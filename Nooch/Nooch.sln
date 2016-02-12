@@ -1,0 +1,52 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.31101.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nooch", "Nooch\Nooch.csproj", "{83C1266D-20F3-40B7-BB43-3F4080DB7F5D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nooch.Data", "Nooch.Data\Nooch.Data.csproj", "{06E62963-0C50-4013-B9C3-D9C3BD236AFB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nooch.DataAccess", "Nooch.DataAccess\Nooch.DataAccess.csproj", "{B9F58AAE-F52F-4A9E-916A-2A4840EBBFBB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nooch.Common", "Nooch.Common\Nooch.Common.csproj", "{1A360833-A6EF-49AC-9F3F-B6BC9D6A78FA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nooch.API", "Nooch.API\Nooch.API.csproj", "{55BC7E1D-3201-4578-A653-084016D23D74}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nooch.Web", "Nooch.Web\Nooch.Web.csproj", "{86043F02-65BF-4289-A780-8D61908B7BB5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{83C1266D-20F3-40B7-BB43-3F4080DB7F5D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{83C1266D-20F3-40B7-BB43-3F4080DB7F5D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{83C1266D-20F3-40B7-BB43-3F4080DB7F5D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{83C1266D-20F3-40B7-BB43-3F4080DB7F5D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{06E62963-0C50-4013-B9C3-D9C3BD236AFB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{06E62963-0C50-4013-B9C3-D9C3BD236AFB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{06E62963-0C50-4013-B9C3-D9C3BD236AFB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{06E62963-0C50-4013-B9C3-D9C3BD236AFB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B9F58AAE-F52F-4A9E-916A-2A4840EBBFBB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B9F58AAE-F52F-4A9E-916A-2A4840EBBFBB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B9F58AAE-F52F-4A9E-916A-2A4840EBBFBB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B9F58AAE-F52F-4A9E-916A-2A4840EBBFBB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1A360833-A6EF-49AC-9F3F-B6BC9D6A78FA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A360833-A6EF-49AC-9F3F-B6BC9D6A78FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1A360833-A6EF-49AC-9F3F-B6BC9D6A78FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1A360833-A6EF-49AC-9F3F-B6BC9D6A78FA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{55BC7E1D-3201-4578-A653-084016D23D74}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{55BC7E1D-3201-4578-A653-084016D23D74}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{55BC7E1D-3201-4578-A653-084016D23D74}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{55BC7E1D-3201-4578-A653-084016D23D74}.Release|Any CPU.Build.0 = Release|Any CPU
+		{86043F02-65BF-4289-A780-8D61908B7BB5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{86043F02-65BF-4289-A780-8D61908B7BB5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{86043F02-65BF-4289-A780-8D61908B7BB5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{86043F02-65BF-4289-A780-8D61908B7BB5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

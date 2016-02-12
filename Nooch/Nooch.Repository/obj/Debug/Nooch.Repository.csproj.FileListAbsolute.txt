@@ -1,0 +1,12 @@
+C:\Users\msb\Desktop\Nooch_New_Architecture\Nooch\Nooch.Repository\bin\Debug\Nooch.Repository.dll.config
+C:\Users\msb\Desktop\Nooch_New_Architecture\Nooch\Nooch.Repository\bin\Debug\Nooch.Repository.dll
+C:\Users\msb\Desktop\Nooch_New_Architecture\Nooch\Nooch.Repository\bin\Debug\Nooch.Repository.pdb
+C:\Users\msb\Desktop\Nooch_New_Architecture\Nooch\Nooch.Repository\bin\Debug\EntityFramework.dll
+C:\Users\msb\Desktop\Nooch_New_Architecture\Nooch\Nooch.Repository\bin\Debug\EntityFramework.SqlServer.dll
+C:\Users\msb\Desktop\Nooch_New_Architecture\Nooch\Nooch.Repository\bin\Debug\Nooch.Data.dll
+C:\Users\msb\Desktop\Nooch_New_Architecture\Nooch\Nooch.Repository\bin\Debug\Nooch.Data.pdb
+C:\Users\msb\Desktop\Nooch_New_Architecture\Nooch\Nooch.Repository\bin\Debug\EntityFramework.xml
+C:\Users\msb\Desktop\Nooch_New_Architecture\Nooch\Nooch.Repository\bin\Debug\EntityFramework.SqlServer.xml
+C:\Users\msb\Desktop\Nooch_New_Architecture\Nooch\Nooch.Repository\obj\Debug\Nooch.Repository.csprojResolveAssemblyReference.cache
+C:\Users\msb\Desktop\Nooch_New_Architecture\Nooch\Nooch.Repository\obj\Debug\Nooch.Repository.dll
+C:\Users\msb\Desktop\Nooch_New_Architecture\Nooch\Nooch.Repository\obj\Debug\Nooch.Repository.pdb

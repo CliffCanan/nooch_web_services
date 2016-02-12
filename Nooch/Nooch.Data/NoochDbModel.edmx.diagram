@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+ <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <!-- Diagram content (shape and connector positions) -->
+    <edmx:Diagrams>
+      <Diagram DiagramId="2230df619b654c26874fbbcde6631aab" Name="Diagram1">
+        <EntityTypeShape EntityType="NOOCHModel.AdminUser" Width="1.5" PointX="0.75" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="NOOCHModel.GeoLocation" Width="1.5" PointX="2.75" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="NOOCHModel.Landlord" Width="1.5" PointX="4.75" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="NOOCHModel.Location" Width="1.5" PointX="0.75" PointY="5.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="NOOCHModel.Member" Width="1.5" PointX="6.75" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="NOOCHModel.User" Width="1.5" PointX="8.75" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="NOOCHModel.MemberPrivacySetting" Width="1.5" PointX="9.375" PointY="14" />
+        <EntityTypeShape EntityType="NOOCHModel.MembersIPAddress" Width="1.5" PointX="0.75" PointY="9.75" />
+        <EntityTypeShape EntityType="NOOCHModel.Notification" Width="1.5" PointX="2.75" PointY="10.75" />
+        <EntityTypeShape EntityType="NOOCHModel.Property" Width="1.5" PointX="11.75" PointY="0.75" />
+        <EntityTypeShape EntityType="NOOCHModel.PropertyUnit" Width="1.5" PointX="11.75" PointY="6.75" />
+        <EntityTypeShape EntityType="NOOCHModel.SocialMediaPost" Width="1.5" PointX="11.75" PointY="12.75" />
+        <EntityTypeShape EntityType="NOOCHModel.Tenant" Width="1.5" PointX="13.75" PointY="0.75" />
+        <EntityTypeShape EntityType="NOOCHModel.Transaction" Width="1.5" PointX="9.375" PointY="4.375" />
+        <AssociationConnector Association="NOOCHModel.FK_Transactions_GeoLocations" />
+        <AssociationConnector Association="NOOCHModel.FK_MemberPrivacySettings_Members" />
+        <AssociationConnector Association="NOOCHModel.FK_Transactions_Members2" />
+        <AssociationConnector Association="NOOCHModel.FK_Transactions_Members3" />
+        <EntityTypeShape EntityType="NOOCHModel.MemberNotification" Width="1.5" PointX="9" PointY="17.75" />
+        <AssociationConnector Association="NOOCHModel.FK_MemberNotifications_Members" />
+      </Diagram>
+    </edmx:Diagrams>
+  </edmx:Designer>
+</edmx:Edmx>

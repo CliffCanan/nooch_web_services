@@ -1,0 +1,8 @@
+C:\Users\msb\Desktop\Nooch_New_Architecture\Nooch\Nooch\bin\Nooch.dll.config
+C:\Users\msb\Desktop\Nooch_New_Architecture\Nooch\Nooch\bin\Nooch.dll
+C:\Users\msb\Desktop\Nooch_New_Architecture\Nooch\Nooch\bin\Nooch.pdb
+C:\Users\msb\Desktop\Nooch_New_Architecture\Nooch\Nooch\obj\Debug\Nooch.csprojResolveAssemblyReference.cache
+C:\Users\msb\Desktop\Nooch_New_Architecture\Nooch\Nooch\obj\Debug\Nooch.dll
+C:\Users\msb\Desktop\Nooch_New_Architecture\Nooch\Nooch\obj\Debug\Nooch.pdb
+C:\Users\msb\Desktop\Nooch_New_Architecture\Nooch\Nooch\bin\AutoMapper.dll
+C:\Users\msb\Desktop\Nooch_New_Architecture\Nooch\Nooch\bin\AutoMapper.xml
