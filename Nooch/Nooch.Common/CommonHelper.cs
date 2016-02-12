@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using log4net.Repository.Hierarchy;
 using Nooch.Common.Cryptography.Algorithms;
+using Nooch.Common.Entities.MobileAppOutputEnities;
+using Nooch.Common.Resources;
 using Nooch.Data;
 
 namespace Nooch.Common
@@ -156,6 +158,27 @@ namespace Nooch.Common
             {
                 return false;
             }
+        }
+
+
+        public static MemberBusinessDto GetMemberByUdId(string udId)
+        {
+            Logger.Info("MemberDataAccess - GetMemberByUdId[ udId:" + udId + "].");
+          
+                var member = _dbContext.Members.FirstOrDefault(m=>m.UDID1==udId && m.IsDeleted==false);
+                if (member != null)
+                {
+                    if (member.Status == Constants.STATUS_REGISTERED)
+                    {
+                        return new MemberBusinessDto { Status = "Your nooch account is inactive." };
+                    }
+                    return new MemberBusinessDto { UserName = GetDecryptedData(member.UserName) };
+                }
+          
+            return new MemberBusinessDto
+            {
+                Status = "You are not a nooch member. Please register to become a nooch member."
+            };
         }
 
        

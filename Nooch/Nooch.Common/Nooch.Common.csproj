@@ -58,6 +58,8 @@
     <Compile Include="Cryptography\CryptographyBase.cs" />
     <Compile Include="Entities\MemberEnity.cs" />
     <Compile Include="Entities\MobileAppInputEntities\UpdateMemberIpInput.cs" />
+    <Compile Include="Entities\MobileAppOutputEnities\MemberBusinessDto.cs" />
+    <Compile Include="Entities\MobileAppOutputEnities\MemberDto.cs" />
     <Compile Include="Entities\StringResult.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -77,9 +79,7 @@
       <Name>Nooch.Data</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Entities\MobileAppOutputEnities\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -10,6 +10,7 @@ using AutoMapper;
 using Nooch.Common;
 using Nooch.Common.Entities;
 using Nooch.Common.Entities.MobileAppInputEntities;
+using Nooch.Common.Entities.MobileAppOutputEnities;
 using Nooch.Data;
 using Nooch.DataAccess;
 
@@ -65,6 +66,33 @@ namespace Nooch.API.Controllers
                 
             }
         }
+
+        [HttpGet]
+        [ActionName("GetMemberByUdId")]
+        public MemberDto GetMemberByUdId(string udId, string accessToken, string memberId)
+        {
+            if (CommonHelper.IsValidRequest(accessToken, memberId))
+            {
+                try
+                {
+                    Logger.Info("Service layer - GetPrimaryEmail [udId: " + udId + "]");
+                    
+                    var memberEntity = CommonHelper.GetMemberByUdId(udId);
+                    var member = new MemberDto { UserName = memberEntity.UserName, Status = memberEntity.Status };
+                    return member;
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception("Server Error");
+                }
+            }
+            else
+            {
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+            return new MemberDto();
+        }
+
 
     }
 }
