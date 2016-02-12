@@ -93,6 +93,32 @@ namespace Nooch.API.Controllers
             return new MemberDto();
         }
 
+        [HttpGet]
+        [ActionName("GetMemberPendingTransctionsCount")]
+        public PendingTransCoutResult GetMemberPendingTransctionsCount(string MemberId, string AccessToken)
+        {
+            if (CommonHelper.IsValidRequest(AccessToken, MemberId))
+            {
+                try
+                {
+                    //Logger.LogDebugMessage("Service layer -> GetMemberPendingTransctionsCount - MemberId: [" + MemberId + "]");
+                    var transactionDataAccess = new TransactionsDataAccess();
+
+                    PendingTransCoutResult trans = transactionDataAccess.GetMemberPendingTransCount(MemberId);
+                    return trans;
+                }
+                catch (Exception ex)
+                {
+                    //throw new Exception("Server Error");
+                    return new PendingTransCoutResult { pendingRequestsSent = "0", pendingRequestsReceived = "0", pendingInvitationsSent = "0", pendingDisputesNotSolved = "0" };
+                }
+            }
+            else
+            {
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
+
 
     }
 }

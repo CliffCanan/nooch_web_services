@@ -51,6 +51,7 @@
   <ItemGroup>
     <Compile Include="MembersDataAccess.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TransactionsDataAccess.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
