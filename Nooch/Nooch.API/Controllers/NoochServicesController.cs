@@ -157,8 +157,8 @@ namespace Nooch.API.Controllers
             return new StringResult();
         }
 
-         [HttpGet]
-         [ActionName("GetMemberNameByUserName")]
+        [HttpGet]
+        [ActionName("GetMemberNameByUserName")]
         public StringResult GetMemberNameByUserName(string userName)
         {
             try
@@ -174,6 +174,60 @@ namespace Nooch.API.Controllers
             }
             return new StringResult();
         }
-     
+        [HttpGet]
+        [ActionName("MemberActivation")]
+        public BoolResult MemberActivation(string tokenId)
+        {
+            try
+            {
+                Logger.Info("Service Layer -> MemberActivation Initiated - [tokenId: " + tokenId + "]");
+                var mda = new MembersDataAccess();
+                return new BoolResult { Result = mda.MemberActivation(tokenId) };
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Layer -> MemberActivation Failed - [tokenId: " + tokenId + "]. Exception -> " + ex);
+                return new BoolResult();
+            }
+
+        }
+        [HttpGet]
+        [ActionName("IsMemberActivated")]
+        public BoolResult IsMemberActivated(string tokenId)
+        {
+            try
+            {
+
+
+                return new BoolResult { Result = CommonHelper.IsMemberActivated(tokenId) };
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Layer -> IsMemberActivated Failed - [tokenId: " + tokenId + "]. Exception -> " + ex);
+                return new BoolResult();
+            }
+
+        }
+
+
+        [HttpGet]
+        [ActionName("IsNonNoochMemberActivated")]
+        public BoolResult IsNonNoochMemberActivated(string emailId)
+        {
+            try
+            {
+                Logger.Info("Service Layer - IsNonNoochMemberActivated - Email ID: [" + emailId + "]");
+               
+                return new BoolResult { Result = CommonHelper.IsNonNoochMemberActivated(emailId) };
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Layer -> IsNonNoochMemberActivated Failed - [tokenId: " + emailId + "]. Exception -> " + ex);
+                return new BoolResult();    
+            }
+            
+        }
+
+
     }
 }

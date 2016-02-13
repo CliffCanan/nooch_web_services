@@ -207,7 +207,7 @@ namespace Nooch.Common
 
             var noochMember =
                 _dbContext.Members.FirstOrDefault(
-                    m => m.MemberId==memGuid && m.IsDeleted == false);
+                    m => m.MemberId == memGuid && m.IsDeleted == false);
 
             return noochMember != null ? GetDecryptedData(noochMember.UserName) : null;
         }
@@ -224,10 +224,27 @@ namespace Nooch.Common
 
             if (noochMember != null)
             {
-                return   UppercaseFirst(GetDecryptedData(noochMember.FirstName))+" "+UppercaseFirst(GetDecryptedData(noochMember.LastName));
+                return UppercaseFirst(GetDecryptedData(noochMember.FirstName)) + " " + UppercaseFirst(GetDecryptedData(noochMember.LastName));
 
             }
             return null;
+        }
+
+        public static bool IsMemberActivated(string tokenId)
+        {
+
+            var id = Utility.ConvertToGuid(tokenId);
+
+            var noochMember =
+                _dbContext.AuthenticationTokens.FirstOrDefault(m => m.TokenId == id && m.IsActivated == true);
+            return noochMember != null;
+        }
+
+        public static bool IsNonNoochMemberActivated(string emailId)
+        {
+            
+                var noochMember = _dbContext.Members.FirstOrDefault(m=>m.UserName == emailId && m.IsDeleted==false);
+                return noochMember != null;
         }
 
     }
