@@ -242,10 +242,27 @@ namespace Nooch.Common
 
         public static bool IsNonNoochMemberActivated(string emailId)
         {
-            
-                var noochMember = _dbContext.Members.FirstOrDefault(m=>m.UserName == emailId && m.IsDeleted==false);
-                return noochMember != null;
+
+            var noochMember = _dbContext.Members.FirstOrDefault(m => m.UserName == emailId && m.IsDeleted == false);
+            return noochMember != null;
         }
+
+
+        public static string IsDuplicateMember(string userName)
+        {
+            Logger.Info("Common Helper -> IsDuplicateMember Initiated - [UserName to check: " + userName + "]");
+
+            var userNameLowerCase = GetEncryptedData(userName.ToLower());
+
+            var noochMember =
+                _dbContext.Members.FirstOrDefault(m => m.UserNameLowerCase == userNameLowerCase && m.IsDeleted == false);
+
+            return noochMember != null ? "Username already exists for the primary email you entered. Please try with some other email." : "Not a nooch member.";
+        }
+
+
+
+
 
     }
 }

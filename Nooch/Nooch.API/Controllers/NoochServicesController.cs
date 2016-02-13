@@ -217,15 +217,35 @@ namespace Nooch.API.Controllers
             try
             {
                 Logger.Info("Service Layer - IsNonNoochMemberActivated - Email ID: [" + emailId + "]");
-               
+
                 return new BoolResult { Result = CommonHelper.IsNonNoochMemberActivated(emailId) };
             }
             catch (Exception ex)
             {
                 Logger.Error("Service Layer -> IsNonNoochMemberActivated Failed - [tokenId: " + emailId + "]. Exception -> " + ex);
-                return new BoolResult();    
+                return new BoolResult();
             }
-            
+
+        }
+
+
+        [HttpGet]
+        [ActionName("IsDuplicateMember")]
+        public StringResult IsDuplicateMember(string userName)
+        {
+            StringResult result = new StringResult();
+            try
+            {
+                Logger.Info("Service layer - IsDuplicateMember - userName: [" + userName + "]");
+
+                return new StringResult { Result = CommonHelper.IsDuplicateMember(userName) };
+            }
+            catch (Exception ex)
+            {
+                result.Result = ex.ToString();
+
+            }
+            return result;
         }
 
 
