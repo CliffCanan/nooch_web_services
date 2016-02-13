@@ -8,6 +8,7 @@ using System.Web.Http;
 
 using AutoMapper;
 using Nooch.Common;
+using Nooch.Common.Cryptography.Algorithms;
 using Nooch.Common.Entities;
 using Nooch.Common.Entities.MobileAppInputEntities;
 using Nooch.Common.Entities.MobileAppOutputEnities;
@@ -246,6 +247,82 @@ namespace Nooch.API.Controllers
 
             }
             return result;
+        }
+
+        public static string Base64Encode(string plainText)
+        {
+            var plainTextBytes = System.Text.Encoding.UTF8.GetBytes(plainText);
+            return Convert.ToBase64String(plainTextBytes);
+        }
+
+
+        public static string Base64Decode(string base64EncodedData)
+        {
+            var base64EncodedBytes = Convert.FromBase64String(base64EncodedData);
+            return System.Text.Encoding.UTF8.GetString(base64EncodedBytes);
+        }
+
+        public MemberDto GetEncryptedData(string sourceData)
+        {
+            try
+            {
+                string DecodedMessage = Base64Decode(sourceData);
+
+                var aesAlgorithm = new AES();
+                string encryptedData = aesAlgorithm.Encrypt(DecodedMessage, string.Empty);
+                MemberDto obj = new MemberDto { Status = encryptedData.Replace(" ", "+") };
+                return new MemberDto { Status = encryptedData.Replace(" ", "+") };
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Layer - GetEncryptedData FAILED - sourceData: [" + sourceData + "]. Exception: [" + ex + "]");
+                return new MemberDto();
+            }
+            
+        }
+
+
+      
+        public MemberDto GetDecryptedData(string sourceData)
+        {
+            try
+            {
+                //Logger.LogDebugMessage("Service Layer - GetDecryptedData - sourceData [" + sourceData + "]");
+
+                var aesAlgorithm = new AES();
+                string decryptedData = aesAlgorithm.Decrypt(sourceData.Replace(" ", "+"), string.Empty);
+
+                string Base64EncodedData = Base64Encode(decryptedData);
+
+                return new MemberDto { Status = Base64EncodedData };
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Layer - GetDecryptedData FAILED - sourceData: [" + sourceData + "]. Exception: [" + ex + "]");
+                return new MemberDto();    
+            }
+            
+        }
+
+        public StringResult GetServerCurrentTime()
+        {
+            try
+            {
+                return new StringResult { Result = string.Format("{0:MM/d/yyyy hh:mm:ss tt}", DateTime.Now) };
+            }
+            catch (Exception ex)
+            {
+                
+                return new StringResult { Result = "" };
+            }
+        }
+
+        public StringResult WeeklyLimitTest(string memId)
+        {
+            var tda = new TransactionsDataAccess();
+            Guid memGuid = Utility.ConvertToGuid(memId);
+
+            return new StringResult { Result = CommonHelper.IsWeeklyTransferLimitExceeded(memGuid, 5).ToString() };
         }
 
 

@@ -261,7 +261,76 @@ namespace Nooch.Common
         }
 
 
+        public static bool IsWeeklyTransferLimitExceeded(Guid MemberId, decimal amount)
+        {
+            // Get max weekly value allowed 
+            var WeeklyLimitAllowed = Utility.GetValueFromConfig("WeeklyTransferLimit");
 
+            DateTime CurrentWeekStartDate = DateTime.Today.AddDays(-1 * (int)(DateTime.Today.DayOfWeek));
+
+            
+                
+                    // We only want to find transactions where this user has SENT money successfully. Exclude any pending/disputed/cancelled/rejected transactions.
+
+
+            var totalAmountSent =
+                _dbContext.Transactions.Where(m => m.Member.MemberId == MemberId || m.Member1.MemberId == MemberId &&
+                                                   m.TransactionStatus == "Success" &&
+                                                   m.TransactionDate > CurrentWeekStartDate &&
+                                                   (m.TransactionType == "5dt4HUwCue532sNmw3LKDQ==" ||
+                                                    m.TransactionType == "DrRr1tU1usk7nNibjtcZkA==" ||
+                                                    m.TransactionType == "T3EMY1WWZ9IscHIj3dbcNw=="))
+                    .ToList()
+                    .Sum(t => t.Amount);
+                    
+                     
+
+                if (totalAmountSent > 10)
+                {
+                    if (!(Convert.ToDecimal(WeeklyLimitAllowed) > (Convert.ToDecimal(totalAmountSent) + amount)))
+                    {
+                        #region Check For Exempt Users
+
+                        if (MemberId.ToString().ToLower() == "00bd3972-d900-429d-8a0d-28a5ac4a75d7")
+                        {
+                            Logger.Info("****  TDA -> IsWeeklyTransferLimitExceeded LIMIT EXCEEDED - But transaction for TEAM NOOCH, so allowing transaction - [Amount: $" + amount.ToString() + "]  ****");
+                            return false;
+                        }
+                        if (MemberId.ToString().ToLower() == "b3a6cf7b-561f-4105-99e4-406a215ccf60")
+                        {
+                            Logger.Info("****  TDA -> IsWeeklyTransferLimitExceeded LIMIT EXCEEDED - But transaction for CLIFF CANAN, so allowing transaction - [Amount: $" + amount.ToString() + "]  ****");
+                            return false;
+                        }
+                        if (MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49") // Marvis Burns (RentScene)
+                        {
+                            Logger.Info("****  TDA -> IsWeeklyTransferLimitExceeded LIMIT EXCEEDED - But transaction for RENT SCENE, so allowing transaction - [Amount: $" + amount.ToString() + "]  ****");
+                            return false;
+                        }
+                        if (MemberId.ToString().ToLower() == "e44c13da-7705-4953-8431-8ab0b2511a77") // REALTY MARK's Account (Member name is 'Diane Torres')
+                        {
+                            Logger.Info("****  TDA -> IsWeeklyTransferLimitExceeded LIMIT EXCEEDED - But transaction for RENT SCENE, so allowing transaction - [Amount: $" + amount.ToString() + "]  ****");
+                            return false;
+                        }
+                        if (MemberId.ToString().ToLower() == "8b4b4983-f022-4289-ba6e-48d5affb5484") // Josh Detweiler (AppJaxx)
+                        {
+                            Logger.Info("****  TDA -> IsWeeklyTransferLimitExceeded LIMIT EXCEEDED - But transaction is for APPJAXX, so allowing transaction - [Amount: $" + amount.ToString() + "]  ****");
+                            return false;
+                        }
+                        if (MemberId.ToString().ToLower() == "2d0427d2-7f21-40d9-a5a2-ac3e973809ec") // Dana Kozubal (Dave Phillip's)
+                        {
+                            Logger.Info("****  TDA -> IsWeeklyTransferLimitExceeded LIMIT EXCEEDED - But transaction is for DANA KOZUBAL, so allowing transaction - [Amount: $" + amount.ToString() + "]  ****");
+                            return false;
+                        }
+
+                        #endregion Check For Exempt Users
+
+                        return true;
+                    }
+                }
+            
+
+            return false;
+        }
 
 
     }
