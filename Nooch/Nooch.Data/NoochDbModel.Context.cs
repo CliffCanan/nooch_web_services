@@ -40,5 +40,7 @@ namespace Nooch.Data
         public virtual DbSet<Tenant> Tenants { get; set; }
         public virtual DbSet<Transaction> Transactions { get; set; }
         public virtual DbSet<MemberNotification> MemberNotifications { get; set; }
+        public virtual DbSet<AuthenticationToken> AuthenticationTokens { get; set; }
+        public virtual DbSet<InviteCode> InviteCodes { get; set; }
     }
 }

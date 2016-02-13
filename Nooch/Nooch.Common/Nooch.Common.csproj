@@ -56,10 +56,12 @@
     <Compile Include="CommonHelper.cs" />
     <Compile Include="Cryptography\Algorithms\AES.cs" />
     <Compile Include="Cryptography\CryptographyBase.cs" />
+    <Compile Include="Entities\BoolResult.cs" />
     <Compile Include="Entities\MemberEnity.cs" />
     <Compile Include="Entities\MobileAppInputEntities\UpdateMemberIpInput.cs" />
     <Compile Include="Entities\MobileAppOutputEnities\MemberBusinessDto.cs" />
     <Compile Include="Entities\MobileAppOutputEnities\MemberDto.cs" />
+    <Compile Include="Entities\MobileAppOutputEnities\MemberOutputEntity.cs" />
     <Compile Include="Entities\MobileAppOutputEnities\PendingTransCoutResult.cs" />
     <Compile Include="Entities\StringResult.cs" />
     <Compile Include="Logger.cs" />

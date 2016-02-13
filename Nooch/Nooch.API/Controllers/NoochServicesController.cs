@@ -22,7 +22,7 @@ namespace Nooch.API.Controllers
         //public IEnumerable<string> Get()
         //{
 
-            
+
         //    Logger.Info("came in log");
 
         //    var config = new MapperConfiguration(cfg => cfg.CreateMap<Member, MemberEnity>());
@@ -37,7 +37,7 @@ namespace Nooch.API.Controllers
         //    return new string[] { "value1", "value2" };
         //}
 
-     
+
 
 
         [HttpPost]
@@ -49,8 +49,8 @@ namespace Nooch.API.Controllers
                 try
                 {
                     MembersDataAccess mda = new MembersDataAccess();
-                    string res = mda.UpdateMemberIPAddressAndDeviceId(member.MemberId, member.IpAddress, member.DeviceId);
-                    return  new StringResult() {Result = mda.UpdateMemberIPAddressAndDeviceId(member.MemberId, member.IpAddress, member.DeviceId)};
+                    string res = mda.UpdateMemberIpAddressAndDeviceId(member.MemberId, member.IpAddress, member.DeviceId);
+                    return new StringResult() { Result = mda.UpdateMemberIpAddressAndDeviceId(member.MemberId, member.IpAddress, member.DeviceId) };
                 }
                 catch (Exception ex)
                 {
@@ -62,8 +62,8 @@ namespace Nooch.API.Controllers
             else
             {
                 throw new Exception("Invalid OAuth 2 Access");
-                
-                
+
+
             }
         }
 
@@ -76,7 +76,7 @@ namespace Nooch.API.Controllers
                 try
                 {
                     Logger.Info("Service layer - GetPrimaryEmail [udId: " + udId + "]");
-                    
+
                     var memberEntity = CommonHelper.GetMemberByUdId(udId);
                     var member = new MemberDto { UserName = memberEntity.UserName, Status = memberEntity.Status };
                     return member;
@@ -120,5 +120,60 @@ namespace Nooch.API.Controllers
         }
 
 
+
+        [HttpGet]
+        [ActionName("GetMemberIdByUserName")]
+        public StringResult GetMemberIdByUserName(string userName)
+        {
+            try
+            {
+
+                return new StringResult { Result = CommonHelper.GetMemberIdByUserName(userName) };
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Layer - GetMemberByUserName FAILED - [userName: " + userName +
+                                       "], Exception: [" + ex + "]");
+
+            }
+            return new StringResult();
+        }
+
+        [HttpGet]
+        [ActionName("GetMemberUsernameByMemberId")]
+        public StringResult GetMemberUsernameByMemberId(string memberId)
+        {
+            try
+            {
+
+                return new StringResult { Result = CommonHelper.GetMemberUsernameByMemberId(memberId) };
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Layer - GetMemberUsernameByMemberId FAILED - [memberId: " + memberId +
+                                       "], Exception: [" + ex + "]");
+
+            }
+            return new StringResult();
+        }
+
+         [HttpGet]
+         [ActionName("GetMemberNameByUserName")]
+        public StringResult GetMemberNameByUserName(string userName)
+        {
+            try
+            {
+
+                return new StringResult { Result = CommonHelper.GetMemberNameByUserName(userName) };
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Layer - GetMemberUsernameByMemberId FAILED - [GetMemberNameByUserName : " + userName +
+                                       "], Exception: [" + ex + "]");
+
+            }
+            return new StringResult();
+        }
+     
     }
 }

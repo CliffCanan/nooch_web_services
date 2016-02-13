@@ -53,7 +53,13 @@
     <Compile Include="AdminUser.cs">
       <DependentUpon>NoochDbModel.tt</DependentUpon>
     </Compile>
+    <Compile Include="AuthenticationToken.cs">
+      <DependentUpon>NoochDbModel.tt</DependentUpon>
+    </Compile>
     <Compile Include="GeoLocation.cs">
+      <DependentUpon>NoochDbModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="InviteCode.cs">
       <DependentUpon>NoochDbModel.tt</DependentUpon>
     </Compile>
     <Compile Include="Landlord.cs">

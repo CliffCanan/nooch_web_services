@@ -5,6 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Mail;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -202,7 +203,95 @@ namespace Nooch.Common
             return randomId;
         }
 
+        public static string GetEmailTemplate(string physicalPath)
+        {
+            using (var sr = new StreamReader(physicalPath))
+                return sr.ReadToEnd();
+        }
+        public static bool SendEmail(string templateName, MailPriority priority, string fromAddress, string toAddress, string attachmentPath, string subject, string referenceLink, IEnumerable<KeyValuePair<string, string>> replacements, string ccMailId, string bccMailId, string bodyText)
+        {
+            try
+            {
+                MailMessage mailMessage = new MailMessage();
 
+                string template;
+                string subjectString = subject;
+                string content = string.Empty;
+
+                if (!String.IsNullOrEmpty(templateName))
+                {
+                    template = GetEmailTemplate(String.Concat(GetValueFromConfig("EmailTemplatesPath"), templateName, ".txt"));
+                    content = template;
+
+                    // Replace tokens in the message body and subject line
+                    if (replacements != null)
+                    {
+                        foreach (var token in replacements)
+                        {
+                            content = content.Replace(token.Key, token.Value);
+                            subjectString = subject.Replace(token.Key, token.Value);
+                        }
+                    }
+                    mailMessage.Body = content;
+                }
+                else
+                {
+                    mailMessage.Body = bodyText;
+                }
+
+                switch (fromAddress)
+                {
+                    case "receipts@nooch.com":
+                        mailMessage.From = new MailAddress(fromAddress, "Nooch Payments");
+                        break;
+                    case "support@nooch.com":
+                        mailMessage.From = new MailAddress(fromAddress, "Nooch Support");
+                        break;
+                    case "hello@nooch.com":
+                        mailMessage.From = new MailAddress(fromAddress, "Team Nooch");
+                        break;
+                    case "landlords@rentscene.com":
+                        mailMessage.From = new MailAddress(fromAddress, "Rent Scene");
+                        break;
+                    case "team@rentscene.com":
+                        mailMessage.From = new MailAddress(fromAddress, "Rent Scene Team");
+                        break;
+                    case "payments@rentscene.com":
+                        mailMessage.From = new MailAddress(fromAddress, "Rent Scene Payments");
+                        break;
+                    default:
+                        mailMessage.From = new MailAddress(fromAddress, "Nooch Admin");
+                        break;
+                }
+                mailMessage.IsBodyHtml = true;
+                mailMessage.Subject = subjectString;
+                mailMessage.To.Add(toAddress);
+
+                if (!String.IsNullOrEmpty(bccMailId))
+                {
+                    mailMessage.Bcc.Add(bccMailId);
+                }
+                
+
+                
+
+                SmtpClient smtpClient = new SmtpClient();
+
+                smtpClient.Host = GetValueFromConfig("SMTPAddress");
+                smtpClient.UseDefaultCredentials = false;
+                
+                smtpClient.Credentials = new NetworkCredential(GetValueFromConfig("SMTPLogOn"), GetValueFromConfig("SMTPPassword"));
+                smtpClient.Send(mailMessage);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("UtilityDataAccess -> SendEmail ERROR -> [Template: " + templateName + "], " +
+                                       "[ToAddress: " + toAddress + "],  [Exception: " + ex + "]");
+                return false;
+            }
+        }
 
       
     }

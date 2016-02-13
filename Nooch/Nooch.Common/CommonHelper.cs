@@ -96,7 +96,7 @@ namespace Nooch.Common
         }
 
 
-      
+
 
 
         public static bool IsValidRequest(string accessToken, string memberId)
@@ -105,8 +105,8 @@ namespace Nooch.Common
             {
                 Guid memGuid = new Guid(memberId);
                 accessToken = accessToken.Replace(' ', '+');
-                
-                  
+
+
                 try
                 {
                     //Get the member details
@@ -164,24 +164,71 @@ namespace Nooch.Common
         public static MemberBusinessDto GetMemberByUdId(string udId)
         {
             Logger.Info("MemberDataAccess - GetMemberByUdId[ udId:" + udId + "].");
-          
-                var member = _dbContext.Members.FirstOrDefault(m=>m.UDID1==udId && m.IsDeleted==false);
-                if (member != null)
+
+            var member = _dbContext.Members.FirstOrDefault(m => m.UDID1 == udId && m.IsDeleted == false);
+            if (member != null)
+            {
+                if (member.Status == Constants.STATUS_REGISTERED)
                 {
-                    if (member.Status == Constants.STATUS_REGISTERED)
-                    {
-                        return new MemberBusinessDto { Status = "Your nooch account is inactive." };
-                    }
-                    return new MemberBusinessDto { UserName = GetDecryptedData(member.UserName) };
+                    return new MemberBusinessDto { Status = "Your nooch account is inactive." };
                 }
-          
+                return new MemberBusinessDto { UserName = GetDecryptedData(member.UserName) };
+            }
+
             return new MemberBusinessDto
             {
                 Status = "You are not a nooch member. Please register to become a nooch member."
             };
         }
 
-       
+
+        public static string GetMemberIdByUserName(string userName)
+        {
+
+            var userNameLowerCase = GetEncryptedData(userName.ToLower());
+            userName = GetEncryptedData(userName);
+
+            var noochMember =
+                _dbContext.Members.FirstOrDefault(
+                    m => m.UserNameLowerCase == userNameLowerCase && m.UserName == userName && m.IsDeleted == false);
+
+            if (noochMember != null)
+            {
+                return noochMember.MemberId.ToString();
+
+            }
+            return null;
+        }
+
+        public static string GetMemberUsernameByMemberId(string MemberId)
+        {
+
+            Guid memGuid = Utility.ConvertToGuid(MemberId);
+
+            var noochMember =
+                _dbContext.Members.FirstOrDefault(
+                    m => m.MemberId==memGuid && m.IsDeleted == false);
+
+            return noochMember != null ? GetDecryptedData(noochMember.UserName) : null;
+        }
+
+        public static string GetMemberNameByUserName(string userName)
+        {
+
+            var userNameLowerCase = GetEncryptedData(userName.ToLower());
+            userName = GetEncryptedData(userName);
+
+            var noochMember =
+                _dbContext.Members.FirstOrDefault(
+                    m => m.UserNameLowerCase == userNameLowerCase && m.UserName == userName && m.IsDeleted == false);
+
+            if (noochMember != null)
+            {
+                return   UppercaseFirst(GetDecryptedData(noochMember.FirstName))+" "+UppercaseFirst(GetDecryptedData(noochMember.LastName));
+
+            }
+            return null;
+        }
 
     }
 }
