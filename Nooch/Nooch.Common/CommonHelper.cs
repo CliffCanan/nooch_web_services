@@ -449,5 +449,23 @@ namespace Nooch.Common
             }
 
         }
+
+        public static bool CheckTokenExistance(string AccessToken)
+        {
+            
+                try
+                {
+                    //Get the member details
+                    
+                    var noochMember = _dbContext.Members.FirstOrDefault(m=>m.AccessToken==AccessToken && m.IsDeleted==false);
+                    return noochMember != null;
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("MDA -> CheckTokenExistance FAILED - [Exception: " + ex + "]");
+                    return false;
+                }
+            
+        }
     }
 }

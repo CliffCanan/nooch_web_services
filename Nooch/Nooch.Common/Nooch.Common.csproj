@@ -59,6 +59,7 @@
     <Compile Include="Entities\BoolResult.cs" />
     <Compile Include="Entities\MemberEnity.cs" />
     <Compile Include="Entities\MobileAppInputEntities\UpdateMemberIpInput.cs" />
+    <Compile Include="Entities\MobileAppOutputEnities\LocationSearch.cs" />
     <Compile Include="Entities\MobileAppOutputEnities\MemberBusinessDto.cs" />
     <Compile Include="Entities\MobileAppOutputEnities\MemberDto.cs" />
     <Compile Include="Entities\MobileAppOutputEnities\MemberForInvitedMembersList.cs" />

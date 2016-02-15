@@ -959,7 +959,38 @@ namespace Nooch.DataAccess
             
         }
 
-        
+        //public List<LocationSearch> GetLocationSearch(string MemberId, int Radius)
+        //{
+        //    Logger.Info("MDA -> GetLocationSearch - [MemberId: " + MemberId + "],  [Radius: " + Radius + "]");
+
+            
+        //        try
+        //        {
+        //            List<Location> list = _dbContext.GetLocationSearch(MemberId, Radius).ToList();
+        //            List<LocationSearch> list1 = new List<LocationSearch>();
+
+        //            foreach (Locations loc in list)
+        //            {
+        //                LocationSearch obj = new LocationSearch();
+        //                obj.FirstName = CommonHelper.GetDecryptedData(loc.FirstName);
+        //                obj.LastName = CommonHelper.GetDecryptedData(loc.LastName);
+        //                decimal miles = loc.Miles.Value;
+        //                if (miles > 0)
+        //                    obj.Miles = decimal.Parse(miles.ToString("###.####"));
+        //                else
+        //                    obj.Miles = decimal.Parse("000.0000");
+        //                obj.Photo = loc.Photo;
+        //                obj.MemberId = loc.MemberId.ToString();
+        //                list1.Add(obj);
+        //            }
+        //            return list1;
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            throw new Exception(ex.ToString());
+        //        }
+            
+        //}
 
         
     }
