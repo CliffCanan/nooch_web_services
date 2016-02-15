@@ -20,6 +20,7 @@ namespace Nooch.Data
             this.Transactions = new HashSet<Transaction>();
             this.Transactions1 = new HashSet<Transaction>();
             this.MemberNotifications = new HashSet<MemberNotification>();
+            this.SynapseBankLoginResults = new HashSet<SynapseBankLoginResult>();
         }
     
         public System.Guid MemberId { get; set; }
@@ -92,5 +93,6 @@ namespace Nooch.Data
         public virtual ICollection<Transaction> Transactions { get; set; }
         public virtual ICollection<Transaction> Transactions1 { get; set; }
         public virtual ICollection<MemberNotification> MemberNotifications { get; set; }
+        public virtual ICollection<SynapseBankLoginResult> SynapseBankLoginResults { get; set; }
     }
 }

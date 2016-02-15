@@ -5,6 +5,7 @@ using System.Net.Mail;
 using System.Text;
 using System.Threading.Tasks;
 using Nooch.Common;
+using Nooch.Common.Entities.MobileAppOutputEnities;
 using Nooch.Common.Resources;
 using Nooch.Data;
 
@@ -595,6 +596,43 @@ namespace Nooch.DataAccess
                 }
             
             return false; // If user is already activated
+        }
+
+
+        public PhoneEmailListDto GetMemberIds(PhoneEmailListDto phoneEmailListDto)
+        {
+            Logger.Info("MDA -> GetMemberIds Initiated - phoneEmailList is: [" + phoneEmailListDto.phoneEmailList + "]");
+
+            
+            
+
+                foreach (PhoneEmailMemberPair phoneEmailObj in phoneEmailListDto.phoneEmailList)
+                {
+                    // First check for a PHONE match
+                    
+                    var noochMember = _dbContext.Members.FirstOrDefault(m => m.ContactNumber == phoneEmailObj.phoneNo && m.IsDeleted == false);
+
+                    if (noochMember != null)
+                    {
+                        phoneEmailObj.memberId = noochMember.MemberId.ToString();
+                    }
+                    else
+                    {
+                        // Then check for an EMAIL match
+
+                        var tempEmailEnc = CommonHelper.GetEncryptedData(phoneEmailObj.emailAddy.ToLower());
+
+                        
+                        noochMember = _dbContext.Members.FirstOrDefault(m => m.UserName== tempEmailEnc || m.FacebookAccountLogin==tempEmailEnc && m.IsDeleted == false);
+
+                        if (noochMember != null)
+                        {
+                            phoneEmailObj.memberId = noochMember.MemberId.ToString();
+                        }
+                    }
+                }
+            
+            return phoneEmailListDto;
         }
 
     }

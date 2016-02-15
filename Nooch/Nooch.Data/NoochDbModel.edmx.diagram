@@ -27,6 +27,15 @@
         <AssociationConnector Association="NOOCHModel.FK_MemberNotifications_Members" />
         <EntityTypeShape EntityType="NOOCHModel.AuthenticationToken" Width="1.5" PointX="0.75" PointY="15" />
         <EntityTypeShape EntityType="NOOCHModel.InviteCode" Width="1.5" PointX="3.375" PointY="14.75" />
+        <EntityTypeShape EntityType="NOOCHModel.SynapseBankLoginResult" Width="1.5" PointX="9" PointY="25.25" />
+        <EntityTypeShape EntityType="NOOCHModel.SynapseBanksOfMember" Width="1.5" PointX="14.375" PointY="7.75" />
+        <EntityTypeShape EntityType="NOOCHModel.SynapseCreateOrderResult" Width="1.5" PointX="11.375" PointY="15.75" />
+        <EntityTypeShape EntityType="NOOCHModel.SynapseCreateUserResult" Width="1.5" PointX="13.375" PointY="15.75" />
+        <EntityTypeShape EntityType="NOOCHModel.SynapseIdVerificationQuestion" Width="1.5" PointX="15.375" PointY="15.75" />
+        <EntityTypeShape EntityType="NOOCHModel.SynapseSupportedBank" Width="1.5" PointX="16.375" PointY="0.75" />
+        <EntityTypeShape EntityType="NOOCHModel.TenantsIdDocument" Width="1.5" PointX="16.375" PointY="3.75" />
+        <EntityTypeShape EntityType="NOOCHModel.UnitsOccupiedByTenant" Width="1.5" PointX="5.375" PointY="16.75" />
+        <AssociationConnector Association="NOOCHModel.FK_SynapseBankLoginResults_Members" />
       </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>

@@ -108,10 +108,34 @@
     <Compile Include="SocialMediaPost.cs">
       <DependentUpon>NoochDbModel.tt</DependentUpon>
     </Compile>
+    <Compile Include="SynapseBankLoginResult.cs">
+      <DependentUpon>NoochDbModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="SynapseBanksOfMember.cs">
+      <DependentUpon>NoochDbModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="SynapseCreateOrderResult.cs">
+      <DependentUpon>NoochDbModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="SynapseCreateUserResult.cs">
+      <DependentUpon>NoochDbModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="SynapseIdVerificationQuestion.cs">
+      <DependentUpon>NoochDbModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="SynapseSupportedBank.cs">
+      <DependentUpon>NoochDbModel.tt</DependentUpon>
+    </Compile>
     <Compile Include="Tenant.cs">
       <DependentUpon>NoochDbModel.tt</DependentUpon>
     </Compile>
+    <Compile Include="TenantsIdDocument.cs">
+      <DependentUpon>NoochDbModel.tt</DependentUpon>
+    </Compile>
     <Compile Include="Transaction.cs">
+      <DependentUpon>NoochDbModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="UnitsOccupiedByTenant.cs">
       <DependentUpon>NoochDbModel.tt</DependentUpon>
     </Compile>
     <Compile Include="User.cs">

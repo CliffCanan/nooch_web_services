@@ -212,6 +212,30 @@ namespace Nooch.Common
             return noochMember != null ? GetDecryptedData(noochMember.UserName) : null;
         }
 
+        public static string GetPhoneNumberByMemberId(string MemberId)
+        {
+
+            Guid memGuid = Utility.ConvertToGuid(MemberId);
+
+            var noochMember =
+                _dbContext.Members.FirstOrDefault(
+                    m => m.MemberId == memGuid && m.IsDeleted == false);
+
+            return noochMember != null ? noochMember.ContactNumber : null;
+        }
+
+        public static string GetMemberIdByPhone(string memberPhone)
+        {
+
+            
+
+            var noochMember =
+                _dbContext.Members.FirstOrDefault(
+                    m => m.ContactNumber==memberPhone && m.IsDeleted == false);
+
+            return noochMember != null ? noochMember.MemberId.ToString(): null;
+        }
+
         public static string GetMemberNameByUserName(string userName)
         {
 
@@ -332,6 +356,40 @@ namespace Nooch.Common
             return false;
         }
 
+
+        public static Member GetMemberDetails(string memberId)
+        {
+            
+            try
+            {
+                var id = Utility.ConvertToGuid(memberId);
+
+                    var noochMember = _dbContext.Members.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
+
+                    if (noochMember != null)
+                    {
+                        return noochMember;
+                    }
+                
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("MDA -> GetMemberDetails FAILED - Member ID: [" + memberId + "], [Exception: " + ex + "]");
+            }
+            return new Member();
+        }
+
+        public static SynapseBanksOfMember GetSynapseBankAccountDetails(string memberId)
+        {
+            Logger.Info("MDA -> GetSynapseBankAccountDetails - MemberId: [" + memberId + "]");
+
+            var id = Utility.ConvertToGuid(memberId);
+
+                var memberAccountDetails = _dbContext.SynapseBanksOfMembers.FirstOrDefault(m=>m.MemberId==id && m.IsDefault==true);
+
+                return memberAccountDetails;
+            
+        }
 
     }
 }

@@ -63,6 +63,7 @@
     <Compile Include="Entities\MobileAppOutputEnities\MemberDto.cs" />
     <Compile Include="Entities\MobileAppOutputEnities\MemberOutputEntity.cs" />
     <Compile Include="Entities\MobileAppOutputEnities\PendingTransCoutResult.cs" />
+    <Compile Include="Entities\MobileAppOutputEnities\PhoneEmailListDto.cs" />
     <Compile Include="Entities\StringResult.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

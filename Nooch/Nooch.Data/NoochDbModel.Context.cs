@@ -42,5 +42,13 @@ namespace Nooch.Data
         public virtual DbSet<MemberNotification> MemberNotifications { get; set; }
         public virtual DbSet<AuthenticationToken> AuthenticationTokens { get; set; }
         public virtual DbSet<InviteCode> InviteCodes { get; set; }
+        public virtual DbSet<SynapseBankLoginResult> SynapseBankLoginResults { get; set; }
+        public virtual DbSet<SynapseBanksOfMember> SynapseBanksOfMembers { get; set; }
+        public virtual DbSet<SynapseCreateOrderResult> SynapseCreateOrderResults { get; set; }
+        public virtual DbSet<SynapseCreateUserResult> SynapseCreateUserResults { get; set; }
+        public virtual DbSet<SynapseIdVerificationQuestion> SynapseIdVerificationQuestions { get; set; }
+        public virtual DbSet<SynapseSupportedBank> SynapseSupportedBanks { get; set; }
+        public virtual DbSet<TenantsIdDocument> TenantsIdDocuments { get; set; }
+        public virtual DbSet<UnitsOccupiedByTenant> UnitsOccupiedByTenants { get; set; }
     }
 }

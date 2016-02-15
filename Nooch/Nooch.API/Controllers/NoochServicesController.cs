@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -157,6 +158,66 @@ namespace Nooch.API.Controllers
             }
             return new StringResult();
         }
+
+        [HttpGet]
+        [ActionName("GetPhoneNumberByMemberId")]
+        public StringResult GetPhoneNumberByMemberId(string memberId)
+        {
+            try
+            {
+                Logger.Info("Service Layer -> GetPhoneNumberByMemberId Initiated - [MemberID: " + memberId + "]");
+                
+                return new StringResult
+                {
+                    Result = CommonHelper.GetPhoneNumberByMemberId(memberId)
+                };
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Layer -> GetPhoneNumberByMemberId FAILED - [Exception: " + ex + "]");
+                return new StringResult();
+            }
+        }
+
+        [HttpGet]
+        [ActionName("GetMemberIdByPhone")]
+        public StringResult GetMemberIdByPhone(string phoneNo, string accessToken)
+        {
+            try
+            {
+              
+                    Logger.Info("Service layer - GetMemberByPhone - phoneNo: [" + phoneNo + "]");
+                    
+                    return new StringResult { Result = CommonHelper.GetMemberIdByPhone(phoneNo) };
+              
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service layer - GetMemberByPhone - FAILED - [Exception: " + ex + "]");
+                
+            }
+            return new StringResult();
+        }
+
+
+
+        [HttpPost]
+        [ActionName("GetMemberIds")]
+        public PhoneEmailListDto GetMemberIds(PhoneEmailListDto phoneEmailListDto)
+        {
+            try
+            {
+                //Logger.LogDebugMessage("Service layer - GetMemberIds - userName: [" + phoneEmailListDto + "]");
+                var memberDataAccess = new MembersDataAccess();
+                return memberDataAccess.GetMemberIds(phoneEmailListDto);
+            }
+            catch (Exception ex)
+            {
+                return new PhoneEmailListDto();    
+            }
+            
+        }
+
 
         [HttpGet]
         [ActionName("GetMemberNameByUserName")]
@@ -323,6 +384,79 @@ namespace Nooch.API.Controllers
             Guid memGuid = Utility.ConvertToGuid(memId);
 
             return new StringResult { Result = CommonHelper.IsWeeklyTransferLimitExceeded(memGuid, 5).ToString() };
+        }
+
+
+        [HttpGet]
+        [ActionName("GetMemberDetails")]
+        public MemberDto GetMemberDetails(string memberId, string accessToken)
+        {
+            Logger.Info("Service Layer -> GetMemberDetails - [MemberId: " + memberId + "]");
+
+            if (CommonHelper.IsValidRequest(accessToken, memberId))
+            {
+                try
+                {
+                    // Get the Member's Account Info
+                    
+                    var memberEntity = CommonHelper.GetMemberDetails(memberId);
+
+                    // Get Synapse Bank Account Info
+                    var synapseBank = CommonHelper.GetSynapseBankAccountDetails(memberId);
+
+                    string accountstatus = "";
+                    if (synapseBank != null)
+                    {
+                        // Now check this bank's status. 
+                        // CLIFF (10/7/15): If the user's ID is verified (after sending SSN info to Synapse), then consider the bank Verified as well
+                        if (memberEntity.IsVerifiedWithSynapse == true)
+                        {
+                            accountstatus = "Verified";
+                        }
+                        else
+                        {
+                            accountstatus = synapseBank.Status;
+                        }
+                    }
+
+                    bool b = (synapseBank != null) ? true : false;
+
+                    // Create Member Object to return to the app
+                    var member = new MemberDto
+                    {
+                        MemberId = memberEntity.MemberId.ToString(),
+                        UserName = CommonHelper.GetDecryptedData(memberEntity.UserName),
+                        Status = memberEntity.Status,
+                        FirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberEntity.FirstName)),
+                        LastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberEntity.LastName)),
+                        PhotoUrl = memberEntity.Photo ?? Path.GetFileName("gv_no_photo.jpg"),
+                        LastLocationLat = memberEntity.LastLocationLat,
+                        LastLocationLng = memberEntity.LastLocationLng,
+                        IsRequiredImmediatley = memberEntity.IsRequiredImmediatley.ToString(),
+                        FacebookAccountLogin = memberEntity.FacebookAccountLogin != null ? CommonHelper.GetDecryptedData(memberEntity.FacebookAccountLogin) : "",
+                        //IsKnoxBankAdded = b, // Why is the Knox & Synapse value both equal to the same thing?
+                        IsSynapseBankAdded = b,
+                        SynapseBankStatus = accountstatus,
+                        IsVerifiedPhone = (memberEntity.IsVerifiedPhone != null) && Convert.ToBoolean(memberEntity.IsVerifiedPhone),
+                        IsSSNAdded = (memberEntity.SSN != null),
+                        DateCreated = memberEntity.DateCreated,
+                        DateOfBirth = (memberEntity.DateOfBirth == null) ? "" : Convert.ToDateTime(memberEntity.DateOfBirth).ToString("MM/dd/yyyy"),
+                        DeviceToken = memberEntity.DeviceToken
+                    };
+
+                    return member;
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Layer -> GetMemberDetails FAILED - [MemberId: " + memberId + "], [Exception: " + ex.InnerException + "]");
+                    throw new Exception("Server Error");
+                }
+                return new MemberDto();
+            }
+            else
+            {
+                throw new Exception("Invalid OAuth 2 Access");
+            }
         }
 
 
