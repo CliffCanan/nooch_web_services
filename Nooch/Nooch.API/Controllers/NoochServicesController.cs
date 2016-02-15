@@ -527,6 +527,114 @@ namespace Nooch.API.Controllers
         }
 
 
+        [HttpGet]
+        [ActionName("SaveMemberDeviceToken")]
+        public StringResult SaveMemberDeviceToken(string memberId, string accessToken, string deviceToken)
+        {
+            Logger.Info("Service Layer -> SaveMemberDeviceToken Initiated - [MemberId: " + memberId + "], [DeviceToken: " + deviceToken + "]");
+
+            StringResult res = new StringResult();
+
+            if (CommonHelper.IsValidRequest(accessToken, memberId))
+            {
+                if (!String.IsNullOrEmpty(deviceToken))
+                {
+                    try
+                    {
+                        MembersDataAccess mda = new MembersDataAccess();
+                        res.Result = mda.SaveMemberDeviceToken(memberId, deviceToken);
+
+                        return res;
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error("Service Layer -> SaveMemberDeviceToken FAILED - [MemberId: " + memberId + "]. Exception: [" + ex + "]");
+
+                        throw new Exception("Server Error.");
+                    }
+                }
+                else
+                {
+                    res.Result = "No DeviceToken was sent!";
+                }
+
+                res.Result = "Failed to save DeviceToken";
+                return res;
+            }
+            else
+            {
+                Logger.Error("Service Layer -> SaveMemberDeviceToken FAILED - [MemberId: " + memberId + "]. INVALID OAUTH 2 ACCESS.");
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
+
+        private string GenerateAccessToken()
+        {
+            byte[] time = BitConverter.GetBytes(DateTime.UtcNow.ToBinary());
+            byte[] key = Guid.NewGuid().ToByteArray();
+            string token = Convert.ToBase64String(time.Concat(key).ToArray());
+            return CommonHelper.GetEncryptedData(token);
+        }
+
+        [HttpGet]
+        [ActionName("LoginRequest")]
+        public StringResult LoginRequest(string userName, string pwd, Boolean rememberMeEnabled, decimal lat,
+            decimal lng, string udid, string devicetoken)
+        {
+            try
+            {
+                Logger.Info("Service Layer -> LoginRequest - [userName: " + userName + "], [UDID: " + udid + "], [devicetoken: " + devicetoken + "]");
+
+                var mda = new MembersDataAccess();
+                string cookie = mda.LoginRequest(userName, pwd, rememberMeEnabled, lat, lng, udid, devicetoken);
+
+                if (string.IsNullOrEmpty(cookie))
+                {
+                    cookie = "Authentication failed.";
+                    return new StringResult { Result = "Invalid Login or Password" };
+                }
+                else if (cookie == "Temporarily_Blocked")
+                {
+                    return new StringResult { Result = "Temporarily_Blocked" };
+                }
+                else if (cookie == "Suspended")
+                {
+                    return new StringResult { Result = "Suspended" };
+                }
+                else if (cookie == "Registered")
+                {
+                    string state = GenerateAccessToken();
+                    CommonHelper.UpdateAccessToken(userName, state);
+                    return new StringResult { Result = state };
+                }
+                else if (cookie == "Invalid user id or password.")
+                {
+                    return new StringResult { Result = "Invalid user id or password." };
+                }
+                else if (cookie == "The password you have entered is incorrect.")
+                {
+                    return new StringResult { Result = "The password you have entered is incorrect." };
+                }
+                else if (cookie == "Success")
+                {
+
+
+                    string state = GenerateAccessToken();
+                    CommonHelper.UpdateAccessToken(userName, state);
+                    return new StringResult { Result = state };
+                }
+                else
+                {
+                    return new StringResult { Result = cookie };
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Layer -> LoginRequest FAILED - [userName: " + userName + "], [Exception: " + ex + "]");
+                throw new Exception("Server Error");
+            }
+
+        }
 
     }
 

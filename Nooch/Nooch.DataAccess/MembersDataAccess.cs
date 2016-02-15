@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Nooch.Common;
 using Nooch.Common.Entities.MobileAppOutputEnities;
 using Nooch.Common.Resources;
+using Nooch.Common.Rules;
 using Nooch.Data;
 
 namespace Nooch.DataAccess
@@ -693,5 +694,273 @@ namespace Nooch.DataAccess
 
         }
 
+
+        public string SaveMemberDeviceToken(string MemberId, string DeviceToken)
+        {
+            if (DeviceToken.Length < 10)
+            {
+                return "Invalid Device Token passed - too short.";
+            }
+
+            Guid MemId = Utility.ConvertToGuid(MemberId);
+
+
+
+            var noochMember = _dbContext.Members.FirstOrDefault(m => m.MemberId == MemId && m.IsDeleted == false);
+
+            if (noochMember != null)
+            {
+                noochMember.DeviceToken = DeviceToken;
+                noochMember.DateModified = DateTime.Now;
+                _dbContext.SaveChanges();
+
+                return "DeviceToken saved successfully.";
+            }
+            else
+            {
+                return "Member ID not found or Member status deleted.";
+            }
+
+        }
+
+
+
+
+        private static void ChangeStatus(Member member, Boolean rememberMeEnabled)
+        {
+            if (member.Status == Constants.STATUS_TEMPORARILY_BLOCKED)
+            {
+                member.Status = Constants.STATUS_ACTIVE;
+            }
+            member.RememberMeEnabled = rememberMeEnabled;
+        }
+
+        public string LoginRequest(string userName, string password, Boolean rememberMeEnabled, decimal lat, decimal lng, string udid, string devicetoken)
+        {
+            Logger.Info("MDA -> LoginRequest Initiated - [UserName: " + userName + "], [UDID: " + udid + "]");
+
+            var userEmail = userName;
+            var userNameLowerCase = CommonHelper.GetEncryptedData(userName.ToLower());
+            userName = CommonHelper.GetEncryptedData(userName);
+
+            
+            var memberEntity =
+                _dbContext.Members.FirstOrDefault(m => m.UserNameLowerCase == userNameLowerCase && m.IsDeleted == false);
+
+                if (memberEntity != null)
+                {
+                    var memberNotifications = CommonHelper.GetMemberNotificationSettingsByUserName(userEmail);
+
+                    switch (memberEntity.Status)
+                    {
+                        case "Temporarily_Blocked":
+                            Logger.Info("MDA -> LoginRequest FAILED - User is Already TEMPORARILY_BLOCKED - UserName: [" + userName + "]");
+                            return "Temporarily_Blocked";
+                        case "Suspended":
+                            Logger.Info("MDA -> LoginRequest FAILED - User is Already SUSPENDED - UserName: [" + userName + "]");
+                            return "Suspended";
+                        default:
+                            if (memberEntity.Status == "Active" ||
+                                memberEntity.Status == "Registered" ||
+                                memberEntity.Status == "NonRegistered" ||
+                                memberEntity.Type == "Personal - Browser")
+                            {
+                                #region
+
+                                #region Check If User Is Already Logged In
+
+                                // Check if user already logged in or not.  If yes, then send Auto Logout email
+                                if (!String.IsNullOrEmpty(memberEntity.AccessToken) &&
+                                    !String.IsNullOrEmpty(memberEntity.UDID1) &&
+                                    memberEntity.IsOnline == true &&
+                                    memberEntity.UDID1.ToLower() != udid.ToLower())
+                                {
+                                    Logger.Info("MDA -> LoginRequest - Sending Automatic Logout Notification - [UserName: " + userEmail +
+                                                           "], [UDID: " + udid +
+                                                           "], [AccessToken: " + memberEntity.AccessToken + "]");
+
+                                    var fromAddress = Utility.GetValueFromConfig("adminMail");
+                                    var toAddress = userEmail;
+                                    var userFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberEntity.FirstName));
+
+                                    string msg = "Hi,\n\nYou have been automatically logged out from your Nooch account because you signed in from a new device.\n" +
+                                                 "If this is a mistake and you feel your account may be compromised, please contact support@nooch.com immediately.  - Team Nooch";
+
+                                    try
+                                    {
+                                        Utility.SendEmail("", MailPriority.High, fromAddress, toAddress, null,
+                                            "Nooch Automatic Logout", null, null, null, null, msg);
+
+                                        Logger.Info("MDA -> LoginRequest - Automatic Log Out Email sent to [" + toAddress + "] successfully.");
+
+                                        // Checking if phone exists and isVerified before sending SMS to user
+                                        if (memberEntity.ContactNumber != null && memberEntity.IsVerifiedPhone == true)
+                                        {
+                                            try
+                                            {
+                                                //msg = "Hi, You were automatically logged out from your Nooch account b/c you signed in from another device. " +
+                                                // "If this is a mistake, contact support@nooch.com immediately. - Nooch";
+                                                //string result = UtilityDataAccess.SendSMS(memberEntity.ContactNumber, msg, memberEntity.AccessToken, memberEntity.MemberId.ToString());
+
+                                                //Logger.LogDebugMessage("MDA -> LoginRequest - Automatic Log Out SMS sent to [" + memberEntity.ContactNumber + "] successfully. [SendSMS Result: " + result + "]");
+                                            }
+                                            catch (Exception ex)
+                                            {
+                                                Logger.Error("MDA -> LoginRequest - Automatic Log Out SMS NOT sent to [" + memberEntity.ContactNumber + "], " +
+                                                                       "Exception: [" + ex.Message + "]");
+                                            }
+                                        }
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Logger.Error("MDA -> LoginRequest - Automatic Log Out email NOT sent to [" + toAddress + "]. Problem occured in sending email.");
+                                    }
+
+                                }
+
+                                #endregion Check If User Is Already Logged In
+
+                                // Update UDID of device from which the user has logged in.
+                                if (!String.IsNullOrEmpty(udid))
+                                {
+                                    memberEntity.UDID1 = udid;
+                                }
+                                if (!String.IsNullOrEmpty(devicetoken))
+                                {
+                                    memberEntity.DeviceToken = devicetoken;
+                                }
+
+                                memberEntity.LastLocationLat = lat;
+                                memberEntity.LastLocationLng = lng;
+                                memberEntity.IsOnline = true;
+
+                                var currentTimeMinus24Hours = DateTime.Now.AddHours(-24);
+                                int loginRetryCountInDb = memberEntity.InvalidLoginAttemptCount.Equals(null)
+                                    ? 0
+                                    : memberEntity.InvalidLoginAttemptCount.Value;
+
+                                // Check (FPTime || InvalidLoginAttemptTime) > CurrentTime - 24 hrs { if true, delete past records and insert new}                    
+                                bool isInvalidLoginTimeOver = new InvalidAttemptDurationSpecification().IsSatisfiedBy(memberEntity.InvalidLoginTime,
+                                    currentTimeMinus24Hours);
+
+                                if (isInvalidLoginTimeOver)
+                                {
+                                    ChangeStatus(memberEntity, rememberMeEnabled);
+
+                                    //Reset attempt count
+                                    memberEntity.InvalidLoginTime = null;
+                                    memberEntity.InvalidLoginAttemptCount = null;
+                                    //membersRepository.UpdateEntity(memberEntity);
+                                    _dbContext.SaveChanges();
+                                    loginRetryCountInDb = memberEntity.InvalidLoginAttemptCount.Equals(null)
+                                        ? 0
+                                        : memberEntity.InvalidLoginAttemptCount.Value;
+
+                                    if (!memberEntity.Password.Equals(password.Replace(" ", "+")))
+                                    {
+                                        return CommonHelper.IncreaseInvalidLoginAttemptCount(memberEntity.MemberId.ToString(), loginRetryCountInDb);
+                                    }
+                                }
+
+                                if (loginRetryCountInDb < 4 && memberEntity.Password.Equals(password.Replace(" ", "+")))
+                                {
+                                    //Reset attempt count
+                                    memberEntity.InvalidLoginTime = null;
+                                    memberEntity.InvalidLoginAttemptCount = null;
+                                    memberEntity.InvalidPinAttemptCount = null;
+                                    memberEntity.InvalidPinAttemptTime = null;
+
+                                    memberEntity.Status = Constants.STATUS_ACTIVE;
+                                    _dbContext.SaveChanges();
+                                    //membersRepository.UpdateEntity(memberEntity);
+
+                                    return "Success"; // active nooch member  
+                                }
+
+                                 if (memberEntity.InvalidLoginAttemptCount == null ||
+                                         memberEntity.InvalidLoginAttemptCount == 0)
+                                {
+                                    // This is the first invalid try
+                                    Logger.Info("MDA -> LoginRequest FAILED - User's PW was incorrect - 1st Invalid Attempt - UserName: [" + userName + "]");
+
+                                    return CommonHelper.IncreaseInvalidLoginAttemptCount(memberEntity.MemberId.ToString(), loginRetryCountInDb);
+                                }
+
+                                 if (loginRetryCountInDb == 4)
+                                {
+                                    // Already Suspended
+                                    Logger.Info("MDA -> LoginRequest FAILED - User's PW was incorrect - User Already Suspended - UserName: [" + userName + "]");
+
+                                    return String.Concat("Your account has been temporarily blocked.  You can login only after 24 hours from this time: ",
+                                        memberEntity.InvalidLoginTime);
+                                }
+
+                                else if (loginRetryCountInDb == 3)
+                                {
+                                    // This is 4th try, so suspend the member
+                                    Logger.Info("MDA -> LoginRequest FAILED - User's PW was incorrect - 3rd Invalid Attempt, now suspending user - UserName: [" + userName + "]");
+
+                                    memberEntity.InvalidLoginTime = DateTime.Now;
+                                    memberEntity.InvalidLoginAttemptCount = loginRetryCountInDb + 1;
+                                    memberEntity.Status = Constants.STATUS_TEMPORARILY_BLOCKED;
+                                    _dbContext.SaveChanges();
+                                    //membersRepository.UpdateEntity(memberEntity);
+
+                                    // email to user after 3 invalid login attemt
+                                    #region SendingEmailToUser
+
+                                    var tokens = new Dictionary<string, string>
+                                    {
+                                        {
+                                            Constants.PLACEHOLDER_FIRST_NAME,
+                                            CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberEntity.FirstName))
+                                        }
+                                    };
+
+                                    try
+                                    {
+                                        var fromAddress = Utility.GetValueFromConfig("adminMail");
+                                        string emailAddress = CommonHelper.GetDecryptedData(memberEntity.UserName);
+                                        Logger.Info(
+                                            "SupendMember - Attempt to send mail for Supend Member[ memberId:" +
+                                            memberEntity.MemberId + "].");
+                                        Utility.SendEmail("userSuspended", MailPriority.High, fromAddress,
+                                            emailAddress, null, "Your Nooch account has been suspended", null, tokens, null,
+                                            null, null);
+                                    }
+                                    catch (Exception)
+                                    {
+                                        Logger.Info("SupendMember - Supend Member status email not send to [" +
+                                                               memberEntity.MemberId +
+                                                               "]. Problem occured in sending Supend Member status mail. ");
+                                    }
+
+                                    #endregion
+
+                                    return String.Concat(
+                                        "Your account has been temporarily blocked.  You can login only after 24 hours from this time: ",
+                                        memberEntity.InvalidLoginTime);
+                                }
+
+                                return CommonHelper.IncreaseInvalidLoginAttemptCount(memberEntity.MemberId.ToString(), loginRetryCountInDb);
+
+                                #endregion
+                            }
+                            else
+                            {
+                                return "Invalid user id or password.";
+                            }
+                    }
+                }
+                else
+                {
+                    return "Invalid user id or password.";
+                }
+            
+        }
+
+        
+
+        
     }
 }
