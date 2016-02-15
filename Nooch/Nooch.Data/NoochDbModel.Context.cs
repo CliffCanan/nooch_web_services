@@ -61,5 +61,18 @@ namespace Nooch.Data
     
             return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction<GetMostFrequentFriends_Result>("GetMostFrequentFriends", memberIdParameter);
         }
+    
+        public virtual ObjectResult<string> GetReportsForMember(string memberId, string getWhat)
+        {
+            var memberIdParameter = memberId != null ?
+                new ObjectParameter("MemberId", memberId) :
+                new ObjectParameter("MemberId", typeof(string));
+    
+            var getWhatParameter = getWhat != null ?
+                new ObjectParameter("GetWhat", getWhat) :
+                new ObjectParameter("GetWhat", typeof(string));
+    
+            return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction<string>("GetReportsForMember", memberIdParameter, getWhatParameter);
+        }
     }
 }

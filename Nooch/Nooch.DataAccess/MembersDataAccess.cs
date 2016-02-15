@@ -654,5 +654,44 @@ namespace Nooch.DataAccess
 
         }
 
+        public string GetMemberStats(string MemberId, string query)
+        {
+            try
+            {
+
+
+                return _dbContext.GetReportsForMember(MemberId, query).SingleOrDefault();
+            }
+            catch
+            {
+            }
+            return "";
+        }
+
+
+        public List<Member> getInvitedMemberList(string memberId)
+        {
+            Logger.Info("MDA -> getInvitedMemberList - memberId: [" + memberId + "]");
+
+
+            var id = Utility.ConvertToGuid(memberId);
+            //Get the member details
+
+            var noochMember = _dbContext.Members.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
+            if (noochMember != null)
+            {
+                Guid n = Utility.ConvertToGuid(noochMember.InviteCodeId.ToString());
+
+                var allnoochMember =
+                    _dbContext.Members.Where(m => m.InviteCodeId == noochMember.InviteCodeId).ToList();
+                return allnoochMember;
+            }
+            else
+            {
+                return null;
+            }
+
+        }
+
     }
 }

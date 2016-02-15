@@ -651,6 +651,10 @@
         <Function Name="GetMostFrequentFriends" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
           <Parameter Name="MemberId" Type="varchar" Mode="In" />
         </Function>
+        <Function Name="GetReportsForMember" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="MemberId" Type="varchar" Mode="In" />
+          <Parameter Name="GetWhat" Type="varchar" Mode="In" />
+        </Function>
         <EntityContainer Name="NOOCHModelStoreContainer">
           <EntitySet Name="AdminUsers" EntityType="Self.AdminUsers" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="AuthenticationTokens" EntityType="Self.AuthenticationTokens" Schema="dbo" store:Type="Tables" />
@@ -932,7 +936,11 @@
             <End Role="SynapseBankLoginResult" EntitySet="SynapseBankLoginResults" />
           </AssociationSet>
           <FunctionImport Name="GetMostFrequentFriends" ReturnType="Collection(NOOCHModel.GetMostFrequentFriends_Result)">
+          <Parameter Name="MemberId" Mode="In" Type="String" />
+          </FunctionImport>
+          <FunctionImport Name="GetReportsForMember" ReturnType="Collection(String)">
             <Parameter Name="MemberId" Mode="In" Type="String" />
+            <Parameter Name="GetWhat" Mode="In" Type="String" />
           </FunctionImport>
         </EntityContainer>
         <EntityType Name="MemberPrivacySetting">
@@ -2033,6 +2041,7 @@
               </ComplexTypeMapping>
             </ResultMapping>
           </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="GetReportsForMember" FunctionName="NOOCHModel.Store.GetReportsForMember" />
         </EntityContainerMapping>
       </Mapping>
     </edmx:Mappings>

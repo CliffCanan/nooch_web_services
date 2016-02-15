@@ -61,6 +61,7 @@
     <Compile Include="Entities\MobileAppInputEntities\UpdateMemberIpInput.cs" />
     <Compile Include="Entities\MobileAppOutputEnities\MemberBusinessDto.cs" />
     <Compile Include="Entities\MobileAppOutputEnities\MemberDto.cs" />
+    <Compile Include="Entities\MobileAppOutputEnities\MemberForInvitedMembersList.cs" />
     <Compile Include="Entities\MobileAppOutputEnities\MemberOutputEntity.cs" />
     <Compile Include="Entities\MobileAppOutputEnities\MostFrequentFriends.cs" />
     <Compile Include="Entities\MobileAppOutputEnities\PendingTransCoutResult.cs" />

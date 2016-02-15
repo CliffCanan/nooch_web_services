@@ -483,5 +483,55 @@ namespace Nooch.API.Controllers
             }
         }
 
+
+        [HttpGet]
+        [ActionName("GetMemberStats")]
+        public StringResult GetMemberStats(string MemberId, string accesstoken, string query)
+        {
+            if (CommonHelper.IsValidRequest(accesstoken, MemberId))
+            {
+                try
+                {
+                    //Logger.LogDebugMessage("Service layer - GetMemberStats - MemberId].");
+                    var memberDataAccess = new MembersDataAccess();
+                    return new StringResult { Result = memberDataAccess.GetMemberStats(MemberId, query) };
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Layer -> GetMemberStats FAILED - [Exception: " + ex + "]");
+
+                    throw new Exception("Invalid OAuth 2 Access");
+                }
+
+            }
+            else
+            {
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
+
+        [HttpPost]
+        [ActionName("getInvitedMemberList")]
+        public List<MemberForInvitedMembersList> getInvitedMemberList(string memberId, string accessToken)
+        {
+            if (CommonHelper.IsValidRequest(accessToken, memberId))
+            {
+                var memberDataAccess = new MembersDataAccess();
+                List<Member> members = memberDataAccess.getInvitedMemberList(memberId);
+                return (from fMember in members let config = new MapperConfiguration(cfg => { cfg.CreateMap<Member, MemberForInvitedMembersList>().BeforeMap((src, dest) => src.FirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(src.FirstName))).BeforeMap((src, dest) => src.LastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(src.LastName))).BeforeMap((src, dest) => src.UserName = CommonHelper.GetDecryptedData(src.UserName)); }) let mapper = config.CreateMapper() select mapper.Map<Member, MemberForInvitedMembersList>(fMember)).ToList();
+            }
+            else
+            {
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
+
+
+
     }
+
+
+
+
+
 }
