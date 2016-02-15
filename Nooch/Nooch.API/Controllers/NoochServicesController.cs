@@ -166,7 +166,7 @@ namespace Nooch.API.Controllers
             try
             {
                 Logger.Info("Service Layer -> GetPhoneNumberByMemberId Initiated - [MemberID: " + memberId + "]");
-                
+
                 return new StringResult
                 {
                     Result = CommonHelper.GetPhoneNumberByMemberId(memberId)
@@ -185,16 +185,16 @@ namespace Nooch.API.Controllers
         {
             try
             {
-              
-                    Logger.Info("Service layer - GetMemberByPhone - phoneNo: [" + phoneNo + "]");
-                    
-                    return new StringResult { Result = CommonHelper.GetMemberIdByPhone(phoneNo) };
-              
+
+                Logger.Info("Service layer - GetMemberByPhone - phoneNo: [" + phoneNo + "]");
+
+                return new StringResult { Result = CommonHelper.GetMemberIdByPhone(phoneNo) };
+
             }
             catch (Exception ex)
             {
                 Logger.Error("Service layer - GetMemberByPhone - FAILED - [Exception: " + ex + "]");
-                
+
             }
             return new StringResult();
         }
@@ -213,9 +213,9 @@ namespace Nooch.API.Controllers
             }
             catch (Exception ex)
             {
-                return new PhoneEmailListDto();    
+                return new PhoneEmailListDto();
             }
-            
+
         }
 
 
@@ -339,11 +339,11 @@ namespace Nooch.API.Controllers
                 Logger.Error("Service Layer - GetEncryptedData FAILED - sourceData: [" + sourceData + "]. Exception: [" + ex + "]");
                 return new MemberDto();
             }
-            
+
         }
 
 
-      
+
         public MemberDto GetDecryptedData(string sourceData)
         {
             try
@@ -360,9 +360,9 @@ namespace Nooch.API.Controllers
             catch (Exception ex)
             {
                 Logger.Error("Service Layer - GetDecryptedData FAILED - sourceData: [" + sourceData + "]. Exception: [" + ex + "]");
-                return new MemberDto();    
+                return new MemberDto();
             }
-            
+
         }
 
         public StringResult GetServerCurrentTime()
@@ -373,7 +373,7 @@ namespace Nooch.API.Controllers
             }
             catch (Exception ex)
             {
-                
+
                 return new StringResult { Result = "" };
             }
         }
@@ -398,7 +398,7 @@ namespace Nooch.API.Controllers
                 try
                 {
                     // Get the Member's Account Info
-                    
+
                     var memberEntity = CommonHelper.GetMemberDetails(memberId);
 
                     // Get Synapse Bank Account Info
@@ -459,6 +459,29 @@ namespace Nooch.API.Controllers
             }
         }
 
+        [HttpGet]
+        [ActionName("GetMostFrequentFriends")]
+        public List<GetMostFrequentFriends_Result> GetMostFrequentFriends(string MemberId, string accesstoken)
+        {
+            if (CommonHelper.IsValidRequest(accesstoken, MemberId))
+            {
+                try
+                {
+
+                    MembersDataAccess obj = new MembersDataAccess();
+                    return obj.GetMostFrequentFriends(MemberId);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Layer -> GetMostFrequentFriends FAILED - [Exception: " + ex + "]");
+                    throw new Exception("Error");
+                }
+            }
+            else
+            {
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
 
     }
 }

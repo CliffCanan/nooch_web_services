@@ -59,6 +59,9 @@
     <Compile Include="GeoLocation.cs">
       <DependentUpon>NoochDbModel.tt</DependentUpon>
     </Compile>
+    <Compile Include="GetMostFrequentFriends_Result.cs">
+      <DependentUpon>NoochDbModel.tt</DependentUpon>
+    </Compile>
     <Compile Include="InviteCode.cs">
       <DependentUpon>NoochDbModel.tt</DependentUpon>
     </Compile>

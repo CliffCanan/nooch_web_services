@@ -12,6 +12,8 @@ namespace Nooch.Data
     using System;
     using System.Data.Entity;
     using System.Data.Entity.Infrastructure;
+    using System.Data.Entity.Core.Objects;
+    using System.Linq;
     
     public partial class NOOCHEntities : DbContext
     {
@@ -50,5 +52,14 @@ namespace Nooch.Data
         public virtual DbSet<SynapseSupportedBank> SynapseSupportedBanks { get; set; }
         public virtual DbSet<TenantsIdDocument> TenantsIdDocuments { get; set; }
         public virtual DbSet<UnitsOccupiedByTenant> UnitsOccupiedByTenants { get; set; }
+    
+        public virtual ObjectResult<GetMostFrequentFriends_Result> GetMostFrequentFriends(string memberId)
+        {
+            var memberIdParameter = memberId != null ?
+                new ObjectParameter("MemberId", memberId) :
+                new ObjectParameter("MemberId", typeof(string));
+    
+            return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction<GetMostFrequentFriends_Result>("GetMostFrequentFriends", memberIdParameter);
+        }
     }
 }

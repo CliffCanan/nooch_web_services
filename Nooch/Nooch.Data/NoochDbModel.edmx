@@ -648,6 +648,9 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <Function Name="GetMostFrequentFriends" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="MemberId" Type="varchar" Mode="In" />
+        </Function>
         <EntityContainer Name="NOOCHModelStoreContainer">
           <EntitySet Name="AdminUsers" EntityType="Self.AdminUsers" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="AuthenticationTokens" EntityType="Self.AuthenticationTokens" Schema="dbo" store:Type="Tables" />
@@ -928,6 +931,9 @@
             <End Role="Member" EntitySet="Members" />
             <End Role="SynapseBankLoginResult" EntitySet="SynapseBankLoginResults" />
           </AssociationSet>
+          <FunctionImport Name="GetMostFrequentFriends" ReturnType="Collection(NOOCHModel.GetMostFrequentFriends_Result)">
+            <Parameter Name="MemberId" Mode="In" Type="String" />
+          </FunctionImport>
         </EntityContainer>
         <EntityType Name="MemberPrivacySetting">
           <Key>
@@ -1409,6 +1415,12 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <ComplexType Name="GetMostFrequentFriends_Result">
+          <Property Type="Int32" Name="Id" Nullable="false" />
+          <Property Type="Int32" Name="Frequency" Nullable="true" />
+          <Property Type="String" Name="SenderId" Nullable="true" MaxLength="50" />
+          <Property Type="String" Name="RecepientId" Nullable="true" MaxLength="50" />
+        </ComplexType>
       </Schema>
     </edmx:ConceptualModels>
     <!-- C-S mapping content -->
@@ -2011,6 +2023,16 @@
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
+          <FunctionImportMapping FunctionImportName="GetMostFrequentFriends" FunctionName="NOOCHModel.Store.GetMostFrequentFriends">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="NOOCHModel.GetMostFrequentFriends_Result">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="Frequency" ColumnName="Frequency" />
+                <ScalarProperty Name="SenderId" ColumnName="SenderId" />
+                <ScalarProperty Name="RecepientId" ColumnName="RecepientId" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
         </EntityContainerMapping>
       </Mapping>
     </edmx:Mappings>

@@ -269,217 +269,217 @@ namespace Nooch.DataAccess
 
             Guid memId = Utility.ConvertToGuid(MemberId);
 
-            
-                bool ipSavedSuccessfully = false;
-                bool udidIdSavedSuccessfully = false;
 
-                #region Save IP Address
+            bool ipSavedSuccessfully = false;
+            bool udidIdSavedSuccessfully = false;
 
-                if (!String.IsNullOrEmpty(IP))
+            #region Save IP Address
+
+            if (!String.IsNullOrEmpty(IP))
+            {
+                try
                 {
-                    try
+
+                    var ipAddressesFound = _dbContext.MembersIPAddresses.Where(m => m.MemberId == memId).ToList();
+
+                    if (ipAddressesFound.Count() > 5)
                     {
-                        
-                        var ipAddressesFound = _dbContext.MembersIPAddresses.Where(m => m.MemberId == memId).ToList();  
+                        // If there are already 5 entries, update the one added first (the oldest)
+                        var lastIpFound = (from c in _dbContext.MembersIPAddresses where c.MemberId == memId select c)
+                                          .OrderBy(m => m.ModifiedOn)
+                                          .Take(1)
+                                          .FirstOrDefault();
 
-                        if (ipAddressesFound.Count()> 5)
+                        lastIpFound.ModifiedOn = DateTime.Now;
+                        lastIpFound.Ip = IP;
+
+
+
+                        int a = _dbContext.SaveChanges();
+
+                        if (a > 0)
                         {
-                            // If there are already 5 entries, update the one added first (the oldest)
-                            var lastIpFound = (from c in _dbContext.MembersIPAddresses where c.MemberId == memId select c)
-                                              .OrderBy(m => m.ModifiedOn)
-                                              .Take(1)
-                                              .FirstOrDefault();
-
-                            lastIpFound.ModifiedOn = DateTime.Now;
-                            lastIpFound.Ip = IP;
-
-
-
-                            int a = _dbContext.SaveChanges();
-
-                            if (a > 0)
-                            {
-                                Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId SUCCESS For Saving IP Address (1) - [MemberId: " + MemberId + "]");
-                                ipSavedSuccessfully = true;
-                            }
-                            else
-                            {
-                                Logger.Error("MDA -> UpdateMemberIPAddressAndDeviceId FAILED Trying To Saving IP Address (1) in DB - [MemberId: " + MemberId + "]");
-                            }
+                            Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId SUCCESS For Saving IP Address (1) - [MemberId: " + MemberId + "]");
+                            ipSavedSuccessfully = true;
                         }
                         else
                         {
-                            // Otherwise, make a new entry
-                            MembersIPAddress mip = new MembersIPAddress();
-                            mip.MemberId = memId;
-                            mip.ModifiedOn = DateTime.Now;
-                            mip.Ip = IP;
-                            _dbContext.MembersIPAddresses.Add(mip);
-                            int b = _dbContext.SaveChanges();
-
-                            if (b > 0)
-                            {
-                                Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId SUCCESS For Saving IP Address (2) - [MemberId: " + MemberId + "]");
-                                ipSavedSuccessfully = true;
-                            }
-                            else
-                            {
-                                Logger.Error("MDA -> UpdateMemberIPAddressAndDeviceId FAILED Trying To Saving IP Address (2) in DB - [MemberId: " + MemberId + "]");
-                            }
+                            Logger.Error("MDA -> UpdateMemberIPAddressAndDeviceId FAILED Trying To Saving IP Address (1) in DB - [MemberId: " + MemberId + "]");
                         }
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        Logger.Error("MDA -> UpdateMemberIPAddressAndDeviceId FAILED For Saving IP Address - [Exception: " + ex + "]");
-                    }
-                }
-                else
-                {
-                    Logger.Error("MDA -> UpdateMemberIPAddressAndDeviceId - No IP Address Passed - [MemberId: " + MemberId + "]");
-                }
+                        // Otherwise, make a new entry
+                        MembersIPAddress mip = new MembersIPAddress();
+                        mip.MemberId = memId;
+                        mip.ModifiedOn = DateTime.Now;
+                        mip.Ip = IP;
+                        _dbContext.MembersIPAddresses.Add(mip);
+                        int b = _dbContext.SaveChanges();
 
-                #endregion Save IP Address
-
-
-                #region Save Device ID
-
-                if (!String.IsNullOrEmpty(DeviceId))
-                {
-                    try
-                    {
-                        // CLIFF (8/12/15): This "Device ID" will be stored in Nooch's DB as "UDID1" and is specifically for Synapse's "Fingerprint" requirement...
-                        //                  NOT for push notifications, which should use the "DeviceToken" in Nooch's DB.  (Confusing, but they are different values)
-                        
-                        var member = _dbContext.Members.FirstOrDefault(m => m.MemberId==memId);
-
-                        if (member != null)
+                        if (b > 0)
                         {
-                            member.UDID1 = DeviceId;
-                            member.DateModified = DateTime.Now;
-                        }
-                        int c = _dbContext.SaveChanges();
-
-                        if (c > 0)
-                        {
-                            Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId SUCCESS For Saving Device ID - [MemberId: " + MemberId + "]");
-                            udidIdSavedSuccessfully = true;
+                            Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId SUCCESS For Saving IP Address (2) - [MemberId: " + MemberId + "]");
+                            ipSavedSuccessfully = true;
                         }
                         else
                         {
-                            Logger.Error("MDA -> UpdateMemberIPAddressAndDeviceId FAILED Trying To Saving Device ID in DB - [MemberId: " + MemberId + "]");
+                            Logger.Error("MDA -> UpdateMemberIPAddressAndDeviceId FAILED Trying To Saving IP Address (2) in DB - [MemberId: " + MemberId + "]");
                         }
                     }
-                    catch (Exception ex)
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("MDA -> UpdateMemberIPAddressAndDeviceId FAILED For Saving IP Address - [Exception: " + ex + "]");
+                }
+            }
+            else
+            {
+                Logger.Error("MDA -> UpdateMemberIPAddressAndDeviceId - No IP Address Passed - [MemberId: " + MemberId + "]");
+            }
+
+            #endregion Save IP Address
+
+
+            #region Save Device ID
+
+            if (!String.IsNullOrEmpty(DeviceId))
+            {
+                try
+                {
+                    // CLIFF (8/12/15): This "Device ID" will be stored in Nooch's DB as "UDID1" and is specifically for Synapse's "Fingerprint" requirement...
+                    //                  NOT for push notifications, which should use the "DeviceToken" in Nooch's DB.  (Confusing, but they are different values)
+
+                    var member = _dbContext.Members.FirstOrDefault(m => m.MemberId == memId);
+
+                    if (member != null)
                     {
-                        Logger.Error("MDA -> UpdateMemberIPAddressAndDeviceId FAILED For Saving Device ID - [Exception: " + ex + "]");
+                        member.UDID1 = DeviceId;
+                        member.DateModified = DateTime.Now;
+                    }
+                    int c = _dbContext.SaveChanges();
+
+                    if (c > 0)
+                    {
+                        Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId SUCCESS For Saving Device ID - [MemberId: " + MemberId + "]");
+                        udidIdSavedSuccessfully = true;
+                    }
+                    else
+                    {
+                        Logger.Error("MDA -> UpdateMemberIPAddressAndDeviceId FAILED Trying To Saving Device ID in DB - [MemberId: " + MemberId + "]");
                     }
                 }
-                else
+                catch (Exception ex)
                 {
-                    Logger.Error("MDA -> UpdateMemberIPAddressAndDeviceId - No Device ID Passed - [MemberId: " + MemberId + "]");
+                    Logger.Error("MDA -> UpdateMemberIPAddressAndDeviceId FAILED For Saving Device ID - [Exception: " + ex + "]");
                 }
+            }
+            else
+            {
+                Logger.Error("MDA -> UpdateMemberIPAddressAndDeviceId - No Device ID Passed - [MemberId: " + MemberId + "]");
+            }
 
-                #endregion Save Device ID
+            #endregion Save Device ID
 
-                if (ipSavedSuccessfully && udidIdSavedSuccessfully)
-                {
-                    return "Both IP and DeviceID saved successfully.";
-                }
-                else if (ipSavedSuccessfully)
-                {
-                    return "Only IP address saved successfully, not DeviceID.";
-                }
-                else if (udidIdSavedSuccessfully)
-                {
-                    return "Only DeviceID saved successfully, not IP Address.";
-                }
+            if (ipSavedSuccessfully && udidIdSavedSuccessfully)
+            {
+                return "Both IP and DeviceID saved successfully.";
+            }
+            else if (ipSavedSuccessfully)
+            {
+                return "Only IP address saved successfully, not DeviceID.";
+            }
+            else if (udidIdSavedSuccessfully)
+            {
+                return "Only DeviceID saved successfully, not IP Address.";
+            }
 
-                return "Neither IP address nor DeviceID were saved.";
-           
+            return "Neither IP address nor DeviceID were saved.";
+
         }
 
         public string getReferralCode(String memberId)
         {
             Logger.Info("MDA -> getReferralCode Initiated - [MemberId: " + memberId + "]");
-         
-                var id = Utility.ConvertToGuid(memberId);
-              
-                var noochMember = _dbContext.Members.FirstOrDefault(mm => mm.MemberId == id && mm.IsDeleted==false); 
-                if (noochMember != null)
+
+            var id = Utility.ConvertToGuid(memberId);
+
+            var noochMember = _dbContext.Members.FirstOrDefault(mm => mm.MemberId == id && mm.IsDeleted == false);
+            if (noochMember != null)
+            {
+                if (noochMember.InviteCodeId != null)
                 {
-                    if (noochMember.InviteCodeId != null)
+                    Guid v = Utility.ConvertToGuid(noochMember.InviteCodeId.ToString());
+
+                    var inviteMember = _dbContext.InviteCodes.FirstOrDefault(m => m.InviteCodeId == v);
+                    if (inviteMember != null)
                     {
-                        Guid v = Utility.ConvertToGuid(noochMember.InviteCodeId.ToString());
-                        
-                        var inviteMember = _dbContext.InviteCodes.FirstOrDefault(m => m.InviteCodeId == v);
-                        if (inviteMember != null)
-                        {
-                            return inviteMember.code;
-                        }
-                        return "";
+                        return inviteMember.code;
                     }
-                    //No referal code
                     return "";
                 }
+                //No referal code
+                return "";
+            }
             return "Invalid";
         }
         public string setReferralCode(Guid memberId)
         {
             Logger.Info("MDA -> setReferralCode - [MemberID: " + memberId + "]");
 
-           
-                try
-                {
-                    // Get the member details
-                  
-                    var noochMember = _dbContext.Members.FirstOrDefault(mm => mm.MemberId == memberId);
 
-                    if (noochMember != null)
+            try
+            {
+                // Get the member details
+
+                var noochMember = _dbContext.Members.FirstOrDefault(mm => mm.MemberId == memberId);
+
+                if (noochMember != null)
+                {
+                    // Check if the user already has an invite code generted or not
+                    string existing = getReferralCode(memberId.ToString());
+
+                    if (existing == "")
                     {
-                        // Check if the user already has an invite code generted or not
-                        string existing = getReferralCode(memberId.ToString());
+                        // Generate random code
+                        Random rng = new Random();
+                        int value = rng.Next(1000);
+                        string text = value.ToString("000");
+                        string fName = CommonHelper.GetDecryptedData(noochMember.FirstName);
 
-                        if (existing == "")
+                        // Make sure First name is at least 4 letters
+                        if (fName.Length < 4)
                         {
-                            // Generate random code
-                            Random rng = new Random();
-                            int value = rng.Next(1000);
-                            string text = value.ToString("000");
-                            string fName = CommonHelper.GetDecryptedData(noochMember.FirstName);
+                            string lname = CommonHelper.GetDecryptedData(noochMember.LastName);
 
-                            // Make sure First name is at least 4 letters
-                            if (fName.Length < 4)
-                            {
-                                string lname = CommonHelper.GetDecryptedData(noochMember.LastName);
-
-                                fName = fName + lname.Substring(0, 4 - fName.Length).ToUpper();
-                            }
-                            string code = fName.Substring(0, 4).ToUpper() + text;
-
-                            // Insert into invites
-                            InviteCode obj = new InviteCode();
-                            obj.InviteCodeId = Guid.NewGuid();
-                            obj.code = code;
-                            obj.totalAllowed = 10;
-                            obj.count = 0;
-                            _dbContext.InviteCodes.Add(obj);
-                            int result = _dbContext.SaveChanges();
-
-                            // Update the inviteid into the members table's InviteCodeID column
-                            noochMember.InviteCodeId = obj.InviteCodeId;
-                            _dbContext.SaveChanges();
-                            return "Success";
+                            fName = fName + lname.Substring(0, 4 - fName.Length).ToUpper();
                         }
-                        return "Invite Code Already Exists";
+                        string code = fName.Substring(0, 4).ToUpper() + text;
+
+                        // Insert into invites
+                        InviteCode obj = new InviteCode();
+                        obj.InviteCodeId = Guid.NewGuid();
+                        obj.code = code;
+                        obj.totalAllowed = 10;
+                        obj.count = 0;
+                        _dbContext.InviteCodes.Add(obj);
+                        int result = _dbContext.SaveChanges();
+
+                        // Update the inviteid into the members table's InviteCodeID column
+                        noochMember.InviteCodeId = obj.InviteCodeId;
+                        _dbContext.SaveChanges();
+                        return "Success";
                     }
-                    return "Invalid";
+                    return "Invite Code Already Exists";
                 }
-                catch (Exception ex)
-                {
-                    Logger.Error("MDA -> setReferralCode FAILED - [Exception: " + ex + "]");
-                    return "Error";
-                }
-            
+                return "Invalid";
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("MDA -> setReferralCode FAILED - [Exception: " + ex + "]");
+                return "Error";
+            }
+
         }
 
 
@@ -487,83 +487,83 @@ namespace Nooch.DataAccess
         {
             Logger.Info("MDA -> MemberActivation Initiated - TokenID: [" + tokenId + "]");
 
-           
-                var id = Utility.ConvertToGuid(tokenId);
 
-                var authenticationToken =  _dbContext.AuthenticationTokens.FirstOrDefault(m=>m.TokenId==id && m.IsActivated==false);
+            var id = Utility.ConvertToGuid(tokenId);
 
-                if (authenticationToken != null)
+            var authenticationToken = _dbContext.AuthenticationTokens.FirstOrDefault(m => m.TokenId == id && m.IsActivated == false);
+
+            if (authenticationToken != null)
+            {
+                authenticationToken.IsActivated = true;
+                authenticationToken.DateModified = DateTime.Now;
+
+                Guid memGuid = authenticationToken.MemberId;
+
+                if (_dbContext.SaveChanges() > 0)
                 {
-                    authenticationToken.IsActivated = true;
-                    authenticationToken.DateModified = DateTime.Now;
+                    Logger.Info("MDA -> MemberActivation - Member activated successfully - [" + memGuid + "]");
 
-                    Guid memGuid = authenticationToken.MemberId;
 
-                    if (_dbContext.SaveChanges() > 0)
+                    var memberObj = _dbContext.Members.FirstOrDefault(mm => mm.MemberId == memGuid);
+
+                    if (memberObj != null)
                     {
-                        Logger.Info("MDA -> MemberActivation - Member activated successfully - [" + memGuid + "]");
+                        // Set a Referral Code/Invitation Code
+                        string result = setReferralCode(memberObj.MemberId);
 
-                       
-                        var memberObj = _dbContext.Members.FirstOrDefault(mm => mm.MemberId == memGuid);
+                        memberObj.Status = Constants.STATUS_ACTIVE;
+                        memberObj.DateModified = DateTime.Now;
 
-                        if (memberObj != null)
+                        #region Update Tenant Record If For A Tenant
+
+                        if (memberObj.Type == "Tenant")
                         {
-                            // Set a Referral Code/Invitation Code
-                            string result = setReferralCode(memberObj.MemberId);
-
-                            memberObj.Status = Constants.STATUS_ACTIVE;
-                            memberObj.DateModified = DateTime.Now;
-
-                            #region Update Tenant Record If For A Tenant
-
-                            if (memberObj.Type == "Tenant")
+                            try
                             {
-                                try
+
+                                var tenantdObj =
+                                    _dbContext.Tenants.FirstOrDefault(
+                                        m => m.MemberId == memGuid && m.IsDeleted == false);
+
+                                if (tenantdObj != null)
                                 {
-                                    
-                                    var tenantdObj =
-                                        _dbContext.Tenants.FirstOrDefault(
-                                            m => m.MemberId == memGuid && m.IsDeleted == false);
+                                    Logger.Info("MDA -> MemberActivation - This is a TENANT - About to update Tenants Table " +
+                                                          "MemberID: [" + memGuid + "]");
 
-                                    if (tenantdObj != null)
+                                    tenantdObj.eMail = memberObj.UserName;
+                                    tenantdObj.IsEmailVerified = true;
+                                    tenantdObj.DateModified = DateTime.Now;
+
+                                    int saveChangesToTenant = _dbContext.SaveChanges();
+
+                                    if (saveChangesToTenant > 0)
                                     {
-                                        Logger.Info("MDA -> MemberActivation - This is a TENANT - About to update Tenants Table " +
-                                                              "MemberID: [" + memGuid + "]");
-
-                                        tenantdObj.eMail = memberObj.UserName;
-                                        tenantdObj.IsEmailVerified = true;
-                                        tenantdObj.DateModified = DateTime.Now;
-
-                                        int saveChangesToTenant = _dbContext.SaveChanges();
-
-                                        if (saveChangesToTenant > 0)
-                                        {
-                                            Logger.Info("MDA -> MemberActivation - Saved changes to TENANT table successfully - " +
-                                                                   "MemberID: [" + memGuid + "]");
-                                        }
-                                        else
-                                        {
-                                            Logger.Error("MDA -> MemberActivation - FAILED to save changes to TENANT table - " +
-                                                                   "MemberID: [" + memGuid + "]");
-                                        }
+                                        Logger.Info("MDA -> MemberActivation - Saved changes to TENANT table successfully - " +
+                                                               "MemberID: [" + memGuid + "]");
+                                    }
+                                    else
+                                    {
+                                        Logger.Error("MDA -> MemberActivation - FAILED to save changes to TENANT table - " +
+                                                               "MemberID: [" + memGuid + "]");
                                     }
                                 }
-                                catch (Exception ex)
-                                {
-                                    Logger.Error("MDA -> MemberActivation EXCEPTION on checking if this user is a TENANT - " +
-                                                           "MemberID: [" + memGuid + "], [Exception: " + ex + "]");
-                                }
                             }
+                            catch (Exception ex)
+                            {
+                                Logger.Error("MDA -> MemberActivation EXCEPTION on checking if this user is a TENANT - " +
+                                                       "MemberID: [" + memGuid + "], [Exception: " + ex + "]");
+                            }
+                        }
 
-                            #endregion Update Tenant Record If For A Tenant
+                        #endregion Update Tenant Record If For A Tenant
 
 
-                            #region Send Welcome Email
+                        #region Send Welcome Email
 
-                            string fromAddress = Utility.GetValueFromConfig("welcomeMail");
-                            string toAddress = CommonHelper.GetDecryptedData(memberObj.UserName);
+                        string fromAddress = Utility.GetValueFromConfig("welcomeMail");
+                        string toAddress = CommonHelper.GetDecryptedData(memberObj.UserName);
 
-                            var tokens = new Dictionary<string, string>
+                        var tokens = new Dictionary<string, string>
                             {
                                 {
                                     Constants.PLACEHOLDER_FIRST_NAME,
@@ -574,27 +574,27 @@ namespace Nooch.DataAccess
                                     CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.LastName))
                                 }
                             };
-                            try
-                            {
-                                Utility.SendEmail("WelcomeEmailTemplate", MailPriority.High,
-                                    fromAddress, toAddress, null, "Welcome to Nooch", null, tokens, null, null, null);
+                        try
+                        {
+                            Utility.SendEmail("WelcomeEmailTemplate", MailPriority.High,
+                                fromAddress, toAddress, null, "Welcome to Nooch", null, tokens, null, null, null);
 
-                                Logger.Info("MDA -> MemberActivation - Welcome email sent to [" +
-                                                       toAddress + "] successfully");
-                            }
-                            catch (Exception ex)
-                            {
-                                Logger.Error("MDA -> MemberActivation Welcome mail NOT sent to [" +
-                                                       toAddress + "], Exception: [" + ex + "]");
-                            }
-
-                            #endregion Send Welcome Email
-
-                            return _dbContext.SaveChanges() > 0;
+                            Logger.Info("MDA -> MemberActivation - Welcome email sent to [" +
+                                                   toAddress + "] successfully");
                         }
+                        catch (Exception ex)
+                        {
+                            Logger.Error("MDA -> MemberActivation Welcome mail NOT sent to [" +
+                                                   toAddress + "], Exception: [" + ex + "]");
+                        }
+
+                        #endregion Send Welcome Email
+
+                        return _dbContext.SaveChanges() > 0;
                     }
                 }
-            
+            }
+
             return false; // If user is already activated
         }
 
@@ -603,36 +603,55 @@ namespace Nooch.DataAccess
         {
             Logger.Info("MDA -> GetMemberIds Initiated - phoneEmailList is: [" + phoneEmailListDto.phoneEmailList + "]");
 
-            
-            
 
-                foreach (PhoneEmailMemberPair phoneEmailObj in phoneEmailListDto.phoneEmailList)
+
+
+            foreach (PhoneEmailMemberPair phoneEmailObj in phoneEmailListDto.phoneEmailList)
+            {
+                // First check for a PHONE match
+
+                var noochMember = _dbContext.Members.FirstOrDefault(m => m.ContactNumber == phoneEmailObj.phoneNo && m.IsDeleted == false);
+
+                if (noochMember != null)
                 {
-                    // First check for a PHONE match
-                    
-                    var noochMember = _dbContext.Members.FirstOrDefault(m => m.ContactNumber == phoneEmailObj.phoneNo && m.IsDeleted == false);
+                    phoneEmailObj.memberId = noochMember.MemberId.ToString();
+                }
+                else
+                {
+                    // Then check for an EMAIL match
+
+                    var tempEmailEnc = CommonHelper.GetEncryptedData(phoneEmailObj.emailAddy.ToLower());
+
+
+                    noochMember = _dbContext.Members.FirstOrDefault(m => m.UserName == tempEmailEnc || m.FacebookAccountLogin == tempEmailEnc && m.IsDeleted == false);
 
                     if (noochMember != null)
                     {
                         phoneEmailObj.memberId = noochMember.MemberId.ToString();
                     }
-                    else
-                    {
-                        // Then check for an EMAIL match
-
-                        var tempEmailEnc = CommonHelper.GetEncryptedData(phoneEmailObj.emailAddy.ToLower());
-
-                        
-                        noochMember = _dbContext.Members.FirstOrDefault(m => m.UserName== tempEmailEnc || m.FacebookAccountLogin==tempEmailEnc && m.IsDeleted == false);
-
-                        if (noochMember != null)
-                        {
-                            phoneEmailObj.memberId = noochMember.MemberId.ToString();
-                        }
-                    }
                 }
-            
+            }
+
             return phoneEmailListDto;
+        }
+
+
+        public List<GetMostFrequentFriends_Result> GetMostFrequentFriends(string MemberId)
+        {
+
+            try
+            {
+                //Logger.LogDebugMessage("Service layer -> GetMostFrequentFriends - MemberId: [" + MemberId + "]");
+
+                return _dbContext.GetMostFrequentFriends(MemberId).ToList();
+            }
+            catch (Exception ex)
+            {
+                return null;
+
+
+            }
+
         }
 
     }
