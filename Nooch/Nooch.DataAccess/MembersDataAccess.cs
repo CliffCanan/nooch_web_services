@@ -578,7 +578,7 @@ namespace Nooch.DataAccess
                             };
                         try
                         {
-                            Utility.SendEmail("WelcomeEmailTemplate", MailPriority.High,
+                            Utility.SendEmail("WelcomeEmailTemplate", 
                                 fromAddress, toAddress, null, "Welcome to Nooch", null, tokens, null, null, null);
 
                             Logger.Info("MDA -> MemberActivation - Welcome email sent to [" +
@@ -789,7 +789,7 @@ namespace Nooch.DataAccess
 
                                     try
                                     {
-                                        Utility.SendEmail("", MailPriority.High, fromAddress, toAddress, null,
+                                        Utility.SendEmail("",  fromAddress, toAddress, null,
                                             "Nooch Automatic Logout", null, null, null, null, msg);
 
                                         Logger.Info("MDA -> LoginRequest - Automatic Log Out Email sent to [" + toAddress + "] successfully.");
@@ -925,7 +925,7 @@ namespace Nooch.DataAccess
                                         Logger.Info(
                                             "SupendMember - Attempt to send mail for Supend Member[ memberId:" +
                                             memberEntity.MemberId + "].");
-                                        Utility.SendEmail("userSuspended", MailPriority.High, fromAddress,
+                                        Utility.SendEmail("userSuspended",  fromAddress,
                                             emailAddress, null, "Your Nooch account has been suspended", null, tokens, null,
                                             null, null);
                                     }

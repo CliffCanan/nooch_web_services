@@ -696,6 +696,20 @@ namespace Nooch.API.Controllers
             }
             throw new Exception("Invalid OAuth 2 Access");
         }
+
+
+
+        #region Money and Transactions Game goes here
+
+        [HttpGet]
+        [ActionName("CancelMoneyRequestForNonNoochUser")]
+        public StringResult CancelMoneyRequestForNonNoochUser(string TransactionId, string MemberId)
+        {
+            TransactionsDataAccess tda = new TransactionsDataAccess();
+            return new StringResult { Result = tda.CancelMoneyRequestForNonNoochUser(TransactionId, MemberId) };
+        }
+        #endregion
+
     }
 
 

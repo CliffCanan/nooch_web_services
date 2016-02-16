@@ -208,7 +208,7 @@ namespace Nooch.Common
             using (var sr = new StreamReader(physicalPath))
                 return sr.ReadToEnd();
         }
-        public static bool SendEmail(string templateName, MailPriority priority, string fromAddress, string toAddress, string attachmentPath, string subject, string referenceLink, IEnumerable<KeyValuePair<string, string>> replacements, string ccMailId, string bccMailId, string bodyText)
+        public static bool SendEmail(string templateName,  string fromAddress, string toAddress, string attachmentPath, string subject, string referenceLink, IEnumerable<KeyValuePair<string, string>> replacements, string ccMailId, string bccMailId, string bodyText)
         {
             try
             {
