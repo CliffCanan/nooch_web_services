@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Mail;
 using System.Text;
 using System.Threading.Tasks;
+using AutoMapper;
 using Nooch.Common;
 using Nooch.Common.Entities.MobileAppOutputEnities;
 using Nooch.Common.Resources;
@@ -959,38 +960,58 @@ namespace Nooch.DataAccess
             
         }
 
-        //public List<LocationSearch> GetLocationSearch(string MemberId, int Radius)
-        //{
-        //    Logger.Info("MDA -> GetLocationSearch - [MemberId: " + MemberId + "],  [Radius: " + Radius + "]");
+        public List<LocationSearch> GetLocationSearch(string MemberId, int Radius)
+        {
+            Logger.Info("MDA -> GetLocationSearch - [MemberId: " + MemberId + "],  [Radius: " + Radius + "]");
 
-            
-        //        try
-        //        {
-        //            List<Location> list = _dbContext.GetLocationSearch(MemberId, Radius).ToList();
-        //            List<LocationSearch> list1 = new List<LocationSearch>();
 
-        //            foreach (Locations loc in list)
-        //            {
-        //                LocationSearch obj = new LocationSearch();
-        //                obj.FirstName = CommonHelper.GetDecryptedData(loc.FirstName);
-        //                obj.LastName = CommonHelper.GetDecryptedData(loc.LastName);
-        //                decimal miles = loc.Miles.Value;
-        //                if (miles > 0)
-        //                    obj.Miles = decimal.Parse(miles.ToString("###.####"));
-        //                else
-        //                    obj.Miles = decimal.Parse("000.0000");
-        //                obj.Photo = loc.Photo;
-        //                obj.MemberId = loc.MemberId.ToString();
-        //                list1.Add(obj);
-        //            }
-        //            return list1;
-        //        }
-        //        catch (Exception ex)
-        //        {
-        //            throw new Exception(ex.ToString());
-        //        }
+            try
+            {
+                List<GetLocationSearch_Result> list = _dbContext.GetLocationSearch(MemberId, Radius).ToList();
+                List<LocationSearch> list1 = new List<LocationSearch>();
+
+                foreach (GetLocationSearch_Result loc in list)
+                {
+
+                    var config =
+                        new MapperConfiguration(cfg => cfg.CreateMap<GetLocationSearch_Result, LocationSearch>()
+                            .BeforeMap((src, dest) => src.FirstName = CommonHelper.GetDecryptedData(src.FirstName))
+                            .BeforeMap((src, dest) => src.LastName= CommonHelper.GetDecryptedData(src.LastName))
+                            );
+
+                    var mapper = config.CreateMapper();
+
+                    LocationSearch obj = mapper.Map<LocationSearch>(loc);
+
+                    obj.FirstName = CommonHelper.GetDecryptedData(loc.FirstName);
+                    obj.LastName = CommonHelper.GetDecryptedData(loc.LastName);
+                    decimal miles = obj.Miles;
+                    obj.Miles = decimal.Parse(miles > 0 ? miles.ToString("###.####") : "000.0000");
+                    obj.Photo = loc.Photo;
+                    obj.MemberId = loc.MemberId.ToString();
+                    list1.Add(obj);
+                }
+                return list1;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.ToString());
+            }
+
+        }
+
+
+        public Boolean validateInvitationCode(String invitationCode)
+        {
+            Logger.Info("MDA -> validateInvitationCode - invitationCode: [" + invitationCode + "]");
+
+                var noochInviteMember = _dbContext.InviteCodes.FirstOrDefault(m=>m.code==invitationCode && m.count<m.totalAllowed);
+                return noochInviteMember != null;
             
-        //}
+        }
+
+
+
 
         
     }

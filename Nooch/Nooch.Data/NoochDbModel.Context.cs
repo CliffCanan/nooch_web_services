@@ -74,5 +74,18 @@ namespace Nooch.Data
     
             return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction<string>("GetReportsForMember", memberIdParameter, getWhatParameter);
         }
+    
+        public virtual ObjectResult<GetLocationSearch_Result> GetLocationSearch(string memberId, Nullable<int> radius)
+        {
+            var memberIdParameter = memberId != null ?
+                new ObjectParameter("MemberId", memberId) :
+                new ObjectParameter("MemberId", typeof(string));
+    
+            var radiusParameter = radius.HasValue ?
+                new ObjectParameter("Radius", radius) :
+                new ObjectParameter("Radius", typeof(int));
+    
+            return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction<GetLocationSearch_Result>("GetLocationSearch", memberIdParameter, radiusParameter);
+        }
     }
 }

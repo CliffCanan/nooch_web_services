@@ -236,6 +236,28 @@ namespace Nooch.Common
             return noochMember != null ? noochMember.MemberId.ToString() : null;
         }
 
+
+        public static string GetMemberReferralCodeByMemberId(string MemberId)
+        {
+
+
+
+            Guid memGuid = Utility.ConvertToGuid(MemberId);
+
+            var noochMember =
+                _dbContext.Members.FirstOrDefault(
+                    m => m.MemberId == memGuid && m.IsDeleted == false);
+
+            if (noochMember == null || noochMember.InviteCodeId == null) return "";
+            Guid inviGuid = Utility.ConvertToGuid(noochMember.InviteCodeId.ToString());
+
+            var inviteCodeREsult =
+                _dbContext.InviteCodes.FirstOrDefault(
+                    m => m.InviteCodeId== inviGuid );
+
+            return inviteCodeREsult != null ? inviteCodeREsult.code : "";
+        }
+
         public static string GetMemberNameByUserName(string userName)
         {
 

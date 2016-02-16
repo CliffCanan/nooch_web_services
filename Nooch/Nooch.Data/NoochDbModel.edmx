@@ -648,6 +648,10 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <Function Name="GetLocationSearch" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="MemberId" Type="varchar" Mode="In" />
+          <Parameter Name="Radius" Type="int" Mode="In" />
+        </Function>
         <Function Name="GetMostFrequentFriends" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
           <Parameter Name="MemberId" Type="varchar" Mode="In" />
         </Function>
@@ -941,6 +945,10 @@
           <FunctionImport Name="GetReportsForMember" ReturnType="Collection(String)">
             <Parameter Name="MemberId" Mode="In" Type="String" />
             <Parameter Name="GetWhat" Mode="In" Type="String" />
+          </FunctionImport>
+          <FunctionImport Name="GetLocationSearch" ReturnType="Collection(NOOCHModel.GetLocationSearch_Result)">
+            <Parameter Name="MemberId" Mode="In" Type="String" />
+            <Parameter Name="Radius" Mode="In" Type="Int32" />
           </FunctionImport>
         </EntityContainer>
         <EntityType Name="MemberPrivacySetting">
@@ -1428,6 +1436,15 @@
           <Property Type="Int32" Name="Frequency" Nullable="true" />
           <Property Type="String" Name="SenderId" Nullable="true" MaxLength="50" />
           <Property Type="String" Name="RecepientId" Nullable="true" MaxLength="50" />
+        </ComplexType>
+        <ComplexType Name="GetLocationSearch_Result">
+          <Property Type="Int32" Name="LocationId" Nullable="true" />
+          <Property Type="Guid" Name="MemberId" Nullable="false" />
+          <Property Type="String" Name="FirstName" Nullable="true" />
+          <Property Type="String" Name="LastName" Nullable="true" />
+          <Property Type="String" Name="Photo" Nullable="true" MaxLength="500" />
+          <Property Type="Decimal" Name="miles" Nullable="true" Precision="18" Scale="6" />
+          <Property Type="String" Name="State" Nullable="false" MaxLength="1" />
         </ComplexType>
       </Schema>
     </edmx:ConceptualModels>
@@ -2042,6 +2059,19 @@
             </ResultMapping>
           </FunctionImportMapping>
           <FunctionImportMapping FunctionImportName="GetReportsForMember" FunctionName="NOOCHModel.Store.GetReportsForMember" />
+          <FunctionImportMapping FunctionImportName="GetLocationSearch" FunctionName="NOOCHModel.Store.GetLocationSearch">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="NOOCHModel.GetLocationSearch_Result">
+                <ScalarProperty Name="LocationId" ColumnName="LocationId" />
+                <ScalarProperty Name="MemberId" ColumnName="MemberId" />
+                <ScalarProperty Name="FirstName" ColumnName="FirstName" />
+                <ScalarProperty Name="LastName" ColumnName="LastName" />
+                <ScalarProperty Name="Photo" ColumnName="Photo" />
+                <ScalarProperty Name="miles" ColumnName="miles" />
+                <ScalarProperty Name="State" ColumnName="State" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
         </EntityContainerMapping>
       </Mapping>
     </edmx:Mappings>

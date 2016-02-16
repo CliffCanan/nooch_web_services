@@ -636,6 +636,44 @@ namespace Nooch.API.Controllers
 
         }
 
+        [HttpGet]
+        [ActionName("SaveMemberDeviceToken")]
+        public List<LocationSearch> GetLocationSearch(string MemberId, int Radius, string accessToken)
+        {
+            try
+            {
+                if (CommonHelper.IsValidRequest(accessToken, MemberId))
+                {
+                    var memberDataAccess = new MembersDataAccess();
+                    List<LocationSearch> list = memberDataAccess.GetLocationSearch(MemberId, Radius);
+                    return list;
+                }
+                else
+                {
+                    throw new Exception("Invalid OAuth 2 Access");
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
+        [HttpPost]
+        [ActionName("validateInvitationCode")]
+        public Boolean validateInvitationCode(string invitationCode)
+        {
+            //No access token is added as the new user requires to authenticate invitecode.
+            var memberDataAccess = new MembersDataAccess();
+            return memberDataAccess.validateInvitationCode(invitationCode);
+        }
+
+        [HttpPost]
+        [ActionName("getReferralCode")]
+        public StringResult getReferralCode(string memberId, string accessToken)
+        {
+            return CommonHelper.IsValidRequest(accessToken, memberId) ? new StringResult { Result = CommonHelper.GetMemberReferralCodeByMemberId(memberId)} : new StringResult { Result = "Invalid OAuth 2 Access" };
+        }
     }
 
 
