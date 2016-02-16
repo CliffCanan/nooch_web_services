@@ -674,6 +674,28 @@ namespace Nooch.API.Controllers
         {
             return CommonHelper.IsValidRequest(accessToken, memberId) ? new StringResult { Result = CommonHelper.GetMemberReferralCodeByMemberId(memberId)} : new StringResult { Result = "Invalid OAuth 2 Access" };
         }
+
+        [HttpPost]
+        [ActionName("getTotalReferralCode")]
+        public StringResult getTotalReferralCode(string referalCode)
+        {
+            var memberDataAccess = new MembersDataAccess();
+            var isValid = memberDataAccess.getTotalReferralCode(referalCode);
+            return new StringResult { Result = isValid.ToString() };
+        }
+
+
+        [HttpPost]
+        [ActionName("ApiSMS")]
+        public StringResult ApiSMS(string phoneto, string msg, string accessToken, string memberId)
+        {
+            if ((msg == "Hi\n You were automatically logged out because you signed in from another device.\n - Team Nooch") || CommonHelper.IsValidRequest(accessToken, memberId))
+            {
+                
+                return new StringResult { Result = Utility.SendSMS(phoneto,msg) };
+            }
+            throw new Exception("Invalid OAuth 2 Access");
+        }
     }
 
 

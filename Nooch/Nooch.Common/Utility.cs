@@ -15,7 +15,7 @@ namespace Nooch.Common
 {
     public static class Utility
     {
-        
+
         public static string GetValueFromConfig(string key)
         {
             return ConfigurationManager.AppSettings[key];
@@ -271,15 +271,15 @@ namespace Nooch.Common
                 {
                     mailMessage.Bcc.Add(bccMailId);
                 }
-                
 
-                
+
+
 
                 SmtpClient smtpClient = new SmtpClient();
 
                 smtpClient.Host = GetValueFromConfig("SMTPAddress");
                 smtpClient.UseDefaultCredentials = false;
-                
+
                 smtpClient.Credentials = new NetworkCredential(GetValueFromConfig("SMTPLogOn"), GetValueFromConfig("SMTPPassword"));
                 smtpClient.Send(mailMessage);
 
@@ -293,6 +293,23 @@ namespace Nooch.Common
             }
         }
 
-      
+        public static string SendSMS(string phoneto, string msg)
+        {
+            string AccountSid = GetValueFromConfig("AccountSid");
+            string AuthToken = GetValueFromConfig("AuthToken");
+            string from = GetValueFromConfig("AccountPhone");
+            string to = "";
+
+            if (!phoneto.Trim().Contains('+'))
+                to = GetValueFromConfig("SMSInternationalCode") + phoneto.Trim();
+            else
+                to = phoneto.Trim();
+
+            var client = new Twilio.TwilioRestClient(AccountSid, AuthToken);
+            var sms = client.SendSmsMessage(from, to, msg);
+            return sms.Status;
+        }
+
+
     }
 }

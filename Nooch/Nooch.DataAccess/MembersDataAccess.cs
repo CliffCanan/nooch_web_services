@@ -1011,6 +1011,21 @@ namespace Nooch.DataAccess
         }
 
 
+        public bool getTotalReferralCode(String referalCode)
+        {
+            Logger.Info("MDA -> getReferralCode Initiated - referalCode: [" + referalCode + "]");
+
+                
+                var inviteMember = _dbContext.InviteCodes.FirstOrDefault(m=>m.code==referalCode);
+
+                if (inviteMember != null)
+                {
+                    return inviteMember.count < inviteMember.totalAllowed;
+                }
+            return false;
+        }
+
+
 
 
         
