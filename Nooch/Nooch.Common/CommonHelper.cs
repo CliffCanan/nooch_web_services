@@ -1,18 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Mail;
 using System.Text;
 using System.Threading.Tasks;
 using log4net.Repository.Hierarchy;
 using Nooch.Common.Cryptography.Algorithms;
 using Nooch.Common.Entities.MobileAppOutputEnities;
 using Nooch.Common.Resources;
+using Nooch.Common.Rules;
 using Nooch.Data;
 
 namespace Nooch.Common
 {
     public static class CommonHelper
     {
+        private const string Chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         private static NOOCHEntities _dbContext = new NOOCHEntities();
         public static string GetEncryptedData(string sourceData)
         {
@@ -590,5 +593,251 @@ namespace Nooch.Common
             return result;
         }
 
+        private static string IncreaseInvalidPinAttemptCount(
+            Member memberEntity, int pinRetryCountInDb)
+        {
+            Member mem= _dbContext.Members.Find(memberEntity);
+
+
+            mem.InvalidPinAttemptCount = pinRetryCountInDb + 1;
+            mem.InvalidPinAttemptTime = DateTime.Now;
+            _dbContext.SaveChanges();
+            return memberEntity.InvalidPinAttemptCount == 1
+                ? "PIN number you have entered is incorrect."
+                : "PIN number you entered again is incorrect. Your account will be suspended for 24 hours if you enter wrong PIN number again.";
+        }
+
+        public static string ValidatePinNumber(string memberId, string pinNumber)
+        {
+            
+                var id = Utility.ConvertToGuid(memberId);
+
+                
+            var memberEntity = _dbContext.Members.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
+                    
+
+                if (memberEntity != null)
+                {
+                    int pinRetryCountInDb = 0;
+                    pinRetryCountInDb = memberEntity.InvalidPinAttemptCount.Equals(null)
+                        ? 0
+                        : memberEntity.InvalidPinAttemptCount.Value;
+                    var currentTimeMinus24Hours = DateTime.Now.AddHours(-24);
+
+                    //Check(InvalidPinAttemptTime) > CurrentTime - 24 hrs                  
+                    bool isInvalidPinAttempTimeOver =
+                        (new InvalidAttemptDurationSpecification().IsSatisfiedBy(memberEntity.InvalidPinAttemptTime,
+                            currentTimeMinus24Hours));
+
+                    if (isInvalidPinAttempTimeOver)
+                    {
+                        //Reset attempt count
+                        memberEntity.InvalidPinAttemptCount = null;
+                        memberEntity.InvalidPinAttemptTime = null;
+                        //if member has no dispute raised or under review, he can be made active, else he should remain suspended so that he cant do fund transfer or withdraw amount...
+
+                        var disputeStatus = CommonHelper.GetEncryptedData(Constants.DISPUTE_STATUS_REPORTED);
+                        var disputeReviewStatus = CommonHelper.GetEncryptedData(Constants.DISPUTE_STATUS_REVIEW);
+
+                        if (
+                            !memberEntity.Transactions.Any(
+                                transaction =>
+                                    (transaction.DisputeStatus == disputeStatus ||
+                                     transaction.DisputeStatus == disputeReviewStatus) &&
+                                    memberEntity.MemberId == transaction.RaisedById))
+                        {
+                            memberEntity.Status = Constants.STATUS_ACTIVE;
+                        }
+
+                        memberEntity.DateModified = DateTime.Now;
+                        _dbContext.SaveChanges();
+                        
+                        pinRetryCountInDb = memberEntity.InvalidPinAttemptCount.Equals(null)
+                            ? 0
+                            : memberEntity.InvalidPinAttemptCount.Value;
+                        ;
+
+                        if (!memberEntity.PinNumber.Equals(pinNumber.Replace(" ", "+")))
+                        // incorrect pinnumber after 24 hours
+                        {
+                            return IncreaseInvalidPinAttemptCount( memberEntity, pinRetryCountInDb);
+                        }
+                    }
+
+                    if (pinRetryCountInDb < 3 && memberEntity.PinNumber.Equals(pinNumber.Replace(" ", "+")))
+                    {
+                        //Reset attempt count                       
+                        memberEntity.InvalidPinAttemptCount = 0;
+                        memberEntity.InvalidPinAttemptTime = null;
+
+                        _dbContext.SaveChanges();
+                        return "Success"; // active nooch member  
+                    }
+
+                    //Username is there in db, whereas pin number entered by user is incorrect.
+                    if (memberEntity.InvalidPinAttemptCount == null || memberEntity.InvalidPinAttemptCount == 0)
+                    //this is the first invalid try
+                    {
+                        return IncreaseInvalidPinAttemptCount( memberEntity, pinRetryCountInDb);
+                    }
+
+                    if (pinRetryCountInDb == 3)
+                    {
+                        return
+                            "Your account has been suspended. Please contact admin or send a mail to support@nooch.com if you need to reset your PIN number immediately.";
+                    }
+                    if (pinRetryCountInDb == 2)
+                    {
+                        memberEntity.InvalidPinAttemptCount = pinRetryCountInDb + 1;
+                        memberEntity.InvalidPinAttemptTime = DateTime.Now;
+                        memberEntity.Status = Constants.STATUS_SUSPENDED;
+                        _dbContext.SaveChanges();
+                        
+
+                        #region SendingEmailToUser
+
+                        var tokens = new Dictionary<string, string>
+                        {
+                            {
+                                Constants.PLACEHOLDER_FIRST_NAME,
+                                CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberEntity.FirstName))
+                            }
+                        };
+
+                        try
+                        {
+                            var fromAddress = Utility.GetValueFromConfig("adminMail");
+                            string emailAddress = CommonHelper.GetDecryptedData(memberEntity.UserName);
+                            Logger.Info(
+                                "Validate PIN Number --> Attempt to send mail for Suspend Member[ memberId:" +
+                                memberEntity.MemberId + "].");
+                            Utility.SendEmail("userSuspended",  fromAddress, emailAddress,
+                                null, "Your Nooch account has been suspended", null, tokens, null, null, null);
+                        }
+                        catch (Exception)
+                        {
+                            Logger.Error("Validate PIN Number --> Suspend Member status email not send to [" +
+                                                   memberEntity.MemberId +
+                                                   "]. Problem occurred in sending Suspend Member status mail. ");
+                        }
+
+                        #endregion
+
+                        return
+                            "Your account has been suspended for 24 hours from now. Please contact admin or send a mail to support@nooch.com if you need to reset your PIN number immediately.";
+                        // this is 3rd try
+                    }
+                    return IncreaseInvalidPinAttemptCount( memberEntity, pinRetryCountInDb);
+                    // this is second try.
+                }
+                return "Member not found.";
+            
+        }
+
+
+        public static string GetGivenMemberTransferLimit(string memberId)
+        {
+            try
+            {
+                var id = Utility.ConvertToGuid(memberId);
+
+                
+                    // checking user details for given id
+                    
+                var memberObj = _dbContext.Members.FirstOrDefault(m => m.MemberId == id && m.IsDeleted==false);
+
+                    if (memberObj != null)
+                    {
+                        return !String.IsNullOrEmpty(memberObj.TransferLimit) ? memberObj.TransferLimit : "0";
+                    }
+                return "0";
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("TDA -> GetGivenMemberTransferLimit FAILED - [MemberID: " + memberId + "], [Exception: " + ex + "]");
+                return "0";
+            }
+        }
+
+
+        public static bool isOverTransactionLimit(decimal amount, string senderMemId, string recipMemId)
+        {
+            var maxTransferLimitPerPayment = Utility.GetValueFromConfig("MaximumTransferLimitPerTransaction");
+
+            if (amount > Convert.ToDecimal(maxTransferLimitPerPayment))
+            {
+                if (senderMemId.ToLower() == "00bd3972-d900-429d-8a0d-28a5ac4a75d7" || // TEAM NOOCH
+                    recipMemId.ToLower() == "00bd3972-d900-429d-8a0d-28a5ac4a75d7")
+                {
+                    Logger.Info("*****  TDA -> isOverTransactionLimit - Transaction for TEAM NOOCH, so allowing transaction - [Amount: $" + amount.ToString() + "]  ****");
+                    return false;
+                }
+                if (senderMemId.ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49" || // Marvis Burns (RentScene)
+                    recipMemId.ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49")
+                {
+                    Logger.Info("*****  TDA -> isOverTransactionLimit - Transaction for RENT SCENE, so allowing transaction - [Amount: $" + amount.ToString() + "]  ****");
+                    return false;
+                }
+
+                if (senderMemId.ToLower() == "c9839463-d2fa-41b6-9b9d-45c7f79420b1" || // Sherri Tan (RentScene - via Marvis Burns)
+                    recipMemId.ToLower() == "c9839463-d2fa-41b6-9b9d-45c7f79420b1")
+                {
+                    Logger.Info("*****  TDA -> isOverTransactionLimit - Transaction for RENT SCENE, so allowing transaction - [Amount: $" + amount.ToString() + "]  ****");
+                    return false;
+                }
+                if (senderMemId.ToLower() == "8b4b4983-f022-4289-ba6e-48d5affb5484" || // Josh Detweiler (AppJaxx)
+                    recipMemId.ToLower() == "8b4b4983-f022-4289-ba6e-48d5affb5484")
+                {
+                    Logger.Info("*****  TDA -> isOverTransactionLimit - Transaction is for APPJAXX, so allowing transaction - [Amount: $" + amount.ToString() + "]  ****");
+                    return false;
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
+
+        public static MemberNotification GetMemberNotificationSettings(string memberId)
+        {
+            //Logger.LogDebugMessage("MDA -> GetMemberNotificationSettings Initiated - [MemberId: " + memberId + "]");
+
+
+
+                Guid memId = Utility.ConvertToGuid(memberId);
+
+                
+                var memberNotifications = _dbContext.MemberNotifications.FirstOrDefault(m => m.Member.MemberId == memId); 
+
+                return memberNotifications;
+            
+        }
+
+        /// <summary>
+        /// To get random alphanumeric 5 digit transaction tracking ID.
+        /// </summary>
+        /// <returns>Nooch Random ID</returns>
+        public static string GetRandomTransactionTrackingId()
+        {
+            var random = new Random();
+            int j = 1;
+            
+                for (int i = 0; i <= j; i++)
+                {
+                    var randomId = new string(
+                        Enumerable.Repeat(Chars, 9)
+                                  .Select(s => s[random.Next(s.Length)])
+                                  .ToArray());
+                    var transactionEntity = _dbContext.Transactions.FirstOrDefault(n=>n.TransactionTrackingId==randomId);
+                    if (transactionEntity == null)
+                    {
+                        return randomId;
+                    }
+
+                    j += i + 1;
+                }
+            return null;
+        }
     }
 }

@@ -793,6 +793,42 @@ namespace Nooch.API.Controllers
 
 
 
+        /***********************************/
+        /****  REQUEST-RELATED METHODS  ****/
+        /***********************************/
+
+        #region Request methods
+        [HttpPost]
+        [ActionName("RequestMoney")]
+        StringResult RequestMoney(RequestDto requestInput, out string requestId, string accessToken)
+        {
+            if (CommonHelper.IsValidRequest(accessToken, requestInput.MemberId))
+            {
+                requestId = string.Empty;
+                try
+                {
+                    Logger.Info("Service Layer - RequestMoney Initiated - MemberId: [" + requestInput.MemberId + "]");
+                    var tda = new TransactionsDataAccess();
+                    return new StringResult { Result = tda.RequestMoney(requestInput, out requestId) };
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Layer - RequestMoney FAILED - MemberId: [" + requestInput.MemberId + "], Exception: [" + ex + "]");
+                    throw new Exception("Server Error");
+
+                }
+                
+            }
+            else
+            {
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
+
+
+        #endregion
+
+
 
         #endregion
 

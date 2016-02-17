@@ -71,6 +71,7 @@
     <Compile Include="Entities\GameThriveResponseClass.cs" />
     <Compile Include="Entities\googleURLShortnerResponseClass.cs" />
     <Compile Include="Entities\MemberEnity.cs" />
+    <Compile Include="Entities\MobileAppInputEntities\RequestDto.cs" />
     <Compile Include="Entities\MobileAppInputEntities\UpdateMemberIpInput.cs" />
     <Compile Include="Entities\MobileAppOutputEnities\LocationSearch.cs" />
     <Compile Include="Entities\MobileAppOutputEnities\MemberBusinessDto.cs" />
