@@ -637,7 +637,7 @@ namespace Nooch.API.Controllers
         }
 
         [HttpGet]
-        [ActionName("SaveMemberDeviceToken")]
+        [ActionName("GetLocationSearch")]
         public List<LocationSearch> GetLocationSearch(string MemberId, int Radius, string accessToken)
         {
             try
@@ -826,6 +826,29 @@ namespace Nooch.API.Controllers
         }
 
 
+
+
+
+        // to reject request for existing user
+        [HttpGet]
+        [ActionName("RejectMoneyRequestForExistingNoochUser")]
+        public StringResult RejectMoneyRequestForExistingNoochUser(string transactionId)
+        {
+            try
+            {
+                Logger.Info("Service layer - RejectMoneyRequestForExistingNoochUser - [TransactionId: " + transactionId + "]");
+
+                var transactionDataAccess = new TransactionsDataAccess();
+                string result = transactionDataAccess.RejectMoneyRequestForExistingNoochUser(transactionId);
+                return new StringResult { Result = result };
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Server Error");
+            }
+            
+
+        }
         #endregion
 
 
@@ -837,7 +860,7 @@ namespace Nooch.API.Controllers
 
         [HttpGet]
         [ActionName("CheckSDNListing")]
-        StringResult CheckSDNListing(string MemberId)
+        public StringResult CheckSDNListing(string MemberId)
         {
 
 
@@ -859,7 +882,7 @@ namespace Nooch.API.Controllers
 
         [HttpGet]
         [ActionName("SaveSocialMediaPost")]
-        StringResult SaveSocialMediaPost(string MemberId, string accesstoken, string PostTo, string PostContent)
+        public StringResult SaveSocialMediaPost(string MemberId, string accesstoken, string PostTo, string PostContent)
         {
             if (CommonHelper.IsValidRequest(accesstoken, MemberId))
             {

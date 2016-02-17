@@ -1784,6 +1784,162 @@ namespace Nooch.DataAccess
 
 
 
+        public string RejectMoneyRequestForExistingNoochUser(string TrannsactionId)
+        {
+            Logger.Info("TDA -> RejectMoneyRequestForExistingNoochUser - transactionId: [" + TrannsactionId + "]");
+
+            try
+            {
+                var transId = Utility.ConvertToGuid(TrannsactionId);
+
+
+                var transactionDetail = _dbContext.Transactions.FirstOrDefault(m => m.TransactionId == transId
+                                                                                    && m.TransactionStatus == "Pending" &&
+                                                                                    (m.TransactionType ==
+                                                                                     "DrRr1tU1usk7nNibjtcZkA==" ||
+                                                                                     m.TransactionType ==
+                                                                                     "T3EMY1WWZ9IscHIj3dbcNw=="))
+                    ;
+                
+
+                    if (transactionDetail != null)
+                    {
+                        #region IfSomethingFound
+
+                        transactionDetail.TransactionStatus = "Rejected";
+                        _dbContext.SaveChanges();
+                        
+
+                        string SenderFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member1.FirstName));
+                        string SenderLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member1.LastName));
+                        string RejectorFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member.FirstName));
+                        string RejectorLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member.LastName));
+
+                        string wholeAmount = transactionDetail.Amount.ToString("n2");
+                        string[] s3 = wholeAmount.Split('.');
+
+                        string memo = "";
+                        if (!string.IsNullOrEmpty(transactionDetail.Memo))
+                        {
+                            if (transactionDetail.Memo.Length > 3)
+                            {
+                                string firstThreeChars = transactionDetail.Memo.Substring(0, 3).ToLower();
+                                bool startWithFor = firstThreeChars.Equals("for");
+
+                                if (startWithFor)
+                                {
+                                    memo = transactionDetail.Memo.ToString();
+                                }
+                                else
+                                {
+                                    memo = "For " + transactionDetail.Memo.ToString();
+                                }
+                            }
+                            else
+                            {
+                                memo = "For " + transactionDetail.Memo.ToString();
+                            }
+                        }
+
+                        #region Push Notification to Request Sender
+                        // sending push notification to money sender
+                        
+                        var noochMemberfornotification = CommonHelper.GetMemberNotificationSettings(transactionDetail.Member1.MemberId.ToString());
+
+                        if (noochMemberfornotification != null)
+                        {
+                            try
+                            {
+                                string mailBodyText = RejectorFirstName + " " + RejectorLastName + " just rejected your Nooch payment request for $" + wholeAmount + ".";
+                                Utility.SendNotificationMessage(mailBodyText, 1, null,
+                                    transactionDetail.Member1.DeviceToken,
+                                    Utility.GetValueFromConfig("AppKey"), Utility.GetValueFromConfig("MasterSecret"));
+                            }
+                            catch (Exception)
+                            {
+                                Logger.Error("RejectMoneyRequestForExistingNoochUser - Push notification not sent to [" + transactionDetail.Member1.UDID1 + "].");
+                            }
+                        }
+
+                        #endregion
+
+                        // Sending email to request sender about rejection
+
+                        var tokens = new Dictionary<string, string>
+							{
+								{Constants.PLACEHOLDER_FIRST_NAME, SenderFirstName},
+								{Constants.PLACEHOLDER_RECEPIENT_FULL_NAME, RejectorFirstName + " " + RejectorLastName},
+								{Constants.PLACEHOLDER_RECEPIENT_FIRST_NAME, RejectorFirstName},
+								{Constants.PLACEHLODER_CENTS, s3[1].ToString()},
+								{Constants.PLACEHOLDER_TRANSFER_AMOUNT, s3[0].ToString()},
+								{Constants.MEMO, memo}
+							};
+
+                        var fromAddress = Utility.GetValueFromConfig("transfersMail");
+                        var toAddress = CommonHelper.GetDecryptedData(transactionDetail.Member1.UserName);
+
+                        try
+                        {
+                            Utility.SendEmail("requestDeniedToSender", 
+                                fromAddress, toAddress, null,
+                                RejectorFirstName + " " + RejectorLastName + " denied your payment request for $" + wholeAmount, null,
+                                tokens, null, null, null);
+
+                            Logger.Info("TDA -> rejectMoneyRequestForExistingNoochUser -> requestDeniedToSender email sent to [" + toAddress + "] successfully.");
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Error("TDA -> rejectMoneyRequestForExistingNoochUser -> requestDeniedToSender email NOT sent to [" + toAddress +
+                                                   "], Exception: [" + ex.Message + "]");
+                        }
+
+                        // sending email to user who rejected this request
+
+                        var tokens2 = new Dictionary<string, string>
+							{
+								{Constants.PLACEHOLDER_FIRST_NAME, RejectorFirstName},
+								{Constants.PLACEHOLDER_SENDER_FULL_NAME, SenderFirstName + " " + SenderLastName},
+								{Constants.PLACEHLODER_CENTS, s3[1].ToString()},
+								{Constants.PLACEHOLDER_TRANSFER_AMOUNT, s3[0].ToString()},
+								{Constants.MEMO, memo}
+							};
+
+                        toAddress = CommonHelper.GetDecryptedData(transactionDetail.Member.UserName);
+
+                        try
+                        {
+                        Utility.SendEmail("requestDeniedToRecipient", 
+                                fromAddress, toAddress, null,
+                                "You rejected a Nooch request from " + SenderFirstName + " " + SenderLastName, null,
+                                tokens2, null, null, null);
+
+                            Logger.Info("rejectMoneyRequestForExistingNoochUser -> requestDeniedToRecipient email sent to [" + toAddress + "] successfully.");
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Error("rejectMoneyRequestForExistingNoochUser -> requestDeniedToRecipient email NOT sent to [" +
+                                                   toAddress + "], Exception: [" + ex.Message + "]");
+                        }
+
+                        return "Request Rejected Successfully.";
+
+                        #endregion
+                    }
+                    else
+                    {
+                        return "";
+                    }
+                
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("TDA -> RejectMoneyRequestForExistingNoochUser FAILED. [Exception: " + ex + "]");
+                return "";
+            }
+        }
+
+
+
 
     }
 }
