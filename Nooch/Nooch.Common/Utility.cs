@@ -10,6 +10,10 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Web.Script.Serialization;
+using Newtonsoft.Json;
+using Nooch.Common.Entities;
+
 
 namespace Nooch.Common
 {
@@ -310,6 +314,28 @@ namespace Nooch.Common
             return sms.Status;
         }
 
+
+        public static string SendNotificationMessage(string alertText, int badge, string sound, string devicetokens, string username, string password)
+        {
+            // Sample JSON Input...
+            // string json = "{\"aps\":{\"badge\":356,\"alert\":\"this 4 rd post\"},\"device_tokens\":[\"DC59F629CBAF8D88418C9FCD813F240B72311C6EDF27FAED0F5CB4ADB9F4D3C9\"]}";
+
+            string json = new JavaScriptSerializer().Serialize(new
+            {
+                app_id = username,
+                isIos = true,
+                include_ios_tokens = new string[] { devicetokens },
+                contents = new GameThriveMsgContent() { en = alertText }
+            });
+
+            var cli = new WebClient();
+            cli.Headers[HttpRequestHeader.ContentType] = "application/json";
+
+            string response = cli.UploadString("https://gamethrive.com/api/v1/notifications", json);
+            GameThriveResponseClass gamethriveresponse = JsonConvert.DeserializeObject<GameThriveResponseClass>(response);
+
+            return "1";
+        }
 
     }
 }

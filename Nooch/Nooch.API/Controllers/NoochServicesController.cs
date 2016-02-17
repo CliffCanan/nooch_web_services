@@ -701,6 +701,7 @@ namespace Nooch.API.Controllers
 
         #region Money and Transactions Game goes here
 
+        #region cancel transactions
         [HttpGet]
         [ActionName("CancelMoneyRequestForNonNoochUser")]
         public StringResult CancelMoneyRequestForNonNoochUser(string TransactionId, string MemberId)
@@ -755,8 +756,40 @@ namespace Nooch.API.Controllers
             return new StringResult { Result = tda.CancelMoneyTransferToNonMemberForSender(TransactionId, MemberId) };
         }
 
+        #endregion
 
 
+
+        #region send transaction reminders
+
+        [HttpGet]
+        [ActionName("SendTransactionReminderEmail")]
+        public StringResult SendTransactionReminderEmail(string ReminderType,
+            string TransactionId, string accessToken, string MemberId)
+        {
+            if (CommonHelper.IsValidRequest(accessToken, MemberId))
+            {
+                try
+                {
+                    Logger.Info("Service layer - SendTransactionReminderEmail - memberId: [" + MemberId + "]");
+                    var transactionDataAccess = new TransactionsDataAccess();
+
+                    return new StringResult { Result = transactionDataAccess.SendTransactionReminderEmail(ReminderType, TransactionId, MemberId) };
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service layer - SendTransactionReminderEmail FAILED - memberId: [" + MemberId + "]. Exception: [" + ex + "]");
+                    throw new Exception("Server Error.");
+                }
+                
+            }
+            else
+            {
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
+
+        #endregion
 
 
 
