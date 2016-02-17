@@ -111,6 +111,9 @@
     <Compile Include="PropertyUnit.cs">
       <DependentUpon>NoochDbModel.tt</DependentUpon>
     </Compile>
+    <Compile Include="SDNSearchResult.cs">
+      <DependentUpon>NoochDbModel.tt</DependentUpon>
+    </Compile>
     <Compile Include="SocialMediaPost.cs">
       <DependentUpon>NoochDbModel.tt</DependentUpon>
     </Compile>

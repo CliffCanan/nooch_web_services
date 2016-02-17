@@ -253,7 +253,7 @@ namespace Nooch.Common
 
             var inviteCodeREsult =
                 _dbContext.InviteCodes.FirstOrDefault(
-                    m => m.InviteCodeId== inviGuid );
+                    m => m.InviteCodeId == inviGuid);
 
             return inviteCodeREsult != null ? inviteCodeREsult.code : "";
         }
@@ -474,20 +474,121 @@ namespace Nooch.Common
 
         public static bool CheckTokenExistance(string AccessToken)
         {
-            
-                try
-                {
-                    //Get the member details
-                    
-                    var noochMember = _dbContext.Members.FirstOrDefault(m=>m.AccessToken==AccessToken && m.IsDeleted==false);
-                    return noochMember != null;
-                }
-                catch (Exception ex)
-                {
-                    Logger.Error("MDA -> CheckTokenExistance FAILED - [Exception: " + ex + "]");
-                    return false;
-                }
-            
+
+            try
+            {
+                //Get the member details
+
+                var noochMember = _dbContext.Members.FirstOrDefault(m => m.AccessToken == AccessToken && m.IsDeleted == false);
+                return noochMember != null;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("MDA -> CheckTokenExistance FAILED - [Exception: " + ex + "]");
+                return false;
+            }
+
         }
+
+
+
+        public static bool IsListedInSDN(string lastName, Guid userId)
+        {
+            bool result = false;
+            Logger.Info("MDA -> IsListedInSDNList - userName: [" + lastName + "]");
+
+
+            var noochMemberN =
+                _dbContext.Members.FirstOrDefault(
+                    m => m.IsDeleted == false && (m.IsSDNSafe == false || m.IsSDNSafe == null) && m.MemberId == userId);
+
+            if (noochMemberN != null)
+            {
+                result = true;
+
+                StringBuilder st = new StringBuilder();
+                //Check if the person exists in the SDN List or not
+                List<SDNSearchResult> terrorlist = _dbContext.pGetSDNListing(GetDecryptedData(noochMemberN.LastName)).ToList();
+
+                // hit matched send notification email to nooch admin and update member table
+                if (terrorlist.Count > 0)
+                {
+                    noochMemberN.SDNCheckDateTime = DateTime.Now;
+                    noochMemberN.AnyPriliminaryHit = true;
+                    //  noochMemberN.ent_num = noochMember.ent_num;
+                    st.Append("<table border='1'>");
+                    st.Append("<tr>");
+                    st.Append("<th>ENT Number</th>");
+                    st.Append("<th>SDN Name</th>");
+                    st.Append("<th>Percentage Matched</th>");
+                    st.Append("<tr>");
+
+                    foreach (var terrorist in terrorlist)
+                    {
+                        st.Append("<tr>");
+                        st.Append("<td>" + terrorist.ent_num + "</td>");
+                        st.Append("<td>" + terrorist.SDN_NAME + "</td>");
+                        st.Append("<td>" + (terrorist.lastper + terrorist.subper) / 2 + "</td>");
+                        st.Append("<tr>");
+                    }
+                    st.Append("</table>");
+
+                    //- mail sending code---
+                    // update his data and send email to Nooch admin
+                    var sendername = GetDecryptedData(noochMemberN.FirstName) + " " +
+                                     GetDecryptedData(noochMemberN.LastName);
+                    var senderemail = GetDecryptedData(noochMemberN.UserName);
+                    StringBuilder str = new StringBuilder();
+                    string s =
+                        "<html><body><strong>OFAC list Match</strong><br/>An automatic SDN screening returned the following details of a flagged user:<br/><br/>" +
+                        st;
+
+                    str.Append(s);
+
+                    s = "<br/><p>This user's Nooch Account information is:</p><br/>" +
+                        "<table border='1'><tr><td>Email Address: </td><td>" + senderemail + "</td></tr>" +
+                        "<tr><td>Name: </td><td>" + sendername + "</td></tr>" +
+                        "<tr><td>MemberID: </td><td>" + noochMemberN.MemberId + "</td></tr>" +
+                        "<tr><td>Country: </td><td>" + GetDecryptedData(noochMemberN.Country) + "</td></tr>" +
+                        "<tr><td>Address: </td><td>" + GetDecryptedData(noochMemberN.Address) + "</td></tr>" +
+                        "<tr><td>Phone Number: </td><td>" + noochMemberN.ContactNumber + "</td></tr></table><br/>- Nooch SDN Check</body></html>";
+
+                    str.Append(s);
+                    string adminUserName = CommonHelper.GetEncryptedData(Utility.GetValueFromConfig("transfersMail"));
+                    var fromAddress = CommonHelper.GetDecryptedData(adminUserName);
+
+                    bool b = Utility.SendEmail(null, fromAddress,
+                        Utility.GetValueFromConfig("SDNMailReciever"), null, "SDN Listed", null, null, null,
+                        null, str.ToString());
+
+                    Logger.Info(
+                        "SDN Screening Alert - SDN Screening Results email sent to [" +
+                        "SDN@nooch.com" + "].");
+
+                    if (true)
+                    {
+                        Logger.Info(
+                            "SDN Screening Alert - SDN Screening Results email sent to [" + "SDN@nooch.com" + "].");
+                    }
+                    {
+                        Logger.Error(
+                            "SDN Screening Alert - SDN Screening Results email NOT sent to [" + "SDN@nooch.com" + "].");
+                    }
+                }
+                else
+                {
+                    noochMemberN.SDNCheckDateTime = DateTime.Now;
+                    noochMemberN.AnyPriliminaryHit = false;
+                    noochMemberN.ent_num = null;
+                }
+
+                // updatine record in members table
+                _dbContext.SaveChanges();
+
+            }
+
+            return result;
+        }
+
     }
 }

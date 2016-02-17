@@ -1025,7 +1025,34 @@ namespace Nooch.DataAccess
             return false;
         }
 
+        public string SaveMediaPosts(string MemberId, string PostTo, string PostContent)
+        {
+            try
+            {
+                
+                    var member = new SocialMediaPost
+                    {
+                        Id = Guid.NewGuid(),
+                        PostContent = PostContent,
+                        PostedBy = Utility.ConvertToGuid(MemberId),
+                        PostedOn = DateTime.Now,
+                        PostTo = PostTo
+                    };
 
+                    int result = 0;
+                    
+                    _dbContext.SocialMediaPosts.Add(member);
+                result =  _dbContext.SaveChanges();
+
+                    return result > 0 ? "Success" : "Error";
+                
+            }
+
+            catch
+            {
+                return "Error";
+            }
+        }
 
 
         

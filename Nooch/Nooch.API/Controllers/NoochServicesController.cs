@@ -672,7 +672,7 @@ namespace Nooch.API.Controllers
         [ActionName("getReferralCode")]
         public StringResult getReferralCode(string memberId, string accessToken)
         {
-            return CommonHelper.IsValidRequest(accessToken, memberId) ? new StringResult { Result = CommonHelper.GetMemberReferralCodeByMemberId(memberId)} : new StringResult { Result = "Invalid OAuth 2 Access" };
+            return CommonHelper.IsValidRequest(accessToken, memberId) ? new StringResult { Result = CommonHelper.GetMemberReferralCodeByMemberId(memberId) } : new StringResult { Result = "Invalid OAuth 2 Access" };
         }
 
         [HttpPost]
@@ -691,8 +691,8 @@ namespace Nooch.API.Controllers
         {
             if ((msg == "Hi\n You were automatically logged out because you signed in from another device.\n - Team Nooch") || CommonHelper.IsValidRequest(accessToken, memberId))
             {
-                
-                return new StringResult { Result = Utility.SendSMS(phoneto,msg) };
+
+                return new StringResult { Result = Utility.SendSMS(phoneto, msg) };
             }
             throw new Exception("Invalid OAuth 2 Access");
         }
@@ -707,6 +707,109 @@ namespace Nooch.API.Controllers
         {
             TransactionsDataAccess tda = new TransactionsDataAccess();
             return new StringResult { Result = tda.CancelMoneyRequestForNonNoochUser(TransactionId, MemberId) };
+        }
+
+
+
+        /// <summary>
+        /// For Cancelling a REQUEST sent to an EXISTING Nooch user.
+        /// Currently called only from the iOS app.
+        /// </summary>
+        /// <param name="TransactionId"></param>
+        /// <param name="MemberId"></param>
+        [HttpGet]
+        [ActionName("CancelMoneyRequestForExistingNoochUser")]
+        public StringResult CancelMoneyRequestForExistingNoochUser(string TransactionId, string MemberId)
+        {
+            TransactionsDataAccess tda = new TransactionsDataAccess();
+            return new StringResult { Result = tda.CancelMoneyRequestForExistingNoochUser(TransactionId, MemberId) };
+        }
+
+
+        /// <summary>
+        /// CLIFF (12/8/15): NOT SURE WHERE THIS IS USED. NOT CALLED BY THE iOS app.  Might be called from cancel landing page.
+        /// </summary>
+        /// <param name="TransactionId"></param>
+        /// <param name="MemberId"></param>
+        /// <returns></returns>
+        [HttpGet]
+        [ActionName("CancelMoneyTransferForSender")]
+        public StringResult CancelMoneyTransferForSender(string TransactionId, string MemberId)
+        {
+            TransactionsDataAccess obj = new TransactionsDataAccess();
+            return new StringResult { Result = obj.CancelMoneyTransferForSender(TransactionId, MemberId) };
+        }
+
+
+        /// <summary>
+        /// For Cancelling an INVITE (Send Money) to a NON-NOOCH user. Called only from the iOS app.
+        /// </summary>
+        /// <param name="TransactionId"></param>
+        /// <param name="MemberId"></param>
+        /// <returns></returns>
+        [HttpGet]
+        [ActionName("CancelMoneyTransferToNonMemberForSender")]
+        public StringResult CancelMoneyTransferToNonMemberForSender(string TransactionId, string MemberId)
+        {
+            TransactionsDataAccess tda = new TransactionsDataAccess();
+            return new StringResult { Result = tda.CancelMoneyTransferToNonMemberForSender(TransactionId, MemberId) };
+        }
+
+
+
+
+
+
+
+        #endregion
+
+
+        #region SDN related stuff
+
+        [HttpGet]
+        [ActionName("CheckSDNListing")]
+        StringResult CheckSDNListing(string MemberId)
+        {
+
+
+            var noochMemberN = CommonHelper.GetMemberDetails(MemberId);
+            if (noochMemberN != null)
+            {
+                var b = CommonHelper.IsListedInSDN(CommonHelper.GetDecryptedData(noochMemberN.LastName),
+                    noochMemberN.MemberId);
+            }
+
+
+            return new StringResult();
+        }
+
+        #endregion
+
+
+        #region Social media related stuff
+
+        [HttpGet]
+        [ActionName("SaveSocialMediaPost")]
+        StringResult SaveSocialMediaPost(string MemberId, string accesstoken, string PostTo, string PostContent)
+        {
+            if (CommonHelper.IsValidRequest(accesstoken, MemberId))
+            {
+                try
+                {
+                    Logger.Info("Service Layer - SaveSocialMediaPost - [MemberId: " + MemberId + "],  [Posted To: " + PostTo + "]");
+                    var memberDataAccess = new MembersDataAccess();
+                    return new StringResult { Result = memberDataAccess.SaveMediaPosts(MemberId, PostTo, PostContent) };
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception("Server Error");
+                }
+
+            }
+            else
+            {
+                throw new Exception("Invalid OAuth 2 Access");
+            }
         }
         #endregion
 

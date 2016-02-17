@@ -293,6 +293,357 @@ namespace Nooch.DataAccess
                 return "Exception: " + ex.Message.ToString();
             }
         }
+
+
+
+
+        /// <summary>
+        /// For Cancelling a REQUEST sent to an EXISTING Nooch user. Called only from the iOS app.
+        /// </summary>
+        /// <param name="TransactionId"></param>
+        /// <param name="MemberId"></param>
+        public string CancelMoneyRequestForExistingNoochUser(string TransactionId, string MemberId)
+        {
+            try
+            {
+                Guid memGuid = Utility.ConvertToGuid(MemberId);
+                Guid transid = Utility.ConvertToGuid(TransactionId);
+
+                
+
+                Logger.Info("TDA -> CancelMoneyRequestForExistingNoochUser Initiated for: [" + MemberId + "]");
+
+                var res = _dbContext.Transactions.FirstOrDefault(m=>m.Member1.MemberId==memGuid && m.TransactionId==transid
+                    && m.TransactionStatus=="Pending" && (m.TransactionType=="T3EMY1WWZ9IscHIj3dbcNw==" || m.TransactionType=="DrRr1tU1usk7nNibjtcZkA=="));
+                    
+                    
+                if (res != null)
+                {
+                    res.TransactionStatus = "Cancelled";
+
+                    int i = _dbContext.SaveChanges();
+
+                    if (i > 0)
+                    {
+                        string memo = "";
+                        if (!string.IsNullOrEmpty(res.Memo))
+                        {
+                            memo = "For " + res.Memo.ToString();
+                        }
+                        // updated, now send email to user who made the request
+                        var tokens = new Dictionary<string, string>
+												 {
+													 {Constants.PLACEHOLDER_FIRST_NAME, CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(res.Member1.FirstName))},
+													 {Constants.PLACEHOLDER_Recepient_Email, CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(res.Member.FirstName)) + " " + CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(res.Member.LastName))},
+													 {Constants.PLACEHOLDER_TRANSFER_AMOUNT, res.Amount.ToString("n2")},
+													 {Constants.PLACEHOLDER_DATE, Convert.ToDateTime(res.TransactionDate).ToString("MMM dd yyyy")},
+													 {Constants.MEMO, memo}
+												 };
+
+                        // for TransferReceived email notification       
+                        string adminUserName = Utility.GetValueFromConfig("transfersMail");
+                        var fromAddress = adminUserName;
+                        var toAddress = CommonHelper.GetDecryptedData(res.Member1.UserName.ToString());
+                        try
+                        {
+                            // email notification
+                            Utility.SendEmail("requestCancelledToSender",  fromAddress, toAddress, null, "Nooch payment request to " + CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(res.Member.FirstName)) + " cancelled", null, tokens, null, null, null);
+                            Logger.Info("CancelMoneyRequestForExistingNoochUser --> requestCancelledToSender email sent to Sender: [" + toAddress + "] successfully.");
+                        }
+                        catch (Exception)
+                        {
+                            Logger.Error("CancelMoneyRequestForExistingNoochUser --> requestCancelledToSender email NOT sent to [" + toAddress + "]. Problem occurred in sending mail.");
+                        }
+
+                        var tokens2 = new Dictionary<string, string>
+												 {
+													 {Constants.PLACEHOLDER_FIRST_NAME, CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(res.Member.FirstName))},
+													 {Constants.PLACEHOLDER_LAST_NAME, CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(res.Member1.FirstName))+" "+CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(res.Member1.LastName))},
+													 {Constants.PLACEHOLDER_TRANSFER_AMOUNT, res.Amount.ToString("n2")},
+													 {Constants.MEMO, memo}
+												 };
+
+                        var toAddress2 = CommonHelper.GetDecryptedData(res.Member.UserName);
+                        try
+                        {
+                            Utility.SendEmail("requestCancelledToRecipient",  fromAddress, toAddress2, null, "Nooch payment request cancelled", null, tokens2, null, null, null);
+                            Logger.Info("CancelMoneyRequestForExistingNoochUser --> requestCancelledToRecipient email sent to [" + toAddress2 + "] successfully.");
+                        }
+                        catch (Exception)
+                        {
+                            Logger.Error("CancelMoneyRequestForExistingNoochUser --> requestCancelledToRecipient email NOT sent to [" + toAddress2 + "]. Problem occurred in sending mail.");
+                        }
+
+                        return "Transaction Cancelled Successfully.";
+                    }
+                    else
+                    {
+                        // not updated returning error
+                        return "Something went wrong while updating transaction, please retry.";
+                    }
+                }
+                else
+                {
+                    return "No Such Transaction Found.";
+                }
+            }
+            catch (Exception ex)
+            {
+                return "" + ex.ToString();
+            }
+
+        }
+
+
+
+
+        public string CancelMoneyTransferForSender(string TransactionId, string MemberId)
+        {
+            try
+            {
+                Guid memGuid = Utility.ConvertToGuid(MemberId);
+                Guid transGuid = Utility.ConvertToGuid(TransactionId);
+               
+
+                Logger.Info("TransactionDataAccess - CancelMoneyTransferForSender[ CancelMoneyTransferForSender:" + MemberId + "].");
+
+                
+
+                var res = _dbContext.Transactions.FirstOrDefault(m=>m.TransactionStatus=="Pending"
+                    && m.TransactionType == "5dt4HUwCue532sNmw3LKDQ==" && m.TransactionId==transGuid && m.Member.MemberId==memGuid);
+                if (res != null)
+                {
+                    // found and update
+                    res.TransactionStatus = "Cancelled";
+                    int i = _dbContext.SaveChanges();
+                    if (i > 1)
+                    {
+                        // updated
+                        // send mail to Money Sender
+                        var tokens = new Dictionary<string, string>
+												 {
+													 {Constants.PLACEHOLDER_FIRST_NAME, CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(res.Member.FirstName))+" "+ CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(res.Member.LastName))},
+													 {Constants.TRANSACTION_ID, CommonHelper.GetDecryptedData(res.Member1.UserName)},
+													 {Constants.PLACEHOLDER_TRANSFER_AMOUNT, res.Amount.ToString("n2")}													 
+												 };
+
+                        string adminUserName = Utility.GetValueFromConfig("transfersMail");
+                        var fromAddress = adminUserName;
+                        var toAddress = CommonHelper.GetDecryptedData(res.Member.UserName.ToString());
+                        try
+                        {
+                            // email notification
+                            Utility.SendEmail("transferCancelledToSender", fromAddress, toAddress, null, "Nooch transfer", null, tokens, null, null, null);
+                            Logger.Info("CancelMoneyTransferForSender - CancelMoneyTransferForSender status mail sent to [" + toAddress + "].");
+                        }
+                        catch (Exception)
+                        {
+                            Logger.Error("CancelMoneyTransferForSender - CancelMoneyTransferForSender mail not sent to [" + toAddress + "]. Problem occurred in sending mail.");
+                        }
+
+                        // Transfer Cancelled to recipient mail
+                        string s22 = res.Amount.ToString("n2");
+                        string[] s32 = s22.Split('.');
+
+                        var tokens2 = new Dictionary<string, string>
+												 {
+													 {Constants.PLACEHOLDER_FIRST_NAME, CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(res.Member1.FirstName))+" "+CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(res.Member1.LastName))},
+													 {Constants.TRANSACTION_ID, CommonHelper.GetDecryptedData(res.Member.UserName)},
+													 {Constants.PLACEHOLDER_TRANSFER_AMOUNT, s32[0]},
+													 {Constants.PLACEHLODER_CENTS, s32[1]}
+												 };
+
+                        var toAddress2 = CommonHelper.GetDecryptedData(res.InvitationSentTo.ToString());
+                        try
+                        {
+                            // email notification
+                            Utility.SendEmail("transferCancelledToRecipient",  fromAddress, toAddress2, null, "Nooch transfer", null, tokens2, null, null, null);
+                            Logger.Info("TransferReceived - TransferReceived status mail sent to [" + toAddress + "].");
+                        }
+                        catch (Exception)
+                        {
+                            Logger.Error("TransferReceived - TransferReceived mail not sent to [" + toAddress + "]. Problem occured in sending mail.");
+                        }
+
+                        return "Transaction Cancelled Successfully.";
+                    }
+                    else
+                    {
+                        // not updated returning error
+                        return "Something went wrong while updating transaction, please retry.";
+                    }
+                }
+                else
+                {
+                    // not found
+                    return "No Such Transaction Found.";
+                }
+            }
+            catch (Exception ex)
+            {
+                return "" + ex.ToString();
+            }
+        }
+
+
+
+
+
+        /// <summary>
+        /// For Cancelling an INVITE (Send Money) to a NON-NOOCH user. Called only from the iOS app.
+        /// </summary>
+        /// <param name="TransactionId"></param>
+        /// <param name="MemberId"></param>
+        public string CancelMoneyTransferToNonMemberForSender(string TransactionId, string MemberId)
+        {
+            try
+            {
+                Logger.Info("TDA -> CancelMoneyTransferToNonMemberForSender Initiated - " +
+                                       "MemberID: [" + MemberId + "], TransID: [" + TransactionId + "]");
+
+                Guid memGuid = Utility.ConvertToGuid(MemberId);
+                Guid transid = Utility.ConvertToGuid(TransactionId);
+
+                
+                var transObj = _dbContext.Transactions.FirstOrDefault(m=>m.TransactionStatus=="pending" && m.Member.MemberId==memGuid
+                    && m.TransactionId==transid && (m.TransactionType=="T3EMY1WWZ9IscHIj3dbcNw==" || m.TransactionType=="DrRr1tU1usk7nNibjtcZkA=="))
+                ;
+                
+
+                if (transObj != null)
+                {
+                    transObj.TransactionStatus = "Cancelled";
+                    int i =_dbContext.SaveChanges();
+
+                    if (i > 0)
+                    {
+                        string s22 = transObj.Amount.ToString("n2");
+                        string[] s32 = s22.Split('.');
+                        string senderFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transObj.Member.FirstName));
+                        string senderLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transObj.Member.LastName));
+                        string senderFullName = senderFirstName + " " + senderFirstName;
+                        string nonNoochRecipient = CommonHelper.GetDecryptedData(transObj.InvitationSentTo);
+
+                        var fromAddress = Utility.GetValueFromConfig("transfersMail");
+                        var toAddress = CommonHelper.GetDecryptedData(transObj.Member.UserName);
+
+                        bool isForRentScene = false;
+                        //var logoToDisplay = "noochlogo";
+
+                        if (transObj.Member.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49") // Rent Scene's account
+                        {
+                            isForRentScene = true;
+                            senderFirstName = "Rent Scene";
+                            senderLastName = "";
+                            senderFullName = "Rent Scene";
+                        }
+
+                        fromAddress = isForRentScene ? "payments@rentscene.com"
+                                                     : Utility.GetValueFromConfig("transfersMail");
+
+
+                        if (transObj.IsPhoneInvitation == true &&
+                            transObj.PhoneNumberInvited != null &&
+                            transObj.InvitationSentTo == null)
+                        {
+                            nonNoochRecipient = CommonHelper.GetDecryptedData(transObj.PhoneNumberInvited.Trim());
+                            nonNoochRecipient = CommonHelper.FormatPhoneNumber(nonNoochRecipient);
+                        }
+                        else
+                        {
+                            nonNoochRecipient = CommonHelper.GetDecryptedData(transObj.InvitationSentTo);
+                        }
+
+                        // Send email to Sender
+                        var tokens = new Dictionary<string, string>
+							{
+								{Constants.PLACEHOLDER_FIRST_NAME, senderFirstName},
+								{Constants.TRANSACTION_ID, nonNoochRecipient},
+								{Constants.PLACEHOLDER_TRANSFER_AMOUNT, s32[0]},
+								{Constants.PLACEHLODER_CENTS, s32[1]}
+							};
+
+                        try
+                        {
+                            Utility.SendEmail("transferCancelledToSender",  fromAddress, toAddress,
+                                                        null, "Your payment has been cancelled", null, tokens, null, null, null);
+
+                            Logger.Info("TDA -> CancelMoneyTransferToNonMemberForSender - transferCancelledToSender email sent to [" + toAddress + "].");
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Error("TDA -> CancelMoneyTransferToNonMemberForSender - transferCancelledToSender email not sent to [" + toAddress + "], " +
+                                                   "Exception: [" + ex + "]");
+                        }
+
+
+                        if (transObj.IsPhoneInvitation != null &&
+                            transObj.IsPhoneInvitation == true &&
+                            transObj.PhoneNumberInvited != null)
+                        {
+                            string MessageToRecepient = senderFullName + " just cancelled a $" + s32[0].ToString() + "." + s32[1].ToString() +
+                                " payment to you on Nooch. Sorry about that!";
+
+                            // removing extra stuff from phone number
+                            nonNoochRecipient = nonNoochRecipient.Replace("(", "");
+                            nonNoochRecipient = nonNoochRecipient.Replace(")", "");
+                            nonNoochRecipient = nonNoochRecipient.Replace(" ", "");
+                            nonNoochRecipient = nonNoochRecipient.Replace("-", "");
+
+                            string s = Utility.SendSMS(nonNoochRecipient, MessageToRecepient);
+                        }
+                        else
+                        {
+                            var tokens2 = new Dictionary<string, string>
+								{
+									{Constants.PLACEHOLDER_FIRST_NAME,  "there"}, // Cliff (1/18/16): this had been using the email/phone # of the recipient since we don't know their name (although we might sometimes if sent by Rent Scene, but we're not currently storing that name), so changing to "there" as in "Hi there,..."
+									{Constants.TRANSACTION_ID, senderFirstName + " " + senderLastName},
+									{Constants.PLACEHOLDER_TRANSFER_AMOUNT, s32[0]},
+									{Constants.PLACEHLODER_CENTS, s32[1]}
+								};
+
+                            var toAddress2 = (transObj.InvitationSentTo == null) ? CommonHelper.GetDecryptedData(transObj.Member1.UserName) : CommonHelper.GetDecryptedData(transObj.InvitationSentTo);
+
+                            try
+                            {
+                            Utility.SendEmail("transferCancelledToRecipient", fromAddress, toAddress2, null,
+                                    senderFullName + " cancelled a $" + s32[0]+ "." + s32[1] + " payment to you",
+                                    null, tokens2, null, null, null);
+
+                                Logger.Info("TDA -> CancelMoneyTransferToNonMemberForSender - transferCancelledToRecipient email sent to [" + toAddress + "] successfully");
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.Error("TDA -> CancelMoneyTransferToNonMemberForSender - transferCancelledToRecipient email NOT sent to [" + toAddress + "], " +
+                                                       "Exception: [" + ex + "]");
+                            }
+                        }
+
+                        return "Transaction Cancelled Successfully.";
+                    }
+                    else
+                    {
+                        // not updated returning error
+                        Logger.Error("TDA -> CancelMoneyTransferToNonMemberForSender FAILED - Could not save updates to DB - TransID: [" + TransactionId + "]");
+                        return "Something went wrong while updating transaction, please retry.";
+                    }
+                }
+                else
+                {
+                    // Transaction Not Found
+                    return "No Such Transaction Found.";
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("TDA -> CancelMoneyTransferToNonMemberForSender FAILED (Outer Exception) - TransID: [" + TransactionId + "]");
+                return "" + ex.Message;
+            }
+        }
         #endregion
+
+
+
+
     }
 }

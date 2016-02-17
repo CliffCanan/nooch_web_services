@@ -52,6 +52,7 @@ namespace Nooch.Data
         public virtual DbSet<SynapseSupportedBank> SynapseSupportedBanks { get; set; }
         public virtual DbSet<TenantsIdDocument> TenantsIdDocuments { get; set; }
         public virtual DbSet<UnitsOccupiedByTenant> UnitsOccupiedByTenants { get; set; }
+        public virtual DbSet<SDNSearchResult> SDNSearchResults { get; set; }
     
         public virtual ObjectResult<GetMostFrequentFriends_Result> GetMostFrequentFriends(string memberId)
         {
@@ -86,6 +87,24 @@ namespace Nooch.Data
                 new ObjectParameter("Radius", typeof(int));
     
             return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction<GetLocationSearch_Result>("GetLocationSearch", memberIdParameter, radiusParameter);
+        }
+    
+        public virtual ObjectResult<SDNSearchResult> pGetSDNListing(string searchtext)
+        {
+            var searchtextParameter = searchtext != null ?
+                new ObjectParameter("searchtext", searchtext) :
+                new ObjectParameter("searchtext", typeof(string));
+    
+            return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction<SDNSearchResult>("pGetSDNListing", searchtextParameter);
+        }
+    
+        public virtual ObjectResult<SDNSearchResult> pGetSDNListing(string searchtext, MergeOption mergeOption)
+        {
+            var searchtextParameter = searchtext != null ?
+                new ObjectParameter("searchtext", searchtext) :
+                new ObjectParameter("searchtext", typeof(string));
+    
+            return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction<SDNSearchResult>("pGetSDNListing", mergeOption, searchtextParameter);
         }
     }
 }

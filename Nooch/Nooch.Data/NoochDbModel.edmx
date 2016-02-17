@@ -305,6 +305,18 @@
           <Property Name="LeaseLength" Type="varchar(max)" />
           <Property Name="LeaseDocumentPath" Type="varchar(max)" />
         </EntityType>
+        <EntityType Name="SDNSearchResults">
+          <Key>
+            <PropertyRef Name="ent_num" />
+          </Key>
+          <Property Name="ent_num" Type="int" Nullable="false" />
+          <Property Name="SDN_NAME" Type="varchar" MaxLength="250" />
+          <Property Name="LastName" Type="varchar" MaxLength="50" />
+          <Property Name="SubText" Type="varchar" MaxLength="50" />
+          <Property Name="LastText" Type="varchar" MaxLength="50" />
+          <Property Name="subper" Type="int" />
+          <Property Name="lastper" Type="int" />
+        </EntityType>
         <EntityType Name="SocialMediaPosts">
           <Key>
             <PropertyRef Name="Id" />
@@ -659,6 +671,9 @@
           <Parameter Name="MemberId" Type="varchar" Mode="In" />
           <Parameter Name="GetWhat" Type="varchar" Mode="In" />
         </Function>
+        <Function Name="pGetSDNListing" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="searchtext" Type="varchar" Mode="In" />
+        </Function>
         <EntityContainer Name="NOOCHModelStoreContainer">
           <EntitySet Name="AdminUsers" EntityType="Self.AdminUsers" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="AuthenticationTokens" EntityType="Self.AuthenticationTokens" Schema="dbo" store:Type="Tables" />
@@ -673,6 +688,7 @@
           <EntitySet Name="Notifications" EntityType="Self.Notifications" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Properties" EntityType="Self.Properties" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="PropertyUnits" EntityType="Self.PropertyUnits" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="SDNSearchResults" EntityType="Self.SDNSearchResults" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="SocialMediaPosts" EntityType="Self.SocialMediaPosts" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="SynapseBankLoginResults" EntityType="Self.SynapseBankLoginResults" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="SynapseBanksOfMembers" EntityType="Self.SynapseBanksOfMembers" Schema="dbo" store:Type="Tables" />
@@ -950,6 +966,10 @@
             <Parameter Name="MemberId" Mode="In" Type="String" />
             <Parameter Name="Radius" Mode="In" Type="Int32" />
           </FunctionImport>
+          <FunctionImport Name="pGetSDNListing" EntitySet="SDNSearchResults" ReturnType="Collection(NOOCHModel.SDNSearchResult)">
+          <Parameter Name="searchtext" Mode="In" Type="String" />
+          </FunctionImport>
+          <EntitySet Name="SDNSearchResults" EntityType="NOOCHModel.SDNSearchResult" />
         </EntityContainer>
         <EntityType Name="MemberPrivacySetting">
           <Key>
@@ -1446,6 +1466,18 @@
           <Property Type="Decimal" Name="miles" Nullable="true" Precision="18" Scale="6" />
           <Property Type="String" Name="State" Nullable="false" MaxLength="1" />
         </ComplexType>
+        <EntityType Name="SDNSearchResult">
+          <Key>
+            <PropertyRef Name="ent_num" />
+          </Key>
+          <Property Name="ent_num" Type="Int32" Nullable="false" />
+          <Property Name="SDN_NAME" Type="String" MaxLength="250" FixedLength="false" Unicode="false" />
+          <Property Name="LastName" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="SubText" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="LastText" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="subper" Type="Int32" />
+          <Property Name="lastper" Type="Int32" />
+        </EntityType>
       </Schema>
     </edmx:ConceptualModels>
     <!-- C-S mapping content -->
@@ -2072,6 +2104,20 @@
               </ComplexTypeMapping>
             </ResultMapping>
           </FunctionImportMapping>
+          <FunctionImportMapping FunctionImportName="pGetSDNListing" FunctionName="NOOCHModel.Store.pGetSDNListing" />
+          <EntitySetMapping Name="SDNSearchResults">
+            <EntityTypeMapping TypeName="NOOCHModel.SDNSearchResult">
+              <MappingFragment StoreEntitySet="SDNSearchResults">
+                <ScalarProperty Name="lastper" ColumnName="lastper" />
+                <ScalarProperty Name="subper" ColumnName="subper" />
+                <ScalarProperty Name="LastText" ColumnName="LastText" />
+                <ScalarProperty Name="SubText" ColumnName="SubText" />
+                <ScalarProperty Name="LastName" ColumnName="LastName" />
+                <ScalarProperty Name="SDN_NAME" ColumnName="SDN_NAME" />
+                <ScalarProperty Name="ent_num" ColumnName="ent_num" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
         </EntityContainerMapping>
       </Mapping>
     </edmx:Mappings>
