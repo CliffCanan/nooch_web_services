@@ -1950,7 +1950,7 @@ namespace Nooch.DataAccess
             {
                 var transId = Utility.ConvertToGuid(transactionId);
 
-                var transactionDetail = _dbContext.Transactions.Where(c => c.TransactionId == transId).First();
+                var transactionDetail = _dbContext.Transactions.Where(c => c.TransactionId == transId).FirstOrDefault();
                    
                    // var transactionDetail = transactionRepository.SelectAll(transactionSpecification, new[] { "Members", "Members1" }).FirstOrDefault();
 
@@ -1978,7 +1978,7 @@ namespace Nooch.DataAccess
                      
 
                     //ClearTransactionHistory functionality 
-                    var member = _dbContext.Members.Where(u => u.MemberId == id).First();
+                    var member = _dbContext.Members.Where(u => u.MemberId == id).FirstOrDefault();
 
                     if (member != null)
                     {
@@ -2268,7 +2268,7 @@ namespace Nooch.DataAccess
        
                 //ClearTransactionHistory functionality 
                 
-                var member = _dbContext.Members.Where(u => u.MemberId == id).First();
+                var member = _dbContext.Members.Where(u => u.MemberId == id).FirstOrDefault();
                 if (member != null)
                 {
                  
@@ -2282,12 +2282,12 @@ namespace Nooch.DataAccess
 
                     
                     var disputedTransaction =
-                        _dbContext.Transactions.Where(t => t.Member1.MemberId == id && ((t.TransactionType == transactionType) && (t.DisputeStatus != null))).OrderByDescending(c => c.DisputeDate).First();
+                        _dbContext.Transactions.Where(t => t.Member1.MemberId == id && ((t.TransactionType == transactionType) && (t.DisputeStatus != null))).OrderByDescending(c => c.DisputeDate).FirstOrDefault();
                     
 
 
                     var receivedTransaction =
-                       _dbContext.Transactions.Where(entity => entity.Member1.MemberId == id && entity.TransactionType == transactionType ).OrderByDescending(c => c.DisputeDate).First();
+                       _dbContext.Transactions.Where(entity => entity.Member1.MemberId == id && entity.TransactionType == transactionType ).OrderByDescending(c => c.DisputeDate).FirstOrDefault();
 
                     if (disputedTransaction != null)
                     {
@@ -2318,7 +2318,7 @@ namespace Nooch.DataAccess
                      
 
                     //ClearTransactionHistory functionality 
-                    var member = _dbContext.Members.Where(u=>u.MemberId==id).First();
+                    var member = _dbContext.Members.Where(u=>u.MemberId==id).FirstOrDefault();
 
                     //if (member.ClearTransactionHistory.HasValue && member.ClearTransactionHistory.Value)
                     //{
@@ -2582,24 +2582,24 @@ namespace Nooch.DataAccess
 
                 if (listType.ToUpper().Equals("SENT"))
                 {
-                    
-                    transactions = _dbContext.Transactions.Where(entity => entity.Member.MemberId == id && entity.TransactionId == txnId).First();
+
+                    transactions = _dbContext.Transactions.FirstOrDefault(entity => entity.Member.MemberId == id && entity.TransactionId == txnId);
                 }
                 else if (listType.ToUpper().Equals("RECEIVED"))
                 {
-                    
-                    transactions = _dbContext.Transactions.Where(entity => entity.Member1.MemberId == id && entity.TransactionId == txnId).First();
+
+                    transactions = _dbContext.Transactions.FirstOrDefault(entity => entity.Member1.MemberId == id && entity.TransactionId == txnId);
                 }
                 else if (listType.ToUpper().Equals("DISPUTED"))
                 {
-                  
-                    transactions = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id)
-                                  && entity.DisputeStatus != null && entity.TransactionId == txnId).First();
+
+                    transactions = _dbContext.Transactions.FirstOrDefault(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id)
+                                                                           && entity.DisputeStatus != null && entity.TransactionId == txnId);
                 }
                 else // for withdraw
                 {
-                    transactions = _dbContext.Transactions.Where(entity => entity.Member1.MemberId == id &&
-                        entity.TransactionId == txnId).First();                   
+                    transactions = _dbContext.Transactions.FirstOrDefault(entity => (entity.Member1.MemberId == id || entity.Member.MemberId == id) &&
+                                                                                    entity.TransactionId == txnId);                   
                 }
 
                 

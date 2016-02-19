@@ -1221,7 +1221,7 @@ namespace Nooch.API.Controllers
         [ActionName("GetTransactionsSearchList")]
         public List<TransactionDto> GetTransactionsSearchList(string member, string friendName, string category, int pageSize, int pageIndex, string accessToken, string sublist)
         {
-            if (true)
+            if (CommonHelper.IsValidRequest(accessToken,member))
             {
                 try
                 {
@@ -1233,26 +1233,26 @@ namespace Nooch.API.Controllers
 
                     if (transactionListEntities != null && transactionListEntities.Count > 0)
                     {
-                        var memberDataAccess = new MembersDataAccess();
+                        
                         var Transactions = new Collection<TransactionDto>();
 
                         foreach (var trans in transactionListEntities)
                         {
                             TransactionDto obj = new TransactionDto();
                             obj.MemberId = trans.Member.MemberId.ToString();
-                            obj.NoochId = trans.Member.Nooch_ID.ToString();
+                            obj.NoochId = trans.Member.Nooch_ID;
                             obj.RecepientId = trans.Member1.MemberId.ToString();
                             obj.TransactionId = trans.TransactionId.ToString();
 
                             // If the transaction's sender matches the user, then display the receipient's name.
-                            if (trans.Member.MemberId.ToString() == member)
+                            if (trans.Member.MemberId.ToString().ToUpper() == member.ToUpper())
                             {
                                 // Member is Receiver in this transaction
                                 obj.FirstName =CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member1.FirstName));
                                 obj.LastName =CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member1.LastName));
                                 obj.Photo = String.Concat(Utility.GetValueFromConfig("PhotoUrl"), trans.Member1.Photo != null ? Path.GetFileName(trans.Member1.Photo) : Path.GetFileName("gv_no_photo.jpg"));
                             }
-                            else if (trans.Member1.MemberId.ToString() == member)
+                            else if (trans.Member1.MemberId.ToString().ToUpper() == member.ToUpper())
                             {
                                 obj.FirstName =CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member.FirstName));
                                 obj.LastName =CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member.LastName));
@@ -1287,7 +1287,8 @@ namespace Nooch.API.Controllers
                             if (obj.FirstName.ToLower().Contains(friendName.ToLower()) || obj.LastName.ToLower().Contains(friendName.ToLower()))
                                 Transactions.Add(obj);
                         }
-                        return Transactions.Skip((pageIndex - 1) * pageSize).Take(pageIndex * pageSize).ToList();
+                        //return Transactions.Skip((pageIndex - 1) * pageSize).Take(pageIndex * pageSize).ToList();
+                        return Transactions.ToList();
                     }
                 }
                 catch (Exception ex)
@@ -1298,7 +1299,7 @@ namespace Nooch.API.Controllers
             }
             else
             {
-                throw new Exception("Invalid OAuth 2 Access");
+                throw new Exception("Invalid oAuth access token.");
             }
         }
 
@@ -1464,6 +1465,74 @@ namespace Nooch.API.Controllers
                             receivedTransactions.DisputeStatus = !string.IsNullOrEmpty(transactionListEntities.DisputeStatus) ? CommonHelper.GetDecryptedData(transactionListEntities.DisputeStatus) : null;
                             receivedTransactions.DisputeId = transactionListEntities.DisputeTrackingId;
                             receivedTransactions.TransactionType = "Received";
+                            // sender photo - Received from
+                            receivedTransactions.Photo = String.Concat(Utility.GetValueFromConfig("PhotoUrl"), transactionListEntities.Member.Photo != null ? Path.GetFileName(transactionListEntities.Member.Photo) : Path.GetFileName("gv_no_photo.jpg"));
+                            receivedTransactions.DisputeReportedDate = transactionListEntities.DisputeDate.HasValue ? disputeDateString : string.Empty;
+                            receivedTransactions.DisputeReviewDate = transactionListEntities.ReviewDate.HasValue ? disputeReviewDateString : string.Empty;
+                            receivedTransactions.DisputeResolvedDate = transactionListEntities.ResolvedDate.HasValue ? disputeResolvedDateString : string.Empty;
+
+                            if (transactionListEntities.GeoLocation != null)
+                            {
+                                receivedTransactions.AddressLine1 = transactionListEntities.GeoLocation.AddressLine1 != null ? transactionListEntities.GeoLocation.AddressLine1 : string.Empty;
+                                receivedTransactions.AddressLine2 = transactionListEntities.GeoLocation.AddressLine2 != null ? transactionListEntities.GeoLocation.AddressLine2 : string.Empty;
+                                receivedTransactions.City = transactionListEntities.GeoLocation.City != null ? transactionListEntities.GeoLocation.City : string.Empty;
+                                receivedTransactions.State = transactionListEntities.GeoLocation.State != null ? transactionListEntities.GeoLocation.State : string.Empty;
+                                receivedTransactions.Country = transactionListEntities.GeoLocation.Country != null ? transactionListEntities.GeoLocation.Country : string.Empty;
+                                receivedTransactions.ZipCode = transactionListEntities.GeoLocation.ZipCode != null ? transactionListEntities.GeoLocation.ZipCode : string.Empty;
+
+                                receivedTransactions.Latitude = transactionListEntities.GeoLocation.Latitude != null ? (float)transactionListEntities.GeoLocation.Latitude : default(float);
+                                receivedTransactions.Longitude = transactionListEntities.GeoLocation.Longitude != null ? (float)transactionListEntities.GeoLocation.Longitude : default(float);
+                            }
+
+                            if (transactionListEntities.GeoLocation != null)
+                            {
+                                receivedTransactions.Location = transactionListEntities.GeoLocation.Latitude + ", " +
+                                    transactionListEntities.GeoLocation.Longitude;
+                            }
+                            else
+                            {
+                                receivedTransactions.Location = "- Nil -";
+                            }
+
+                            receivedTransactions.Picture = transactionListEntities.Picture;
+
+                            return receivedTransactions;
+
+                            #endregion Received
+                        }
+                        if (category.Equals("REQUEST"))
+                        {
+                            #region Received
+
+                            var receivedTransactions = new TransactionDto();
+
+                            transactionDateTime = transactionDateString.Split(' ');
+
+                            string timeZoneDateString = string.Empty;
+
+                            if (!string.IsNullOrEmpty(transactionListEntities.Member1.TimeZoneKey))
+                            {
+                                timeZoneDateString = memberDataAccess.GMTTimeZoneConversion(transactionListEntities.TransactionDate.ToString(), transactionListEntities.Member1.TimeZoneKey);
+
+                                timeZoneDateString = Convert.ToDateTime(timeZoneDateString).ToString("MM/dd/yyyy hh:mm:ss tt");
+
+                                transactionDateTime = timeZoneDateString.Split(' ');
+                            }
+
+                            receivedTransactions.FirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionListEntities.Member.FirstName));
+                            receivedTransactions.LastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionListEntities.Member.LastName));
+                            receivedTransactions.MemberId = transactionListEntities.Member.MemberId.ToString();
+                            receivedTransactions.NoochId = transactionListEntities.Member.Nooch_ID.ToString();
+                            receivedTransactions.RecepientId = transactionListEntities.Member1.MemberId.ToString();
+                            receivedTransactions.TransactionId = transactionListEntities.TransactionId.ToString();
+                            receivedTransactions.Name = CommonHelper.GetDecryptedData(transactionListEntities.Member.FirstName) + " " + CommonHelper.GetDecryptedData(transactionListEntities.Member.LastName);
+                            receivedTransactions.TransactionDate = !string.IsNullOrEmpty(transactionListEntities.Member1.TimeZoneKey) ? timeZoneDateString : transactionDateString;
+                            receivedTransactions.Date = transactionDateTime[0];
+                            receivedTransactions.Time = transactionDateTime[1] + " " + transactionDateTime[2];
+                            receivedTransactions.Amount = Math.Round(transactionListEntities.Amount, 2);
+                            receivedTransactions.DisputeStatus = !string.IsNullOrEmpty(transactionListEntities.DisputeStatus) ? CommonHelper.GetDecryptedData(transactionListEntities.DisputeStatus) : null;
+                            receivedTransactions.DisputeId = transactionListEntities.DisputeTrackingId;
+                            receivedTransactions.TransactionType = "Request";
                             // sender photo - Received from
                             receivedTransactions.Photo = String.Concat(Utility.GetValueFromConfig("PhotoUrl"), transactionListEntities.Member.Photo != null ? Path.GetFileName(transactionListEntities.Member.Photo) : Path.GetFileName("gv_no_photo.jpg"));
                             receivedTransactions.DisputeReportedDate = transactionListEntities.DisputeDate.HasValue ? disputeDateString : string.Empty;
