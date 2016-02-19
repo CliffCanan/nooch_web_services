@@ -839,5 +839,29 @@ namespace Nooch.Common
                 }
             return null;
         }
+
+
+        public static Landlord GetLandlordDetails(string memberId)
+        {
+            //Logger.LogDebugMessage("MDA -> GetLandlordDetails - MemberId: [" + memberId + "]");
+            try
+            {
+                var id = Utility.ConvertToGuid(memberId);
+
+                var landlordObj = _dbContext.Landlords.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
+
+                    if (landlordObj != null)
+                    {
+                        return landlordObj;
+                    }
+                
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("MDA -> GetLandlordDetails FAILED - Member ID: [" + memberId + "], [Exception: " + ex + "]");
+            }
+
+            return new Landlord();
+        }
     }
 }

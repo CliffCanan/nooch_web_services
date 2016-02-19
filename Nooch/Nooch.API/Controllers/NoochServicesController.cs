@@ -782,7 +782,7 @@ namespace Nooch.API.Controllers
                     Logger.Error("Service layer - SendTransactionReminderEmail FAILED - memberId: [" + MemberId + "]. Exception: [" + ex + "]");
                     throw new Exception("Server Error.");
                 }
-                
+
             }
             else
             {
@@ -818,7 +818,7 @@ namespace Nooch.API.Controllers
                     throw new Exception("Server Error");
 
                 }
-                
+
             }
             else
             {
@@ -847,7 +847,7 @@ namespace Nooch.API.Controllers
             {
                 throw new Exception("Server Error");
             }
-            
+
 
         }
         #endregion
@@ -920,7 +920,7 @@ namespace Nooch.API.Controllers
             {
                 try
                 {
-                     
+
                     Logger.Info("Service Layer -> GetSingleTransactionDetail Intiated - " +
                                            "MemberId: [" + MemberId + "], TransID: [" + transactionId + "]");
 
@@ -1001,10 +1001,10 @@ namespace Nooch.API.Controllers
                 catch (Exception ex)
                 {
                     Logger.Error("Service layer - GetsingleTransactionDetail FAILED - MemberId: [" + MemberId + "]. Exception: [" + ex + "]");
-                    throw  (ex);
-                    
+                    throw (ex);
+
                 }
-               
+
             }
             else
             {
@@ -1051,7 +1051,7 @@ namespace Nooch.API.Controllers
                                 if (trans.Member.MemberId.ToString() == member)
                                 {
                                     // Member is Receiver in this transaction
-                                    obj.FirstName =CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member1.FirstName));
+                                    obj.FirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member1.FirstName));
                                     obj.LastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member1.LastName));
 
                                     obj.Photo = String.Concat(Utility.GetValueFromConfig("PhotoUrl"),
@@ -1066,7 +1066,7 @@ namespace Nooch.API.Controllers
                                 if (trans.Member1.MemberId.ToString() == member)
                                 {
                                     //the receiver is same as the current member than display the names of sender.
-                                    obj.FirstName =CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member.FirstName));
+                                    obj.FirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member.FirstName));
                                     obj.LastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member.LastName));
                                     obj.Photo = String.Concat(Utility.GetValueFromConfig("PhotoUrl"), trans.Member.Photo != null ? Path.GetFileName(trans.Member.Photo) : Path.GetFileName("gv_no_photo.jpg"));
                                     obj.Amount = Math.Round(trans.Amount, 2);
@@ -1074,7 +1074,7 @@ namespace Nooch.API.Controllers
 
                                 if (trans.Member.MemberId.ToString() == member && trans.TransactionType == "T3EMY1WWZ9IscHIj3dbcNw==")
                                 {
-                                    obj.FirstName =CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member1.FirstName));
+                                    obj.FirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member1.FirstName));
                                     obj.LastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member1.LastName));
                                     obj.Photo = String.Concat(Utility.GetValueFromConfig("PhotoUrl"), trans.Member1.Photo != null ? Path.GetFileName(trans.Member1.Photo) : Path.GetFileName("gv_no_photo.jpg"));
                                     decimal trFee = (trans.TransactionFee != null) ? Convert.ToDecimal(trans.TransactionFee) : 0;
@@ -1132,7 +1132,7 @@ namespace Nooch.API.Controllers
                 catch (Exception ex)
                 {
                     Logger.Error("Service Layer - GetTransactionsList FAILED - MemberID: [" + member + "], Exception: [" + ex + "]");
-                   throw  ex;
+                    throw ex;
                 }
                 return new Collection<TransactionDto>();
             }
@@ -1178,8 +1178,8 @@ namespace Nooch.API.Controllers
                             RecepientId = transObj.Member1.MemberId.ToString(),
                             TransactionId = transObj.TransactionId.ToString(),
                             Name = CommonHelper.GetDecryptedData(transObj.Member.FirstName) + " " + CommonHelper.GetDecryptedData(transObj.Member.LastName),
-                            FirstName =CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transObj.Member.FirstName)),
-                            LastName =CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transObj.Member.LastName)),
+                            FirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transObj.Member.FirstName)),
+                            LastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transObj.Member.LastName)),
                             TransactionDate = !string.IsNullOrEmpty(transObj.Member1.TimeZoneKey) ? string.Format("{0:MM/d/yyyy hh:mm:ss tt}", Convert.ToDateTime(mda.GMTTimeZoneConversion(transObj.TransactionDate.ToString(), transObj.Member1.TimeZoneKey))) : string.Format("{0:MM/d/yyyy hh:mm:ss tt}", transObj.TransactionDate),
                             Amount = Math.Round(transObj.Amount, 2),
                             DisputeStatus = !string.IsNullOrEmpty(transObj.DisputeStatus) ? CommonHelper.GetDecryptedData(transObj.DisputeStatus) : null,
@@ -1221,7 +1221,7 @@ namespace Nooch.API.Controllers
         [ActionName("GetTransactionsSearchList")]
         public List<TransactionDto> GetTransactionsSearchList(string member, string friendName, string category, int pageSize, int pageIndex, string accessToken, string sublist)
         {
-            if (CommonHelper.IsValidRequest(accessToken,member))
+            if (CommonHelper.IsValidRequest(accessToken, member))
             {
                 try
                 {
@@ -1233,7 +1233,7 @@ namespace Nooch.API.Controllers
 
                     if (transactionListEntities != null && transactionListEntities.Count > 0)
                     {
-                        
+
                         var Transactions = new Collection<TransactionDto>();
 
                         foreach (var trans in transactionListEntities)
@@ -1248,14 +1248,14 @@ namespace Nooch.API.Controllers
                             if (trans.Member.MemberId.ToString().ToUpper() == member.ToUpper())
                             {
                                 // Member is Receiver in this transaction
-                                obj.FirstName =CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member1.FirstName));
-                                obj.LastName =CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member1.LastName));
+                                obj.FirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member1.FirstName));
+                                obj.LastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member1.LastName));
                                 obj.Photo = String.Concat(Utility.GetValueFromConfig("PhotoUrl"), trans.Member1.Photo != null ? Path.GetFileName(trans.Member1.Photo) : Path.GetFileName("gv_no_photo.jpg"));
                             }
                             else if (trans.Member1.MemberId.ToString().ToUpper() == member.ToUpper())
                             {
-                                obj.FirstName =CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member.FirstName));
-                                obj.LastName =CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member.LastName));
+                                obj.FirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member.FirstName));
+                                obj.LastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member.LastName));
                                 obj.Photo = String.Concat(Utility.GetValueFromConfig("PhotoUrl"), trans.Member.Photo != null ? Path.GetFileName(trans.Member.Photo) : Path.GetFileName("gv_no_photo.jpg"));
                             }
                             obj.Name = obj.FirstName + " " + obj.LastName;
@@ -1383,8 +1383,8 @@ namespace Nooch.API.Controllers
                                 transactionDateTime = timeZoneDateString.Split(' ');
                             }
 
-                            sentTransactions.FirstName =CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionListEntities.Member1.FirstName));
-                            sentTransactions.LastName =CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionListEntities.Member1.LastName));
+                            sentTransactions.FirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionListEntities.Member1.FirstName));
+                            sentTransactions.LastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionListEntities.Member1.LastName));
                             sentTransactions.MemberId = transactionListEntities.Member.MemberId.ToString();
                             sentTransactions.NoochId = transactionListEntities.Member1.Nooch_ID.ToString();
                             sentTransactions.RecepientId = transactionListEntities.Member1.MemberId.ToString();
@@ -1451,8 +1451,8 @@ namespace Nooch.API.Controllers
                                 transactionDateTime = timeZoneDateString.Split(' ');
                             }
 
-                            receivedTransactions.FirstName =CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionListEntities.Member.FirstName));
-                            receivedTransactions.LastName =CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionListEntities.Member.LastName));
+                            receivedTransactions.FirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionListEntities.Member.FirstName));
+                            receivedTransactions.LastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionListEntities.Member.LastName));
                             receivedTransactions.MemberId = transactionListEntities.Member.MemberId.ToString();
                             receivedTransactions.NoochId = transactionListEntities.Member.Nooch_ID.ToString();
                             receivedTransactions.RecepientId = transactionListEntities.Member1.MemberId.ToString();
@@ -1589,8 +1589,8 @@ namespace Nooch.API.Controllers
                                     transactionDateTime = timeZoneDateString.Split(' ');
                                 }
 
-                                disputedTransaction.FirstName =CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionListEntities.Member1.FirstName));
-                                disputedTransaction.LastName =CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionListEntities.Member1.LastName));
+                                disputedTransaction.FirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionListEntities.Member1.FirstName));
+                                disputedTransaction.LastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionListEntities.Member1.LastName));
                                 disputedTransaction.NoochId = transactionListEntities.Member1.Nooch_ID;
                                 disputedTransaction.TransactionId = transactionListEntities.TransactionId.ToString();
                                 disputedTransaction.Name = CommonHelper.GetDecryptedData(transactionListEntities.Member1.FirstName) + " " + CommonHelper.GetDecryptedData(transactionListEntities.Member1.LastName);
@@ -1769,6 +1769,128 @@ namespace Nooch.API.Controllers
 
 
         #endregion History Related Methods
+
+
+        [HttpGet]
+        [ActionName("GetMemberDetailsForLandingPage")]
+        public MemberDto GetMemberDetailsForLandingPage(string memberId)
+        {
+            Logger.Info("Service Layer -> GetMemberDetailsForLandingPage - [MemberId: " + memberId + "]");
+
+            try
+            {
+                // Get the Member's Account Info
+
+                var memberEntity = CommonHelper.GetMemberDetails(memberId);
+
+                // Get Synapse Bank Account Info
+                var synapseBank = CommonHelper.GetSynapseBankAccountDetails(memberId);
+
+                string accountstatus = "";
+
+                if (synapseBank != null)
+                {
+                    // Now check this bank's status. 
+                    // CLIFF (10/7/15): If the user's ID is verified (after sending SSN info to Synapse), then consider the bank Verified as well
+                    if (memberEntity.IsVerifiedWithSynapse == true)
+                    {
+                        accountstatus = "Verified";
+                    }
+                    else
+                    {
+                        accountstatus = synapseBank.Status;
+                    }
+                }
+
+                bool b = (synapseBank != null);
+
+
+
+                //var config =
+                //        new MapperConfiguration(cfg => cfg.CreateMap<Member,MemberDto>()
+                //            .BeforeMap((src, dest) => src.FirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(src.FirstName)))
+                //            .BeforeMap((src, dest) => src.LastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(src.LastName)))
+                //            .BeforeMap((src, dest) => src.UserName = CommonHelper.GetDecryptedData(src.UserName))
+                //            .BeforeMap((src, dest) => src.DateOfBirth = dest.DateOfBirth == null ? "" : Convert.ToDateTime(memberEntity.DateOfBirth).ToString("MM/dd/yyyy"))
+                //            .BeforeMap((src, dest) => src.Address = dest.Address == null ? "" : CommonHelper.GetDecryptedData(dest.Address))
+                //            .BeforeMap((src, dest) => src.City = dest.City == null ? "" : CommonHelper.GetDecryptedData(dest.City))
+                //            .BeforeMap((src, dest) => src.Zip = dest.Zipcode == null ? "" : CommonHelper.GetDecryptedData(dest.Zipcode))
+                //            .BeforeMap((src, dest) => src.IsVerifiedPhone = dest.IsVerifiedPhone == null && Convert.ToBoolean(dest.IsVerifiedPhone))
+                //            .BeforeMap((src, dest) => src.IsSSNAdded = dest.SSN == null && Convert.ToBoolean(dest.SSN))
+                //            .BeforeMap((src, dest) => src.PhotoUrl = dest.Photo ?? Path.GetFileName("gv_no_photo.jpg"))
+                //                .BeforeMap((src, dest) => src.FacebookAccountLogin = dest.FacebookAccountLogin != null ?
+                //                           CommonHelper.GetDecryptedData(dest.FacebookAccountLogin) :
+                //                           "")
+                //                           .BeforeMap((src, dest) => src.IsSynapseBankAdded = b).BeforeMap((src, dest) => src.SynapseBankStatus = accountstatus)
+
+                //            .BeforeMap((src, dest) => src.DateCreatedString = dest.DateCreated == null ? "" : Convert.ToDateTime(memberEntity.DateCreated).ToString("MM/dd/yyyy"))
+                //            );
+
+                //var mapper = config.CreateMapper();
+
+                //MemberDto member = mapper.Map<MemberDto>(memberEntity);
+
+
+
+
+                // Create MemberDTO Object to return to the app
+                var member = new MemberDto
+                {
+                    MemberId = memberEntity.MemberId.ToString(),
+                    UserName = CommonHelper.GetDecryptedData(memberEntity.UserName),
+                    Status = memberEntity.Status,
+                    FirstName = !String.IsNullOrEmpty(memberEntity.FirstName) ?
+                                CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberEntity.FirstName)) :
+                                "",
+                    LastName = !String.IsNullOrEmpty(memberEntity.LastName) ?
+                               CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberEntity.LastName)) :
+                               "",
+                    DateOfBirth = (memberEntity.DateOfBirth == null) ? "" : Convert.ToDateTime(memberEntity.DateOfBirth).ToString("MM/dd/yyyy"),
+                    Address = !String.IsNullOrEmpty(memberEntity.Address) ?
+                              CommonHelper.GetDecryptedData(memberEntity.Address) :
+                              null,
+                    City = !String.IsNullOrEmpty(memberEntity.City) ?
+                           CommonHelper.GetDecryptedData(memberEntity.City) :
+                           null,
+                    Zip = !String.IsNullOrEmpty(memberEntity.Zipcode) ?
+                          CommonHelper.GetDecryptedData(memberEntity.Zipcode) :
+                          null,
+                    ContactNumber = memberEntity.ContactNumber,
+                    IsVerifiedPhone = memberEntity.IsVerifiedPhone != null && Convert.ToBoolean(memberEntity.IsVerifiedPhone),
+                    IsSSNAdded = memberEntity.SSN != null,
+                    PhotoUrl = memberEntity.Photo ?? Path.GetFileName("gv_no_photo.jpg"),
+                    FacebookAccountLogin = memberEntity.FacebookAccountLogin != null ?
+                                           CommonHelper.GetDecryptedData(memberEntity.FacebookAccountLogin) :
+                                           "",
+                    IsSynapseBankAdded = b,
+                    SynapseBankStatus = accountstatus,
+                    IsVerifiedWithSynapse = memberEntity.IsVerifiedWithSynapse,
+                    DateCreatedString = memberEntity.DateCreated == null ? "" : Convert.ToDateTime(memberEntity.DateCreated).ToString("MM/dd/yyyy"),
+                    DeviceToken = memberEntity.DeviceToken,
+                };
+
+                if (memberEntity.Type == "Landlord")
+                {
+                    var landlordEntity = CommonHelper.GetLandlordDetails(memberId);
+                    member.companyName = !String.IsNullOrEmpty(landlordEntity.CompanyName)
+                                         ? CommonHelper.GetDecryptedData(landlordEntity.CompanyName)
+                                         : "NA";
+
+                    if (member.companyName.ToLower() == "realty mark llc")
+                    {
+                        member.companyName = "Realty Mark LLC";
+                    }
+                }
+
+                return member;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Layer -> GetMemberDetailsForLandingPage FAILED - [MemberId: " + memberId + "], [Exception: " + ex + "]");
+            }
+
+            return new MemberDto();
+        }
     }
 
 
