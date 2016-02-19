@@ -81,6 +81,7 @@
     <Compile Include="Entities\MobileAppOutputEnities\MostFrequentFriends.cs" />
     <Compile Include="Entities\MobileAppOutputEnities\PendingTransCoutResult.cs" />
     <Compile Include="Entities\MobileAppOutputEnities\PhoneEmailListDto.cs" />
+    <Compile Include="Entities\MobileAppOutputEnities\TransactionDto.cs" />
     <Compile Include="Entities\StringResult.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -1054,6 +1054,29 @@ namespace Nooch.DataAccess
             }
         }
 
+        public string GMTTimeZoneConversion(string serverDateTime, string timeZoneKey)
+        {
+            Logger.Info("MDA - GMTTimeZoneConversion - TimeZoneKey: [" + timeZoneKey + "]");
+            // Convert Server time to GMT Time
+            DateTime utcDateTime = Convert.ToDateTime(serverDateTime).ToUniversalTime();
+            DateTime dateTime = default(DateTime);
+            timeZoneKey = CommonHelper.GetDecryptedData(timeZoneKey);
+            try
+            {
+                TimeZoneInfo timeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneKey);
+                dateTime = TimeZoneInfo.ConvertTimeFromUtc(utcDateTime, timeZone);
+            }
+            catch (TimeZoneNotFoundException e)
+            {
+                return timeZoneKey + " not found on the local server: " + e;
+            }
+            catch (InvalidTimeZoneException e)
+            {
+                return timeZoneKey + " is corrupt on the local server: " + e;
+            }
+
+            return dateTime.ToString();
+        }
 
         
     }
