@@ -2014,8 +2014,7 @@ namespace Nooch.DataAccess
                         {
                             #region whenSomethingisPassedForSubList
 
-                            if (pageSize == 0 && pageIndex == 0)
-                            {
+                           
 
                                 if (listType.ToUpper().Equals("SENT"))
                                 {
@@ -2074,175 +2073,70 @@ namespace Nooch.DataAccess
                                 }
 
                             #endregion
-                        }
-                            else
-                            {
-                                #region WhenNothingIsPassedForSubList
-
-                                if (listType.ToUpper().Equals("SENT"))
-                                {
-                                    transactions = _dbContext.Transactions.Where(entity =>
-                                                entity.Member.MemberId == id &&
-                                               (entity.TransactionType == transactionTypeTransfer || entity.TransactionType == transactionTypeDonation)).ToList();
-
-                                }
-                                else if (listType.ToUpper().Equals("RECEIVED"))
-                                {
-
-                                    transactions = _dbContext.Transactions.Where(entity =>
-                                                entity.Member1.MemberId == id &&
-                                                entity.TransactionType == transactionTypeTransfer).ToList();
-
-                                }
-                                else if (listType.ToUpper().Equals("DISPUTED"))
-                                {
-                                    transactions = _dbContext.Transactions.Where(entity =>
-                                               (entity.Member1.MemberId == id || entity.Member.MemberId == id) &&
-                                                entity.DisputeStatus != null &&
-                                                entity.TransactionType == transactionTypeDisputed).ToList();
-                                }
-                                else if (listType.ToUpper().Equals("ALL"))
-                                {
-                                    transactions = _dbContext.Transactions.Where(entity =>
-                                                entity.Member.MemberId == id || entity.Member1.MemberId == id).ToList();
-
-                                }
-                                else if (listType.ToUpper().Equals("DONATION"))
-                                {
-
-                                    transactions = _dbContext.Transactions.Where(entity =>
-                                                (entity.Member1.MemberId == id || entity.Member.MemberId == id) &&
-                                                 entity.TransactionType == transactionTypeDonation).ToList();
-                                }
-                                else if (listType.ToUpper().Equals("REQUEST"))
-                                {
-
-                                    transactions = _dbContext.Transactions.Where(entity =>
-                                                (entity.Member1.MemberId == id || entity.Member.MemberId == id) &&
-                                                 entity.TransactionType == transactionTypeRequest).ToList();
-                                }
-                                #endregion
-                            }
+                         
+                           
                         }
                         else
                         {
-                            #region whenSomethingisPassedForSubList
+                            #region WhenNothingIsPassedForSubList
 
-                            if (pageSize == 0 && pageIndex == 0)
+                            if (listType.ToUpper().Equals("SENT"))
+                            {
+                                transactions = _dbContext.Transactions.Where(entity =>
+                                            entity.Member.MemberId == id &&
+                                           (entity.TransactionType == transactionTypeTransfer || entity.TransactionType == transactionTypeDonation)).ToList();
+
+                            }
+                            else if (listType.ToUpper().Equals("RECEIVED"))
                             {
 
-                                if (listType.ToUpper().Equals("SENT"))
-                                {
-                                    transactions = _dbContext.Transactions.Where(entity => entity.Member.MemberId == id &&
-                                                (entity.TransactionType == transactionTypeTransfer || entity.TransactionType == transactionTypeDonation) &&
-                                                 entity.TransactionStatus == SubListType).ToList();
+                                transactions = _dbContext.Transactions.Where(entity =>
+                                            entity.Member1.MemberId == id &&
+                                            entity.TransactionType == transactionTypeTransfer).ToList();
 
+                            }
+                            else if (listType.ToUpper().Equals("DISPUTED"))
+                            {
+                                transactions = _dbContext.Transactions.Where(entity =>
+                                           (entity.Member1.MemberId == id || entity.Member.MemberId == id) &&
+                                            entity.DisputeStatus != null &&
+                                            entity.TransactionType == transactionTypeDisputed).ToList();
+                            }
+                            else if (listType.ToUpper().Equals("ALL"))
+                            {
+                                transactions = _dbContext.Transactions.Where(entity =>
+                                            entity.Member.MemberId == id || entity.Member1.MemberId == id).ToList();
 
-                                }
-                                else if (listType.ToUpper().Equals("RECEIVED"))
-                                {
+                            }
+                            else if (listType.ToUpper().Equals("DONATION"))
+                            {
 
+                                transactions = _dbContext.Transactions.Where(entity =>
+                                            (entity.Member1.MemberId == id || entity.Member.MemberId == id) &&
+                                             entity.TransactionType == transactionTypeDonation).ToList();
+                            }
+                            else if (listType.ToUpper().Equals("REQUEST"))
+                            {
 
-                                    transactions = _dbContext.Transactions.Where(entity =>
-                                                entity.Member1.MemberId == id &&
-                                                entity.TransactionType == transactionTypeTransfer &&
-                                                entity.TransactionStatus == SubListType).ToList();
-                                }
-                                else if (listType.ToUpper().Equals("DISPUTED"))
-                                {
-
-                                    transactions = _dbContext.Transactions.Where(entity =>
-                                                ((entity.Member1.MemberId == id || entity.Member.MemberId == id) &&
-                                                  entity.DisputeStatus != null && entity.TransactionType == transactionTypeDisputed) &&
-                                                  entity.TransactionStatus == SubListType).ToList();
-                                }
-                                else if (listType.ToUpper().Equals("ALL") && SubListType == "Pending") // CR
-                                {
-
-                                    transactions = _dbContext.Transactions.Where(entity =>
-                                                (entity.Member.MemberId == id || entity.Member1.MemberId == id) &&
-                                                 entity.TransactionStatus == SubListType).ToList();
-                                }
-                                else if (listType.ToUpper().Equals("ALL") && SubListType == "Success") // CR
-                                {
-
-                                    transactions = _dbContext.Transactions.Where(entity =>
-                                                (entity.Member.MemberId == id || entity.Member1.MemberId == id) &&
-                                                (entity.TransactionStatus == SubListType || entity.TransactionStatus == "Cancelled" || entity.TransactionStatus == "Rejected")).ToList();
-                                }
-                                else if (listType.ToUpper().Equals("DONATION"))
-                                {
-
-                                    transactions = _dbContext.Transactions.Where(entity =>
-                                                (entity.Member1.MemberId == id || entity.Member.MemberId == id) &&
-                                                 entity.TransactionType == transactionTypeDonation &&
-                                                 entity.TransactionStatus == SubListType).ToList();
-
-                                }
-                                else if (listType.ToUpper().Equals("REQUEST"))
-                                {
-                                    transactions = _dbContext.Transactions.Where(entity =>
-                                                (entity.Member1.MemberId == id || entity.Member.MemberId == id) &&
-                                                 entity.TransactionType == transactionTypeRequest &&
-                                                (entity.TransactionStatus == SubListType || entity.TransactionStatus == "Cancelled" || entity.TransactionStatus == "Rejected")).ToList();
-                                }
-
+                                transactions = _dbContext.Transactions.Where(entity =>
+                                            (entity.Member1.MemberId == id || entity.Member.MemberId == id) &&
+                                             entity.TransactionType == transactionTypeRequest).ToList();
+                            }
                             #endregion
-                            }
-                            else
-                            {
-                                #region WhenNothingIsPassedForSubList
-
-                                if (listType.ToUpper().Equals("SENT"))
-                                {
-                                    transactions = _dbContext.Transactions.Where(entity =>
-                                                entity.Member.MemberId == id &&
-                                               (entity.TransactionType == transactionTypeTransfer || entity.TransactionType == transactionTypeDonation)).ToList();
-
-                                }
-                                else if (listType.ToUpper().Equals("RECEIVED"))
-                                {
-
-                                    transactions = _dbContext.Transactions.Where(entity =>
-                                                entity.Member1.MemberId == id &&
-                                                entity.TransactionType == transactionTypeTransfer).ToList();
-
-                                }
-                                else if (listType.ToUpper().Equals("DISPUTED"))
-                                {
-                                    transactions = _dbContext.Transactions.Where(entity =>
-                                               (entity.Member1.MemberId == id || entity.Member.MemberId == id) &&
-                                                entity.DisputeStatus != null &&
-                                                entity.TransactionType == transactionTypeDisputed).ToList();
-                                }
-                                else if (listType.ToUpper().Equals("ALL"))
-                                {
-                                    transactions = _dbContext.Transactions.Where(entity =>
-                                                entity.Member.MemberId == id || entity.Member1.MemberId == id).ToList();
-
-                                }
-                                else if (listType.ToUpper().Equals("DONATION"))
-                                {
-
-                                    transactions = _dbContext.Transactions.Where(entity =>
-                                                (entity.Member1.MemberId == id || entity.Member.MemberId == id) &&
-                                                 entity.TransactionType == transactionTypeDonation).ToList();
-                                }
-                                else if (listType.ToUpper().Equals("REQUEST"))
-                                {
-
-                                    transactions = _dbContext.Transactions.Where(entity =>
-                                                (entity.Member1.MemberId == id || entity.Member.MemberId == id) &&
-                                                 entity.TransactionType == transactionTypeRequest).ToList();
-                                }
-                                #endregion
-                            }
 
                         }
 
                         totalRecordsCount = transactions.Count();
 
-                        
+                        if (pageSize == 0 && pageIndex == 0)
+                        {
+                            transactions = transactions.Take(1000).ToList();
+                        }
+                        else
+                        {
+                            transactions = transactions.Skip(pageSize * pageIndex).Take(pageSize).ToList();
+                     
+                        }
 
                         if (transactions.Count > 0)
                         {

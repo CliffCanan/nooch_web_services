@@ -1767,6 +1767,14 @@ namespace Nooch.API.Controllers
             }
         }
 
+        /// Get a user's pending transactions count.
+        /// </summary>
+        /// <param name="MemberId"></param>
+        /// <param name="AccessToken"></param>
+        /// <returns>PendingTransCoutResult [sic] object with values for 4 types of pending transactions: requests sent/received, invites, disputes unresolved.</returns>
+         
+        
+
 
         #endregion History Related Methods
     }
