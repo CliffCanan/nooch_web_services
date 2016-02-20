@@ -68,9 +68,12 @@
     <Compile Include="Cryptography\Algorithms\AES.cs" />
     <Compile Include="Cryptography\CryptographyBase.cs" />
     <Compile Include="Entities\BoolResult.cs" />
+    <Compile Include="Entities\MobileAppOutputEnities\DisputeResultEntity.cs" />
     <Compile Include="Entities\GameThriveResponseClass.cs" />
     <Compile Include="Entities\googleURLShortnerResponseClass.cs" />
     <Compile Include="Entities\MemberEnity.cs" />
+    <Compile Include="Entities\MobileAppInputEntities\DisputeDto.cs" />
+    <Compile Include="Entities\MobileAppInputEntities\DisputeResult.cs" />
     <Compile Include="Entities\MobileAppInputEntities\RequestDto.cs" />
     <Compile Include="Entities\MobileAppInputEntities\UpdateMemberIpInput.cs" />
     <Compile Include="Entities\MobileAppOutputEnities\LocationSearch.cs" />

@@ -1768,11 +1768,42 @@ namespace Nooch.API.Controllers
         }
 
 
+        /// <summary>
+        /// To raise dispute for particular transaction.
+        /// </summary>
+        [HttpPost]
+        [ActionName("RaiseDispute")]
+        public DisputeResult RaiseDispute(DisputeDto raiseDisputeInput, string accessToken, string memberId)
+        {
+            if (CommonHelper.IsValidRequest(accessToken, memberId))
+            {
+                try
+                {
+                    Logger.Info("Service layer - RaiseDispute - transactionId: [" + raiseDisputeInput.TransactionId + "]");
+                    var transactionsDataAccess = new TransactionsDataAccess();
+                    var result = transactionsDataAccess.RaiseDispute(raiseDisputeInput.MemberId,
+                            raiseDisputeInput.RecepientId, raiseDisputeInput.TransactionId, raiseDisputeInput.ListType,
+                            raiseDisputeInput.CcMailIds, raiseDisputeInput.BccMailIds, raiseDisputeInput.Subject, raiseDisputeInput.BodyText);
+                    return new DisputeResult
+                    {
+                        Result = result.Result,
+                        DisputeId = result.DisputeId,
+                        DisputeDate = result.DisputeDate
+                    };
+                } 
+                catch (Exception ex)
+                {
+                    Logger.Error("Service layer - RaiseDispute FAILED - transactionId: " + raiseDisputeInput.TransactionId + "]. Exception: [" + ex + "]");                   
+                    throw ex;
+                }          
+                
+            }
+            else
+            {
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
+
         #endregion History Related Methods
     }
-
-
-
-
-
-}
+ }

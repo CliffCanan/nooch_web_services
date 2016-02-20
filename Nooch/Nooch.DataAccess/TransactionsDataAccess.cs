@@ -13,11 +13,13 @@ using Nooch.Common.Entities.MobileAppInputEntities;
 using Nooch.Common.Entities.MobileAppOutputEnities;
 using Nooch.Common.Resources;
 using Nooch.Data;
+using System.Collections.ObjectModel;
 
 namespace Nooch.DataAccess
 {
     public class TransactionsDataAccess
     {
+        private const string Chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         private readonly NOOCHEntities _dbContext = null;
 
         public TransactionsDataAccess()
@@ -2600,9 +2602,7 @@ namespace Nooch.DataAccess
                 {
                     transactions = _dbContext.Transactions.FirstOrDefault(entity => (entity.Member1.MemberId == id || entity.Member.MemberId == id) &&
                                                                                     entity.TransactionId == txnId);                   
-                }
-
-                
+                }                
 
                 if (transactions != null)
                 {
@@ -2610,6 +2610,229 @@ namespace Nooch.DataAccess
                 }
                 return new Transaction();
             
+        }
+
+        #region Dispute Related Methods
+        /// <summary>
+        /// Method called when a user raises a dispute about a transaction they previously sent.
+        /// </summary>
+        /// <param name="memberId"></param>
+        /// <param name="recipientId"></param>
+        /// <param name="transactionId"></param>
+        /// <param name="listType"></param>
+        /// <param name="ccCollection"></param>
+        /// <param name="bccCollection"></param>
+        /// <param name="subject"></param>
+        /// <param name="bodyText"></param>
+        public DisputeResultEntity RaiseDispute(string memberId, string recipientId, string transactionId, string listType, string ccCollection, string bccCollection, string subject, string bodyText)
+        {
+            Logger.Info("TDA - RaiseDispute Initiated - [MemberId: " + memberId + "], [TransactionId: " + transactionId + "]");
+
+            string DisputeTId = "";
+            string DisputeTransId = "";
+
+            var senderId = Utility.ConvertToGuid(memberId);
+            var receiverId = Utility.ConvertToGuid(recipientId);
+            var txnId = Utility.ConvertToGuid(transactionId);
+            var timeZoneKey = string.Empty;
+            subject = "Nooch Transfer Disputed";
+            var category = listType.ToUpper();
+            var transaction = new Transaction();
+            var sender = new Member();
+          
+                var notifications = new Collection<Notification>();
+                if (category.Equals("SENT"))
+                {                
+                      transaction = _dbContext.Transactions.Where(transactionTemp => transactionTemp.TransactionId == txnId).FirstOrDefault();
+                }
+                
+                if (transaction != null)
+                {
+                    string disputeTrackingId = GetRandomDisputeTrackingId();
+                    transaction.DisputeTrackingId = disputeTrackingId;
+                    DisputeTId = disputeTrackingId.ToString();
+                    DisputeTransId = transaction.TransactionId.ToString();
+                    transaction.Subject = "Dispute recorded successfully.";
+
+                    var disputeStatus = CommonHelper.GetEncryptedData(Constants.DISPUTE_STATUS_REPORTED);
+
+                    transaction.DisputeStatus = disputeStatus;
+                    transaction.TransactionStatus = "Pending";
+                    transaction.TransactionType = "+C1+zhVafHdXQXCIqjU/Zg==";
+
+                    if (category.Equals("SENT"))
+                    {
+                        transaction.RaisedBy = "Sender";
+                        timeZoneKey = !string.IsNullOrEmpty(transaction.Member.TimeZoneKey) ? transaction.Member.TimeZoneKey : null;
+                    }
+
+                    transaction.DisputeDate = DateTime.Now;
+                    transaction.RaisedById = senderId;
+                     
+                    int result = _dbContext.SaveChanges();
+
+                    var mda = new MembersDataAccess();
+                    var notifSettings = CommonHelper.GetMemberNotificationSettingsByUserName(CommonHelper.GetDecryptedData(transaction.Member.UserName));
+
+                    if (result > 0)
+                    {
+                        CreateNotifications(memberId, notifications, transaction.Member.UserName, "Support", disputeTrackingId, bodyText);                      
+                        foreach (var m in notifications)
+                        {                           
+                                _dbContext.Notifications.Add(m);
+                                _dbContext.SaveChanges();
+                        }
+                       
+                        if (category.Equals("SENT"))
+                        {                        
+                            sender = _dbContext.Members.Where(memberTemp => memberTemp.MemberId == senderId).FirstOrDefault();
+                        }
+                       
+                        if (sender != null)
+                        {
+                            sender.Status = Constants.STATUS_SUSPENDED;
+                            sender.DateModified = DateTime.Now;                         
+                            _dbContext.SaveChanges();                           
+                            #region Send Email To User About Account Suspension
+
+                            var tokens = new Dictionary<string, string>
+							 {
+								 {Constants.PLACEHOLDER_FIRST_NAME, CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(sender.FirstName))}
+							 };
+
+                            try
+                            {
+                                var fromAddress = Utility.GetValueFromConfig("adminMail");
+                                string emailAddress = CommonHelper.GetDecryptedData(sender.UserName);
+                                Logger.Error("SupendMember - Attempt to send mail for Supend Member[ memberId:" + sender.MemberId + "].");
+
+                                Utility.SendEmail("userSuspended", fromAddress, emailAddress, null, "Your Nooch account has been suspended.", null, tokens, null, null, null); //'MailPriority.High' removed this bez of missmatch para -Surya
+                            }
+                            catch (Exception)
+                            {
+                                Logger.Error("TDA -> Raise Dispute - Supend Member email NOT send to [" + sender.MemberId + "]. Problem sending email.");
+                            }
+
+                            #endregion Send Email To User About Account Suspension
+                        }
+
+
+                        try
+                        {
+                            string supportMail = Utility.GetValueFromConfig("supportMail");
+                            string s2 = transaction.Amount.ToString("n2");
+                            string[] s3 = s2.Split('.');
+                            string transferToUsername = "";
+
+                            if (transaction.TransactionType == "DrRr1tU1usk7nNibjtcZkA==" && transaction.InvitationSentTo != null)
+                            {
+                                transferToUsername = CommonHelper.GetDecryptedData(transaction.InvitationSentTo);
+                            }
+                            else if (transaction.TransactionType == "5dt4HUwCue532sNmw3LKDQ==" && transaction.RaisedBy == "Sender")
+                            {
+                                transferToUsername = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transaction.Member1.FirstName)) + " " +
+                                                     CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transaction.Member1.LastName));
+                            }
+                            else if (transaction.TransactionType == "5dt4HUwCue532sNmw3LKDQ==" && transaction.RaisedById == receiverId)
+                            {
+                                transferToUsername = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transaction.Member.FirstName)) + " " +
+                                                     CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transaction.Member.LastName));
+                            }
+                            else if (transaction.TransactionType == "T3EMY1WWZ9IscHIj3dbcNw==")
+                            {
+                                transferToUsername = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transaction.Member.FirstName)) + " " +
+                                                     CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transaction.Member.LastName));
+                            }
+                            else
+                            {
+                                transferToUsername = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transaction.Member1.FirstName)) + " " +
+                                                     CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transaction.Member1.LastName));
+                            }
+                            // get name and other details of sender to send email
+
+                            var tokens = new Dictionary<string, string>
+												 {
+													 {Constants.PLACEHOLDER_FIRST_NAME, CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(sender.FirstName))},
+													 {Constants.PLACEHOLDER_NEWUSER,transferToUsername},
+													 {Constants.PLACEHLODER_CENTS, s3[1].ToString()},
+                                                     {Constants.PLACEHOLDER_TRANSFER_AMOUNT, s3[0].ToString()},
+													 {Constants.PLACEHOLDER_TRANSACTION_CANCELLED_ON, Convert.ToDateTime(transaction.DisputeDate).ToString("MMMM dd, yyyy")},
+													 {Constants.PLACEHOLDER_DISPUTEID, DisputeTId}
+												 };
+
+                            Utility.SendEmail("disputeRaised", supportMail, CommonHelper.GetDecryptedData(transaction.Member.UserName), null, subject, null, tokens, ccCollection, bccCollection, bodyText); //'MailPriority.High' removed this bez of missmatch para -Surya
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Error("TDA -> RaiseDispute - Dispute raised email NOT sent to [" + CommonHelper.GetDecryptedData(transaction.Member.UserName) + "], [Exception: " + ex + "]");
+
+                            return new DisputeResultEntity
+                            {
+                                Result = "Failure"
+                            };
+                        }
+
+                        return new DisputeResultEntity
+                        {
+                            Result = "Dispute has been reported for this transaction. Please note your dispute tracking id: " + disputeTrackingId,
+                            DisputeId = disputeTrackingId,
+                            DisputeDate = !string.IsNullOrEmpty(timeZoneKey) ? mda.GMTTimeZoneConversion(DateTime.Now.ToString(), timeZoneKey) : DateTime.Now.ToString()
+                        };
+                    }
+                }
+                return new DisputeResultEntity
+                {
+                    Result = "Transaction not found."
+                };            
+        }
+
+        /// <summary>
+        /// To get random alphanumeric 5 digit dispute tracking id.
+        /// </summary>
+        /// <returns>Nooch Random ID</returns>
+        /// 
+
+        public string GetRandomDisputeTrackingId()
+        {
+            var random = new Random();
+            int j = 1;
+                    
+                for (int i = 0; i <= j; i++)
+                {
+                    var randomId = new string(
+                        Enumerable.Repeat(Chars, 5)
+                                  .Select(s => s[random.Next(s.Length)])
+                                  .ToArray());                   
+                
+                    var transactionEntity = _dbContext.Transactions.Where(memberTemp => memberTemp.DisputeTrackingId == randomId).FirstOrDefault();
+                   
+                    if (transactionEntity == null)
+                    {
+                        return randomId;
+                    }
+
+                    j += i + 1;
+                }
+            return null;
+        }
+
+        #endregion Dispute Related Methods
+
+        private static void CreateNotifications(string memberId, Collection<Notification> notifications, string mailId, string templateType, string disputeTrackingId, string bodyText)
+        {
+            var notification = new Notification
+            {
+                DateCreated = DateTime.Now,
+                DateSent = DateTime.Now,
+                MailContent = bodyText,
+                NotificationId = Guid.NewGuid(),
+                Recepient_UserName = mailId,
+                SenderId = Utility.ConvertToGuid(memberId),
+                TemplateType = templateType,
+                DisputeTrackingId = disputeTrackingId
+            };
+
+            notifications.Add(notification);
         }
 
     }
