@@ -16,6 +16,7 @@ using Nooch.Common.Entities.MobileAppOutputEnities;
 using Nooch.Data;
 using Nooch.DataAccess;
 using System.Collections.ObjectModel;
+using Nooch.Common.Entities.SynapseRelatedEntities;
 using Nooch.Common.Resources;
 
 namespace Nooch.API.Controllers
@@ -1982,5 +1983,36 @@ namespace Nooch.API.Controllers
 
             return new MemberDto();
         }
+
+
+
+
+        /************************************************/
+        /***** ----  SYNAPSE-RELATED SERVICES  ---- *****/
+        /************************************************/
+        #region Synapse-Related Services
+
+        [HttpGet]
+        [ActionName("RegisterUserWithSynapseV3")]
+        public synapseCreateUserV3Result_int RegisterUserWithSynapseV3(string memberId)
+        {
+            try
+            {
+                MembersDataAccess mda = new MembersDataAccess();
+                
+                synapseCreateUserV3Result_int res = mda.RegisterUserWithSynapseV3(memberId);
+                
+
+                return res;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Layer -> RegisterUserWithSynapseV3 FAILED. [Exception: " + ex.ToString() + "]");
+
+                return null;
+            }
+        }
+
+        #endregion
     }
 }

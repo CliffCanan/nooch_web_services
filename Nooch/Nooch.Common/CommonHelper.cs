@@ -1,12 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Mail;
 using System.Text;
 using System.Threading.Tasks;
 using log4net.Repository.Hierarchy;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Nooch.Common.Cryptography.Algorithms;
 using Nooch.Common.Entities.MobileAppOutputEnities;
+using Nooch.Common.Entities.SynapseRelatedEntities;
 using Nooch.Common.Resources;
 using Nooch.Common.Rules;
 using Nooch.Data;
@@ -141,7 +146,7 @@ namespace Nooch.Common
                             }
                             catch (Exception)
                             {
-                                Logger.LogDebugMessage("InviteReminder - LogOut mail not sent to [" + toAddress + "]. Problem occured in sending mail.");
+                                Logger.Info("InviteReminder - LogOut mail not sent to [" + toAddress + "]. Problem occured in sending mail.");
                             }
                             //sms notification
                             StringResult smsResult = ApiSMS(PhoneNumber.Result, msg, accessToken, memberId);
@@ -420,7 +425,7 @@ namespace Nooch.Common
 
         public static MemberNotification GetMemberNotificationSettingsByUserName(string userName)
         {
-            //Logger.LogDebugMessage("MDA -> GetMemberNotificationSettingsByUserName - UserName: [" + userName + "]");
+            //Logger.Info("MDA -> GetMemberNotificationSettingsByUserName - UserName: [" + userName + "]");
 
             userName = GetEncryptedData(userName);
 
@@ -596,7 +601,7 @@ namespace Nooch.Common
         private static string IncreaseInvalidPinAttemptCount(
             Member memberEntity, int pinRetryCountInDb)
         {
-            Member mem= _dbContext.Members.Find(memberEntity);
+            Member mem = _dbContext.Members.Find(memberEntity);
 
 
             mem.InvalidPinAttemptCount = pinRetryCountInDb + 1;
@@ -609,94 +614,94 @@ namespace Nooch.Common
 
         public static string ValidatePinNumber(string memberId, string pinNumber)
         {
-            
-                var id = Utility.ConvertToGuid(memberId);
 
-                
+            var id = Utility.ConvertToGuid(memberId);
+
+
             var memberEntity = _dbContext.Members.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
-                    
 
-                if (memberEntity != null)
+
+            if (memberEntity != null)
+            {
+                int pinRetryCountInDb = 0;
+                pinRetryCountInDb = memberEntity.InvalidPinAttemptCount.Equals(null)
+                    ? 0
+                    : memberEntity.InvalidPinAttemptCount.Value;
+                var currentTimeMinus24Hours = DateTime.Now.AddHours(-24);
+
+                //Check(InvalidPinAttemptTime) > CurrentTime - 24 hrs                  
+                bool isInvalidPinAttempTimeOver =
+                    (new InvalidAttemptDurationSpecification().IsSatisfiedBy(memberEntity.InvalidPinAttemptTime,
+                        currentTimeMinus24Hours));
+
+                if (isInvalidPinAttempTimeOver)
                 {
-                    int pinRetryCountInDb = 0;
+                    //Reset attempt count
+                    memberEntity.InvalidPinAttemptCount = null;
+                    memberEntity.InvalidPinAttemptTime = null;
+                    //if member has no dispute raised or under review, he can be made active, else he should remain suspended so that he cant do fund transfer or withdraw amount...
+
+                    var disputeStatus = CommonHelper.GetEncryptedData(Constants.DISPUTE_STATUS_REPORTED);
+                    var disputeReviewStatus = CommonHelper.GetEncryptedData(Constants.DISPUTE_STATUS_REVIEW);
+
+                    if (
+                        !memberEntity.Transactions.Any(
+                            transaction =>
+                                (transaction.DisputeStatus == disputeStatus ||
+                                 transaction.DisputeStatus == disputeReviewStatus) &&
+                                memberEntity.MemberId == transaction.RaisedById))
+                    {
+                        memberEntity.Status = Constants.STATUS_ACTIVE;
+                    }
+
+                    memberEntity.DateModified = DateTime.Now;
+                    _dbContext.SaveChanges();
+
                     pinRetryCountInDb = memberEntity.InvalidPinAttemptCount.Equals(null)
                         ? 0
                         : memberEntity.InvalidPinAttemptCount.Value;
-                    var currentTimeMinus24Hours = DateTime.Now.AddHours(-24);
+                    ;
 
-                    //Check(InvalidPinAttemptTime) > CurrentTime - 24 hrs                  
-                    bool isInvalidPinAttempTimeOver =
-                        (new InvalidAttemptDurationSpecification().IsSatisfiedBy(memberEntity.InvalidPinAttemptTime,
-                            currentTimeMinus24Hours));
-
-                    if (isInvalidPinAttempTimeOver)
+                    if (!memberEntity.PinNumber.Equals(pinNumber.Replace(" ", "+")))
+                    // incorrect pinnumber after 24 hours
                     {
-                        //Reset attempt count
-                        memberEntity.InvalidPinAttemptCount = null;
-                        memberEntity.InvalidPinAttemptTime = null;
-                        //if member has no dispute raised or under review, he can be made active, else he should remain suspended so that he cant do fund transfer or withdraw amount...
-
-                        var disputeStatus = CommonHelper.GetEncryptedData(Constants.DISPUTE_STATUS_REPORTED);
-                        var disputeReviewStatus = CommonHelper.GetEncryptedData(Constants.DISPUTE_STATUS_REVIEW);
-
-                        if (
-                            !memberEntity.Transactions.Any(
-                                transaction =>
-                                    (transaction.DisputeStatus == disputeStatus ||
-                                     transaction.DisputeStatus == disputeReviewStatus) &&
-                                    memberEntity.MemberId == transaction.RaisedById))
-                        {
-                            memberEntity.Status = Constants.STATUS_ACTIVE;
-                        }
-
-                        memberEntity.DateModified = DateTime.Now;
-                        _dbContext.SaveChanges();
-                        
-                        pinRetryCountInDb = memberEntity.InvalidPinAttemptCount.Equals(null)
-                            ? 0
-                            : memberEntity.InvalidPinAttemptCount.Value;
-                        ;
-
-                        if (!memberEntity.PinNumber.Equals(pinNumber.Replace(" ", "+")))
-                        // incorrect pinnumber after 24 hours
-                        {
-                            return IncreaseInvalidPinAttemptCount( memberEntity, pinRetryCountInDb);
-                        }
+                        return IncreaseInvalidPinAttemptCount(memberEntity, pinRetryCountInDb);
                     }
+                }
 
-                    if (pinRetryCountInDb < 3 && memberEntity.PinNumber.Equals(pinNumber.Replace(" ", "+")))
-                    {
-                        //Reset attempt count                       
-                        memberEntity.InvalidPinAttemptCount = 0;
-                        memberEntity.InvalidPinAttemptTime = null;
+                if (pinRetryCountInDb < 3 && memberEntity.PinNumber.Equals(pinNumber.Replace(" ", "+")))
+                {
+                    //Reset attempt count                       
+                    memberEntity.InvalidPinAttemptCount = 0;
+                    memberEntity.InvalidPinAttemptTime = null;
 
-                        _dbContext.SaveChanges();
-                        return "Success"; // active nooch member  
-                    }
+                    _dbContext.SaveChanges();
+                    return "Success"; // active nooch member  
+                }
 
-                    //Username is there in db, whereas pin number entered by user is incorrect.
-                    if (memberEntity.InvalidPinAttemptCount == null || memberEntity.InvalidPinAttemptCount == 0)
-                    //this is the first invalid try
-                    {
-                        return IncreaseInvalidPinAttemptCount( memberEntity, pinRetryCountInDb);
-                    }
+                //Username is there in db, whereas pin number entered by user is incorrect.
+                if (memberEntity.InvalidPinAttemptCount == null || memberEntity.InvalidPinAttemptCount == 0)
+                //this is the first invalid try
+                {
+                    return IncreaseInvalidPinAttemptCount(memberEntity, pinRetryCountInDb);
+                }
 
-                    if (pinRetryCountInDb == 3)
-                    {
-                        return
-                            "Your account has been suspended. Please contact admin or send a mail to support@nooch.com if you need to reset your PIN number immediately.";
-                    }
-                    if (pinRetryCountInDb == 2)
-                    {
-                        memberEntity.InvalidPinAttemptCount = pinRetryCountInDb + 1;
-                        memberEntity.InvalidPinAttemptTime = DateTime.Now;
-                        memberEntity.Status = Constants.STATUS_SUSPENDED;
-                        _dbContext.SaveChanges();
-                        
+                if (pinRetryCountInDb == 3)
+                {
+                    return
+                        "Your account has been suspended. Please contact admin or send a mail to support@nooch.com if you need to reset your PIN number immediately.";
+                }
+                if (pinRetryCountInDb == 2)
+                {
+                    memberEntity.InvalidPinAttemptCount = pinRetryCountInDb + 1;
+                    memberEntity.InvalidPinAttemptTime = DateTime.Now;
+                    memberEntity.Status = Constants.STATUS_SUSPENDED;
+                    _dbContext.SaveChanges();
 
-                        #region SendingEmailToUser
 
-                        var tokens = new Dictionary<string, string>
+                    #region SendingEmailToUser
+
+                    var tokens = new Dictionary<string, string>
                         {
                             {
                                 Constants.PLACEHOLDER_FIRST_NAME,
@@ -704,34 +709,34 @@ namespace Nooch.Common
                             }
                         };
 
-                        try
-                        {
-                            var fromAddress = Utility.GetValueFromConfig("adminMail");
-                            string emailAddress = CommonHelper.GetDecryptedData(memberEntity.UserName);
-                            Logger.Info(
-                                "Validate PIN Number --> Attempt to send mail for Suspend Member[ memberId:" +
-                                memberEntity.MemberId + "].");
-                            Utility.SendEmail("userSuspended",  fromAddress, emailAddress,
-                                null, "Your Nooch account has been suspended", null, tokens, null, null, null);
-                        }
-                        catch (Exception)
-                        {
-                            Logger.Error("Validate PIN Number --> Suspend Member status email not send to [" +
-                                                   memberEntity.MemberId +
-                                                   "]. Problem occurred in sending Suspend Member status mail. ");
-                        }
-
-                        #endregion
-
-                        return
-                            "Your account has been suspended for 24 hours from now. Please contact admin or send a mail to support@nooch.com if you need to reset your PIN number immediately.";
-                        // this is 3rd try
+                    try
+                    {
+                        var fromAddress = Utility.GetValueFromConfig("adminMail");
+                        string emailAddress = CommonHelper.GetDecryptedData(memberEntity.UserName);
+                        Logger.Info(
+                            "Validate PIN Number --> Attempt to send mail for Suspend Member[ memberId:" +
+                            memberEntity.MemberId + "].");
+                        Utility.SendEmail("userSuspended", fromAddress, emailAddress,
+                            null, "Your Nooch account has been suspended", null, tokens, null, null, null);
                     }
-                    return IncreaseInvalidPinAttemptCount( memberEntity, pinRetryCountInDb);
-                    // this is second try.
+                    catch (Exception)
+                    {
+                        Logger.Error("Validate PIN Number --> Suspend Member status email not send to [" +
+                                               memberEntity.MemberId +
+                                               "]. Problem occurred in sending Suspend Member status mail. ");
+                    }
+
+                    #endregion
+
+                    return
+                        "Your account has been suspended for 24 hours from now. Please contact admin or send a mail to support@nooch.com if you need to reset your PIN number immediately.";
+                    // this is 3rd try
                 }
-                return "Member not found.";
-            
+                return IncreaseInvalidPinAttemptCount(memberEntity, pinRetryCountInDb);
+                // this is second try.
+            }
+            return "Member not found.";
+
         }
 
 
@@ -741,15 +746,15 @@ namespace Nooch.Common
             {
                 var id = Utility.ConvertToGuid(memberId);
 
-                
-                    // checking user details for given id
-                    
-                var memberObj = _dbContext.Members.FirstOrDefault(m => m.MemberId == id && m.IsDeleted==false);
 
-                    if (memberObj != null)
-                    {
-                        return !String.IsNullOrEmpty(memberObj.TransferLimit) ? memberObj.TransferLimit : "0";
-                    }
+                // checking user details for given id
+
+                var memberObj = _dbContext.Members.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
+
+                if (memberObj != null)
+                {
+                    return !String.IsNullOrEmpty(memberObj.TransferLimit) ? memberObj.TransferLimit : "0";
+                }
                 return "0";
             }
             catch (Exception ex)
@@ -801,17 +806,17 @@ namespace Nooch.Common
 
         public static MemberNotification GetMemberNotificationSettings(string memberId)
         {
-            //Logger.LogDebugMessage("MDA -> GetMemberNotificationSettings Initiated - [MemberId: " + memberId + "]");
+            //Logger.Info("MDA -> GetMemberNotificationSettings Initiated - [MemberId: " + memberId + "]");
 
 
 
-                Guid memId = Utility.ConvertToGuid(memberId);
+            Guid memId = Utility.ConvertToGuid(memberId);
 
-                
-                var memberNotifications = _dbContext.MemberNotifications.FirstOrDefault(m => m.Member.MemberId == memId); 
 
-                return memberNotifications;
-            
+            var memberNotifications = _dbContext.MemberNotifications.FirstOrDefault(m => m.Member.MemberId == memId);
+
+            return memberNotifications;
+
         }
 
         /// <summary>
@@ -822,39 +827,39 @@ namespace Nooch.Common
         {
             var random = new Random();
             int j = 1;
-            
-                for (int i = 0; i <= j; i++)
-                {
-                    var randomId = new string(
-                        Enumerable.Repeat(Chars, 9)
-                                  .Select(s => s[random.Next(s.Length)])
-                                  .ToArray());
-                    var transactionEntity = _dbContext.Transactions.FirstOrDefault(n=>n.TransactionTrackingId==randomId);
-                    if (transactionEntity == null)
-                    {
-                        return randomId;
-                    }
 
-                    j += i + 1;
+            for (int i = 0; i <= j; i++)
+            {
+                var randomId = new string(
+                    Enumerable.Repeat(Chars, 9)
+                              .Select(s => s[random.Next(s.Length)])
+                              .ToArray());
+                var transactionEntity = _dbContext.Transactions.FirstOrDefault(n => n.TransactionTrackingId == randomId);
+                if (transactionEntity == null)
+                {
+                    return randomId;
                 }
+
+                j += i + 1;
+            }
             return null;
         }
 
 
         public static Landlord GetLandlordDetails(string memberId)
         {
-            //Logger.LogDebugMessage("MDA -> GetLandlordDetails - MemberId: [" + memberId + "]");
+            //Logger.Info("MDA -> GetLandlordDetails - MemberId: [" + memberId + "]");
             try
             {
                 var id = Utility.ConvertToGuid(memberId);
 
                 var landlordObj = _dbContext.Landlords.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
 
-                    if (landlordObj != null)
-                    {
-                        return landlordObj;
-                    }
-                
+                if (landlordObj != null)
+                {
+                    return landlordObj;
+                }
+
             }
             catch (Exception ex)
             {
@@ -862,6 +867,672 @@ namespace Nooch.Common
             }
 
             return new Landlord();
+        }
+
+
+        public static String ConvertImageURLToBase64(String url)
+        {
+            if (!String.IsNullOrEmpty(url))
+            {
+                Logger.Info("MDA -> ConvertImageURLToBase64 Initiated - Photo URL is: [" + url + "]");
+
+                StringBuilder _sb = new StringBuilder();
+
+                Byte[] _byte = GetImage(url);
+
+                _sb.Append(Convert.ToBase64String(_byte, 0, _byte.Length));
+
+                return _sb.ToString();
+            }
+
+            return "";
+        }
+
+        private static byte[] GetImage(string url)
+        {
+            Stream stream = null;
+            byte[] buf;
+
+            try
+            {
+                WebProxy myProxy = new WebProxy();
+                HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
+
+                HttpWebResponse response = (HttpWebResponse)req.GetResponse();
+                stream = response.GetResponseStream();
+
+                using (BinaryReader br = new BinaryReader(stream))
+                {
+                    int len = (int)(response.ContentLength);
+                    buf = br.ReadBytes(len);
+                    br.Close();
+                }
+
+                stream.Close();
+                response.Close();
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("MDA -> GetImage FAILED - Photo URL was: [" + url + "]. Exception: [" + ex + "]");
+                buf = null;
+            }
+
+            return (buf);
+        }
+
+        public static string GetRecentOrDefaultIPOfMember(Guid MemberIdPassed)
+        {
+            string RecentIpOfUser = "";
+
+
+            var memberIP = _dbContext.MembersIPAddresses.OrderByDescending(m => m.ModifiedOn).FirstOrDefault(m => m.MemberId == MemberIdPassed);
+
+            RecentIpOfUser = memberIP != null ? memberIP.ToString() : "54.201.43.89";
+
+            return RecentIpOfUser;
+        }
+
+
+     
+        
+        
+        public static  submitIdVerificationInt sendUserSsnInfoToSynapseV3(string MemberId)
+        {
+            Logger.Info("MDA -> sendUserSsnInfoToSynapseV3 Initialized - [MemberId: " + MemberId + "]");
+
+            submitIdVerificationInt res = new submitIdVerificationInt();
+            res.success = false;
+
+            kycInfoResponseFromSynapse synapseResponse = new kycInfoResponseFromSynapse();
+
+            var id = Utility.ConvertToGuid(MemberId);
+
+            var memberEntity = GetMemberDetails(MemberId);
+
+                if (memberEntity != null)
+                {
+                    string usersFirstName = UppercaseFirst(GetDecryptedData(memberEntity.FirstName));
+                    string usersLastName = UppercaseFirst(GetDecryptedData(memberEntity.LastName));
+
+                    string usersAddress = "";
+                    string usersCity = "";
+                    string usersZip = "";
+
+                    DateTime usersDob;
+                    string usersDobDay = "";
+                    string usersDobMonth = "";
+                    string usersDobYear = "";
+
+                    string usersSsnLast4 = "";
+
+                    string usersSynapseOauthKey = "";
+                    string usersFingerprint = "";
+
+                    try
+                    {
+                        #region Check User For All Required Data
+
+                        bool isMissingSomething = false;
+                        // Member found, now check that they have added a full Address (including city, zip), SSN, & DoB
+
+                        // Check for Fingerprint (UDID1 in the database)
+                        if (string.IsNullOrEmpty(memberEntity.UDID1.ToString()))
+                        {
+                            isMissingSomething = true;
+                            res.message = "MDA - Missing UDID";
+                        }
+                        else
+                        {
+                            usersFingerprint = memberEntity.UDID1;
+                        }
+
+                        // Check for Address
+                        if (string.IsNullOrEmpty(memberEntity.Address.ToString()))
+                        {
+                            isMissingSomething = true;
+                            res.message += " MDA - Missing Address";
+                        }
+                        else
+                        {
+                            usersAddress = GetDecryptedData(memberEntity.Address);
+                        }
+
+                        // Check for City
+                        if (string.IsNullOrEmpty(memberEntity.City.ToString()))
+                        {
+                            isMissingSomething = true;
+                            res.message += " MDA - Missing City";
+                        }
+                        else
+                        {
+                            usersCity = GetDecryptedData(memberEntity.City);
+                        }
+
+                        // Check for ZIP
+                        if (string.IsNullOrEmpty(memberEntity.Zipcode.ToString()))
+                        {
+                            isMissingSomething = true;
+                            res.message += " MDA - Missing ZIP";
+                        }
+                        else
+                        {
+                            usersZip = GetDecryptedData(memberEntity.Zipcode);
+                        }
+
+                        // Check for SSN
+                        if (string.IsNullOrEmpty(memberEntity.SSN.ToString()))
+                        {
+                            isMissingSomething = true;
+                            res.message += " MDA - Missing SSN";
+                        }
+                        else
+                        {
+                            usersSsnLast4 = GetDecryptedData(memberEntity.SSN);
+                        }
+
+                        // Check for Date Of Birth (Not encrypted)
+                        if (string.IsNullOrEmpty(memberEntity.DateOfBirth.ToString()))
+                        {
+                            isMissingSomething = true;
+                            res.message += " MDA - Missing Date of Birth";
+                        }
+                        else
+                        {
+                            usersDob = Convert.ToDateTime(memberEntity.DateOfBirth);
+
+                            // We have DOB, now we must parse it into day, month, & year
+                            usersDobDay = usersDob.Day.ToString();
+                            usersDobMonth = usersDob.Month.ToString();
+                            usersDobYear = usersDob.Year.ToString();
+                        }
+                        // Return if any data was missing in previous block
+                        if (isMissingSomething)
+                        {
+                            Logger.Error("MDA -> sendUserSsnInfoToSynapseV3 ABORTED: Member has no DoB. [MemberId: " + MemberId + "], [Message: " + res.message + "]");
+                            return res;
+                        }
+
+
+                        // Now check if user already has a Synapse User account (would have a record in SynapseCreateUserResults.dbo)
+                        
+                        var usersSynapseDetails = _dbContext.SynapseCreateUserResults.FirstOrDefault(m=>m.MemberId==id && m.IsDeleted==false);
+
+                        if (usersSynapseDetails == null)
+                        {
+                            Logger.Info("MDA -> sendUserSsnInfoToSynapseV3 ABORTED: Member's Synapse User Details not found. [MemberId: " + MemberId + "]");
+                            return res;
+                        }
+                        else
+                        {
+                            usersSynapseOauthKey = GetDecryptedData(usersSynapseDetails.access_token);
+                        }
+
+                        #endregion Check User For All Required Data
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error("MDA -> sendUserSsnInfoToSynapseV3 FAILED on checking for all required data - [MemberID: " +
+                                               MemberId + "], [Exception: " + ex + "]");
+                    }
+
+                    // Update Member's DB record from NULL to false (update to true later on if Verification from Synapse is completely successful)
+                    Logger.Info("MDA -> sendUserSsnInfoToSynapseV3 - About to set IsVerifiedWithSynapse to False before calling Synapse: [MemberID: " + MemberId + "]");
+                    memberEntity.IsVerifiedWithSynapse = false;
+
+                    #region Send SSN Info To Synapse
+
+                    try
+                    {
+                        #region Call Synapse V3 /user/doc/add API
+
+                        Logger.Info("MDA -> sendUserSsnInfoToSynapseV3 - Checkpoint 10693 - About To Query Synapse");
+
+                        synapseAddKycInfoInputV3Class synapseInput = new synapseAddKycInfoInputV3Class();
+
+                        SynapseV3Input_login login = new SynapseV3Input_login();
+                        login.oauth_key = usersSynapseOauthKey;
+                        synapseInput.login = login;
+
+                        addKycInfoInput_user_doc doc = new addKycInfoInput_user_doc();
+                        doc.birth_day = usersDobDay;
+                        doc.birth_month = usersDobMonth;
+                        doc.birth_year = usersDobYear;
+                        doc.name_first = usersFirstName;
+                        doc.name_last = usersLastName;
+                        doc.address_street1 = usersAddress;
+                        doc.address_postal_code = usersZip;
+                        doc.address_country_code = "US";
+
+                        doc.document_value = usersSsnLast4;
+                        doc.document_type = "SSN";
+
+                        addKycInfoInput_user user = new addKycInfoInput_user();
+                        user.fingerprint = usersFingerprint;
+                        user.doc = doc;
+
+                        synapseInput.user = user;
+
+                        string baseAddress = "https://sandbox.synapsepay.com/api/v3/user/doc/add";
+                        //string baseAddress = "https://synapsepay.com/api/v3/user/doc/add";
+
+                        // CLIFF (10/10/15): Adding the following for testing purposes only
+                        #region For Testing
+                        if (GetDecryptedData(memberEntity.UserName).IndexOf("jones00") > -1)
+                        {
+                            Logger.Info("****  sendUserSSNInfoToSynapseV3 -> JUST A TEST BLOCK REACHED!  ****");
+                            baseAddress = "https://sandbox.synapsepay.com/api/v3/user/doc/add";
+                        }
+                        else if (memberEntity.MemberId.ToString().ToLower() == "b3a6cf7b-561f-4105-99e4-406a215ccf60")
+                        {
+                            doc.name_last = "Satell";
+                            doc.document_value = "7562";
+                        }
+
+                        try
+                        {
+                            Logger.Info("Payload to send to Synapse: [OauthKey: " + login.oauth_key +
+                                "], [Birth_day: " + doc.birth_day + "], [Birth_month: " + doc.birth_month +
+                                "], [Birth_year: " + doc.birth_year + "], [name_first: " + doc.name_first +
+                                "], [name_last: " + doc.name_last + "], [ssn: " + doc.document_value +
+                                "], [address_street1: " + doc.address_street1 + "], [post_code: " + doc.address_postal_code +
+                                "], [country_code: " + doc.address_country_code + "], [Fingerprint: " + user.fingerprint +
+                                "], [BASE_ADDRESS: " + baseAddress + "].");
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Error("MDA -> sendUserSSNInfoToSynapseV3 - Couldn't log Synapse SSN Payload. [Exception: " + ex + "]");
+                        }
+                        #endregion For Testing
+
+
+                        var http = (HttpWebRequest)WebRequest.Create(new Uri(baseAddress));
+                        http.Accept = "application/json";
+                        http.ContentType = "application/json";
+                        http.Method = "POST";
+
+                        string parsedContent = JsonConvert.SerializeObject(synapseInput);
+                        ASCIIEncoding encoding = new ASCIIEncoding();
+                        Byte[] bytes = encoding.GetBytes(parsedContent);
+
+                        Stream newStream = http.GetRequestStream();
+                        newStream.Write(bytes, 0, bytes.Length);
+                        newStream.Close();
+
+                        var response = http.GetResponse();
+                        var stream = response.GetResponseStream();
+                        var sr = new StreamReader(stream);
+                        var content = sr.ReadToEnd();
+
+                        synapseResponse = JsonConvert.DeserializeObject<kycInfoResponseFromSynapse>(content);
+
+                        #endregion Call Synapse V3 /user/doc/add API
+
+
+                        // NOW WE MUST PARSE THE SYNAPSE RESPONSE. THERE ARE 3 POSSIBLE SCENARIOS:
+                        // 1.) SSN Validation was successful. Synapse returns {"success": true}
+                        // 2.) SSN Validation was PARTLY successful.  Synapse returns: "success":true... 
+                        //     plus an object "question_set", containing a series of questions and array of multiple choice answers for each question.
+                        //     We will display the questions to the user via the IDVerification.aspx page (already built-in to the Add-Bank process)
+                        // 3.) SSN Validation Failed  (not sure what Synapse returns for this... their docs are not clear).
+
+                        if (synapseResponse != null)
+                        {
+                            if (synapseResponse.success == true)
+                            {
+                                Logger.Info("MDA -> sendUserSsnInfoToSynapseV3 - Synapse returned SUCCESS = TRUE");
+
+                                res.success = true;
+
+                                // Great, we have at least partial success.  Now check if further verification is needed by checking if Synapse returned a 'question_set' object.
+                                if (synapseResponse.question_set != null)
+                                {
+                                    // Further Verification is needed...
+                                    res.message = "additional questions needed";
+
+                                    // Now make sure an Array[] set of 'questions' was returned (could be up to 5 questions, each with 5 possible answer choices)
+                                    if (synapseResponse.question_set.questions != null)
+                                    {
+                                        Logger.Info("MDA -> sendUserSsnInfoToSynapseV3 - Question_Set was returned, further validation will be needed. Saving ID Verification Questions...");
+
+                                        // Saving these questions in DB.  
+
+                                        // UPDATE (9/29/15):
+                                        // The user will have to answer these on the IDVerification.aspx page.
+                                        // That's why I updated the sendSSN function to not be void and return success + a message. Based on that value,
+                                        // the Add-Bank page will direct the user either to the IDVerification page (via iFrame), or not if questions are not needed.
+
+                                        Guid memGuid = Utility.ConvertToGuid(MemberId);
+
+                                        // Loop through each question set (question/answers/id)
+                                        #region Iterate through each question to save in DB
+
+                                        foreach (synapseIdVerificationQuestionAnswerSet question in synapseResponse.question_set.questions)
+                                        {
+                                            SynapseIdVerificationQuestion questionForDb = new SynapseIdVerificationQuestion();
+
+                                            Guid memId = memGuid;
+                                            questionForDb.MemberId = memId;
+                                            questionForDb.QuestionSetId = synapseResponse.question_set.id;
+                                            questionForDb.SynpQuestionId = question.id;
+
+                                            questionForDb.DateCreated = DateTime.Now;
+                                            questionForDb.submitted = false;
+
+                                            questionForDb.person_id = synapseResponse.question_set.person_id;
+                                            questionForDb.time_limit = synapseResponse.question_set.time_limit;
+                                            questionForDb.score = synapseResponse.question_set.score;
+                                            questionForDb.updated_at = synapseResponse.question_set.updated_at.ToString();
+                                            questionForDb.livemode = synapseResponse.question_set.livemode;
+                                            questionForDb.expired = synapseResponse.question_set.expired;
+                                            questionForDb.created_at = synapseResponse.question_set.created_at.ToString();
+
+                                            questionForDb.Question = question.question;
+
+                                            questionForDb.Choice1Id = question.answers[0].id;
+                                            questionForDb.Choice1Text = question.answers[0].answer;
+
+                                            questionForDb.Choice2Id = question.answers[1].id;
+                                            questionForDb.Choice2Text = question.answers[1].answer;
+
+                                            questionForDb.Choice3Id = question.answers[2].id;
+                                            questionForDb.Choice3Text = question.answers[2].answer;
+
+                                            questionForDb.Choice4Id = question.answers[3].id;
+                                            questionForDb.Choice4Text = question.answers[3].answer;
+
+                                            questionForDb.Choice5Id = question.answers[4].id;
+                                            questionForDb.Choice5Text = question.answers[4].answer;
+                                            _dbContext.SynapseIdVerificationQuestions.Add(questionForDb);
+                                            _dbContext.SaveChanges();
+                                            
+                                        }
+                                        #endregion Iterate through each question to save in DB
+                                    }
+                                }
+                                else if (synapseResponse.user != null)
+                                {
+                                    // User is verified completely -- in this case response in same of register use with Synapse...
+                                    // Just update permission in CreateSynapseUserResults table
+
+                                    #region Update Permission in CreateSynapseUserResults Table
+                                    try
+                                    {
+                                        // Get existing record from Create Synapse User Results table for this Member
+
+                                        var synapseRes = _dbContext.SynapseCreateUserResults.FirstOrDefault(m=>m.MemberId==id && m.IsDeleted==false);
+
+                                        if (synapseRes != null)
+                                        {
+                                            synapseRes.permission = synapseResponse.user.permission;
+                                            _dbContext.SaveChanges();
+                                            
+                                        }
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Logger.Error("MDA -> sendUserSsnInfoToSynapseV3 - EXCEPTION on trying to update User's record in CreateSynapseUserResults Table - " +
+                                                               "[MemberID: " + MemberId + "], [Exception: " + ex + "]");
+                                    }
+                                    #endregion Update Permission in CreateSynapseUserResults Table
+
+                                    // Update Member's DB record
+                                    memberEntity.IsVerifiedWithSynapse = true;
+                                    memberEntity.ValidatedDate = DateTime.Now;
+
+                                    res.message = "complete success";
+                                }
+                            }
+                            else
+                            {
+                                // Response from Synapse had 'success' != true
+                                Logger.Info("MDA -> sendUserSsnInfoToSynapseV3 FAILED: Synapse Result \"success != true\" - [MemberId: " + MemberId + "]");
+                                res.message = "SSN response from synapse was false";
+                            }
+                        }
+                        else
+                        {
+                            // Response from Synapse was null
+                            Logger.Info("MDA -> sendUserSsnInfoToSynapseV3 FAILED: Synapse Result was NULL - [MemberId: " + MemberId + "]");
+                            res.message = "SSN response from synapse was null";
+                        }
+
+                    }
+                    catch (WebException we)
+                    {
+                        var httpStatusCode = ((HttpWebResponse)we.Response).StatusCode;
+
+                        Logger.Error("MDA -> sendUserSsnInfoToSynapseV3 FAILED (Outer) - [errorCode: " + httpStatusCode.ToString() + "], [Message" + we.Message + "]");
+
+                        res.message = "MDA exception";
+
+                        var response = new StreamReader(we.Response.GetResponseStream()).ReadToEnd();
+                        JObject errorJsonFromSynapse = JObject.Parse(response);
+
+                        // CLIFF (10/10/15): Synapse lists all possible V3 error codes in the docs -> Introduction -> Errors
+                        //                   We might have to do different things depending on which error is returned... for now just pass
+                        //                   back the error number & msg to the function that called this method.
+                        string error_code = errorJsonFromSynapse["error_code"].ToString();
+                        string errorMsg = errorJsonFromSynapse["error"]["en"].ToString();
+
+                        if (!String.IsNullOrEmpty(errorMsg) &&
+                            (errorMsg.IndexOf("Unable to verify") > -1 ||
+                             errorMsg.IndexOf("submit a valid copy of passport") > -1))
+                        {
+                            Logger.Info("****  THIS USER'S SSN INFO WAS NOT VERIFIED AT ALL. MUST INVESTIGATE WHY (COULD BE TYPO WITH PERSONAL INFO). " +
+                                                  "DETERMINE IF NECESSARY TO ASK FOR DRIVER'S LICENSE.  ****");
+
+                            memberEntity.AdminNotes = "SSN INFO WAS INVALID WHEN SENT TO SYNAPSE. NEED TO COLLECT DRIVER'S LICENSE.";
+
+                            // Email Nooch Admin about this user for manual follow-up (Send email to Cliff)
+                            #region Notify Nooch Admin About Failed SSN Validation
+                            try
+                            {
+                                StringBuilder st = new StringBuilder();
+
+                                string city = !String.IsNullOrEmpty(memberEntity.City) ? CommonHelper.GetDecryptedData(memberEntity.City) : "NONE";
+
+                                st.Append("<table border='1' cellpadding='6' style='border-collapse:collapse;text-align:center;'>" +
+                                          "<tr><th>PARAMETER</th><th>VALUE</th></tr>");
+                                st.Append("<tr><td><strong>Name</strong></td><td>" + usersFirstName + " " + usersLastName + "</td></tr>");
+                                st.Append("<tr><td><strong>MemberId</strong></td><td>" + MemberId + "</td></tr>");
+                                st.Append("<tr><td><strong>Nooch_ID</strong></td><td>" + memberEntity.Nooch_ID + "</td></tr>");
+                                st.Append("<tr><td><strong>DOB</strong></td><td>" + Convert.ToDateTime(memberEntity.DateOfBirth).ToString("MMMM dd, yyyy") + "</td></tr>");
+                                st.Append("<tr><td><strong>SSN</strong></td><td>" + usersSsnLast4 + "</td></tr>");
+                                st.Append("<tr><td><strong>Address</strong></td><td>" + usersAddress + "</td></tr>");
+                                st.Append("<tr><td><strong>City</strong></td><td>" + city + "</td></tr>");
+                                st.Append("<tr><td><strong>ZIP</strong></td><td>" + usersZip + "</td></tr>");
+                                st.Append("<tr><td><strong>Contact #</strong></td><td>" + CommonHelper.FormatPhoneNumber(memberEntity.ContactNumber) + "</td></tr>");
+                                st.Append("<tr><td><strong>Phone Verified?</strong></td><td>" + memberEntity.IsVerifiedPhone.ToString() + "</td></tr>");
+                                st.Append("<tr><td><strong>IsVerifiedWithSynapse</strong></td><td>" + memberEntity.IsVerifiedWithSynapse.ToString() + "</td></tr>");
+                                st.Append("<tr><td><strong>Status</strong></td><td><strong>" + memberEntity.Status + "</strong></td></tr>");
+                                st.Append("</table>");
+
+                                StringBuilder completeEmailTxt = new StringBuilder();
+                                string s = "<html><body><h2>Nooch SSN Verification Failure</h2><p style='margin:0 auto 20px;'>The following Nooch user just triggered an SSN Verification attempt, but failed:</p>"
+                                           + st.ToString() +
+                                           "<br/><br/><small>This email was generated automatically during <strong>[MDA -> sendUserSsnInfoToSynapse]</strong>.</small></body></html>";
+
+                                completeEmailTxt.Append(s);
+                                Utility.SendEmail(null,  "SSNFAILURE@nooch.com", "cliff@nooch.com",
+                                                            null, "NOOCH USER'S SSN (V3) VALIDATION FAILED", null, null, null, null, completeEmailTxt.ToString());
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.Error("MDA -> sendUserSsnInfoToSynapseV3 FAILED - Attempted to notify Nooch Admin via email but got Exception: [" + ex + "]");
+                            }
+                            #endregion Notify Nooch Admin About Failed SSN Validation
+
+
+                            // Now try to send ID verification document (IF AVAILABLE... WHICH IT PROBABLY WON'T BE)
+                            // CLIFF (10/10/15): I guess we will have to add more code depending on what the response for this next line is...
+                            submitDocumentToSynapseV3(memberEntity.MemberId.ToString(), memberEntity.Photo);
+                        }
+                    }
+
+                    // Save changes to Members DB
+                    memberEntity.DateModified = DateTime.Now;
+                    _dbContext.SaveChanges();
+
+                    #endregion Parse Synapse Response
+                }
+                else
+                {
+                    // Member not found in Nooch DB
+                    Logger.Info("MDA -> sendUserSsnInfoToSynapseV3 FAILED: Member not found - [MemberId: " + MemberId + "]");
+                    res.message = "Member not found";
+                }
+            
+
+            return res;
+        }
+
+
+        public static GenericInternalResponseForSynapseMethods submitDocumentToSynapseV3(string MemberId, string ImageUrl)
+        {
+            Logger.Info("MDA -> submitDocumentToSynapseV3 Initialized - [MemberId: " + MemberId + "]");
+
+            var id = Utility.ConvertToGuid(MemberId);
+
+            GenericInternalResponseForSynapseMethods res = new GenericInternalResponseForSynapseMethods();
+
+            
+                #region Get User's Synapse OAuth Consumer Key
+
+                string usersSynapseOauthKey = "";
+
+                
+                var usersSynapseDetails = _dbContext.SynapseCreateUserResults.FirstOrDefault(m=>m.MemberId==id && m.IsDeleted==false);
+
+                if (usersSynapseDetails == null)
+                {
+                    Logger.Info("MDA -> submitDocumentToSynapseV3 ABORTED: Member's Synapse User Details not found. [MemberId: " + MemberId + "]");
+
+                    res.message = "Could not find this member's account info";
+
+                    return res;
+                }
+                else
+                {
+                    usersSynapseOauthKey = CommonHelper.GetDecryptedData(usersSynapseDetails.access_token);
+                }
+
+                #endregion Get User's Synapse OAuth Consumer Key
+
+
+                #region Get User's Fingerprint
+
+                string usersFingerprint = "";
+
+                
+                var member = GetMemberDetails(id.ToString());
+
+                if (member == null)
+                {
+                    Logger.Info("MDA -> submitDocumentToSynapseV3 ABORTED: Member not found. [MemberId: " + MemberId + "]");
+                    res.message = "Member not found";
+
+                    return res;
+                }
+                else
+                {
+                    if (String.IsNullOrEmpty(member.UDID1))
+                    {
+                        Logger.Info("MDA -> submitDocumentToSynapseV3 ABORTED: Member's Fingerprint not found. [MemberId: " + MemberId + "]");
+                        res.message = "Could not find this member's fingerprint";
+
+                        return res;
+                    }
+                    else
+                    {
+                        usersFingerprint = member.UDID1;
+                    }
+                }
+
+                #endregion Get User's Fingerprint
+
+
+                #region Call Synapse /user/doc/attachments/add API
+
+                submitDocToSynapseV3Class answers = new submitDocToSynapseV3Class();
+
+                SynapseV3Input_login s_log = new SynapseV3Input_login();
+                s_log.oauth_key = usersSynapseOauthKey;
+                answers.login = s_log;
+                //answers.login.oauth_key = usersSynapseOauthKey;
+
+
+                submitDocToSynapse_user sdtu = new submitDocToSynapse_user();
+                submitDocToSynapse_user_doc doc = new submitDocToSynapse_user_doc();
+                doc.attachment = "data:text/csv;base64," + ConvertImageURLToBase64(ImageUrl).Replace("\\", "");
+
+                sdtu.fingerprint = usersFingerprint;
+
+                sdtu.doc = doc;
+
+                answers.user = sdtu;
+
+                //answers.user.doc.attachment = "data:text/csv;base64," + ConvertImageURLToBase64(ImageUrl).Replace("\\", ""); // NEED TO GET THE ACTUAL DOC... EITHER PASS THE BYTES TO THIS METHOD, OR GET FROM DB
+                //answers.user.fingerprint = usersFingerprint;
+
+                string baseAddress = "https://sandbox.synapsepay.com/api/v3/user/doc/attachments/add";
+                //string baseAddress = "https://synapsepay.com/api/v3/user/doc/attachments/add";
+
+                try
+                {
+                    var http = (HttpWebRequest)WebRequest.Create(new Uri(baseAddress));
+                    http.Accept = "application/json";
+                    http.ContentType = "application/json";
+                    http.Method = "POST";
+
+                    string parsedContent = JsonConvert.SerializeObject(answers);
+                    ASCIIEncoding encoding = new ASCIIEncoding();
+                    Byte[] bytes = encoding.GetBytes(parsedContent);
+
+                    Stream newStream = http.GetRequestStream();
+                    newStream.Write(bytes, 0, bytes.Length);
+                    newStream.Close();
+
+                    var response = http.GetResponse();
+                    var stream = response.GetResponseStream();
+                    var sr = new StreamReader(stream);
+                    var content = sr.ReadToEnd();
+
+                    kycInfoResponseFromSynapse resFromSynapse = new kycInfoResponseFromSynapse();
+
+                    resFromSynapse = JsonConvert.DeserializeObject<kycInfoResponseFromSynapse>(content);
+
+                    if (resFromSynapse != null)
+                    {
+                        if (resFromSynapse.success.ToString().ToLower() == "true")
+                        {
+                            Logger.Info("MDA -> submitDocumentToSynapseV3 SUCCESSFUL - [MemberID: " + MemberId + "]");
+
+                            res.success = true;
+
+                            res.message = "";
+                        }
+                        else
+                        {
+                            res.message = "Got a response, but success was not true";
+                            Logger.Info("MDA -> submitDocumentToSynapseV3 FAILED - Got Synapse response, but success was NOT 'true' - [MemberID: " + MemberId + "]");
+                        }
+                    }
+                    else
+                    {
+                        res.message = "Verification response was null";
+                        Logger.Info("MDA -> submitDocumentToSynapseV3 FAILED - Synapse response was NULL - [MemberID: " + MemberId + "]");
+                    }
+                }
+                catch (WebException ex)
+                {
+                    res.message = "MDA Exception #9575";
+                    Logger.Info("MDA -> submitDocumentToSynapseV3 FAILED - Catch [Exception: " + ex + "]");
+                }
+
+                #endregion Call Synapse /user/doc/attachments/add API
+            
+
+            return res;
         }
     }
 }
