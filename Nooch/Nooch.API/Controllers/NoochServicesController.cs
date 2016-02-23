@@ -16,6 +16,7 @@ using Nooch.Common.Entities.MobileAppOutputEnities;
 using Nooch.Data;
 using Nooch.DataAccess;
 using System.Collections.ObjectModel;
+using Nooch.Common.Resources;
 
 namespace Nooch.API.Controllers
 {
@@ -1772,8 +1773,8 @@ namespace Nooch.API.Controllers
         /// <param name="MemberId"></param>
         /// <param name="AccessToken"></param>
         /// <returns>PendingTransCoutResult [sic] object with values for 4 types of pending transactions: requests sent/received, invites, disputes unresolved.</returns>
-         
-        
+
+
 
 
         /// <summary>
@@ -1798,13 +1799,59 @@ namespace Nooch.API.Controllers
                         DisputeId = result.DisputeId,
                         DisputeDate = result.DisputeDate
                     };
-                } 
+                }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service layer - RaiseDispute FAILED - transactionId: " + raiseDisputeInput.TransactionId + "]. Exception: [" + ex + "]");                   
+                    Logger.Error("Service layer - RaiseDispute FAILED - transactionId: " + raiseDisputeInput.TransactionId + "]. Exception: [" + ex + "]");
                     throw ex;
-                }          
-                
+                }
+
+            }
+            else
+            {
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
+
+
+        [HttpPost]
+        [ActionName("sendTransactionInCSV")]
+        public StringResult sendTransactionInCSV(string memberId, string toAddress, string accessToken)
+        {
+            if (CommonHelper.IsValidRequest(accessToken, memberId))
+            {
+                try
+                {
+
+
+                    var r = GetTransactionsList(memberId, "ALL", 100000, 1, accessToken, "").Select(i => new { i.TransactionId, SenderId = i.MemberId, RecepientId = i.RecepientId, i.DisputeId, i.Amount, i.TransactionDate, i.TransactionFee, i.TransactionType, i.LocationId, i.DisputeReportedDate, i.DisputeReviewDate, i.DisputeResolvedDate, i.AdminNotes, i.RaisedBy, i.Memo, i.Picture, i.TransactionStatus });
+                    var csv = string.Join(", ", r.Select(i => i.ToString()).ToArray()).Replace("{", "").Replace("}", "");
+
+
+
+                    var sender = CommonHelper.GetMemberDetails(memberId);
+
+                    var tokens = new Dictionary<string, string>
+								 {
+									 {Constants.PLACEHOLDER_FIRST_NAME, CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(sender.FirstName))}
+								 };
+
+                    bool b = Utility.SendEmailCSV(toAddress, csv, "Here's your Nooch activity report", "Hi,<br/> Your complete Nooch transaction history is attached in a .CSV file.<br/><br/>Thanks<br/>-Nooch Team", tokens);
+                    Logger.Info("TransactionHistorySent - TransactionHistorySent status mail sent to [" + toAddress + "].");
+
+                    if (b)
+                    {
+                        return new StringResult { Result = "1" };
+                    }
+                    else
+                    {
+                        return new StringResult { Result = "0" };
+                    }
+                }
+                catch
+                {
+                    throw new Exception("0");
+                }
             }
             else
             {
@@ -1936,4 +1983,4 @@ namespace Nooch.API.Controllers
             return new MemberDto();
         }
     }
- }
+}

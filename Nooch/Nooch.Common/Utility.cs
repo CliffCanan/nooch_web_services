@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Configuration;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Mail;
+using System.Net.Mime;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -212,7 +214,7 @@ namespace Nooch.Common
             using (var sr = new StreamReader(physicalPath))
                 return sr.ReadToEnd();
         }
-        public static bool SendEmail(string templateName,  string fromAddress, string toAddress, string attachmentPath, string subject, string referenceLink, IEnumerable<KeyValuePair<string, string>> replacements, string ccMailId, string bccMailId, string bodyText)
+        public static bool SendEmail(string templateName, string fromAddress, string toAddress, string attachmentPath, string subject, string referenceLink, IEnumerable<KeyValuePair<string, string>> replacements, string ccMailId, string bccMailId, string bodyText)
         {
             try
             {
@@ -335,6 +337,66 @@ namespace Nooch.Common
             GameThriveResponseClass gamethriveresponse = JsonConvert.DeserializeObject<GameThriveResponseClass>(response);
 
             return "1";
+        }
+
+
+
+        public static bool SendEmailCSV(string toAddress, string attachmentCSVString, string subject, string bodyText, IEnumerable<KeyValuePair<string, string>> replacements)
+        {
+
+
+            try
+            {
+                MailMessage mailMessage = new MailMessage();
+
+                string subjectString = subject;
+                string content = string.Empty;
+                string template;
+
+                template = GetEmailTemplate(String.Concat(Utility.GetValueFromConfig("EmailTemplatesPath"), "TransactionHistoryTemplate", ".txt"));
+                content = replacements.Aggregate(template, (current, token) => current.Replace(token.Key, token.Value));
+
+                mailMessage.Body = content;
+
+
+
+                mailMessage.IsBodyHtml = true;
+                mailMessage.Subject = subjectString;
+                mailMessage.To.Add(new MailAddress(toAddress, "reports@nooch.com"));
+
+                using (MemoryStream stream = new MemoryStream(Encoding.ASCII.GetBytes(attachmentCSVString)))
+                {
+                    Attachment attachment = new Attachment(stream, new ContentType("text/csv"));
+                    attachment.Name = "MyNoochTransactions.csv";
+
+                    mailMessage.Attachments.Add(attachment);
+
+
+
+                    SmtpClient smtpClient = new SmtpClient();
+
+                    smtpClient.Host = GetValueFromConfig("SMTPAddressForCSVAttachment");
+                    smtpClient.UseDefaultCredentials = false;
+
+                    smtpClient.Credentials = new NetworkCredential(GetValueFromConfig("SMTPLogOnForCSVAttachment"), GetValueFromConfig("SMTPPasswordForCSVAttachment"));
+                    smtpClient.Send(mailMessage);
+                    return true;
+
+                }
+
+            }
+            catch (SmtpException smtpException)
+            {
+                Logger.Error("Utility Data Access - SendEmail: smtpException [" + smtpException + "]");
+                Logger.Error(smtpException.StackTrace);
+                return false;
+            }
+            catch (Exception exception)
+            {
+                Logger.Error("Utility Data Access - SendEmail: Not an SMTP exception [" + exception + "]");
+                Logger.Error(exception.StackTrace);
+                throw exception;
+            }
         }
 
     }
