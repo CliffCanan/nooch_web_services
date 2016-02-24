@@ -14,6 +14,9 @@ using Nooch.Common.Entities.MobileAppOutputEnities;
 using Nooch.Common.Resources;
 using Nooch.Data;
 using System.Collections.ObjectModel;
+using System.IO;
+using Newtonsoft.Json.Linq;
+using Nooch.Common.Entities.SynapseRelatedEntities;
 
 namespace Nooch.DataAccess
 {
@@ -2727,6 +2730,283 @@ namespace Nooch.DataAccess
             };
 
             notifications.Add(notification);
+        }
+
+
+        public static SynapseV3AddTrans_ReusableClass AddTransSynapseV3Reusable(string sender_oauth, string sender_fingerPrint,
+            string sender_bank_node_id, string amount, string fee, string receiver_oauth, string receiver_fingerprint,
+            string receiver_bank_node_id, string suppID_or_transID, string senderUserName, string receiverUserName, string iPForTransaction, string senderLastName, string recepientLastName)
+        {
+            Logger.Info("TDA -> SynapseV3AddTrans_ReusableClass Initiated - [Sender Username: " + senderUserName + "], " +
+                                   "[Recipient Username: " + receiverUserName + "], [Amount: " + amount + "]");
+
+            SynapseV3AddTrans_ReusableClass res = new SynapseV3AddTrans_ReusableClass();
+            res.success = false;
+
+            try
+            {
+                bool SenderSynapsePermissionOK = false;
+                bool RecipientSynapsePermissionOK = false;
+
+                #region Check Sender Synapse Permissions
+
+                // 1. Check USER permissions for SENDER
+                synapseSearchUserResponse senderPermissions = CommonHelper.getUserPermissionsForSynapseV3(senderUserName);
+
+                if (senderPermissions == null || !senderPermissions.success)
+                {
+                    Logger.Error("TDA -> SynapseV3AddTrans_ReusableClass - SENDER's Synapse Permissions were NULL or not successful :-(");
+
+                    res.ErrorMessage = "Problem with senders synapse user permission.";
+                    return res;
+                }
+
+                // 2. Check BANK/NODE permission for SENDER
+                if (senderPermissions.users != null && senderPermissions.users.Length > 0)
+                {
+                    foreach (synapseSearchUserResponse_User senderUser in senderPermissions.users)
+                    {
+                        // iterating each node inside
+                        if (senderUser.nodes != null && senderUser.nodes.Length > 0)
+                        {
+                            NodePermissionCheckResult nodePermCheckRes = CommonHelper.IsNodeActiveInGivenSetOfNodes(senderUser.nodes, sender_bank_node_id);
+
+                            if (nodePermCheckRes.IsPermissionfound == true)
+                            {
+                                if (nodePermCheckRes.PermissionType == "CREDIT-AND-DEBIT" || nodePermCheckRes.PermissionType == "DEBIT")
+                                {
+                                    SenderSynapsePermissionOK = true;
+                                }
+                                // iterate through all users
+                                //else
+                                //{
+                                //    res.success = false;
+                                //    res.ErrorMessage = "Sender doesn't have permission to send money from account.";
+                                //    return res;
+                                //}
+                            }
+                            // iterate through all users
+                            //else
+                            //{
+                            //    res.success = false;
+                            //    res.ErrorMessage = "Sender doesn't have permission to send money from account.";
+                            //    return res;
+                            //}
+                        }
+                    }
+                }
+                #endregion Check Sender Synapse Permissions
+
+                #region Check Recipient Synapse Permissions
+
+                // 3. Check USER permissions for RECIPIENT
+                synapseSearchUserResponse recepientPermissions = CommonHelper.getUserPermissionsForSynapseV3(receiverUserName);
+
+                if (recepientPermissions == null || !recepientPermissions.success)
+                {
+                    Logger.Error("TDA -> SynapseV3AddTrans_ReusableClass - RECIPIENT's Synapse Permissions were NULL or not successful :-(");
+
+                    res.ErrorMessage = "Problem with recepient bank account permission.";
+                    return res;
+                }
+
+                // 4. Check BANK/NODE permission for RECIPIENT
+                if (recepientPermissions.users != null && recepientPermissions.users.Length > 0)
+                {
+                    foreach (synapseSearchUserResponse_User recUser in recepientPermissions.users)
+                    {
+                        // iterating each node inside
+                        if (recUser.nodes != null && recUser.nodes.Length > 0)
+                        {
+                            NodePermissionCheckResult nodePermCheckRes = CommonHelper.IsNodeActiveInGivenSetOfNodes(recUser.nodes, receiver_bank_node_id);
+
+                            if (nodePermCheckRes.IsPermissionfound == true)
+                            {
+                                if (nodePermCheckRes.PermissionType == "CREDIT-AND-DEBIT" || nodePermCheckRes.PermissionType == "DEBIT")
+                                {
+                                    RecipientSynapsePermissionOK = true;
+                                }
+                                // iterate through all users
+                                //else
+                                //{
+                                //    res.success = false;
+                                //    res.ErrorMessage = "Sender doesn't have permission to send money from account.";
+                                //    return res;
+                                //}
+                            }
+                            // iterate through all users
+                            //else
+                            //{
+                            //    res.success = false;
+                            //    res.ErrorMessage = "Sender doesn't have permission to send money from account.";
+                            //    return res;
+                            //}
+                        }
+                    }
+                }
+                #endregion Check Recipient Synapse Permissions
+
+                if (!SenderSynapsePermissionOK)
+                {
+                    res.ErrorMessage = "Sender bank permission problem.";
+                    return res;
+                }
+                if (!RecipientSynapsePermissionOK)
+                {
+                    res.ErrorMessage = "Recipient bank permission problem.";
+                    return res;
+                }
+
+                // all set...time to move money between accounts
+                try
+                {
+                    #region Setup Synapse V3 Order Details
+
+                    SynapseV3AddTransInput transParamsForSynapse = new SynapseV3AddTransInput();
+
+                    SynapseV3Input_login login = new SynapseV3Input_login() { oauth_key = sender_oauth };
+                    SynapseV3Input_user user = new SynapseV3Input_user() { fingerprint = sender_fingerPrint };
+                    transParamsForSynapse.login = login;
+                    transParamsForSynapse.user = user;
+
+                    SynapseV3AddTransInput_trans transMain = new SynapseV3AddTransInput_trans();
+
+                    SynapseV3AddTransInput_trans_from from = new SynapseV3AddTransInput_trans_from()
+                    {
+                        id = sender_bank_node_id,
+                        type = "ACH-US"
+                    };
+                    SynapseV3AddTransInput_trans_to to = new SynapseV3AddTransInput_trans_to()
+                    {
+                        id = receiver_bank_node_id,
+                        type = "ACH-US"
+                    };
+                    transMain.to = to;
+                    transMain.from = from;
+
+                    SynapseV3AddTransInput_trans_amount amountMain = new SynapseV3AddTransInput_trans_amount()
+                    {
+                        amount = Convert.ToDouble(amount),
+                        currency = "USD"
+                    };
+                    transMain.amount = amountMain;
+
+                    SynapseV3AddTransInput_trans_extra extraMain = new SynapseV3AddTransInput_trans_extra()
+                    {
+                        supp_id = suppID_or_transID,
+                        // This is where we put the ACH memo (customized for Landlords, but just the same template for regular P2P transfers: "Nooch Payment {LNAME SENDER} / {LNAME RECIPIENT})
+                        // maybe we should set this in whichever function calls this function because we don't have the names here...
+                        // yes modifying this method to add 3 new parameters....sender IP, sender last name, recepient last name... this would be helpfull in keeping this method clean.
+                        note = "NOOCH PAYMENT // " + senderLastName + " / " + recepientLastName, // + moneySenderLastName + " / " + requestMakerLastName, 
+                        webhook = "",
+                        process_on = 0, // this should be greater then 0 I guess... CLIFF: I don't think so, it's an optional parameter, but we always want it to process immediately, so I guess it should always be 0
+                        ip = iPForTransaction // CLIFF:  This is actually required.  It should be the most recent IP address of the SENDER, or if none found, then '54.148.37.21'
+                    };
+                    transMain.extra = extraMain;
+
+                    SynapseV3AddTransInput_trans_fees feeMain = new SynapseV3AddTransInput_trans_fees();
+
+                    if (Convert.ToDouble(amount) > 10)
+                    {
+                        feeMain.fee = "0.20"; // to offset the Synapse fee so the user doesn't pay it
+                    }
+                    else if (Convert.ToDouble(amount) <= 10)
+                    {
+                        feeMain.fee = "0.10"; // to offset the Synapse fee so the user doesn't pay it
+                    }
+                    feeMain.note = "Negative Nooch Fee";
+
+                    SynapseV3AddTransInput_trans_fees_to tomain = new SynapseV3AddTransInput_trans_fees_to()
+                    {
+                        id = "5618028c86c27347a1b3aa0f" // Temporary: ID of Nooch's SYNAPSE account (not bank account)... using temp Sandbox account until we get Production credentials
+                    };
+
+                    feeMain.to = tomain;
+                    transMain.fees = new SynapseV3AddTransInput_trans_fees[1];
+                    transMain.fees[0] = feeMain;
+
+                    transParamsForSynapse.trans = transMain;
+
+                    #endregion Setup Synapse V3 Order Details
+
+                    #region Calling Synapse V3 TRANSACTION ADD
+
+                    string UrlToHitV3 = "https://sandbox.synapsepay.com/api/v3/trans/add";
+                    //string UrlToHit = "https://synapsepay.com/api/v3/trans/add";
+
+                    try
+                    {
+                        // Calling Add Trans API
+
+                        var http = (HttpWebRequest)WebRequest.Create(new Uri(UrlToHitV3));
+                        http.Accept = "application/json";
+                        http.ContentType = "application/json";
+                        http.Method = "POST";
+
+                        string parsedContent = JsonConvert.SerializeObject(transParamsForSynapse);
+                        ASCIIEncoding encoding = new ASCIIEncoding();
+                        Byte[] bytes = encoding.GetBytes(parsedContent);
+
+                        Stream newStream = http.GetRequestStream();
+                        newStream.Write(bytes, 0, bytes.Length);
+                        newStream.Close();
+
+                        var response = http.GetResponse();
+                        var stream = response.GetResponseStream();
+                        var sr = new StreamReader(stream);
+                        var content = sr.ReadToEnd();
+
+                        var synapseResponse = JsonConvert.DeserializeObject<SynapseV3AddTrans_Resp>(content);
+
+                        if (synapseResponse.success == true ||
+                            synapseResponse.success.ToString().ToLower() == "true")
+                        {
+                            res.success = true;
+                            res.ErrorMessage = "OK";
+                        }
+                        else
+                        {
+                            res.success = false;
+                            res.ErrorMessage = "Check synapse error.";
+                        }
+                        res.responseFromSynapse = synapseResponse;
+
+                    }
+                    catch (WebException ex)
+                    {
+                        var resp = new StreamReader(ex.Response.GetResponseStream()).ReadToEnd();
+                        JObject jsonFromSynapse = JObject.Parse(resp);
+
+                        Logger.Info("TDA -> TransferMoneyUsingSynapse FAILED. [Exception: " + jsonFromSynapse.ToString() + "]");
+
+                        JToken token = jsonFromSynapse["error"]["en"];
+
+                        if (token != null)
+                        {
+                            res.ErrorMessage = token.ToString();
+                        }
+                        else
+                        {
+                            res.ErrorMessage = "Error occured in call money transfer service.";
+                        }
+                    }
+
+                    #endregion Calling Synapse V3 TRANSACTION ADD
+
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("TDA -> AddTransSynapseV3Reusable FAILED - Inner Exception: [Exception: " + ex + "]");
+                    res.ErrorMessage = "Server Error - TDA Inner Exception";
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("TDA -> AddTransSynapseV3Reusable FAILED - Outer Exception: [Exception: " + ex + "]");
+                res.ErrorMessage = "TDA Outer Exception";
+            }
+
+            return res;
         }
 
     }
