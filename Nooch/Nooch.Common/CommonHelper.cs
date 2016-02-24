@@ -409,6 +409,18 @@ namespace Nooch.Common
             return new Member();
         }
 
+        public static List<SynapseBankLoginResult> GetSynapseBankLoginResulList(string memberId)
+        {
+            Logger.Info("MDA -> GetSynapseBankAccountDetails - MemberId: [" + memberId + "]");
+
+            var id = Utility.ConvertToGuid(memberId);
+
+            var memberAccountDetails = _dbContext.SynapseBankLoginResults.Where(m => m.MemberId == id && m.IsDeleted== false).ToList();
+
+            return memberAccountDetails;
+
+        }
+
         public static SynapseBanksOfMember GetSynapseBankAccountDetails(string memberId)
         {
             Logger.Info("MDA -> GetSynapseBankAccountDetails - MemberId: [" + memberId + "]");
@@ -416,6 +428,18 @@ namespace Nooch.Common
             var id = Utility.ConvertToGuid(memberId);
 
             var memberAccountDetails = _dbContext.SynapseBanksOfMembers.FirstOrDefault(m => m.MemberId == id && m.IsDefault == true);
+
+            return memberAccountDetails;
+
+        }
+
+        public static SynapseCreateUserResult GetSynapseCreateaUserDetails(string memberId)
+        {
+            Logger.Info("MDA -> GetSynapseBankAccountDetails - MemberId: [" + memberId + "]");
+
+            var id = Utility.ConvertToGuid(memberId);
+
+            var memberAccountDetails = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == id && m.IsDeleted== false);
 
             return memberAccountDetails;
 

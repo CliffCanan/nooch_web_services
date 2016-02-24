@@ -91,6 +91,8 @@
     <Compile Include="Entities\SynapseRelatedEntities\submitDocToSynapseV3Class.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\submitIdVerificationInt.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\synapseAddKycInfoInputV3Class.cs" />
+    <Compile Include="Entities\SynapseRelatedEntities\SynapseBankLoginv3_Input.cs" />
+    <Compile Include="Entities\SynapseRelatedEntities\SynapseBankLoginV3_Response_Int.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\synapseCreateUserInput_int.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\synapseCreateUserV3Result_int.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\synapseV3GenericResponse.cs" />
