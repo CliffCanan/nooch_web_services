@@ -16,6 +16,7 @@ using Nooch.Common.Entities.MobileAppOutputEnities;
 using Nooch.Data;
 using Nooch.DataAccess;
 using System.Collections.ObjectModel;
+using System.Web;
 using Nooch.Common.Entities.SynapseRelatedEntities;
 using Nooch.Common.Resources;
 
@@ -1999,9 +2000,9 @@ namespace Nooch.API.Controllers
             try
             {
                 MembersDataAccess mda = new MembersDataAccess();
-                
+
                 synapseCreateUserV3Result_int res = mda.RegisterUserWithSynapseV3(memberId);
-                
+
 
                 return res;
             }
@@ -2011,6 +2012,56 @@ namespace Nooch.API.Controllers
 
                 return null;
             }
+        }
+
+
+        public synapseV3GenericResponse submitDocumentToSynapseV3(SaveVerificationIdDocument DocumentDetails)
+        {
+            synapseV3GenericResponse res = new synapseV3GenericResponse();
+
+            try
+            {
+                Logger.Info("Service layer - submitDocumentToSynapseV3 [MemberId: " + DocumentDetails.MemberId + "]");
+
+                var mda = new MembersDataAccess();
+
+
+                // making url from byte array...coz submitDocumentToSynapseV3 expects url of image.
+
+                string ImageUrlMade = "";
+
+                if (DocumentDetails.Picture != null)
+                {
+                    // Make  image from bytes
+                    string filename = HttpContext.Current.Server.MapPath("UploadedPhotos") + "/Photos/" +
+                                      DocumentDetails.MemberId + ".png";
+                    using (FileStream fs = new FileStream(filename, FileMode.Create, FileAccess.ReadWrite))
+                    {
+                        fs.Write(DocumentDetails.Picture, 0, (int)DocumentDetails.Picture.Length);
+                    }
+                    ImageUrlMade = Utility.GetValueFromConfig("PhotoUrl") + DocumentDetails.MemberId + ".png";
+                }
+                else
+                {
+                    ImageUrlMade = Utility.GetValueFromConfig("PhotoUrl") + "gv_no_photo.png";
+                }
+
+
+                var mdaResult = mda.submitDocumentToSynapseV3(DocumentDetails.MemberId, ImageUrlMade);
+
+                res.isSuccess = mdaResult.success;
+                res.msg = mdaResult.message;
+
+                return res;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Layer - submitDocumentToSynapseV3 FAILED - [userName: " + DocumentDetails.MemberId + "]. Exception: [" + ex + "]");
+
+                throw new Exception("Server Error.");
+            }
+
+
         }
 
         #endregion

@@ -1505,6 +1505,157 @@ namespace Nooch.DataAccess
                 }
             
         }
+
+
+        public GenericInternalResponseForSynapseMethods submitDocumentToSynapseV3(string MemberId, string ImageUrl)
+        {
+            Logger.Info("MDA -> submitDocumentToSynapseV3 Initialized - [MemberId: " + MemberId + "]");
+
+            var id = Utility.ConvertToGuid(MemberId);
+
+            GenericInternalResponseForSynapseMethods res = new GenericInternalResponseForSynapseMethods();
+
+            
+                #region Get User's Synapse OAuth Consumer Key
+
+                string usersSynapseOauthKey = "";
+
+                
+                var usersSynapseDetails = _dbContext.SynapseCreateUserResults.FirstOrDefault(m=>m.MemberId==id && m.IsDeleted==false);
+
+                if (usersSynapseDetails == null)
+                {
+                    Logger.Info("MDA -> submitDocumentToSynapseV3 ABORTED: Member's Synapse User Details not found. [MemberId: " + MemberId + "]");
+
+                    res.message = "Could not find this member's account info";
+
+                    return res;
+                }
+                else
+                {
+                    usersSynapseOauthKey = CommonHelper.GetDecryptedData(usersSynapseDetails.access_token);
+                }
+
+                #endregion Get User's Synapse OAuth Consumer Key
+
+
+                #region Get User's Fingerprint
+
+                string usersFingerprint = "";
+
+                
+            var member = CommonHelper.GetMemberDetails(id.ToString());;
+
+                if (member == null)
+                {
+                    Logger.Info("MDA -> submitDocumentToSynapseV3 ABORTED: Member not found. [MemberId: " + MemberId + "]");
+                    res.message = "Member not found";
+
+                    return res;
+                }
+                else
+                {
+                    if (String.IsNullOrEmpty(member.UDID1))
+                    {
+                        Logger.Info("MDA -> submitDocumentToSynapseV3 ABORTED: Member's Fingerprint not found. [MemberId: " + MemberId + "]");
+                        res.message = "Could not find this member's fingerprint";
+
+                        return res;
+                    }
+                    else
+                    {
+                        usersFingerprint = member.UDID1;
+                    }
+                }
+
+                #endregion Get User's Fingerprint
+
+
+                #region Call Synapse /user/doc/attachments/add API
+
+                submitDocToSynapseV3Class answers = new submitDocToSynapseV3Class();
+
+                SynapseV3Input_login s_log = new SynapseV3Input_login();
+                s_log.oauth_key = usersSynapseOauthKey;
+                answers.login = s_log;
+                //answers.login.oauth_key = usersSynapseOauthKey;
+
+
+                submitDocToSynapse_user sdtu = new submitDocToSynapse_user();
+                submitDocToSynapse_user_doc doc = new submitDocToSynapse_user_doc();
+                doc.attachment = "data:text/csv;base64," + CommonHelper.ConvertImageURLToBase64(ImageUrl).Replace("\\", "");
+
+                sdtu.fingerprint = usersFingerprint;
+
+                sdtu.doc = doc;
+
+                answers.user = sdtu;
+
+                //answers.user.doc.attachment = "data:text/csv;base64," + ConvertImageURLToBase64(ImageUrl).Replace("\\", ""); // NEED TO GET THE ACTUAL DOC... EITHER PASS THE BYTES TO THIS METHOD, OR GET FROM DB
+                //answers.user.fingerprint = usersFingerprint;
+
+                string baseAddress = "https://sandbox.synapsepay.com/api/v3/user/doc/attachments/add";
+                //string baseAddress = "https://synapsepay.com/api/v3/user/doc/attachments/add";
+
+                try
+                {
+                    var http = (HttpWebRequest)WebRequest.Create(new Uri(baseAddress));
+                    http.Accept = "application/json";
+                    http.ContentType = "application/json";
+                    http.Method = "POST";
+
+                    string parsedContent = JsonConvert.SerializeObject(answers);
+                    ASCIIEncoding encoding = new ASCIIEncoding();
+                    Byte[] bytes = encoding.GetBytes(parsedContent);
+
+                    Stream newStream = http.GetRequestStream();
+                    newStream.Write(bytes, 0, bytes.Length);
+                    newStream.Close();
+
+                    var response = http.GetResponse();
+                    var stream = response.GetResponseStream();
+                    var sr = new StreamReader(stream);
+                    var content = sr.ReadToEnd();
+
+                    kycInfoResponseFromSynapse resFromSynapse = new kycInfoResponseFromSynapse();
+
+                    resFromSynapse = JsonConvert.DeserializeObject<kycInfoResponseFromSynapse>(content);
+
+                    if (resFromSynapse != null)
+                    {
+                        if (resFromSynapse.success.ToString().ToLower() == "true")
+                        {
+                            Logger.Info("MDA -> submitDocumentToSynapseV3 SUCCESSFUL - [MemberID: " + MemberId + "]");
+
+                            res.success = true;
+
+                            res.message = "";
+                        }
+                        else
+                        {
+                            res.message = "Got a response, but success was not true";
+                            Logger.Info("MDA -> submitDocumentToSynapseV3 FAILED - Got Synapse response, but success was NOT 'true' - [MemberID: " + MemberId + "]");
+                        }
+                    }
+                    else
+                    {
+                        res.message = "Verification response was null";
+                        Logger.Info("MDA -> submitDocumentToSynapseV3 FAILED - Synapse response was NULL - [MemberID: " + MemberId + "]");
+                    }
+                }
+                catch (WebException ex)
+                {
+                    res.message = "MDA Exception #9575";
+                    Logger.Info("MDA -> submitDocumentToSynapseV3 FAILED - Catch [Exception: " + ex + "]");
+                }
+
+                #endregion Call Synapse /user/doc/attachments/add API
+            
+
+            return res;
+        }
+
+
         #endregion
 
         
