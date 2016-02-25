@@ -53,6 +53,8 @@
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.ServiceModel.Web" />
     <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -87,6 +89,8 @@
     <Compile Include="Entities\MobileAppOutputEnities\TransactionDto.cs" />
     <Compile Include="Entities\StringResult.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\kycInfoResponseFromSynapse.cs" />
+    <Compile Include="Entities\SynapseRelatedEntities\NodePermissionCheckResult.cs" />
+    <Compile Include="Entities\SynapseRelatedEntities\public class SynapseV3AddTrans_ReusableClass.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\SaveVerificationIdDocument.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\submitDocToSynapseV3Class.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\submitIdVerificationInt.cs" />
@@ -96,6 +100,8 @@
     <Compile Include="Entities\SynapseRelatedEntities\SynapseBankVerifyV3_Input.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\synapseCreateUserInput_int.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\synapseCreateUserV3Result_int.cs" />
+    <Compile Include="Entities\SynapseRelatedEntities\synapseSearchUserResponse.cs" />
+    <Compile Include="Entities\SynapseRelatedEntities\SynapseV3AddTransInput.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\SynapseV3BankLoginResult_ServiceRes.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\synapseV3GenericResponse.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\SynapseV3VerifyNode_ServiceInput.cs" />

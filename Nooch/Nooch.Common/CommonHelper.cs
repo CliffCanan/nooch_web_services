@@ -1558,5 +1558,127 @@ namespace Nooch.Common
 
             return res;
         }
+
+
+
+        public static synapseSearchUserResponse getUserPermissionsForSynapseV3(string userEmail)
+        {
+            synapseSearchUserResponse res = new synapseSearchUserResponse();
+            res.success = false;
+
+            try
+            {
+                synapseSearchUserInputClass input = new synapseSearchUserInputClass();
+
+                synapseSearchUser_Client client = new synapseSearchUser_Client();
+                client.client_id = Utility.GetValueFromConfig("SynapseClientId");
+                client.client_secret = Utility.GetValueFromConfig("SynapseClientSecret");
+
+                synapseSearchUser_Filter filter = new synapseSearchUser_Filter();
+                filter.page = 1;
+                filter.exact_match = true; // we might want to set this to false to prevent error due to capitalization mis-match... (or make sure we only send all lowercase email when creating a Synapse user)
+                filter.query = userEmail;
+
+                input.client = client;
+                input.filter = filter;
+
+                //string UrlToHit = "https://synapsepay.com/api/v3/user/search";
+                string UrlToHit = "https://sandbox.synapsepay.com/api/v3/user/search";
+
+                var http = (HttpWebRequest)WebRequest.Create(new Uri(UrlToHit));
+                http.Accept = "application/json";
+                http.ContentType = "application/json";
+                http.Method = "POST";
+
+                string parsedContent = JsonConvert.SerializeObject(input);
+                ASCIIEncoding encoding = new ASCIIEncoding();
+                Byte[] bytes = encoding.GetBytes(parsedContent);
+
+                Stream newStream = http.GetRequestStream();
+                newStream.Write(bytes, 0, bytes.Length);
+                newStream.Close();
+
+                try
+                {
+                    var response = http.GetResponse();
+                    var stream = response.GetResponseStream();
+                    var sr = new StreamReader(stream);
+                    var content = sr.ReadToEnd();
+
+                    JObject checkPermissionResponse = JObject.Parse(content);
+
+                    if (checkPermissionResponse["success"] != null &&
+                        Convert.ToBoolean(checkPermissionResponse["success"]) == true)
+                    {
+                        res = JsonConvert.DeserializeObject<synapseSearchUserResponse>(content);
+                    }
+                    else
+                    {
+                        res.error_code = "Service error.";
+                    }
+                }
+                catch (WebException we)
+                {
+                    #region Synapse V3 Get User Permissions Exception
+
+                    var httpStatusCode = ((HttpWebResponse)we.Response).StatusCode;
+                    res.http_code = httpStatusCode.ToString();
+
+                    var response = new StreamReader(we.Response.GetResponseStream()).ReadToEnd();
+                    JObject errorJsonFromSynapse = JObject.Parse(response);
+
+                    // CLIFF (10/10/15): Synapse lists all possible V3 error codes in the docs -> Introduction -> Errors
+                    //                   We might have to do different things depending on which error is returned... for now just pass
+                    //                   back the error number & msg to the function that called this method.
+                    res.error_code = errorJsonFromSynapse["error_code"].ToString();
+                    res.errorMsg = errorJsonFromSynapse["error"]["en"].ToString();
+
+                    if (!String.IsNullOrEmpty(res.error_code))
+                    {
+                        Logger.Error("TDA -> getUserPermissionsForSynapseV3 FAILED - [Synapse Error Code: " + res.error_code +
+                                               "], [Error Msg: " + res.errorMsg + "], [User Email: " + userEmail + "]");
+                    }
+                    else
+                    {
+                        Logger.Error("TDA -> getUserPermissionsForSynapseV3 FAILED: Synapse Error, but *error_code* was null for [User Email: " +
+                                               userEmail + "], [Exception: " + we.InnerException + "]");
+                    }
+
+                    #endregion Synapse V3 Get User Permissions Exception
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("TDA -> getUserPermissionsForSynapseV3 FAILED: Outer Catch Error - [User Email: " + userEmail +
+                                       "], [Exception: " + ex.InnerException + "]");
+
+                res.error_code = "Nooch Server Error: Outer Exception.";
+            }
+
+            return res;
+        }
+
+
+        public static NodePermissionCheckResult IsNodeActiveInGivenSetOfNodes(synapseSearchUserResponse_Node[] allNodes, string nodeToMatch)
+        {
+            NodePermissionCheckResult res = new NodePermissionCheckResult();
+
+            res.IsPermissionfound = false;
+
+            foreach (synapseSearchUserResponse_Node node in allNodes)
+            {
+                if (node._id != null && node._id.oid == nodeToMatch)
+                {
+                    if (!String.IsNullOrEmpty(node.allowed))
+                    {
+                        res.IsPermissionfound = true;
+                        res.PermissionType = node.allowed;
+                        break;
+                    }
+                }
+            }
+
+            return res;
+        }
     }
 }
