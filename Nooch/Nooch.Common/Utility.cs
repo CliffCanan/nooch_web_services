@@ -15,6 +15,8 @@ using System.Threading.Tasks;
 using System.Web.Script.Serialization;
 using Newtonsoft.Json;
 using Nooch.Common.Entities;
+using System.ServiceModel;
+using System.ServiceModel.Web;
 
 
 namespace Nooch.Common
@@ -22,6 +24,14 @@ namespace Nooch.Common
     public static class Utility
     {
 
+        public static IFormatProvider GetFormatProvider
+        {
+            get
+            {
+                const IFormatProvider iFormatProvider = null;
+                return iFormatProvider;
+            }
+        }
         public static string GetValueFromConfig(string key)
         {
             return ConfigurationManager.AppSettings[key];
@@ -251,6 +261,7 @@ namespace Nooch.Common
                         mailMessage.From = new MailAddress(fromAddress, "Nooch Payments");
                         break;
                     case "support@nooch.com":
+
                         mailMessage.From = new MailAddress(fromAddress, "Nooch Support");
                         break;
                     case "hello@nooch.com":
@@ -398,6 +409,50 @@ namespace Nooch.Common
                 throw exception;
             }
         }
+
+
+        /// <summary>
+        /// Used to log and throw exception
+        /// </summary>
+        /// <param name="exception">Exception raised at runtime</param>
+
+        public static void ThrowFaultException(Exception exception)
+        {
+            Logger.Error(String.Format(Utility.GetFormatProvider, "Exception: [{0}], Message: [{1}], StackTrace: {2}", exception.GetType().FullName, exception.Message, exception.StackTrace.Replace(Environment.NewLine, string.Empty)));
+
+            Utility.LogInnerException(exception);
+
+            if (WebOperationContext.Current != null)
+            {
+                var outResponse = WebOperationContext.Current.OutgoingResponse;
+                outResponse.StatusCode = HttpStatusCode.InternalServerError;
+                outResponse.StatusDescription = exception.Message;
+
+                Logger.Info("Status Code: [ " + outResponse.StatusCode + "], Status Description: [" + outResponse.StatusDescription + "]");
+
+                throw new WebException(exception.Message);
+            }
+        }
+        /// <summary>
+        /// Used to log and throw exception with user message
+        /// </summary>
+        /// <param name="exception">Exception raised at runtime</param>
+        /// <param name="errorMessage">User specified error message thrown to Web Project</param>
+
+        public static void ThrowFaultException(Exception exception, string errorMessage)
+        {
+            Logger.Error(String.Format(Utility.GetFormatProvider, "Exception:{0} :{1} StackTrace:{2}", exception.GetType().FullName, exception.Message, exception.StackTrace.Replace(Environment.NewLine, string.Empty)));
+            Utility.LogInnerException(exception);
+            if (WebOperationContext.Current != null)
+            {
+                var outResponse = WebOperationContext.Current.OutgoingResponse;
+                outResponse.StatusCode = HttpStatusCode.InternalServerError;
+                outResponse.StatusDescription = errorMessage;
+                Logger.Info("Status code:[ " + outResponse.StatusCode + "], Status description:[" + outResponse.StatusDescription + "].");
+                throw new WebException(errorMessage);
+            }
+        }
+
 
     }
 }
