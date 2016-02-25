@@ -2728,6 +2728,170 @@ namespace Nooch.DataAccess
 
             notifications.Add(notification);
         }
+        public string CancelRejectTransaction(string transactionId, string userResponse)
+        {
+            Logger.Info("TDA -> CancelRejectTransaction Initiated - [transactionId: " + transactionId + "], [userResponse: " + userResponse + "]");
+
+            if (userResponse == "Rejected" || userResponse == "Cancelled")
+            {
+                try
+                {
+                    var transId = Utility.ConvertToGuid(transactionId);
+
+                    var transactionDetail = _dbContext.Transactions.Where(memberTemp => memberTemp.TransactionId == transId).FirstOrDefault();
+
+                    transactionDetail.TransactionStatus = userResponse;
+
+                    _dbContext.SaveChanges();
+
+                    // 'Members' IS THE REQUEST REJECTOR
+                    // 'Members1' IS THE REQUEST SENDER
+                    if (userResponse == "Rejected")
+                    {
+                        // sending push notification to request maker
+                        Guid RequestSenderId = Utility.ConvertToGuid(transactionDetail.Member1.MemberId.ToString());
+
+
+
+                        var noochMemberfornotification = _dbContext.Members.Where(memberTemp =>
+                                memberTemp.MemberId.Equals(RequestSenderId) && memberTemp.IsDeleted == false && memberTemp.ContactNumber != null && memberTemp.IsVerifiedPhone == true).FirstOrDefault();
+
+                        if (noochMemberfornotification != null)
+                        {
+                            try
+                            {
+                                string mailBodyText = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member.FirstName))
+                                      + " " + CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member.LastName))
+                                      + " just declined your Nooch payment request.";
+
+                                Utility.SendNotificationMessage(mailBodyText, 0, null,
+                                           noochMemberfornotification.DeviceToken,
+                                           Utility.GetValueFromConfig("AppKey"), Utility.GetValueFromConfig("MasterSecret"));
+                                Logger.Info("TDA -> Request Denied - Push notification sent to [" + noochMemberfornotification.UDID1 + "] sucessfully");
+                            }
+                            catch (Exception)
+                            {
+                                Logger.Info("TDA -> Request Denied - Push notification NOT sent to [" + noochMemberfornotification.UDID1 + "]");
+                            }
+                        }
+
+                        // sending email TO USER THAT SENT THE REQUEST about rejection
+                        string reqSenderFirstName = "";
+                        string reqRejectorFullName = "";
+                        string reqRejectorFirstName = "";
+
+                        reqSenderFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member1.FirstName));
+                        reqRejectorFullName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member.FirstName)) + " " +
+                                               CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member.LastName));
+                        reqRejectorFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member.FirstName));
+
+                        string s2 = transactionDetail.Amount.ToString("n2");
+                        string[] s3 = s2.Split('.');
+
+                        string memo = "";
+                        if (transactionDetail.Memo != null && transactionDetail.Memo != "")
+                        {
+                            if (transactionDetail.Memo.Length > 3)
+                            {
+                                string firstThreeChars = transactionDetail.Memo.Substring(0, 3).ToLower();
+                                bool startWithFor = firstThreeChars.Equals("for");
+
+                                if (startWithFor)
+                                {
+                                    memo = transactionDetail.Memo.ToString();
+                                }
+                                else
+                                {
+                                    memo = "For " + transactionDetail.Memo.ToString();
+                                }
+                            }
+                            else
+                            {
+                                memo = "For " + transactionDetail.Memo.ToString();
+                            }
+                        }
+
+                        var tokens = new Dictionary<string, string>
+										{
+											{Constants.PLACEHOLDER_FIRST_NAME,reqSenderFirstName},
+											{Constants.PLACEHOLDER_RECIPIENT_FULL_NAME,reqRejectorFullName},
+											{Constants.PLACEHLODER_CENTS, s3[1].ToString()},
+											{Constants.PLACEHOLDER_TRANSFER_AMOUNT, s3[0].ToString()},
+											{Constants.PLACEHOLDER_RECIPIENT_FIRST_NAME,reqRejectorFirstName},
+											{Constants.MEMO, memo}
+										};
+
+                        var fromAddress = Utility.GetValueFromConfig("transfersMail");
+                        var toAddress = CommonHelper.GetDecryptedData(transactionDetail.Member1.UserName);
+
+                        // email notification
+                        try
+                        {
+                            Utility.SendEmail("requestDeniedToSender",
+                                fromAddress, toAddress, null,
+                                CommonHelper.UppercaseFirst(
+                                    CommonHelper.GetDecryptedData(transactionDetail.Member.FirstName)) + " " + CommonHelper.UppercaseFirst(
+                                    CommonHelper.GetDecryptedData(transactionDetail.Member.LastName)) + " denied your payment request", null,
+                                tokens, null, null, null);
+
+                            Logger.Info("TDA -> requestDeniedToSender - Email sent to [" + toAddress + "] successfully");
+                        }
+                        catch (Exception)
+                        {
+                            Logger.Info(
+                                "TDA -> requestDeniedToSender FAILED - Email NOT sent to [" + toAddress + "]");
+                        }
+
+                        // sending email to user who REJECTED this request (ie.: RECIPIENT)
+
+                        string reqSenderFullName = "";
+
+                        reqRejectorFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member.FirstName));
+                        reqSenderFullName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member1.FirstName)) + " " +
+                                          CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member1.LastName));
+
+                        var tokens2 = new Dictionary<string, string>
+										{
+											{Constants.PLACEHOLDER_FIRST_NAME,reqRejectorFirstName},
+											{Constants.PLACEHOLDER_SENDER_FULL_NAME,reqSenderFullName},
+											{Constants.PLACEHLODER_CENTS, s3[1].ToString()},
+											{Constants.PLACEHOLDER_TRANSFER_AMOUNT, s3[0].ToString()},
+											{Constants.MEMO, memo}
+										};
+
+                        toAddress = CommonHelper.GetDecryptedData(transactionDetail.Member.UserName);
+
+                        try
+                        {
+                            // email notification
+                            Utility.SendEmail("requestDeniedToRecipient",
+                                fromAddress, toAddress, null,
+                                "You rejected a Nooch request from " + reqSenderFullName, null,
+                                tokens2, null, null, null);
+
+                            Logger.Info("TDA -> requestDeniedToRecipient - Email sent to [" + toAddress + "] successfully");
+                        }
+                        catch (Exception)
+                        {
+                            Logger.Info("TDA -> requestDeniedToRecipient FAILED - Email NOT sent to [" + toAddress + "]");
+                        }
+                    }
+
+                    return "success";
+
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("TDA -> CancelRejectTransaction Initiated - [transactionId: " + transactionId + "], Exception: [" + ex.Message + "]");
+                    return "";
+                }
+            }
+            else
+            {
+                return "";
+            }
+        }
+
 
     }
 }

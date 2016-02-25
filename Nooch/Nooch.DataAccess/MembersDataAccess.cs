@@ -1083,6 +1083,608 @@ namespace Nooch.DataAccess
             return dateTime.ToString();
         }
 
+        public bool IsPhoneNumberAlreadyRegistered(string PhoneNumberToSearch)
+        {
+            string NumAltOne = "+" + PhoneNumberToSearch;
+            string NumAltTwo = "+1" + PhoneNumberToSearch;
+            string BlankNumCase = CommonHelper.GetEncryptedData(" ");
+
+            if (!String.IsNullOrEmpty(PhoneNumberToSearch))
+            {
+
+                var MemberSerachedWithPhone = _dbContext.Members.Where(
+                        inviteTemp =>
+                            (inviteTemp.ContactNumber == PhoneNumberToSearch ||
+                             inviteTemp.ContactNumber == NumAltOne || inviteTemp.ContactNumber == NumAltTwo) &&
+                             inviteTemp.IsDeleted == false &&
+                             inviteTemp.ContactNumber != BlankNumCase).FirstOrDefault();
+                if (MemberSerachedWithPhone == null)
+                {
+                    return false;
+                }
+                else
+                {
+                    return true;
+                }
+
+            }
+            else
+            {
+                return false;
+            }
+        }
+        public string UpdateMemberIPAddressAndDeviceId(string MemberId, string IP, string DeviceId)
+        {
+            if (String.IsNullOrEmpty(MemberId))
+            {
+                return "MemberId not supplied.";
+            }
+
+            Guid memId = Utility.ConvertToGuid(MemberId);
+
+
+            bool ipSavedSuccessfully = false;
+            bool udidIdSavedSuccessfully = false;
+
+            #region Save IP Address
+
+            if (!String.IsNullOrEmpty(IP))
+            {
+                try
+                {
+
+                    var ipAddressesFound = _dbContext.MembersIPAddresses.Where(memberTemp => memberTemp.MemberId.Value.Equals(memId)).ToList();
+
+                    if (ipAddressesFound.Count > 5)
+                    {
+                        // If there are already 5 entries, update the one added first (the oldest)
+                        var lastIpFound = (from c in ipAddressesFound select c)
+                                          .OrderBy(m => m.ModifiedOn)
+                                          .Take(1)
+                                          .SingleOrDefault();
+
+                        lastIpFound.ModifiedOn = DateTime.Now;
+                        lastIpFound.Ip = IP;
+
+
+                        int a = _dbContext.SaveChanges();
+
+                        if (a > 0)
+                        {
+                            Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId SUCCESS For Saving IP Address (1) - [MemberId: " + MemberId + "]");
+                            ipSavedSuccessfully = true;
+                        }
+                        else
+                        {
+                            Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId FAILED Trying To Saving IP Address (1) in DB - [MemberId: " + MemberId + "]");
+                        }
+                    }
+                    else
+                    {
+                        // Otherwise, make a new entry
+                        MembersIPAddress mip = new MembersIPAddress();
+                        mip.MemberId = memId;
+                        mip.ModifiedOn = DateTime.Now;
+                        mip.Ip = IP;
+                        _dbContext.MembersIPAddresses.Add(mip);
+                        int b = _dbContext.SaveChanges();
+
+                        if (b > 0)
+                        {
+                            Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId SUCCESS For Saving IP Address (2) - [MemberId: " + MemberId + "]");
+                            ipSavedSuccessfully = true;
+                        }
+                        else
+                        {
+                            Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId FAILED Trying To Saving IP Address (2) in DB - [MemberId: " + MemberId + "]");
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId FAILED For Saving IP Address - [Exception: " + ex + "]");
+                }
+            }
+            else
+            {
+                Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId - No IP Address Passed - [MemberId: " + MemberId + "]");
+            }
+
+            #endregion Save IP Address
+
+
+            #region Save Device ID
+
+            if (!String.IsNullOrEmpty(DeviceId))
+            {
+                try
+                {
+                    // CLIFF (8/12/15): This "Device ID" will be stored in Nooch's DB as "UDID1" and is specifically for Synapse's "Fingerprint" requirement...
+                    //                  NOT for push notifications, which should use the "DeviceToken" in Nooch's DB.  (Confusing, but they are different values)
+
+
+                    var member = _dbContext.Members.Where(memberTemp => memberTemp.MemberId == memId).FirstOrDefault();
+
+                    if (member != null)
+                    {
+                        member.UDID1 = DeviceId;
+                        member.DateModified = DateTime.Now;
+                    }
+
+                    int c = _dbContext.SaveChanges();
+
+                    if (c > 0)
+                    {
+                        Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId SUCCESS For Saving Device ID - [MemberId: " + MemberId + "]");
+                        udidIdSavedSuccessfully = true;
+                    }
+                    else
+                    {
+                        Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId FAILED Trying To Saving Device ID in DB - [MemberId: " + MemberId + "]");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("MDA -> UpdateMemberIPAddressAndDeviceId FAILED For Saving Device ID - [Exception: " + ex + "]");
+                }
+            }
+            else
+            {
+                Logger.Error("MDA -> UpdateMemberIPAddressAndDeviceId - No Device ID Passed - [MemberId: " + MemberId + "]");
+            }
+
+            #endregion Save Device ID
+
+            if (ipSavedSuccessfully && udidIdSavedSuccessfully)
+            {
+                return "Both IP and DeviceID saved successfully.";
+            }
+            else if (ipSavedSuccessfully)
+            {
+                return "Only IP address saved successfully, not DeviceID.";
+            }
+            else if (udidIdSavedSuccessfully)
+            {
+                return "Only DeviceID saved successfully, not IP Address.";
+            }
+
+            return "Neither IP address nor DeviceID were saved.";
+
+        }
+        public int UpdateMember(Member m)
+        {
+            Member member = m;
+            return _dbContext.SaveChanges();
+
+        }
+        public Member GetMemberDetails(string memberId)
+        {
+            //Logger.LogDebugMessage("MDA -> GetMemberDetails - MemberId: [" + memberId + "]");
+            try
+            {
+                var id = Utility.ConvertToGuid(memberId);
+
+                var noochMember = _dbContext.Members.Where(memberTemp =>
+                                     memberTemp.MemberId == id &&
+                                     memberTemp.IsDeleted == false).FirstOrDefault();
+
+                if (noochMember != null)
+                {
+                    return noochMember;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("MDA -> GetMemberDetails FAILED - Member ID: [" + memberId + "], [Exception: " + ex + "]");
+            }
+            return new Member();
+        }
+        public SynapseBanksOfMember GetSynapseBankAccountDetails(string memberId)
+        {
+            Logger.Info("MDA -> GetSynapseBankAccountDetails - MemberId: [" + memberId + "]");
+            var id = Utility.ConvertToGuid(memberId);
+
+            var memberAccountDetails = _dbContext.SynapseBanksOfMembers.Where(bank =>
+                                (bank.MemberId.Value == id &&
+                                 bank.IsDefault == true)).FirstOrDefault();
+
+            return memberAccountDetails;
+
+        }
+
+        public string CreateNonNoochUserPasswordForPhoneInvitations(string TransId, string password, string EmailId)
+        {
+            Logger.Info("MDA -> CreateNonNoochUserPasswordForPhoneInvitations - TransId: [" + TransId + "]");
+
+            try
+            {
+
+                Guid tid = Utility.ConvertToGuid(TransId);
+                password = CommonHelper.GetEncryptedData(password);
+                string pinNumber = Utility.GetRandomPinNumber();
+                pinNumber = CommonHelper.GetEncryptedData(pinNumber);
+
+
+                var transactionDetail = _dbContext.Transactions.Where(memberTemp =>
+                                     memberTemp.TransactionId == tid &&
+                                    (memberTemp.TransactionType == "DrRr1tU1usk7nNibjtcZkA==" ||
+                                     memberTemp.TransactionType == "T3EMY1WWZ9IscHIj3dbcNw==")).FirstOrDefault();
+
+
+                if (transactionDetail != null)
+                {
+                    var userNameLowerCase = CommonHelper.GetEncryptedData(EmailId.ToLower());
+                    
+
+
+                    var memdetails = _dbContext.Members.Where(memberTemp =>
+                                (memberTemp.UserName == userNameLowerCase || memberTemp.UserNameLowerCase== userNameLowerCase) &&
+                                memberTemp.IsDeleted == false).FirstOrDefault();
+
+                    if (memdetails == null)
+                    {
+                        #region Username Not Already Registered
+
+                        #region Add New Member Record To DB
+
+                        string noochRandomId = GetRandomNoochId();
+                        string newUserPhoneNumber = CommonHelper.GetDecryptedData(transactionDetail.PhoneNumberInvited);
+                        newUserPhoneNumber = newUserPhoneNumber.Replace("(", "");
+                        newUserPhoneNumber = newUserPhoneNumber.Replace(")", "");
+                        newUserPhoneNumber = newUserPhoneNumber.Replace(" ", "");
+                        newUserPhoneNumber = newUserPhoneNumber.Replace("-", "");
+
+                        string inviteCode = transactionDetail.Member.InviteCodeId.ToString();
+
+                        string emailEncrypted = userNameLowerCase;
+
+                        var member = new Member
+                        {
+                            Nooch_ID = noochRandomId,
+                            MemberId = Guid.NewGuid(),
+                            UserName = emailEncrypted,
+                            FirstName = CommonHelper.GetEncryptedData(""),
+                            LastName = CommonHelper.GetEncryptedData(""),
+                            SecondaryEmail = emailEncrypted,
+                            Password = password.Replace(" ", "+"),
+                            PinNumber = pinNumber.Replace(" ", "+"),
+                            Status = Constants.STATUS_REGISTERED,
+                            IsDeleted = false,
+                            DateCreated = DateTime.Now,
+                            DateModified = DateTime.Now,
+                            UserNameLowerCase = userNameLowerCase,
+                            // FacebookAccountLogin = facebookAccountLogin,
+                            Type = "Personal",
+                            // contact number verified because already coming from SMS url delivered in phone
+                            ContactNumber = newUserPhoneNumber,
+                            IsVerifiedPhone = true,
+                            IsVerifiedWithSynapse = false,
+                            AdminNotes = "Created via Phone Invitation Landing page"
+                        };
+                        member.Photo = Utility.GetValueFromConfig("PhotoUrl") + "gv_no_photo.png";
+                        if (!String.IsNullOrEmpty(inviteCode) && inviteCode.Length > 1)
+                        {
+                            member.InviteCodeIdUsed = Utility.ConvertToGuid(inviteCode);
+                        }
+
+                        int result = 0;
+
+
+                        try
+                        {
+                            _dbContext.Members.Add(member);
+                            result = _dbContext.SaveChanges();
+
+                        }
+                        catch (Exception ex)
+                        {
+                            return "Exception " + ex.ToString();
+                        }
+
+                        #endregion Add New Member Record To DB
+
+                        if (result > 0)
+                        {
+                            #region Create Auth Token
+                           //// var requestId = Guid.Empty;
+                            var tokenId = Guid.NewGuid();
+
+                            var token = new AuthenticationToken
+                            {
+                                TokenId = tokenId,
+                                MemberId = member.MemberId,
+                                IsActivated = false,
+                                DateGenerated = DateTime.Now
+                               // FriendRequestId = requestId
+                            };
+                            //var tokensRepository = new Repository<AuthenticationTokens, NoochDataEntities>(noochConnection);
+
+                            _dbContext.AuthenticationTokens.Add(token);
+                            
+                            bool status = Convert.ToBoolean(_dbContext.SaveChanges());
+                            #endregion Create Auth Token
+
+                            #region Set Notification Settings
+                            // for member notification settings
+                            //var memberNotificationsRepository = new Repository<MemberNotifications, NoochDataEntities>(noochConnection);
+
+                            var memberNotification = new MemberNotification
+                            {
+                                NotificationId = Guid.NewGuid(),
+
+                                MemberId = member.MemberId,
+
+                                FriendRequest = true,
+                                InviteRequestAccept = true,
+                                TransferSent = true,
+                                TransferReceived = true,
+                                TransferAttemptFailure = true,
+                                NoochToBank = true,
+                                BankToNooch = true,
+                                EmailFriendRequest = true,
+                                EmailInviteRequestAccept = true,
+                                EmailTransferSent = true,
+                                EmailTransferReceived = true,
+                                EmailTransferAttemptFailure = true,
+                                TransferUnclaimed = true,
+                                BankToNoochRequested = true,
+                                BankToNoochCompleted = true,
+                                NoochToBankRequested = true,
+                                NoochToBankCompleted = true,
+                                InviteReminder = true,
+                                LowBalance = true,
+                                ValidationRemainder = true,
+                                ProductUpdates = true,
+                                NewAndUpdate = true,
+                                DateCreated = DateTime.Now
+                            };
+                            _dbContext.MemberNotifications.Add(memberNotification);
+                            _dbContext.SaveChanges();
+
+                            #endregion Set Notification Settings
+
+                            #region Set Privacy Settings
+
+
+                            var memberPrivacySettings = new MemberPrivacySetting
+                            {
+
+                                MemberId = member.MemberId,
+
+                                AllowSharing = true,
+                                ShowInSearch = true,
+                                DateCreated = DateTime.Now
+                            };
+                            _dbContext.MemberPrivacySettings.Add(memberPrivacySettings);
+
+                            _dbContext.SaveChanges();
+
+
+                            #endregion Set Privacy Settings
+
+                            if (status)
+                            {
+                                var fromAddress = Utility.GetValueFromConfig("welcomeMail");
+
+                                #region Send Registration Email
+
+                                try
+                                {
+                                    //send registration email to member with autogenerated token
+                                    var link = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
+                                    "/Registration/Activation.aspx?tokenId=" + tokenId);
+
+                                    var tokens = new Dictionary<string, string>
+                                        {
+                                            {
+                                                Constants.PLACEHOLDER_FIRST_NAME,
+                                                CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(member.FirstName))
+                                            },
+                                            {
+                                                Constants.PLACEHOLDER_LAST_NAME,
+                                                CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(member.LastName))
+                                            },
+                                            {Constants.PLACEHOLDER_OTHER_LINK, link}
+                                        };
+
+                                    Utility.SendEmail(Constants.TEMPLATE_REGISTRATION,
+                                        fromAddress,CommonHelper.GetDecryptedData(userNameLowerCase), null, "Confirm your email on Nooch", link,
+                                        tokens, null, null, null);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.Error("MDA -> CreateNonNoochUserPasswordForPhoneInvitations EXCEPTION - Member activation email NOT sent to [" +
+                                                           CommonHelper.GetDecryptedData(userNameLowerCase) + "], [Exception: " + ex + "]");
+                                }
+
+                                #endregion Send Registration Email
+
+                                #region Send Temp PIN Email
+                                try
+                                {
+                                    var tokens2 = new Dictionary<string, string>
+                                        {
+                                            {Constants.PLACEHOLDER_FIRST_NAME,CommonHelper.GetDecryptedData( userNameLowerCase)},
+                                            {Constants.PLACEHOLDER_PINNUMBER, CommonHelper.GetDecryptedData(pinNumber)}
+                                        };
+
+                                    Utility.SendEmail("pinSetForNewUser",
+                                        fromAddress, CommonHelper.GetDecryptedData(userNameLowerCase), null, "Your temporary Nooch PIN",
+                                        null, tokens2, null, null, null);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.Error("MDA -> CreateNonNoochUserPasswordForPhoneInvitations EXCEPTION - Member Temp PIN email NOT sent to [" +
+                                                          CommonHelper.GetDecryptedData( userNameLowerCase )+ "], [Exception: " + ex + "]");
+                                }
+                                #endregion Send Temp PIN Email
+
+                                #region Send Email Notification To Referrer (If Applicable)
+
+                                if (!String.IsNullOrEmpty(inviteCode))
+                                {
+                                    try
+                                    {
+                                        Guid invideCodeGuid = Utility.ConvertToGuid(inviteCode);
+
+
+                                        var inviteCodeObj = _dbContext.InviteCodes.Where(inviteTemp => inviteTemp.InviteCodeId == invideCodeGuid).FirstOrDefault();
+
+                                        if (inviteCodeObj == null)
+                                        {
+                                            Logger.Info("MDA -> CreateNonNoochUserPasswordForPhoneInvitations Attempted but invite code not found");
+                                        }
+                                        else if (inviteCodeObj.count >= inviteCodeObj.totalAllowed)
+                                        {
+                                            Logger.Info("MDA -> CreateNonNoochUserPasswordForPhoneInvitations Attempted to notify referrer but Allowable limit of [" +
+                                                                   inviteCodeObj.totalAllowed + "] already reached for Code: [" + inviteCode + "]");
+                                        }
+                                        else // Invite Code record found!
+                                        {
+                                            if (inviteCode.ToLower() != "nocode")
+                                            {
+                                                try
+                                                {
+                                                    // Sending email to user who invited this user (Based on the invite code provided during registration)
+
+                                                    // NOTE (CLIFF 10/9/15): THIS METHOD ISN'T CURRENLTLY TAKING FIRST/LAST NAME AS PARAMAETERS, BUT IT NEEDS TO...
+                                                    //string fullName = CommonHelper.UppercaseFirst(firstName) + " " + CommonHelper.UppercaseFirst(lastName);
+                                                    string fullName = "";
+                                                    SendEmailToInvitor(inviteCodeObj.InviteCodeId, CommonHelper.GetDecryptedData(userNameLowerCase), fullName);
+                                                }
+                                                catch (Exception ex)
+                                                {
+                                                    Logger.Error("MDA -> CreateNonNoochUserPasswordForPhoneInvitations - Exception trying to send Email To Referrer - [Exception: " + ex + "]");
+                                                }
+                                            }
+
+                                            // updating invite code count
+                                            inviteCodeObj.count++;
+                                            _dbContext.SaveChanges();
+
+                                        }
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Logger.Error("MDA -> CreateNonNoochUserPasswordForPhoneInvitations Attempted but got [Exception: " + ex + "]");
+                                    }
+                                }
+                                #endregion Send Email Notification To Referrer (If Applicable)
+
+                                return "Thanks for registering! Check your email to complete activation.";
+                            }
+                            else
+                            {
+                                Logger.Error("MDA -> CreateNonNoochUserPasswordForPhoneInvitations FAILED - Could not save Auth Token to DB.");
+                                return "Password creation failed.";
+                            }
+                        }
+                        else
+                        {
+                            Logger.Error("MDA -> CreateNonNoochUserPasswordForPhoneInvitations FAILED - Could not save Member to DB.");
+                            return "Error Saving Member record.";
+                        }
+
+                        #endregion Username Not Already Registered
+                    }
+                    else
+                    {
+                        return "User already exists";
+                    }
+                }
+                else
+                {
+                    Logger.Error("MDA -> CreateNonNoochUserPasswordForPhoneInvitations FAILED - No transaction found for [TransID: " + TransId + "]");
+                    return "No TransId found";
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return "Failure " + ex.ToString();
+            }
+        }
+        public void SendEmailToInvitor(Guid InviteCodeIdUsed, string userJoinedEmail, string userJoinedName)
+        {
+            Logger.Info("MDA -> SendEmailToInvitor - Initiated - Invite Code Used [" + InviteCodeIdUsed + "], [New User Name: " +
+                                   userJoinedName + "], [New User Email: " + userJoinedEmail + "]");
+
+            try
+            {
+                // Get member who sent invitation
+
+                var memberObj = _dbContext.Members.Where(member => member.InviteCodeId == InviteCodeIdUsed).FirstOrDefault();
+
+                if (memberObj != null)
+                {
+                    var fromAddress = Utility.GetValueFromConfig("welcomeMail");
+                    var toAddress = CommonHelper.GetDecryptedData(memberObj.UserName);
+
+                    var tokens = new Dictionary<string, string>
+                        {
+                            {
+                                Constants.PLACEHOLDER_FIRST_NAME,
+                                CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName))
+                            },
+                            {
+                                Constants.PLACEHOLDER_LAST_NAME,
+                                CommonHelper.UppercaseFirst(userJoinedEmail)
+                            },
+                            {
+                                Constants.PLACEHOLDER_FRIEND_FIRST_NAME,
+                                CommonHelper.UppercaseFirst(userJoinedName)
+                            }
+                        };
+                    try
+                    {
+                        Utility.SendEmail("EmailToInvitorAfterSignup",
+                            "hello@nooch.com", toAddress, null,
+                            userJoinedName + " joined Nooch with your invite code", null,
+                            tokens, null, null, null);
+
+                        Logger.Info("MDA -> SendEmailToInvitor - Email sent to Referrer [" + toAddress + "], [InviteCode: " +
+                                               InviteCodeIdUsed + "]");
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error("MDA -> SendEmailToInvitor email NOT sent to Referrer - [" + toAddress + "], [InviteCode: " +
+                                               InviteCodeIdUsed + "], [New User's Name: " + userJoinedName + "], [Exception: " + ex + "]");
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("MDA -> SendEmailToInvitor FAILED (Outer) - Email NOT sent to Referrer - [New User's Email: " + userJoinedEmail +
+                                       "], [InviteCode:" + InviteCodeIdUsed + "], [Exception: " + ex + "]");
+            }
+        }
+        public string GetRandomNoochId()
+        {
+            const string chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            var random = new Random();
+            int j = 1;
+
+            for (int i = 0; i <= j; i++)
+            {
+                var randomId = new string(
+                    Enumerable.Repeat(chars, 8)
+                        .Select(s => s[random.Next(s.Length)])
+                        .ToArray());
+
+
+                var memberEntity = _dbContext.Members.Where(memberTemp => memberTemp.Nooch_ID.Equals(randomId)).FirstOrDefault();
+                if (memberEntity == null)
+                {
+                    return randomId;
+                }
+
+                j += i + 1;
+            }
+
+            return null;
+        }
 
         #region synapse related methods
 

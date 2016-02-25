@@ -83,4 +83,16 @@ namespace Nooch.Common.Entities.MobileAppOutputEnities
         
         public string companyName { get; set; }
     }
+
+    public class genericResponse
+    {
+
+        public bool success { get; set; }
+
+
+        public string msg { get; set; }
+
+
+        public string note { get; set; }
+    }
 }

@@ -1869,6 +1869,10 @@ namespace Nooch.API.Controllers
         #endregion History Related Methods
 
 
+        /*************************************/
+        /****  METHODS FOR LANDING PAGES  ****/
+        /*************************************/
+
         [HttpGet]
         [ActionName("GetMemberDetailsForLandingPage")]
         public MemberDto GetMemberDetailsForLandingPage(string memberId)
@@ -1990,8 +1994,365 @@ namespace Nooch.API.Controllers
             return new MemberDto();
         }
 
+        [HttpGet]
+        [ActionName("UpdateMemberProfile")]
+        public genericResponse UpdateMemberProfile(string memId, string fname, string lname, string email, string phone, string address, string zip, string dob, string ssn, string fngprnt, string ip, string pw)
+        {
+            genericResponse res = new genericResponse();
+            res.success = false;
+            res.msg = "Initial";
+
+            try
+            {
+                Logger.Info("Service Layer -> UpdateMemberProfile Initiated - [MemberId: " + memId + "]");
+
+                Member member = null;
+
+                var id = Utility.ConvertToGuid(memId);
+
+                var mda = new MembersDataAccess();
+                member = mda.GetMemberByGuid(id);
 
 
+
+                if (member != null)
+                {
+                    try
+                    {
+                        #region Encrypt each piece of data
+
+                        member.FirstName = CommonHelper.GetEncryptedData(fname.Split(' ')[0]);
+
+                        if (fname.IndexOf(' ') > 0)
+                        {
+                            member.LastName = CommonHelper.GetEncryptedData(fname.Split(' ')[1]);
+                        }
+                        if (!String.IsNullOrEmpty(pw) &&
+                            member.Password != null && member.Password == "")
+                        {
+                            member.Password = CommonHelper.GetEncryptedData(CommonHelper.GetDecryptedData(pw)
+                                                          .Replace(" ", "+"));
+                        }
+                        //if (!String.IsNullOrEmpty())
+                        //{
+                        //    member.SecondaryEmail = CommonHelper.GetEncryptedData(profileInput.SecondaryMail);
+                        //}
+                        //if (!String.IsNullOrEmpty(profileInput.RecoveryMail))
+                        //{
+                        //    member.RecoveryEmail = CommonHelper.GetEncryptedData(profileInput.RecoveryMail);
+                        //}
+                        //if (!String.IsNullOrEmpty(profileInput.FacebookAcctLogin))
+                        //{
+                        //    member.FacebookAccountLogin = profileInput.FacebookAcctLogin;
+                        //}
+                        if (!String.IsNullOrEmpty(address))
+                        {
+                            member.Address = CommonHelper.GetEncryptedData(address);
+                        }
+                        //if (!String.IsNullOrEmpty(profileInput.City))
+                        //{
+                        //    member.City = CommonHelper.GetEncryptedData(profileInput.City);
+                        //}
+                        //if (!String.IsNullOrEmpty(profileInput.State))
+                        //{
+                        //    member.State = CommonHelper.GetEncryptedData(profileInput.State);
+                        //}
+                        if (!String.IsNullOrEmpty(zip))
+                        {
+                            member.Zipcode = CommonHelper.GetEncryptedData(zip);
+                        }
+                        //if (!String.IsNullOrEmpty(profileInput.Country))
+                        //{
+                        //    member.Country = profileInput.Country;
+                        //}
+                        //if (!string.IsNullOrEmpty(profileInput.TimeZoneKey))
+                        //{
+                        //    member.TimeZoneKey = CommonHelper.GetEncryptedData(profileInput.TimeZoneKey);
+                        //}
+                        if (!String.IsNullOrEmpty(dob))
+                        {
+                            DateTime dobDateTime;
+
+                            if (DateTime.TryParse(dob, out dobDateTime))
+                            {
+                                member.DateOfBirth = dobDateTime;
+                            }
+                            else
+                            {
+                                res.note = res.note + "[Invalid DOB passed.]";
+                            }
+                        }
+                        if (!String.IsNullOrEmpty(ssn))
+                        {
+                            member.SSN = CommonHelper.GetEncryptedData(ssn);
+                        }
+                        if (!String.IsNullOrEmpty(fngprnt))
+                        {
+                            member.UDID1 = fngprnt;
+                        }
+
+                        #endregion Encrypt each piece of data
+
+                        //Logger.LogDebugMessage("Service Layer -> UpdateMemberProfile - contactNumber (sent from app): [" + contactNumber + "]");
+                        //Logger.LogDebugMessage("Service Layer -> UpdateMemberProfile - member.ContactNumber (from DB): [" + member.ContactNumber + "]");
+
+
+
+                        phone = CommonHelper.RemovePhoneNumberFormatting(phone);
+
+                        if (!String.IsNullOrEmpty(phone) &&
+                            (String.IsNullOrEmpty(member.ContactNumber) ||
+                             CommonHelper.RemovePhoneNumberFormatting(member.ContactNumber) != phone))
+                        {
+                            if (!mda.IsPhoneNumberAlreadyRegistered(phone))
+                            {
+                                member.ContactNumber = phone;
+                                member.IsVerifiedPhone = false;
+
+                                #region Sending SMS Verificaion
+
+                                try
+                                {
+                                    fname = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(member.FirstName));
+                                    string MessageBody = "Hi " + fname + ", This is Nooch - just need to verify this is your phone number. Please reply 'Go' to confirm your phone number.";
+                                    string SMSresult = Utility.SendSMS(phone, MessageBody);
+
+                                    Logger.Info("Service Layer -> UpdateMemberProfile -> SMS Verification sent to [" + phone + "] successfully.");
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.Error("Service Layer -> UpdateMemberProfile -> SMS Verification NOT sent to [" +
+                                        phone + "], Exception: [" + ex.Message + "]");
+                                }
+
+                                #endregion Sending SMS Verificaion
+                            }
+                            else
+                            {
+                                res.note = "Phone number was already registered with Nooch: " + CommonHelper.FormatPhoneNumber(phone);
+                            }
+                        }
+
+                        if (!String.IsNullOrEmpty(ip))
+                        {
+                            try
+                            {
+                                mda.UpdateMemberIPAddressAndDeviceId(memId, ip, "");
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.Error("Service Layer -> UpdateMemberProfile - FAILED to save IP Address - MemberID: [" + memId +
+                                                       "], IP: [" + ip + "], Exception: [" + ex.Message + "]");
+                            }
+                        }
+
+                        member.DateModified = DateTime.Now;
+                        // CLIFF (7/30/15): We used to set the Validated Date here automatically when the user completed their profile.
+                        //                  But now we also need users to send SSN and DoB, so will set the Validated Date in SaveMemberSSN()
+                        // member.ValidatedDate = DateTime.Now;
+
+                        Logger.Info("Servie Layer -> UpdateMemberProfile - About to save to DB...");
+
+                        int saveToDb = mda.UpdateMember(member);
+
+
+                        Logger.Info("Servie Layer -> UpdateMemberProfile - Just saved to DB - 'saveToDb': [" + saveToDb + "]");
+
+                        if (saveToDb > 0)
+                        {
+                            Logger.Info("Servie Layer -> UpdateMemberProfile - Updated Successfully! - MemberID: [" + memId + "]");
+
+                            res.success = true;
+                            res.msg = "Your details have been updated successfully.";
+                        }
+                        else
+                        {
+                            Logger.Error("Service Layer -> UpdateMemberProfile FAILED - Error on updating record in DB - [MemberID: " + memId + "]");
+                            res.msg = "Error on updating member's record in DB.";
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error("Service Layer -> UpdateMemberProfile FAILED - [MemberID: " + memId + "], [Exception: " + ex.Message + "]");
+
+                        res.msg = ex.InnerException.Message;
+                    }
+                }
+                else
+                {
+                    Logger.Error("Service Layer -> UpdateMemberProfile FAILED - MemberID Not Found - [MemberID: " + memId + "]");
+                    res.msg = "Member not found.";
+                }
+
+            }
+            catch (Exception ex)
+            {
+                res.msg = "Service Layer exception -> " + ex.Message.ToString();
+                Logger.Error("Service Layer -> UpdateMemberProfile FAILED - MemberId: [" + memId + "], Exception: [" + ex + "]");
+            }
+
+            return res;
+        }
+
+        [HttpGet]
+        [ActionName("GetTransactionDetailByIdForRequestPayPage")]
+        public TransactionDto GetTransactionDetailByIdForRequestPayPage(string TransactionId)
+        {
+            try
+            {
+                Logger.Info("Service Layer -> GetTransactionDetailByIdForRequestPayPage - [Trans ID: " + TransactionId + "]");
+
+                var tda = new TransactionsDataAccess();
+                Transaction tr = tda.GetTransactionById(TransactionId);
+
+                TransactionDto trans = new TransactionDto();
+                trans.Amount = tr.Amount;
+
+                trans.Memo = tr.Memo;
+
+                // Recipient of the Request (user that will pay)
+                // NOTE (Cliff 11/25/15): For requests to non-Nooch users, the Members & Members1 BOTH REFER TO THE EXISTING NOOCH USER WHO SENT THE REQUEST.
+                trans.Name = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(tr.Member.FirstName)) + " " +
+                             CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(tr.Member.LastName));
+
+                // Requester (user that will receive the money)
+                trans.RecepientName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(tr.Member1.FirstName)) + " " +
+                                      CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(tr.Member1.LastName));
+
+                Logger.Info("Service Layer -> GetTransactionDetailByIdForRequestPayPage - [trans.Name is: " + trans.Name + "]");
+                Logger.Info("Service Layer -> GetTransactionDetailByIdForRequestPayPage - [trans.RecepientName is: " + trans.RecepientName + "]");
+
+                trans.SenderPhoto = tr.Member.Photo ?? "https://www.noochme.com/noochweb/Assets/Images/userpic-default.png";
+                trans.RecepientPhoto = tr.Member1.Photo ?? "https://www.noochme.com/noochweb/Assets/Images/userpic-default.png";
+                trans.MemberId = tr.Member1.MemberId.ToString();
+                trans.RecepientId = tr.Member.MemberId.ToString();
+                trans.TransactionId = tr.TransactionId.ToString();
+                trans.TransactionStatus = tr.TransactionStatus;
+                trans.TransactionType = CommonHelper.GetDecryptedData(tr.TransactionType);
+                trans.TransactionDate = Convert.ToDateTime(tr.TransactionDate).ToString("d MMM, yyyy");
+                trans.IsPhoneInvitation = tr.IsPhoneInvitation ?? false;
+
+                if (tr.InvitationSentTo != null &&
+                    tr.IsPhoneInvitation != true &&
+                    String.IsNullOrEmpty(tr.PhoneNumberInvited))
+                {
+                    // Request via EMAIL
+                    trans.InvitationSentTo = CommonHelper.GetDecryptedData(tr.InvitationSentTo);
+                }
+                else if ((tr.IsPhoneInvitation == true || tr.InvitationSentTo == null) &&
+                          !String.IsNullOrEmpty(tr.PhoneNumberInvited))
+                {
+                    // Request via PHONE
+                    trans.InvitationSentTo = CommonHelper.GetDecryptedData(tr.PhoneNumberInvited);
+                }
+                else
+                {
+                    trans.InvitationSentTo = "";
+                }
+
+
+                // CLIFF (10/20/15): For requests sent to existing but'NonRegistered' users, adding this block to include that user's
+                //                   Synapse bank name for displaying the confirmation prompt.
+                #region Transactions to Existing But NonRegistered Users
+
+                if (tr.IsPhoneInvitation != true &&
+                    ((String.IsNullOrEmpty(tr.InvitationSentTo) || tr.InvitationSentTo == "J7xCdPdfLcTvoVrLWCi/zw==") //|| // A few transactions to existing but NonReg users had encyrpted blank spaces for this value
+                    //(trans.TransactionType == "Rent" || tr.TransactionType != "EnOIzpmFFTEaAP16hm9Wsw==")) // "EnOIzpmFFTEaAP16hm9Wsw==" = "Rent"
+                     ))
+                {
+                    Logger.Info("Service Layer -> GetTransactionDetailByIdForRequestPayPage CHECKPOINT 2 - This request is to an existing user - " +
+                                           "About to get Synapse Bank info for Payor -> [trans.RecepientName is: " + trans.RecepientName + "]");
+
+                    trans.IsExistingButNonRegUser = true;
+
+                    // Get the Payor's Account Info (user that will pay - should be trans.RecepientId set above from Members reference)
+                    var mda = new MembersDataAccess();
+                    var memberEntity = mda.GetMemberDetails(trans.RecepientId);
+
+                    trans.SsnIsVerified = (memberEntity.IsVerifiedWithSynapse == true) ? "true" : "false";
+
+                    // Get Synapse Bank Account Info
+                    var synapseBank = mda.GetSynapseBankAccountDetails(trans.RecepientId);
+
+                    if (synapseBank != null)
+                    {
+                        if (synapseBank.bank_name == "J7xCdPdfLcTvoVrLWCi/zw==")
+                        {
+                            // For banks added via routing/account number, the 'bank_name' is a blank encrypted string (never null though), so use the Account Number String instead
+                            string accntNum = CommonHelper.GetDecryptedData(synapseBank.account_number_string);
+
+                            trans.BankName = (accntNum.Length < 8) ? accntNum : accntNum.Substring(accntNum.Length - 8);
+                            trans.BankId = "manual"; // Using this just as a note... the JS for the landing page will check for this and display the bank name as appropriate
+                        }
+                        else
+                        {
+                            trans.BankName = !String.IsNullOrEmpty(synapseBank.bank_name) ? CommonHelper.GetDecryptedData(synapseBank.bank_name) : "";
+                            trans.BankId = !String.IsNullOrEmpty(synapseBank.nickname) ? CommonHelper.GetDecryptedData(synapseBank.nickname) : "";
+                        }
+                    }
+                    else
+                    {
+                        trans.BankName = "no bank found";
+                    }
+                }
+
+                #endregion Transactions to Existing But NonRegistered Users
+
+                return trans;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Layer -> GetTransactionDetailByIdForRequestPayPage EXCEPTION - [Trans ID: " + TransactionId + "], [Exception: " + ex + "]");
+                //UtilityService.ThrowFaultException(ex);
+                return null;
+            }
+        }
+
+        [HttpGet]
+        [ActionName("CancelRejectTransaction")]
+        public string CancelRejectTransaction(string memberId, string accessToken, string transactionId, string userResponse)
+        {
+            if (CommonHelper.IsValidRequest(accessToken, memberId))
+            {
+                try
+                {
+                    Logger.Info("Service Layer - CancelRejectTransaction - [MemberId: " + memberId + "]");
+                    var tda = new TransactionsDataAccess();
+                    string result = tda.CancelRejectTransaction(transactionId, userResponse);
+                    return result;
+                }
+                catch (Exception ex)
+                {
+                    throw ex;
+                }
+                return "";
+            }
+            else
+            {
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
+
+        [HttpGet]
+        [ActionName("CreateNonNoochUserPasswordForPhoneInvitations")]
+        public StringResult CreateNonNoochUserPasswordForPhoneInvitations(string TransId, string password, string EmailId)
+        {
+            try
+            {
+                Logger.Info("Service Layer - CreateNonNoochUserPasswordForPhoneInvitations - [TransId: " + TransId + "]");
+
+                var mda = new MembersDataAccess();
+                string result = mda.CreateNonNoochUserPasswordForPhoneInvitations(TransId, password, EmailId);
+
+                return new StringResult { Result = result };
+            }
+            catch (Exception ex)
+            {
+                //UtilityService.ThrowFaultException(ex);
+                throw ex;
+            }
+
+        }
 
         /************************************************/
         /***** ----  SYNAPSE-RELATED SERVICES  ---- *****/
