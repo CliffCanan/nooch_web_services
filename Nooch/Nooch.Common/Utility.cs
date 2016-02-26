@@ -242,7 +242,7 @@ namespace Nooch.Common
                     // Replace tokens in the message body and subject line
                     if (replacements != null)
                     {
-                        foreach (var token in replacements)
+                         foreach (var token in replacements)
                         {
                             content = content.Replace(token.Key, token.Value);
                             subjectString = subject.Replace(token.Key, token.Value);

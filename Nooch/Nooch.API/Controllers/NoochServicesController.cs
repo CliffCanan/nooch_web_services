@@ -2354,6 +2354,86 @@ namespace Nooch.API.Controllers
 
         }
 
+
+        //surya's code --
+        [HttpPost]
+        [ActionName("CreateNonNoochUserAccountAfterRejectMoney")]
+        public StringResult CreateNonNoochUserAccountAfterRejectMoney(string TransId, string password, string EmailId, string UserName)
+        {
+            try
+            {
+                Logger.Info("Service Layer - CreateNonNoochUserAccountAfterRejectMoney - [TransId: " + TransId + "], [UserName: " + UserName + "]");
+
+                var mda = new MembersDataAccess();
+                string result = mda.CreateNonNoochUserAccountAfterRejectMoney(TransId, password, EmailId, UserName);
+                return new StringResult { Result = result };
+            }
+            catch (Exception ex)
+            {
+                Utility.ThrowFaultException(ex);
+            }
+            return new StringResult { Result = "" };
+        }
+        
+        [HttpGet]
+        [ActionName("RejectMoneyforNonNoochUser")]
+        public StringResult RejectMoneyforNonNoochUser(string transactionId)
+        {
+            try
+            {
+                Logger.Info("Service Layer - RejectMoneyforNonNoochUser - [TransactionId: " + transactionId + "]");
+
+                var tda = new TransactionsDataAccess();
+                string result = tda.RejectMoneyforNonNoochUser(transactionId);
+                return new StringResult { Result = result };
+            }
+            catch (Exception ex)
+            {
+                Utility.ThrowFaultException(ex);
+            }
+            return new StringResult { Result = "" };
+        }
+
+        [HttpGet]
+        [ActionName("RejectMoneyRequestForNonNoochUser")]
+        public StringResult RejectMoneyRequestForNonNoochUser(string transactionId)
+        {
+            try
+            {
+                Logger.Info("Service Layer - RejectMoneyforNonNoochUser - [TransactionID: " + transactionId + "]");
+
+                var tda = new TransactionsDataAccess();
+                string result = tda.RejectMoneyRequestForNonNoochUser(transactionId);
+
+                return new StringResult { Result = result };
+            }
+            catch (Exception ex)
+            {
+                Utility.ThrowFaultException(ex);
+            }
+            return new StringResult { Result = "" };
+        }
+
+        [HttpGet]
+        [ActionName("RejectMoneyCommon")]
+        public StringResult RejectMoneyCommon(string TransactionId, string UserType, string LinkSource, string TransType)
+        {
+            try
+            {
+                Logger.Info("Service Layer -> RejectMoneyCommon Initiated - Transaction ID: [" + TransactionId + "], " +
+                                       "TransType: [" + TransType + "], UserType: [" + UserType + "]");
+
+                var tda = new TransactionsDataAccess();
+                string result = tda.RejectMoneyCommon(TransactionId, UserType, LinkSource, TransType);
+                return new StringResult { Result = result };
+            }
+            catch (Exception ex)
+            {
+                Utility.ThrowFaultException(ex);
+            }
+            return new StringResult { Result = "" };
+        }
+
         /************************************************/
         /***** ----  SYNAPSE-RELATED SERVICES  ---- *****/
         /************************************************/
