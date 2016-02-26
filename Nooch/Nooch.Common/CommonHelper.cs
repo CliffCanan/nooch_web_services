@@ -102,11 +102,7 @@ namespace Nooch.Common
             // Return char and concat substring.
             return char.ToUpper(s[0]) + s.Substring(1);
         }
-
-
-
-
-
+        
         public static bool IsValidRequest(string accessToken, string memberId)
         {
             if (!string.IsNullOrEmpty(accessToken) || !string.IsNullOrEmpty(memberId))
@@ -167,8 +163,7 @@ namespace Nooch.Common
                 return false;
             }
         }
-
-
+        
         public static MemberBusinessDto GetMemberByUdId(string udId)
         {
             Logger.Info("MemberDataAccess - GetMemberByUdId[ udId:" + udId + "].");
@@ -188,8 +183,7 @@ namespace Nooch.Common
                 Status = "You are not a nooch member. Please register to become a nooch member."
             };
         }
-
-
+        
         public static string GetMemberIdByUserName(string userName)
         {
 
@@ -207,7 +201,6 @@ namespace Nooch.Common
             }
             return null;
         }
-
         public static string GetMemberUsernameByMemberId(string MemberId)
         {
 
@@ -219,7 +212,6 @@ namespace Nooch.Common
 
             return noochMember != null ? GetDecryptedData(noochMember.UserName) : null;
         }
-
         public static string GetPhoneNumberByMemberId(string MemberId)
         {
 
@@ -231,7 +223,6 @@ namespace Nooch.Common
 
             return noochMember != null ? noochMember.ContactNumber : null;
         }
-
         public static string GetMemberIdByPhone(string memberPhone)
         {
 
@@ -243,8 +234,6 @@ namespace Nooch.Common
 
             return noochMember != null ? noochMember.MemberId.ToString() : null;
         }
-
-
         public static string GetMemberReferralCodeByMemberId(string MemberId)
         {
 
@@ -265,7 +254,6 @@ namespace Nooch.Common
 
             return inviteCodeREsult != null ? inviteCodeREsult.code : "";
         }
-
         public static string GetMemberNameByUserName(string userName)
         {
 
@@ -283,7 +271,6 @@ namespace Nooch.Common
             }
             return null;
         }
-
         public static bool IsMemberActivated(string tokenId)
         {
 
@@ -293,15 +280,12 @@ namespace Nooch.Common
                 _dbContext.AuthenticationTokens.FirstOrDefault(m => m.TokenId == id && m.IsActivated == true);
             return noochMember != null;
         }
-
         public static bool IsNonNoochMemberActivated(string emailId)
         {
 
             var noochMember = _dbContext.Members.FirstOrDefault(m => m.UserName == emailId && m.IsDeleted == false);
             return noochMember != null;
         }
-
-
         public static string IsDuplicateMember(string userName)
         {
             Logger.Info("Common Helper -> IsDuplicateMember Initiated - [UserName to check: " + userName + "]");
@@ -313,8 +297,6 @@ namespace Nooch.Common
 
             return noochMember != null ? "Username already exists for the primary email you entered. Please try with some other email." : "Not a nooch member.";
         }
-
-
         public static bool IsWeeklyTransferLimitExceeded(Guid MemberId, decimal amount)
         {
             // Get max weekly value allowed 
@@ -385,8 +367,6 @@ namespace Nooch.Common
 
             return false;
         }
-
-
         public static Member GetMemberDetails(string memberId)
         {
 
@@ -408,7 +388,6 @@ namespace Nooch.Common
             }
             return new Member();
         }
-
         public static List<SynapseBankLoginResult> GetSynapseBankLoginResulList(string memberId)
         {
             Logger.Info("MDA -> GetSynapseBankAccountDetails - MemberId: [" + memberId + "]");
@@ -420,7 +399,6 @@ namespace Nooch.Common
             return memberAccountDetails;
 
         }
-
         public static SynapseBanksOfMember GetSynapseBankAccountDetails(string memberId)
         {
             Logger.Info("MDA -> GetSynapseBankAccountDetails - MemberId: [" + memberId + "]");
@@ -957,9 +935,6 @@ namespace Nooch.Common
         }
 
 
-     
-        
-        
         public static  submitIdVerificationInt sendUserSsnInfoToSynapseV3(string MemberId)
         {
             Logger.Info("MDA -> sendUserSsnInfoToSynapseV3 Initialized - [MemberId: " + MemberId + "]");
@@ -1680,5 +1655,426 @@ namespace Nooch.Common
 
             return res;
         }
+
+        //public static SynapseDetailsClass GetSynapseBankAndUserDetailsforGivenMemberId(string memberId)
+        //{
+        //    SynapseDetailsClass res = new SynapseDetailsClass();
+        //    res.wereUserDetailsFound = false;
+        //    res.wereBankDetailsFound = false;
+
+        //    try
+        //    {
+        //        var id = Utility.ConvertToGuid(memberId);
+
+                
+        //            // Checking user details for given MemberID
+                    
+        //            var createSynapseUserObj = GetSynapseCreateaUserDetails(id.ToString()) ;
+
+        //            if (createSynapseUserObj != null &&
+        //                !String.IsNullOrEmpty(createSynapseUserObj.access_token))
+        //            {
+        //                // This MemberId was found in the SynapseCreateUserResults DB
+        //                res.wereUserDetailsFound = true;
+
+        //                Logger.Info("ADA -> GetSynapseBankAndUserDetailsforGivenMemberId - Checkpoint #1 - " +
+        //                                       "SynapseCreateUserResults Record Found! - Now about to check if Synapse OAuth Key is expired or still valid.");
+
+        //                // CLIFF (10/3/15): ADDING CALL TO NEW METHOD TO CHECK USER'S STATUS WITH SYNAPSE, AND REFRESHING OAUTH KEY IF NECESSARY
+                        
+
+        //                #region Check If Testing
+
+        //                // CLIFF (10/22/15): Added this block for testing - if you use an email that includes "jones00" in it, 
+        //                //                   then this method will use the Synapse (v2) SANDBOX.  Leaving this here in case we
+        //                //                   want to test in the future the same way.
+        //                bool shouldUseSynapseSandbox = false;
+        //                string memberUsername = GetMemberUsernameByMemberId(memberId);
+
+        //                if (memberUsername.ToLower().IndexOf("jones00") > -1)
+        //                {
+        //                    shouldUseSynapseSandbox = true;
+        //                    Logger.Info("**  ADA -> GetSynapseBankAndUserDetailsforGivenMemberId -> TESTING USER DETECTED - [" +
+        //                                          memberUsername + "], WILL USE SYNAPSE SANDBOX URL FOR CHECKING OAUTH TOKEN STATUS  **");
+        //                }
+
+        //                #endregion Check If Testing
+
+        //                #region Check If OAuth Key Still Valid
+
+        //                synapseV2checkUsersOauthKey checkTokenResult = checkIfUsersSynapseAuthKeyIsExpired(createSynapseUserObj.access_token,
+        //                                                                                                       shouldUseSynapseSandbox);
+
+        //                if (checkTokenResult != null)
+        //                {
+        //                    if (checkTokenResult.success == true)
+        //                    {
+        //                        res.UserDetails = createSynapseUserObj;
+        //                        res.UserDetails.access_token = checkTokenResult.oauth_consumer_key;
+        //                        res.UserDetailsErrMessage = "OK";
+        //                    }
+        //                    else
+        //                    {
+        //                        Logger.LogErrorMessage("ADA -> GetSynapseBankAndUserDetailsforGivenMemberId FAILED on Checking User's Synapse OAuth Token - " +
+        //                                               "CheckTokenResult.msg: [" + checkTokenResult.msg + "], MemberID: [" + memberId + "]");
+
+        //                        res.UserDetailsErrMessage = checkTokenResult.msg;
+        //                    }
+        //                }
+        //                else
+        //                {
+        //                    Logger.LogErrorMessage("ADA -> GetSynapseBankAndUserDetailsforGivenMemberId FAILED on Checking User's Synapse OAuth Token - " +
+        //                                               "CheckTokenResult was NULL, MemberID: [" + memberId + "]");
+
+        //                    res.UserDetailsErrMessage = "Unable to check user's Oauth Token";
+        //                }
+
+        //                #endregion Check If OAuth Key Still Valid
+        //            }
+        //            else
+        //            {
+        //                Logger.LogErrorMessage("ADA -> GetSynapseBankAndUserDetailsforGivenMemberId FAILED - Unable to find Synapse Create User Details - " +
+        //                                       "MemberID: [" + memberId + "]");
+
+        //                res.UserDetails = null;
+        //                res.UserDetailsErrMessage = "User synapse details not found.";
+        //            }
+
+        //            #region Get The User's Synapse Bank Details
+
+        //            // Now get the user's bank account details
+        //            var UserBankAccountRepository = new Repository<SynapseBanksOfMembers, NoochDataEntities>(noochConnection);
+
+        //            var bankSpecification = new Specification<SynapseBanksOfMembers>
+        //            {
+        //                Predicate = bank =>
+        //                                bank.MemberId.Value.Equals(id) &&
+        //                                bank.IsDefault == true
+        //            };
+
+        //            var defaultBank = UserBankAccountRepository.SelectAll(bankSpecification).FirstOrDefault();
+
+        //            if (defaultBank != null)
+        //            {
+        //                // Found a Synapse bank account for this user
+        //                res.wereBankDetailsFound = true;
+        //                res.BankDetails = defaultBank;
+        //                res.AccountDetailsErrMessage = "OK";
+        //            }
+        //            else
+        //            {
+        //                res.BankDetails = null;
+        //                res.AccountDetailsErrMessage = "User synapse bank not found.";
+        //            }
+
+        //            #endregion Get The User's Synapse Bank Details
+                
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Logger.LogErrorMessage("ADA -> GetSynapseBankAndUserDetailsforGivenMemberId FAILED - MemberID: [" + memberId + "], Outer Exception: [" + ex + "]");
+        //    }
+
+        //    return res;
+        //}
+
+
+
+        //public static synapseV3checkUsersOauthKey refreshSynapseV3OautKey(string oauthKey, bool useSynapseSandbox)
+        //{
+        //    Logger.Info("MDA -> refreshSynapseV2OautKey Initiated - User's Original OAuth Key (enc): [" + oauthKey + "]");
+
+        //    synapseV3checkUsersOauthKey res = new synapseV3checkUsersOauthKey();
+        //    res.success = false;
+
+        //    try
+        //    {
+        //        //string oauthKeyEnc = CommonHelper.GetEncryptedData(oauthKey);
+
+                
+        //            // Checking user details for given MemberID
+                    
+        //            SynapseCreateUserResult synCreateUserObject = _dbContext.SynapseCreateUserResults.FirstOrDefault(m=>m.access_token==oauthKey && m.IsDeleted==false);
+
+        //            string refreshToken = synCreateUserObject.refresh_token;
+
+        //            if (refreshToken != null)
+        //            {
+        //                Logger.Info("MDA -> refreshSynapseV2OautKey - Found Member By Original OAuth Key (enc): [" + oauthKey +
+        //                                       "], Refresh Token (enc): [" + refreshToken + "]");
+
+        //                SynapseV3RefreshOauthKeyAndSign_Input input= new SynapseV3RefreshOauthKeyAndSign_Input();
+
+        //                string SynapseClientId = Utility.GetValueFromConfig("SynapseClientId");
+        //                string SynapseClientSecret = Utility.GetValueFromConfig("SynapseClientSecret");
+
+        //                input.login.email = GetDecryptedData( synCreateUserObject.NonNoochUserEmail);
+                        
+        //                input.client.client_id = SynapseClientId;
+        //                input.client.client_secret = SynapseClientSecret;
+
+        //                string UrlToHit = "https://synapsepay.com/api/v3/user/signin";
+
+        //                if (useSynapseSandbox)
+        //                {
+        //                    Logger.Info("MDA -> refreshSynapseV2OautKey - TEST USER DETECTED - useSynapseSandbox is: [" +
+        //                                           useSynapseSandbox + "] - About to ping Synapse Sandbox /user/refresh...");
+        //                    UrlToHit = "https://sandbox.synapsepay.com/api/v3/user/signin";
+        //                }
+
+        //                var http = (HttpWebRequest)WebRequest.Create(new Uri(UrlToHit));
+        //                http.Accept = "application/json";
+        //                http.ContentType = "application/json";
+        //                http.Method = "POST";
+
+        //                string parsedContent = JsonConvert.SerializeObject(input);
+        //                ASCIIEncoding encoding = new ASCIIEncoding();
+        //                Byte[] bytes = encoding.GetBytes(parsedContent);
+
+        //                Stream newStream = http.GetRequestStream();
+        //                newStream.Write(bytes, 0, bytes.Length);
+        //                newStream.Close();
+
+        //                try
+        //                {
+        //                    var response = http.GetResponse();
+        //                    var stream = response.GetResponseStream();
+        //                    var sr = new StreamReader(stream);
+        //                    var content = sr.ReadToEnd();
+
+        //                    //Logger.LogDebugMessage("MDA -> refreshSynapseV2OautKey Checkpoint #1 - About to parse Synapse Response");
+
+        //                    synapseCreateUserV3Result_int refreshResultFromSyn = new synapseCreateUserV3Result_int();
+
+        //                    refreshResultFromSyn = JsonConvert.DeserializeObject<synapseCreateUserV3Result_int>(content);
+
+        //                    JObject refreshResponse = JObject.Parse(content);
+
+        //                    Logger.Info("MDA -> refreshSynapseV2OautKey - Just Parsed Synapse Response: [" + refreshResponse + "]");
+
+        //                    if (refreshResultFromSyn.success.ToString() == "true" ||
+        //                        (refreshResponse["success"] != null && Convert.ToBoolean(refreshResponse["success"]) == true))
+        //                    {
+        //                        synCreateUserObject.access_token = GetEncryptedData(refreshResultFromSyn.oauth_consumer_key);
+        //                        synCreateUserObject.refresh_token = GetEncryptedData(refreshResultFromSyn.refresh_token);
+        //                        synCreateUserObject.expires_in = refreshResultFromSyn.expires_at; // SYNAPSE TELLS US WHEN IT WILLE EXPIRE, BUT WE AREN'T CURRENTLY STORING THE 'expires_at'.  We should from now on use that instead of "expires_in".
+
+        //                        int a = synapseCreateUsersRepo.Save();
+
+        //                        if (a > 0)
+        //                        {
+        //                            Logger.Info("MDA -> refreshSynapseV2OautKey - SUCCESS From Synapse and Successfully added to Nooch DB - " +
+        //                                                   "Original Oauth Key (encr): [" + oauthKey + "], " +
+        //                                                   "Value for new, refreshed OAuth Key (encr): [" + synCreateUserObject.access_token + "]");
+
+        //                            res.success = true;
+        //                            res.oauth_consumer_key = synCreateUserObject.access_token;
+        //                            res.msg = "Oauth key refreshed successfully";
+        //                        }
+        //                        else
+        //                        {
+        //                            Logger.Error("MDA -> refreshSynapseV2OautKey FAILED - Error saving new key in Nooch DB - " +
+        //                                                   "Original Oauth Key: [" + oauthKey + "], " +
+        //                                                   "Value for new, refreshed OAuth Key: [" + synCreateUserObject.access_token + "]");
+
+        //                            res.msg = "Failed to save new OAuth key in Nooch DB.";
+        //                        }
+        //                    }
+        //                    else
+        //                    {
+        //                        Logger.Error("MDA -> refreshSynapseV2OautKey FAILED - Error from Synapse service, no 'success' key found - " +
+        //                                                   "Original Oauth Key: [" + oauthKey + "]");
+        //                        res.msg = "Service error.";
+        //                    }
+        //                }
+        //                catch (WebException we)
+        //                {
+        //                    #region Synapse V2 Get User Permissions Exception
+
+        //                    var httpStatusCode = ((HttpWebResponse)we.Response).StatusCode;
+        //                    string http_code = httpStatusCode.ToString();
+
+        //                    var response = new StreamReader(we.Response.GetResponseStream()).ReadToEnd();
+        //                    JObject errorJsonFromSynapse = JObject.Parse(response);
+
+        //                    string reason = errorJsonFromSynapse["reason"].ToString();
+
+        //                    Logger.Error("MDA -> refreshSynapseV2OautKey WEBEXCEPTION - HTTP Code: [" + http_code +
+        //                                               "], Error Msg: [" + reason + "], Original Oauth Key (enc): [" + oauthKey + "]");
+
+        //                    if (!String.IsNullOrEmpty(reason))
+        //                    {
+        //                        res.msg = "Webexception on refresh attempt: [" + reason + "]";
+        //                    }
+        //                    else
+        //                    {
+        //                        Logger.Error("MDA -> refreshSynapseV2OautKey FAILED: Synapse Error, but *reason* was null for [Original Oauth Key (enc): " +
+        //                                               oauthKey + "], [Exception: " + we.InnerException + "]");
+        //                    }
+
+        //                    #endregion Synapse V2 Get User Permissions Exception
+        //                }
+        //            }
+                
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Logger.Error("MDA -> refreshSynapseV2OautKey FAILED: Outer Catch Error - Original OAuth Key (enc): [" + oauthKey +
+        //                               "], [Exception: " + ex + "]");
+
+        //        res.msg = "Nooch Server Error: Outer Exception.";
+        //    }
+
+        //    return res;
+        //}
+
+        //public static synapseV3checkUsersOauthKey checkIfUsersSynapseAuthKeyIsExpired(string oauthKey, bool useSynapseSandbox)
+        //{
+        //    synapseV3checkUsersOauthKey res = new synapseV3checkUsersOauthKey();
+        //    res.success = false;
+
+        //    try
+        //    {
+        //        if (!String.IsNullOrEmpty(oauthKey))
+        //        {
+        //            synapseV3ShowUserInput input = new synapseV3ShowUserInput();
+        //            input.login.oauth_key= oauthKey;
+
+        //            //Logger.LogDebugMessage("MDA -> checkIfUsersSynapseAuthKeyIsExpired - About to Query Synapse /user/show API: " +
+        //            //                       "OAuth Key: [" + input.oauth_consumer_key + "]");
+
+        //            string urlToUse = "https://synapsepay.com/api/v3/user/kyc/show";
+
+        //            if (useSynapseSandbox)
+        //            {
+        //                urlToUse = "https://sandbox.synapsepay.com/api/v3/user/kyc/show";
+        //            }
+
+        //            var http = (HttpWebRequest)WebRequest.Create(new Uri(urlToUse));
+        //            http.Accept = "application/json";
+        //            http.ContentType = "application/json";
+        //            http.Method = "POST";
+
+        //            string parsedContent = JsonConvert.SerializeObject(input);
+        //            ASCIIEncoding encoding = new ASCIIEncoding();
+        //            Byte[] bytes = encoding.GetBytes(parsedContent);
+
+        //            Stream newStream = http.GetRequestStream();
+        //            newStream.Write(bytes, 0, bytes.Length);
+        //            newStream.Close();
+
+        //            try
+        //            {
+        //                var response = http.GetResponse();
+        //                var stream = response.GetResponseStream();
+        //                var sr = new StreamReader(stream);
+        //                var content = sr.ReadToEnd();
+
+        //                JObject checkPermissionResponse = JObject.Parse(content);
+
+        //                if (checkPermissionResponse["success"] != null &&
+        //                    Convert.ToBoolean(checkPermissionResponse["success"]) == true)
+        //                {
+        //                    res.success = true;
+        //                    res.oauth_consumer_key = oauthKey;
+        //                    res.msg = "Oauth key still valid";
+        //                }
+        //                else
+        //                {
+        //                    res.msg = "Error: problem with query to Syn /user/show.";
+        //                }
+
+        //                Logger.Info("MDA -> checkIfUsersSynapseAuthKeyIsExpired - Response from Synapse /user/show API: " +
+        //                                       "Success: [" + res.success + "], " +
+        //                                       "OAuth Key: [" + input.login.oauth_key+ "], " +
+        //                                       "res.msg: [" + res.msg + "]");
+        //            }
+        //            catch (WebException we)
+        //            {
+        //                #region Synapse V2 Check Synapse Token Status
+
+        //                var httpStatusCode = ((HttpWebResponse)we.Response).StatusCode;
+        //                string http_code = httpStatusCode.ToString();
+
+        //                var response = new StreamReader(we.Response.GetResponseStream()).ReadToEnd();
+        //                JObject errorJsonFromSynapse = JObject.Parse(response);
+
+        //                string reason = errorJsonFromSynapse["reason"].ToString();
+
+        //                Logger.Error("MDA -> checkIfUsersSynapseAuthKeyIsExpired FAILED - Synapse Error Code: ['" + reason +
+        //                                           "'], User's Oauth Key (enc): [" + oauthKey + "]");
+
+        //                if (!String.IsNullOrEmpty(reason))
+        //                {
+        //                    #region Attempt OAuth Refresh
+
+        //                    if (reason.IndexOf("Error in OAuth Authentication") > -1)
+        //                    {
+        //                        try
+        //                        {
+        //                            Logger.Info("MDA -> checkIfUsersSynapseAuthKeyIsExpired - Synapse Returned 'Error in Oauth Authentication' - " +
+        //                                                  "Now going to attempt to refresh OAuth Key...");
+
+        //                            // ATTEMPT TO REFRESH USER'S OAUTH KEY WITH SYNAPSE
+        //                            synapseV3checkUsersOauthKey refreshResult = new synapseV3checkUsersOauthKey();
+        //                            refreshResult = refreshSynapseV2OautKey(oauthKey, useSynapseSandbox);
+
+        //                            if (refreshResult.success)
+        //                            {
+        //                                Logger.LogInfoMessage("MDA -> checkIfUsersSynapseAuthKeyIsExpired - Got Success Response From Refresh Method - " +
+        //                                                      "RefreshResult.msg: [" + refreshResult.msg + "], " +
+        //                                                      "New Oauth Key: [" + refreshResult.oauth_consumer_key + "]");
+
+        //                                res.success = true;
+        //                                res.oauth_consumer_key = refreshResult.oauth_consumer_key;
+        //                                res.msg = refreshResult.msg;
+
+        //                                return res;
+        //                            }
+        //                            else
+        //                            {
+        //                                Logger.LogErrorMessage("MDA -> checkIfUsersSynapseAuthKeyIsExpired - Got FAILURE Response From Refresh Method - " +
+        //                                                      "RefreshResult.msg: [" + refreshResult.msg + "], " +
+        //                                                      "New Oauth Key: [" + refreshResult.oauth_consumer_key + "]");
+
+        //                                res.msg = "Attempted oauth_key refresh but was not successful - 10931.";
+        //                            }
+        //                        }
+        //                        catch (Exception ex)
+        //                        {
+        //                            Logger.LogErrorMessage("MDA -> checkIfUsersSynapseAuthKeyIsExpired FAILURE - Got EXCEPTION when calling SynapseV2Refresh method - " +
+        //                                                      "Original Oauth Key: [" + oauthKey + "], " +
+        //                                                      "Exception: [" + ex + "]");
+
+        //                            res.msg = "Attempted oauth_key refresh but got exception: [" + ex.Message + "]";
+        //                        }
+        //                    }
+
+        //                    #endregion Attempt OAuth Refresh
+        //                }
+        //                else
+        //                {
+        //                    Logger.LogErrorMessage("MDA -> checkIfUsersSynapseAuthKeyIsExpired FAILED: Synapse Error, but *reason* was null - " +
+        //                                           "HTTP Code: " + http_code + "], User's OAuth Key: [" + oauthKey + "], [Exception: " + we.InnerException + "]");
+        //                }
+
+        //                #endregion Synapse V2 Check Synapse Token Status
+        //            }
+        //        }
+        //        else
+        //        {
+        //            res.msg = "No oauth key passed!";
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Logger.LogErrorMessage("MDA -> checkIfUsersSynapseAuthKeyIsExpired FAILED: Outer Catch Error - [User's OAuth Key: " + oauthKey +
+        //                               "], [Exception: " + ex + "]");
+
+        //        res.msg = "Nooch Server Error: Outer Exception.";
+        //    }
+
+        //    return res;
+        //}
     }
 }
