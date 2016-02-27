@@ -2439,7 +2439,7 @@ namespace Nooch.API.Controllers
         /************************************************/
         #region Synapse-Related Services
 
-        [HttpGet]
+        [HttpPost]
         [ActionName("RegisterUserWithSynapseV3")]
         public synapseCreateUserV3Result_int RegisterUserWithSynapseV3(string memberId)
         {
@@ -2461,6 +2461,8 @@ namespace Nooch.API.Controllers
         }
 
 
+        [HttpPost]
+        [ActionName("submitDocumentToSynapseV3")]
         public synapseV3GenericResponse submitDocumentToSynapseV3(SaveVerificationIdDocument DocumentDetails)
         {
             synapseV3GenericResponse res = new synapseV3GenericResponse();
@@ -2479,7 +2481,8 @@ namespace Nooch.API.Controllers
                 if (DocumentDetails.Picture != null)
                 {
                     // Make  image from bytes
-                    string filename = HttpContext.Current.Server.MapPath("UploadedPhotos") + "/Photos/" +
+
+                    string filename = HttpContext.Current.Server.MapPath("../../UploadedPhotos") + "/Photos/" +
                                       DocumentDetails.MemberId + ".png";
                     using (FileStream fs = new FileStream(filename, FileMode.Create, FileAccess.ReadWrite))
                     {
@@ -2511,7 +2514,8 @@ namespace Nooch.API.Controllers
         }
 
 
-
+        [HttpPost]
+        [ActionName("SynapseV3AddNode")]
         public SynapseBankLoginV3_Response_Int SynapseV3AddNode(string MemberId, string BnkName, string BnkUserName, string BnkPw)
         {
             Logger.Info("MDA -> SynapseV3AddNode Initiated - MemberId: [" + MemberId + "], BankName: [" + BnkName + "]");
@@ -2757,6 +2761,8 @@ namespace Nooch.API.Controllers
                                     nodenew.allowed = bankLoginRespFromSynapse["nodes"][0]["allowed"] != null ?
                                                       bankLoginRespFromSynapse["nodes"][0]["allowed"].ToString() :
                                                       null;
+                                    nodenew.extra = new extra();
+                                    nodenew.extra.mfa = new extra_mfa();
                                     nodenew.extra.mfa.message = bankLoginRespFromSynapse["nodes"][0]["extra"]["mfa"]["message"].ToString().Trim();
 
                                     rootBankObj.nodes = nodesarray;
@@ -2985,7 +2991,8 @@ namespace Nooch.API.Controllers
         }
 
 
-
+        [HttpPost]
+        [ActionName("SynapseV3MFABankVerify")]
         public SynapseV3BankLoginResult_ServiceRes SynapseV3MFABankVerify(SynapseV3VerifyNode_ServiceInput input)
         {
             SynapseV3BankLoginResult_ServiceRes res = new SynapseV3BankLoginResult_ServiceRes();
