@@ -29,6 +29,13 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
         public bool read_only { get; set; }
     }
 
+    public class createUser_login2
+    {
+        public string email { get; set; }
+        public string password { get; set; }
+        
+    }
+
     public class createUser_fingerprints
     {
         public string fingerprint { get; set; }

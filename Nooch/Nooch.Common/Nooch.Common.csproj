@@ -90,7 +90,7 @@
     <Compile Include="Entities\StringResult.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\kycInfoResponseFromSynapse.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\NodePermissionCheckResult.cs" />
-    <Compile Include="Entities\SynapseRelatedEntities\public class SynapseV3AddTrans_ReusableClass.cs" />
+    <Compile Include="Entities\SynapseRelatedEntities\SynapseV3AddTrans_ReusableClass.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\SaveVerificationIdDocument.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\submitDocToSynapseV3Class.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\submitIdVerificationInt.cs" />
@@ -100,10 +100,15 @@
     <Compile Include="Entities\SynapseRelatedEntities\SynapseBankVerifyV3_Input.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\synapseCreateUserInput_int.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\synapseCreateUserV3Result_int.cs" />
+    <Compile Include="Entities\SynapseRelatedEntities\SynapseDetailsClass.cs" />
+    <Compile Include="Entities\SynapseRelatedEntities\SynapseDetailsClass_BankDetails.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\synapseSearchUserResponse.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\SynapseV3AddTransInput.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\SynapseV3BankLoginResult_ServiceRes.cs" />
+    <Compile Include="Entities\SynapseRelatedEntities\synapseV3checkUsersOauthKey.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\synapseV3GenericResponse.cs" />
+    <Compile Include="Entities\SynapseRelatedEntities\SynapseV3RefreshOauthKeyAndSign_Input.cs" />
+    <Compile Include="Entities\SynapseRelatedEntities\synapseV3ShowUserInput.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\SynapseV3VerifyNode_ServiceInput.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
