@@ -3049,52 +3049,52 @@ namespace Nooch.API.Controllers
 
 
 
-        //public SynapseDetailsClass GetSynapseBankAndUserDetails(string memberid)
-        //{
-        //    SynapseDetailsClass res = new SynapseDetailsClass();
+        public SynapseDetailsClass GetSynapseBankAndUserDetails(string memberid)
+        {
+            SynapseDetailsClass res = new SynapseDetailsClass();
 
-        //    try
-        //    {
-        //        Logger.Info("Service Layer - GetSynapseBankAndUserDetails Initiated - MemberId: [" + memberid + "]");
+            try
+            {
+                Logger.Info("Service Layer - GetSynapseBankAndUserDetails Initiated - MemberId: [" + memberid + "]");
 
-        //        var ada = new AccountDataAccess();
-        //        var adaResult = ada.GetSynapseBankAndUserDetailsforGivenMemberId(memberid);
+                
+                var adaResult = CommonHelper.GetSynapseBankAndUserDetailsforGivenMemberId(memberid);
 
-        //        res.wereBankDetailsFound = adaResult.wereBankDetailsFound;
-        //        res.wereUserDetailsFound = adaResult.wereUserDetailsFound;
+                res.wereBankDetailsFound = adaResult.wereBankDetailsFound;
+                res.wereUserDetailsFound = adaResult.wereUserDetailsFound;
 
-        //        Logger.LogDebugMessage("Service Layer - GetSynapseBankAndUserDetails Checkpoint #1!");
+                Logger.Info("Service Layer - GetSynapseBankAndUserDetails Checkpoint #1!");
 
-        //        res.AccountDetailsErrMessage = adaResult.AccountDetailsErrMessage;
-        //        res.UserDetailsErrMessage = adaResult.UserDetailsErrMessage;
+                res.AccountDetailsErrMessage = adaResult.AccountDetailsErrMessage;
+                res.UserDetailsErrMessage = adaResult.UserDetailsErrMessage;
 
-        //        Logger.LogDebugMessage("Service Layer - GetSynapseBankAndUserDetails Checkpoint #2!");
+                Logger.Info("Service Layer - GetSynapseBankAndUserDetails Checkpoint #2!");
 
-        //        //res.UserDetails.access_token = adaResult.UserDetails.access_token;
+                //res.UserDetails.access_token = adaResult.UserDetails.access_token;
 
-        //        //Logger.LogDebugMessage("Service Layer - GetSynapseBankAndUserDetails Checkpoint #3!");
+                //Logger.LogDebugMessage("Service Layer - GetSynapseBankAndUserDetails Checkpoint #3!");
 
-        //        //res.UserDetails.MemberId = adaResult.UserDetails.MemberId.ToString();
-        //        //res.UserDetails.user_id = adaResult.UserDetails.user_id;
-        //        //res.BankDetails.bankid = adaResult.BankDetails.bankid;
-        //        //res.BankDetails.email = adaResult.BankDetails.email;
-        //        //res.BankDetails.Status = adaResult.BankDetails.Status;
-        //        //res.BankDetails.AddedOn = adaResult.BankDetails.AddedOn;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Logger.LogErrorMessage("Service Layer - GetSynapseBankAndUserDetails FAILED - MemberId: [" + memberid +
-        //                               "], Exception: [" + ex + "]");
-        //    }
+                //res.UserDetails.MemberId = adaResult.UserDetails.MemberId.ToString();
+                //res.UserDetails.user_id = adaResult.UserDetails.user_id;
+                //res.BankDetails.bankid = adaResult.BankDetails.bankid;
+                //res.BankDetails.email = adaResult.BankDetails.email;
+                //res.BankDetails.Status = adaResult.BankDetails.Status;
+                //res.BankDetails.AddedOn = adaResult.BankDetails.AddedOn;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Layer - GetSynapseBankAndUserDetails FAILED - MemberId: [" + memberid +
+                                       "], Exception: [" + ex + "]");
+            }
 
-        //    Logger.LogDebugMessage("Service Layer - GetSynapseBankAndUserDetails FINISHED, ABOUT TO RETURN - MemberId: [" + memberid +
-        //                           "], res.wereUserDetailsFound: [" + res.wereUserDetailsFound +
-        //                           "], res.wereBankDetailsFound: [" + res.wereBankDetailsFound + "]");
-        //    //"], UserDetails.access_token: [" + res.UserDetails.access_token +
-        //    //"], BankDetails.bankid: [" + res.BankDetails.bankid + "]");
+            Logger.Info("Service Layer - GetSynapseBankAndUserDetails FINISHED, ABOUT TO RETURN - MemberId: [" + memberid +
+                                   "], res.wereUserDetailsFound: [" + res.wereUserDetailsFound +
+                                   "], res.wereBankDetailsFound: [" + res.wereBankDetailsFound + "]");
+            //"], UserDetails.access_token: [" + res.UserDetails.access_token +
+            //"], BankDetails.bankid: [" + res.BankDetails.bankid + "]");
 
-        //    return res;
-        //}
+            return res;
+        }
 
         #endregion
     }
