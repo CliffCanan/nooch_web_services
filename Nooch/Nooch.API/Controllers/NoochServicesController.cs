@@ -2446,8 +2446,10 @@ namespace Nooch.API.Controllers
             try
             {
                 MembersDataAccess mda = new MembersDataAccess();
-
-                synapseCreateUserV3Result_int res = mda.RegisterUserWithSynapseV3(memberId);
+                // for testing
+                synapseCreateUserV3Result_int res = mda.RegisterUserWithSynapseV3(memberId,true);
+                //for live 
+                //synapseCreateUserV3Result_int res = mda.RegisterUserWithSynapseV3(memberId, false);
 
 
                 return res;

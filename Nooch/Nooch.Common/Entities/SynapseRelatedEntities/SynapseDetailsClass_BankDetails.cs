@@ -10,6 +10,9 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
     {
         public int? bankid { get; set; }
         public string email { get; set; }
+
+        public string bank_oid { get; set; }
+        public string account_type { get; set; }
         public string Status { get; set; }
         public DateTime? AddedOn { get; set; }
     }

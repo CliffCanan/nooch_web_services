@@ -79,4 +79,18 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
         public bool exact_match { get; set; }
         public string query { get; set; }
     }
+
+
+    public class synapseV3ShowUserInputClass
+    {
+        public synapseSearchUser_Client client { get; set; }
+        public synapseV3ShowUser_Filter filter { get; set; }
+    }
+
+    public class synapseV3ShowUser_Filter
+    {
+        public int page { get; set; }
+        
+        public string query { get; set; }
+    }
 }

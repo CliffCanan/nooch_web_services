@@ -1688,7 +1688,7 @@ namespace Nooch.DataAccess
 
         #region synapse related methods
 
-        public synapseCreateUserV3Result_int RegisterUserWithSynapseV3(string memberId)
+        public synapseCreateUserV3Result_int RegisterUserWithSynapseV3(string memberId, bool isSandbox)
         {
             Logger.Info("MDA -> RegisterUserWithSynapseV3 Initiated - [Member: " + memberId + "]");
 
@@ -1793,8 +1793,11 @@ namespace Nooch.DataAccess
                     extra.is_business = false; // CLIFF (10/10/12): For Landlords, this could potentially be true... but we'll figure that out later
 
                     payload.extra = extra;
-
-                    var baseAddress = "https://sandbox.synapsepay.com/api/v3/user/create";
+                    var baseAddress = "https://synapsepay.com/api/v3/user/create";
+                    if (isSandbox)
+                    {
+                     baseAddress = "https://sandbox.synapsepay.com/api/v3/user/create";
+                    }
                     //var baseAddress = "https://synapsepay.com/api/v3/user/create";
 
                     try
@@ -1913,7 +1916,7 @@ namespace Nooch.DataAccess
                     if (res.success == true &&
                         !String.IsNullOrEmpty(res.oauth.oauth_key))
                     {
-                        res.user_id = !String.IsNullOrEmpty(res.user.client.id.ToString()) ? res.user.client.id.ToString() : "";
+                        res.user_id = !String.IsNullOrEmpty(res.user.client.id) ? res.user.client.id : "";
                         res.ssn_verify_status = "did not check yet";
 
                         // Mark any existing Synapse 'Create User' results for this user as Deleted
@@ -1960,7 +1963,7 @@ namespace Nooch.DataAccess
                             newSynapseUser.expires_in = res.oauth.expires_at;
                             newSynapseUser.refresh_token = CommonHelper.GetEncryptedData(res.oauth.refresh_token);
                             newSynapseUser.username = CommonHelper.GetEncryptedData(res.user.logins[0].email);
-                            newSynapseUser.user_id = res.user.client.id.ToString(); // this is no more int... this will be string from now onwards
+                            newSynapseUser.user_id = res.user.client.id; // this is no more int... this will be string from now onwards
 
                             // LETS USE THE EXISTING V2 DB TABLE FOR V3: 'SynapseCreateUserResults'... all the same, PLUS a few additional parameters (none are that important, but we should store them):
                             // NEED TO ADD THE FOLLOWING PARAMETERS TO DATABASE: is_business (bool); legal_name (string); permission (string); phone number (string); photos (string)

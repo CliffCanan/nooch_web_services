@@ -444,6 +444,7 @@
           <Property Name="permission" Type="varchar(max)" />
           <Property Name="Phone_number" Type="varchar(max)" />
           <Property Name="photos" Type="varchar(max)" />
+          <Property Name="expires_at" Type="varchar" MaxLength="50" />
         </EntityType>
         <EntityType Name="SynapseIdVerificationQuestions">
           <Key>
@@ -1363,6 +1364,7 @@
           <Property Name="permission" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
           <Property Name="Phone_number" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
           <Property Name="photos" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
+          <Property Name="expires_at" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
         </EntityType>
         <EntityType Name="SynapseIdVerificationQuestion">
           <Key>
@@ -1976,6 +1978,7 @@
           <EntitySetMapping Name="SynapseCreateUserResults">
             <EntityTypeMapping TypeName="NOOCHModel.SynapseCreateUserResult">
               <MappingFragment StoreEntitySet="SynapseCreateUserResults">
+                <ScalarProperty Name="expires_at" ColumnName="expires_at" />
                 <ScalarProperty Name="photos" ColumnName="photos" />
                 <ScalarProperty Name="Phone_number" ColumnName="Phone_number" />
                 <ScalarProperty Name="permission" ColumnName="permission" />

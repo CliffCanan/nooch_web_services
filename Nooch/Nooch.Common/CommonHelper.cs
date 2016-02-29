@@ -1686,7 +1686,7 @@ namespace Nooch.Common
                     #region Check If Testing
 
                     // CLIFF (10/22/15): Added this block for testing - if you use an email that includes "jones00" in it, 
-                    //                   then this method will use the Synapse (v2) SANDBOX.  Leaving this here in case we
+                    //                   then this method will use the Synapse (v3) SANDBOX.  Leaving this here in case we
                     //                   want to test in the future the same way.
                     bool shouldUseSynapseSandbox = false;
                     string memberUsername = GetMemberUsernameByMemberId(memberId);
@@ -1701,16 +1701,21 @@ namespace Nooch.Common
                     #endregion Check If Testing
 
                     #region Check If OAuth Key Still Valid
+                    // if testing
+                    synapseV3checkUsersOauthKey checkTokenResult = refreshSynapseV3OautKey(createSynapseUserObj.access_token,
+                                                                                                           true);
+                    // if live
+                    //synapseV3checkUsersOauthKey checkTokenResult = refreshSynapseV3OautKey(createSynapseUserObj.access_token,
+                    //                                                                   false);
 
-                    synapseV3checkUsersOauthKey checkTokenResult = checkIfUsersSynapseAuthKeyIsExpired(createSynapseUserObj.access_token,
-                                                                                                           shouldUseSynapseSandbox);
 
                     if (checkTokenResult != null)
                     {
                         if (checkTokenResult.success == true)
                         {
                             res.UserDetails = new SynapseDetailsClass_UserDetails();
-                            res.UserDetails.access_token = checkTokenResult.oauth_consumer_key;
+                            res.UserDetails.access_token = checkTokenResult.oauth_consumer_key;  // NOTe :: Giving in encrypted format
+                            res.UserDetails.user_id = checkTokenResult.user_oid;
                             res.UserDetailsErrMessage = "OK";
                         }
                         else
@@ -1719,6 +1724,7 @@ namespace Nooch.Common
                                                    "CheckTokenResult.msg: [" + checkTokenResult.msg + "], MemberID: [" + memberId + "]");
 
                             res.UserDetailsErrMessage = checkTokenResult.msg;
+                            
                         }
                     }
                     else
@@ -1727,6 +1733,7 @@ namespace Nooch.Common
                                                    "CheckTokenResult was NULL, MemberID: [" + memberId + "]");
 
                         res.UserDetailsErrMessage = "Unable to check user's Oauth Token";
+                        
                     }
 
                     #endregion Check If OAuth Key Still Valid
@@ -1738,6 +1745,7 @@ namespace Nooch.Common
 
                     res.UserDetails = null;
                     res.UserDetailsErrMessage = "User synapse details not found.";
+                    
                 }
 
                 #region Get The User's Synapse Bank Details
@@ -1755,6 +1763,8 @@ namespace Nooch.Common
                     res.BankDetails.Status= defaultBank.Status;
                     res.BankDetails.bankid= defaultBank.bankid;
                     res.BankDetails.email= defaultBank.email;
+                    res.BankDetails.bank_oid = defaultBank.oid;
+                    res.BankDetails.account_type= defaultBank.type_synapse;
                     res.AccountDetailsErrMessage = "OK";
                 }
                 else
@@ -1776,6 +1786,7 @@ namespace Nooch.Common
 
 
 
+        // oAuth token needs to be in encrypted format
         public static synapseV3checkUsersOauthKey refreshSynapseV3OautKey(string oauthKey, bool useSynapseSandbox)
         {
             Logger.Info("MDA -> refreshSynapseV2OautKey Initiated - User's Original OAuth Key (enc): [" + oauthKey + "]");
@@ -1792,125 +1803,191 @@ namespace Nooch.Common
 
                 SynapseCreateUserResult synCreateUserObject = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.access_token == oauthKey && m.IsDeleted == false);
 
-                string refreshToken = synCreateUserObject.refresh_token;
-
-                if (refreshToken != null)
+                // check for this is not needed.
+                // Will be calling login/refresh access token service to confirm if saved oAtuh token matches with token coming in response, if not then will update the token.
+                if (synCreateUserObject!=null)
                 {
-                    Logger.Info("MDA -> refreshSynapseV2OautKey - Found Member By Original OAuth Key (enc): [" + oauthKey +
-                                           "], Refresh Token (enc): [" + refreshToken + "]");
 
-                    SynapseV3RefreshOauthKeyAndSign_Input input = new SynapseV3RefreshOauthKeyAndSign_Input();
 
-                    string SynapseClientId = Utility.GetValueFromConfig("SynapseClientId");
-                    string SynapseClientSecret = Utility.GetValueFromConfig("SynapseClientSecret");
+                        var noochMemberObject = GetMemberDetails(synCreateUserObject.MemberId.ToString());
 
-                    input.login.email = GetDecryptedData(synCreateUserObject.NonNoochUserEmail);
+                        //refreshToken = GetDecryptedData(refreshToken);
+                        #region Found Refresh Token
+                        Logger.Info("MDA -> refreshSynapseV2OautKey - Found Member By Original OAuth Key (enc): [" +
+                                                    oauthKey +
+                                                    "]");
 
-                    input.client.client_id = SynapseClientId;
-                    input.client.client_secret = SynapseClientSecret;
+                        SynapseV3RefreshOauthKeyAndSign_Input input = new SynapseV3RefreshOauthKeyAndSign_Input();
 
-                    string UrlToHit = "https://synapsepay.com/api/v3/user/signin";
+                        string SynapseClientId = Utility.GetValueFromConfig("SynapseClientId");
+                        string SynapseClientSecret = Utility.GetValueFromConfig("SynapseClientSecret");
 
-                    if (useSynapseSandbox)
-                    {
-                        Logger.Info("MDA -> refreshSynapseV2OautKey - TEST USER DETECTED - useSynapseSandbox is: [" +
-                                               useSynapseSandbox + "] - About to ping Synapse Sandbox /user/refresh...");
-                        UrlToHit = "https://sandbox.synapsepay.com/api/v3/user/signin";
-                    }
-
-                    var http = (HttpWebRequest)WebRequest.Create(new Uri(UrlToHit));
-                    http.Accept = "application/json";
-                    http.ContentType = "application/json";
-                    http.Method = "POST";
-
-                    string parsedContent = JsonConvert.SerializeObject(input);
-                    ASCIIEncoding encoding = new ASCIIEncoding();
-                    Byte[] bytes = encoding.GetBytes(parsedContent);
-
-                    Stream newStream = http.GetRequestStream();
-                    newStream.Write(bytes, 0, bytes.Length);
-                    newStream.Close();
-
-                    try
-                    {
-                        var response = http.GetResponse();
-                        var stream = response.GetResponseStream();
-                        var sr = new StreamReader(stream);
-                        var content = sr.ReadToEnd();
-
-                        //Logger.LogDebugMessage("MDA -> refreshSynapseV2OautKey Checkpoint #1 - About to parse Synapse Response");
-
-                        synapseCreateUserV3Result_int refreshResultFromSyn = new synapseCreateUserV3Result_int();
-
-                        refreshResultFromSyn = JsonConvert.DeserializeObject<synapseCreateUserV3Result_int>(content);
-
-                        JObject refreshResponse = JObject.Parse(content);
-
-                        Logger.Info("MDA -> refreshSynapseV2OautKey - Just Parsed Synapse Response: [" + refreshResponse + "]");
-
-                        if (refreshResultFromSyn.success.ToString() == "true" ||
-                            (refreshResponse["success"] != null && Convert.ToBoolean(refreshResponse["success"]) ))
+                        input.login = new createUser_login2()
                         {
-                            synCreateUserObject.access_token = GetEncryptedData(refreshResultFromSyn.oauth_consumer_key);
-                            synCreateUserObject.refresh_token = GetEncryptedData(refreshResultFromSyn.oauth.refresh_token);
-                            synCreateUserObject.expires_in = refreshResultFromSyn.oauth.expires_at; // SYNAPSE TELLS US WHEN IT WILLE EXPIRE, BUT WE AREN'T CURRENTLY STORING THE 'expires_at'.  We should from now on use that instead of "expires_in".
-
+                            email = GetDecryptedData(synCreateUserObject.NonNoochUserEmail)
                             
-                            int a = _dbContext.SaveChanges();
+                        };
 
-                            if (a > 0)
+                        input.client = new createUser_client()
+                        {
+                            client_id = SynapseClientId,
+                            client_secret = SynapseClientSecret
+                        };
+
+                        input.user._id= new synapseSearchUserResponse_Id1()
+                        {
+                            oid = synCreateUserObject.user_id
+                        };
+                        input.user.fingerprint= new createUser_fingerprints()
+                        {
+                            fingerprint = noochMemberObject.UDID1
+                        };
+
+                        input.user.ip = GetRecentOrDefaultIPOfMember(noochMemberObject.MemberId);
+
+                        string UrlToHit = "https://synapsepay.com/api/v3/user/signin";
+
+
+                        if (useSynapseSandbox)
+                        {
+                            Logger.Info(
+                                "MDA -> refreshSynapseV2OautKey - TEST USER DETECTED - useSynapseSandbox is: [" +
+                                useSynapseSandbox + "] - About to ping Synapse Sandbox /user/refresh...");
+                            UrlToHit = "https://sandbox.synapsepay.com/api/v3/user/signin";
+                        }
+
+                        var http = (HttpWebRequest)WebRequest.Create(new Uri(UrlToHit));
+                        http.Accept = "application/json";
+                        http.ContentType = "application/json";
+                        http.Method = "POST";
+
+                        string parsedContent = JsonConvert.SerializeObject(input);
+                        ASCIIEncoding encoding = new ASCIIEncoding();
+                        Byte[] bytes = encoding.GetBytes(parsedContent);
+
+                        Stream newStream = http.GetRequestStream();
+                        newStream.Write(bytes, 0, bytes.Length);
+                        newStream.Close();
+
+                        try
+                        {
+                            var response = http.GetResponse();
+                            var stream = response.GetResponseStream();
+                            var sr = new StreamReader(stream);
+                            var content = sr.ReadToEnd();
+
+                            //Logger.LogDebugMessage("MDA -> refreshSynapseV2OautKey Checkpoint #1 - About to parse Synapse Response");
+
+                            synapseCreateUserV3Result_int refreshResultFromSyn = new synapseCreateUserV3Result_int();
+
+                            refreshResultFromSyn = JsonConvert.DeserializeObject<synapseCreateUserV3Result_int>(content);
+
+                            JObject refreshResponse = JObject.Parse(content);
+
+                            Logger.Info("MDA -> refreshSynapseV2OautKey - Just Parsed Synapse Response: [" +
+                                        refreshResponse + "]");
+
+                            if (refreshResultFromSyn.success.ToString() == "true" ||
+                                (refreshResponse["success"] != null && Convert.ToBoolean(refreshResponse["success"])))
                             {
-                                Logger.Info("MDA -> refreshSynapseV2OautKey - SUCCESS From Synapse and Successfully added to Nooch DB - " +
-                                                       "Original Oauth Key (encr): [" + oauthKey + "], " +
-                                                       "Value for new, refreshed OAuth Key (encr): [" + synCreateUserObject.access_token + "]");
+                                // checking if token is same as saved in db
+                                if (synCreateUserObject.access_token ==
+                                    GetEncryptedData(refreshResultFromSyn.oauth_consumer_key))
+                                {
+                                    // same as earlier..no change
+                                    synCreateUserObject.access_token =
+                                    GetEncryptedData(refreshResultFromSyn.oauth_consumer_key);
+                                    synCreateUserObject.refresh_token =
+                                        GetEncryptedData(refreshResultFromSyn.oauth.refresh_token);
+                                    synCreateUserObject.expires_in = refreshResultFromSyn.oauth.expires_in;
+                                    synCreateUserObject.expires_at= refreshResultFromSyn.oauth.expires_at;
 
-                                res.success = true;
-                                res.oauth_consumer_key = synCreateUserObject.access_token;
-                                res.msg = "Oauth key refreshed successfully";
+
+                                }
+                                else
+                                {
+                                    // changed.. time to update
+                                    synCreateUserObject.access_token =
+                                      GetEncryptedData(refreshResultFromSyn.oauth_consumer_key);
+                                    synCreateUserObject.refresh_token =
+                                        GetEncryptedData(refreshResultFromSyn.oauth.refresh_token);
+                                    synCreateUserObject.expires_in = refreshResultFromSyn.oauth.expires_in;
+                                    synCreateUserObject.expires_at = refreshResultFromSyn.oauth.expires_at;
+                                }
+
+                                
+                                int a = _dbContext.SaveChanges();
+
+                                if (a > 0)
+                                {
+                                    Logger.Info(
+                                        "MDA -> refreshSynapseV2OautKey - SUCCESS From Synapse and Successfully added to Nooch DB - " +
+                                        "Original Oauth Key (encr): [" + oauthKey + "], " +
+                                        "Value for new, refreshed OAuth Key (encr): [" +
+                                        synCreateUserObject.access_token + "]");
+
+                                    res.success = true;
+                                    res.oauth_consumer_key = synCreateUserObject.access_token;
+                                    res.oauth_refresh_token = synCreateUserObject.refresh_token;
+                                    res.user_oid = synCreateUserObject.user_id;
+                                    res.msg = "Oauth key refreshed successfully";
+                                }
+                                else
+                                {
+                                    Logger.Error(
+                                        "MDA -> refreshSynapseV2OautKey FAILED - Error saving new key in Nooch DB - " +
+                                        "Original Oauth Key: [" + oauthKey + "], " +
+                                        "Value for new, refreshed OAuth Key: [" + synCreateUserObject.access_token + "]");
+
+                                    res.msg = "Failed to save new OAuth key in Nooch DB.";
+                                }
                             }
                             else
                             {
-                                Logger.Error("MDA -> refreshSynapseV2OautKey FAILED - Error saving new key in Nooch DB - " +
-                                                       "Original Oauth Key: [" + oauthKey + "], " +
-                                                       "Value for new, refreshed OAuth Key: [" + synCreateUserObject.access_token + "]");
-
-                                res.msg = "Failed to save new OAuth key in Nooch DB.";
+                                Logger.Error(
+                                    "MDA -> refreshSynapseV2OautKey FAILED - Error from Synapse service, no 'success' key found - " +
+                                    "Original Oauth Key: [" + oauthKey + "]");
+                                res.msg = "Service error.";
                             }
                         }
-                        else
+                        catch (WebException we)
                         {
-                            Logger.Error("MDA -> refreshSynapseV2OautKey FAILED - Error from Synapse service, no 'success' key found - " +
-                                                       "Original Oauth Key: [" + oauthKey + "]");
-                            res.msg = "Service error.";
-                        }
-                    }
-                    catch (WebException we)
-                    {
-                        #region Synapse V2 Get User Permissions Exception
+                            #region Synapse V3 Sig in/ refresh  Exception
 
-                        var httpStatusCode = ((HttpWebResponse)we.Response).StatusCode;
-                        string http_code = httpStatusCode.ToString();
+                            var httpStatusCode = ((HttpWebResponse)we.Response).StatusCode;
+                            string http_code = httpStatusCode.ToString();
 
-                        var response = new StreamReader(we.Response.GetResponseStream()).ReadToEnd();
-                        JObject errorJsonFromSynapse = JObject.Parse(response);
+                            var response = new StreamReader(we.Response.GetResponseStream()).ReadToEnd();
+                            JObject errorJsonFromSynapse = JObject.Parse(response);
 
-                        string reason = errorJsonFromSynapse["reason"].ToString();
+                            string reason = errorJsonFromSynapse["reason"].ToString();
 
-                        Logger.Error("MDA -> refreshSynapseV2OautKey WEBEXCEPTION - HTTP Code: [" + http_code +
-                                                   "], Error Msg: [" + reason + "], Original Oauth Key (enc): [" + oauthKey + "]");
+                            Logger.Error("MDA -> refreshSynapseV2OautKey WEBEXCEPTION - HTTP Code: [" + http_code +
+                                         "], Error Msg: [" + reason + "], Original Oauth Key (enc): [" + oauthKey + "]");
 
-                        if (!String.IsNullOrEmpty(reason))
-                        {
-                            res.msg = "Webexception on refresh attempt: [" + reason + "]";
-                        }
-                        else
-                        {
-                            Logger.Error("MDA -> refreshSynapseV2OautKey FAILED: Synapse Error, but *reason* was null for [Original Oauth Key (enc): " +
-                                                   oauthKey + "], [Exception: " + we.InnerException + "]");
-                        }
+                            if (!String.IsNullOrEmpty(reason))
+                            {
+                                res.msg = "Webexception on refresh attempt: [" + reason + "]";
+                            }
+                            else
+                            {
+                                Logger.Error(
+                                    "MDA -> refreshSynapseV2OautKey FAILED: Synapse Error, but *reason* was null for [Original Oauth Key (enc): " +
+                                    oauthKey + "], [Exception: " + we.InnerException + "]");
+                            }
 
-                        #endregion Synapse V2 Get User Permissions Exception
-                    }
+                            #endregion Synapse V3 Sig in/ refresh  Exception
+                        } 
+                        #endregion
+                  
+                }
+                else
+                {
+                    // no record found for given oAuth token in synapse createuser results table
+                    Logger.Error(
+                                   "MDA -> refreshSynapseV2OautKey FAILED -  no record found for given oAuth key found - " +
+                                   "Original Oauth Key: (enc) [" + oauthKey + "]");
+                    res.msg = "Service error.";
                 }
 
             }
@@ -1925,153 +2002,6 @@ namespace Nooch.Common
             return res;
         }
 
-        public static synapseV3checkUsersOauthKey checkIfUsersSynapseAuthKeyIsExpired(string oauthKey, bool useSynapseSandbox)
-        {
-            synapseV3checkUsersOauthKey res = new synapseV3checkUsersOauthKey();
-            res.success = false;
-
-            try
-            {
-                if (!String.IsNullOrEmpty(oauthKey))
-                {
-                    synapseV3ShowUserInput input = new synapseV3ShowUserInput();
-                    input.login.oauth_key = oauthKey;
-
-                    //Logger.LogDebugMessage("MDA -> checkIfUsersSynapseAuthKeyIsExpired - About to Query Synapse /user/show API: " +
-                    //                       "OAuth Key: [" + input.oauth_consumer_key + "]");
-
-                    string urlToUse = "https://synapsepay.com/api/v3/user/kyc/show";
-
-                    if (useSynapseSandbox)
-                    {
-                        urlToUse = "https://sandbox.synapsepay.com/api/v3/user/kyc/show";
-                    }
-
-                    var http = (HttpWebRequest)WebRequest.Create(new Uri(urlToUse));
-                    http.Accept = "application/json";
-                    http.ContentType = "application/json";
-                    http.Method = "POST";
-
-                    string parsedContent = JsonConvert.SerializeObject(input);
-                    ASCIIEncoding encoding = new ASCIIEncoding();
-                    Byte[] bytes = encoding.GetBytes(parsedContent);
-
-                    Stream newStream = http.GetRequestStream();
-                    newStream.Write(bytes, 0, bytes.Length);
-                    newStream.Close();
-
-                    try
-                    {
-                        var response = http.GetResponse();
-                        var stream = response.GetResponseStream();
-                        var sr = new StreamReader(stream);
-                        var content = sr.ReadToEnd();
-
-                        JObject checkPermissionResponse = JObject.Parse(content);
-
-                        if (checkPermissionResponse["success"] != null &&
-                            Convert.ToBoolean(checkPermissionResponse["success"]) == true)
-                        {
-                            res.success = true;
-                            res.oauth_consumer_key = oauthKey;
-                            res.msg = "Oauth key still valid";
-                        }
-                        else
-                        {
-                            res.msg = "Error: problem with query to Syn /user/show.";
-                        }
-
-                        Logger.Info("MDA -> checkIfUsersSynapseAuthKeyIsExpired - Response from Synapse /user/show API: " +
-                                               "Success: [" + res.success + "], " +
-                                               "OAuth Key: [" + input.login.oauth_key + "], " +
-                                               "res.msg: [" + res.msg + "]");
-                    }
-                    catch (WebException we)
-                    {
-                        #region Synapse V2 Check Synapse Token Status
-
-                        var httpStatusCode = ((HttpWebResponse)we.Response).StatusCode;
-                        string http_code = httpStatusCode.ToString();
-
-                        var response = new StreamReader(we.Response.GetResponseStream()).ReadToEnd();
-                        JObject errorJsonFromSynapse = JObject.Parse(response);
-
-                        string reason = errorJsonFromSynapse["reason"].ToString();
-
-                        Logger.Error("MDA -> checkIfUsersSynapseAuthKeyIsExpired FAILED - Synapse Error Code: ['" + reason +
-                                                   "'], User's Oauth Key (enc): [" + oauthKey + "]");
-
-                        if (!String.IsNullOrEmpty(reason))
-                        {
-                            #region Attempt OAuth Refresh
-
-                            if (reason.IndexOf("Error in OAuth Authentication") > -1)
-                            {
-                                try
-                                {
-                                    Logger.Info("MDA -> checkIfUsersSynapseAuthKeyIsExpired - Synapse Returned 'Error in Oauth Authentication' - " +
-                                                          "Now going to attempt to refresh OAuth Key...");
-
-                                    // ATTEMPT TO REFRESH USER'S OAUTH KEY WITH SYNAPSE
-                                    synapseV3checkUsersOauthKey refreshResult = new synapseV3checkUsersOauthKey();
-                                    refreshResult = refreshSynapseV3OautKey(oauthKey, useSynapseSandbox);
-
-                                    if (refreshResult.success)
-                                    {
-                                        Logger.Info("MDA -> checkIfUsersSynapseAuthKeyIsExpired - Got Success Response From Refresh Method - " +
-                                                              "RefreshResult.msg: [" + refreshResult.msg + "], " +
-                                                              "New Oauth Key: [" + refreshResult.oauth_consumer_key + "]");
-
-                                        res.success = true;
-                                        res.oauth_consumer_key = refreshResult.oauth_consumer_key;
-                                        res.msg = refreshResult.msg;
-
-                                        return res;
-                                    }
-                                    else
-                                    {
-                                        Logger.Error("MDA -> checkIfUsersSynapseAuthKeyIsExpired - Got FAILURE Response From Refresh Method - " +
-                                                              "RefreshResult.msg: [" + refreshResult.msg + "], " +
-                                                              "New Oauth Key: [" + refreshResult.oauth_consumer_key + "]");
-
-                                        res.msg = "Attempted oauth_key refresh but was not successful - 10931.";
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    Logger.Error("MDA -> checkIfUsersSynapseAuthKeyIsExpired FAILURE - Got EXCEPTION when calling SynapseV2Refresh method - " +
-                                                              "Original Oauth Key: [" + oauthKey + "], " +
-                                                              "Exception: [" + ex + "]");
-
-                                    res.msg = "Attempted oauth_key refresh but got exception: [" + ex.Message + "]";
-                                }
-                            }
-
-                            #endregion Attempt OAuth Refresh
-                        }
-                        else
-                        {
-                            Logger.Error("MDA -> checkIfUsersSynapseAuthKeyIsExpired FAILED: Synapse Error, but *reason* was null - " +
-                                                   "HTTP Code: " + http_code + "], User's OAuth Key: [" + oauthKey + "], [Exception: " + we.InnerException + "]");
-                        }
-
-                        #endregion Synapse V2 Check Synapse Token Status
-                    }
-                }
-                else
-                {
-                    res.msg = "No oauth key passed!";
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.Error("MDA -> checkIfUsersSynapseAuthKeyIsExpired FAILED: Outer Catch Error - [User's OAuth Key: " + oauthKey +
-                                       "], [Exception: " + ex + "]");
-
-                res.msg = "Nooch Server Error: Outer Exception.";
-            }
-
-            return res;
-        }
+        
     }
 }
