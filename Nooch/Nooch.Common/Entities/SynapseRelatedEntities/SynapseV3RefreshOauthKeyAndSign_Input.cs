@@ -19,7 +19,7 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
     public class SynapseV3RefreshOAuthToken_User_Input
     {
         public synapseSearchUserResponse_Id1 _id { get; set; }
-        public createUser_fingerprints fingerprint { get; set; }
+        public string fingerprint { get; set; }
 
         public string ip { get; set; }
     }

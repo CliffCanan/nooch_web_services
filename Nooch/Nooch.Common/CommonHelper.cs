@@ -929,7 +929,7 @@ namespace Nooch.Common
 
             var memberIP = _dbContext.MembersIPAddresses.OrderByDescending(m => m.ModifiedOn).FirstOrDefault(m => m.MemberId == MemberIdPassed);
 
-            RecentIpOfUser = memberIP != null ? memberIP.ToString() : "54.201.43.89";
+            RecentIpOfUser = memberIP.Ip != null ? memberIP.Ip.ToString() : "54.201.43.89";
 
             return RecentIpOfUser;
         }
@@ -1714,7 +1714,7 @@ namespace Nooch.Common
                         if (checkTokenResult.success == true)
                         {
                             res.UserDetails = new SynapseDetailsClass_UserDetails();
-                            res.UserDetails.access_token = checkTokenResult.oauth_consumer_key;  // NOTe :: Giving in encrypted format
+                            res.UserDetails.access_token = CommonHelper.GetDecryptedData(checkTokenResult.oauth_consumer_key);  // NOTe :: Giving in encrypted format
                             res.UserDetails.user_id = checkTokenResult.user_oid;
                             res.UserDetailsErrMessage = "OK";
                         }
@@ -1824,8 +1824,9 @@ namespace Nooch.Common
 
                         input.login = new createUser_login2()
                         {
-                            email = GetDecryptedData(synCreateUserObject.NonNoochUserEmail)
-                            
+                            //email = GetDecryptedData(synCreateUserObject.NonNoochUserEmail), //why cant we get login feilds from members table ?
+                            email = GetDecryptedData(noochMemberObject.UserName),
+                            password = GetDecryptedData(noochMemberObject.Password)
                         };
 
                         input.client = new createUser_client()
@@ -1834,16 +1835,16 @@ namespace Nooch.Common
                             client_secret = SynapseClientSecret
                         };
 
-                        input.user._id= new synapseSearchUserResponse_Id1()
+                        SynapseV3RefreshOAuthToken_User_Input user = new SynapseV3RefreshOAuthToken_User_Input();
+                    
+                        user._id= new synapseSearchUserResponse_Id1()
                         {
                             oid = synCreateUserObject.user_id
                         };
-                        input.user.fingerprint= new createUser_fingerprints()
-                        {
-                            fingerprint = noochMemberObject.UDID1
-                        };
+                        user.fingerprint =  noochMemberObject.UDID1;
 
-                        input.user.ip = GetRecentOrDefaultIPOfMember(noochMemberObject.MemberId);
+                        user.ip = GetRecentOrDefaultIPOfMember(noochMemberObject.MemberId);
+                        input.user = user;
 
                         string UrlToHit = "https://synapsepay.com/api/v3/user/signin";
 
@@ -1879,7 +1880,7 @@ namespace Nooch.Common
                             //Logger.LogDebugMessage("MDA -> refreshSynapseV2OautKey Checkpoint #1 - About to parse Synapse Response");
 
                             synapseCreateUserV3Result_int refreshResultFromSyn = new synapseCreateUserV3Result_int();
-
+                            
                             refreshResultFromSyn = JsonConvert.DeserializeObject<synapseCreateUserV3Result_int>(content);
 
                             JObject refreshResponse = JObject.Parse(content);
@@ -1892,11 +1893,11 @@ namespace Nooch.Common
                             {
                                 // checking if token is same as saved in db
                                 if (synCreateUserObject.access_token ==
-                                    GetEncryptedData(refreshResultFromSyn.oauth_consumer_key))
+                                    GetEncryptedData(refreshResultFromSyn.oauth.oauth_key))
                                 {
                                     // same as earlier..no change
                                     synCreateUserObject.access_token =
-                                    GetEncryptedData(refreshResultFromSyn.oauth_consumer_key);
+                                    GetEncryptedData(refreshResultFromSyn.oauth.oauth_key);
                                     synCreateUserObject.refresh_token =
                                         GetEncryptedData(refreshResultFromSyn.oauth.refresh_token);
                                     synCreateUserObject.expires_in = refreshResultFromSyn.oauth.expires_in;
@@ -1908,7 +1909,7 @@ namespace Nooch.Common
                                 {
                                     // changed.. time to update
                                     synCreateUserObject.access_token =
-                                      GetEncryptedData(refreshResultFromSyn.oauth_consumer_key);
+                                      GetEncryptedData(refreshResultFromSyn.oauth.oauth_key);
                                     synCreateUserObject.refresh_token =
                                         GetEncryptedData(refreshResultFromSyn.oauth.refresh_token);
                                     synCreateUserObject.expires_in = refreshResultFromSyn.oauth.expires_in;

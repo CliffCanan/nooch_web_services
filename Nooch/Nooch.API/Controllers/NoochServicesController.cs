@@ -3068,7 +3068,7 @@ namespace Nooch.API.Controllers
 
                 
                 var adaResult = CommonHelper.GetSynapseBankAndUserDetailsforGivenMemberId(memberid);
-
+              
                 res.wereBankDetailsFound = adaResult.wereBankDetailsFound;
                 res.wereUserDetailsFound = adaResult.wereUserDetailsFound;
 
@@ -3076,6 +3076,8 @@ namespace Nooch.API.Controllers
 
                 res.AccountDetailsErrMessage = adaResult.AccountDetailsErrMessage;
                 res.UserDetailsErrMessage = adaResult.UserDetailsErrMessage;
+
+                res = adaResult;
 
                 Logger.Info("Service Layer - GetSynapseBankAndUserDetails Checkpoint #2!");
 
