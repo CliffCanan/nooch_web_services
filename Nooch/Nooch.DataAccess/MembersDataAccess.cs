@@ -3000,6 +3000,42 @@ namespace Nooch.DataAccess
                 }
             
         }
+
+
+
+        public string SaveDOBForMember(string MemberId, string dob)
+        {
+            DateTime dateTime2;
+
+            if (!DateTime.TryParse(dob, out dateTime2))
+            {
+                return "Invalid DOB passed.";
+            }
+
+            
+                
+                var noochMember = CommonHelper.GetMemberDetails(MemberId);
+                
+
+                if (noochMember != null)
+                {
+                    noochMember.DateOfBirth = dateTime2;
+                    noochMember.DateModified = DateTime.Now;
+                    var dbContext = CommonHelper.GetDbContextFromEntity(noochMember);
+                    dbContext.SaveChanges();
+
+
+                    return "DOB saved successfully.";
+                }
+                else
+                {
+                    return "Member Id not found or Member status deleted.";
+                }
+            
+        }
+
+      
+        
         
     }
 }

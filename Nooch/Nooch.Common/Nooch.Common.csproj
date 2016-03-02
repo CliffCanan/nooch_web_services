@@ -70,6 +70,7 @@
     <Compile Include="Cryptography\Algorithms\AES.cs" />
     <Compile Include="Cryptography\CryptographyBase.cs" />
     <Compile Include="Entities\BoolResult.cs" />
+    <Compile Include="Entities\MobileAppInputEntities\SaveMemberDOB_Input.cs" />
     <Compile Include="Entities\MobileAppOutputEnities\DisputeResultEntity.cs" />
     <Compile Include="Entities\GameThriveResponseClass.cs" />
     <Compile Include="Entities\googleURLShortnerResponseClass.cs" />
