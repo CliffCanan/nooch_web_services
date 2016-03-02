@@ -2434,6 +2434,35 @@ namespace Nooch.API.Controllers
             return new StringResult { Result = "" };
         }
 
+        [HttpGet]
+        [ActionName("SaveMemberSSN")]
+        StringResult SaveMemberSSN(string memberId, string SSN, string accessToken)
+        {
+            if (CommonHelper.IsValidRequest(accessToken, memberId))
+            {
+                try
+                {
+                    Logger.Info("Service Layer - SaveMemberSSN - [MemberId: " + memberId + "]");
+                    MembersDataAccess mda = new MembersDataAccess();
+                    return new StringResult()
+                    {
+                        Result = mda.SaveMemberSSN(memberId, SSN)
+                    };
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Layer - Operation FAILED: SaveMemberSSN - [MemberId: " + memberId + "]. Exception: [" + ex + "]");
+                    throw new Exception("Server Error.");
+                }
+                }
+            else
+            {
+                Logger.Error("Service Layer - Operation FAILED: SaveMemberSSN - memberId: [" + memberId + "]. INVALID OAUTH 2 ACCESS.");
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
+
+
         /************************************************/
         /***** ----  SYNAPSE-RELATED SERVICES  ---- *****/
         /************************************************/
@@ -3057,7 +3086,8 @@ namespace Nooch.API.Controllers
         }
 
 
-
+        [HttpGet]
+        [ActionName("GetSynapseBankAndUserDetails")]
         public SynapseDetailsClass GetSynapseBankAndUserDetails(string memberid)
         {
             SynapseDetailsClass res = new SynapseDetailsClass();
@@ -3107,6 +3137,7 @@ namespace Nooch.API.Controllers
             return res;
         }
 
+        
         #endregion
     }
 }

@@ -2971,6 +2971,33 @@ namespace Nooch.DataAccess
 
         #endregion
 
+
+        public string SaveMemberSSN(string MemberId, string ssn)
+        {
+            if (ssn.Length != 4)
+            {
+                return "Invalid SSN passed.";
+            }
+            
+                //Guid MemId = Utility.ConvertToGuid(MemberId);
+
+            var noochMember = CommonHelper.GetMemberDetails(MemberId);
+
+                if (noochMember != null)
+                {
+                    noochMember = _dbContext.Members.Find(noochMember);
+                    noochMember.SSN = CommonHelper.GetEncryptedData(ssn);
+                    noochMember.DateModified = DateTime.Now;
+                    _dbContext.SaveChanges();
+
+                    return "SSN saved successfully.";
+                }
+                else
+                {
+                    return "Member Id not found or Member status deleted.";
+                }
+            
+        }
         
     }
 }
