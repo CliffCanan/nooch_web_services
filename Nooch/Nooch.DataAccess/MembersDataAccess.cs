@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -2985,10 +2986,11 @@ namespace Nooch.DataAccess
 
                 if (noochMember != null)
                 {
-                    noochMember = _dbContext.Members.Find(noochMember);
+                    
                     noochMember.SSN = CommonHelper.GetEncryptedData(ssn);
                     noochMember.DateModified = DateTime.Now;
-                    _dbContext.SaveChanges();
+                    var dbContext = CommonHelper.GetDbContextFromEntity(noochMember);
+                     dbContext.SaveChanges();
 
                     return "SSN saved successfully.";
                 }

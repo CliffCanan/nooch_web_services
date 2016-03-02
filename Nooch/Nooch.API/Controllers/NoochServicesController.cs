@@ -2436,7 +2436,7 @@ namespace Nooch.API.Controllers
 
         [HttpGet]
         [ActionName("SaveMemberSSN")]
-        StringResult SaveMemberSSN(string memberId, string SSN, string accessToken)
+        public StringResult SaveMemberSSN(string memberId, string SSN, string accessToken)
         {
             if (CommonHelper.IsValidRequest(accessToken, memberId))
             {
