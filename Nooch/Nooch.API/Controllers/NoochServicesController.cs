@@ -3107,6 +3107,86 @@ namespace Nooch.API.Controllers
             return res;
         }
 
+
+        [HttpGet]
+        [ActionName("CheckSynapseBankDetails")]
+        public CheckSynapseBankDetails CheckSynapseBankDetails(string BankName)
+        {
+            string bname = BankName.Trim();
+
+            CheckSynapseBankDetails res = new CheckSynapseBankDetails();
+             var bdetails =  _dbContext.SynapseSupportedBanks.Where(memberTemp =>
+                                        memberTemp.BankName.Equals(bname) &&
+                                        memberTemp.IsDeleted == false).FirstOrDefault();
+              
+
+                if (bdetails != null)
+                {
+                    res.IsBankFound = true;
+                    res.Message = "OK";
+                    res.IsPinRequired = Convert.ToBoolean(bdetails.IsPinRequired);
+                    res.mfa_type = bdetails.MFAType;
+                }
+                else
+                {
+                    res.IsBankFound = false;
+                    res.Message = "Bank not found";
+                }
+             
+
+            Logger.Error("Service Layer -> CheckSynapseBankDetails End - [BankName: " + BankName + "],  [Message to return: " + res.Message + "]");
+
+            return res;
+        }
+
+        [HttpGet]
+        [ActionName("SetSynapseDefaultBank")]
+        public SynapseBankSetDefaultResult SetSynapseDefaultBank(string MemberId, string BankName, string BankId)
+        {
+            SynapseBankSetDefaultResult res = CommonHelper.SetSynapseDefaultBank(MemberId, BankName, BankId);
+            return res;
+
+        }
+
+        [HttpGet]
+        [ActionName("RemoveSynapseV3BankAccount")]
+        public synapseV3GenericResponse RemoveSynapseV3BankAccount(string memberId, string accessToken)
+        {
+            synapseV3GenericResponse res = new synapseV3GenericResponse();
+            res.isSuccess = false;
+
+            if (CommonHelper.IsValidRequest(accessToken, memberId))
+            {
+                try
+                {
+                    Logger.Info("Service Layer - RemoveSynapseV3BankAccount - MemberId: [" + memberId + "]");
+
+                    var memdataAccess = new MembersDataAccess();
+
+                    var mdaResult = memdataAccess.RemoveSynapseV3BankAccount(memberId);
+
+                    res.isSuccess = mdaResult.success;
+                    res.msg = mdaResult.message;
+
+                    return res;
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Layer - RemoveSynapseV3BankAccount FAILED - MemberId: [" + memberId + "]. Exception: [" + ex + "]");
+
+                    res.msg = "Service layer catch exception";
+
+                    Utility.ThrowFaultException(ex);
+                }
+            }
+            else
+            {
+                res.msg = "Invalid OAuth 2 Access";
+            }
+
+            return res;
+        }
+
         #endregion
     }
 }

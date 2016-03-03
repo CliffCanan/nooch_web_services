@@ -2969,6 +2969,170 @@ namespace Nooch.DataAccess
         }
 
 
+        public GenericInternalResponseForSynapseMethods RemoveSynapseV3BankAccount(string MemberId)
+        {
+            Logger.Info("MDA -> RemoveSynapseV3BankAccount - [MemberId: " + MemberId + "]");
+
+            GenericInternalResponseForSynapseMethods res = new GenericInternalResponseForSynapseMethods();
+            res.success = false;
+
+            var id = Utility.ConvertToGuid(MemberId);
+            var bankAccountsFound = _dbContext.SynapseBanksOfMembers.Where(bank =>
+                                       bank.MemberId.Value == id &&
+                                       bank.IsDefault == true).ToList();
+               
+
+                if (bankAccountsFound.Count > 0)
+                {
+                    foreach (SynapseBanksOfMember sb in bankAccountsFound)
+                    {
+                        sb.IsDefault = false;
+                        _dbContext.SaveChanges();
+                        
+                    }
+
+
+                    #region Get User's Synapse OAuth Consumer Key
+
+                    string usersSynapseOauthKey = "";
+
+                     
+
+                     
+                    var usersSynapseDetails = _dbContext.SynapseCreateUserResults.Where(synapseUser =>
+                                        synapseUser.MemberId.Value.Equals(id) &&
+                                        synapseUser.IsDeleted == false).FirstOrDefault();
+
+                    if (usersSynapseDetails == null)
+                    {
+                        Logger.Info("MDA -> RemoveSynapseV3BankAccount ABORTED: Member's Synapse User Details not found. [MemberId: " + MemberId + "]");
+                        res.message = "Could not find this member's account info";
+                        return res;
+                    }
+                    else
+                    {
+                        usersSynapseOauthKey = CommonHelper.GetDecryptedData(usersSynapseDetails.access_token);
+                    }
+
+                    #endregion Get User's Synapse OAuth Consumer Key
+
+
+                    #region Get User's Fingerprint
+
+                    string usersFingerprint = "";
+
+                    
+
+                    var member = _dbContext.Members.Where(synapseUser =>
+                                        synapseUser.MemberId.Equals(id) &&
+                                        synapseUser.IsDeleted == false).FirstOrDefault();
+
+                    if (member == null)
+                    {
+                        Logger.Info("MDA -> RemoveSynapseV3BankAccount ABORTED: Member not found. [MemberId: " + MemberId + "]");
+                        res.message = "Member not found";
+
+                        return res;
+                    }
+                    else
+                    {
+                        if (String.IsNullOrEmpty(member.UDID1))
+                        {
+                            Logger.Info("MDA -> RemoveSynapseV3BankAccount ABORTED: Member's Fingerprint not found. [MemberId: " + MemberId + "]");
+                            res.message = "Could not find this member's fingerprint";
+
+                            return res;
+                        }
+                        else
+                        {
+                            usersFingerprint = member.UDID1.ToString();
+                        }
+                    }
+
+                    #endregion Get User's Fingerprint
+
+
+                    #region Tell Synapse To Remove This Node
+
+                    SynapseRemoveBankV3_Input removeBankPars = new SynapseRemoveBankV3_Input();
+                    //removeBankPars.login.oauth_key = usersSynapseOauthKey;
+
+                    SynapseV3Input_login log = new SynapseV3Input_login() { oauth_key = usersSynapseOauthKey };
+                    removeBankPars.login = log;
+
+                    //removeBankPars.user.fingerprint = usersFingerprint;
+                    SynapseV3Input_user userr = new SynapseV3Input_user() { fingerprint = usersFingerprint };
+                    removeBankPars.user = userr;
+
+                    SynapseNodeId noId = new SynapseNodeId() { oid = bankAccountsFound[0].oid };
+
+                    SynapseRemoveBankV3_Input_node nodem = new SynapseRemoveBankV3_Input_node() { _id = noId };
+
+                    //removeBankPars.node._id.oid = bankAccountsFound[0].ToString();
+                    removeBankPars.node = nodem;
+
+                    string baseAddress = "https://sandbox.synapsepay.com/api/v3/node/remove";
+                    //string baseAddress = "https://sandbox.synapsepay.com/api/v3/node/remove";
+
+                    try
+                    {
+                        var http = (HttpWebRequest)WebRequest.Create(new Uri(baseAddress));
+                        http.Accept = "application/json";
+                        http.ContentType = "application/json";
+                        http.Method = "POST";
+
+                        string parsedContent = JsonConvert.SerializeObject(removeBankPars);
+                        ASCIIEncoding encoding = new ASCIIEncoding();
+                        Byte[] bytes = encoding.GetBytes(parsedContent);
+
+                        Stream newStream = http.GetRequestStream();
+                        newStream.Write(bytes, 0, bytes.Length);
+                        newStream.Close();
+
+                        var response = http.GetResponse();
+                        var stream = response.GetResponseStream();
+                        var sr = new StreamReader(stream);
+                        var content = sr.ReadToEnd();
+
+                        JObject removeBankRespFromSynapse = JObject.Parse(content);
+
+                        if (removeBankRespFromSynapse["success"].ToString().ToLower() == "true" ||
+                            removeBankRespFromSynapse["message"]["en"].ToString().ToLower() == "node removed")
+                        {
+                            Logger.Info("MDA -> RemoveSynapseV3BankAccount SUCCESSFUL - [MemberID: " + MemberId + "]");
+
+                            res.success = true;
+
+                            res.message = "Bank account deleted successfully";
+                        }
+                        else
+                        {
+                            Logger.Info("MDA -> RemoveSynapseV3BankAccount FAILED - Synapse response was NULL - [MemberID: " + MemberId + "]");
+
+                            res.message = "Remove node response was null from Synapse";
+                        }
+                    }
+                    catch (WebException ex)
+                    {
+                        res.message = "MDA Exception #10536";
+
+                        Logger.Error("MDA -> RemoveSynapseV3BankAccount FAILED - Catch [Exception: " + ex + "]");
+                    }
+
+                    #endregion Tell Synapse To Remove This Node
+
+                    return res;
+                }
+                else
+                {
+                    res.message = "No active bank account found for this user";
+
+                    return res;
+                }
+             
+        }
+
+
         #endregion
 
         

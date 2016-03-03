@@ -15,6 +15,7 @@ using Nooch.Common.Entities.SynapseRelatedEntities;
 using Nooch.Common.Resources;
 using Nooch.Common.Rules;
 using Nooch.Data;
+ 
 
 namespace Nooch.Common
 {
@@ -2003,6 +2004,576 @@ namespace Nooch.Common
             return res;
         }
 
+        public static SynapseBankSetDefaultResult SetSynapseDefaultBank(string MemberId, string BankName, string BankId)
+        {
+            Logger.Info("MDA -> SetSynapseDefaultBank Initiated. [MemberId: " + MemberId + "], [Bank Name: " +
+                                    BankName + "], [BankId: " + BankId + "]");
+
+            SynapseBankSetDefaultResult res = new SynapseBankSetDefaultResult();
+
+            #region Check query data
+            if (String.IsNullOrEmpty(MemberId) ||
+                String.IsNullOrEmpty(BankName) ||
+                String.IsNullOrEmpty(BankId))
+            {
+                if (String.IsNullOrEmpty(BankName))
+                {
+                    res.Message = "Invalid data - need Bank Name";
+                }
+                else if (String.IsNullOrEmpty(MemberId))
+                {
+                    res.Message = "Invalid data - need MemberId";
+                }
+                else if (String.IsNullOrEmpty(BankId))
+                {
+                    res.Message = "Invalid data - need Bank Id";
+                }
+
+                Logger.Info("MDA -> SetSynapseDefaultBank ERROR: [" + res.Message + "] for MemberId: [" + MemberId + "]");
+                res.Is_success = false;
+                return res;
+            }
+            #endregion Check query data
+
+            else
+            {
+                Guid memId = Utility.ConvertToGuid(MemberId);
+                int bnkid = Convert.ToInt16(BankId);
+
+                // Get Nooch username (primary email address) from MemberId
+                var noochUserName = GetMemberUsernameByMemberId(MemberId);
+                var MemberInfoInNoochDb = GetMemberDetails(MemberId);
+
+                #region Member Found
+
+                if (MemberInfoInNoochDb != null)
+                {
+                    // Get bank from saved banks list
+
+                    #region Find the bank to be set as Default
+                    string bnaknameEncrypted = CommonHelper.GetEncryptedData(BankName);
+
+
+                    //var selectedBank = synapseBankRepository.SelectAll(memberSpecification).FirstOrDefault();
+
+                    // CLIFF (10/7/15): ADDING THIS CODE TO MAKE SURE WE SELECT THE *MOST RECENT* BANK (b/c it creates problems when a user
+                    //                  re-attaches the same bank... it has the same ID from Synapse, there may be more than one match)
+                    //                  So take the most recent addition...
+
+                    var banksFound = _dbContext.SynapseBanksOfMembers.Where(memberTemp =>
+                                        memberTemp.MemberId.Value.Equals(memId) &&
+                                        memberTemp.bank_name == bnaknameEncrypted &&
+                                        memberTemp.bankid == bnkid).ToList();
+                    var selectedBank = (from c in banksFound select c)
+                                      .OrderByDescending(bank => bank.AddedOn)
+                                      .Take(1)
+                                      .SingleOrDefault();
+
+                    #endregion Find the bank to be set as Default
+
+                    if (selectedBank != null)
+                    {
+                        // An existing Bank was found, now mark it as inactive
+                        SetOtherBanksInactiveForGivenMemberId(memId);
+
+                        selectedBank.IsDefault = true;
+
+                        // CLIFF (7/13/15): Before we set the Bank's Status, we need to compare the user's Nooch info (name, email, phone, & maybe address)
+                        // with the info that Synapse returned for this specific bank.  The problem is that sometimes Synapse will return NULL for 1 or more
+                        // pieces of data (for example, for my current Default bank account (PNC), Synapse returned no name, no email, and no phone.
+                        // We can only send the Verification email IF SYNAPSE RETURNED AN EMAIL for that bankId.
+                        // HERE'S THE LOGIC:
+                        // 1.) If name, email, phone (strip out punctuation) all match, then automatically mark this bank's status as "Verified".
+                        // 2.) Otherwise (i.e. No match, OR null values from Synapse), mark this bank's status as "Not Verified".
+                        // 3.) Check if Synapse returned any Email Address for the bankId.  If YES, send Verification Email to THAT email (NOT the user's Nooch email)
+                        // 4.) If NO email returned from Synapse, then send the secondary Bank Verification Email (I'm making a new template, will add to server).
+                        //     This will tell the user they must send Nooch any photo ID that matches the name on the bank.
+                        //     Then I will have to manually update the bank's status to "Verified" (Need to add a button for this on the Member Details page in the Admin Dash).
+
+                        #region Check if Bank included user info & Compare to Nooch info
+
+                        string noochEmailAddress = CommonHelper.GetDecryptedData(MemberInfoInNoochDb.UserName).ToLower();
+                        string noochPhoneNumber = CommonHelper.RemovePhoneNumberFormatting(MemberInfoInNoochDb.ContactNumber);
+                        string noochFirstName = CommonHelper.GetDecryptedData(MemberInfoInNoochDb.FirstName).ToLower();
+                        string noochLastName = CommonHelper.GetDecryptedData(MemberInfoInNoochDb.LastName).ToLower();
+                        string noochFullName = noochFirstName + " " + noochLastName;
+
+                        string fullNameFromBank = selectedBank.name_on_account.ToString();
+                        string firstNameFromBank = "";
+                        string lastNameFromBank = "";
+                        string emailFromBank = selectedBank.email.ToString().ToLower();
+                        string phoneFromBank = CommonHelper.RemovePhoneNumberFormatting(selectedBank.phone_number);
+
+                        bool bankIncludedName = false;
+                        bool bankIncludedEmail = false;
+                        bool bankIncludedPhone = false;
+
+                        bool nameMatchedExactly = false;
+                        bool lastNameMatched = false;
+                        bool firstNameMatched = false;
+                        bool emailMatchedExactly = false;
+                        bool emailMatchedPartly = false;
+                        bool phoneMatched = false;
+
+                        #region Check, Parse, & Compare Name from Bank Account
+                        if (!String.IsNullOrEmpty(fullNameFromBank))
+                        {
+                            bankIncludedName = true;
+
+                            // Name was included with Bank, now decrypt it to compare with User's Name
+                            fullNameFromBank = CommonHelper.GetDecryptedData(fullNameFromBank).ToLower();
+
+                            #region Parse Name
+                            // Parse & compare NAME from Nooch account w/ NAME from this bank account
+                            string[] nameFromBank_splitUp = fullNameFromBank.Split(' ');
+
+                            if (nameFromBank_splitUp.Length == 1)
+                            {
+                                lastNameFromBank = nameFromBank_splitUp[0];
+                            }
+                            else if (nameFromBank_splitUp.Length == 2)
+                            {
+                                firstNameFromBank = nameFromBank_splitUp[0];
+                                lastNameFromBank = nameFromBank_splitUp[1];
+                            }
+                            else if (nameFromBank_splitUp.Length >= 3)
+                            {
+                                firstNameFromBank = nameFromBank_splitUp[0];
+                                // Take the last string in the array and set as Last Name From Bank (So, if a bank name was "John W. Smith", this would make 'Smith' the last name)
+                                lastNameFromBank = nameFromBank_splitUp[(nameFromBank_splitUp.Length - 1)];
+                            }
+                            #endregion Parse Name
+
+                            #region Compare Name
+
+                            int fullNameCompare = noochFullName.IndexOf(fullNameFromBank);  // Does Nooch FULL name contain FULL name from bank?
+                            int fullNameCompare2 = fullNameFromBank.IndexOf(noochFullName); // Does FULL name from bank contain Nooch FULL name?
+                            int firstNameCompare = fullNameFromBank.IndexOf(noochFirstName);// Does FULL name from bank contain Nooch FIRST name?
+                            int lastNameCompare = fullNameFromBank.IndexOf(noochLastName);  // Does FULL name from bank contain Nooch LAST name?
+                            int lastNameCompare2 = noochFullName.IndexOf(lastNameFromBank); // Does FULL Nooch name contain LAST name from bank?
+
+                            if (noochFullName == fullNameFromBank || fullNameCompare > -1 || fullNameCompare2 > -1) // Name matches exactly
+                            {
+                                nameMatchedExactly = true;
+                                lastNameMatched = true;
+                                firstNameMatched = true;
+                            }
+                            else if (noochLastName == lastNameFromBank || lastNameCompare > -1 || lastNameCompare2 > -1)
+                            {
+                                // This would be when the bank name is not an exact full match, but the last names match...
+                                // Ex.: "Bob Smith" in Nooch vs. "Robert Smith" or "Bob A. Smith" or even "Smith, Bob A." from the bank
+                                // ... the full names don't match exactly, but the last names do match, so that's better than no match at all
+                                lastNameMatched = true;
+                            }
+                            else if (noochFirstName == firstNameFromBank || firstNameCompare > -1)
+                            {
+                                // This would be when the bank name is not an exact full match, and the last names also did not match, but bank name includes Nooch first name
+                                // This is very weak though, and could be true by accident if it's a common first name.  So may not use this as evidence of anything, just checking.
+                                // Ex.: "Clifford Smith" in Nooch vs. "Clifford S. Johnson" or "Smith, Clifford S." from the bank
+                                firstNameMatched = true;
+                            }
+
+                            #endregion Compare Name
+                        }
+                        #endregion Check, Parse, & Compare Name from Bank Account
+
+                        #region Check & Compare Email Address
+                        if (!String.IsNullOrEmpty(emailFromBank))
+                        {
+                            bankIncludedEmail = true;
+
+                            // Compare EMAIL from bank w/ EMAIL from Nooch
+
+                            if (noochEmailAddress == emailFromBank) // Email matches exactly
+                            {
+                                emailMatchedExactly = true;
+                            }
+                            else
+                            {
+                                int emailCompare = noochEmailAddress.IndexOf(emailFromBank);  // Does Nooch EMAIL contain EMAIL from bank?
+                                int emailCompare2 = emailFromBank.IndexOf(noochEmailAddress); // Does EMAIL from bank contain Nooch EMAIL?
+
+                                if (emailCompare > -1 || emailCompare2 > -1)
+                                {
+                                    // This would be when the email addresses are nearly a match, i.e. one contains the other (in case there's some extra character at the beginning or end of the bank email)
+                                    emailMatchedPartly = true;
+                                }
+                            }
+                        }
+                        #endregion Check & Compare Email Address
+
+                        #region Check & Compare Phone
+                        if (!String.IsNullOrEmpty(phoneFromBank))
+                        {
+                            bankIncludedPhone = true;
+
+                            // Compare PHONE from bank w/ PHONE (i.e. 'ContactNumber' in DB) from Nooch
+                            if (noochPhoneNumber == phoneFromBank) // Phone number matches exactly
+                            {
+                                phoneMatched = true;
+                            }
+                            else
+                            {
+                                int phoneCompare = noochPhoneNumber.IndexOf(phoneFromBank);  // Does Nooch PHONE contain PHONE from bank?
+                                int phoneCompare2 = phoneFromBank.IndexOf(noochPhoneNumber); // Does PHONE from bank contain Nooch PHONE?
+
+                                if (phoneCompare > -1 || phoneCompare2 > -1)
+                                {
+                                    // This would be when the phone #'s are nearly a match, i.e. one contains the other (in case there's some extra character at the beginning or end of the bank phone.)
+                                    phoneMatched = true;
+                                }
+                            }
+                        }
+                        #endregion Check & Compare Phone
+
+                        #endregion Check if Bank included user info & Compare to Nooch info
+
+                        #region Set Bank Logo URL Variable for Either Email Template
+
+                        string appPath = Utility.GetValueFromConfig("ApplicationURL");
+                        var bankLogoUrl = "";
+
+                        switch (BankName)
+                        {
+                            case "Ally":
+                                {
+                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/ally.png");
+                                }
+                                break;
+                            case "Bank of America":
+                                {
+                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/bankofamerica.png");
+                                }
+                                break;
+                            case "Wells Fargo":
+                                {
+                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/WellsFargo.png");
+                                }
+                                break;
+                            case "Chase":
+                                {
+                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/chase.png");
+                                }
+                                break;
+                            case "Citibank":
+                                {
+                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/citibank.png");
+                                }
+                                break;
+                            case "TD Bank":
+                                {
+                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/td.png");
+                                }
+                                break;
+                            case "Capital One 360":
+                                {
+                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/capone360.png");
+                                }
+                                break;
+                            case "US Bank":
+                                {
+                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/usbank.png");
+                                }
+                                break;
+                            case "PNC":
+                                {
+                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/pnc.png");
+                                }
+                                break;
+                            case "SunTrust":
+                                {
+                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/suntrust.png");
+                                }
+                                break;
+                            case "USAA":
+                                {
+                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/usaa.png");
+                                }
+                                break;
+
+                            case "First Tennessee":
+                                {
+                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/firsttennessee.png");
+                                }
+                                break;
+                            default:
+                                {
+                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/no.png");
+                                }
+                                break;
+                        }
+                        #endregion Set Bank Logo URL Variable for Either Email Template
+
+
+                        #region Scenarios for immediately VERIFYING this bank account
+
+                        if ((bankIncludedName && nameMatchedExactly == true) &&
+                            ((bankIncludedEmail && (emailMatchedExactly || emailMatchedPartly)) ||
+                             (bankIncludedPhone && phoneMatched)))
+                        {
+                            // Name Matched exactly and EITHER email or phone matched
+                            // Now set this bank account as 'Verified'
+                            selectedBank.Status = "Verified";
+                            selectedBank.VerifiedOn = DateTime.Now;
+
+                            Logger.Info("MDA -> SetSynapseDefaultBank -> Bank VERIFIED (Case 1) - Names Matched EXACTLY - MemberId: [" + MemberId +
+                                                   "]; BankName: [" + BankName + "]; bankIncludedEmail: [" + bankIncludedEmail + "]; bankIncludedPhone: [" + bankIncludedPhone + "]");
+                        }
+
+                        else if (bankIncludedName && lastNameMatched &&
+                                ((bankIncludedEmail && (emailMatchedExactly || emailMatchedPartly)) ||
+                                 (bankIncludedPhone && phoneMatched)))
+                        {
+                            // Same as previous, except Last Name matched, not full name
+                            // (separating this case for Logging purposes even though the outcome is the same as above)
+                            selectedBank.Status = "Verified";
+                            selectedBank.VerifiedOn = DateTime.Now;
+
+                            Logger.Info("MDA -> SetSynapseDefaultBank -> Bank VERIFIED (Case 2) - Last Name Matched - [MemberId: " + MemberId +
+                                                   "];  [BankName: " + BankName + "];  [bankIncludedEmail: " + bankIncludedEmail + "];  [EmailFromBank: " + emailFromBank +
+                                                   ";  [bankIncludedPhone: " + bankIncludedPhone + "];  [PhoneFromBank: " + phoneFromBank + "]");
+                        }
+
+                        else if (bankIncludedName &&
+                                 bankIncludedEmail &&
+                                 bankIncludedPhone && phoneMatched)
+                        {
+                            // Name included but no match; email included but no match; phone included AND matches
+                            // (separating this case for Logging purposes even though the outcome is the same as above)
+                            selectedBank.Status = "Verified";
+                            selectedBank.VerifiedOn = DateTime.Now;
+
+                            Logger.Info("MDA -> SetSynapseDefaultBank -> Bank VERIFIED (Case 3) - Phone Matched - MemberId: [" + MemberId +
+                                                   "];  [BankName: " + BankName + "];  [bankIncludedEmail: " + bankIncludedEmail + "];  [EmailFromBank: " + emailFromBank +
+                                                   ";  [bankIncludedPhone: " + bankIncludedPhone + "];  [PhoneFromBank: " + phoneFromBank + "]");
+                        }
+
+                        #endregion Scenarios for immediately VERIFYING this bank account
+
+
+                        #region Scenarios for cases where further verification needed
+
+                        #region Non-Verified Scenario 1 - Email included from bank
+                        // Non-Verifed Scenario #1: Some email was included from bank, so send Bank Verification Email Template #1 (With Link)
+                        else if (bankIncludedEmail && emailFromBank.Length > 4)
+                        {
+                            // Bank included some Email which is at least 5 characters long (so not just a dummy letter that the bank might have)
+                            // First, Mark as NOT Verified
+                            selectedBank.Status = "Not Verified";
+
+                            #region Logging
+                            string caseNum = "";
+
+                            if (bankIncludedName &&
+                                (nameMatchedExactly || lastNameMatched || firstNameMatched))
+                            {
+                                caseNum = "4";
+                            }
+                            else
+                            {
+                                // Nothing matches, but at least an email was included from the Bank
+                                caseNum = "5";
+                            }
+
+                            // Bank included some name with at least partial match
+                            Logger.Info("MDA -> SetSynapseDefaultBank -> Bank NOT Verified (Case " + caseNum + ") -  MemberId: [" + MemberId +
+                                                   "]; BankName: [" + BankName + "]; bankIncludedName: [" + bankIncludedName + "]; nameMatchedExactly: [" +
+                                                   "]; nameMatchedExactly: [" + nameMatchedExactly + "]; lastNameMatched: [" + lastNameMatched + "];  nameFromBank: [" + fullNameFromBank +
+                                                   "]; bankIncludedEmail: [" + bankIncludedEmail + "]; EmailFromBank: [" + emailFromBank + "]; bankIncludedPhone: [" + bankIncludedPhone +
+                                                   "]; PhoneFromBank: [" + phoneFromBank + "]");
+
+                            #endregion Logging
+
+                            // Now send Bank Verification Email (with Link) to the EMAIL FROM THE BANK ACCOUNT
+                            #region Send Verify Bank Email TO EMAIL FROM THE BANK
+
+                            if (emailFromBank == "test@synapsepay.com")
+                            {
+                                Logger.Info("MDA -> SetSynapseDefaultBank TEST USER - EMAIL FROM BANK WAS [test@synapsepay.com] - NOT SENDING BANK VERIFICATION EMAIL");
+                            }
+                            else
+                            {
+                                var toAddress = emailFromBank;
+                                var fromAddress = Utility.GetValueFromConfig("adminMail");
+
+                                var firstNameForEmail = String.IsNullOrEmpty(firstNameFromBank)
+                                                        ? ""
+                                                        : " " + CommonHelper.UppercaseFirst(firstNameFromBank); // Adding the extra space at the beginning of the FirstName for the Email template: So it's either "Hi," or "Hi John,"
+                                var fullNameFromBankTitleCase = CommonHelper.UppercaseFirst(firstNameFromBank) + " " +
+                                                                CommonHelper.UppercaseFirst(lastNameFromBank);
+                                var link = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
+                                                        "/trans/BankVerification.aspx?tokenId=" + CommonHelper.GetEncryptedData(selectedBank.Id.ToString()));
+
+                                var tokens = new Dictionary<string, string>
+                                            {
+                                                {Constants.PLACEHOLDER_FIRST_NAME, firstNameForEmail},
+                                                {Constants.PLACEHOLDER_BANK_NAME, BankName},
+                                                {Constants.PLACEHOLDER_RECIPIENT_FULL_NAME, fullNameFromBankTitleCase},
+                                                {Constants.PLACEHOLDER_Recepient_Email, emailFromBank},
+                                                {Constants.PLACEHOLDER_BANK_BALANCE, bankLogoUrl},
+                                                {Constants.PLACEHOLDER_OTHER_LINK, link}
+                                            };
+
+                                try
+                                {
+                                    Utility.SendEmail("bankEmailVerification",
+                                        fromAddress, toAddress, null,
+                                        "Your bank account was added to Nooch - Please Verify",
+                                        null, tokens, null, "bankAdded@nooch.com", null);
+
+                                    Logger.Info(
+                                        "MDA -> SetSynapseDefaultBank --> Bank Verification w/ Link Email sent to: [" +
+                                        toAddress + "] for Nooch Username: [" + noochUserName + "]");
+                                }
+                                catch (Exception)
+                                {
+                                    Logger.Error(
+                                        "MDA -> SetSynapseDefaultBank --> Bank Verification w/ Link Email NOT sent to [" +
+                                        toAddress + "] for Nooch Username: [" + noochUserName + "]");
+                                }
+                            }
+                            #endregion Send Verify Bank Email TO EMAIL FROM THE BANK
+                        }
+                        #endregion Non-Verified Scenario 1 - Email included from bank
+
+                        #region NonVerified Scanario 2 - Email NOT included from bank
+                        // Non-Verifed Scenario #2: Email was NOT included from bank, so send Bank Verification Email Template #2 (No Link)
+                        else
+                        {
+                            selectedBank.Status = "Not Verified";
+
+                            Logger.Info("SetSynapseDefaultBank -> Bank NOT Verified (Case 6) -  MemberId: [" + MemberId +
+                                                   "]; BankName: [" + BankName + "]; bankIncludedName: [" + bankIncludedName + "]; nameMatchedExactly: [" +
+                                                   "]; nameMatchedExactly: [" + nameMatchedExactly + "]; lastNameMatched: [" + lastNameMatched + "];  nameFromBank: [" + fullNameFromBank +
+                                                   "]; bankIncludedEmail: [" + bankIncludedEmail + "]; EmailFromBank: [" + emailFromBank + "]; bankIncludedPhone: [" + bankIncludedPhone +
+                                                   "]; PhoneFromBank: [" + phoneFromBank + "]");
+
+                            // If the User's ID was verified successfully, then don't send the Verfication email.  But keep the bank as "not verified" until a Nooch admin reviews
+                            if (MemberInfoInNoochDb.IsVerifiedWithSynapse == true)
+                            {
+                                Logger.Info("MDA -> SetSynapseDefaultBank -> Bank was not verified, but user's SSN verification was successful, so " +
+                                                       "NOT sending the Verification Email - [MemberID: " + MemberId + "], [Username: " + noochEmailAddress + "]");
+
+                                StringBuilder st = new StringBuilder("<br/><p><strong>This user's Nooch Account information is:</strong></p>" +
+                                          "<table border='1' style='border-collapse:collapse;'>" +
+                                          "<tr><td><strong>MemberID:</strong></td><td>" + MemberId + "</td></tr>" +
+                                          "<tr><td><strong>Nooch Name:</strong></td><td>" + noochFullName + "</td></tr>" +
+                                          "<tr><td><strong>Bank Included Name?:</strong></td><td>" + bankIncludedName + "</td></tr>" +
+                                          "<tr><td><strong>Name From Bank:</strong></td><td>" + fullNameFromBank + "</td></tr>" +
+                                          "<tr><td><strong>nameMatchedExactly:</strong></td><td>" + nameMatchedExactly + "</td></tr>" +
+                                          "<tr><td><strong>lastNameMatched:</strong></td><td>" + lastNameMatched + "</td></tr>" +
+                                          "<tr><td><strong>Nooch Email Address:</strong></td><td>" + noochEmailAddress + "</td></tr>" +
+                                          "<tr><td><strong>Bank Included Email?:</strong></td><td>" + bankIncludedEmail + "</td></tr>" +
+                                          "<tr><td><strong>Email Address From Bank:</strong></td><td>" + emailFromBank + "</td></tr>" +
+                                          "<tr><td><strong>emailMatchedExactly:</strong></td><td>" + emailMatchedExactly + "</td></tr>" +
+                                          "<tr><td><strong>Nooch Phone #:</strong></td><td>" + MemberInfoInNoochDb.ContactNumber + "</td></tr>" +
+                                          "<tr><td><strong>Bank Included Phone #?:</strong></td><td>" + bankIncludedPhone + "</td></tr>" +
+                                          "<tr><td><strong>Phone # From Bank:</strong></td><td>" + phoneFromBank + "</td></tr>" +
+                                          "<tr><td><strong>Phone Matched?:</strong></td><td>" + phoneMatched + "</td></tr>" +
+                                          "<tr><td><strong>Address:</strong></td><td>" + CommonHelper.GetDecryptedData(MemberInfoInNoochDb.Address) +
+                                          "</td></tr></table><br/><br/>- Nooch Bot</body></html>");
+
+                                // Notify Nooch Admin
+                                StringBuilder completeEmailTxt = new StringBuilder();
+                                string s = "<html><body><h2>Non-Verified Syanpse Bank Account</h2><p>The following Nooch user just attached a Synapse bank account, which was unable " +
+                                           "to be verified because the bank did not return an email address, BUT this user's SSN info was verified successfully with Synapse.</p>" +
+                                           "<p>The bank account has beem marked \"Not Verified\" and is now awaiting Admin verification:</p>"
+                                           + st.ToString() +
+                                           "<br/><br/><small>This email was generated automatically in [MDA -> SetSynapseBankDefault -> Bank Not Verified (Case 6).</small></body></html>";
+
+                                completeEmailTxt.Append(s);
+
+                                Utility.SendEmail(null, "admin-autonotify@nooch.com", "bankAdded@nooch.com", null,
+                                            "Nooch Admin Alert: Bank Added, Awaiting Admin Approval",
+                                            null, null, null, null, completeEmailTxt.ToString());
+                            }
+                            else
+                            {
+                                // SEND VERIFICATION EMAIL to the Nooch user's userName (email address).
+                                // User will have to provide alternative documentation (i.e. Driver's License) to verify their account.
+                                #region Send Verify Bank Email to Nooch username
+
+                                var toAddress = noochUserName;
+                                var fromAddress = Utility.GetValueFromConfig("adminMail");
+
+                                var tokens = new Dictionary<string, string>
+                                            {
+                                                {Constants.PLACEHOLDER_FIRST_NAME, CommonHelper.UppercaseFirst(noochFirstName)},
+                                                {Constants.PLACEHOLDER_BANK_NAME, BankName},
+                                                {Constants.PLACEHOLDER_BANK_BALANCE, bankLogoUrl}
+                                            };
+
+                                try
+                                {
+                                    Utility.SendEmail("bankEmailVerificationNoLink",
+                                        fromAddress, toAddress, null,
+                                        "Your bank account was added to Nooch - Additional Verification Needed",
+                                        null, tokens, null, "bankAdded@nooch.com", null);
+
+                                    Logger.Info(
+                                        "MDA -> SetSynapseDefaultBank --> Bank Verification No Link Email sent to: [" +
+                                        toAddress + "] for Nooch Username: [" + noochUserName + "]");
+                                }
+                                catch (Exception)
+                                {
+                                    Logger.Info(
+                                        "MDA -> SetSynapseDefaultBank --> Bank Verification No Link Email NOT sent to [" +
+                                        toAddress + "] for Nooch Username: [" + noochUserName + "]");
+                                }
+                                #endregion Send Verify Bank Email to Nooch username
+                            }
+                        }
+
+                        #endregion NonVerified Scanario 2 - Email NOT included from bank
+
+                        #endregion Scenarios for cases where further verification needed
+
+                        // FINALLY, UPDATE THIS BANK IN NOOCH DB
+                        _dbContext.SaveChanges();
+
+
+                        res.Message = "Success";
+                        res.Is_success = true;
+                        return res;
+                    }
+                    else
+                    {
+                        Logger.Info("MDA -> SetSynapseDefaultBank ERROR: Selected Bank not found in Nooch DB - MemberId: [" + MemberId + "]; BankId: [" + BankId + "]");
+
+                        res.Message = "Bank not found for given Member";
+                        res.Is_success = false;
+                        return res;
+                    }
+
+                }
+
+                #endregion Member Found
+
+                #region Member NOT Found
+                else
+                {
+                    Logger.Info("MDA -> SetSynapseDefaultBank ERROR: Member not found in Nooch DB - MemberId: [" + MemberId + "]; BankId: [" + BankId + "]");
+                    res.Message = "Member not found";
+                    res.Is_success = false;
+                    return res;
+                }
+                #endregion Member NOT Found
+            }
+        }
+
+        private static void SetOtherBanksInactiveForGivenMemberId(Guid memId)
+        {
+             
+                var selectedBank =
+                    _dbContext.SynapseBanksOfMembers.Where(memberTemp =>
+                            memberTemp.MemberId.Value.Equals(memId) && memberTemp.IsDefault != false).ToList();
+                foreach (SynapseBanksOfMember sbank in selectedBank)
+                {
+                    sbank.IsDefault = false;
+                    _dbContext.SaveChanges(); 
+                }
+            
+        }
         
     }
 }

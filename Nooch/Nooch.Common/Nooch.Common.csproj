@@ -88,8 +88,11 @@
     <Compile Include="Entities\MobileAppOutputEnities\PhoneEmailListDto.cs" />
     <Compile Include="Entities\MobileAppOutputEnities\TransactionDto.cs" />
     <Compile Include="Entities\StringResult.cs" />
+    <Compile Include="Entities\SynapseRelatedEntities\CheckSynapseBankDetails.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\kycInfoResponseFromSynapse.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\NodePermissionCheckResult.cs" />
+    <Compile Include="Entities\SynapseRelatedEntities\SynapseBankSetDefaultResult.cs" />
+    <Compile Include="Entities\SynapseRelatedEntities\SynapseRemoveBankV3_Input.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\SynapseV3AddTrans_ReusableClass.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\SaveVerificationIdDocument.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\submitDocToSynapseV3Class.cs" />
