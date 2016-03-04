@@ -2006,7 +2006,7 @@ namespace Nooch.Common
             return res;
         }
 
-<<<<<<< HEAD
+ 
         public static SynapseBankSetDefaultResult SetSynapseDefaultBank(string MemberId, string BankName, string BankId)
         {
             Logger.Info("MDA -> SetSynapseDefaultBank Initiated. [MemberId: " + MemberId + "], [Bank Name: " +
@@ -2577,7 +2577,7 @@ namespace Nooch.Common
                 }
             
         }
-=======
+ 
 
         public static DbContext GetDbContextFromEntity(object entity)
         {
@@ -2602,8 +2602,7 @@ namespace Nooch.Common
 
             return context;
         }
-
->>>>>>> b2c80714d1208afc819c752d66dc3be184bc37d8
+ 
         
     }
 }
