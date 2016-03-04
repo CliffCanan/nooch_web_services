@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -3135,6 +3136,70 @@ namespace Nooch.DataAccess
 
         #endregion
 
+
+        public string SaveMemberSSN(string MemberId, string ssn)
+        {
+            if (ssn.Length != 4)
+            {
+                return "Invalid SSN passed.";
+            }
+            
+                //Guid MemId = Utility.ConvertToGuid(MemberId);
+
+            var noochMember = CommonHelper.GetMemberDetails(MemberId);
+
+                if (noochMember != null)
+                {
+                    
+                    noochMember.SSN = CommonHelper.GetEncryptedData(ssn);
+                    noochMember.DateModified = DateTime.Now;
+                    var dbContext = CommonHelper.GetDbContextFromEntity(noochMember);
+                     dbContext.SaveChanges();
+
+                    return "SSN saved successfully.";
+                }
+                else
+                {
+                    return "Member Id not found or Member status deleted.";
+                }
+            
+        }
+
+
+
+        public string SaveDOBForMember(string MemberId, string dob)
+        {
+            DateTime dateTime2;
+
+            if (!DateTime.TryParse(dob, out dateTime2))
+            {
+                return "Invalid DOB passed.";
+            }
+
+            
+                
+                var noochMember = CommonHelper.GetMemberDetails(MemberId);
+                
+
+                if (noochMember != null)
+                {
+                    noochMember.DateOfBirth = dateTime2;
+                    noochMember.DateModified = DateTime.Now;
+                    var dbContext = CommonHelper.GetDbContextFromEntity(noochMember);
+                    dbContext.SaveChanges();
+
+
+                    return "DOB saved successfully.";
+                }
+                else
+                {
+                    return "Member Id not found or Member status deleted.";
+                }
+            
+        }
+
+      
+        
         
     }
 }

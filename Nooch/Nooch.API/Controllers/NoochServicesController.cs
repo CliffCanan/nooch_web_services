@@ -2434,6 +2434,67 @@ namespace Nooch.API.Controllers
             return new StringResult { Result = "" };
         }
 
+        // made it post type beacuse access token might generate white spaces which can be encoded to plus by web request...which will create problem for validating access token.
+        [HttpPost]
+        [ActionName("SaveMemberSSN")]
+        public StringResult SaveMemberSSN(SaveMemberSSN_Input input)
+        {
+            if (CommonHelper.IsValidRequest(input.accessToken, input.memberId))
+            {
+                try
+                {
+                    Logger.Info("Service Layer - SaveMemberSSN - [MemberId: " + input.memberId + "]");
+                    MembersDataAccess mda = new MembersDataAccess();
+                    return new StringResult()
+                    {
+                        Result = mda.SaveMemberSSN(input.memberId, input.SSN)
+                    };
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Layer - Operation FAILED: SaveMemberSSN - [MemberId: " + input.memberId + "]. Exception: [" + ex + "]");
+                    throw new Exception("Server Error.");
+                }
+                }
+            else
+            {
+                Logger.Error("Service Layer - Operation FAILED: SaveMemberSSN - memberId: [" + input.memberId + "]. INVALID OAUTH 2 ACCESS.");
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
+
+        [HttpPost]
+        [ActionName("SaveDOBForMember")]
+        public StringResult SaveDOBForMember(SaveMemberDOB_Input input)
+        {
+            if (CommonHelper.IsValidRequest(input.accessToken, input.memberId))
+            {
+                try
+                {
+                    Logger.Info("Service Layer - SaveDOBForMember - [MemberId: " + input.memberId + "]");
+
+                    MembersDataAccess mda = new MembersDataAccess();
+                    return new StringResult()
+                    {
+                        Result = mda.SaveDOBForMember(input.memberId, input.DOB)
+                    };
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Layer - SaveDOBForMember FAILED - [MemberId: " + input.memberId + "]. [Exception: " + ex + "]");
+                    throw new Exception("Server Error.");    
+                }
+
+                return new StringResult();
+            }
+            else
+            {
+                Logger.Error("Service layer - Operation FAILED: SaveDOBForMember - memberId: [" +input.memberId + "]. INVALID OAUTH 2 ACCESS.");
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
+
+
         /************************************************/
         /***** ----  SYNAPSE-RELATED SERVICES  ---- *****/
         /************************************************/
@@ -3057,7 +3118,8 @@ namespace Nooch.API.Controllers
         }
 
 
-
+        [HttpGet]
+        [ActionName("GetSynapseBankAndUserDetails")]
         public SynapseDetailsClass GetSynapseBankAndUserDetails(string memberid)
         {
             SynapseDetailsClass res = new SynapseDetailsClass();
@@ -3107,6 +3169,7 @@ namespace Nooch.API.Controllers
             return res;
         }
 
+ 
 
         [HttpGet]
         [ActionName("CheckSynapseBankDetails")]
@@ -3186,7 +3249,8 @@ namespace Nooch.API.Controllers
 
             return res;
         }
-
+         
+ 
         #endregion
     }
 }
