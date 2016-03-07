@@ -1,0 +1,551 @@
+﻿ #section{ float:left; width:903px; margin-top:-5px; /* position:relative; z-index:5;*/}
+.sec-bg-top-msg{ float:left; width:903px; height:11px; background:url(../images/sec-bg-top-msg.png) no-repeat left top;}
+.sec-bg-top{ float:left; width:903px; height:11px; background:url(../images/sec-bg-top.png) no-repeat left top;}
+.sec-bg-mid{ float:left; width:858px; background:url(../images/sec-bg-mid.png) repeat-y left top; padding:0 25px 25px 20px; z-index:-1;}
+.sh-btm{ float:left; background:url(../images/sec-bg-btm.png) no-repeat left top;}
+.sec-bg-btm{ float:left; width:903px; height:18px; background:url(../images/sec-bg-btm.png) no-repeat left top;}
+/*-------------           Innerbanner      -------------*/
+.inner-banner{ float:left; width:865px; position:relative; z-index:3; padding:20px 0 20px;}
+.inner-banner h1{ float:left; color:#fff; font:bold 47px/55px Klavika; padding:0 0 5px 15px;}
+.inner-banner p{ float:left; font:normal 11px Klavika, Klavika, sans-serif; width:300px; padding:13px 0 0 30px; position:absolute; bottom:30px; left:200px;}
+/*--------------------------- = Common = ----------------------------------*/
+.informationText{color:Green; font:14px Klavika;font-weight:bold; width:100%;}
+.PageTitleText{color:Black;font-weight:bold; font-size:21px; width:100%; padding-bottom:10px; font:bold 21px helvetica;}
+.button{background:url(../images/send-btn.png) no-repeat!important; width:90px; font:14px Klavika; color:#ffffff; border:medium none; cursor:pointer; padding:3px 0 10px 0; }
+.supportbutton{background:url(../images/support-btn.png) no-repeat!important; width:165px; font:14px Klavika; color:#ffffff; border:medium none; cursor:pointer; padding:3px 0 10px 0; }
+.label{float:left; width:100px; text-align:right; padding:6px 19px 0 0; font:14px Klavika;}
+.inputtext{ text-align:left!important; margin-top:5px;}
+#linkDiv p{ float:left; padding:0 0 0 117px;}
+.mandatory { float:left; padding:10px 20px 0 0; color:#FF0000; font-weight:bold; }
+.noMandatory { float:left; padding:10px 20px 0 0; margin-left:7px; color:#FF0000; font-weight:bold; }
+.logout-button{ background:url(../images/logout_btn.png) no-repeat left top; width:120px; height:50px; margin: 32px 0 0 95px;cursor:pointer;border:none;}
+
+/*-------------            Control      -------------*/
+.subs{ float:left; padding:5px 0 0 0;}
+.subs .subs-lft{ float:left; background:url(../images/subs-lft.gif) no-repeat left top; width:4px; height:26px;}
+.subs .subs-mid{ float:left; background:url(../images/subs-mid.gif) repeat-x left top; height:26px;}
+.subs .subs-rht{ float:left; background:url(../images/subs-rht.gif) no-repeat left top; width:4px; height:26px;}
+.subs input{ float:left; background:#fff; border:1px solid #fff; margin:4px 0 0 0; color:black; font:normal 12px Helvetica; width:190px; padding:0 0; text-align:left; outline:none;}
+.subscribe button{ float:left; background:url(../images/subscribe-btn.gif) no-repeat left top; width:211px; border:none; height:52px; margin-top:10px; outline:none; cursor:pointer;}
+.subs-lft{ float:left; background:url(../images/subs-lft.gif) no-repeat left top; width:4px; height:26px;}
+.subs-mid{ float:left; background:url(../images/subs-mid.gif) repeat-x left top; height:26px;}
+.subs-rht{ float:left; background:url(../images/subs-rht.gif) no-repeat left top; width:4px; height:26px;}
+/*----------------------------- = Validation = ----------------------------*/
+
+.errorValidText{color:red; font-size:15px; width:100%;}
+.floatLeft { float: left; }
+.login-btn{ background:url(../images/login-btn.gif) no-repeat left top; width:104px; height:40px; border:none; margin:5px 200px 0 107px; cursor:pointer;}
+
+/*----------------------------- = Register = -----------------------------*/
+.register-content{ float:left;  padding:15px 25px 25px; width:805px;}
+.register{ float:left;  padding:0; width:805px; min-height:200px;}
+.register h1{ float:left; font:bold 21px Helvetica; margin:0 0 0 338px; padding:px 0 10px 0; }
+.register-form{float:left; margin:5px 0 0 138px; width:462px; min-height:145px; padding:15px 0 0 70px;}
+.register-form form{float:left;}
+.register-form form ul{ float:left;}
+.register-form form ul li{ float:left; display:block; padding-bottom:6px;}
+.register-form form ul li label{float:left; width:150px; text-align:right; padding:10px 7px 0 0;}
+.register-form form ul li span{ float:left; padding:8px 0 0 7px; color:#579931;}
+.register-form form ul li input{ text-align:left;} 
+.register-form form ul li button.register-btn{ background:url(../images/register-btn.gif) no-repeat left top; width:135px; height:40px; border:none; margin:5px 200px 0 157px; cursor:pointer;}
+.register-btn{ background:url(../images/register-btn.gif) no-repeat left top; width:135px; height:40px; border:none; margin:5px 200px 0 157px; cursor:pointer;}
+
+.register-content h5 {font:bold 21px Helvetica; text-align:center; width:100%; }
+.register-content p textalign { float:none; font:12px/24px Klavika; padding:10px 0 20px; text-align:left; }
+.aboutButton { background:url("../images/send-btn.png") no-repeat scroll 0 0 transparent !important; border:medium none; color:#FFFFFF; cursor:pointer; font:14px Klavika; margin:5px 0 0 355px !important; padding:4px 0 !important; width:90px; }
+.controlstyle { display:block; float:left; padding-bottom:6px; width:100%; }
+.register-label{float:left; width:150px; text-align:right; padding:10px 5px 0 0; font:14px Klavika }
+.register-labels{padding:10px 23px 0 0!important; }
+.register-subs { padding:5px 0 0 10px; }
+.register-button { background:url("../images/send-btn.png") no-repeat scroll 0 0 transparent !important; border:medium none; color:#FFFFFF; cursor:pointer; font:bold 12px Klavika; margin:5px 0 0 170px !important; padding:6px 0 !important; width:90px; }
+.register-span { float:left; padding:8px 0 0 7px; color:#579931;}
+.acceptbutton { background:url("../images/send-btn.png") no-repeat scroll 0 0 transparent; border:medium none; color:#FFFFFF; cursor:pointer; font:bold 12px Klavika; padding:6px 0; width:100px; margin-left:300px }
+.declinebutton { background:url("../images/Reg-Decline.png") no-repeat scroll 0 0 transparent; border:medium none; cursor:pointer; font:bold 12px Klavika; padding:6px 0; width:100px; margin-left:4px }
+.complete { background:url("../images/thanks-bg.png") no-repeat scroll 0 0 transparent; color:#1D7E19; font:bold 13px/20px Klavika!important; height:65px; padding:37px!important; width:257px; }
+.register-innerbanner p{left:272px;}
+.register-content div.termsdeclinelabel{ float:left;  padding:15px 261px 25px; width:700px;}
+.show-secmail-info{z-index:1; position:absolute;margin:margin:0 !important; display:none;width:300px;height:70px;left:-199px;top: -92px;}
+.show-recoverymail-info{z-index:1; position:absolute;margin:margin:0 !important; display:none;width:300px;height:87px;left:-199px;top:-91px;}
+.show-password-info{z-index:1; position:absolute;margin:margin:0 !important; display:none;width:300px;height:70px;left:-199px;top:-93px;}
+/*-------------------------------- = Message = --------------------------------*/
+.message-label{float:left; width:75px; text-align:right; padding:10px 5px 0 0; font-weight:bold; }
+
+.msg{ float:left; padding:5px 0 0 0;}
+.msg .msg-lft{ float:left; background:url(../images/subs-lft.gif) no-repeat left top; width:4px; height:26px;}
+.msg .msg-mid{ float:left; background:url(../images/subs-mid.gif) repeat-x left top; height:26px;}
+.msg .msg-rht{ float:left; background:url(../images/subs-rht.gif) no-repeat left top; width:4px; height:26px;}
+.msg-input{ float:left; background:#fff; border:1px solid #fff; margin:4px 0 0 0; color:#726a84; font:normal 12px Klavika; width:95%; padding:0 0; text-align:left; outline:none;}
+.subscribe button{ float:left; background:url(../images/subscribe-btn.gif) no-repeat left top; width:211px; border:none; height:52px; margin-top:10px; outline:none; cursor:pointer;}
+.msg-lft{ float:left; background:url(../images/subs-lft.gif) no-repeat left top; width:4px; height:26px;}
+.msg-mid{ float:left; background:url(../images/subs-mid.gif) repeat-x left top; height:26px;}
+.msg-rht{ float:left; background:url(../images/subs-rht.gif) no-repeat left top; width:4px; height:26px;}
+/*----------------------------- = ForgotPasword = -----------------------------*/
+.forgotpassword-content{ float:left;  padding:15px 25px 25px; width:805px;}
+.forgotpassword{ float:left;  padding:0; width:805px; min-height:200px;}
+.forgotpassword h1{ float:left; padding:10px 0 10px 60px; margin:0 0px 0 231px; color:#579931; font:bold 26px Klavika;}
+.forgotpassword-form{float:left; margin:5px 0 0 138px;width:462px; min-height:145px; padding:15px 0 0 70px;}
+.forgotpassword-form {float:left;}
+.forgotpassword-form div.controlholder{ float:left; display:block; padding-bottom:6px; padding-right:6px;width:100%;}
+.forgotpassword-form span.emaillabel{float:left; width:150px; text-align:right; padding:6px 7px 0 0;font:normal 14px Klavika}
+.forgotpassword-form input.test{ background:url(../images/menu-mid.png);  no-repeat left top; width:104px; height:40px; border:none; margin:5px 200px 0 107px; cursor:pointer; }
+.forgotpassword-form span.sendtext{ float:left; padding:10px 0 0 42px;color:Green;font-weight:bold;text-align:left;width:100%;}
+.forgotpassword-form span.sendtext a{ color:#1b1440; font:normal 12px Klavika;}
+.forgotpassword-form span.sendtext a:hover{ color:#579931;}
+.forgotpassword-form span.sendtext a:hover span{ color:#1b1440;}
+.forgotpassword-form span.sendtext a span{ padding:0 10px;}
+/*----------------------------=ResetPassword=--------------------------*/
+.resetpasswordactivation{font:bold 17px/24px Klavika!important; color:#1d7e19; width:400px; height:87px; padding-top:93px;padding-left:230px;}
+.memberverificaton{float:left; width:155px; text-align:right; padding:10px -5px 0 0; font:14px klavika;}
+.ResetPassowrd-mandatory { float:left; padding:3px 10px 0 0; color:#FF0000; font-weight:bold; }
+.show-resetpassword-info{z-index:1; position:absolute;margin:-114px 0 0 15px; display:none;width:300px;left:550px;height:70px;}
+/*----------------------------- = Login = -----------------------------*/
+.login-content{ float:left;  padding:15px 25px 25px; width:805px;}
+.login{ float:left;  padding:0; width:805px; min-height:200px;}
+.login h1{ float:left; background:url(../images/login_icon.png) no-repeat left top; height:64px; padding:20px 0 0 70px; margin:0 0px 0 312px; color:#579931; font:bold 34px Helvetika;}
+
+.login-form{float:left; margin:5px 0 0 138px;  width:462px; min-height:145px; padding:10px 0 0 70px;}
+.login-form form{float:left;}
+.login-form form ul{ float:left;}
+.login-form form ul li{ float:left; display:block; padding-bottom:6px;}
+.login-form form ul li label{float:left; width:100px; text-align:right; padding:10px 7px 0 0;}
+.login-form form ul li input{ text-align:left;} 
+.login-form form ul li button.login-btn{ background:url(../images/login-btn.gif) no-repeat left top; width:104px; height:40px; border:none; margin:5px 200px 0 107px; cursor:pointer;}
+.login-form form p{ float:left; padding:0px 0 0 107px;}
+.login-form form p a{ color:#1b1440; font:normal 12px Klavika;}
+.login-form form p a:hover{ color:#579931;}
+.login-form form p a:hover span{ color:#1b1440;}
+.login-form form p a span{ padding:0 10px;}
+
+.login-form input.loginbuttonposition  {margin:38px 0 0 -200px}
+.content { margin-top:25px; }
+.div { display:block; float:left; padding-bottom:6px; margin:5px 0 5px 0;}
+/*------------------------=ModalPopup========================================*/
+ .modal-inner-wrapper{width:310px;height:150px;background-color:Lavender;}   
+ .modal-inner-wrapper .content{width:290px; height:130px; background-color:#D2E6FA; border: solid 1px Gray; z-index:9999;float:right; margin-top:10px; margin-right:10px;}
+ .modal-inner-wrapper .content .close{float:right;}
+ .modal-inner-wrapper .content .body{margin-top:20px;}
+ .rounded-corners{
+            /*FOR OTHER MAJOR BROWSERS*/
+            -moz-border-radius: 21px ;
+            -webkit-border-radius: 21px;
+            -khtml-border-radius: 21px;
+            border-radius: 21px;
+            /*FOR IE*/
+            behavior: url(border-radius.htc);
+        }
+
+ .rel {position: relative;z-index: inherit;zoom: 1; /* For IE6 */}
+ .modal-bg{background-color:SeaGreen;filter:alpha(opacity=50);opacity:0.6;z-index:999;top:-1000px;}
+ .ModalWindow{border: solid1px#c0c0c0;background:#f0f0f0;padding: 0px10px10px10px;position:absolute;top:-1000px;}
+ .modal{position:absolute;top:-1000px;}
+ .popupconfirmbtn{background:url(../images/FBInviteColor.png) no-repeat!important; width:60px; font:13px Klavika; color:#ffffff; border:medium none; cursor:pointer; padding:3px 0 10px 0; margin-top:3px;}
+ .popupconfirmyesbtn{float:left; display:block;border:none;color: #FFFFFF;font: 13px Klavika ; width:48px;height:22px; background:url(../images/FBInviteColor.png) repeat-x;margin:-6px 0 0 39px}
+ .popupconfirmnobtn{float:left; display:block;border:none; color: #FFFFFF;font: 13px Klavika ; width:48px;height:22px; background:url(../images/FBInviteColor.png) repeat-x;margin:-6px 0 0 5px}
+/*-----------------------------=Send Money Popup----------------------------------------------*/
+ .SendMoneyModal-inner-wrapper{width:310px;height:185px;background-color:Lavender;}   
+ .SendMoneyModal-inner-wrapper .content{width:290px; height:165px; background-color:#D2E6FA; border: solid 1px Gray; z-index:9999;float:right; margin-top:10px; margin-right:10px;}
+/*--------------------------=Facebook Invite-------------------------------------------------*/
+.facebookListDiv{background:none!important; margin-left:-105px; width:auto;}
+.facebookListDiv .sendmm-rht .sh-top{ float:left; background:url(../images/sh-top.gif) no-repeat left top; width:637px; height:11px; margin:0px 0px 0px 0px;}
+.facebookListDiv .sendmm-rht .sh-mid{ float:left; background:url(../images/sh-mid.gif) repeat-y left top; width:637px; min-height:400px;}
+.facebookListDiv .sendmm-rht .sh-btm{ float:left; background:url(../images/sh-btm.gif) no-repeat left top; width:637px; height:11px;}
+.facebookListDiv .sendmm-rht .sh-mid li span.img.pic{margin:0 10px 0 5px;}
+.facebooklistview-form{margin:4px 0 0 240px;padding:10px 0 0 70px;}
+/*-------------------------=InviteMenuForm--------------------------------------------------------------------*/
+.myaccount-content{ float:left;  padding:3px 8px 9px 8px; width:175px;}
+.myaccount-content .myaccount-lft{ float:left; width:170px;}
+.myaccount-content .myaccount-rht{ float:right; width:600px; }
+.myaccount-content .myaccount-rht .myaccount-rht-content{font:bold 30px Klavika;padding_top:20px; float:center;}
+.myaccount-content .myaccount-rht .myaccount-rht-content ul{padding-top:200px;}
+.myaccount-menu{ float:left; margin:30px 0 0 17px; padding-bottom:15px;}
+.myaccount-menu ul{ float:left;}
+
+.myaccount-menu ul li:first-child{ border:none;}
+.myaccount-menu ul li a{ float:left; color:#1b1440; font:normal 12px Arial, Arial, sans-serif; padding:12px 0 0 0; }
+
+.myaccount-menu ul{border:1px solid #9dbe87; background:#fff;}
+.myaccount-menu ul li{ float:left; display:block;  width:170px; background:url(../images/btn-bg.png) repeat-x;}
+.myaccount-menu ul li a{float:left; padding:10px 0 10px 15px!important; font:bold 12px Arial; color:#fff; }
+.myaccount-menu{margin:0!important; padding:0!important;}
+ul.submenu{float:left; padding:5px; width:160px; border:none;}
+ul.submenu li.sub{float:left; background:none; padding:0; width:100%; border-bottom:1px dotted #7E9E67;}
+ul.submenu li.sub a{font:bold 12px/20px Arial;  color:#000; float:left; padding:0; text-align:left; padding:5px 10px 5px 10px!important; width:140px;}
+ul.submenu li.sub a:hover{color:#fff;}
+ul.submenu li.sub:hover{background:#7E9E67;} 
+
+/*-------------------------=Confirm Request------------------------------------------------------------------*/
+
+.confirmrequestListDiv{background:none!important; margin-left:-105px; width:auto;}
+.confirmrequestListDiv .sendmm-rht .sh-top{ float:left; background:url(../images/sh-top.gif) no-repeat left top; width:637px; height:11px; margin:20px 0 0 140px;}
+.confirmrequestListDiv .sendmm-rht .sh-mid{ float:left; background:url(../images/sh-mid.gif) repeat-y left top; width:637px; min-height:400px;margin: 0 0 0 140px;}
+.confirmrequestListDiv .sendmm-rht .sh-btm{ float:left; background:url(../images/sh-btm.gif) no-repeat left top; width:637px; height:11px; margin-left:140px;}
+.confirmrequestListDiv .sendmm-rht .sh-mid li span.img.pic{margin:0 10px 0 5px;}
+
+.confirmrequest{margin:margin:4px 0 0 240px;padding:10px 0 0 70px;}
+.confirmrequest input.add-btn{ background:url(../images/menu-mid.png);  no-repeat left top; width:100px; height:40px; border:none;  cursor:pointer; padding:0px 0px 0px 0px;}
+.confirmrequest input.viewconfirm-btn{ background:url(../images/menu-mid.png);  no-repeat left top; width:100px; height:40px; border:none;  cursor:pointer;padding:0px 0px 0px 0px; }
+.confirmrequest input.invite-btn{ background:url(../images/menu-mid.png);  width:100px; height:40px; border:none;  cursor:pointer;padding:0px 0px 0px 0px;}
+.confirmrequest input.accept{ background:url("../images/send-btn.png") no-repeat scroll 0 0 transparent; border:medium none; color:#FFFFFF; cursor:pointer; font:bold 12px Klavika; padding:6px 0; width:60px;}
+.confirmrequest input.decline{ background:url("../images/Decline.png") no-repeat scroll 0 0 transparent; border:medium none; color:Black; cursor:pointer; font:bold 12px Klavika; padding:6px 0; width:60px;}
+/*------------------------------=personal Invite-----------------------------------------*/
+.PersonalInvite-form{float:left;  margin:0 0 0 13px;  width:462px; min-height:145px; padding:10px 0 0 70px;}
+.invite-content{padding:15px 10px!important; margin-left:180px!important;}
+.invitation{float:left; padding-bottom:10px; margin:0 0 0 -4px; width:100%;}
+.invitation p{float:left; font:bold 12px Klavika; color:#000; padding:9px 5px 0 5px;}
+.invitation span.invitelabel{float:left; width:260px; text-align:right; padding:6px 11px 0 0; font:14px Klavika;}
+.invitation input.send-btn{background: url(../images/send-btn.png) no-repeat; width:90px; font:14px Klavika; color:#fff; border:none; cursor:pointer; padding:3px 0 10px 0; margin:5px 0 0 5px; float:left;}
+.invitation span.btn-send{background: url(../images/send-btn.png) no-repeat; width:60px; font:bold 12px Klavika; color:#fff; border:none; cursor:pointer; padding:8px 0; margin-left:5px;}
+.nooch-it2 p{padding-top:5px;}
+.nooch-it2 p a{font:bold 12px Klavika; color:#006600; }
+.references{margin-top:10px;}
+.references button{margin-right:5px;}
+/*--------------------------=Facebook Invite-------------------------------------------------*/
+.facebookListDiv{background:none!important; margin-left:-200px; width:auto;}
+.facebookListDiv .sendmm-rht .sh-top{ float:left; background:url(../images/sh-top.gif) no-repeat left top; width:637px; height:11px; margin:0px 0px 0px 0px;}
+.facebookListDiv .sendmm-rht .sh-mid{ float:left; background:url(../images/sh-mid.gif) repeat-y left top; width:637px; min-height:400px;}
+.facebookListDiv .sendmm-rht .sh-btm{ float:left; background:url(../images/sh-btm.gif) no-repeat left top; width:637px; height:11px;}
+.facebookListDiv .sendmm-rht .sh-mid li span.img.pic{margin:0 10px 0 5px;}
+.facebooklistview-form{margin:4px 0 0 240px;padding:10px 0 0 70px;}
+/*----------------------------- = Blog = -----------------------------*/
+.inner-banner{ float:left; width:865px; position:relative; z-index:3; padding:20px 0 20px;}
+.inner-banner h1{ float:left; color:#fff; font:bold 47px/55px Klavika; padding:0 0 5px 15px;}
+.inner-banner p{ float:left; font:normal 11px Klavika, Klavika, sans-serif; width:300px; padding:13px 0 0 30px; position:absolute; bottom:30px; left:200px;}
+
+.blog-content{ float:left;}
+.blog-content .blog-lft{ float:left; width:582px; margin-right:70px;}
+.blog-content .blog-rht{ float:right; width:206px;}
+
+.article-list{ float:left;}
+.article-list h1{ float:left; width:582px; font:bold 21px Helvetca; color:#1b1440; padding:20px 0 3px;}
+.article-list h3{ float:left; width:582px;  font:bold 15px Helvetca; color:#9abe82; padding-bottom:10px;}
+.article-list .article{ float:left; width:582px;}
+.article-list .article h1{ float:left; font:bold 13px Klavika; text-transform:uppercase; padding:0 0 3px 0; width:100%;}
+.article-list .article p{float:left; font:normal 14px/19px Klavika; text-align:justify;}
+.article-list .article a{float:left; font:normal 9px Klavika; text-decoration:underline; text-transform:uppercase; color:#1B1440; padding:3px 0 0 0;}
+.article-list .article a:hover{ color:#37810B;}
+.article-top{ float:left; background:url(../images/article-top.gif) no-repeat left top; width:582px; height:14px;}
+.article-btm{ float:left; background:url(../images/article-btm.gif) no-repeat left top; width:582px; height:11px;}
+.article-mid{ float:left; background:url(../images/article-mid.gif) repeat-y left top;  width:552px; padding:10px 15px;}
+
+
+
+.something-tosay{ float:left; padding-top:25px;}
+.something-tosay h1{ float:left; font:bold 15px Helvetica; padding:0 0 3px 0; width:206px;}
+.something-tosay p{ float:left; text-align:justify; width:206px; font:12px Klavika;}
+
+.cool-stuff{ float:left; padding-top:25px;}
+.cool-stuff h1{ float:left; font:bold 15px Helvetica; padding:0 0 3px 0; width:206px;}
+.cool-stuff ul{ float:left; width:206px;}
+.cool-stuff ul li{ float:left; width:206px; padding:2px 0;}
+.cool-stuff ul li a{ color:#1B1440; font:14px Klavika;}
+.cool-stuff ul li a:hover{ color:#37810b;}
+
+/*----------------------------- = Features = -----------------------------*/
+.features-content{ float:left;  padding:45px 0 20px 0;}
+.feature-lft{ float:left; width:360px; margin-right:15px;}
+.feature-rht{ float:right; width:480px;}
+
+.features-content .feature-lft .nooch-it{ float:left; margin-left:50px;}
+.features-content .feature-lft .nooch-img{ float:left; margin:0 15px;}
+.features-content .feature-lft .nooch-content{ float:left; width:200px;}
+.features-content .feature-lft .nooch-content h1{ float:left; font:bold 12px Klavika; text-transform:uppercase; padding-bottom:3px; width:250px; color:#1B1440;}
+.features-content .feature-lft .nooch-content p{float:left; font:normal 12px Klavika; text-align:justify; color:#1B1440;}
+
+.features-content .feature-lft p.phrase{ float:left; font:normal 18px/25px Klavika; color:#9ABE82; margin:50px 0 0 15px; width:255px; text-align:justify;}
+
+.feature-lft .more-info{ float:left; margin:0 0 0 60px; width:290px;  padding-top:85px;}
+.feature-lft .more-info img{ float:left; margin:0 0 20px 0;}
+.feature-lft .more-info h1{float:left; font:bold 12px Klavika; text-transform:uppercase; padding-bottom:3px;}
+.feature-lft .more-info p{float:left; font:normal 12px Klavika; text-align:justify; width:290px;}
+
+.feature-rht .lft-img{ float:left;}
+.feature-rht .headline{ float:right; margin:0 0 0 15px; width:215px;  padding-top:85px;}
+.feature-rht .headline img{ float:left; margin:0 0 20px 50px;}
+.feature-rht .headline h1{float:left; font:bold 12px Klavika; text-transform:uppercase; padding-bottom:3px; width:276px;}
+.feature-rht .headline p{float:left; font:normal 12px Klavika; text-align:justify;}
+.feature-rht .headline ul{ float:left; width:215px;  padding:15px  0 0 0;}
+.feature-rht .headline ul li{ float:left; width:215px; padding:3px 0;}
+.feature-rht .headline ul li a{ text-decoration:none; text-transform:none; font:normal 11px Klavika, Klavika, sans-serif; background:url(../images/bltn.gif) no-repeat left center; padding:0 0 0 7px;}
+.feature-rht .headline ul li a:hover{ color:#37810b;}
+
+/*----------------------------- = Send Money = -----------------------------*/
+.sendmm-content{ float:left;  padding:13px 0 0 0; width:855px;}
+.sendmm-content .sendmm-lft{ float:left; width:200px;}
+.sendmm-content .sendmm-lft h1{ float:left; font:bold 12px Klavika; padding-bottom:3px; width:250px; color:#1B1440;}
+.sendmm-content .sendmm-lft p{float:left; font:normal 12px Klavika; text-align:justify; color:#1B1440;}
+
+.sendmm-content .sendmm-rht{ float:right; width:637px;}
+.sendmm-content .sendmm-rht .sh-top{ float:left; background:url(../images/sh-top.gif) no-repeat left top; width:637px; height:11px;}
+.sendmm-content .sendmm-rht .sh-mid{ float:left; background:url(../images/sh-mid.gif) repeat-y left top; width:637px; min-height:500px;}
+.sendmm-content .sendmm-rht .sh-btm{ float:left; background:url(../images/sh-btm.gif) no-repeat left top; width:637px; height:11px;}
+/*----------------------------- = MyAccount-Form[Account Details]= -----------------------------*/
+.myaccount-form{float:left; margin-left:150px; width:462px; min-height:145px; width:80%;}
+.myaccount-label{float:left; width:170px; text-align:right; padding:10px 5px 0 40px; font:14px Klavika; }
+.showcard-img{z-index:1; position:absolute;margin:-242px 0 0 18px; display:none;width:300px;left:412px;height:70px;}
+/*----------------------------- = MyAccount-Form[FundWithDraw]= -----------------------------*/
+.fundWithDrawBalance-label{float:left; width:250px; text-align:right; padding:10px 10px 0 0;font:14px Klavika; font-weight:bold; }
+.fundWithDrawBalanceAmount-label{float:left; width:152px; text-align:left; padding:10px 5px 0 0; font:14px Klavika; font-weight:bold; }
+/*----------------------------- = MyAccount-Form[Account settings]= -----------------------------*/
+.myaccountsettings-form{float:left; margin:0;  width:462px; min-height:145px; padding:15px 0 0 100px;}
+.accountSettings-Button-Position{float:left; margin:-115px 0 0 232px;width:462px;padding:100px 0 0 70px;}
+.show-facebook-info{z-index:1; position:absolute;margin:0 !important; display:none;width:300px;left:-199px;height:87px;top:-65px;}
+/*--------------------------- = Member Activation = -----------------------*/
+
+.member-content{ float:left;padding:15px 25px 25px; width:805px;}
+.activation{font:bold 17px/24px Klavika!important; color:#1d7e19; width:320px; height:87px; padding-top:70px;}
+.innerbanner-text p{left:272px;}
+.resetpasswordactivation{font:bold 17px/24px Klavika!important; color:#1d7e19; width:400px; height:87px; padding-top:93px;padding-left:230px;}
+.activation { background:url("../images/thanks-bg.png") no-repeat scroll 0 0 transparent; color:#1D7E19; font:bold 13px/20px Klavika!important; height:86px; padding:30px!important; width:260px; }
+/*--------------------------=Info Message ToolTip------------------------------------------------*/
+.tooltip{width:245px; float:left;}
+.tool-top{width:245px; float:left; height:9px; background:url(../images/info_top.png) no-repeat;}
+.tool-mid{width:225px; float:left; min-height:27px; background:url(../images/info_mid.png) repeat-y; padding:0 10px; text-align:justify;}
+.tool-bot{width:245px; float:left; height:27px; background:url(../images/info_bot.png) no-repeat;}
+/*-----------------------------------------------------------------------------------------------*/
+
+
+
+/*--------nav-menus----------*/
+.member-nav-menu{ float:left; width:875px; margin-left:10px;position:relative;}
+.member-nav-menu .menu-lft{  float:left; width:5px; background:url(../ProtoImages/menu-lft.png) no-repeat; height:39px;}
+.member-nav-menu .menu-mid{float:left; width:864px; background:url(../ProtoImages/menu-mid.png) repeat-x; height:39px;}
+.member-nav-menu .menu-rht{ float:left; width:6px; background:url(../ProtoImages/menu-rht.png) no-repeat; height:39px;}
+.member-nav-menu ul{ float:left; width:875px;}
+.member-nav-menu ul li{ float:left; display: inline; padding:12px 53px; background:url(../ProtoImages/menu-sep1.png) repeat-y right top;}
+/*.member-nav-menu ul li:first-child{ border:none;}*/
+.member-nav-menu ul li a{ float:left; font:14px KlavikaBoldItalic; color:#000000;}
+.member-nav-menu ul li a:hover{ color:#2f7008; float:left;}
+
+/*---------chromestyle menu---------*/
+.chromestyle{
+width: 542px;
+font-weight: bold;
+}
+
+.chromestyle:after{ /*Add margin between menu and rest of content in Firefox*/
+content: "."; 
+display: block; 
+height: 0; 
+clear: both; 
+visibility: hidden;
+}
+
+.chromestyle ul{
+width: 100%;
+padding: 8px 0;
+margin: 0;
+}
+
+.chromestyle ul li{
+display: inline;
+}
+
+.chromestyle ul li a{padding: 10px 63px; margin: 0;text-decoration: none;}/* 27-06-11*/
+.chromestyle ul li a img{padding-left:5px;}
+
+.chromestyle ul li a:hover, .chromestyle ul li a.selected{ /*script dynamically adds a class of "selected" to the current active menu item*/
+
+}
+
+/* ######### Style for Drop Down Menu ######### */
+
+.dropmenudiv{
+position:absolute;
+top: 0;
+border-color:#DFDDE4;
+border-style:solid;
+border-width:1px 1px 0;
+border-bottom: 2px solid #fffff;
+border-top: none;
+font:normal 12px Verdana;
+line-height:18px;
+z-index:100;
+background:#EEF5E7;
+width: 200px;
+visibility: hidden;
+}
+
+
+.dropmenudiv a{
+width: auto;
+display: block;
+text-indent: 3px;
+border-bottom: 1px solid #DFDDE4; /*THEME CHANGE HERE*/
+padding: 5px 0 5px 5px;
+text-decoration: none;
+color: black;
+color:#1b1440; font:bold 12px KlavikaBoldItalic;
+}
+
+* html .dropmenudiv a{ /*IE only hack*/
+width: 100%;
+}
+
+#dropmenu1{position: absolute!important; left:0!important; top:39px!important; z-index:999;}
+#dropmenu2{position: absolute!important; left:335px!important; top:39px!important;}/* 27-06-11*/
+#dropmenu3{position: absolute!important; left:528px!important; top:39px!important; z-index:1000;}/* 27-06-11*/
+#dropmenu4{position: absolute!important; left:757px!important; top:39px!important;}
+.dropmenudiv a:hover{ /*THEME CHANGE HERE*/
+background:#A6BE94; color:#fff;
+}
+
+.myaccount-form p{ float:left; font:bold 16px Klavika;color:#205388;}
+.mysettings-img { display:block; float:left; padding-bottom:6px; *padding-bottom:0px!important; width:100%; padding-left:10px; }
+.bank-button  {background:url("../images/bank-btn.png") no-repeat scroll 0 0 transparent !important;border:medium none;color:#FFFFFF;cursor:pointer;font:14px Klavika;padding:3px 0 10px;width:100px;}
+.fblogout-button  {background:url("../images/FBlogout.png") no-repeat scroll 0 0 transparent !important;border:medium none;color:#FFFFFF;cursor:pointer;font:14px Klavika;padding:0 0 10px;width:73px; height:25px;}
+
+/* Grid Styles */
+.grid { width: 100%; border-collapse: separate !important; float: left; border: solid 2px #c1d2e3; }
+.grid tr th { color: #333230; padding: 6px 5px 8px 5px; background: #D3E1EE; line-height: 18px; font: 12pt bold Klavika; }
+.grid tr th a { color: #333230; padding-right: 20px; text-decoration: none; }
+.grid tr th a:hover { color: #336699; }
+.grid-draghandle { cursor: move; vertical-align: middle; }
+.sort-indicator { float: right; }
+.pager { float: left; padding: 5px 0 5px 0; width: 100%; background: #FEFEFE; }
+.pager p { float: right; display: inline; padding-top: 2px; margin-right: 20px; line-height: 22px; }
+.pager .enabledButton { margin-right: 10px; float: right; background: url(/Images/General/grid-btn-bg.gif) repeat-x; color: #426386; font-weight: bold; border-top: 1px solid #CCCCCC; border-bottom: 1px solid #6C6C6C; border-left: 1px solid #A5A5A5; border-right: 1px solid #A5A5A5; cursor: pointer; padding: 1px 5px; text-decoration: none; height: 22px; line-height: 22px; }
+.pager .disabledButton { margin-right: 10px; float: right; border-top: 1px solid #CCCCCC; border-bottom: 1px solid #6C6C6C; border-left: 1px solid #A5A5A5; border-right: 1px solid #A5A5A5; background-color: #DEDEDE; color: #999; text-decoration: none; padding: 1px 5px; height: 22px; line-height: 22px; }
+.grid-item.nodrag td { background: #FEFEFE; border-top: solid 2px #D3E1EE; }
+.grid-item td { background: #EEF3F9; padding-top:5px!important; vertical-align: middle; line-height: 18px; }
+.grid-alternate-item td { background: #F6FAFD; vertical-align: middle; line-height: 12px; }
+tr.myDragClass td { background: #eee; padding-left: 2px; border-top: solid 1px #ccc; border-bottom: solid 1px #ccc; opacity: 0.8; color: #aaa; }
+tr.myDragClass td a { color: #aaa; }
+tr.myDragClass td img, tr.myDragClass td .taskDelete, tr.myDragClass td.napok div { display: none; }
+tr.myDragClass td span, tr.myDragClass td span span { padding: 0; }
+.grid_head{font:14px Klavika!important;border:0.2px solid #D4D1DB;}
+.grid_item{font:14px Klavika!important; padding-top:5px!important;border:0.2px solid #D4D1DB;}
+
+/* Error Styles */
+.errorMessage { color: #FF0000; font-size: 12px; font-style: italic; font-weight: bold; }
+.emptyDataTemplate{ color: #FF0000; font-size: 12px; font-style: italic; font-weight: bold; }
+.labelNoData {color:Red;font:14px klavika;}
+
+/* By Gayathri */
+.confirm-bg-mid{ float:left; width:169px; background-color:#eef3fa; border:2px solid #d2e6fa; padding:0 25px 25px 16px;height:71px;margin:75px 0px 0px 220px;}
+.confirm-invite-button { background:url("../images/send-btn.png") no-repeat scroll 0 0 transparent !important; border:medium none; color:#FFFFFF; cursor:pointer; font:14px Klavika; margin:20px 0 0 282px !important; padding:6px 0 !important; width:100px; }
+.pin-verification-form{float:left; padding: 5px 0 0 70px!important;min-height: 130px!important; margin: 0 0 0 80px!important; width:462px; }
+.sendmoney-button{background:url(../images/FBInviteColor.png) no-repeat!important; width:60px; font:13px Klavika; color:#ffffff; border:medium none; cursor:pointer; padding:3px 0 10px 0; margin-top:3px;}
+.sendmoney-popup div{width:100%; font:14px Klavika; text-align:center; margin-top:10px;}
+
+.sendmoney-confirm div{width:100%; font:14px Klavika; text-align:center; margin-top:35px;}
+.sendmoney-pin div{width:100%; font:14px Klavika; text-align:center; margin-top:30px;}
+
+
+
+
+/*new design for non profits*/
+ <div id="wrapper">
+        <div class="middle_container">
+        	<div class="main_content">
+                <h1 class="heading">Account Information</h1>
+                <div class="content">
+                    <form>
+                        <div class="form_row">
+                            <label for="org_name">Non Profit Name</label>
+                            <input class="text_input" placeholder="Philadelphia Children's Foundation" type="text" name="org_name" id="org_name">
+                        </div>
+                        <div class="form_row">
+                            <label for="user_email">E-mail Address</label>
+                            <input class="text_input" placeholder="Email Address" type="text" name="user_email" id="user_email">
+                        </div>
+                        <div class="form_row">
+                            <label for="user_password">Tax ID #</label>
+                            <input class="text_input" placeholder="12-3456789" type="password" name="password" id="password">
+                        </div>
+                        <div class="form_row">
+                            <label for="tax_id">Facebook Profile</label>
+                            <input class="text_input" placeholder="https://www.facebook.com/NoochMoney" type="text" name="tax_id" id="tax_id">
+                        </div>
+                        <div class="form_row">
+                            <label for="address">Twitter Username</label>
+                            <input class="text_input" placeholder="@NoochMoney" type="text" name="address" id="address">
+                        </div>
+                        
+                        <div class="form_row">
+                        	<label for=""></label>
+                        	<input type="button" value="Save Changes" class="button_account" id="signupbutton">
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div> 
+Malkit says
+ #wrapper{
+	float: left;
+    width: 100%;
+}
+.middle_container {
+    margin: 0 auto;
+    width: 960px;
+}
+.main_content{
+    background: none repeat scroll 0 0 #FFFFFF;
+    float: left;
+    padding: 20px;
+    width: 940px;
+}
+h1.heading {
+    border-bottom: 2px solid #EEEEEE;
+    border-top: 2px solid #EEEEEE;
+    color: #222222;
+    font-size: 20px;
+    margin: 0;
+    padding: 10px 0;
+}
+.content{
+    color: #333;
+    float: left;
+    font-size: 14px;
+    width: 100%;
+}
+form {
+    float: left;
+	width: 100%;
+    margin: 10px 0;
+}
+.form_row {
+    float: left;
+    margin: 5px auto;
+    padding: 0;
+    width: 100%;
+}
+.content label {
+    float: left;
+    padding: 5px 15px 5px 0;
+    text-align: right;
+    width: 25%;
+	font-weight: bold;
+}
+.content .text_input {
+    border: 1px solid #D8D8D8;
+    border-radius: 3px;
+    box-shadow: 0 0 5px #E0E0E0 inset;
+    float: left;
+    padding: 7px;
+    width: 25%;
+}
+.content .text_input:focus {
+    border: 1px solid #FFFFFF;
+    box-shadow: 0 0 8px 0 #37afe9;
+    outline: medium none;
+    transition: all 0.3s linear 0s;
+}
+.content .button_account {
+    background-color: #1AA1DE;
+    border: 1px solid #348CCA;
+    border-radius: 3px;
+    color: #FFFFFF;
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: 10px;
+    min-width: 100px;
+    padding: 7px;
+    text-align: center;
+    transition: all 0.1s linear 0s;
+}
+.content .button_account:hover {
+    background-color: #37afe9;
+    border-color: #3a97d8;
+    color: #FFFFFF;
+} 

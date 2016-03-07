@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 15.1.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 width="259.25px" height="107px" viewBox="0 0 259.25 107" enable-background="new 0 0 259.25 107" xml:space="preserve">
+<font horiz-adv-x="1792">
+<!-- Copyright Dave Gandy 2014. All rights reserved. -->
+<!-- Copyright: Copyright 2015 Adobe System Incorporated. All rights reserved. -->
+<font-face font-family="FontAwesome" units-per-em="1792" underline-position="-179" underline-thickness="90"/>
+<missing-glyph horiz-adv-x="896" d="M224,112l0,1312l448,0l0,-1312l-448,0M112,0l672,0l0,1536l-672,0l0,-1536z"/>
+<glyph unicode="&#xF023;" horiz-adv-x="1152" d="M320,768l0,192C320,1101 435,1216 576,1216C717,1216 832,1101 832,960l0,-192M1152,672C1152,725 1109,768 1056,768l-32,0l0,192C1024,1206 822,1408 576,1408C330,1408 128,1206 128,960l0,-192l-32,0C43,768 0,725 0,672l0,-576C0,43 43,0 96,0l960,0C1109,0 1152,43 1152,96z"/>
+</font>
+
+	<path fill="none" stroke="#52B3E5" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="
+	M140.425,80.522c0,3.48-2.821,6.303-6.304,6.303H34.64c-3.482,0-6.304-2.822-6.304-6.303V15.534c0-3.48,2.821-6.302,6.304-6.302
+	h99.481c3.482,0,6.304,2.822,6.304,6.302V80.522z"/>
+<path fill="none" stroke="#52B3E5" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="
+	M146.949,84.366c17.826,12.127,18.156,13.77,18.156,13.755H3.663c-0.093,0,0.386-2.686,17.729-13.755"/>
+<path fill="none" stroke="#6FBE44" stroke-width="3" stroke-linecap="round" stroke-miterlimit="10" d="M131.452,71.831
+	c0,3.754-2.69,6.798-6.007,6.798h-82.13c-3.316,0-6.006-3.044-6.006-6.798V24.226c0-3.753,2.689-6.798,6.006-6.798h82.13
+	c3.316,0,6.007,3.044,6.007,6.798V71.831z"/>
+<g>
+	<g>
+		<g>
+			<path fill="none" stroke="#52B3E5" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" d="
+				M256.407,85.02v8.451c0,5.777-4.687,10.463-10.468,10.463h-31.397c-5.78,0-10.466-4.686-10.466-10.463V85.02V20.382V14.09
+				c0-5.778,4.686-10.463,10.466-10.463h31.397c5.781,0,10.468,4.685,10.468,10.463v6.292V85.02z"/>
+		</g>
+		<circle fill="#52B3E5" cx="230.085" cy="92.133" r="3.96"/>
+		
+			<line fill="none" stroke="#52B3E5" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" x1="212.127" y1="23.515" x2="248.354" y2="23.515"/>
+		
+			<line fill="none" stroke="#52B3E5" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" x1="212.127" y1="80.208" x2="248.354" y2="80.208"/>
+	</g>
+	<rect x="217.95" y="27.417" fill="none" width="24.583" height="38.822"/>
+	<text transform="matrix(1 0 0 1 218.0273 65.4165)" fill="#6CB640" font-family="'FontAwesome'" font-size="38"></text>
+</g>
+<rect x="69.505" y="21.917" fill="none" width="29.75" height="43.822"/>
+<text transform="matrix(1 0 0 1 70.8809 63.9165)" fill="#6CB640" font-family="'FontAwesome'" font-size="42"></text>
+</svg>

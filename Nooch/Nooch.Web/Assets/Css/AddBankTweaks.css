@@ -1,0 +1,1622 @@
+@font-face {
+	font-family: 'Varela Round';
+	font-style: normal;
+	font-weight: 400;
+	src: local("Varela Round"), local("VarelaRound-Regular"), url(https://themes.googleusercontent.com/static/fonts/varelaround/v3/APH4jr0uSos5wiut5cpjrnhCUOGz7vYGh680lGh-uXM.woff) format("woff");
+}
+@font-face {
+	font-family: 'Roboto';
+	font-style: normal;
+	font-weight: 300;
+	src: url("https://themes.googleusercontent.com/font?kit=d-QWLnp4didxos_6urzFtg") format("woff");
+}
+@font-face {
+	font-family: 'Roboto';
+	font-style: italic;
+	font-weight: 300;
+	src: url("https://themes.googleusercontent.com/font?kit=iE8HhaRzdhPxC93dOdA05z8E0i7KZn-EPnyo3HZu7kw") format("woff");
+}
+@font-face {
+	font-family: 'Roboto';
+	font-style: italic;
+	font-weight: 400;
+	src: url("https://themes.googleusercontent.com/font?kit=biUEjW7P-lfzIZFXrcy-wQ") format("woff");
+}
+@font-face {
+	font-family: 'Roboto';
+	font-style: normal;
+	font-weight: 400;
+	src: url("https://themes.googleusercontent.com/font?kit=grlryt2bdKIyfMSOhzd1eA") format("woff");
+}
+@font-face {
+	font-family: 'Roboto';
+	font-style: normal;
+	font-weight: 500;
+	src: url("https://themes.googleusercontent.com/font?kit=7KXg6nyyqN8gyMoNwQ7aOQ") format("woff");
+}
+@font-face {
+	font-family: 'Roboto';
+	font-style: italic;
+	font-weight: 500;
+	src: url("https://themes.googleusercontent.com/font?kit=daIfzbEw-lbjMyv4rMUUTj8E0i7KZn-EPnyo3HZu7kw") format("woff");
+}
+@font-face {
+	font-family: 'Roboto';
+	font-style: normal;
+	font-weight: 700;
+	src: url("https://themes.googleusercontent.com/font?kit=vxNK-E6B13CyehuDCmvQvw") format("woff");
+}
+
+.body {background-color:transparent !important; overflow:hidden;}
+body {
+  font-family: "Roboto", "Helvetica Neue",Helvetica,Arial,sans-serif;
+  color: #313233;
+}
+h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
+    font-family: "Varela Round","Open Sans",Helvetica,Arial,sans-serif;
+    font-weight: 500;
+    line-height: 1.1;
+    color: inherit;
+}
+a {color: #3fabe1;}
+a:hover,
+a:focus {color: #1d83b7;}
+
+h1 a:hover {text-decoration:none;}
+
+.lt-gray-text 		{ color: #bcbec0 !important;}
+.gray-text-dark		{ color: rgba(88,90,92,.95) !important;}
+.red-text,
+.negative-amount	{ color: rgb(169, 68, 66) !important;}
+.orange-text 		{ color: #cc9933; }
+.yellow-text 		{ color: #cccc33; }
+.blue-text 			{ color: #3fabe1 !important;}
+.light-green-text 	{ color: #7ab259; }
+.green-text,
+.text-success		{ color: #72bf44 !important; }
+.purp-text			{ color: #5a538d; }
+.white-text			{ color: #fff !important; }
+	
+/**************************
+ *****    BUTTONS    ******
+ **************************/
+/**  BLUE BUTTON GRADIENT **/
+.btn-primary {
+	background: -webkit-linear-gradient(#6dbee8, #41abe1);
+	background:    -moz-linear-gradient(#6dbee8, #41abe1);
+	background: 	 -o-linear-gradient(#6dbee8, #41abe1);
+	background: 	   -webkit-gradient(#6dbee8, #41abe1);
+	background: 		linear-gradient(#6dbee8, #41abe1);
+    border-color: #29a1de;
+	text-shadow: 0px 1px rgba(19, 32, 38, 0.25);
+}
+
+/**  GREEN BUTTON GRADIENT  **/
+.btn-success, .btn-success:active,
+.green-gradient { 
+	background: -webkit-linear-gradient(top, #7fd034,#6ab029);
+	background:    -moz-linear-gradient(top, #7fd034,#6ab029);
+	background:      -o-linear-gradient(top, #7fd034,#6ab029);
+	background: 	   -webkit-gradient(linear, 50% 0%, 50% 100%, color-stop(0%, #7fd034), color-stop(100%, #6ab029));
+	background: 		linear-gradient(top, #7fd034,#6ab029);
+	text-shadow: 0px 1px rgba(26, 38, 19, 0.3);
+}
+
+/**  Disabled GREEN GRADIENT  **/
+.btn-success:disabled { 
+	border-radius: 3px;	
+	background: -webkit-gradient(linear, 50% 0%, 50% 100%, color-stop(0%, #c0c2c4), color-stop(100%, #b1b3b6));
+	background: -webkit-linear-gradient(top, #c0c2c4,#b1b3b6);
+	background: -moz-linear-gradient(top, #c0c2c4,#b1b3b6);
+	background: -o-linear-gradient(top, #c0c2c4,#b1b3b6);
+	background: linear-gradient(top, #c0c2c4,#b1b3b6);
+}
+
+/**  GRAY BUTTON GRADIENT  **/
+.btn-gray, .btn-gray:active { 	
+	background: -webkit-gradient(linear, 50% 0%, 50% 100%, color-stop(0%, #c0c2c4), color-stop(100%, #b1b3b6));
+	background: -webkit-linear-gradient(top, #c0c2c4,#b1b3b6);
+	background: -moz-linear-gradient(top, #c0c2c4,#b1b3b6);
+	background: -o-linear-gradient(top, #c0c2c4,#b1b3b6);
+	background: linear-gradient(top, #c0c2c4,#b1b3b6);
+	color: white !important;
+	text-shadow: 0 -1px 30px rgba(61,61,62,.6);
+}
+
+/**  RED BUTTON GRADIENT  **/
+.gradient_red { background: linear gradient(#e02d33, #d2232a); }
+/**  PURPLE BUTTON GRADIENT  **/
+.btn-purp,
+.label-purple{ 
+	color: white;
+	background: #5a538d;
+	background:  -webkit-linear-gradient(top, #595287,#413a70);
+	background: 	-moz-linear-gradient(top, #595287,#413a70);
+	background: 	 -ms-linear-gradient(top, #595287,#413a70);
+	background: 	  -o-linear-gradient(top, #595287,#413a70);
+	background: 		-webkit-gradient(linear, 50% 0%, 50% 100%, color-stop(0%, #595287), color-stop(100%, #413a70));
+	background: 		 linear-gradient(top, #595287,#413a70);
+}
+
+.btn .fa {margin-right:2%;margin-left:2%;}
+
+/**  GENERIC TRANSITION  **/
+.btn,
+.glyphicon, .fa,
+.alert,
+.switch-toggle label {
+	-webkit-transition: all 0.2s;
+	-moz-transition: all 0.2s;
+	transition: all 0.2s;
+}
+.form-control {
+  border-radius:5px;
+  border: 1px solid rgb(188,190,192);
+  color: rgb(88, 90, 92);
+  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.15);
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.15);
+}
+.raised-view {box-shadow: 0px 5px 13px -4px rgba(64,65,66,0.3);}
+
+.form-fb-icon {background: url('../images/fb-circle-sm.png') no-repeat 0% 0%/ 32px; height:33px;}
+.form-twitter-icon {background: url('../images/twitter-circle-sm.png') no-repeat 0% 0%/ 32px; height:33px;}
+
+/**************************/
+/*****     MODALS     *****/
+/**************************/
+.modal-header { color: #3fabe1;}
+.modal-title { text-align:center; text-shadow: 1px 1px 0px rgb(240, 248, 252); white-space: nowrap;}
+.modal-title .fa.pull-left {position:relative; top:4px;}
+.modal-dialog {max-width: 520px;}
+.modal-header {
+	background: rgba(208,210,212,.6);
+	border-radius: 5px 5px 0 0;
+	padding-bottom: 8px;
+}
+.modal-header .close {
+	position: relative;
+	left: 30px;
+	top: -30px;
+	opacity: .9;
+	background: rgba(63,171,225,.9);
+	color: white;
+	border: 2px solid;
+	border-radius: 50%;
+	width: 30px;
+	height: 30px;
+	text-shadow: 1px 1px 0px rgba(41,42,43,.75);
+	box-shadow: 1px 1px 1px rgba(64,65,66,.8);
+	-webkit-transition: all 0.2s ease;
+	-moz-transition: all 0.2s ease;
+	transition: all 0.2s ease;
+}
+.modal-header .close:hover {opacity:.98;}
+.modal-footer {margin-top:0px;}
+.modal.in .modal-dialog { 
+	transform: translate(0px,30px); 
+	-webkit-transform: translate(0px,30px); 
+}
+.modal-body .modalContentImage {
+  display:block;
+  margin:0 auto 1em;
+}
+.modal-body:not(.regFntWght) > p {font-size: 16px;font-weight:500;} 
+.modal-logout .modal-dialog {max-width:400px;}
+
+
+
+
+/***********************************
+/******     PARSLEY FORMS     ******
+/***********************************/
+input.parsley-success,
+select.parsley-success,
+textarea.parsley-success {
+  color: #468847;
+  background-color: #DFF0D8;
+  border: 1px solid #D6E9C6;
+}
+input.parsley-error,
+select.parsley-error,
+textarea.parsley-error {
+    color: rgb(185, 74, 72) !important;
+    background-color: rgb(242, 222, 222) !important;
+    border: 1px solid rgb(238, 211, 215) !important;
+}
+.parsley-errors-list {
+  border-left: 2px solid #cf1a17;
+  margin: 2px 0 3px 2px;
+  padding: 0;
+  list-style-type: none;
+  font-size: 0.96em;
+  font-weight:600;
+  line-height: 1.15em;
+  opacity: 0;
+  letter-spacing: .2px;
+  color: #cf1a17;
+  -moz-transition: all .25s ease-in;
+  -webkit-transition: all .25s ease-in;
+  transition: all .25s ease-in;
+}
+.parsley-errors-list.filled {
+  opacity: 1;
+  margin-top: 5px;
+  padding: 1px 6px 2px;
+  font-size:15px;
+}
+ul.parsley-error-list {font-size: 90%;}
+input.parsley-error, 
+textarea.parsley-error {box-shadow:0px 1px 4px rgba(20, 0, 0, 0.075) inset, 0px 0px 8px rgba(229, 184, 183, 0.6) !important;}
+
+.label {
+	font-family: "Roboto",Open Sans,Helvetica,Arial,sans-serif;
+	font-weight: 400;
+	letter-spacing: .3px;
+}
+
+.btn:not(.btn-panel-heading) {border-radius:5px;}
+
+div:not(.modal-content) .btn:active {position:relative;top:2px;}
+
+a {cursor:pointer;}
+.no-cursor {cursor: none !important;}
+.no-pad { padding:0; }
+.box-view {
+	background: white;
+	-webkit-box-shadow: 1px 2px 11px 1px rgba(188, 190, 192, 0.7);
+	   -moz-box-shadow: 1px 2px 11px 1px rgba(188, 190, 192, 0.7);
+			box-shadow: 1px 2px 11px 1px rgba(188, 190, 192, 0.7);
+}
+
+.dropdown-menu {
+  padding: 0;
+  margin: 2px 0 0;
+  border-radius: 6px;
+  -webkit-box-shadow: 0 6px 10px rgba(0, 0, 0, 0.175);
+		  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.175);
+}
+.dropdown-menu .divider {
+  height: 1px;
+  margin: 0;
+}
+
+.popover-title {
+  font-size: 15px;
+  line-height: 19px;
+  background-color: #3fabe1;
+  border:none;
+  color:white;
+}
+.popover-content { font-size: 85%;}
+.page-header {margin:10px 0 20px;}
+.panel-heading {
+    border-top-right-radius: 4px;
+    border-top-left-radius: 4px;
+}
+.settings {width: 190px;}
+
+.hover-right {text-decoration:none !important; padding:10px;}
+.hover-right span {
+	-moz-transition:margin-left .3s;
+	-webkit-transition:margin-left .3s;
+	transition:margin-left .3s;
+}
+.hover-right span:first-child { margin-left: 2px; }
+
+/********************************
+/*****  ADD A BANK PROCESS  *****
+/********************************/	
+
+/** IFRAME **/
+#body-depositNew iframe#linkBank {
+	overflow:scroll !important;
+	-webkit-overflow-scrolling:touch !important;
+	z-index: 99999;
+	width: 100%;
+	max-width: 480px;
+	height: 620px;
+	display: block;
+	margin: 20px auto 70px;
+	border-radius: 6px;
+	box-shadow: 0px 3px 5px -1px rgba(64,65,66,0.5);
+}
+#modal-addBankInstr .modal-dialog {margin-bottom: 60px;}
+#modal-addBankInstr .glyphicon {font-size: 100%;}
+#orDiv {height:20px;margin:10px 35%;white-space:nowrap}
+#orDiv > * {display:inline-block}  /* On the Settings Screen, part of the Modal right before the Add Bank process. */
+#orDiv .line {border-bottom:1px solid rgba(64,65,66,.5); width:24%}
+#orDiv div:nth-child(2) {font-size:80%; color:rgba(64,65,66,.8); position:relative; top:3px;}
+
+.body-addBank .backdrop {
+	opacity: 0;
+	z-index: -1;
+	position: fixed;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	background-color: #000;
+}
+.body-addBank nav {
+	min-height:40px;
+	height:40px;
+	z-index:-2;
+}
+.body-addBank .title {
+	top: 10px;
+	font-size: 14px;
+	font-weight: 300;
+	letter-spacing: .5px;
+}
+.body-addBank #notifications-btn-shell {display:none}
+.addBank-container {
+	background: #fff;
+	border-radius: 6px;
+	height: 554px;
+	max-width: 530px;
+	margin: 2px auto 0;
+	position: relative;
+	width: 96%;
+}
+.addBank-close {
+	z-index: 99;
+	position: absolute;
+	left: 92%;
+	top: -13px;
+	background: none repeat scroll 0% 0% rgba(63, 171, 225, 0.8);
+	border: 2px solid;
+	border-radius: 50%;
+	color: #FFF;
+	opacity: 0.75;
+	width: 30px;
+	height: 30px;
+	font-size: 20px;
+	line-height: 90%;
+	padding: 3px 7px;
+	text-decoration: none;
+	text-shadow: 1px 1px 0px rgba(41, 42, 43, 0.75);
+	box-shadow: 1px 1px 1px rgba(64, 65, 66, 0.8);
+	-webkit-transition: all 0.3s ease 0s;
+	transition: all 0.3s ease 0s;
+}
+.addBank-close:hover {
+	text-decoration: none;
+	text-shadow: none;
+	background: none repeat scroll 0% 0% rgba(249,251, 255, 0.8);
+}
+.addBank-heading {
+	background: #3fabe1;
+	border-radius: 6px 6px 0 0;
+	color: white;
+	font-family: "Roboto",Open Sans,Helvetica,Arial,sans-serif;
+	font-size: 20px;
+	font-weight: 300;
+	padding: 6px;
+	margin: 2px auto 0;
+	text-align: center;
+	text-shadow: 0px 1px rgba(19, 32, 38, 0.35);
+	box-shadow: 0 2px 4px -3px rgba(19,32,38,.6);
+	position:relative;
+	width: 100%;
+}
+a#bckbtn,
+a.manualLogin {
+	position: absolute;
+	top: 8px;
+	animation-name: bounceIn;
+	-webkit-animation-name: bounceIn;	
+	animation-duration: 0.7s;
+	-webkit-animation-duration: 0.7s;
+	-webkit-animation-iteration-count: 1;
+	animation-iteration-count: 1;
+	-webkit-transition: all .18s ease;
+    transition: all .18s ease;
+}
+a#bckbtn { left: 14px; }
+a.manualLogin { right: 16px; }
+a#bckbtn:active,
+a.manualLogin:active {top: 12px;}
+
+div.dividerLine {
+  border-bottom:1px solid rgba(188,190,192,.8);
+  clear: both;
+  margin:-2px auto 12px;
+  max-width:61.8034%;
+  width:0%;
+}
+
+.form-group.hasInputIcon {position: relative;}
+.form-group.hasInputIcon .fa.fa-user {font-size:18px; margin-left:6px; top:9px;}
+.form-group.hasInputIcon .fa {
+    color:#3fabe1;
+	font-size:17px;
+	position:absolute;
+	top:10px;
+	margin-left:8px;
+	z-index:99;
+}
+.addBankContainer-body .form-group input[type="text"],
+.addBankContainer-body .form-group input[type="number"],
+.addBankContainer-body .form-group input[type="password"] {
+  height: 40px;
+  font-size: 15.5px;
+}
+.addBankContainer-body input#userFullName { text-transform: capitalize; }
+.form-group.hasInputIcon input {padding-left: 32px;}
+.addBankContainer-body {padding: 16px 8px 10px;overflow:hidden; position:static !important;}
+.addBank-oneTimeAccessNotif p {
+	font-size: 11px;
+	font-weight: 300;
+	text-align: center;
+}
+.addBank-instructions { 
+    padding: 4px 9px;
+    border: 1px solid #DADADA;
+    border-radius: 8px;
+    background-color: rgba(228,230,232,.7);
+	font-size: 15.5px;
+	font-weight: 400;
+	text-align: center;
+	margin: 15px auto 5px;
+}
+#addBank-search input {padding: 1px 25px;}
+.body-addBank form { margin: 3px auto;}
+.body-addBank form#addBank-selectAccount { margin-top: 20px; max-width: 420px; }
+form#bankLogin,
+form#bankLoginManual,
+form#addBank-sec-question {max-width: 390px; width:96%;}
+
+.addBank-steps {width:98%; left:1%; }
+#addBank-steps-icon {
+  position:absolute;
+  margin: -5px 0 0 -5px;
+  z-index:9;
+}
+#addBank-steps-icon .fa-stack-2x {
+  color: #fff; 
+  font-size:42px;
+  text-shadow: 0 0 2px rgba(88,90,92,0.5);
+}
+#addBank-steps-icon .fa-stack-1x {
+  color: #72bf44;
+  font-size: 21px;
+  top: 2px;
+}
+
+
+.addBank-steps .btn {font-size:90%;padding:4px 0; }
+.addBank-steps .btn:first-child {border-right:none}
+.addBank-steps .btn#step1 {padding-left:8px;cursor:none;}
+.addBank-steps .btn#step3 {border-left:none;cursor:not-allowed;}
+.addBank-steps .btn#step1:active,
+.addBank-steps .btn#step3:active {top:0;}
+.addBank-steps .active{
+	font-size: 93% !important;
+	font-weight: 500;
+	text-shadow: 0 1px rgba(26, 38, 19, 0.3);
+}
+.addBank-steps .filledIn {
+	color: #FFF;
+	background-color: #72bf44 !important;
+	font-size: 13px;
+	text-shadow: 0 1px rgba(26, 38, 19, 0.3);
+	border-color: #6AB029;
+	-webkit-box-shadow: none;
+	box-shadow: none;
+	background: -webkit-linear-gradient(top, #7fd034,#6ab029) !important;
+	background: -moz-linear-gradient(top, #7fd034,#6ab029) !important;
+	background: -o-linear-gradient(top, #7fd034,#6ab029) !important;
+	background: -webkit-gradient(linear, 50% 0%, 50% 100%, color-stop(0%, #7fd034), color-stop(100%, #6ab029)) !important;
+	background: linear-gradient(top, #7fd034,#6ab029) !important;
+}
+
+.addBank-steps.btn-group .btn:active {top:0px !important;}
+.addBank-steps.btn-group .btn.filledIn:hover {color: #fff !important;}
+
+html.landlord .addBank-steps .btn {
+    font-size: 95%;
+    padding: 6px 0 5px;
+}
+
+input#bankSearch {
+  font-family:"Varela Round","Roboto",Helvetica,Lucida Grande,Lucida Sans,Arial,sans-serif;
+  font-size:18px;
+  padding:5px 15px 5px 20px;}
+.glyphInSearchbar {
+	font-size:18px;
+	position:absolute;
+	top:9px;
+	left:10px;
+}
+
+.popBank-shell {
+  display:inline-block !important;
+  width:24.1%;
+  padding:8px;
+  vertical-align:top;
+  transform: scale(0.1,0.1);
+  opacity:0;
+}
+.popBank-shell.finishedAnimating {
+	opacity:1; 
+	transform:scale(1,1);
+}
+.popBank-shell.group1 {
+  -webkit-animation-duration: 1.2s;
+  animation-duration: 1.2s;
+}
+.popBank-shell.group2 {
+  -webkit-animation-duration: .95s;
+  animation-duration: .95s;
+}
+.popBank-shell.group3 {
+  -webkit-animation-duration: .8s;
+  animation-duration: .8s;
+}
+.popBank-shell.group4 {
+  -webkit-animation-duration: .7s;
+  animation-duration: .7s;
+}
+.popBank-shell:active {
+  position: relative;
+  top: 3px;
+}
+#popularBanks img, #popularBanks input {width: 100%;border-radius:6px;}
+#popularBanks .popBank-label {
+	display: block;
+	width: 100%;
+	font-size: 12px;
+	font-weight: 300;
+	line-height: 1.25;
+	text-align: center;
+	opacity: .95;
+}
+
+html.landlord #popularBanks .popBank-label { font-size: 13px; }
+
+#bankNotListed {
+    text-align: center;
+    margin: -21px auto 0;
+}
+#bankNotListed .btn {
+  text-transform: uppercase;
+  letter-spacing: .25px;
+  padding: 8px 22px;
+}
+
+#wideContainer { 
+  display: block;
+  height: 460px;
+  left:0px;
+  position: relative;
+  width: 204%;
+  z-index:9;
+}
+#wideContainer > div {
+  float:left;
+  width:49.5%;
+  margin-right:.49%;
+}
+#addBank1 {
+  position:relative !important;
+  left:0px;
+}
+#addBank2 {
+  position:relative !important;
+}
+.addBankContainer-body .flyInLeft {
+  left:0% !important;
+}
+.addBankContainer-body .flyOutLeft {
+  left:-110% !important;
+}
+
+/** AUTOCOMPLETE UI **/
+.ui-autocomplete-loading {
+	background: white url("..Assets/Images/LoadingGif_blue.gif") right center no-repeat;
+}
+.ui-autocomplete {
+	max-height: 220px;
+	overflow-y: auto;
+	/* prevent horizontal scrollbar */
+	overflow-x: hidden;
+}
+.ui-autocomplete .ui-menu-item {
+  font-family:"Varela Round","Roboto",Helvetica,Lucida Grande,Lucida Sans,Arial,sans-serif;
+  
+  -webkit-transition: .15s ease;
+          transition: .15s ease;
+}
+
+.autocomplete-suggestion {
+    font-size: 18px;
+  -webkit-transition: .15s ease;
+          transition: .15s ease;
+          padding: 12px 15px;
+          letter-spacing: .25px;
+          text-align: center;
+}
+.autocomplete-suggestion b {
+    font-weight: 500;
+    color: ##3fabe1;
+}
+
+/** UIBLOCK (LOADING BOX) **/
+.blockUI.blockOverlay { opacity: 0.4 !important; border-radius: 6px; }
+.blockUI.blockElement {top:50px !important;}
+.blockUI .fa-loading {font-size:34px;}
+.blockUI .loadingMsg {
+  display:block;
+  font-size:16px;
+  margin: 7px auto 0;
+}
+element.style {
+  font-size: 20px;
+  font-weight: 300;
+}
+
+.selectedBank-logo {
+	width: 100%;
+	margin: 10px auto 30px;
+}
+.selectedBank-logo > img{
+	display:block;
+	border-radius:6px;
+	height: 84px;
+	width: 110px;
+	margin: 0 auto;
+	overflow: hidden;
+	padding:6px 8px;
+	-webkit-box-shadow: 0px 6px 10px -3px rgba(64,65,66,0.35);
+	box-shadow: 0px 6px 10px -3px rgba(64,65,66,0.35);
+	-webkit-animation-name: floating;
+	        animation-name: floating;
+	-webkit-animation-duration: 2.3s;
+	        animation-duration: 2.3s;
+	-webkit-animation-iteration-count: infinite;
+	        animation-iteration-count: infinite;
+	-webkit-animation-timing-function: ease-in-out;
+	        animation-timing-function: ease-in-out;
+	z-index: 101;
+}
+.selectedBank-logo > img[src="../bankPictures/WellsFargo.png"] {
+	padding:0;
+	max-width:102px;
+	margin-top:15px;
+}
+#addBankManual .selectedBank-logo { margin: 15px auto 5px; }
+html.landlord #addBankManual .selectedBank-logo {
+    margin-bottom: 20px;
+    padding: 10px;
+    border-radius: 20%;
+    box-shadow: 0px 6px 20px -5px rgba(64,65,66,0.3);
+    width: 145px;
+    height: 125px;
+}
+#addBankManual .selectedBank-logo > img {
+    width: 98px;
+    height: 99px;
+    padding: 0px !important;
+    -webkit-box-shadow: none;
+            box-shadow: none;
+    -webkit-animation-name: none;
+	        animation-name: none;
+}
+
+#wideContainer > div > form .form-group:not(.loginBtns) > .btn {
+	font-size: 16px;
+	letter-spacing: .25px;
+	text-shadow: 0px -1px rgba(32, 33, 34, 0.25);
+	-webkit-transition: .15s all ease-out;
+	transition: .15s all ease-out;
+	max-width: 300px;
+	margin-top: 25px;
+	margin-left: auto;
+	margin-right:auto;
+}
+#wideContainer > div > form .form-group:not(.loginBtns) > .btn:active {margin-top:28px;}
+.loginBtns .btn {
+	font-size: 17px !important;
+	letter-spacing: .5px !important;
+	margin-top:5px !important;
+	text-shadow: 0px -1px rgba(32, 33, 34, 0.25);
+	-webkit-transition: .15s all ease-out;
+	transition: .15s all ease-out;
+	width: 48.4% !important;
+}
+.loginBtns .btn:active {margin-top:8px !important;top:0px !important;}
+.loginBtns button[type="submit"] {float: right;}
+.btn#submitMfaQuestion {margin-top: 15px !important;}
+.btn#submitMfaQuestion:active {margin-top: 18px !important;}
+.btn#bankSelction {width:100%;}
+#bankLoginBtn .fa,
+#bankLoginBtn_Manual .fa {
+	font-size:84%;
+	margin-right:12%;
+	position:relative;
+	top:-1px;
+	opacity:.8;
+}
+#bankLoginManual .form-group {margin-bottom:12px;}
+#bankLoginManual .loginBtns {margin:20px -15px 0;}
+
+#bankLoginManual #result {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+}
+#bankLoginManual .form-group #result i.fa {
+  font-size: 22px;
+  top: 9px;
+  right: 25px;
+}
+
+form#bankLogin .input-lg,
+form#addBank-search .input-lg,
+form#addBank-sec-question .input-lg,
+form#addBank-selectAccount .input-group-lg > .form-control,
+form#addBank-selectAccount .input-group-lg > .input-group-addon,
+form#addBank-selectAccount .input-group-lg > .input-group-btn > .btn {height:42px;padding: 5px 16px;font-size:17px;}
+
+#bankLogin_errorMsg {
+  margin:-5px auto 10px;
+  overflow:hidden;
+}
+
+.form-group.sec-question {text-align:center;font-size:16px;}
+.sec-question label {margin-bottom: 10px;}
+
+.sec-question-input {text-align: center;}
+.sec-question-input#securityCodeInput {
+  letter-spacing: 4px;
+  font-size: 20px;
+  font-weight: 600;
+}
+.sec-question-input#securityCodeInput::-webkit-input-placeholder {
+	font-size: 16px;
+	font-weight:400;
+	letter-spacing: 1px;
+	padding: 4px 0 0;
+}
+.sec-question-input#securityCodeInput::-moz-placeholder {
+	font-size: 16px;
+	font-weight:400;
+	letter-spacing: 1px;
+	padding: 4px 0 0;
+}
+.sec-question-input#securityCodeInput:-moz-placeholder {   /* Older versions of Firefox */
+	font-size: 16px;
+	font-weight:400;
+	letter-spacing: 1px;
+	padding: 4px 0 0;
+}
+.sec-question-input#securityCodeInput:-ms-input-placeholder { 
+	font-size: 16px;
+	font-weight:400;
+	letter-spacing: 1px;
+	padding: 4px 0 0;	
+}
+.sec-question p { letter-spacing:.1px; }
+#codeMsg {
+  font-weight:500;
+  font-style:italic;
+  margin-bottom:15px;
+}
+
+#allAccounts { margin:15px auto; }
+#addBank-selectAccount .input-group { margin: 5px auto 10px; }
+#addBank-selectAccount .input-group-addon { border-radius: 8px 0 0 8px; }
+#addBank-selectAccount .form-control {
+  border-radius: 0 6px 6px 0;
+  font-weight: 400;
+  padding: 4px 10px;
+  height: 42px;
+  text-align:center;
+  -webkit-transition:all .2s ease;
+  transition:all .2s ease;
+}
+#addBank-selectAccount #bankLogin { margin-top: 30px; }
+#addBank-selectAccount label .pull-right {
+  font-size: 90%;
+  font-weight: 300;
+  letter-spacing: 1px;
+  position: relative;
+  text-transform: uppercase;
+  top: 1px;
+}
+#addBank-selectAccount .selected {
+	background: rgba(114,191,68,.8);
+	border-color: rgba(105, 176, 61, 0.8);
+	color: white;
+	text-shadow: 0px 1px rgba(19, 49, 64, 0.3);
+}
+
+.encryptNoticePos_abs {
+  position:absolute;
+  bottom:10px;
+  left:10%;
+  width:80%;
+}
+.encryption-notice {
+  position: absolute;
+  left: 4%;
+  width: 92%;
+  bottom: 9px;
+  z-index:102;
+}
+.encryption-notice div {
+	background: none repeat scroll 0% 0% rgba(209,211,212,0.35);
+	border: 1px solid rgba(219, 221, 223,0.6);
+	border-radius: 4px;
+	font-size: 11px;
+	font-weight: 300;
+	letter-spacing: .1px;
+	line-height: 118%;
+	margin-top: 25px;
+	max-height: 34px;
+	padding: 4px 1px;
+	text-align: center;
+	text-shadow: 0px 1px rgba(255,255,255,0.6);
+}
+.encryption-notice .fa {
+	margin-right: 12px;
+	font-size: 95%;
+}
+.encryption-notice .text {position:relative;top:-1px;}
+html.landlord .encryption-notice { left: 9%; width:82%; }
+
+form#addBank-sec-question .form-group {text-align:center;}
+form#addBank-code {margin-top:10px;}
+form#addBank-code .form-group:not(:first-child) {
+	max-width:300px;
+	margin: 15px auto;
+}
+
+#modal-bankNotFound .modal-body p {
+	font-size:15.5px;
+	text-align:center;
+}
+
+@media only screen and (max-width: 330px) {
+    .encryption-notice { z-index: 8; }
+}
+
+@media only screen and (max-width: 500px) {
+	/********************************
+	/*****  ADD A BANK PROCESS  *****
+	/********************************/	
+	.popBank-shell {
+	  padding: 0 4px 0;
+	  margin-bottom: 5px;
+	}
+    html.landlord .popBank-shell {
+        padding: 0 8px 1px;
+        margin-bottom: 10px;
+    }
+	#bankLoginManual .loginBtns { margin-top: 10px; }
+    #bankLoginManual .addBank-instructions { margin: 5px auto 0px; max-width: 92%; }
+    .form-group.hasInputIcon .fa.fa-user { font-size: 16.5px; top: 10.5px; }
+}
+
+@media only screen and (max-width: 800px) {
+
+/******************************************************
+ ******************************************************
+				Site Name: Nooch
+				Author: Nooch Inc
+
+		Stylesheet: BASE MOBILE STYLESHEET	
+ ******************************************************
+ ******************************************************/
+	.body:not(#idQuestionsPage) {
+		max-width: 490px;
+		margin: 0px auto;
+	}
+    .body#idQuestionsPage { margin: 0 auto; max-width: 530px;}
+	.desk-only {display:none;}
+	.form-control:not(.input-lg) {height:38px;}
+	.btn {padding: 8px 12px;}
+
+	.panel-body { padding: 5px 15px 0; }
+	.logo-icon { display: none;}
+	.logo-reg img { width: 100px;}
+	.container { width: 100%; }	
+
+	/**************************/
+	/*****     ALERTS     *****/
+	/**************************/	
+	.alert {
+	  padding: 6px 15px;
+	  margin-bottom:4px;
+	  text-align:center;
+	  border-radius:3px;
+	  -webkit-transition:.4s all;
+	  transition:.4s all;
+	}
+	.alert .alert-title {text-align:center; font-weight:500;}
+	.alert .alert-title .fa {position:relative; left:-1%; font-size:110%; width:1.3em;}
+	.alert-dismissable .close {
+		right: -10px;
+		opacity: 0.6;
+		text-align: center;
+		text-shadow: 1px 1px rgba(252,243,242,.9);
+	}
+	.alert-dismissable .close:hover {color: inherit; opacity:.82;}
+	.alert-dismissable .close:active {top:-1px;}
+	.alert > p {text-shadow: 1px 1px 0px rgba(252,243,242,.9)}
+	.alert > p + p {margin-top:1px;}
+	.alert-success {
+		background-color: #1a981c;
+		border-color: #168218;
+		box-shadow: 0 3px 2px -2px rgba(19,108,20,.6);
+		color:white
+	}
+	.alert-success > p,
+	.alert-success .close {text-shadow: 1px 1px 0px rgba(9,71,9,0.7);}
+	.alert-danger {
+		background-color: #d61915;
+		border-color: #c41713;
+		box-shadow: 0 3px 2px -2px rgba(89,10,9,.6);
+		color: white;
+	}
+	.alert-danger > p,
+	.alert-danger .close {
+	  text-shadow: 1px 1px 1px rgba(71,8,7,0.5);
+	  -webkit-transition:1s all;
+	  transition:1s all;
+	}
+	.alert:first-child {border-radius: 0 0 3px 3px;}
+	.alertShrunk {height:0; padding:0; overflow:hidden;}
+	.alertShrunk > p {font-size:0px;}
+
+    .sweet-alert { padding: 30px 10px 10px; top: 35%; }
+    .sweet-alert p { font-size: 16px; }
+
+	/**************************/
+	/*****     MODALS     *****/
+	/**************************/
+	.modal-title > .glyphicon {position: absolute; top: 17px; left: 7%; font-size: 110%;}
+	.modal .modal-dialog {
+		width:94%;
+		max-width: 450px;
+		margin: 10px auto;
+		-webkit-transform: translate(0px, 60px);
+				transform: translate(0px, 50px);
+	}
+	.modal-body { padding: 15px 20px; overflow:hidden;}
+	.modal-body p { font-size: 13px; line-height: 135%;}
+	.modal-body .help-block { margin: 8px 0;}
+	.modal-footer { padding: 14px 15px;}
+	.modal-footer .btn { min-width: 40%;}
+	.modal-header .close {
+		position: absolute;
+		left: 93%;
+		top: -15px;
+	}
+	
+	.body .popover {box-shadow: 0px 3px 8px 0px rgba(30, 31, 33, 0.5);}
+
+	/*************************/
+	/****     TABLES 	 *****/
+	/*************************/
+	table tr > td {-webkit-transition: all .15s;transition: all .15s}
+
+	.ui-state-hover, .ui-state-highlight, .ui-menu-item a:hover {
+		background: rgba(63,171,225,.6);
+		border-color: rgba(63,171,225,1);
+		background-image:none;
+	}
+	
+	/* For table rows that collapse. */
+	table td table {width:100%; background: rgba(209,211,212,.4); box-shadow: 0px 1px 5px -1px rgba(128,130,133,0.7) inset;-webkit-appearance: none;}
+	table td table tr {background:transparent !important;}
+	table td table td {text-align:left; background:transparent;}
+}
+
+@media only screen and (max-width: 460px) {
+    .addBank-container {margin-top:10px;}
+
+    #addBankManual .selectedBank-logo > img {
+        max-width: 49px;
+    }
+}
+
+@media only screen and (max-width: 768px) {
+/******************************************************
+				Site Name: Nooch
+				Author: Nooch Inc
+
+		  Stylesheet: TABLET STYLESHEET	
+ ******************************************************/
+.logo-reg {display: none;}
+.logo-icon {display: block;}
+.logo-icon img {width: 74px;}
+.container { width: 100%; }
+}
+/*******************************/
+/**** End of Tablet Section ****/
+/*******************************/
+
+.form-group-divider {padding: 10px 0px 30px;}
+.form-group-divider > div {border-bottom:1px solid rgba(209,211,212,.6)}
+
+.green-header {
+	background:#72bf44;
+	color:white;
+}
+
+.modal-image-container{
+	position: absolute;
+	width: 29%;
+	top: 75px;
+	right: 30px;
+}
+.modal-content p + ul {
+	width: 63%;
+	display: inline-block;
+	margin: 5px 0 15px;
+}
+
+.form-control-icon-left { padding-left: 30px; padding-right:4px; font-size: 98%;}
+
+.bank-logo-primary {
+	max-width:120px;
+	border: 1px solid rgba(128,130,133,.9);
+	padding: 0 10px;
+}
+.media .media-body p {margin:4px 0;}
+.bank-account { margin-bottom:30px; }
+form .table-header {border-bottom:1px solid rgb(221, 221, 221); padding: 5px 8px; margin-bottom:15px;}
+
+
+@media only screen and (min-width: 768px) {
+  
+/******************************************************
+ ******************************************************
+				Site Name: Nooch
+				Author: Nooch Inc
+
+				Stylesheet: DESKTOP STYLESHEET	
+ ******************************************************
+ ******************************************************/
+
+html.landlord {overflow-y: visible;}
+.mobile-only {display:none;}
+
+.brandedLogo {
+    position: absolute;
+    top: 1.5%;
+    left: 1%;
+    max-width: 140px;
+}
+
+.logo-icon {display:none;}
+.navbar-brand img {width: 80px;}
+.btn:not(.btn-panel-heading) { padding: 9px 22px; }
+#wideContainer > div > form .form-group:not(.loginBtns) > .btn { font-size: 17.5px; padding: 10px 25px; }
+.signup-banner a {width:70%;}
+.footer ul li {padding:0 20px;}
+.container { width: 92%; }
+.box-view {
+	border-radius: 6px;
+	-webkit-box-shadow: 1px 2px 11px 1px rgba(188, 190, 192, 0.85);
+	   -moz-box-shadow: 1px 2px 11px 1px rgba(188, 190, 192, 0.85);
+			box-shadow: 1px 2px 11px 1px rgba(188, 190, 192, 0.85);
+}
+
+.form-group.hasInputIcon input {
+    padding-left: 35px;
+}
+
+#addBank-steps-icon { margin: -12px 0 0 12px; }
+#addBank-steps-icon .fa-stack-2x { font-size: 60px; }
+#addBank-steps-icon .fa-stack-1x {
+    font-size: 26px;
+    line-height: 56px;
+    top: 0px;
+    left: 7px;
+}
+.addBank-container .addBank-steps {
+    width: 90%;
+    left: 5%;
+}
+.addBank-steps .btn {
+  font-size: 16px !important;
+  padding: 4px 10px !important;
+  font-weight: 400;
+}
+.addBank-steps .active {
+  font-size: 16px !important;
+}
+
+#addBankManual .form-horizontal .control-label { text-align: center; }
+#bankNotListed { margin-top: -24px; }
+
+#addBank-selectAccount .input-group-addon,
+#addBank-selectAccount .form-control { height: 50px; font-size: 17px; padding: 5px 16px; }
+
+}
+
+@media only screen and (min-width: 1050px) {
+    .hide-xl {display:none; visibility:hidden;}
+
+    .brandedLogo {
+        top: 15px;
+        left: 1%;
+        max-width: 190px;
+    }
+
+    .addBank-container { margin: 10px auto 30px; }
+
+    .addBank-instructions {
+        font-size: 18px;
+        letter-spacing: .2px;
+        box-shadow: 0 7px 12px -7px rgba(0,0,0,.25);
+        position: fixed;
+        right: 1.75%;
+        max-width: 365px;
+        top: 26%;
+        padding: 10px;
+    }
+
+    input#bankSearch {
+        height: 39px;
+        margin: 0px auto -10px;
+        font-size: 19px;
+        max-width: 456px;
+    }
+    .glyphInSearchbar {
+        font-size: 19px;
+        top: 10px;
+        left: 8.5%;
+    }
+    .addBankContainer-body .form-group input[type="text"], 
+    .addBankContainer-body .form-group input[type="number"], 
+    .addBankContainer-body .form-group input[type="password"] {
+        height: 40px;
+        font-size: 17px;
+    }
+    .form-group.hasInputIcon .fa,
+    .form-group.hasInputIcon .fa.fa-user { top: 11px; }
+
+    html {overflow-y: scroll;}
+    .popBank-shell { padding: 6px 10px; transition: .2s all ease;}
+    #popularBanks .popBank-label { font-size: 13.75px; }
+    #addBankManual .selectedBank-logo{
+        margin: 10px auto 0px;
+        padding: 10px;
+        border-radius: 50%;
+        box-shadow: 0px 6px 20px -5px rgba(64,65,66,0.3);
+        width: 140px;
+        height: 132px;
+    }
+
+    .loginBtns > .btn {
+        height: 46px;
+        font-size: 18px !important;
+        font-weight: 300;
+    }
+
+    #bankNotListed > .btn {
+        font-size: 15.5px;
+        padding: 8px 30px;
+        box-shadow: 0 3px 10px -2px rgba(0,0,0,.25);
+    }
+
+    .encryption-notice { left: 9%; width: 82%; }
+}
+
+
+/** Radio Switch **/
+/* Hide by default */
+.switch-toggle a, .switch-light span span {display: none;}
+
+/* We can't test for a specific feature,
+* so we only target browsers with support for media queries. */
+
+  /* Checkbox switch */
+  .switch-light {
+    display: block;
+    min-height: 1.875em;
+    /* Outline the toggles when the inputs are focused */
+    position: relative;
+    overflow: visible;
+    padding: 0;
+    margin-left: 6.25em;
+    /* Position the label over all the elements, except the slide-button (<a>)
+     * Clicking anywhere on the label will change the switch-state */
+  }
+  .switch-light * {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box; }
+  .switch-light a {
+      display: block;
+      -webkit-transition: all 0.2s ease-out;
+      -moz-transition: all 0.2s ease-out;
+      transition: all 0.2s ease-out; }
+    .switch-light label, .switch-light > span {
+      line-height: 1.875em;
+      vertical-align: middle; }
+    .switch-light input:focus ~ a, .switch-light input:focus + label {
+      outline: 1px dotted #888; }
+    .switch-light label {
+      position: relative;
+      z-index: 3;
+      display: block;
+      width: 100%; }
+    .switch-light input {
+      position: absolute;
+      opacity: 0;
+      z-index: 5; }
+    .switch-light input:checked ~ a {right: 0%;}
+    .switch-light > span {
+      position: absolute;
+      left: -6.25em;
+      width: 100%;
+      margin: 0;
+      padding-right: 6.25em;
+      text-align: left; 
+	}
+    .switch-light > span span {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 5;
+      display: block;
+      width: 50%;
+      margin-left: 6.25em;
+      text-align: center; }
+    .switch-light > span span:last-child {left: 50%;}
+    .switch-light a {
+      position: absolute;
+      right: 50%;
+      top: 0;
+      z-index: 4;
+      display: block;
+      width: 50%;
+      height: 100%;
+      padding: 0; }
+
+  /* Radio switch */
+  .switch-toggle {
+    display: block;
+    min-height: 1.875em;
+    /* Outline the toggles when the inputs are focused */
+    position: relative;
+    display: table;
+    table-layout: fixed;
+    /* For callout panels in foundation */
+    padding: 0 !important;
+    /* Generate styles for the multiple states */ }
+    .switch-toggle * {
+      -webkit-box-sizing: border-box;
+      -moz-box-sizing: border-box;
+      box-sizing: border-box; 
+      font-size: 1em;
+      cursor: pointer !important;
+    }
+    .switch-toggle a {
+      display: block;
+      -webkit-transition: all 0.2s ease-out;
+      -moz-transition: all 0.2s ease-out;
+      transition: all 0.2s ease-out; }
+    .switch-toggle label, .switch-toggle > span {
+      line-height: 1.875em;
+      vertical-align: middle; }
+    .switch-toggle input:focus ~ a, .switch-toggle input:focus + label {
+      outline: 1px dotted #888; }
+    .switch-toggle input {
+      position: absolute;
+      opacity: 0; }
+    .switch-toggle input + label {
+      position: relative;
+      z-index: 2;
+      display: table-cell;
+      width: 50%;
+      padding: 0 0.5em;
+      margin: 0;
+      text-align: center; }
+    .switch-toggle a {
+      position: absolute;
+      top: 0;
+      left: 0;
+      padding: 0;
+      z-index: 1;
+      width: 50%;
+      height: 100%; }
+    .switch-toggle input:last-of-type:checked ~ a {left: 50%;}
+    .switch-toggle.switch-3 label, .switch-toggle.switch-3 a {width: 33.3333%;}
+    .switch-toggle.switch-3 input:checked:nth-of-type(2) ~ a {left: 33.33333%;}
+    .switch-toggle.switch-3 input:checked:last-of-type ~ a {left: 66.6666667%;}
+    .switch-toggle.switch-4 label, .switch-toggle.switch-4 a {width: 25%;}
+    .switch-toggle.switch-4 input:checked:nth-of-type(2) ~ a {left: 25%;}
+    .switch-toggle.switch-4 input:checked:nth-of-type(3) ~ a {left: 50%;}
+    .switch-toggle.switch-4 input:checked:last-of-type ~ a {left: 75%;}
+    .switch-toggle.switch-5 label, .switch-toggle.switch-5 a {width: 20%;}
+    .switch-toggle.switch-5 input:checked:nth-of-type(2) ~ a {left: 20%;}
+    .switch-toggle.switch-5 input:checked:nth-of-type(3) ~ a {left: 40%;}
+    .switch-toggle.switch-5 input:checked:nth-of-type(4) ~ a {left: 60%;}
+    .switch-toggle.switch-5 input:checked:last-of-type ~ a {left: 80%;}
+
+  /* Standalone Themes */
+  /* Candy Theme
+  * Based on the "Sort Switches / Toggles (PSD)" by Ormal Clarck
+  * http://www.premiumpixels.com/freebies/sort-switches-toggles-psd/
+  */
+  .switch-candy {
+    background-color: #2d3035;
+    border-radius: 3px;
+    color: #fff;
+    font-weight: bold;
+    text-align: center;
+    text-shadow: 1px 1px 1px #191b1e;
+    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.3), 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+  .switch-candy label {
+    color: #fff;
+    -webkit-transition: color 0.2s ease-out;
+    -moz-transition: color 0.2s ease-out;
+    transition: color 0.2s ease-out;
+  }
+  .switch-candy input:checked + label {
+    color: #333;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+  }
+  .switch-candy a {
+    border: 1px solid #333;
+    background-color: #70c66b;
+    border-radius: 3px;
+    background-image: -webkit-linear-gradient(top, rgba(255, 255, 255, 0.2), rgba(0, 0, 0, 0));
+    background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.2), rgba(0, 0, 0, 0));
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.45);
+  }
+  .switch-candy > span {
+    color: #333;
+    text-shadow: none;}
+  .switch-candy span {color: #fff;}
+  .switch-candy.switch-candy-blue a {background-color: #38a3d4;}
+  .switch-candy.switch-candy-yellow a {background-color: #f5e560; }
+
+/** Switch iOS Theme **/
+.switch-ios.switch-light {
+  color: #868686; }
+.switch-ios.switch-light a {
+  left: 0;
+  width: 1.875em;
+  background-color: #fff;
+  border: 1px solid #d3d3d3;
+  border-radius: 100%;
+  -webkit-transition: all 0.3s ease-out;
+  -moz-transition: all 0.3s ease-out;
+  transition: all 0.3s ease-out;
+  box-shadow: inset 0 -3px 3px rgba(0, 0, 0, 0.025), 0 1px 4px rgba(0, 0, 0, 0.15), 0 4px 4px rgba(0, 0, 0, 0.1); }
+.switch-ios.switch-light > span span {
+  width: 100%;
+  left: 0;
+  opacity: 0; }
+.switch-ios.switch-light > span span:first-of-type {
+  opacity: 1;
+  padding-left: 1.875em; }
+.switch-ios.switch-light > span span:last-of-type {padding-right: 1.875em; }
+.switch-ios.switch-light > span:before {
+  content: '';
+  display: block;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  left: 6.25em;
+  top: 0;
+  background-color: #fafafa;
+  border: 1px solid #d3d3d3;
+  border-radius: 30px;
+  -webkit-transition: all 0.5s ease-out;
+  -moz-transition: all 0.5s ease-out;
+  transition: all 0.5s ease-out;
+  box-shadow: inset rgba(0, 0, 0, 0.1) 0 1px 0; }
+.switch-ios.switch-light input:checked ~ a {
+  left: 100%;
+  margin-left: -1.875em; }
+.switch-ios.switch-light input:checked ~ span:before {
+  border-color: #53d76a;
+  box-shadow: inset 0 0 0 30px #53d76a; }
+.switch-ios.switch-light input:checked ~ span span:first-of-type {opacity: 0; }
+.switch-ios.switch-light input:checked ~ span span:last-of-type {
+  opacity: 1;
+  color: #fff; }
+.switch-ios.switch-toggle {
+  background-color: #fafafa;
+  border: 1px solid #d3d3d3;
+  border-radius: 11px;
+  box-shadow: inset rgba(0, 0, 0, 0.1) 0 1px 0; }
+.switch-ios.switch-toggle a {
+  background-color: #3fabe1;
+  border-radius: 10px;
+}
+.switch-ios.switch-toggle label {
+  /*color: #868686;*/
+  color: #797A7C;
+  font-weight: 500;
+  -webkit-transition: all 0.16s ease-in;
+  -moz-transition: all 0.16s ease-in;
+  transition: all 0.16s ease-in;
+}
+.switch-ios input:checked + label {
+  /*color: #3a3a3a;*/
+  color: white;
+  font-weight: 400;
+  text-shadow: 0 1px 2px rgba(64,65,66,.4);
+}
+
+
+/* Bugfix for older Webkit, including mobile Webkit. Adapted from
+** http://css-tricks.com/webkit-sibling-bug/ */
+@media only screen and (-webkit-max-device-pixel-ratio: 2) and (max-device-width: 80em) {
+  .switch-light, .switch-toggle {-webkit-animation: webkitSiblingBugfix infinite 1s;}
+}
+
+@-webkit-keyframes webkitSiblingBugfix {
+  from {
+    -webkit-transform: translate3d(0, 0, 0);
+  }
+  to {
+    -webkit-transform: translate3d(0, 0, 0); 
+  }
+}
+
+.sweet-overlay { background: rgba(10, 10, 10, 0.6); }
+.sweet-alert {
+  font-family: Helvetica, "Roboto", "Open Sans", Arial, sans-serif;
+  padding-bottom: 10px;
+  border-radius: 26px;
+  box-shadow: 0 0 14px rgba(0, 0, 0, 0.2), 0 14px 28px rgba(10, 10, 10, 0.4);
+}
+.sweet-alert h2 {
+  font-family: "Helvetica Neue", Helvetica, "Roboto", Arial, sans-serif !important;
+  color: #212121;
+  margin: 25px 0 20px;
+  font-size: 26px;
+  line-height: 1.6;
+}
+.sweet-alert p {
+  display: block;
+  text-align: center;
+  color: #212121;
+  font-weight: 400;
+  font-size: 17px;
+  line-height: 1.4;
+  margin: 20px 0;
+}
+.sweet-alert button {
+  box-shadow: none !important;
+  background: none !important;
+  border-radius: 5px;
+  text-transform: uppercase;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 8px 16px;
+  position: relative;
+  margin-top: 0;
+}
+.sweet-alert button:hover, .sweet-alert button:focus {background-color: #f6f6f6 !important;}
+.sweet-alert button.confirm {color: #3fabe1; float:right;}
+.sweet-alert button.cancel {color: rgb(188,190,192); float:left;}
+.sweet-alert button.cancel:focus {box-shadow: none !important;}
+.sweet-alert .sa-icon:not(.sa-custom) {
+  transform: scale(0.8);
+  margin-bottom: -10px;
+  margin-top: -10px; }
+.sweet-alert input {
+  border: none;
+  border-radius: 0;
+  border-bottom: 1px solid #c9c9c9;
+  color: #212121;
+  margin-bottom: 8px;
+  padding: 1px;
+  padding-bottom: 8px;
+  height: auto;
+  box-shadow: none;
+  font-size: 13px;
+  margin: 10px 0; }
+.sweet-alert input:focus {
+    border: none;
+    border-bottom: 1px solid #3c80f6;
+    box-shadow: inset 0 -1px 0 #3c80f6; }
+.sweet-alert fieldset {padding: 0;}
+.sweet-alert fieldset .sa-input-error {display: none;}
+
+.sweet-alert.largeText p {font-size: 18px;}
+
+.securityAlert p {font-size: 15.5px; line-height:1.35; margin: 0 0 .9em;}
+.securityAlert ul {font-size: 15.5px; line-height:1.35; text-align:left;}
+.securityAlert .sa-icon.sa-custom {margin: 0 auto;}
+.securityAlert h2 {margin:20px auto 10px;}
+
+.sweet-alert ul .fa-li.fa-check {color:#72bf44;}
+
+@media only screen and (max-width: 767px) {
+  .sweet-alert.securityAlert h2 {
+    margin: 15px 0 10px;
+    font-size: 21px;
+    line-height: 1.2;
+  }
+  .sweet-alert.securityAlert ul { padding-left: 20px; }
+
+  .sweet-alert.stackedBtns .sa-button-container > button { float: none; }
+}
+
+@media only screen and (min-width: 768px) {
+  .sweet-alert {
+    padding-top: 40px;
+    padding-bottom: 12px;
+    border-radius: 30px;
+    box-shadow: 0 0 14px rgba(0, 0, 0, 0.24),
+				0 14px 28px rgba(0, 0, 0, 0.48);
+  }
+  .securityAlert p { font-size: 16px; line-height:1.4; margin: 0 0 1em; }
+  .securityAlert ul { font-size: 16px; line-height:1.4; }
+  .sweet-alert ul > li { margin-top: .25em; }
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    -webkit-transform: scale(.2);
+    -ms-transform: scale(.2);
+    transform: scale(.2);
+  }
+
+  50% {
+    opacity: 1;
+    -webkit-transform: scale(1.12);
+    -ms-transform: scale(1.12);
+    transform: scale(1.12);
+  }
+
+  70% {
+    -webkit-transform: scale(.86);
+    -ms-transform: scale(.86);
+    transform: scale(.86);
+  }
+
+  100% {
+    opacity: 1;
+    -webkit-transform: scale(1);
+    -ms-transform: scale(1);
+    transform: scale(1);
+  }
+}
+.bounceIn {
+  -webkit-animation-name: bounceIn;
+  animation-name: bounceIn;
+}
+@keyframes flipInX {
+  from {
+    transform: perspective(400px) rotate3d(1, 0, 0, 90deg);
+    animation-timing-function: ease-in;
+    opacity: 0;
+  }
+
+  40% {
+    transform: perspective(400px) rotate3d(1, 0, 0, -20deg);
+    animation-timing-function: ease-in;
+  }
+
+  60% {
+    transform: perspective(400px) rotate3d(1, 0, 0, 10deg);
+    opacity: 1;
+  }
+
+  80% {
+    transform: perspective(400px) rotate3d(1, 0, 0, -5deg);
+  }
+
+  to {
+    transform: perspective(400px);
+  }
+}
+
+.flipInX {
+  backface-visibility: visible !important;
+  animation-name: flipInX;
+}

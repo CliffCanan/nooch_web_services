@@ -1,0 +1,468 @@
+﻿
+@{
+    Layout = null;
+}
+
+
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>Nooch | Add a Bank</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/Assets/Css/animate.css" />
+    <link href="@Url.Content("~/Assets/Css/animate.css")" rel="stylesheet" />
+    <link href="@Url.Content("~/Assets/Css/sweetalert-override.min.css")" rel="stylesheet" />
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.4/themes/cupertino/jquery-ui.css" />
+    <link href="@Url.Content("~/Assets/Css/jquery.auto-complete.css")" rel="stylesheet" />
+    <link href="@Url.Content("~/Assets/Css/AddBankTweaks.css")" rel="stylesheet" />
+    <link href="@Url.Content("~/Assets/Css/AddBankTweaks.css")" rel="stylesheet" />
+
+    @*<link rel="icon" href="../Assets/favicon.ico" />*@
+</head>
+
+
+
+<body class="body body-addBank" data-role="page">
+    <form id="form1" runat="server">
+        <asp:ScriptManager ID="ScriptManager1" runat="server" EnablePageMethods="true"></asp:ScriptManager>
+        <div class="addBank-container raised-view">
+
+            <div class="addBank-heading">
+                <span>Choose Your Bank</span>
+                <a class="hide" id="bckbtn">
+                    <span style="font-size: 94%;" class="fa fa-chevron-left white-text"></span>
+                </a>
+                <a class="manualLogin">
+                    <span class="fa fa-fw fa-pencil-square-o white-text"></span>
+                </a>
+            </div>
+
+            <div class="addBankContainer-body">
+
+                <span class="fa-stack fa-lg" id="addBank-steps-icon">
+                    <i class="fa fa-circle fa-stack-2x"></i>
+                    <i class="fa fa-bank fa-stack-1x fa-inverse"></i>
+                </span>
+                <div class="btn-group btn-group-justified addBank-steps">
+                    <a id="step1" class="btn btn-default active filledIn">  1. Find</a>
+                    <a id="step2" class="btn btn-default" data-toggle="modal" data-target="#modal-selectBankWarning" data-backdrop="static">2. Sign In</a>
+                    <a id="step3" class="btn btn-default">3. Select</a>
+                </div>
+
+                <div id="wideContainer">
+
+                    <div id="addBank1" class="clearfix">
+
+                        <form class="addBank-search clearfix" id="searchForm" role="search">
+                            <div class="form-group center-block">
+                                <div class="addBank-instructions">Start by typing your bank's name or selecting from common banks<span class="hide-xl"> below</span>.</div>
+                            </div>
+
+                            <div class="form-group center-block" style="position: relative">
+                                <input type="search" class="form-control text-center" id="bankSearch" placeholder="Ex: 'Bank of America'" />
+                                <span class="glyphInSearchbar fa fa-search blue-text"></span>
+                            </div>
+                        </form>
+
+                        <div style="margin: 30px auto 20px;" id="popularBanks">
+                            <div class="form-group popBank-shell group1" data-bname="Bank of America">
+                                <input type="image" name="boam" value="boam" src="@Url.Content("~/Assets/Images/bankPictures/bankofamerica.png")" />
+                                <label class="popBank-label">Bank of America</label>
+                            </div>
+                            <div class="form-group popBank-shell group3" data-bname="Wells Fargo">
+                                <input type="image" name="Wells Fargo" value="well" src="@Url.Content("~/Assets/Images/bankPictures/WellsFargo.png")" />
+                                <label class="popBank-label">Wells Fargo</label>
+                            </div>
+                            <div class="form-group popBank-shell group2" data-bname="Chase">
+                                <input type="image" name="chas" value="chas" src="@Url.Content("~/Assets/Images/bankPictures/chase.png")" />
+                                <label class="popBank-label">Chase</label>
+                            </div>
+                            <div class="form-group popBank-shell group4" data-bname="Citibank">
+                                <input type="image" name="citi" value="citi" src="@Url.Content("~/Assets/Images/bankPictures/citibank.png")" />
+                                <label class="popBank-label">Citibank</label>
+                            </div>
+                            <div class="form-group popBank-shell group2" data-bname="TD Bank">
+                                <input type="image" name="td" value="td" src="@Url.Content("~/Assets/Images/bankPictures/td.png")" />
+                                <label class="popBank-label">TD Bank</label>
+                            </div>
+                            <div class="form-group popBank-shell group4" data-bname="Capital One 360">
+                                <input type="image" name="capone360" value="capone360" src="@Url.Content("~/Assets/Images/bankPictures/capone360.png")" />
+                                <label class="popBank-label">Capital One 360</label>
+                            </div>
+                            <div class="form-group popBank-shell group3" data-bname="US Bank">
+                                <input type="image" name="US Bank" value="usbk" src="@Url.Content("~/Assets/Images/bankPictures/usbank.png")" />
+                                <label class="popBank-label">US Bank</label>
+                            </div>
+                            <div class="form-group popBank-shell group1" data-bname="PNC">
+                                <input type="image" name="pnc1" value="pnc1" src="@Url.Content("~/Assets/Images/bankPictures/pnc.png")" />
+                                ><label class="popBank-label">PNC</label>
+                            </div>
+                            <div class="form-group popBank-shell group1" data-bname="SunTrust">
+                                <input type="image" name="suntrust" value="suntrust" src="@Url.Content("~/Assets/Images/bankPictures/suntrust.png")" />
+                                <label class="popBank-label">SunTrust</label>
+                            </div>
+                            <div class="form-group popBank-shell group3" data-bname="USAA">
+                                <input type="image" name="usaa" value="usaa" src="@Url.Content("~/Assets/Images/bankPictures/usaa.png")" />
+                                <label class="popBank-label">USAA</label>
+                            </div>
+                            <div class="form-group popBank-shell group2" data-bname="Ally">
+                                <input type="image" name="ally" value="citz" src="@Url.Content("~/Assets/Images/bankPictures/ally.png")" />
+                                <label class="popBank-label">Ally Bank</label>
+                            </div>
+                            <div class="form-group popBank-shell group4" data-bname="First Tennessee">
+                                <input type="image" name="firsttenn" value="firsttenn" src="@Url.Content("~/Assets/Images/bankPictures/firsttennessee.png")" />
+                                <label class="popBank-label">First Tennessee</label>
+                            </div>
+                        </div>
+
+                        <div id="bankNotListed">
+                            <button type="button" class="btn btn-primary manualLogin">Bank Not Listed <i class="fa fa-fw fa-question-circle"></i></button>
+                        </div>
+
+                    </div>
+
+
+                    <div id="addBank2" class="hide" style="opacity:1">
+                        <div class="selectedBank-logo">
+                            <img src="" />
+                        </div>
+
+                        <!-- THIS FORM MUST SUBMIT-->
+                        <form name="bankLogin" id="bankLogin">
+
+                            <div class="form-group center-block">
+                                <div class="addBank-instructions">Login to your <span style="font-weight: bold">Online Banking</span> account.</div>
+                            </div>
+
+                            <div id="bankLogin_errorMsg"></div>
+
+                            <div class="form-group hasInputIcon" id="bnkUsrNameGrp">
+                                <div>
+                                    <i class="fa fa-fw fa-user"></i>
+                                    <input type="text" class="form-control" id="bankUsername" name="bankUsername" parsley-type="alphanum" parsley-trigger="change focusout" data-parsley-required="true" data-parsley-minlength="4" placeholder="Online Banking User ID" maxlength="30" data-parsley-required-message="Enter the username you use to log in to your Online Banking account." data-parsley-minlength-message="Hmmm, that username looks too short..." />
+                                </div>
+                            </div>
+
+                            <div class="form-group hasInputIcon" id="bnkPwNameGrp">
+                                <div>
+                                    <i class="fa fa-fw fa-key"></i>
+                                    <input type="password" class="form-control" id="bankPassword" name="bankPassword" data-parsley-required="true" data-parsley-minlength="4" placeholder="Online Banking Password" maxlength="25" data-parsley-required-message="Enter the password you use to log in to your Online Banking account." data-parsley-minlength-message="Doesn't look like a complete password..." />
+                                </div>
+                            </div>
+
+                            <div class="form-group hasInputIcon hide" id="bnkPinGrp">
+                                <div>
+                                    <i class="fa fa-fw fa-th"></i>
+                                    <input type="password" class="form-control" id="bankPin" name="bankPin" placeholder="Online Banking Pin" maxlength="8" data-parsley-minlength="3" data-parsley-required="true" data-parsley-required-message="USAA requires your online banking PIN." data-parsley-minlength-message="This value should be at least 3 characters." />
+                                </div>
+                            </div>
+
+                            <input type="hidden" id="selectedBankInput" name="" value="" />
+
+                            <div class="form-group loginBtns">
+                                <a id="backbtn2" class="btn btn-gray">Back</a>
+
+                                <button type="submit" id="bankLoginBtn" class="btn btn-success"><span class="fa fa-lock"></span>Login</button>
+
+                                <div class="hide" style="font-size: 85%; text-align: center; color: #6d6e71; margin-top: 8px;">
+                                    By clicking "Login" you are agreeing to the Nooch <a href="https://www.nooch.com/tos">Terms of Service</a>.
+                                </div>
+                            </div>
+
+                        </form>
+                    </div>
+
+
+                    <div id="addBank_mfa_question" class="hide">
+
+                        <div class="selectedBank-logo">
+                            <img src="" />
+                        </div>
+
+                        <form style="margin-top: 10px;" id="addBank-sec-question" parsley-validate>
+
+                            <div class="form-group center-block">
+                                <div class="addBank-instructions">To keep your account safe, your bank requires additional security questions<span class="hide-xl">:</span></span></div>
+                            </div>
+
+                            <div id="mfa_question_errorMsg"></div>
+
+                            <div class="dividerLine"></div>
+
+                            <div class="form-group sec-question" id="ques1Div">
+                                <label for="securityQuest1">Security Question #1:</label>
+                                <p style="font-weight: 400" class="sec-questionText" id="securityQuestionOneFromServer"></p>
+                                <input type="text" id="securityQuest1" class="form-control sec-question-input" parsley-type="alphanum" parsley-trigger="focusout" data-parsley-required="true" placeholder="" data-parsley-minlength="2" data-parsley-required-message="Alas, this question requires an answer (ideally a correct one) ;)" data-parsley-minlength-message="The answer should be longer than that!" />
+                            </div>
+
+                            <div class="form-group sec-question hide" id="ques2Div">
+                                <label for="securityQuest2">Security Question #2:</label>
+                                <p style="font-weight: 400" class="sec-questionText" id="securityQuestionTwoFromServer"></p>
+                                <input type="text" class="form-control sec-question-input" id="securityQuest2" parsley-type="alphanum" parsley-trigger="focusout" placeholder="" data-parsley-minlength="2" data-parsley-required-message="This one also needs an answer. ;)" data-parsley-minlength-message="The answer should be longer than that!" />
+                            </div>
+
+                            <div class="form-group sec-question hide" id="ques3Div">
+                                <label for="securityQuest2">Security Question #3:</label>
+                                <p style="font-weight: 400" class="sec-questionText" id="securityQuestionThreeFromServer"></p>
+                                <input type="text" class="form-control sec-question-input" id="securityQuest3" parsley-type="alphanum" parsley-trigger="focusout" placeholder="" data-parsley-minlength="2" data-parsley-required-message="Afraid to say it...this one also requires an answer." data-parsley-minlength-message="The answer should be longer than that!" />
+                            </div>
+
+                            <input type="hidden" id="bankAccessTokenForQuestion" name="" value="" />
+
+                            <div class="form-group">
+                                <button type="submit" id="submitMfaQuestion" class="btn btn-primary btn-block">Submit Answer</button>
+                            </div>
+
+                        </form>
+
+                    </div>
+
+
+                    <div id="addBank_mfa_code" class="hide">
+
+                        <div class="selectedBank-logo">
+                            <img src="" />
+                        </div>
+
+                        <form id="addBank-code">
+
+                            <div class="form-group center-block">
+                                <div class="addBank-instructions">To prevent fraud, your bank requires additional security info.</div>
+                            </div>
+
+                            <div id="mfa_code_errorMsg"></div>
+
+                            <div class="form-group sec-question">
+                                <label for="securityCodeInput">Security Code:</label>
+                                <p class="sec-questionText" id="codeMsg"></p>
+                                <input type="password" class="form-control sec-question-input" id="securityCodeInput" parsley-type="alphanum" parsley-trigger="focusout" data-parsley-required="true" data-parsley-minlength="2" placeholder="Enter Code" maxlength="12" />
+                            </div>
+
+                            <input type="hidden" id="bankAccessTokenForCode" name="" value="" />
+
+                            <div class="form-group">
+                                <button type="submit" id="submitMfaCode" class="btn btn-primary btn-block">Submit Code</button>
+                            </div>
+
+                        </form>
+
+                    </div>
+
+
+                    <div id="addBank_selectAccount" class="hide">
+
+                        <div class="selectedBank-logo">
+                            <img src="" />
+                        </div>
+
+                        <div id="errorMsgDiv">
+                        </div>
+
+                        <form id="addBank-selectAccount" parsley-validate role="form">
+
+                            <div id="allAccounts">
+
+                            </div>
+
+                            <div class="form-group">
+                                <button id="bankSelction" type="button" onclick="SetDefaultAct()" class="btn btn-gray center-block">Select Account</button>
+                            </div>
+
+                        </form>
+
+                    </div>
+
+
+                    <div id="addBankManual" class="hide">
+                        <div class="selectedBank-logo">
+                            <img src="@Url.Content("~/Assets/Images/bankPictures/bank.png")" />
+                        </div>
+
+                        <form parsley-validate class="form-horizontal" name="bankLoginManual" id="bankLoginManual" novalidate>
+
+                            <div class="form-group center-block">
+                                <div class="addBank-instructions">Enter your bank's info below to link your account.</div>
+                            </div>
+
+                            <div id="bankManual_errorMsg"></div>
+
+                            <div class="form-group hasInputIcon" id="fullNameGroup">
+                                <div class="col-xs-12">
+                                    <i class="fa fa-fw fa-user"></i>
+                                    <input type="text" class="form-control" id="userFullName" name="userFullName" placeholder="Account Holder's Full Name" data-parsley-whitespace="squish" parsley-trigger="change focusout" required="true" parsley-minlength="4" maxlength="40" data-parsley-required-message="Enter the full name (First & Last) of the bank account holder." data-parsley-minlength-message="Hmmm, that looks too short..." />
+                                </div>
+                            </div>
+
+                            <div class="form-group hasInputIcon" id="routGroup">
+                                <div class="col-xs-12">
+                                    <i class="fa fa-fw fa-user"></i>
+                                    <input type="text" pattern="[0-9]*" class="form-control" id="bankRout" name="bankRout" placeholder="Routing Number" data-parsley-type="digits" data-parsley-trigger="change focusout" required="true" data-parsley-length="[9,9]" maxlength="9" data-parsley-type-message="Your routing # should be only digits, i.e. 0-9." data-parsley-length-message="Your routing # should be exactly 9 numbers." data-parsley-required-message="Enter the account's Routing Number." data-parsley-minlength-message="Hmmm, that should be a little longer..." />
+                                    <div id="result"></div>
+                                </div>
+                            </div>
+
+                            <div class="form-group hasInputIcon" id="acntGroup">
+                                <div class="col-xs-12">
+                                    <i class="fa fa-fw fa-user"></i>
+                                    <input type="text" pattern="[0-9]*" class="form-control" id="bankAcntNum" name="bankAcntNum" placeholder="Account Number" data-parsley-type="digits" data-parsley-trigger="change focusout" required="true" minlength="6" maxlength="18" data-parsley-type-message="Your account # should be only digits, i.e. 0-9." data-parsley-required-message="Enter the Account Number for this bank account." data-parsley-minlength-message="Hmmm, that should be a little longer..." />
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-xs-4 col-md-5 control-label">Type</label>
+                                <div class="col-xs-8 col-md-7">
+                                    <div class="switch-toggle switch-ios">
+                                        <input id="togChecking" name="tog-accntType" type="radio" checked />
+                                        <label for="togChecking" onclick="">Checking</label>
+
+                                        <input id="togSavings" name="tog-accntType" type="radio" />
+                                        <label for="togSavings" onclick="">Savings</label>
+                                        <a></a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-xs-4 col-md-5 control-label">Class</label>
+                                <div class="col-xs-8 col-md-7">
+                                    <div class="switch-toggle switch-ios">
+                                        <input id="togPersonal" name="tog-accntClass" type="radio" checked />
+                                        <label for="togPersonal" onclick="">Personal</label>
+
+                                        <input id="togBusiness" name="tog-accntClass" type="radio" />
+                                        <label for="togBusiness" onclick="">Business</label>
+                                        <a></a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group loginBtns">
+                                <div class="col-xs-12">
+                                    <a id="backbtn_onManual" class="btn btn-gray">Back</a>
+                                    <button type="submit" id="bankLoginBtn_Manual" class="btn btn-success"><span class="fa fa-lock"></span>Submit</button>
+                                    <div style="font-size: 88%; text-align: center; color: #6d6e71; margin-top: 8px;">
+                                        By clicking "Submit" you are agreeing to the Nooch <a href="https://www.nooch.com/tos">Terms of Service</a>.
+                                    </div>
+                                </div>
+                            </div>
+
+                        </form>
+                    </div>
+
+                </div>
+
+                <div class="encryption-notice">
+                    <div><span class="fa fa-lock"></span>All data is sent using a secure 196-bit connection. <a data-toggle="modal" data-target="#modal-cancelAddBank">Learn more</a>.</div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="backdrop"></div>
+
+        <div class="modal fade" id="modal-selectBankWarning" role="dialog" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title"><span class="fa fa-exclamation-triangle pull-left"></span>Whoa Now</h4>
+                    </div>
+                    <div class="modal-body">
+                        <img src="@Url.Content("~/Assets/Images/bankPictures/bank.png")" class="modalContentImage">
+                        <p style="text-align: center; margin: 0;">Please select a bank first.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-dismiss="modal">Whoops, OK!</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="modal-cancelAddBank" role="dialog" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title"><span class="fa fa-exclamation-triangle pull-left"></span>Cancel</h4>
+                    </div>
+                    <div class="modal-body">
+                        <p style="">Are you sure you want to cancel adding a bank account?</p>
+                        <p class="small"><span style="font-weight: bold">Note:</span> This account will not be connected to Nooch. You can re-start the process at any time.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default pull-left" data-dismiss="modal">No</button>
+                        <a href="http://support.nooch.com" type="button" class="btn btn-danger">Confirm Cancel</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="modal-bankNotFound" role="dialog" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title"><span class="fa fa-exclamation-circle pull-left"></span>Bank Not Found</h4>
+                    </div>
+                    <div class="modal-body">
+                        <p>Oh no! We had trouble connecting with that bank.</p>
+                        <p>Please try again or if you continue to see this error we'd greatly appreciate hearing about it at <a href="mailto:support@nooch.com" style="font-weight: 500;">support@nooch.com</a>. We're very sorry for the frustration - thanks for your patience!</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="modal-OtherError" role="dialog" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title"><span class="fa fa-frown-o pull-left"></span>Bank Account Error</h4>
+                    </div>
+                    <div class="modal-body regFntWght">
+                        <p id="par1">Oh no! We had trouble connecting with that bank.</p>
+                        <p id="par2">Please try again or if you continue to see this error we'd greatly appreciate hearing about it at <a href="mailto:support@nooch.com" style="font-weight: 500;">support@nooch.com</a>. We're very sorry for the frustration - thanks for your patience!</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </form>
+
+    <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <script src="//cdn.jsdelivr.net/velocity/1.2.2/velocity.min.js"></script>
+<script src="//cdn.jsdelivr.net/velocity/1.2.2/velocity.ui.min.js"></script>
+
+<link href="@Url.Content("~/js/parsley.min.js")" rel="stylesheet"/>
+<link href="@Url.Content("~/js/jquery.blockUI.min.js")" rel="stylesheet"/>
+<link href="@Url.Content("~/js/sweetalert.min.js")" rel="stylesheet"/>
+    <link href="@Url.Content("~/js/jquery.auto-complete.min.js")" rel="stylesheet" />
+    
+    <script type="text/javascript">
+
+        // Add a script element as a child of the body
+        function downloadJSAtOnload() {
+            var element = document.createElement("script");
+            element.src = "@Url.Content("~/js/app/addBank.js")";
+            document.body.appendChild(element);
+        }
+
+        // Check for browser support of event handling capability
+        if (window.addEventListener)
+            window.addEventListener("load", downloadJSAtOnload, false);
+        else if (window.attachEvent)
+            window.attachEvent("onload", downloadJSAtOnload);
+        else window.onload = downloadJSAtOnload;
+
+    </script>
+
+</body>
+</html>
