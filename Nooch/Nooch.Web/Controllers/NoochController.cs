@@ -22,5 +22,12 @@ namespace Nooch.Web.Controllers
         {
             return View();
         }
+
+        public ActionResult CancelRequest()
+        {
+            return View();
+        }
+
+        
     }
 }
