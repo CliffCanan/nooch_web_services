@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
+using Nooch.Common;
+using Nooch.Common.Entities.LandingPagesRelatedEntities;
+using Nooch.Common.Entities.SynapseRelatedEntities;
+using Nooch.Web.Common;
 
 namespace Nooch.Web.Controllers
 {
@@ -41,49 +45,48 @@ namespace Nooch.Web.Controllers
             }
             return View();
         }
-
-        public void GetTransDetails(string TransactionId)
+ 
+        [HttpPost]
+        [ActionName("CheckBankDetails")]
+        public static BankNameCheckStatus CheckBankDetails(string bankname)
         {
-            string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-            string serviceMethod = "/GetTransactionDetailById?TransactionId=" + TransactionId;
+            // Get bank details
+            BankNameCheckStatus res = new BankNameCheckStatus();
+            res.IsSuccess = false;
 
-            TransactionDto transaction = ResponseConverter<TransactionDto>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
-
-            if (transaction != null)
+            try
             {
-                CancelMoneyRequest(Request.QueryString["TransactionId"], Request.QueryString["MemberId"], Request.QueryString["UserType"]);
-            }
+                string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
 
-            if (transaction.TransactionStatus != "Pending")
-            {
-                reslt1.Visible = false;
-                paymentInfo.Visible = true;
-                reslt.Text = "Looks like this request is no longer pending. You may have cancelled it already or the recipient has already responded by accepting or rejecting.";
-                reslt.Visible = true;
-            }
+                string serviceMethod = "/CheckSynapseBankDetails?BankName=" + bankname;
+                Logger.Info("**Add_Bank** CodeBehind -> CheckBankDetails - Service Method to call: [" + String.Concat(serviceUrl, serviceMethod) + "]");
 
+                CheckSynapseBankDetails bankInfoFromServer = ResponseConverter<CheckSynapseBankDetails>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
 
-            if (transaction.IsPhoneInvitation && transaction.PhoneNumberInvited.Length > 0)
-            {
-                senderImage.ImageUrl = "https://www.noochme.com/noochweb/Assets/Images/" + "userpic-default.png";
-                nameLabel.Text = transaction.PhoneNumberInvited;
+                if (bankInfoFromServer.IsBankFound == true)
+                {
+                    res.IsSuccess = true;
+                    res.MFAType = bankInfoFromServer.mfa_type;
+                    res.IsPinRequired = bankInfoFromServer.IsPinRequired;
+                    res.Message = "OK";
+                }
+                else
+                {
+                    // bank not found error
+                    res.MFAType = bankInfoFromServer.mfa_type;
+                    res.IsPinRequired = bankInfoFromServer.IsPinRequired;
+                    res.Message = bankInfoFromServer.Message;
+                }
             }
-            else if (!String.IsNullOrEmpty(transaction.InvitationSentTo))
+            catch (Exception we)
             {
-                senderImage.ImageUrl = "https://www.noochme.com/noochweb/Assets/Images/" + "userpic-default.png";
-                nameLabel.Text = transaction.InvitationSentTo;
+                res.Message = "CheckBankDetails Web Exception - local";
+                Logger.Error("**Add_Bank** CodeBehind -> CheckBankDetails FAILED - [Bank Name: " + bankname +
+                                   "], [Exception Msg: " + we.Message + "], [Exception Inner: " + we.InnerException + "]");
             }
-            else
-            {
-                nameLabel.Text = transaction.Name;
-                senderImage.ImageUrl = transaction.SenderPhoto;
-            }
-
-            AmountLabel.Text = transaction.Amount.ToString("n2");
+            return res;
         }
-
-
-
+ 
         
     }
 }

@@ -110,6 +110,7 @@
     <Compile Include="App_Start\BundleConfig.cs" />
     <Compile Include="App_Start\FilterConfig.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
+    <Compile Include="Common\ResponseConverter.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\NoochController.cs" />
     <Compile Include="Global.asax.cs">
@@ -272,6 +273,24 @@
     <Content Include="fonts\glyphicons-halflings-regular.eot" />
     <Content Include="packages.config" />
     <None Include="Project_Readme.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Nooch.API\Nooch.API.csproj">
+      <Project>{55bc7e1d-3201-4578-a653-084016d23d74}</Project>
+      <Name>Nooch.API</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Nooch.Common\Nooch.Common.csproj">
+      <Project>{1a360833-a6ef-49ac-9f3f-b6bc9d6a78fa}</Project>
+      <Name>Nooch.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Nooch.DataAccess\Nooch.DataAccess.csproj">
+      <Project>{b9f58aae-f52f-4a9e-916a-2a4840ebbfbb}</Project>
+      <Name>Nooch.DataAccess</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Nooch.Data\Nooch.Data.csproj">
+      <Project>{06e62963-0c50-4013-b9c3-d9c3bd236afb}</Project>
+      <Name>Nooch.Data</Name>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
