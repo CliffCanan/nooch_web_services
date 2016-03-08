@@ -2494,6 +2494,66 @@ namespace Nooch.API.Controllers
             }
         }
 
+        [HttpGet]
+        [ActionName("GetTransactionDetailById")]
+        public TransactionDto GetTransactionDetailById(string TransactionId)
+        {
+            try
+            {
+                Logger.Info("Service Layer -> GetTransactionDetailById - [TransactionId: " + TransactionId + "]");
+
+                var tda = new TransactionsDataAccess();
+                Transaction tr = tda.GetTransactionById(TransactionId);
+                TransactionDto trans = new TransactionDto();
+                trans.AdminNotes = tr.AdminName;
+                trans.IsPrePaidTransaction = tr.IsPrepaidTransaction;
+                trans.FirstName = tr.Member.FirstName;
+                trans.LastName = tr.Member.LastName;
+                trans.Name = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(tr.Member.FirstName)) + " " +
+                             CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(tr.Member.LastName));
+
+                trans.RecepientName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(tr.Member1.FirstName)) + " " +
+                             CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(tr.Member1.LastName));
+                trans.SenderPhoto = tr.Member.Photo ?? "";
+                trans.RecepientPhoto = tr.Member1.Photo ?? "";
+                trans.MemberId = tr.Member.MemberId.ToString();
+                trans.Memo = tr.Memo;
+                trans.RecepientId = tr.Member1.MemberId.ToString();
+                trans.TransactionId = tr.TransactionId.ToString();
+                trans.TransactionStatus = tr.TransactionStatus;
+                trans.TransactionType = tr.TransactionType;
+                trans.TransDate = tr.TransactionDate.Value;
+                trans.TransactionFee = tr.TransactionFee.Value;
+                trans.InvitationSentTo = (tr.InvitationSentTo != null) ? CommonHelper.GetDecryptedData(tr.InvitationSentTo) : "";
+                trans.IsPhoneInvitation = tr.IsPhoneInvitation != null && Convert.ToBoolean(tr.IsPhoneInvitation);
+
+                if (tr.IsPhoneInvitation == true)
+                {
+                    if (CommonHelper.GetDecryptedData(tr.PhoneNumberInvited).Length == 10)
+                    {
+                        trans.PhoneNumberInvited =
+                            CommonHelper.FormatPhoneNumber(CommonHelper.GetDecryptedData(tr.PhoneNumberInvited));
+                    }
+                    else
+                    {
+                        trans.PhoneNumberInvited = "";
+                    }
+                }
+                else
+                {
+                    trans.PhoneNumberInvited = "";
+                }
+
+                trans.Amount = tr.Amount;
+                return trans;
+            }
+            catch (Exception ex)
+            {
+                Utility.ThrowFaultException(ex);
+                return null;
+            }
+        }
+
 
         /************************************************/
         /***** ----  SYNAPSE-RELATED SERVICES  ---- *****/
@@ -3252,5 +3312,9 @@ namespace Nooch.API.Controllers
          
  
         #endregion
+
+ 
+
+       
     }
 }

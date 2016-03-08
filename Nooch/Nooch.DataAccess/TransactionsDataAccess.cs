@@ -324,10 +324,9 @@ namespace Nooch.DataAccess
 
                 Logger.Info("TDA -> CancelMoneyRequestForExistingNoochUser Initiated for: [" + MemberId + "]");
 
-                var res = _dbContext.Transactions.FirstOrDefault(m=>m.Member1.MemberId==memGuid && m.TransactionId==transid
-                    && m.TransactionStatus=="Pending" && (m.TransactionType=="T3EMY1WWZ9IscHIj3dbcNw==" || m.TransactionType=="DrRr1tU1usk7nNibjtcZkA=="));
-                    
-                    
+                var res = _dbContext.Transactions.FirstOrDefault(m => m.Member1.MemberId == memGuid && m.TransactionId == transid
+                    && m.TransactionStatus == "Pending" && (m.TransactionType == "T3EMY1WWZ9IscHIj3dbcNw==" || m.TransactionType == "DrRr1tU1usk7nNibjtcZkA=="));
+                     
                 if (res != null)
                 {
                     res.TransactionStatus = "Cancelled";

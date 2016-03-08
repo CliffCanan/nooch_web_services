@@ -1,6 +1,10 @@
-﻿
+﻿@using Nooch.Common.Entities;
+
 @{
+    
     Layout = null;
+    ResultCancelRequest rcr =(ResultCancelRequest) ViewData["OnLoaddata"];
+    
 }
 
 <!DOCTYPE html>
@@ -55,11 +59,12 @@
                     </a>
                 </div>
             </nav>
-
+            @if (rcr.paymentInfo != "false") { 
             <div class="depositComplete-TransDetails paymentInfo" id="paymentInfo" runat="server">
                 <div class="media">
                     <div class="transDetails-userpic pull-left">
-                        <img id="senderImage" src="" class="media-object" alt="Other Guy" />
+                        
+                        <img id="senderImage" src="@rcr.senderImage" class="media-object" alt="Other Guy" />
                
                     </div>
 
@@ -67,18 +72,18 @@
                         <span class="intro-header label label-danger">Request To</span>
                         <div id="senderName">
                            
-                            <label id="nameLabel"  > </label>
+                            <label id="nameLabel"  >@rcr.nameLabel </label>
 
                         </div>
                         <span class="transfer-amount">
                             $
-                            <label id="AmountLabel" > </label>
+                            <label id="AmountLabel" >@rcr.AmountLabel</label>
                            
                         </span>
                     </div>
                 </div>
             </div>
-
+            }
             <div id="iconCircleFA" class="floating white-text col-sm-8 col-sm-offset-2 p-5">
                 <span class="fa-stack fa-lg">
                     <i class="fa fa-circle fa-stack-1x"></i>
@@ -89,11 +94,15 @@
             <br />
 
             <div class="emailConfHeader">
+                @if(rcr.reslt1=="true"){
                 <div style="font-size: 110%">
-                    <Label ID="reslt1"   Text="Request Cancelled"></Label>
+                    <Label ID="reslt1"     >Request Cancelled</Label>
                 </div>
+                }
                 <div id="fromText">
-                    <Label ID="reslt"   Text=""></Label>
+                    @if (rcr.reslt != "") { 
+                    <Label ID="reslt"     >@rcr.reslt;  </Label>
+                    }
 
                 </div>
                 <div class="iphoneLogin hidden"><a href="nooch://" class="btn btn-default">Click here to login to Nooch</a></div>
@@ -116,3 +125,5 @@
     </body>
  
 </html>
+<script src="~/Scripts/app/CancelRequest.js"></script>
+ 
