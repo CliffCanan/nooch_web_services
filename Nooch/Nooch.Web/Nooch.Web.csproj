@@ -228,6 +228,7 @@
     <Content Include="js\moment.min.js" />
     <Content Include="js\parsley.min.js" />
     <Content Include="js\sweetalert.min.js" />
+    <Content Include="Scripts\app\CancelRequest.js" />
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />

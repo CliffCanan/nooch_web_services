@@ -2983,7 +2983,7 @@ namespace Nooch.DataAccess
                                        bank.IsDefault == true).ToList();
                
 
-                if (bankAccountsFound.Count > 0)
+                if (bankAccountsFound.Count == 0)
                 {
                     foreach (SynapseBanksOfMember sb in bankAccountsFound)
                     {
