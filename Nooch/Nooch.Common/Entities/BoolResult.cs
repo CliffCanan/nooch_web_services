@@ -10,4 +10,12 @@ namespace Nooch.Common.Entities
     {
         public bool Result { get; set; }
     }
+
+    public class BankVerification
+    {
+        public bool openAppText { get; set; }
+
+        public bool Div1 { get; set; }
+        public bool Div2 { get; set; }
+    }
 }

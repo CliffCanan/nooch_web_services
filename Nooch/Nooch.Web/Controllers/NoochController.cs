@@ -7,6 +7,9 @@ using Nooch.Common;
 using Nooch.Common.Entities.LandingPagesRelatedEntities;
 using Nooch.Common.Entities.SynapseRelatedEntities;
 using Nooch.Web.Common;
+using Nooch.Data;
+using Nooch.Common.Entities;
+
 
 namespace Nooch.Web.Controllers
 {
@@ -22,8 +25,48 @@ namespace Nooch.Web.Controllers
         {
             return View();
         }
-        public ActionResult BankVerification()
+
+
+        public ActionResult BankVerification(string tokenId)
         {
+
+
+            BankVerification bankVerification = new BankVerification();           
+            string strUserAgent = Request.UserAgent.ToLower();
+
+            if (strUserAgent != null)
+            {
+                if (Request.Browser.IsMobileDevice || strUserAgent.Contains("iphone") || strUserAgent.Contains("mobile") || strUserAgent.Contains("iOS"))
+                {
+                                   
+                    bankVerification.openAppText = true;
+                }
+            }
+            tokenId = tokenId.Trim();
+            tokenId = CommonHelper.GetDecryptedData(tokenId);
+            string serviceUrl = Utility.GetValueFromConfig("ServiceUrl") + "/VerifySynapseAccount?tokenID=" + tokenId.Trim();
+
+            Logger.Info("Bank Verification Browser Page -> Bank Account Verification Page Loaded - [tokenId: " + tokenId + "]");
+
+            BoolResult result = ResponseConverter<BoolResult>.ConvertToCustomEntity(serviceUrl);
+
+            if (result.Result)
+            {
+                Logger.Info("Bank Verification Browser Page -> Bank Account Verified Successfully! - Result from Nooch Services was: [" + result.Result + "]");
+              
+                bankVerification.Div1 = true;
+                bankVerification.Div2 = false;
+
+            }
+            else
+            {
+                Logger.Error("Bank Verification Browser Page -> Bank Account Verification FAILED - Result was: [" + result.Result + "]");
+               
+                bankVerification.Div1 = false;
+                bankVerification.Div2 = true;
+            }
+            ViewData["OnLoadData"] = bankVerification;
+            
             return View();
         }
 

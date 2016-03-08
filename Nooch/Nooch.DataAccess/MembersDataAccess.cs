@@ -3198,6 +3198,170 @@ namespace Nooch.DataAccess
             
         }
 
+
+        /// <summary>
+        /// For settings a user's Synapse Bank to 'Verified'. Currently only called 
+        /// from the Admin Dashboard and from the BankVerification.aspx.cs browser page.
+        /// </summary>
+        /// <param name="bankId"></param>
+        /// <returns>True if successful, false if not.</returns>
+        public bool VerifySynapseAccount(string bankId)
+        {
+            Logger.Info("MDA -> VerifySynapseAccount Initiated - Bank ID: [" + bankId + "]");
+                       
+                int id = Convert.ToInt16(bankId);
+                            
+                var memberBank = _dbContext.SynapseBanksOfMembers.Where(member => member.Id.Equals(id) &&
+                                         (member.Status != "Verified" || member.Status == null)).FirstOrDefault();
+
+                if (memberBank == null)
+                {
+                    Logger.Error("MDA -> VerifySynapseAccount FAILED - No Synapse Bank found with ID of [" + bankId + "] and Status != 'Verified'.");
+                    return false;
+                }
+                else
+                {
+                    // got account, updating it to set as verified
+                    memberBank.Status = "Verified";
+                    memberBank.VerifiedOn = DateTime.Now;
+                                                         
+                    int i = _dbContext.SaveChanges();    
+                    if (i > 0)
+                    {
+                        #region Send Bank Verified Email
+
+                        try
+                        {
+                            var memberId = memberBank.MemberId;
+                            var BankName = CommonHelper.GetDecryptedData(memberBank.bank_name);
+                            var bankNickName = CommonHelper.GetDecryptedData(memberBank.nickname);
+
+                            #region Set Bank Logo URL Variable
+
+                            string appPath = Utility.GetValueFromConfig("ApplicationURL");
+                            var bankLogoUrl = "";
+
+                            switch (BankName)
+                            {
+                                case "Ally":
+                                    {
+                                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/ally.png");
+                                    }
+                                    break;
+                                case "Bank of America":
+                                    {
+                                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/bankofamerica.png");
+                                    }
+                                    break;
+                                case "Wells Fargo":
+                                    {
+                                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/WellsFargo.png");
+                                    }
+                                    break;
+                                case "Chase":
+                                    {
+                                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/chase.png");
+                                    }
+                                    break;
+                                case "Citibank":
+                                    {
+                                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/citibank.png");
+                                    }
+                                    break;
+                                case "TD Bank":
+                                    {
+                                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/td.png");
+                                    }
+                                    break;
+                                case "Capital One 360":
+                                    {
+                                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/capone360.png");
+                                    }
+                                    break;
+                                case "US Bank":
+                                    {
+                                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/usbank.png");
+                                    }
+                                    break;
+                                case "PNC":
+                                    {
+                                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/pnc.png");
+                                    }
+                                    break;
+                                case "SunTrust":
+                                    {
+                                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/suntrust.png");
+                                    }
+                                    break;
+                                case "USAA":
+                                    {
+                                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/usaa.png");
+                                    }
+                                    break;
+
+                                case "First Tennessee":
+                                    {
+                                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/firsttennessee.png");
+                                    }
+                                    break;
+                                default:
+                                    {
+                                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/no.png");
+                                    }
+                                    break;
+                            }
+
+                            #endregion Set Bank Logo URL Variable
+
+                            Logger.Info("MDA -> VerifySynapseAccount --> Checkpoint 8818 - BankLogoUrl: [" + bankLogoUrl + "]");
+                                                        
+                            var noochMember = _dbContext.Members.Where(memberTemp => memberTemp.MemberId == memberId &&
+                                                          memberTemp.IsDeleted == false).FirstOrDefault();
+
+                            Logger.Info("MDA -> VerifySynapseAccount --> Checkpoint 8831 - About to send Bank Verified email");
+
+                            if (noochMember != null)
+                            {
+                                var toAddress = CommonHelper.GetDecryptedData(noochMember.UserName.ToLower());
+                                var fromAddress = Utility.GetValueFromConfig("adminMail");
+
+                                var firstNameForEmail = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(noochMember.FirstName));
+                                var fullName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(noochMember.FirstName)) + " " +
+                                               CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(noochMember.LastName));
+
+                                var tokens = new Dictionary<string, string>
+                                            {
+                                                {Constants.PLACEHOLDER_FIRST_NAME, firstNameForEmail},
+                                                {Constants.PLACEHOLDER_BANK_NAME, BankName},
+                                                {Constants.PLACEHOLDER_RECIPIENT_FULL_NAME, fullName},
+                                                {Constants.PLACEHOLDER_Recepient_Email, bankNickName},
+                                                {Constants.PLACEHOLDER_BANK_BALANCE, bankLogoUrl},
+                                            };
+
+                                Utility.SendEmail("bankVerified",fromAddress, toAddress, null,
+                                    "Your bank account has been verified on Nooch",
+                                    null, tokens, null, null, null);
+
+                                Logger.Info("MDA -> VerifySynapseAccount --> Bank VERIFIED Email sent to: [" + toAddress + "]");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Error("MDA -> VerifySynapseAccount --> Bank Verified Email NOT sent for Synapse BankID: [" + bankId + "], [Exception: " + ex + "]");
+                        }
+
+                        #endregion Send Bank Verified Email
+
+                        return true;
+                    }
+                    else
+                    {
+                        Logger.Error("MDA -> VerifySynapseAccount FAILED - Bank found, but error on updating DB record in SynapseBanksOfMembers - BankID: [" + bankId + "] and Status != 'Verified'.");
+                    }
+                }
+
+                return false;
+                }
       
         
         

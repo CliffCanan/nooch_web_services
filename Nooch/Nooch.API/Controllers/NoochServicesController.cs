@@ -3252,5 +3252,42 @@ namespace Nooch.API.Controllers
          
  
         #endregion
+
+        //Web related Services
+        /// <summary>
+        /// For updating a user's Synapse Bank status to 'Verified'. Currently called from a Member Details
+        /// page in the Admin Dashboard and from the BankVerification.aspx.cs browser page.
+        /// </summary>
+        /// <param name="tokenId"></param>
+
+        [HttpGet]
+        [ActionName("VerifySynapseAccount")]
+        public BoolResult VerifySynapseAccount(string tokenId)
+        {
+            Logger.Info("Service Layer -> VerifySynapseAccount Initiated - Bank TokenID: [" + tokenId + "]");
+
+            if (!String.IsNullOrEmpty(tokenId))
+            {
+                try
+                {
+                    var mda = new MembersDataAccess();
+                    return new BoolResult { Result = mda.VerifySynapseAccount(tokenId) };
+                }
+                catch (Exception ex)
+                {
+                    Logger.Info("Service Layer -> VerifySynapseAccount FAILED. [Exception: " + ex + "]");
+                    //UtilityService.ThrowFaultException(ex);
+                }
+            }
+            else
+            {
+                Logger.Error("Service Layer -> VerifySynapseAccount FAILED - TokenID was null or empty! - TokenID: [" + tokenId + "]");
+            }
+
+            return new BoolResult();
+        }
+
+
+
     }
 }
