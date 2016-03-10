@@ -247,7 +247,169 @@ namespace Nooch.Web.Controllers
             }
             return res;
         }
- 
+
+        public ActionResult PayRequest()
+        {
+            ResultPayRequest rpr = new ResultPayRequest();
+            Logger.Info("payRequest CodeBehind -> Page_load Initiated - [TransactionId Parameter: " + Request.QueryString["TransactionId"] + "]");
+
+            try
+            {
+              
+                
+                    if (!String.IsNullOrEmpty(Request.QueryString["TransactionId"]))
+                    {
+                        if (!String.IsNullOrEmpty(Request.QueryString["UserType"]))
+                        {
+                            string n = Request.QueryString["UserType"].ToString();
+                            rpr.usrTyp = CommonHelper.GetDecryptedData(n);
+
+                            if (rpr.usrTyp == "NonRegistered" ||
+                               rpr.usrTyp == "Existing")
+                            {
+                                Logger.Info("payRequest CodeBehind -> Page_load - UserType is: [" + rpr.usrTyp + "]");
+                            }
+                        }
+
+                        // Check if this is a RENT Payment request (from a Landlord)
+                        if (Request.Params.AllKeys.Contains("IsRentTrans"))
+                        {
+                            if (Request["IsRentTrans"].ToLower() == "true")
+                            {
+                                Logger.Info("payRequest CodeBehind -> Page_load - RENT PAYMENT Detected");
+
+                               rpr.transType = "rent";
+                               rpr.usrTyp = "tenant";
+                            }
+                        }
+
+                        // Check if this payment is for Rent Scene
+                        if (Request.Params.AllKeys.Contains("rs") && Request["rs"] == "1")
+                        {
+                            Logger.Info("payRequest CodeBehind -> Page_load - RENT SCENE Transaction Detected");
+                            rpr.rs = "true";
+                        }
+
+                        Response.Write("<script>var errorFromCodeBehind = '0';</script>");
+
+                    rpr= GetTransDetailsForPayRequest(Request.QueryString["TransactionId"].ToString(),rpr);
+                    }
+                    else
+                    {
+                        // something wrong with query string
+                        Response.Write("<script>var errorFromCodeBehind = '1';</script>");
+                       rpr.payreqInfo= false;
+                    }
+                
+
+              rpr.PayorInitialInfo = false;
+            }
+            catch (Exception ex)
+            {
+               rpr.payreqInfo = false;
+                Response.Write("<script>var errorFromCodeBehind = '1';</script>");
+
+                Logger.Error("payRequest CodeBehind -> page_load OUTER EXCEPTION - [TransactionId Parameter: " + Request.QueryString["TransactionId"] +
+                                       "], [Exception: " + ex.Message + "]");
+            }
+            ViewData["OnLoaddata"] = rpr;
+            return View();
+        }
+
+        public ResultPayRequest GetTransDetailsForPayRequest(string TransactionId,ResultPayRequest resultPayRequest)
+        {
+            ResultPayRequest rpr = resultPayRequest;
+            Logger.Info("payRequest CodeBehind -> GetTransDetails Initiated - TransactionID: [" + TransactionId + "]");
+
+            string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+            string serviceMethod = "/GetTransactionDetailByIdForRequestPayPage?TransactionId=" + TransactionId;
+
+            Logger.Info("payRequest CodeBehind -> GetTransDetails - URL to query: [" + String.Concat(serviceUrl, serviceMethod) + "]");
+
+            TransactionDto transaction = ResponseConverter<TransactionDto>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+
+            if (transaction == null)
+            {
+                Logger.Error("payRequest CodeBehind -> GetTransDetails FAILED - Transaction Not Found - TransactionId: [" + TransactionId + "]");
+
+                rpr.payreqInfo = false;
+                rpr.pymnt_status = "0";
+                Response.Write("<script>errorFromCodeBehind = '1';</script>");
+            }
+            else
+            {
+                if (transaction.MemberId == "852987e8-d5fe-47e7-a00b-58a80dd15b49")
+                {
+                    rpr.rs = "true";
+                }
+
+                rpr.transId = transaction.TransactionId;
+                rpr.pymnt_status = transaction.TransactionStatus.ToLower();
+
+                rpr.transMemo = transaction.Memo;
+
+               rpr.senderImage= transaction.RecepientPhoto;
+               rpr.senderName1= (!String.IsNullOrEmpty(transaction.RecepientName) && transaction.RecepientName.Length > 2) ?
+                                    transaction.RecepientName :
+                                    transaction.Name;
+
+                string s = transaction.Amount.ToString("n2");
+                string[] s1 = s.Split('.');
+                if (s1.Length == 2)
+                {
+                    rpr.transAmountd = s1[0].ToString();
+                    rpr.transAmountc = s1[1].ToString();
+                }
+                else
+                {
+                    rpr.transAmountd = s1[0].ToString();
+                    rpr.transAmountc = "00";
+                }
+
+                // Check if this was a request to an existing, but 'NonRegistered' User
+                if (transaction.IsExistingButNonRegUser == true)
+                {
+                    if (transaction.TransactionStatus.ToLower() != "pending")
+                    {
+                        Logger.Info("payRequest CodeBehind -> GetTransDetails - IsExistingButNonRegUser = 'true', but Transaction no longer pending!");
+                    }
+
+                    rpr.memidexst = !String.IsNullOrEmpty(transaction.RecepientId)
+                                      ? transaction.RecepientId
+                                      : "";
+
+                    rpr.bnkName = transaction.BankName;
+                    rpr.bnkNickname = transaction.BankId;
+
+                    if (transaction.BankName == "no bank found")
+                    {
+                        Logger.Error("payRequest CodeBehind -> GetTransDetails - IsExistingButNonRegUser = 'true', but No Bank Found, so JS should display Add-Bank iFrame.");
+                    }
+                    else
+                    {
+                        rpr.nonRegUsrContainer= true;
+                    }
+                }
+
+                else if (rpr.transType == "rent") // Set in Page_Load above based on URL query string
+                {
+                    Logger.Info("payRequest CodeBehind -> GetTransDetails - Got a RENT Payment!");
+
+                    rpr.memidexst = !String.IsNullOrEmpty(transaction.RecepientId)
+                                      ? transaction.RecepientId
+                                      : "";
+                }
+
+                // Now check what TYPE of invitation (phone or email)
+                rpr.invitationType  = transaction.IsPhoneInvitation == true ? "p" : "e";
+
+                if (!String.IsNullOrEmpty(transaction.InvitationSentTo))
+                {
+                    rpr.invitationSentto = transaction.InvitationSentTo;
+                }
+            }
+            return rpr;
+        }
         
     }
 }
