@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
+using System.Web.Script.Serialization;
 using Nooch.Common;
 using Nooch.Common.Entities.LandingPagesRelatedEntities;
 using Nooch.Common.Entities.SynapseRelatedEntities;
@@ -26,9 +27,11 @@ namespace Nooch.Web.Controllers
             return View();
         }
 
-        public ActionResult AddBank()
+        public ActionResult AddBank(string MemberId)
         {
+            if(!String.IsNullOrEmpty(MemberId))
             return View();
+            return RedirectToAction("Index");
         }
 
 
@@ -207,9 +210,10 @@ namespace Nooch.Web.Controllers
                 }
             }
         }
+        
         [HttpPost]
         [ActionName("CheckBankDetails")]
-        public static BankNameCheckStatus CheckBankDetails(string bankname)
+        public ActionResult CheckBankDetails(string bankname)
         {
             // Get bank details
             BankNameCheckStatus res = new BankNameCheckStatus();
@@ -245,8 +249,223 @@ namespace Nooch.Web.Controllers
                 Logger.Error("**Add_Bank** CodeBehind -> CheckBankDetails FAILED - [Bank Name: " + bankname +
                                    "], [Exception Msg: " + we.Message + "], [Exception Inner: " + we.InnerException + "]");
             }
+            return Json(res);
+        }
+
+        public  BankLoginResult RegisterUserWithSynapse(string memberid)
+        {
+            Logger.Info("**Add_Bank** CodeBehind -> RegisterUserWithSynapse Initiated - [MemberID: " + memberid + "]");
+
+            BankLoginResult res = new BankLoginResult();
+            res.IsSuccess = false;
+            res.ssn_verify_status = "Unknown";
+
+            try
+            {
+
+                string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+                string serviceMethod = "/RegisterUserWithSynapseV3?memberId=" + memberid;
+
+                synapseCreateUserV3Result_int transaction = ResponseConverter<synapseCreateUserV3Result_int>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+
+                if (transaction.success == false)
+                {
+                    res.Message = transaction.errorMsg;
+                }
+                if (transaction.success == true)
+                {
+                    res.IsSuccess = true;
+                    res.Message = "OK";
+                }
+
+                res.ssn_verify_status = transaction.ssn_verify_status;
+            }
+            catch (Exception we)
+            {
+                res.Message = "RegisterUser Web Exception - local";
+                Logger.Error("**Add_Bank** CodeBehind -> RegisterUserWithSynapse FAILED - [MemberID: " + memberid +
+                                   "], [Exception: " + we.InnerException + "]");
+            }
             return res;
         }
+
+        public  SynapseBankLoginRequestResult BankLogin(string username, string password, string memberid, string bankname, bool IsPinRequired, string PinNumber)
+        {
+            SynapseBankLoginRequestResult res = new SynapseBankLoginRequestResult();
+            res.Is_success = false;
+
+            try
+            {
+                // 1. Attempt to register the user with Synapse
+                BankLoginResult accountCreateResult = RegisterUserWithSynapse(memberid);
+                res.ssn_verify_status = accountCreateResult.ssn_verify_status; // Will be overwritten if Bank Login is successful below
+
+                if (accountCreateResult.IsSuccess == true)
+                {
+                    Logger.Info("**Add_Bank** CodeBehind -> BankLogin -> Synapse account created successfully! [MemberID: " + memberid +
+                                           "], [SSN Status: " + accountCreateResult.ssn_verify_status + "]");
+
+                    // 2. Now call the bank login service.
+                    //    Response could be: 1.) array[] of banks,  2.) Question-based MFA,  3.) Code-based MFA, or  4.) Failure/Error
+
+                    string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+                    string serviceMethod = "/SynapseBankLoginRequest?BankName=" + bankname + "&MemberId=" + memberid + "&IsPinRequired=" + IsPinRequired
+                        + "&UserName=" + username + "&Password=" + password + "&PinNumber=" + PinNumber;
+
+                    SynapseBankLoginV3_Response_Int bankLoginResult =
+                        ResponseConverter<SynapseBankLoginV3_Response_Int>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+
+                    if (bankLoginResult.Is_success == true)
+                    {
+                        res.Is_success = true;
+                        res.Is_MFA = bankLoginResult.Is_MFA;
+                        res.Is_MFA = bankLoginResult.Is_MFA;
+                        if (bankLoginResult.Is_MFA)
+                        {
+                            res.MFA_Type = "question";    // no more code based as per synapse V3 docs
+                        }
+                        List<SynapseBankClass> synbanksList = new List<SynapseBankClass>();
+
+                        foreach (nodes bankNode in bankLoginResult.SynapseNodesList.nodes)
+                        {
+                            SynapseBankClass sbc = new SynapseBankClass();
+                            sbc.account_class = bankNode.info._class;
+                            sbc.account_number_string = bankNode.info.account_num;
+                            sbc.account_type = bankNode.type;
+                            sbc.address = "";
+                            sbc.balance = bankNode.info.balance.amount;
+                            sbc.bank_name = bankNode.info.bank_name;
+                            sbc.bankoid = bankNode._id.ToString();
+                            sbc.account_class = bankNode.info._class;
+                            sbc.nickname = bankNode.info.nickname;
+                            sbc.routing_number_string = bankNode.info.routing_num;
+                            sbc.account_type = bankNode.info.type;
+                            sbc.is_active = bankNode.is_active;
+
+                            synbanksList.Add(sbc);
+
+                        }
+
+
+                        res.SynapseBanksList = new SynapseBanksListClass()
+                        {
+                            banks = synbanksList,
+                            success = true
+                        }; ;
+
+                        res.ERROR_MSG = "OK";
+                       // res.ssn_verify_status = bankLoginResult.ssn_verify_status; // Should match the ssn_verify_status from Registering User...
+                    }
+                    else
+                    {
+                        Logger.Error("**Add_Bank** CodeBehind -> BankLogin FAILED -> [MemberID: " + memberid + "], [Error Msg: " + bankLoginResult.errorMsg + "]");
+                        res.ERROR_MSG = bankLoginResult.errorMsg;
+                    }
+                }
+                else
+                {
+                    Logger.Error("**Add_Bank** CodeBehind -> BankLogin -> Register Synapse User FAILED -> [MemberID: " + memberid + "], [Error Msg: " + accountCreateResult.Message + "]");
+                    res.ERROR_MSG = accountCreateResult.Message;
+                }
+
+                // Check if Register method and Bank Login method both got same result for ssn_verify_status
+                // ... not sure which one to prioritize yet in the case of a discrepency, but going with BankLogin one for now.
+                if (res.ssn_verify_status != accountCreateResult.ssn_verify_status)
+                {
+                    Logger.Info("**Add_Bank** CodeBehind -> BankLogin -> ssn_verify_status from Registering User was [" +
+                                            accountCreateResult.ssn_verify_status + "], but ssn_verify_status from BankLogin was: [" +
+                                            res.ssn_verify_status + "]");
+                }
+            }
+            catch (Exception we)
+            {
+                Logger.Error("**Add_Bank** CodeBehind -> BankLogin FAILED - [MemberID: " + memberid +
+                                   "], [Exception: " + we.InnerException + "]");
+
+                res.ERROR_MSG = "error occured at server.";
+            }
+
+            return res;
+        }
+
+        public static SynapseBankLoginRequestResult addBank(string memberid, string fullname, string routing, string account, string nickname, string cl, string type)
+        {
+            Logger.Info("**Add_Bank** CodeBehind -> addBank (for manual routing/account #) Initiated - [MemberID: " + memberid + "]");
+
+            SynapseBankLoginRequestResult res = new SynapseBankLoginRequestResult();
+            res.Is_success = false;
+
+            try
+            {
+                // Now call the bank login service.
+                // Response should be: 1.) array[] of 1 bank, or  2.) Failure/Error
+
+                string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+
+                string serviceMethod = "/SynapseV3AddNodeWithAccountNumberAndRoutingNumber?MemberId=" + memberid +  "&routing_num=" + routing
+                                       + "&account_num=" + account + "&bankNickName=" + nickname + "&accountclass=" + cl + "&accounttype=" + type;
+
+                SynapseBankLoginV3_Response_Int bankAddRes =
+                    ResponseConverter<SynapseBankLoginV3_Response_Int>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+
+                if (bankAddRes.Is_success == true)
+                {
+                    res.Is_success = true;
+                    res.Is_MFA = bankAddRes.Is_MFA;
+                    if (bankAddRes.Is_MFA)
+                    {
+                    res.MFA_Type = "question";    // no more code based as per synapse V3 docs
+                    }
+                    List<SynapseBankClass> synbanksList = new List<SynapseBankClass>();
+
+                    foreach (nodes bankNode in bankAddRes.SynapseNodesList.nodes)
+                    {
+                        SynapseBankClass sbc = new SynapseBankClass();
+                        sbc.account_class = bankNode.info._class;
+                        sbc.account_number_string= bankNode.info.account_num;
+                        sbc.account_type = bankNode.type;
+                        sbc.address = "";
+                        sbc.balance = bankNode.info.balance.amount;
+                        sbc.bank_name = bankNode.info.bank_name;
+                        sbc.bankoid = bankNode._id.ToString();
+                        sbc.account_class = bankNode.info._class;
+                        sbc.nickname = bankNode.info.nickname;
+                        sbc.routing_number_string = bankNode.info.routing_num;
+                        sbc.account_type = bankNode.info.type;
+                        sbc.is_active = bankNode.is_active;
+
+                        synbanksList.Add(sbc);
+
+                    }
+
+
+                    res.SynapseBanksList = new SynapseBanksListClass()
+                    {
+                        banks = synbanksList,
+                        success = true
+                    };;
+                    //res.SynapseCodeBasedResponse = bankAddRes.SynapseCodeBasedResponse;
+                    //res.SynapseQuestionBasedResponse = bankAddRes.SynapseQuestionBasedResponse;
+                    res.ERROR_MSG = "OK";
+                }
+                else
+                {
+                    res.ERROR_MSG = bankAddRes.errorMsg;
+                }
+                //res.ssn_verify_status = bankAddRes.;
+
+                return res;
+            }
+            catch (Exception we)
+            {
+                Logger.Error("**Add_Bank** CodeBehind -> addBank FAILED - [MemberID: " + memberid +
+                                   "], [Exception: " + we.InnerException + "]");
+
+                res.ERROR_MSG = "Error did occur at server. Ohh nooo!!";
+                return res;
+            }
+        }
+
  
         
     }

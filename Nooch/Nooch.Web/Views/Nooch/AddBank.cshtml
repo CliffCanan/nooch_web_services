@@ -26,6 +26,19 @@
 
 
 <body class="body body-addBank" data-role="page">
+    <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <script src="//cdn.jsdelivr.net/velocity/1.2.2/velocity.min.js"></script>
+    <script src="//cdn.jsdelivr.net/velocity/1.2.2/velocity.ui.min.js"></script>
+
+
+<script src="@Url.Content("~/js/parsley.min.js")"></script>
+<script src="@Url.Content("~/js/jquery.blockUI.min.js")"></script>
+<script src="@Url.Content("~/js/sweetalert.min.js")"></script>
+    <script src="@Url.Content("~/js/jquery.auto-complete.min.js")"></script>
+
+
     <form id="form1" runat="server">
         <asp:ScriptManager ID="ScriptManager1" runat="server" EnablePageMethods="true"></asp:ScriptManager>
         <div class="addBank-container raised-view">
@@ -434,17 +447,8 @@
         </div>
 
     </form>
-    <input type="hidden" id="baseUrl" value="@Request.Url.AbsoluteUri"/>
-    <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
-    <script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
-    <script src="//cdn.jsdelivr.net/velocity/1.2.2/velocity.min.js"></script>
-<script src="//cdn.jsdelivr.net/velocity/1.2.2/velocity.ui.min.js"></script>
+    
 
-<link href="@Url.Content("~/js/parsley.min.js")" rel="stylesheet"/>
-<link href="@Url.Content("~/js/jquery.blockUI.min.js")" rel="stylesheet"/>
-<link href="@Url.Content("~/js/sweetalert.min.js")" rel="stylesheet"/>
-    <link href="@Url.Content("~/js/jquery.auto-complete.min.js")" rel="stylesheet" />
     
     <script type="text/javascript">
 

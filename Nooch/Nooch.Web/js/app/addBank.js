@@ -220,7 +220,8 @@ function CheckBankDetails(bankName) {
     BANK_NAME = bankName;
     $.ajax({
         type: "POST",
-        url: "Add-Bank.aspx/CheckBankDetails",
+        //url: "Add-Bank.aspx/CheckBankDetails",
+        url: "CheckBankDetails",
         data: "{ bankname: '" + bankName + "'}",
         contentType: "application/json; charset=utf-8",
         dataType: "json",
@@ -233,9 +234,9 @@ function CheckBankDetails(bankName) {
 			// Hide UIBlock (loading box))
             $('.addBankContainer-body').unblock();
 
-            if (msg.d.IsSuccess == true) 
+            if (msg.IsSuccess == true) 
 			{
-                if (msg.d.IsPinRequired == false)
+                if (msg.IsPinRequired == false)
                 {
                     Is_PIN_REQUIRED = false;
                     $('#bankPin').attr('data-parsley-required', 'false');
