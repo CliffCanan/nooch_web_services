@@ -289,7 +289,7 @@ namespace Nooch.Web.Controllers
             return res;
         }
 
-        public  SynapseBankLoginRequestResult BankLogin(string username, string password, string memberid, string bankname, bool IsPinRequired, string PinNumber)
+        public  SynapseBankLoginRequestResult BankLogin(bankLoginInputFormClass inp)
         {
             SynapseBankLoginRequestResult res = new SynapseBankLoginRequestResult();
             res.Is_success = false;
@@ -297,20 +297,20 @@ namespace Nooch.Web.Controllers
             try
             {
                 // 1. Attempt to register the user with Synapse
-                BankLoginResult accountCreateResult = RegisterUserWithSynapse(memberid);
+                BankLoginResult accountCreateResult = RegisterUserWithSynapse(inp.memberid);
                 res.ssn_verify_status = accountCreateResult.ssn_verify_status; // Will be overwritten if Bank Login is successful below
 
                 if (accountCreateResult.IsSuccess == true)
                 {
-                    Logger.Info("**Add_Bank** CodeBehind -> BankLogin -> Synapse account created successfully! [MemberID: " + memberid +
+                    Logger.Info("**Add_Bank** CodeBehind -> BankLogin -> Synapse account created successfully! [MemberID: " + inp.memberid +
                                            "], [SSN Status: " + accountCreateResult.ssn_verify_status + "]");
 
                     // 2. Now call the bank login service.
                     //    Response could be: 1.) array[] of banks,  2.) Question-based MFA,  3.) Code-based MFA, or  4.) Failure/Error
 
                     string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-                    string serviceMethod = "/SynapseBankLoginRequest?BankName=" + bankname + "&MemberId=" + memberid + "&IsPinRequired=" + IsPinRequired
-                        + "&UserName=" + username + "&Password=" + password + "&PinNumber=" + PinNumber;
+                    string serviceMethod = "/SynapseBankLoginRequest?BankName=" + inp.bankname + "&MemberId=" + inp.memberid + "&IsPinRequired=" + inp.IsPinRequired
+                        + "&UserName=" + inp.username + "&Password=" + inp.password + "&PinNumber=" + inp.PinNumber;
 
                     SynapseBankLoginV3_Response_Int bankLoginResult =
                         ResponseConverter<SynapseBankLoginV3_Response_Int>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
@@ -358,13 +358,13 @@ namespace Nooch.Web.Controllers
                     }
                     else
                     {
-                        Logger.Error("**Add_Bank** CodeBehind -> BankLogin FAILED -> [MemberID: " + memberid + "], [Error Msg: " + bankLoginResult.errorMsg + "]");
+                        Logger.Error("**Add_Bank** CodeBehind -> BankLogin FAILED -> [MemberID: " + inp.memberid + "], [Error Msg: " + bankLoginResult.errorMsg + "]");
                         res.ERROR_MSG = bankLoginResult.errorMsg;
                     }
                 }
                 else
                 {
-                    Logger.Error("**Add_Bank** CodeBehind -> BankLogin -> Register Synapse User FAILED -> [MemberID: " + memberid + "], [Error Msg: " + accountCreateResult.Message + "]");
+                    Logger.Error("**Add_Bank** CodeBehind -> BankLogin -> Register Synapse User FAILED -> [MemberID: " + inp.memberid + "], [Error Msg: " + accountCreateResult.Message + "]");
                     res.ERROR_MSG = accountCreateResult.Message;
                 }
 
@@ -379,7 +379,7 @@ namespace Nooch.Web.Controllers
             }
             catch (Exception we)
             {
-                Logger.Error("**Add_Bank** CodeBehind -> BankLogin FAILED - [MemberID: " + memberid +
+                Logger.Error("**Add_Bank** CodeBehind -> BankLogin FAILED - [MemberID: " + inp.memberid +
                                    "], [Exception: " + we.InnerException + "]");
 
                 res.ERROR_MSG = "error occured at server.";
@@ -389,9 +389,9 @@ namespace Nooch.Web.Controllers
         }
 
 
-        public static SynapseBankLoginRequestResult addBank(string memberid, string fullname, string routing, string account, string nickname, string cl, string type)
+        public static SynapseBankLoginRequestResult addBank(bankaddInputFormClass inp)
         {
-            Logger.Info("**Add_Bank** CodeBehind -> addBank (for manual routing/account #) Initiated - [MemberID: " + memberid + "]");
+            Logger.Info("**Add_Bank** CodeBehind -> addBank (for manual routing/account #) Initiated - [MemberID: " + inp.memberid + "]");
 
             SynapseBankLoginRequestResult res = new SynapseBankLoginRequestResult();
             res.Is_success = false;
@@ -403,8 +403,8 @@ namespace Nooch.Web.Controllers
 
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
 
-                string serviceMethod = "/SynapseV3AddNodeWithAccountNumberAndRoutingNumber?MemberId=" + memberid +  "&routing_num=" + routing
-                                       + "&account_num=" + account + "&bankNickName=" + nickname + "&accountclass=" + cl + "&accounttype=" + type;
+                string serviceMethod = "/SynapseV3AddNodeWithAccountNumberAndRoutingNumber?MemberId=" + inp.memberid + "&routing_num=" + inp.routing
+                                       + "&account_num=" + inp.account + "&bankNickName=" + inp.nickname + "&accountclass=" + inp.cl + "&accounttype=" + inp.type;
 
                 SynapseBankLoginV3_Response_Int bankAddRes =
                     ResponseConverter<SynapseBankLoginV3_Response_Int>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
@@ -468,6 +468,146 @@ namespace Nooch.Web.Controllers
         }
 
  
+
+        // method to call verify bank mfa - to be used with bank login type MFA's
+        [HttpPost]
+        [ActionName("MFALogin")]
+        public static SynapseBankLoginRequestResult MFALogin(MFALoginInputClassForm inp)
+        {
+            SynapseBankLoginRequestResult res = new SynapseBankLoginRequestResult();
+
+            try
+            {
+                Logger.Info("**Add_Bank** CodeBehind -> MFALogin Initiated -> [MemberID: " + inp.memberid + "], [Bank: " + inp.bank + "], [MFA: " + inp.MFA + "]");
+
+                // preparing data for POST type request
+
+                var scriptSerializer = new JavaScriptSerializer();
+                string json;
+
+                SynapseV3VerifyNode_ServiceInput inpu = new SynapseV3VerifyNode_ServiceInput();
+                inpu.BankName = inp.bank; // not required..keeping it for just in case we need something to do with it.
+                inpu.MemberId = inp.memberid;
+                inpu.mfaResponse = inp.MFA;
+                inpu.bankId = inp.ba;   // this is bank_node_id..... must...need to pass this thing in earlier step
+                try
+                {
+                    json = "{\"input\":" + scriptSerializer.Serialize(inpu) + "}";
+
+                    string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+                    string serviceMethod = "/SynapseV3MFABankVerify";
+                    SynapseBankLoginRequestResult bnkloginresult = ResponseConverter<SynapseBankLoginRequestResult>.CallServicePostMethod(String.Concat(serviceUrl, serviceMethod), json);
+
+
+
+                    if (bnkloginresult.Is_success == true)
+                    {
+                        res.Is_success = true;
+                        res.Is_MFA = bnkloginresult.Is_MFA;
+                        res.MFA_Type = bnkloginresult.MFA_Type;
+                        res.SynapseBanksList = bnkloginresult.SynapseBanksList;
+                        res.SynapseCodeBasedResponse = bnkloginresult.SynapseCodeBasedResponse;
+                        res.SynapseQuestionBasedResponse = bnkloginresult.SynapseQuestionBasedResponse;
+                        res.ERROR_MSG = "OK";
+                    }
+                    else
+                    {
+                        Logger.Error("**Add_Bank** CodeBehind -> MFALogin FAILED -> [Error Msg: " + bnkloginresult.ERROR_MSG +
+                                               "], [MemberID: " + memberid + "], [Bank: " + bank + "], [MFA: " + MFA + "]");
+                        res.Is_success = false;
+                        res.ERROR_MSG = bnkloginresult.ERROR_MSG;
+                    }
+                }
+                catch (Exception ec)
+                {
+                    res.Is_success = false;
+                    res.ERROR_MSG = "";
+                    Logger.Error("**Add_Bank** CodeBehind -> MFALogin FAILED - [MemberID: " + memberid +
+                                  "], [Exception: " + ec + "]");
+                }
+
+                
+            }
+            catch (Exception we)
+            {
+                Logger.Error("**Add_Bank** CodeBehind -> MFALogin FAILED - [MemberID: " + memberid +
+                                   "], [Exception: " + we + "]");
+            }
+
+            return res;
+        }
+
+
+
+        // method to call verify bank mfa - to be used with routing and account number login
+        [HttpPost]
+        [ActionName("MFALoginWithRoutingAndAccountNumber")]
+        public static SynapseBankLoginRequestResult MFALoginWithRoutingAndAccountNumber(string bank, string memberid, string MicroDepositOne,string MicroDepositTwo, string ba)
+        {
+            SynapseBankLoginRequestResult res = new SynapseBankLoginRequestResult();
+
+            try
+            {
+                Logger.Info("**Add_Bank** CodeBehind -> MFALoginWithRoutingAndAccountNumber Initiated -> [MemberID: " + memberid + "], [Bank: " + bank + "]");
+
+                // preparing data for POST type request
+
+                var scriptSerializer = new JavaScriptSerializer();
+                string json;
+
+                SynapseV3VerifyNodeWithMicroDeposits_ServiceInput inpu = new SynapseV3VerifyNodeWithMicroDeposits_ServiceInput();
+                inpu.BankName = bank; // not required..keeping it for just in case we need something to do with it.
+                inpu.MemberId = memberid;
+                inpu.microDespositOne = MicroDepositOne;
+                inpu.microDespositTwo = MicroDepositTwo;
+                inpu.bankId = ba;   // this is bank_node_id..... must...need to pass this thing in earlier step
+                try
+                {
+                    json = "{\"input\":" + scriptSerializer.Serialize(inpu) + "}";
+
+                    string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+                    string serviceMethod = "/SynapseV3MFABankVerifyWithMicroDeposits";
+                    SynapseBankLoginRequestResult bnkloginresult = ResponseConverter<SynapseBankLoginRequestResult>.CallServicePostMethod(String.Concat(serviceUrl, serviceMethod), json);
+
+
+
+                    if (bnkloginresult.Is_success == true)
+                    {
+                        res.Is_success = true;
+                        res.Is_MFA = bnkloginresult.Is_MFA;
+                        res.MFA_Type = bnkloginresult.MFA_Type;
+                        res.SynapseBanksList = bnkloginresult.SynapseBanksList;
+                        res.SynapseCodeBasedResponse = bnkloginresult.SynapseCodeBasedResponse;
+                        res.SynapseQuestionBasedResponse = bnkloginresult.SynapseQuestionBasedResponse;
+                        res.ERROR_MSG = "OK";
+                    }
+                    else
+                    {
+                        Logger.Error("**Add_Bank** CodeBehind -> MFALoginWithRoutingAndAccountNumber FAILED -> [Error Msg: " + bnkloginresult.ERROR_MSG +
+                                               "], [MemberID: " + memberid + "], [Bank: " + bank + "]");
+                        res.Is_success = false;
+                        res.ERROR_MSG = bnkloginresult.ERROR_MSG;
+                    }
+                }
+                catch (Exception ec)
+                {
+                    res.Is_success = false;
+                    res.ERROR_MSG = "";
+                    Logger.Error("**Add_Bank** CodeBehind -> MFALoginWithRoutingAndAccountNumber FAILED - [MemberID: " + memberid +
+                                  "], [Exception: " + ec + "]");
+                }
+
+
+            }
+            catch (Exception we)
+            {
+                Logger.Error("**Add_Bank** CodeBehind -> MFALoginWithRoutingAndAccountNumber FAILED - [MemberID: " + memberid +
+                                   "], [Exception: " + we + "]");
+            }
+
+            return res;
+        }
+
 
         public ActionResult PayRequest()
         {
@@ -632,6 +772,38 @@ namespace Nooch.Web.Controllers
             return rpr;
         }
 
+
+
         
+    }
+
+    public class bankLoginInputFormClass
+    {
+        public string username  { get; set; }
+        public string password { get; set; }
+        public string memberid { get; set; }
+        public string bankname { get; set; }
+        public bool IsPinRequired { get; set; }
+        public string PinNumber { get; set; } 
+    }
+
+
+    public class bankaddInputFormClass
+    {
+        public string memberid  { get; set; }
+        public string fullname { get; set; }
+        public string routing { get; set; }
+        public string account { get; set; }
+        public string nickname { get; set; }
+        public string cl { get; set; }
+        public string type { get; set; } 
+    }
+
+    public class MFALoginInputClassForm
+    {
+        public string bank { get; set; }  
+            public string memberid { get; set; } 
+        public string MFA { get; set; }
+        public string ba { get; set; } 
     }
 }

@@ -60,7 +60,7 @@ namespace Nooch.Web.Common
             var response = httpWebRequest.GetResponse();
             return response.ToString();
         }
-        public static string CallServicePostMethod(string serviceUrl, string json)
+        public static T CallServicePostMethod(string serviceUrl, string json)
         {
 
             ServicePointManager.ServerCertificateValidationCallback = ((sender, certificate, chain, sslPolicyErrors) => true);
@@ -78,23 +78,29 @@ namespace Nooch.Web.Common
 
             responseReader.Close();
 
-            var scriptSerializer = new JavaScriptSerializer();
-            var serviceResponse = scriptSerializer.DeserializeObject(response);
+            
 
-            string result = string.Empty;
-            foreach (KeyValuePair<string, object> responseCollection in (Dictionary<string, object>)serviceResponse)
-            {
-                foreach (KeyValuePair<string, object> responseResult in (Dictionary<string, object>)responseCollection.Value)
-                {
-                    if (responseResult.Key.Equals("Result"))
-                    {
-                        result = responseResult.Value.ToString();
-                        return result;
-                    }
-                }
-            }
+
+            var scriptSerializer = new JavaScriptSerializer();
+            var result = scriptSerializer.Deserialize<T>(response);
 
             return result;
+          
+
+            //string result = string.Empty;
+            //foreach (KeyValuePair<string, object> responseCollection in (Dictionary<string, object>)serviceResponse)
+            //{
+            //    foreach (KeyValuePair<string, object> responseResult in (Dictionary<string, object>)responseCollection.Value)
+            //    {
+            //        if (responseResult.Key.Equals("Result"))
+            //        {
+            //            result = responseResult.Value.ToString();
+            //            return result;
+            //        }
+            //    }
+            //}
+
+            //return result;
         }
     }
 }
