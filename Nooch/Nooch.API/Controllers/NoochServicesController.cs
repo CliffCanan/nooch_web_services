@@ -3667,6 +3667,72 @@ namespace Nooch.API.Controllers
         }
 
 
+
+        [HttpPost]
+        [ActionName("SynapseV3MFABankVerifyWithMicroDeposits")]
+        public SynapseV3BankLoginResult_ServiceRes SynapseV3MFABankVerifyWithMicroDeposits(SynapseV3VerifyNodeWithMicroDeposits_ServiceInput input)
+        {
+            SynapseV3BankLoginResult_ServiceRes res = new SynapseV3BankLoginResult_ServiceRes();
+
+            MembersDataAccess mda = new MembersDataAccess();
+
+            SynapseBankLoginV3_Response_Int mdaResult = new SynapseBankLoginV3_Response_Int();
+            mdaResult = mda.SynapseV3MFABankVerifyWithMicroDeposits(input.MemberId, input.BankName, input.microDespositOne,input.microDespositTwo, input.bankId);
+
+            res.Is_success = mdaResult.Is_success;
+            res.Is_MFA = mdaResult.Is_MFA;
+            res.errorMsg = mdaResult.errorMsg;
+
+            #region Bank List Returned
+
+            if (mdaResult.SynapseNodesList != null && mdaResult.SynapseNodesList.nodes.Length > 0 && !mdaResult.Is_MFA)
+            {
+                SynapseNodesListClass nodesList = new SynapseNodesListClass();
+                List<SynapseIndividualNodeClass> bankslistextint = new List<SynapseIndividualNodeClass>();
+
+                foreach (nodes bank in mdaResult.SynapseNodesList.nodes)
+                {
+                    SynapseIndividualNodeClass b = new SynapseIndividualNodeClass();
+                    b.account_class = bank.info._class;
+                    b.bank_name = bank.info.bank_name;
+                    //b.date = bank.date;
+                    b.oid = bank._id.oid;
+                    b.is_active = bank.is_active;
+                    //b.is_verified = bank.is_verified;
+                    //b.mfa_verifed = bank.mfa_verifed;
+                    b.name_on_account = bank.info.name_on_account;
+                    b.nickname = bank.info.nickname;
+
+                    bankslistextint.Add(b);
+                }
+                nodesList.nodes = bankslistextint;
+                nodesList.success = mdaResult.Is_success;
+
+                res.SynapseNodesList = nodesList;
+            }
+
+            #endregion Bank List Returned
+
+            #region MFA Required
+
+            else if (mdaResult.Is_MFA == true)
+            {
+                //res.Bank_Access_Token = mdaResult.Bank_Access_Token;
+
+                if (!String.IsNullOrEmpty(mdaResult.mfaMessage))
+                {
+                    res.mfaMessage = mdaResult.mfaMessage;
+                    res.bankOid = mdaResult.SynapseNodesList.nodes[0]._id.oid;
+                }
+            }
+
+            #endregion MFA Required
+
+            return res;
+        }
+
+
+
         [HttpGet]
         [ActionName("GetSynapseBankAndUserDetails")]
         public SynapseDetailsClass GetSynapseBankAndUserDetails(string memberid)
