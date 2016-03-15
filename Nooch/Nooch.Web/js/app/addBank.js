@@ -220,7 +220,8 @@ function CheckBankDetails(bankName) {
     BANK_NAME = bankName;
     $.ajax({
         type: "POST",
-        url: "Add-Bank.aspx/CheckBankDetails",
+        //url: "Add-Bank.aspx/CheckBankDetails",
+        url: "CheckBankDetails",
         data: "{ bankname: '" + bankName + "'}",
         contentType: "application/json; charset=utf-8",
         dataType: "json",
@@ -233,9 +234,9 @@ function CheckBankDetails(bankName) {
 			// Hide UIBlock (loading box))
             $('.addBankContainer-body').unblock();
 
-            if (msg.d.IsSuccess == true) 
+            if (msg.IsSuccess == true) 
 			{
-                if (msg.d.IsPinRequired == false)
+                if (msg.IsPinRequired == false)
                 {
                     Is_PIN_REQUIRED = false;
                     $('#bankPin').attr('data-parsley-required', 'false');
@@ -442,7 +443,7 @@ function submitBnkLgn() {
 
     $.ajax({
         type: "POST",
-        url: "Add-Bank.aspx/BankLogin",
+        url: "BankLogin",
         data: "{ username: '" + $('#bankUsername').val() + "',password: '" + $('#bankPassword').val() + "',memberid: '" + MEMBER_ID + "',bankname: '" + BANK_NAME + "',IsPinRequired: '" + Is_PIN_REQUIRED + "',PinNumber: '" + $('#bankPin').val() + "'}",
         contentType: "application/json; charset=utf-8",
         dataType: "json",
@@ -743,7 +744,7 @@ function submitManualBank() {
 
 	$.ajax({
         type: "POST",
-        url: "Add-Bank.aspx/addBank", // CLIFF (9/21/15): ADDED NEW METHOD ('addBank') TO CODE-BEHIND PAGE
+        url: "addBank", // CLIFF (9/21/15): ADDED NEW METHOD ('addBank') TO CODE-BEHIND PAGE
         data: "{memberid: '" + MEMBER_ID + "', fullname: '" + $('#userFullName').val() + "',routing: '" + $('#bankRout').val() + "',account: '" + $('#bankAcntNum').val() + "',nickname: '',cl: '" + classString + "',type: '" + typeString + "'}",
         contentType: "application/json; charset=utf-8",
         dataType: "json",
@@ -947,7 +948,7 @@ function MFALogin() {
 	//console.log("Submitting MFA response with data:  {bank: '" + BANK_NAME + "', memberid: '" + MEMBER_ID + "', bankname: '" + BANK_NAME + "', MFA: '" + mfaResp + "', ba: '" + accessCode + "'}");
     $.ajax({
         type: "POST",
-        url: "Add-Bank.aspx/MFALogin",
+        url: "MFALogin",
         data: "{ bank: '" + BANK_NAME + "',memberid: '" + MEMBER_ID + "',MFA: '" + mfaResp + "',ba: '" + accessCode + "'}",
         contentType: "application/json; charset=utf-8",
         dataType: "json",
@@ -1148,7 +1149,7 @@ function SetDefaultAct() {
 
 		$.ajax({
 			type: "POST",
-			url: "Add-Bank.aspx/SetDefaultBank",
+			url: "SetDefaultBank",
 			data: "{ MemberId: '" + MEMBER_ID + "',BankName: '" + bankName + "',BankId: '" + bankId + "'}",
 			contentType: "application/json; charset=utf-8",
 			dataType: "json",

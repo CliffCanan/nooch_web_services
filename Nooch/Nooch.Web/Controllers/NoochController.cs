@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
+using System.Web.Script.Serialization;
 using Nooch.Common;
 using Nooch.Common.Entities.LandingPagesRelatedEntities;
 using Nooch.Common.Entities.SynapseRelatedEntities;
@@ -26,9 +27,11 @@ namespace Nooch.Web.Controllers
             return View();
         }
 
-        public ActionResult AddBank()
+        public ActionResult AddBank(string MemberId)
         {
+            if(!String.IsNullOrEmpty(MemberId))
             return View();
+            return RedirectToAction("Index");
         }
 
 
@@ -207,9 +210,10 @@ namespace Nooch.Web.Controllers
                 }
             }
         }
+        
         [HttpPost]
         [ActionName("CheckBankDetails")]
-        public static BankNameCheckStatus CheckBankDetails(string bankname)
+        public ActionResult CheckBankDetails(string bankname)
         {
             // Get bank details
             BankNameCheckStatus res = new BankNameCheckStatus();
@@ -245,176 +249,617 @@ namespace Nooch.Web.Controllers
                 Logger.Error("**Add_Bank** CodeBehind -> CheckBankDetails FAILED - [Bank Name: " + bankname +
                                    "], [Exception Msg: " + we.Message + "], [Exception Inner: " + we.InnerException + "]");
             }
+            return Json(res);
+        }
+
+        public  BankLoginResult RegisterUserWithSynapse(string memberid)
+        {
+            Logger.Info("**Add_Bank** CodeBehind -> RegisterUserWithSynapse Initiated - [MemberID: " + memberid + "]");
+
+            BankLoginResult res = new BankLoginResult();
+            res.IsSuccess = false;
+            res.ssn_verify_status = "Unknown";
+
+            try
+            {
+
+                string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+                string serviceMethod = "/RegisterUserWithSynapseV3?memberId=" + memberid;
+
+                synapseCreateUserV3Result_int transaction = ResponseConverter<synapseCreateUserV3Result_int>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+
+                if (transaction.success == false)
+                {
+                    res.Message = transaction.errorMsg;
+                }
+                if (transaction.success == true)
+                {
+                    res.IsSuccess = true;
+                    res.Message = "OK";
+                }
+
+                res.ssn_verify_status = transaction.ssn_verify_status;
+            }
+            catch (Exception we)
+            {
+                res.Message = "RegisterUser Web Exception - local";
+                Logger.Error("**Add_Bank** CodeBehind -> RegisterUserWithSynapse FAILED - [MemberID: " + memberid +
+                                   "], [Exception: " + we.InnerException + "]");
+            }
             return res;
         }
 
-        public ActionResult makePayment()
-        
-        
+        public  SynapseBankLoginRequestResult BankLogin(bankLoginInputFormClass inp)
         {
-            HiddenField hkf = new HiddenField();
+            SynapseBankLoginRequestResult res = new SynapseBankLoginRequestResult();
+            res.Is_success = false;
+
             try
             {
-                                   
-                    if (!String.IsNullOrEmpty(Request.QueryString["rs"]))
-                    {
-                        Logger.Info("Make Payment CodeBehind -> Page_load Initiated - Is a RentScene Payment: [" + Request.QueryString["rs"] + "]");
+                // 1. Attempt to register the user with Synapse
+                BankLoginResult accountCreateResult = RegisterUserWithSynapse(inp.memberid);
+                res.ssn_verify_status = accountCreateResult.ssn_verify_status; // Will be overwritten if Bank Login is successful below
 
-                        //rs.Value = Request.QueryString["rs"].ToLower();      
-                        hkf.rs = Request.QueryString["rs"].ToLower();
+                if (accountCreateResult.IsSuccess == true)
+                {
+                    Logger.Info("**Add_Bank** CodeBehind -> BankLogin -> Synapse account created successfully! [MemberID: " + inp.memberid +
+                                           "], [SSN Status: " + accountCreateResult.ssn_verify_status + "]");
+
+                    // 2. Now call the bank login service.
+                    //    Response could be: 1.) array[] of banks,  2.) Question-based MFA,  3.) Code-based MFA, or  4.) Failure/Error
+
+                    string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+                    string serviceMethod = "/SynapseBankLoginRequest?BankName=" + inp.bankname + "&MemberId=" + inp.memberid + "&IsPinRequired=" + inp.IsPinRequired
+                        + "&UserName=" + inp.username + "&Password=" + inp.password + "&PinNumber=" + inp.PinNumber;
+
+                    SynapseBankLoginV3_Response_Int bankLoginResult =
+                        ResponseConverter<SynapseBankLoginV3_Response_Int>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+
+                    if (bankLoginResult.Is_success == true)
+                    {
+                        res.Is_success = true;
+                        res.Is_MFA = bankLoginResult.Is_MFA;
+                        res.Is_MFA = bankLoginResult.Is_MFA;
+                        if (bankLoginResult.Is_MFA)
+                        {
+                            res.MFA_Type = "question";    // no more code based as per synapse V3 docs
+                        }
+                        List<SynapseBankClass> synbanksList = new List<SynapseBankClass>();
+
+                        foreach (nodes bankNode in bankLoginResult.SynapseNodesList.nodes)
+                        {
+                            SynapseBankClass sbc = new SynapseBankClass();
+                            sbc.account_class = bankNode.info._class;
+                            sbc.account_number_string = bankNode.info.account_num;
+                            sbc.account_type = bankNode.type;
+                            sbc.address = "";
+                            sbc.balance = bankNode.info.balance.amount;
+                            sbc.bank_name = bankNode.info.bank_name;
+                            sbc.bankoid = bankNode._id.ToString();
+                            sbc.account_class = bankNode.info._class;
+                            sbc.nickname = bankNode.info.nickname;
+                            sbc.routing_number_string = bankNode.info.routing_num;
+                            sbc.account_type = bankNode.info.type;
+                            sbc.is_active = bankNode.is_active;
+
+                            synbanksList.Add(sbc);
+
+                        }
+
+
+                        res.SynapseBanksList = new SynapseBanksListClass()
+                        {
+                            banks = synbanksList,
+                            success = true
+                        }; ;
+
+                        res.ERROR_MSG = "OK";
+                       // res.ssn_verify_status = bankLoginResult.ssn_verify_status; // Should match the ssn_verify_status from Registering User...
+                    }
+                    else
+                    {
+                        Logger.Error("**Add_Bank** CodeBehind -> BankLogin FAILED -> [MemberID: " + inp.memberid + "], [Error Msg: " + bankLoginResult.errorMsg + "]");
+                        res.ERROR_MSG = bankLoginResult.errorMsg;
+                    }
                 }
+                else
+                {
+                    Logger.Error("**Add_Bank** CodeBehind -> BankLogin -> Register Synapse User FAILED -> [MemberID: " + inp.memberid + "], [Error Msg: " + accountCreateResult.Message + "]");
+                    res.ERROR_MSG = accountCreateResult.Message;
+                }
+
+                // Check if Register method and Bank Login method both got same result for ssn_verify_status
+                // ... not sure which one to prioritize yet in the case of a discrepency, but going with BankLogin one for now.
+                if (res.ssn_verify_status != accountCreateResult.ssn_verify_status)
+                {
+                    Logger.Info("**Add_Bank** CodeBehind -> BankLogin -> ssn_verify_status from Registering User was [" +
+                                            accountCreateResult.ssn_verify_status + "], but ssn_verify_status from BankLogin was: [" +
+                                            res.ssn_verify_status + "]");
+                }
+            }
+            catch (Exception we)
+            {
+                Logger.Error("**Add_Bank** CodeBehind -> BankLogin FAILED - [MemberID: " + inp.memberid +
+                                   "], [Exception: " + we.InnerException + "]");
+
+                res.ERROR_MSG = "error occured at server.";
+            }
+
+            return res;
+        }
+
+
+        public static SynapseBankLoginRequestResult addBank(bankaddInputFormClass inp)
+        {
+            Logger.Info("**Add_Bank** CodeBehind -> addBank (for manual routing/account #) Initiated - [MemberID: " + inp.memberid + "]");
+
+            SynapseBankLoginRequestResult res = new SynapseBankLoginRequestResult();
+            res.Is_success = false;
+
+            try
+            {
+                // Now call the bank login service.
+                // Response should be: 1.) array[] of 1 bank, or  2.) Failure/Error
+
+                string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+
+                string serviceMethod = "/SynapseV3AddNodeWithAccountNumberAndRoutingNumber?MemberId=" + inp.memberid + "&routing_num=" + inp.routing
+                                       + "&account_num=" + inp.account + "&bankNickName=" + inp.nickname + "&accountclass=" + inp.cl + "&accounttype=" + inp.type;
+
+                SynapseBankLoginV3_Response_Int bankAddRes =
+                    ResponseConverter<SynapseBankLoginV3_Response_Int>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+
+                if (bankAddRes.Is_success == true)
+                {
+                    res.Is_success = true;
+                    res.Is_MFA = bankAddRes.Is_MFA;
+                    if (bankAddRes.Is_MFA)
+                    {
+                    res.MFA_Type = "question";    // no more code based as per synapse V3 docs
+                    }
+                    List<SynapseBankClass> synbanksList = new List<SynapseBankClass>();
+
+                    foreach (nodes bankNode in bankAddRes.SynapseNodesList.nodes)
+                    {
+                        SynapseBankClass sbc = new SynapseBankClass();
+                        sbc.account_class = bankNode.info._class;
+                        sbc.account_number_string= bankNode.info.account_num;
+                        sbc.account_type = bankNode.type;
+                        sbc.address = "";
+                        sbc.balance = bankNode.info.balance.amount;
+                        sbc.bank_name = bankNode.info.bank_name;
+                        sbc.bankoid = bankNode._id.ToString();
+                        sbc.account_class = bankNode.info._class;
+                        sbc.nickname = bankNode.info.nickname;
+                        sbc.routing_number_string = bankNode.info.routing_num;
+                        sbc.account_type = bankNode.info.type;
+                        sbc.is_active = bankNode.is_active;
+
+                        synbanksList.Add(sbc);
+
+                    }
+
+
+                    res.SynapseBanksList = new SynapseBanksListClass()
+                    {
+                        banks = synbanksList,
+                        success = true
+                    };;
+                    //res.SynapseCodeBasedResponse = bankAddRes.SynapseCodeBasedResponse;
+                    //res.SynapseQuestionBasedResponse = bankAddRes.SynapseQuestionBasedResponse;
+                    res.ERROR_MSG = "OK";
+                }
+                else
+                {
+                    res.ERROR_MSG = bankAddRes.errorMsg;
+                }
+                //res.ssn_verify_status = bankAddRes.;
+
+                return res;
+            }
+            catch (Exception we)
+            {
+                Logger.Error("**Add_Bank** CodeBehind -> addBank FAILED - [MemberID: " + inp.memberid +
+                                   "], [Exception: " + we.InnerException + "]");
+
+                res.ERROR_MSG = "Error did occur at server. Ohh nooo!!";
+                return res;
+            }
+        }
+
+ 
+
+        // method to call verify bank mfa - to be used with bank login type MFA's
+        [HttpPost]
+        [ActionName("MFALogin")]
+        public static SynapseBankLoginRequestResult MFALogin(MFALoginInputClassForm inp)
+        {
+            SynapseBankLoginRequestResult res = new SynapseBankLoginRequestResult();
+
+            try
+            {
+                Logger.Info("**Add_Bank** CodeBehind -> MFALogin Initiated -> [MemberID: " + inp.memberid + "], [Bank: " + inp.bank + "], [MFA: " + inp.MFA + "]");
+
+                // preparing data for POST type request
+
+                var scriptSerializer = new JavaScriptSerializer();
+                string json;
+
+                SynapseV3VerifyNode_ServiceInput inpu = new SynapseV3VerifyNode_ServiceInput();
+                inpu.BankName = inp.bank; // not required..keeping it for just in case we need something to do with it.
+                inpu.MemberId = inp.memberid;
+                inpu.mfaResponse = inp.MFA;
+                inpu.bankId = inp.ba;   // this is bank_node_id..... must...need to pass this thing in earlier step
+                try
+                {
+                    json = "{\"input\":" + scriptSerializer.Serialize(inpu) + "}";
+
+                    string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+                    string serviceMethod = "/SynapseV3MFABankVerify";
+                    SynapseBankLoginRequestResult bnkloginresult = ResponseConverter<SynapseBankLoginRequestResult>.CallServicePostMethod(String.Concat(serviceUrl, serviceMethod), json);
+
+
+
+                    if (bnkloginresult.Is_success == true)
+                    {
+                        res.Is_success = true;
+                        res.Is_MFA = bnkloginresult.Is_MFA;
+                        res.MFA_Type = bnkloginresult.MFA_Type;
+                        res.SynapseBanksList = bnkloginresult.SynapseBanksList;
+                        res.SynapseCodeBasedResponse = bnkloginresult.SynapseCodeBasedResponse;
+                        res.SynapseQuestionBasedResponse = bnkloginresult.SynapseQuestionBasedResponse;
+                        res.ERROR_MSG = "OK";
+                    }
+                    else
+                    {
+                        Logger.Error("**Add_Bank** CodeBehind -> MFALogin FAILED -> [Error Msg: " + bnkloginresult.ERROR_MSG +
+                                               "], [MemberID: " + inp.memberid + "], [Bank: " + inp.bank + "], [MFA: " + inp.MFA + "]");
+                        res.Is_success = false;
+                        res.ERROR_MSG = bnkloginresult.ERROR_MSG;
+                    }
+                }
+                catch (Exception ec)
+                {
+                    res.Is_success = false;
+                    res.ERROR_MSG = "";
+                    Logger.Error("**Add_Bank** CodeBehind -> MFALogin FAILED - [MemberID: " + inp.memberid +
+                                  "], [Exception: " + ec + "]");
+                }
+
+                
+            }
+            catch (Exception we)
+            {
+                Logger.Error("**Add_Bank** CodeBehind -> MFALogin FAILED - [MemberID: " + inp.memberid +
+                                   "], [Exception: " + we + "]");
+            }
+
+            return res;
+        }
+
+
+
+        // method to call verify bank mfa - to be used with routing and account number login
+        [HttpPost]
+        [ActionName("MFALoginWithRoutingAndAccountNumber")]
+        public static SynapseBankLoginRequestResult MFALoginWithRoutingAndAccountNumber(string bank, string memberid, string MicroDepositOne, string MicroDepositTwo, string ba)
+        {
+            SynapseBankLoginRequestResult res = new SynapseBankLoginRequestResult();
+
+            try
+            {
+                Logger.Info("**Add_Bank** CodeBehind -> MFALoginWithRoutingAndAccountNumber Initiated -> [MemberID: " + memberid + "], [Bank: " + bank + "]");
+
+                // preparing data for POST type request
+
+        
+                var scriptSerializer = new JavaScriptSerializer();
+                string json;
+
+                SynapseV3VerifyNodeWithMicroDeposits_ServiceInput inpu = new SynapseV3VerifyNodeWithMicroDeposits_ServiceInput();
+                inpu.BankName = bank; // not required..keeping it for just in case we need something to do with it.
+                inpu.MemberId = memberid;
+                inpu.microDespositOne = MicroDepositOne;
+                inpu.microDespositTwo = MicroDepositTwo;
+                inpu.bankId = ba;   // this is bank_node_id..... must...need to pass this thing in earlier step
+                try
+                {
+                    json = "{\"input\":" + scriptSerializer.Serialize(inpu) + "}";
+
+                    string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+                    string serviceMethod = "/SynapseV3MFABankVerifyWithMicroDeposits";
+                    SynapseBankLoginRequestResult bnkloginresult = ResponseConverter<SynapseBankLoginRequestResult>.CallServicePostMethod(String.Concat(serviceUrl, serviceMethod), json);
+
+
+
+                    if (bnkloginresult.Is_success == true)
+                    {
+                        res.Is_success = true;
+                        res.Is_MFA = bnkloginresult.Is_MFA;
+                        res.MFA_Type = bnkloginresult.MFA_Type;
+                        res.SynapseBanksList = bnkloginresult.SynapseBanksList;
+                        res.SynapseCodeBasedResponse = bnkloginresult.SynapseCodeBasedResponse;
+                        res.SynapseQuestionBasedResponse = bnkloginresult.SynapseQuestionBasedResponse;
+                        res.ERROR_MSG = "OK";
+                    }
+                    else
+                    {
+                        Logger.Error("**Add_Bank** CodeBehind -> MFALoginWithRoutingAndAccountNumber FAILED -> [Error Msg: " + bnkloginresult.ERROR_MSG +
+                                               "], [MemberID: " + memberid + "], [Bank: " + bank + "]");
+                        res.Is_success = false;
+                        res.ERROR_MSG = bnkloginresult.ERROR_MSG;
+                    }
+                }
+                catch (Exception ec)
+                {
+                    res.Is_success = false;
+                    res.ERROR_MSG = "";
+                    Logger.Error("**Add_Bank** CodeBehind -> MFALoginWithRoutingAndAccountNumber FAILED - [MemberID: " + memberid +
+                                  "], [Exception: " + ec + "]");
+                }
+
+
+            }
+            catch (Exception we)
+            {
+                Logger.Error("**Add_Bank** CodeBehind -> MFALoginWithRoutingAndAccountNumber FAILED - [MemberID: " + memberid +
+                                   "], [Exception: " + we + "]");
+            }
+
+            return res;
+        }
+
+
+        public ActionResult PayRequest()
+        {
+            ResultPayRequest rpr = new ResultPayRequest();
+            Logger.Info("payRequest CodeBehind -> Page_load Initiated - [TransactionId Parameter: " + Request.QueryString["TransactionId"] + "]");
+
+            try
+            {
+              
+                
+                    if (!String.IsNullOrEmpty(Request.QueryString["TransactionId"]))
+                    {
+                        if (!String.IsNullOrEmpty(Request.QueryString["UserType"]))
+                        {
+                            string n = Request.QueryString["UserType"].ToString();
+                            rpr.usrTyp = CommonHelper.GetDecryptedData(n);
+
+                            if (rpr.usrTyp == "NonRegistered" ||
+                               rpr.usrTyp == "Existing")
+                            {
+                                Logger.Info("payRequest CodeBehind -> Page_load - UserType is: [" + rpr.usrTyp + "]");
+                            }
+                        }
+
+                        // Check if this is a RENT Payment request (from a Landlord)
+                        if (Request.Params.AllKeys.Contains("IsRentTrans"))
+                        {
+                            if (Request["IsRentTrans"].ToLower() == "true")
+                            {
+                                Logger.Info("payRequest CodeBehind -> Page_load - RENT PAYMENT Detected");
+
+                               rpr.transType = "rent";
+                               rpr.usrTyp = "tenant";
+                            }
+                        }
+
+                        // Check if this payment is for Rent Scene
+                        if (Request.Params.AllKeys.Contains("rs") && Request["rs"] == "1")
+                        {
+                            Logger.Info("payRequest CodeBehind -> Page_load - RENT SCENE Transaction Detected");
+                            rpr.rs = "true";
+                        }
+
+                        Response.Write("<script>var errorFromCodeBehind = '0';</script>");
+
+                    rpr= GetTransDetailsForPayRequest(Request.QueryString["TransactionId"].ToString(),rpr);
+                    }
+                    else
+                    {
+                        // something wrong with query string
+                        Response.Write("<script>var errorFromCodeBehind = '1';</script>");
+                       rpr.payreqInfo= false;
+                    }
+                
+
+              rpr.PayorInitialInfo = false;
             }
             catch (Exception ex)
             {
-               // errorId.Value = "1";
-                hkf.errorId = "1";
-                Logger.Error("Make Payment CodeBehind -> page_load OUTER EXCEPTION - [Exception: " + ex.Message + "]");
-            }
+               rpr.payreqInfo = false;
+                Response.Write("<script>var errorFromCodeBehind = '1';</script>");
 
-            ViewData["OnLoadData"] = hkf;
+                Logger.Error("payRequest CodeBehind -> page_load OUTER EXCEPTION - [TransactionId Parameter: " + Request.QueryString["TransactionId"] +
+                                       "], [Exception: " + ex.Message + "]");
+            }
+            ViewData["OnLoaddata"] = rpr;
             return View();
         }
 
-        public ActionResult submitPayment(bool isRequest, string amount, string name, string email, string memo, string pin, string ip)
+        public ResultPayRequest GetTransDetailsForPayRequest(string TransactionId,ResultPayRequest resultPayRequest)
         {
-            Logger.Info("Make Payment Code-Behind -> submitPayment Initiated - isRequest: [" + isRequest +
-                                   "], Name: [" + name + "], Email: [" + email +
-                                   "], Amount: [" + amount + "], memo: [" + memo +
-                                   "], PIN: [" + pin + "], IP: [" + ip + "]");
+            ResultPayRequest rpr = resultPayRequest;
+            Logger.Info("payRequest CodeBehind -> GetTransDetails Initiated - TransactionID: [" + TransactionId + "]");
 
-            requestFromRentScene res = new requestFromRentScene();
-            res.success = false;
-            res.msg = "Initial - code behind";
+            string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+            string serviceMethod = "/GetTransactionDetailByIdForRequestPayPage?TransactionId=" + TransactionId;
 
-            pin = (String.IsNullOrEmpty(pin) || pin.Length != 4) ? "0000" : pin;
-            pin = CommonHelper.GetEncryptedData(pin);
+            Logger.Info("payRequest CodeBehind -> GetTransDetails - URL to query: [" + String.Concat(serviceUrl, serviceMethod) + "]");
 
-            try
+            TransactionDto transaction = ResponseConverter<TransactionDto>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+
+            if (transaction == null)
             {
-                string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-                string serviceMethod = "/RequestMoneyForRentScene?name=" + name +
-                                       "&email=" + email + "&amount=" + amount +
-                                       "&memo=" + memo + "&pin=" + pin +
-                                       "&ip=" + ip + "&isRequest=" + isRequest;
+                Logger.Error("payRequest CodeBehind -> GetTransDetails FAILED - Transaction Not Found - TransactionId: [" + TransactionId + "]");
 
-                string urlToUse = String.Concat(serviceUrl, serviceMethod);
-
-                Logger.Info("Make Payment Code-Behind -> submitPayment - URL To Query: [" + urlToUse + "]");
-
-                requestFromRentScene response = ResponseConverter<requestFromRentScene>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
-
-                Logger.Info("Make Payment Code-Behind -> submitPayment RESULT.Success: [" + response.success + "], RESULT.Msg: [" + response.msg + "]");
-
-                if (response != null)
+                rpr.payreqInfo = false;
+                rpr.pymnt_status = "0";
+                Response.Write("<script>errorFromCodeBehind = '1';</script>");
+            }
+            else
+            {
+                if (transaction.MemberId == "852987e8-d5fe-47e7-a00b-58a80dd15b49")
                 {
-                    res = response;
+                    rpr.rs = "true";
+                }
 
-                    //Logger.LogDebugMessage("Make Payment Code-Behind -> submitPayment");
+                rpr.transId = transaction.TransactionId;
+                rpr.pymnt_status = transaction.TransactionStatus.ToLower();
 
-                    #region Logging For Debugging
+                rpr.transMemo = transaction.Memo;
 
-                    if (response.success == true)
-                    {
-                        if (response.isEmailAlreadyReg == true)
-                        {
-                            Logger.Info("Make Payment Code-Behind -> submitPayment Success - Email address already registered to an Existing User - " +
-                                                   "Name: [" + response.name + "], Email: [" + email + "], Status: [" + response.memberStatus + "], MemberID: [" + response.memberId + "]");
-                        }
-                        else
-                        {
-                            Logger.Info("Make Payment Code-Behind -> submitPayment Success - Payment Request submitted to NEW user successfully - " +
-                                                   "Recipient: [" + name + "], Email: [" + email + "], Amount: [" + amount + "], Memo: [" + memo + "]");
-                        }
-                    }
-                    else
-                    {
-                        Logger.Error("Make Payment Code-Behind -> submitPayment FAILED - Server response for RequestMoneyForRentScene() was NOT successful - " +
-                                               "Recipient: [" + name + "], Email: [" + email + "], Amount: [" + amount + "], Memo: [" + memo + "]");
-                    }
+               rpr.senderImage= transaction.RecepientPhoto;
+               rpr.senderName1= (!String.IsNullOrEmpty(transaction.RecepientName) && transaction.RecepientName.Length > 2) ?
+                                    transaction.RecepientName :
+                                    transaction.Name;
 
-                    #endregion Logging For Debugging
+                string s = transaction.Amount.ToString("n2");
+                string[] s1 = s.Split('.');
+                if (s1.Length == 2)
+                {
+                    rpr.transAmountd = s1[0].ToString();
+                    rpr.transAmountc = s1[1].ToString();
                 }
                 else
                 {
-                    res.msg = "Unknown server error - Server's response was null.";
+                    rpr.transAmountd = s1[0].ToString();
+                    rpr.transAmountc = "00";
                 }
-            }
-            catch (Exception ex)
-            {
-                Logger.Error("Make Payment Code-Behind -> submitPayment FAILED - email: [" + email + "], Exception: [" + ex.Message + "]");
-                res.msg = "Code-behind exception during submitPayment.";
-            }
 
-            return Json(res);
-        }
-
-        public ActionResult submitRequestToExistingUser(bool isRequest, string amount, string name, string email, string memo, string pin, string ip, string memberId, string nameFromServer)
-        {
-            Logger.Info("Make Payment Code-Behind -> submitRequestToExistingUser Initiated - isRequest: [" + isRequest +
-                                   "], Name: [" + name + "], Email: [" + email +
-                                   "], Amount: [" + amount + "], memo: [" + memo +
-                                   "], PIN: [" + pin + "], IP: [" + ip + "]" +
-                                   "], MemberID: [" + memberId + "], NameFromServer: [" + nameFromServer + "]");
-
-            requestFromRentScene res = new requestFromRentScene();
-            res.success = false;
-            res.msg = "Initial - code behind";
-
-            pin = (String.IsNullOrEmpty(pin) || pin.Length != 4) ? "0000" : pin;
-            pin = CommonHelper.GetEncryptedData(pin);
-
-            try
-            {
-                string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-                string serviceMethod = "/RequestMoneyToExistingUserForRentScene?name=" + name +
-                                       "&email=" + email + "&amount=" + amount +
-                                       "&memo=" + memo + "&pin=" + pin +
-                                       "&ip=" + ip + "&isRequest=" + isRequest +
-                                       "&memberId=" + memberId + "&nameFromServer=" + nameFromServer;
-
-                string urlToUse = String.Concat(serviceUrl, serviceMethod);
-
-                Logger.Info("Make Payment Code-Behind -> submitRequestToExistingUser - URL To Query: [" + urlToUse + "]");
-
-                requestFromRentScene response = ResponseConverter<requestFromRentScene>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
-
-                Logger.Info("Make Payment Code-Behind -> submitRequestToExistingUser - Server Response for RequestMoneyToExistingUserForRentScene: " +
-                                       "RESULT.Success: [" + response.success + "], RESULT.Msg: [" + response.msg + "]");
-
-                if (response != null)
+                // Check if this was a request to an existing, but 'NonRegistered' User
+                if (transaction.IsExistingButNonRegUser == true)
                 {
-                    res = response;
-
-                    Logger.Info("Make Payment Code-Behind -> submitPayment");
-
-                    #region Logging For Debugging
-
-                    if (response.success == true)
+                    if (transaction.TransactionStatus.ToLower() != "pending")
                     {
-                        Logger.Info("Make Payment Code-Behind -> submitRequestToExistingUser Success - Payment Request submitted to NEW user successfully - " +
-                                               "Recipient: [" + name + "], Email: [" + email + "], Amount: [" + amount + "], Memo: [" + memo + "]");
+                        Logger.Info("payRequest CodeBehind -> GetTransDetails - IsExistingButNonRegUser = 'true', but Transaction no longer pending!");
+                    }
+
+                    rpr.memidexst = !String.IsNullOrEmpty(transaction.RecepientId)
+                                      ? transaction.RecepientId
+                                      : "";
+
+                    rpr.bnkName = transaction.BankName;
+                    rpr.bnkNickname = transaction.BankId;
+
+                    if (transaction.BankName == "no bank found")
+                    {
+                        Logger.Error("payRequest CodeBehind -> GetTransDetails - IsExistingButNonRegUser = 'true', but No Bank Found, so JS should display Add-Bank iFrame.");
                     }
                     else
                     {
-                        Logger.Error("Make Payment Code-Behind -> submitRequestToExistingUser FAILED - Server response for RequestMoneyForRentScene() was NOT successful - " +
-                                               "Recipient: [" + name + "], Email: [" + email + "], Amount: [" + amount + "], Memo: [" + memo + "]");
+                        rpr.nonRegUsrContainer= true;
+                    }
+                }
+
+                else if (rpr.transType == "rent") // Set in Page_Load above based on URL query string
+                {
+                    Logger.Info("payRequest CodeBehind -> GetTransDetails - Got a RENT Payment!");
+
+                    rpr.memidexst = !String.IsNullOrEmpty(transaction.RecepientId)
+                                      ? transaction.RecepientId
+                                      : "";
+                }
+
+                // Now check what TYPE of invitation (phone or email)
+                rpr.invitationType  = transaction.IsPhoneInvitation == true ? "p" : "e";
+
+                if (!String.IsNullOrEmpty(transaction.InvitationSentTo))
+                {
+                    rpr.invitationSentto = transaction.InvitationSentTo;
+                }
+            }
+            return rpr;
+        }
+
+        [HttpGet]
+        [ActionName("SetDefaultBank")]
+        public static SynapseBankSetDefaultResult SetDefaultBank(setDefaultBankInput input)
+        {
+            Logger.Info("**Add_Bank** CodeBehind -> SetDefaultBank Initiated - [MemberID: " + input.MemberId +
+                                   "], [Bank Name: " + input.BankName + "], [BankID: " + input.BankId + "]");
+
+            SynapseBankSetDefaultResult res = new SynapseBankSetDefaultResult();
+
+            try
+            {
+                if (String.IsNullOrEmpty(input.MemberId) ||
+                String.IsNullOrEmpty(input.BankName) ||
+                String.IsNullOrEmpty(input.BankId))
+                {
+                    if (String.IsNullOrEmpty(input.BankName))
+                    {
+                        res.Message = "Invalid data - need Bank Name";
+                    }
+                    else if (String.IsNullOrEmpty(input.MemberId))
+                    {
+                        res.Message = "Invalid data - need MemberId";
+                    }
+                    else if (String.IsNullOrEmpty(input.BankId))
+                    {
+                        res.Message = "Invalid data - need Bank Id";
                     }
 
-                    #endregion Logging For Debugging
+                    res.Is_success = false;
                 }
                 else
                 {
-                    res.msg = "Unknown server error - Server's response was null.";
+                    string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+
+                    string serviceMethod = "/SetSynapseDefaultBank?MemberId=" + input.MemberId + "&BankName=" + input.BankName + "&BankId=" + input.BankId;
+                    SynapseBankSetDefaultResult bnkloginresult = ResponseConverter<SynapseBankSetDefaultResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+
+                    res.Is_success = bnkloginresult.Is_success;
+                    res.Message = bnkloginresult.Message;
                 }
             }
-            catch (Exception ex)
+            catch (Exception we)
             {
-                Logger.Error("Make Payment Code-Behind -> submitRequestToExistingUser FAILED - email: [" + email + "], Exception: [" + ex.Message + "]");
-                res.msg = "Code-behind exception during submitRequestToExistingUser.";
+                Logger.Error("**Add_Bank** CodeBehind -> SetDefaultBank FAILED - [MemberID: " + input.MemberId +
+                                   "], [Exception: " + we.InnerException + "]");
             }
-
-            return Json(res);
+            return res;
         }
+
         
+    }
+
+    public class bankLoginInputFormClass
+    {
+        public string username  { get; set; }
+        public string password { get; set; }
+        public string memberid { get; set; }
+        public string bankname { get; set; }
+        public bool IsPinRequired { get; set; }
+        public string PinNumber { get; set; } 
+    }
+
+
+    public class bankaddInputFormClass
+    {
+        public string memberid  { get; set; }
+        public string fullname { get; set; }
+        public string routing { get; set; }
+        public string account { get; set; }
+        public string nickname { get; set; }
+        public string cl { get; set; }
+        public string type { get; set; } 
+    }
+
+    public class MFALoginInputClassForm
+    {
+        public string bank { get; set; }  
+            public string memberid { get; set; } 
+        public string MFA { get; set; }
+        public string ba { get; set; } 
+    }
+
+
+    public class setDefaultBankInput
+    {
+       public string MemberId { get; set; }
+       public string BankName { get; set; }
+       public string BankId { get; set; }  
     }
 }
