@@ -2054,7 +2054,7 @@ namespace Nooch.Common
                     // Get bank from saved banks list
 
                     #region Find the bank to be set as Default
-                    string bnaknameEncrypted = CommonHelper.GetEncryptedData(BankName);
+                    string bnaknameEncrypted = GetEncryptedData(BankName);
 
 
                     //var selectedBank = synapseBankRepository.SelectAll(memberSpecification).FirstOrDefault();
@@ -2066,7 +2066,7 @@ namespace Nooch.Common
                     var banksFound = _dbContext.SynapseBanksOfMembers.Where(memberTemp =>
                                         memberTemp.MemberId.Value.Equals(memId) &&
                                         memberTemp.bank_name == bnaknameEncrypted &&
-                                        memberTemp.bankid == bnkid).ToList();
+                                        memberTemp.Id == bnkid).ToList();    /// or this would bankid ?? need to check... -Malkit
                     var selectedBank = (from c in banksFound select c)
                                       .OrderByDescending(bank => bank.AddedOn)
                                       .Take(1)

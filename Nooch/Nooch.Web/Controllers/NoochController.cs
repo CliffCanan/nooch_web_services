@@ -772,7 +772,54 @@ namespace Nooch.Web.Controllers
             return rpr;
         }
 
+        [HttpGet]
+        [ActionName("SetDefaultBank")]
+        public static SynapseBankSetDefaultResult SetDefaultBank(setDefaultBankInput input)
+        {
+            Logger.Info("**Add_Bank** CodeBehind -> SetDefaultBank Initiated - [MemberID: " + input.MemberId +
+                                   "], [Bank Name: " + input.BankName + "], [BankID: " + input.BankId + "]");
 
+            SynapseBankSetDefaultResult res = new SynapseBankSetDefaultResult();
+
+            try
+            {
+                if (String.IsNullOrEmpty(input.MemberId) ||
+                String.IsNullOrEmpty(input.BankName) ||
+                String.IsNullOrEmpty(input.BankId))
+                {
+                    if (String.IsNullOrEmpty(input.BankName))
+                    {
+                        res.Message = "Invalid data - need Bank Name";
+                    }
+                    else if (String.IsNullOrEmpty(input.MemberId))
+                    {
+                        res.Message = "Invalid data - need MemberId";
+                    }
+                    else if (String.IsNullOrEmpty(input.BankId))
+                    {
+                        res.Message = "Invalid data - need Bank Id";
+                    }
+
+                    res.Is_success = false;
+                }
+                else
+                {
+                    string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+
+                    string serviceMethod = "/SetSynapseDefaultBank?MemberId=" + input.MemberId + "&BankName=" + input.BankName + "&BankId=" + input.BankId;
+                    SynapseBankSetDefaultResult bnkloginresult = ResponseConverter<SynapseBankSetDefaultResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+
+                    res.Is_success = bnkloginresult.Is_success;
+                    res.Message = bnkloginresult.Message;
+                }
+            }
+            catch (Exception we)
+            {
+                Logger.Error("**Add_Bank** CodeBehind -> SetDefaultBank FAILED - [MemberID: " + input.MemberId +
+                                   "], [Exception: " + we.InnerException + "]");
+            }
+            return res;
+        }
 
         
     }
@@ -805,5 +852,13 @@ namespace Nooch.Web.Controllers
             public string memberid { get; set; } 
         public string MFA { get; set; }
         public string ba { get; set; } 
+    }
+
+
+    public class setDefaultBankInput
+    {
+       public string MemberId { get; set; }
+       public string BankName { get; set; }
+       public string BankId { get; set; }  
     }
 }

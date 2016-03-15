@@ -1149,7 +1149,7 @@ function SetDefaultAct() {
 
 		$.ajax({
 			type: "POST",
-			url: "Add-Bank.aspx/SetDefaultBank",
+			url: "SetDefaultBank",
 			data: "{ MemberId: '" + MEMBER_ID + "',BankName: '" + bankName + "',BankId: '" + bankId + "'}",
 			contentType: "application/json; charset=utf-8",
 			dataType: "json",
