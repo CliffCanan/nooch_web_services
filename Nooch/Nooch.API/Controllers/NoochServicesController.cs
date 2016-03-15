@@ -22,6 +22,8 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Nooch.Common.Entities.SynapseRelatedEntities;
 using Nooch.Common.Resources;
+using Nooch.Common.Entities.LandingPagesRelatedEntities;
+
 
 namespace Nooch.API.Controllers
 {
@@ -3383,7 +3385,7 @@ namespace Nooch.API.Controllers
         }
 
 
-        [HttpPost]
+        [HttpGet]
         [ActionName("SynapseV3AddNode")]
         public SynapseBankLoginV3_Response_Int SynapseV3AddNode(string MemberId, string BnkName, string BnkUserName, string BnkPw)
         {
@@ -3571,14 +3573,21 @@ namespace Nooch.API.Controllers
                         {
                             #region Marking Any Existing Synapse Bank Login Entries as Deleted
 
-                            
-                            var memberLoginResultsCollection = CommonHelper.GetSynapseBankLoginResulList(id.ToString());
+                            var removeExistingSynapseBankLoginResult = CommonHelper.RemoveSynapseBankLoginResultsForGivenMemberId(id.ToString());
 
-                            foreach (SynapseBankLoginResult v in memberLoginResultsCollection)
-                            {
-                                v.IsDeleted = true;
-                                _dbContext.SaveChanges();
-                            }
+
+                            //var memberLoginResultsCollection = CommonHelper.GetSynapseBankLoginResulList(id.ToString());
+
+                            //foreach (SynapseBankLoginResult v in memberLoginResultsCollection)
+                            //{
+
+
+                            //    _dbContext.Set(v.GetType()).Add(v); 
+
+
+                            //    v.IsDeleted = true;
+                            //    _dbContext.SaveChanges();
+                            //}
 
                             #endregion Marking Any Existing Synapse Bank Login Entries as Deleted
 
@@ -3600,6 +3609,7 @@ namespace Nooch.API.Controllers
                                 sbr.IsCodeBasedAuth = false;  // NO MORE CODE-BASED WITH SYNAPSE V3, EVERY MFA IS THE SAME NOW
                                 sbr.mfaMessage = null; // For Code-Based MFA - NOT USED ANYMORE, SHOULD REMOVE FROM DB
                                 sbr.BankAccessToken = CommonHelper.GetEncryptedData(bankLoginRespFromSynapse["nodes"][0]["_id"]["$oid"].ToString()); // CLIFF (8/21/15): Not sure if this syntax is correct
+                                res.bankMFA = bankLoginRespFromSynapse["nodes"][0]["_id"]["$oid"].ToString();
 
 
                                 if (bankLoginRespFromSynapse["nodes"][0]["extra"]["mfa"] != null ||
@@ -4121,6 +4131,9 @@ namespace Nooch.API.Controllers
 
             return res;
         }
+
+      
+
          
  
         #endregion

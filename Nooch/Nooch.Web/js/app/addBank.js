@@ -440,6 +440,7 @@ $('#bankLogin').submit(function(e) {
 function submitBnkLgn() {
     //console.log("{bankname: '" + BANK_NAME + "', IsPinRequired: '" + Is_PIN_REQUIRED + "'}");
     isManual = false;
+    
 
     $.ajax({
         type: "POST",
@@ -450,8 +451,9 @@ function submitBnkLgn() {
         async: "true",
         cache: "false",
         success: function (msg) {
+            
             console.log(msg);
-	
+             
 			// Hide UIBlock (loading box))
             $('.addBankContainer-body').unblock();
 
@@ -460,7 +462,7 @@ function submitBnkLgn() {
 			// Reset the PW field no matter what error it is
 			$('#bankPassword').val('');
 
-            var bnkLoginResult = msg.d;
+            var bnkLoginResult = msg;
 
 			if (bnkLoginResult.Is_success == false) // ERROR CAME BACK FROM SERVER LOGIN ATTEMPT
 			{
@@ -560,7 +562,8 @@ function submitBnkLgn() {
 						easing:'easeInOutQuad'
 					});
 
-					$('#bankAccessTokenForQuestion').val(bnkLoginResult.SynapseQuestionBasedResponse.response.access_token);
+				    //$('#bankAccessTokenForQuestion').val(bnkLoginResult.SynapseQuestionBasedResponse.response.access_token);
+					$('#bankAccessTokenForQuestion').val(bnkLoginResult.Bank_Access_Token);
 
 					$('#addBank-sec-question').parsley().reset();
 
@@ -948,7 +951,7 @@ function MFALogin() {
 	//console.log("Submitting MFA response with data:  {bank: '" + BANK_NAME + "', memberid: '" + MEMBER_ID + "', bankname: '" + BANK_NAME + "', MFA: '" + mfaResp + "', ba: '" + accessCode + "'}");
     $.ajax({
         type: "POST",
-        url: "MFALogin",
+        url: $('#MFALoginUrl').val(),
         data: "{ bank: '" + BANK_NAME + "',memberid: '" + MEMBER_ID + "',MFA: '" + mfaResp + "',ba: '" + accessCode + "'}",
         contentType: "application/json; charset=utf-8",
         dataType: "json",
@@ -956,7 +959,7 @@ function MFALogin() {
         cache: "false",
         success: function (msg) {
             // On success                 
-            var res = msg.d;
+            var res = msg;
             //console.log(res);
 
             // Hide UIBlock (loading box))
@@ -1149,7 +1152,7 @@ function SetDefaultAct() {
 
 		$.ajax({
 			type: "POST",
-			url: "SetDefaultBank",
+			url: $('#setDefaultBankUrl').val(),
 			data: "{ MemberId: '" + MEMBER_ID + "',BankName: '" + bankName + "',BankId: '" + bankId + "'}",
 			contentType: "application/json; charset=utf-8",
 			dataType: "json",

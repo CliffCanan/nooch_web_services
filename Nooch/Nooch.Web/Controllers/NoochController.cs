@@ -214,7 +214,7 @@ namespace Nooch.Web.Controllers
         [HttpPost]
         [ActionName("CheckBankDetails")]
         public ActionResult CheckBankDetails(string bankname)
-        {
+       {
             // Get bank details
             BankNameCheckStatus res = new BankNameCheckStatus();
             res.IsSuccess = false;
@@ -289,10 +289,14 @@ namespace Nooch.Web.Controllers
             return res;
         }
 
-        public  SynapseBankLoginRequestResult BankLogin(bankLoginInputFormClass inp)
+
+        [HttpPost]
+        [ActionName("BankLogin")]
+        public    ActionResult   BankLogin(bankLoginInputFormClass inp)
         {
             SynapseBankLoginRequestResult res = new SynapseBankLoginRequestResult();
             res.Is_success = false;
+            
 
             try
             {
@@ -309,8 +313,10 @@ namespace Nooch.Web.Controllers
                     //    Response could be: 1.) array[] of banks,  2.) Question-based MFA,  3.) Code-based MFA, or  4.) Failure/Error
 
                     string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-                    string serviceMethod = "/SynapseBankLoginRequest?BankName=" + inp.bankname + "&MemberId=" + inp.memberid + "&IsPinRequired=" + inp.IsPinRequired
-                        + "&UserName=" + inp.username + "&Password=" + inp.password + "&PinNumber=" + inp.PinNumber;
+                    //string serviceMethod = "/SynapseBankLoginRequest?BankName=" + inp.bankname + "&MemberId=" + inp.memberid + "&IsPinRequired=" + inp.IsPinRequired
+                    //    + "&UserName=" + inp.username + "&Password=" + inp.password + "&PinNumber=" + inp.PinNumber;
+                    string serviceMethod = "/SynapseV3AddNode?MemberId=" + inp.memberid + "&BnkName=" + inp.bankname + "&BnkUserName=" + inp.username
+                                           + "&BnkPw=" + inp.password ;
 
                     SynapseBankLoginV3_Response_Int bankLoginResult =
                         ResponseConverter<SynapseBankLoginV3_Response_Int>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
@@ -319,39 +325,41 @@ namespace Nooch.Web.Controllers
                     {
                         res.Is_success = true;
                         res.Is_MFA = bankLoginResult.Is_MFA;
-                        res.Is_MFA = bankLoginResult.Is_MFA;
+                       
                         if (bankLoginResult.Is_MFA)
                         {
-                            res.MFA_Type = "question";    // no more code based as per synapse V3 docs
+                            res.Bank_Access_Token = bankLoginResult.bankMFA;
+                            res.MFA_Type = "questions";    // no more code based as per synapse V3 docs
                         }
                         List<SynapseBankClass> synbanksList = new List<SynapseBankClass>();
-
-                        foreach (nodes bankNode in bankLoginResult.SynapseNodesList.nodes)
+                        if (bankLoginResult.SynapseNodesList.nodes.Length>1)
                         {
-                            SynapseBankClass sbc = new SynapseBankClass();
-                            sbc.account_class = bankNode.info._class;
-                            sbc.account_number_string = bankNode.info.account_num;
-                            sbc.account_type = bankNode.type;
-                            sbc.address = "";
-                            sbc.balance = bankNode.info.balance.amount;
-                            sbc.bank_name = bankNode.info.bank_name;
-                            sbc.bankoid = bankNode._id.ToString();
-                            sbc.account_class = bankNode.info._class;
-                            sbc.nickname = bankNode.info.nickname;
-                            sbc.routing_number_string = bankNode.info.routing_num;
-                            sbc.account_type = bankNode.info.type;
-                            sbc.is_active = bankNode.is_active;
+                            foreach (nodes bankNode in bankLoginResult.SynapseNodesList.nodes)
+                            {
+                                SynapseBankClass sbc = new SynapseBankClass();
+                                sbc.account_class = bankNode.info._class;
+                                sbc.account_number_string = bankNode.info.account_num;
+                                sbc.account_type = bankNode.type;
+                                sbc.address = "";
+                                sbc.balance = bankNode.info.balance.amount;
+                                sbc.bank_name = bankNode.info.bank_name;
+                                sbc.bankoid = bankNode._id.ToString();
+                                sbc.account_class = bankNode.info._class;
+                                sbc.nickname = bankNode.info.nickname;
+                                sbc.routing_number_string = bankNode.info.routing_num;
+                                sbc.account_type = bankNode.info.type;
+                                sbc.is_active = bankNode.is_active;
 
-                            synbanksList.Add(sbc);
+                                synbanksList.Add(sbc);
 
+                            }
                         }
-
 
                         res.SynapseBanksList = new SynapseBanksListClass()
                         {
                             banks = synbanksList,
                             success = true
-                        }; ;
+                        };
 
                         res.ERROR_MSG = "OK";
                        // res.ssn_verify_status = bankLoginResult.ssn_verify_status; // Should match the ssn_verify_status from Registering User...
@@ -376,6 +384,7 @@ namespace Nooch.Web.Controllers
                                             accountCreateResult.ssn_verify_status + "], but ssn_verify_status from BankLogin was: [" +
                                             res.ssn_verify_status + "]");
                 }
+                
             }
             catch (Exception we)
             {
@@ -385,7 +394,7 @@ namespace Nooch.Web.Controllers
                 res.ERROR_MSG = "error occured at server.";
             }
 
-            return res;
+            return Json(res);
         }
 
 
@@ -444,7 +453,7 @@ namespace Nooch.Web.Controllers
                     {
                         banks = synbanksList,
                         success = true
-                    };;
+                    };
                     //res.SynapseCodeBasedResponse = bankAddRes.SynapseCodeBasedResponse;
                     //res.SynapseQuestionBasedResponse = bankAddRes.SynapseQuestionBasedResponse;
                     res.ERROR_MSG = "OK";
@@ -472,7 +481,7 @@ namespace Nooch.Web.Controllers
         // method to call verify bank mfa - to be used with bank login type MFA's
         [HttpPost]
         [ActionName("MFALogin")]
-        public static SynapseBankLoginRequestResult MFALogin(MFALoginInputClassForm inp)
+        public  ActionResult MFALogin(MFALoginInputClassForm inp)
         {
             SynapseBankLoginRequestResult res = new SynapseBankLoginRequestResult();
 
@@ -492,11 +501,12 @@ namespace Nooch.Web.Controllers
                 inpu.bankId = inp.ba;   // this is bank_node_id..... must...need to pass this thing in earlier step
                 try
                 {
-                    json = "{\"input\":" + scriptSerializer.Serialize(inpu) + "}";
+                    //json = "{\"input\":" + scriptSerializer.Serialize(inpu) + "}";
+                    json =  scriptSerializer.Serialize(inpu) ;
 
                     string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
                     string serviceMethod = "/SynapseV3MFABankVerify";
-                    SynapseBankLoginRequestResult bnkloginresult = ResponseConverter<SynapseBankLoginRequestResult>.CallServicePostMethod(String.Concat(serviceUrl, serviceMethod), json);
+                    SynapseV3BankLoginResult_ServiceRes bnkloginresult = ResponseConverter<SynapseV3BankLoginResult_ServiceRes>.CallServicePostMethod(String.Concat(serviceUrl, serviceMethod), json);
 
 
 
@@ -504,18 +514,59 @@ namespace Nooch.Web.Controllers
                     {
                         res.Is_success = true;
                         res.Is_MFA = bnkloginresult.Is_MFA;
-                        res.MFA_Type = bnkloginresult.MFA_Type;
-                        res.SynapseBanksList = bnkloginresult.SynapseBanksList;
-                        res.SynapseCodeBasedResponse = bnkloginresult.SynapseCodeBasedResponse;
-                        res.SynapseQuestionBasedResponse = bnkloginresult.SynapseQuestionBasedResponse;
+                        //res.MFA_Type = bnkloginresult.;
+                        List<SynapseBankClass> synbanksList = new List<SynapseBankClass>();
+                        foreach (SynapseIndividualNodeClass bankNode in bnkloginresult.SynapseNodesList.nodes)
+                        {
+                            SynapseBankClass sbc = new SynapseBankClass();
+                            sbc.account_class = bankNode.account_class;
+                            sbc.account_number_string = bankNode.account_num;
+                            sbc.account_type = bankNode.account_type.ToString();
+                            sbc.address = "";
+                            //sbc.balance = bankNode.;
+                            sbc.bank_name = bankNode.bank_name;
+                            sbc.bankoid = bankNode.oid;
+                            
+                            sbc.nickname = bankNode.nickname;
+                            sbc.routing_number_string = bankNode.routing_num;
+                            
+                            sbc.is_active = bankNode.is_active;
+
+                            synbanksList.Add(sbc);
+
+                        }
+
+
+                        res.SynapseBanksList = new SynapseBanksListClass()
+                        {
+                            banks = synbanksList,
+                            success = true
+                        };
+
+                        if (res.Is_MFA)
+                        {
+                            SynapseQuestionBasedMFAClass qbr = new SynapseQuestionBasedMFAClass();
+                            qbr.is_mfa = true;
+                            qbr.response = new SynapseQuestionBasedMFAResponseIntClass()
+                            {
+                                type="questions",
+                                access_token="",
+                                mfa = new SynapseQuestionClass[1]
+                            };
+                            qbr.response.mfa[0].question = bnkloginresult.mfaMessage;
+                            res.SynapseQuestionBasedResponse = qbr;
+                        }
+                      
+                        
+                       
                         res.ERROR_MSG = "OK";
                     }
                     else
                     {
-                        Logger.Error("**Add_Bank** CodeBehind -> MFALogin FAILED -> [Error Msg: " + bnkloginresult.ERROR_MSG +
+                        Logger.Error("**Add_Bank** CodeBehind -> MFALogin FAILED -> [Error Msg: " + bnkloginresult.errorMsg +
                                                "], [MemberID: " + inp.memberid + "], [Bank: " + inp.bank + "], [MFA: " + inp.MFA + "]");
                         res.Is_success = false;
-                        res.ERROR_MSG = bnkloginresult.ERROR_MSG;
+                        res.ERROR_MSG = bnkloginresult.errorMsg;
                     }
                 }
                 catch (Exception ec)
@@ -534,7 +585,7 @@ namespace Nooch.Web.Controllers
                                    "], [Exception: " + we + "]");
             }
 
-            return res;
+            return Json( res);
         }
 
 
@@ -542,7 +593,7 @@ namespace Nooch.Web.Controllers
         // method to call verify bank mfa - to be used with routing and account number login
         [HttpPost]
         [ActionName("MFALoginWithRoutingAndAccountNumber")]
-        public static SynapseBankLoginRequestResult MFALoginWithRoutingAndAccountNumber(string bank, string memberid, string MicroDepositOne, string MicroDepositTwo, string ba)
+        public  SynapseBankLoginRequestResult MFALoginWithRoutingAndAccountNumber(string bank, string memberid, string MicroDepositOne, string MicroDepositTwo, string ba)
         {
             SynapseBankLoginRequestResult res = new SynapseBankLoginRequestResult();
 
@@ -773,9 +824,9 @@ namespace Nooch.Web.Controllers
             return rpr;
         }
 
-        [HttpGet]
+        [HttpPost]
         [ActionName("SetDefaultBank")]
-        public static SynapseBankSetDefaultResult SetDefaultBank(setDefaultBankInput input)
+        public  SynapseBankSetDefaultResult SetDefaultBank(setDefaultBankInput input)
         {
             Logger.Info("**Add_Bank** CodeBehind -> SetDefaultBank Initiated - [MemberID: " + input.MemberId +
                                    "], [Bank Name: " + input.BankName + "], [BankID: " + input.BankId + "]");
