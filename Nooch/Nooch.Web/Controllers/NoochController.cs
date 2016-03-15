@@ -247,7 +247,174 @@ namespace Nooch.Web.Controllers
             }
             return res;
         }
- 
+
+        public ActionResult makePayment()
+        
+        
+        {
+            HiddenField hkf = new HiddenField();
+            try
+            {
+                                   
+                    if (!String.IsNullOrEmpty(Request.QueryString["rs"]))
+                    {
+                        Logger.Info("Make Payment CodeBehind -> Page_load Initiated - Is a RentScene Payment: [" + Request.QueryString["rs"] + "]");
+
+                        //rs.Value = Request.QueryString["rs"].ToLower();      
+                        hkf.rs = Request.QueryString["rs"].ToLower();
+                }
+            }
+            catch (Exception ex)
+            {
+               // errorId.Value = "1";
+                hkf.errorId = "1";
+                Logger.Error("Make Payment CodeBehind -> page_load OUTER EXCEPTION - [Exception: " + ex.Message + "]");
+            }
+
+            ViewData["OnLoadData"] = hkf;
+            return View();
+        }
+
+        public ActionResult submitPayment(bool isRequest, string amount, string name, string email, string memo, string pin, string ip)
+        {
+            Logger.Info("Make Payment Code-Behind -> submitPayment Initiated - isRequest: [" + isRequest +
+                                   "], Name: [" + name + "], Email: [" + email +
+                                   "], Amount: [" + amount + "], memo: [" + memo +
+                                   "], PIN: [" + pin + "], IP: [" + ip + "]");
+
+            requestFromRentScene res = new requestFromRentScene();
+            res.success = false;
+            res.msg = "Initial - code behind";
+
+            pin = (String.IsNullOrEmpty(pin) || pin.Length != 4) ? "0000" : pin;
+            pin = CommonHelper.GetEncryptedData(pin);
+
+            try
+            {
+                string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+                string serviceMethod = "/RequestMoneyForRentScene?name=" + name +
+                                       "&email=" + email + "&amount=" + amount +
+                                       "&memo=" + memo + "&pin=" + pin +
+                                       "&ip=" + ip + "&isRequest=" + isRequest;
+
+                string urlToUse = String.Concat(serviceUrl, serviceMethod);
+
+                Logger.Info("Make Payment Code-Behind -> submitPayment - URL To Query: [" + urlToUse + "]");
+
+                requestFromRentScene response = ResponseConverter<requestFromRentScene>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+
+                Logger.Info("Make Payment Code-Behind -> submitPayment RESULT.Success: [" + response.success + "], RESULT.Msg: [" + response.msg + "]");
+
+                if (response != null)
+                {
+                    res = response;
+
+                    //Logger.LogDebugMessage("Make Payment Code-Behind -> submitPayment");
+
+                    #region Logging For Debugging
+
+                    if (response.success == true)
+                    {
+                        if (response.isEmailAlreadyReg == true)
+                        {
+                            Logger.Info("Make Payment Code-Behind -> submitPayment Success - Email address already registered to an Existing User - " +
+                                                   "Name: [" + response.name + "], Email: [" + email + "], Status: [" + response.memberStatus + "], MemberID: [" + response.memberId + "]");
+                        }
+                        else
+                        {
+                            Logger.Info("Make Payment Code-Behind -> submitPayment Success - Payment Request submitted to NEW user successfully - " +
+                                                   "Recipient: [" + name + "], Email: [" + email + "], Amount: [" + amount + "], Memo: [" + memo + "]");
+                        }
+                    }
+                    else
+                    {
+                        Logger.Error("Make Payment Code-Behind -> submitPayment FAILED - Server response for RequestMoneyForRentScene() was NOT successful - " +
+                                               "Recipient: [" + name + "], Email: [" + email + "], Amount: [" + amount + "], Memo: [" + memo + "]");
+                    }
+
+                    #endregion Logging For Debugging
+                }
+                else
+                {
+                    res.msg = "Unknown server error - Server's response was null.";
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Make Payment Code-Behind -> submitPayment FAILED - email: [" + email + "], Exception: [" + ex.Message + "]");
+                res.msg = "Code-behind exception during submitPayment.";
+            }
+
+            return Json(res);
+        }
+
+        public ActionResult submitRequestToExistingUser(bool isRequest, string amount, string name, string email, string memo, string pin, string ip, string memberId, string nameFromServer)
+        {
+            Logger.Info("Make Payment Code-Behind -> submitRequestToExistingUser Initiated - isRequest: [" + isRequest +
+                                   "], Name: [" + name + "], Email: [" + email +
+                                   "], Amount: [" + amount + "], memo: [" + memo +
+                                   "], PIN: [" + pin + "], IP: [" + ip + "]" +
+                                   "], MemberID: [" + memberId + "], NameFromServer: [" + nameFromServer + "]");
+
+            requestFromRentScene res = new requestFromRentScene();
+            res.success = false;
+            res.msg = "Initial - code behind";
+
+            pin = (String.IsNullOrEmpty(pin) || pin.Length != 4) ? "0000" : pin;
+            pin = CommonHelper.GetEncryptedData(pin);
+
+            try
+            {
+                string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+                string serviceMethod = "/RequestMoneyToExistingUserForRentScene?name=" + name +
+                                       "&email=" + email + "&amount=" + amount +
+                                       "&memo=" + memo + "&pin=" + pin +
+                                       "&ip=" + ip + "&isRequest=" + isRequest +
+                                       "&memberId=" + memberId + "&nameFromServer=" + nameFromServer;
+
+                string urlToUse = String.Concat(serviceUrl, serviceMethod);
+
+                Logger.Info("Make Payment Code-Behind -> submitRequestToExistingUser - URL To Query: [" + urlToUse + "]");
+
+                requestFromRentScene response = ResponseConverter<requestFromRentScene>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+
+                Logger.Info("Make Payment Code-Behind -> submitRequestToExistingUser - Server Response for RequestMoneyToExistingUserForRentScene: " +
+                                       "RESULT.Success: [" + response.success + "], RESULT.Msg: [" + response.msg + "]");
+
+                if (response != null)
+                {
+                    res = response;
+
+                    Logger.Info("Make Payment Code-Behind -> submitPayment");
+
+                    #region Logging For Debugging
+
+                    if (response.success == true)
+                    {
+                        Logger.Info("Make Payment Code-Behind -> submitRequestToExistingUser Success - Payment Request submitted to NEW user successfully - " +
+                                               "Recipient: [" + name + "], Email: [" + email + "], Amount: [" + amount + "], Memo: [" + memo + "]");
+                    }
+                    else
+                    {
+                        Logger.Error("Make Payment Code-Behind -> submitRequestToExistingUser FAILED - Server response for RequestMoneyForRentScene() was NOT successful - " +
+                                               "Recipient: [" + name + "], Email: [" + email + "], Amount: [" + amount + "], Memo: [" + memo + "]");
+                    }
+
+                    #endregion Logging For Debugging
+                }
+                else
+                {
+                    res.msg = "Unknown server error - Server's response was null.";
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Make Payment Code-Behind -> submitRequestToExistingUser FAILED - email: [" + email + "], Exception: [" + ex.Message + "]");
+                res.msg = "Code-behind exception during submitRequestToExistingUser.";
+            }
+
+            return Json(res);
+        }
         
     }
 }

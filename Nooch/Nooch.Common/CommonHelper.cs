@@ -391,6 +391,29 @@ namespace Nooch.Common
             }
             return new Member();
         }
+        public static Member GetMemberDetailsByUserName(string userName)
+        {
+
+            try
+            {
+                var id = GetEncryptedData(userName);
+
+               // var noochMember = _dbContext.Members.FirstOrDefault(m => m.UserName == userName && m.IsDeleted == false);
+                var noochMember = _dbContext.Members.FirstOrDefault(m => m.UserName == id && m.IsDeleted == false);
+
+                if (noochMember != null)
+                {
+                    return noochMember;
+                }
+               
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("MDA -> GetMemberDetails FAILED - UserName [ENC:]: [" + userName + "], [Exception: " + ex + "]");
+            } 
+           // return new Member(); 
+            return null;
+        }
         public static List<SynapseBankLoginResult> GetSynapseBankLoginResulList(string memberId)
         {
             Logger.Info("MDA -> GetSynapseBankAccountDetails - MemberId: [" + memberId + "]");

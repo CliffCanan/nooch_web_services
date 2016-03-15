@@ -158,7 +158,8 @@ function submitPayment()
 
     $.ajax({
         type: "POST",
-        url: "makePayment.aspx/submitPayment",
+       // url: "submitPayment",
+        url: URLs.submitPayment,
         data: "{'isRequest':'" + isRequest +
               "', 'amount':'" + amount +
               "', 'name':'" + name +
@@ -172,12 +173,13 @@ function submitPayment()
         cache: "false",
         success: function (msg)
         {
-            var sendPaymentResponse = msg.d;
+            //var sendPaymentResponse = msg.d;
+            var sendPaymentResponse = msg;
             console.log("SUCCESS -> 'sendPaymentResponse' is... ");
             console.log(sendPaymentResponse);
 
-            resultReason = sendPaymentResponse.msg;
-
+           // resultReason = sendPaymentResponse.msg;
+            resultReason = sendPaymentResponse;
             // Hide the Loading Block
             $('#makePaymentContainer').unblock();
 
@@ -330,7 +332,8 @@ function sendRequestToExistingUser()
 
     $.ajax({
         type: "POST",
-        url: "makePayment.aspx/submitRequestToExistingUser",
+        //url: "submitRequestToExistingUser",
+        url: URLs.submitRequestToExistingUser,
         data: "{'isRequest':'" + isRequest +
               "', 'amount':'" + amount +
               "', 'name':'" + name +
@@ -346,12 +349,13 @@ function sendRequestToExistingUser()
         cache: "false",
         success: function (msg)
         {
-            var sendPaymentResponse = msg.d;
+            //var sendPaymentResponse = msg.d;
+            var sendPaymentResponse = msg;
             console.log("SUCCESS -> 'sendPaymentResponse' is... ");
             console.log(sendPaymentResponse);
 
-            resultReason = sendPaymentResponse.msg;
-
+            //resultReason = sendPaymentResponse.msg;
+            resultReason = sendPaymentResponse;
             // Hide the Loading Block
             $('#makePaymentContainer').unblock();
 

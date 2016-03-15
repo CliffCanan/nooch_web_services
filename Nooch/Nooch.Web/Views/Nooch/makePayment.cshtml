@@ -1,0 +1,240 @@
+﻿@using System.Web.Mvc;
+@using Nooch.Common.Entities;
+@{
+    Layout = null;
+        HiddenField onLoadD = (HiddenField)ViewData["OnLoadData"];
+   
+}
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="@Url.Content("~/Assets/Css/bootstrap.css")" rel="stylesheet" /> 
+    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,400italic,500,500italic,700,900" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.4/themes/cupertino/jquery-ui.css" />
+    <link rel="stylesheet" href="~/Assets/Css/sweetalert-override.min.css" />
+
+    <link rel="stylesheet" href="https://cdn.materialdesignicons.com/1.2.65/css/materialdesignicons.min.css" />
+    <link rel="stylesheet" href="@Url.Content("~/Assets/Css/bootstrap-select.min.css") " />
+    <link rel="stylesheet" href="@Url.Content("~/Assets/Css/chosen.min.css")" />
+    <link rel="stylesheet" href="@Url.Content("~/Assets/Css/bootstrap-datetimepicker.min.css")" /> 
+    <link rel="stylesheet" href="@Url.Content("~/Assets/Css/jquery.steps.css")" /> 
+    <link rel="stylesheet" href="@Url.Content("~/Assets/Css/tweaks.css")" /> 
+    <link rel="icon" href="../Assets/favicon2.ico" /> 
+     <style>
+        .navbar img {
+            width: 170px;
+        }
+
+        #makePaymentContainer {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px -8px rgba(0,0,0,.5);
+            margin: 20px auto 0;
+            padding: 15px 4% 10px;
+            width: 96%;
+            max-width: 600px;
+        }
+
+        .well {
+            font-weight: 500;
+            text-align: center;
+        }
+
+        #amountGrp .fa-usd {
+            position: absolute;
+            top: 12px;
+            left: 21px;
+            z-index: 9;
+        }
+
+        .alert {
+            position: relative;
+        }
+
+        .sweet-alert table {
+            margin: 0 auto;
+            text-align: left;
+        }
+
+            .sweet-alert table tr td:first-child {
+                font-weight: 600;
+                padding-right: 1em;
+                text-align: right;
+            }
+
+            .sweet-alert table tr td:last-child {
+                font-weight: 300;
+                padding-top: 1px;
+            }
+    </style>
+</head>
+
+<body id="body-depositNew" class="createAccountPg">
+
+    <form id="form1" runat="server">
+        <asp:HiddenField runat="server" ID="errorId" value="@onLoadD.errorId"/>
+        <asp:HiddenField runat="server" ID="type" value="@onLoadD.type" />
+        <asp:HiddenField runat="server" ID="rs" value="@onLoadD.rs" />
+    </form>
+
+    <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+        <div class="clearfix">
+            <div class="m-l-15">
+                <a class="pull-left" href="https://www.nooch.com/" style="margin: 10px auto 9px !important;">
+                    <img src="https://noochme.com/noochweb/Assets/Images/rentscene.png" class="center-block" alt="Rent Scene Logo" />
+                </a>
+                <div class="text-center" style="position: absolute; left: 10%; top: 17px; width: 80%;">
+                    <label class="center-block f-20">Create A Payment</label>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+
+    <div class="alert alert-success alert-fixed-top text-center" style="display: none">
+        <span>
+            <i class="fa fa-check-circle m-r-5"></i>
+            <strong>Success!</strong> &nbsp;A payment request for <span id="resultAmount" class="f-500"></span> was just sent to <span id="resultName" class="f-500"></span>.
+        </span>
+    </div>
+
+    <div class="" id="makePaymentContainer">
+
+        <div id="idVerWiz" class="">
+
+            <h3 class="hidden">
+                <i class="mdi mdi-account m-r-5"></i>
+                Payment Info
+            </h3>
+
+            <form id="paymentForm" role="form" class="form-horizontal">
+
+                <div class="well well-sm">
+                    <div class="f-16">
+                        Enter the recipient's info below:
+                        <small class="show f-300">(All Fields Requried)</small>
+                    </div>
+                </div>
+
+                <div class="form-group" id="amountGrp">
+                    <label for="amount" class="col-sm-3 control-label p-t-10">
+                        Amount<br />
+                        <small class="f-400">Max: $5,000</small>
+                    </label>
+                    <div class="col-sm-9 inputContainer">
+                        <i class="fa fa-usd"></i>
+                        <div class="fg-line">
+                            <input id="amount" type="text" class="form-control p-l-20" value="" placeholder=" 00.00" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group" id="nameGrp">
+                    <label for="name" class="col-sm-3 control-label p-t-10">
+                        Name<br />
+                        <i class="mdi mdi-information-outline help-icon f-15 m-l-5 pull-right" data-trigger="hover" data-toggle="popover" data-placement="auto" data-content="Please enter the recipient's full legal name."></i>
+                    </label>
+                    <div class="col-sm-9 inputContainer">
+                        <div class="fg-line">
+                            <input id="name" type="text" class="form-control" value="" placeholder="Enter the recipient's full name" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group" id="emailGrp">
+                    <label for="amount" class="col-sm-3 control-label p-t-10">Email</label>
+                    <div class="col-sm-9 inputContainer">
+                        <div class="fg-line">
+                            <input id="email" type="text" class="form-control" value="" placeholder="Enter email address" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group" id="memoGrp">
+                    <label for="amount" class="col-sm-3 control-label p-t-10">Memo</label>
+                    <div class="col-sm-9 inputContainer">
+                        <div class="fg-line">
+                            <input id="memo" type="text" class="form-control" value="" placeholder="ex: 'Application Fee'" required />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group m-t-25">
+                    <div class="col-sm-offset-3 col-sm-6">
+                        <button id="submitPayment" type="submit" class="btn btn-lg btn-success btn-block">
+                            Submit
+                            <i class="fa fa-caret-right m-l-10 f-17"></i>
+                        </button>
+                    </div>
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- CLIFF (12/17/15): THIS IS JUST UNRELATED TEST CODE FOR THE RENT SCENE WEBSITE - SUMO ME SCROLL BOX... DELETE EVENTUALLY -->
+    <div class="hidden" style="border-top: 10px solid #49a7f5; font-family: 'Montserrat', Helvetica, sans-serif !important; padding: 10px 22px 15px;">
+        <img src="https://noochme.com/noochweb/Assets/Images/rentscene.png" style="margin: 15px auto; display: block; max-width: 70%;" />
+
+        <h3 class="text-center m-b-20" style="font-family: 'Montserrat', Open Sans, Helvetica, sans-serif;">Rent Scene New Listing Alerts</h3>
+
+        <div class="p-15 m-b-15" style="background: rgba(114,191,40,1); color: #fff; border-radius: 5px; text-shadow: 0 1px 0px rgba(0,0,0,.3); font-weight: 300;">
+            <p class="m-0 text-center" style="font-size: 16px; line-height: 1.5; /* font-weight: 500; */">
+                Signup today and be the first to get notified when new apartments become available that fit your criteria.
+            </p>
+        </div>
+
+        <form>
+            <div class="form-group">
+                <input type="text" class="form-control" placeholder="Enter your email here..." style="text-align: center; height: 50px; font-size: 18px; border-radius: 5px;" />
+            </div>
+
+            <a class="" style="width: 100%; padding: 16px 10px; background: #49a7f5; color: #fff; display: block; text-align: center; border-radius: 5px; font-size: 18px; text-shadow: 0 0px 20px rgba(19,44,64,.5); font-weight: 100;">
+                Submit
+                <i class="m-l-10 fa fa-angle-right" style="font-family: 'FontAwesome'; font-style: normal;"></i>
+            </a>
+        </form>
+    </div>
+
+
+    <div class="errorMessage hidden"></div>
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+
+    <!-- Bootstrap Plugins -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <!--<script src="../js/bootstrap-select.min.js"></script>
+    <script src="../js/jasny-bootstrap.min.js"></script>
+    <script src="../js/chosen.jquery.min.js"></script>-->
+    <!-- Input Mask-->
+    <script src="../js/jquery.blockUI.min.js"></script>
+    <script src="../js/input-mask.min.js"></script>
+    <script type="text/javascript">
+        var ipusr;
+    </script>
+    <script type="text/javascript" src="https://www.l2.io/ip.js?var=ipusr"></script>
+    <script src="../js/sweetalert.min.js"></script>
+
+    <!-- Custom Scripts -->
+    <script src="../js/app/makePayment.js"></script>
+
+
+    <script type="text/javascript">
+
+        var URLs = {
+            submitPayment: '@Url.Action("submitPayment", "Nooch")',
+            submitRequestToExistingUser : '@Url.Action("submitRequestToExistingUser", "Nooch")',
+        };
+
+    </script>
+</body>
+</html>

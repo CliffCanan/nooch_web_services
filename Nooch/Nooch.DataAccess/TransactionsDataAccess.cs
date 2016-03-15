@@ -4002,5 +4002,759 @@ namespace Nooch.DataAccess
             return res;
         }
 
+
+
+        /// <summary>
+        /// To REQUEST money from NON-NOOCH user using SYANPSE through EMAIL (REQUEST VIA PHONE HAS A DIFF METHOD)
+        /// </summary>
+        /// <param name="requestDto"></param>
+        /// <param name="requestId"></param>
+        public  string RequestMoneyToNonNoochUserUsingSynapse(RequestDto requestDto, out string requestId)
+        {
+            
+            var checkuser = CommonHelper.GetMemberDetailsByUserName(requestDto.MoneySenderEmailId);
+
+            if (checkuser == null)
+            {
+                Logger.Info("TDA -> RequestMoneyToNonNoochUserUsingSynapse Initiated - Requestor MemberId: [" + requestDto.MemberId + "].");
+
+                requestId = string.Empty;
+
+                var requester = CommonHelper.GetMemberDetails(requestDto.MemberId);
+
+                // Validate PIN of requesting user
+                string validPinNumberResult = CommonHelper.ValidatePinNumber(requestDto.MemberId.ToString(),
+                                                                    requestDto.PinNumber.ToString());
+                if (validPinNumberResult != "Success")
+                {
+                    return validPinNumberResult;
+                }
+
+                // Check if request Amount is over per-transaction limit
+                decimal transactionAmount = Convert.ToDecimal(requestDto.Amount);
+
+                // individual user transfer limit check
+                decimal thisUserTransLimit = 0;
+                string indiTransLimit = CommonHelper.GetGivenMemberTransferLimit(requestDto.MemberId);
+
+                if (!String.IsNullOrEmpty(indiTransLimit))
+                {
+                    if (indiTransLimit != "0")
+                    {
+                        thisUserTransLimit = Convert.ToDecimal(indiTransLimit);
+
+                        if (transactionAmount > thisUserTransLimit)
+                        {
+                            Logger.Error("TDA -> RequestMoneyToNonNoochUserUsingSynapse FAILED - OVER PERSONAL TRANS LIMIT - Amount Requested: [" + transactionAmount.ToString() +
+                                                   "], Indiv. Limit: [" + thisUserTransLimit + "], MemberId: [" + requestDto.MemberId + "]");
+                            return "Hold on there cowboy! To keep Nooch safe, the maximum amount you can request is $" + thisUserTransLimit.ToString("F2");
+                        }
+                    }
+                }
+
+
+                if (CommonHelper.isOverTransactionLimit(transactionAmount, "", requestDto.MemberId))
+                {
+                    Logger.Error("TDA -> RequestMoneyToNonNoochUserUsingSynapse FAILED - OVER GLOBAL TRANS LIMIT - Amount Requested: [" + transactionAmount.ToString() +
+                                                   "], Indiv. Limit: [" + thisUserTransLimit + "], MemberId: [" + requestDto.MemberId + "]");
+
+                    return "Hold on there cowboy! To keep Nooch safe, the maximum amount you can request is $" + Convert.ToDecimal(Utility.GetValueFromConfig("MaximumTransferLimitPerTransaction")).ToString("F2");
+                }
+
+                #region SenderSynapseAccountDetails
+
+
+
+                var requestorInfo = CommonHelper.GetSynapseBankAndUserDetailsforGivenMemberId(requestDto.MemberId.ToString());
+
+                if (requestorInfo.wereBankDetailsFound == null || requestorInfo.wereBankDetailsFound == false)
+                {
+                    return "Requester does not have any bank added";
+                }
+
+                // Check Requestor's Synapse Bank Account status
+                if (requestorInfo.BankDetails != null &&
+                    requestorInfo.BankDetails.Status != "Verified")
+                {
+                    Logger.Info("TDA - RequestMoneyToNonNoochUserUsingSynapse -> Transfer Aborted: No verified bank account for Sender - " +
+                                           "Requester MemberID is: [" + requestDto.MemberId + "]");
+                    return "Requester does not have any verified bank account.";
+                }
+
+                #endregion SenderSynapseAccountDetails
+
+                var transaction = new Transaction
+                {
+                    TransactionId = Guid.NewGuid(),
+                    SenderId=Utility.ConvertToGuid(requestDto.MemberId),
+                    RecipientId=Utility.ConvertToGuid(requestDto.MemberId),
+                    
+                    Amount = requestDto.Amount,
+                    TransactionDate = DateTime.Now,
+                    Picture = (requestDto.Picture != null) ? requestDto.Picture : null,
+                    Memo = (requestDto.Memo == "") ? "" : requestDto.Memo,
+                    DisputeStatus = null,
+
+                    TransactionStatus = "Pending",
+                    TransactionType = CommonHelper.GetEncryptedData("Request"),
+                    DeviceId = requestDto.DeviceId,
+                    TransactionTrackingId = CommonHelper.GetRandomTransactionTrackingId(),
+                    TransactionFee = 0,
+                    InvitationSentTo = CommonHelper.GetEncryptedData(requestDto.MoneySenderEmailId),
+                    GeoLocation = new GeoLocation
+                    {
+                        LocationId = Guid.NewGuid(),
+                        Latitude = requestDto.Latitude,
+                        Longitude = requestDto.Longitude,
+                        Altitude = requestDto.Altitude,
+                        AddressLine1 = requestDto.AddressLine1,
+                        AddressLine2 = requestDto.AddressLine2,
+                        City = requestDto.City,
+                        State = requestDto.State,
+                        Country = requestDto.Country,
+                        ZipCode = requestDto.ZipCode,
+                        DateCreated = DateTime.Now
+                    }
+                };
+
+
+                int dbResult = 0;
+
+                if (requestDto.isTesting == "true")
+                {
+                    dbResult = 1;
+                }
+                else
+                {
+                    _dbContext.Transactions.Add(transaction);
+                    dbResult = _dbContext.SaveChanges();
+                }
+
+                if (dbResult > 0)
+                {
+                    requestId = transaction.TransactionId.ToString();
+
+                    #region Send Notifications
+
+                    string s22 = requestDto.Amount.ToString("n2");
+                    string[] s32 = s22.Split('.');
+
+                    string RequesterFirstName = CommonHelper.UppercaseFirst((CommonHelper.GetDecryptedData(requester.FirstName)).ToString());
+                    string RequesterLastName = CommonHelper.UppercaseFirst((CommonHelper.GetDecryptedData(requester.LastName)).ToString());
+                    string RequesterEmail = (requestDto.isTesting == "true") ? RequesterLastName.Trim().Replace(" ", "") + "-TEST@nooch.com"
+                                                                             : CommonHelper.GetDecryptedData(requester.UserName);
+
+                    string cancelLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
+                                                      "trans/CancelRequest.aspx?TransactionId=" + requestId +
+                                                      "&MemberId=" + requestDto.MemberId +
+                                                      "&UserType=U6De3haw2r4mSgweNpdgXQ==");
+
+                    string recipientName = (!string.IsNullOrEmpty(requestDto.Name) && requestDto.Name.IndexOf("@") == -1)
+                                           ? requestDto.Name
+                                           : "";
+                    string recipientsEmail = (requestDto.isTesting == "true") ? "testering@nooch.com"
+                                                                              : requestDto.MoneySenderEmailId;
+
+                    var fromAddress = Utility.GetValueFromConfig("transfersMail");
+
+                    var logoToDisplay = "noochlogo";
+
+                    bool isForRentScene = false;
+                    if (requester.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49" || // Rent Scene's account
+                        requester.MemberId.ToString().ToLower() == "a35c14e9-ee7b-4fc6-b5d5-f54961f2596a")  // Just for testing: "sallyanejones00@nooch.com"
+                    {
+                        isForRentScene = true;
+                        RequesterFirstName = "Rent Scene";
+                        RequesterLastName = "";
+                        logoToDisplay = "rentscenelogo";
+                    }
+
+                    string memo = "";
+                    if (transaction.Memo != null && transaction.Memo != "")
+                    {
+                        if (transaction.Memo.Length > 3)
+                        {
+                            string firstThreeChars = transaction.Memo.Substring(0, 3).ToLower();
+                            bool startWithFor = firstThreeChars.Equals("for");
+
+                            if (startWithFor)
+                            {
+                                memo = transaction.Memo.ToString();
+                            }
+                            else
+                            {
+                                memo = "For " + transaction.Memo.ToString();
+                            }
+                        }
+                        else
+                        {
+                            memo = "For " + transaction.Memo.ToString();
+                        }
+                    }
+
+                    var tokens = new Dictionary<string, string>
+					    {
+                            {"$Logo$", logoToDisplay},
+						    {Constants.PLACEHOLDER_FIRST_NAME, RequesterFirstName},
+						    {Constants.PLACEHOLDER_NEWUSER, recipientsEmail},
+						    {Constants.PLACEHOLDER_TRANSFER_AMOUNT, s32[0].ToString()},
+						    {Constants.PLACEHLODER_CENTS, s32[1].ToString()},
+			    		    {Constants.PLACEHOLDER_OTHER_LINK, cancelLink},
+						    {Constants.MEMO, memo}
+					     };
+
+                    try
+                    {
+                        Utility.SendEmail("requestSent",  fromAddress, RequesterEmail, null,
+                                                    "Your payment request to " + recipientsEmail + " is pending",
+                                                    null, tokens, null, null, null);
+
+                        Logger.Info("TDA -> RequestMoneyToNonNoochUserUsingSynapse -> RequestSent email sent to [" + RequesterEmail + "] successfully.");
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error("TDA -> RequestMoneyToNonNoochUserUsingSynapse -> RequestSent email NOT sent to [" + RequesterEmail +
+                                               "], [Exception: " + ex + "]");
+                    }
+
+
+                    // Send email to Request Receiver -- sending UserType LinkSource TransType as encrypted along with request
+                    // In this case UserType would = 'New'
+                    // TransType would = 'Request'
+                    // and link source would = 'Email'
+                    cancelLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
+                                               "trans/rejectMoney.aspx?TransactionId=" + requestId +
+                                               "&UserType=U6De3haw2r4mSgweNpdgXQ==" +
+                                               "&LinkSource=75U7bZRpVVxLNbQuoMQEGQ==&" +
+                                               "TransType=T3EMY1WWZ9IscHIj3dbcNw==");
+
+                    string paylink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
+                                                   "trans/payRequest.aspx?TransactionId=" + requestId);
+
+                    if (isForRentScene)
+                    {
+                        paylink = paylink + "&rs=1";
+                    }
+
+                    var tokens2 = new Dictionary<string, string>
+                        {
+                            {"$Logo$", logoToDisplay},
+					        {Constants.PLACEHOLDER_FIRST_NAME, RequesterFirstName},
+					        {Constants.PLACEHOLDER_NEWUSER, recipientsEmail},
+					        {Constants.PLACEHOLDER_TRANSFER_AMOUNT, s32[0].ToString()},
+					        {Constants.PLACEHLODER_CENTS, s32[1].ToString()},
+					        {Constants.PLACEHOLDER_REJECT_LINK, cancelLink},
+					        {Constants.PLACEHOLDER_SENDER_FULL_NAME, RequesterFirstName + " " + RequesterLastName},
+					        {Constants.MEMO,memo},
+					        {Constants.PLACEHOLDER_PAY_LINK, paylink}
+					    };
+
+                    try
+                    {
+                        string subject = isForRentScene
+                                         ? "Payment Request from Rent Scene"
+                                         : RequesterFirstName + " " + RequesterLastName + " requested " + "$" + s22.ToString() + " with Nooch";
+
+                        Utility.SendEmail("requestReceivedToNewUser",  fromAddress,
+                                                    recipientsEmail, null, subject, null, tokens2,
+                                                    null, null, null);
+
+                        Logger.Info("TDA -> RequestMoneyToNonNoochUserUsingSynapse -> requestReceivedToNewUser email sent to [" + recipientsEmail + "] successfully.");
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error("TDA -> RequestMoneyToNonNoochUserUsingSynapse -> requestReceivedToNewUser email NOT sent to [" + recipientsEmail +
+                                               "], Exception: [" + ex + "]");
+                    }
+
+                    #endregion Send Notifications
+
+                    return "Request made successfully.";
+                }
+                else
+                {
+                    Logger.Error("TDA -> RequestMoneyToNonNoochUserUsingSynapse FAILED -> Unable to save transaction in DB - " +
+                                           "Requester MemberID: [" + requestDto.MemberId + "], Recipient: [" + requestDto.MoneySenderEmailId + "]");
+                    return "Request failed.";
+                }
+            }
+            else
+            {
+
+                Logger.Error("TDA -> RequestMoneyToNonNoochUserUsingSynapse FAILED -> Member Already Exists for email address: [" +
+                                       requestDto.MoneySenderEmailId + "], Requester MemberID: [" + requestDto.MemberId + "]");
+
+                // CLIFF (12/24/15): NEED TO ADD A CALL TO THE REGULAR REQUEST METHOD FOR EXISTING USERS.
+                requestId = null;
+                return "User Already Exists";
+            }
+        }
+
+
+        /// <summary>
+        /// This method is for making a request from a regular existing user (or Landlord) to a user who previously accepted/paid an
+        /// invite or request and so have a Nooch status of "NonRegistered".  They already verified their ID and MAY have added a bank,
+        /// so when they arrive at the payRequest landing page, they won't have to re-complete the profile info and add a bank - it will
+        /// just have a button to confirm approval.
+        /// </summary>
+        /// <param name="requestDto"></param>
+        /// <param name="requestId"></param>
+        /// <returns></returns>
+        public string RequestMoneyToExistingButNonregisteredUser(RequestDto requestDto, out string requestId)
+        {
+            Logger.Info("TDA -> RequestMoneyToExistingButNonregisteredUser Initiated - Requestor MemberId: [" + requestDto.MemberId + "].");
+
+            requestId = string.Empty;
+
+            // Check uniqueness of requesting and sending user
+            if (requestDto.MemberId == requestDto.SenderId)
+            {
+                return "Not allowed to request money from yourself.";
+            }
+
+            
+            var requester = CommonHelper.GetMemberDetails(requestDto.MemberId);
+            var requestRecipient = CommonHelper.GetMemberDetails(requestDto.SenderId);
+
+            #region All Checks Before Executing Request
+
+            if (requester == null)
+            {
+                Logger.Error("TDA -> RequestMoneyToExistingButNonregisteredUser FAILED - Requester Member Not Found - [MemberID: " + requestDto.MemberId + "]");
+                requestId = null;
+                return "Requester Member Not Found";
+            }
+            else if (requestRecipient == null)
+            {
+                Logger.Error("TDA -> RequestMoneyToExistingButNonregisteredUser FAILED - requestRecipient (who would pay the request) Member Not Found - [MemberID: " + requestDto.SenderId + "]");
+                requestId = null;
+                return "Request Recipient Member Not Found";
+            }
+
+            // Validate PIN of requesting user - CLIFF (10/20/15): COMMENTING OUT BECAUSE THIS METHOD WILL LIKELY ONLY BE USED BY LANDLORDS, WHO DON'T HAVE A PIN
+            /*string validPinNumberResult = mda.ValidatePinNumber(requestDto.MemberId.ToString(),
+                                                                requestDto.PinNumber.ToString());
+            if (validPinNumberResult != "Success")
+            {
+                return validPinNumberResult;
+            }*/
+
+            // Check if request Amount is over per-transaction limit
+            decimal transactionAmount = Convert.ToDecimal(requestDto.Amount);
+
+            // Individual user transfer limit check
+            decimal thisUserTransLimit = 0;
+            string indiTransLimit = CommonHelper.GetGivenMemberTransferLimit(requestDto.MemberId);
+
+            if (!String.IsNullOrEmpty(indiTransLimit))
+            {
+                if (indiTransLimit != "0")
+                {
+                    thisUserTransLimit = Convert.ToDecimal(indiTransLimit);
+
+                    if (transactionAmount > thisUserTransLimit)
+                    {
+                        Logger.Error("TDA -> RequestMoneyToExistingButNonregisteredUser FAILED - OVER PERSONAL TRANS LIMIT - Amount Requested: [" + transactionAmount.ToString() +
+                                               "], Indiv. Limit: [" + thisUserTransLimit + "], MemberId: [" + requestDto.MemberId + "]");
+
+                        return "Hold on there cowboy! To keep Nooch safe, the maximum amount you can request is $" + thisUserTransLimit.ToString("F2");
+                    }
+                }
+            }
+
+            if (CommonHelper.isOverTransactionLimit(transactionAmount, "", requestDto.MemberId))
+            {
+                return "To keep Nooch safe, the maximum amount you can request is $" + Convert.ToDecimal(Utility.GetValueFromConfig("MaximumTransferLimitPerTransaction")).ToString("F2");
+            }
+
+            #region Get Request Sender's Synapse Account Details
+
+            var requestorSynInfo = CommonHelper.GetSynapseBankAndUserDetailsforGivenMemberId(requestDto.MemberId.ToString());
+
+            if (requestorSynInfo.wereBankDetailsFound != true)
+            {
+                Logger.Error("TDA -> RequestMoneyToExistingButNonregisteredUser -> Transfer ABORTED: Requester's Synapse bank account NOT FOUND - " +
+                                       "Requester MemberID is: [" + requestDto.MemberId + "]");
+                return "Requester does not have any bank added";
+            }
+
+            // Check Requestor's Synapse Bank Account status
+            if (requestorSynInfo.BankDetails != null &&
+                requestorSynInfo.BankDetails.Status != "Verified" &&
+                requester.IsVerifiedWithSynapse != true)
+            {
+                Logger.Error("TDA -> RequestMoneyToExistingButNonregisteredUser -> Transfer ABORTED: Requester's Synapse Bank exists but is Not Verified, " +
+                                       "Requester's \"isVerifiedWithSynapse\" != true - Requester MemberID: [" + requestDto.MemberId + "]");
+                return "Requester does not have any verified bank account.";
+            }
+
+            #endregion Get Sender's Synapse Account Details
+
+            #region Get Request Recipient's Synapse Account Details
+
+            var requestRecipientSynInfo = CommonHelper.GetSynapseBankAndUserDetailsforGivenMemberId(requestDto.SenderId.ToString());
+
+            if (requestRecipientSynInfo.wereBankDetailsFound != true)
+            {
+                Logger.Info("TDA -> RequestMoneyToExistingButNonregisteredUser -> Request Recipient Does not have a Synapse Bank Linked - " +
+                                       "MemberID: [" + requestDto.SenderId + "]");
+
+                // return "Request recipient does not have any bank added";
+            }
+
+            // Check Requestor's Synapse Bank Account status
+            else if (requestRecipientSynInfo.BankDetails != null &&
+                     requestRecipientSynInfo.BankDetails.Status != "Verified" &&
+                     requestRecipient.IsVerifiedWithSynapse != true)
+            {
+                // CLIFF (12/18/15): NEED TO THINK THROUGH HOW TO HANDLE THIS SITUATION.  MIGHT JUST ALLOW IT FOR NOW, AND NOTIFY
+                //                   MYSELF BY EMAIL TO CHECK THE PAYMENT MANUALLY.  LANDLORDS WILL USE THIS METHOD THE MOST, SO NEED TO
+                //                   BE SURE THE TENANTS DON'T HAVE ISSUES.
+                Logger.Error("TDA -> RequestMoneyToExistingButNonregisteredUser -> Transfer ABORTED: Request Recipient's Synapse bank found " +
+                                       "but is Not Verified, and Request Recipient's \"isVerifiedWithSynapse\" != true - Request Recipient MemberID: [" + requestDto.SenderId + "]");
+                return "Request recipient does not have any verified bank account.";
+            }
+
+            #endregion Get Sender's Synapse Account Details
+
+
+            #endregion All Checks Before Executing Request
+
+
+            #region Create New Transaction Record In DB
+
+            var transaction = new Transaction
+            {
+                TransactionId = Guid.NewGuid(),
+                SenderId =
+                requestRecipient.MemberId,
+                
+                RecipientId =
+                
+                                             requester.MemberId
+                ,
+                Amount = requestDto.Amount,
+                TransactionDate = DateTime.Now,
+                Picture = (requestDto.Picture != null) ? requestDto.Picture : null,
+                Memo = requestDto.Memo,
+                DisputeStatus = null,
+                TransactionStatus = "Pending",
+                TransactionType = CommonHelper.GetEncryptedData("Request"),
+                DeviceId = requestDto.DeviceId,
+                TransactionTrackingId = CommonHelper.GetRandomTransactionTrackingId(),
+                TransactionFee = 0,
+                IsPhoneInvitation = false,
+                InvitationSentTo = !String.IsNullOrEmpty(requestDto.MoneySenderEmailId)
+                                   ? CommonHelper.GetEncryptedData(requestDto.MoneySenderEmailId)
+                                   : null,
+                GeoLocation = new GeoLocation
+                {
+                    LocationId = Guid.NewGuid(),
+                    Latitude = requestDto.Latitude,
+                    Longitude = requestDto.Longitude,
+                    Altitude = requestDto.Altitude,
+                    AddressLine1 = requestDto.AddressLine1,
+                    AddressLine2 = requestDto.AddressLine2,
+                    City = requestDto.City,
+                    State = requestDto.State,
+                    Country = requestDto.Country,
+                    ZipCode = requestDto.ZipCode,
+                    DateCreated = DateTime.Now
+                }
+            };
+
+            int dbResult = 0;
+            bool isTesting = false;
+
+            if (requestDto.isTesting == "true")
+            {
+                Logger.Info("TDA -> RequestMoneyToExistingButNonregisteredUser - JUST A TEST!! - isTesting FLAG WAS TRUE... continuing on");
+                isTesting = true;
+                dbResult = 1;
+            }
+            else
+            {
+                _dbContext.Transactions.Add(transaction);
+
+                dbResult = _dbContext.SaveChanges();
+            }
+
+            #endregion Create New Transaction Record In DB
+
+            if (dbResult > 0)
+            {
+                requestId = transaction.TransactionId.ToString();
+
+                #region Send Notifications
+
+                #region Set Up Variables
+
+                var fromAddress = Utility.GetValueFromConfig("transfersMail");
+
+                string RequesterFirstName = CommonHelper.UppercaseFirst((CommonHelper.GetDecryptedData(requester.FirstName)).ToString());
+                string RequesterLastName = CommonHelper.UppercaseFirst((CommonHelper.GetDecryptedData(requester.LastName)).ToString());
+                string RequestReceiverFirstName = CommonHelper.UppercaseFirst((CommonHelper.GetDecryptedData(requestRecipient.FirstName)).ToString());
+                string RequestReceiverLastName = CommonHelper.UppercaseFirst((CommonHelper.GetDecryptedData(requestRecipient.LastName)).ToString());
+
+                string requesterPic = "https://www.noochme.com/noochweb/Assets/Images/userpic-default.png";
+                if (!String.IsNullOrEmpty(requester.Photo) && requester.Photo.Length > 20)
+                {
+                    requesterPic = requester.Photo.ToString();
+                }
+
+                string cancelLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"), "trans/CancelRequest.aspx?TransactionId=" + requestId +
+                                                                                                "&MemberId=" + requestDto.MemberId +
+                                                                                                "&UserType=6KX3VJv3YvoyK+cemdsvMA==");
+
+                string wholeAmount = requestDto.Amount.ToString("n2");
+                string[] amountArray = wholeAmount.Split('.');
+
+                string memo = "";
+                if (transaction.Memo != null && transaction.Memo != "")
+                {
+                    if (transaction.Memo.Length > 3)
+                    {
+                        string firstThreeChars = transaction.Memo.Substring(0, 3).ToLower();
+                        bool startWithFor = firstThreeChars.Equals("for");
+
+                        if (startWithFor)
+                        {
+                            memo = transaction.Memo.ToString();
+                        }
+                        else
+                        {
+                            memo = "for " + transaction.Memo.ToString();
+                        }
+                    }
+                    else
+                    {
+                        memo = "for " + transaction.Memo.ToString();
+                    }
+                }
+
+                bool isForRentScene = false;
+                var logoToDisplay = "noochlogo";
+
+                if (requester.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49" || // Rent Scene's account
+                    requester.MemberId.ToString().ToLower() == "a35c14e9-ee7b-4fc6-b5d5-f54961f2596a")  // Just for testing: "sallyanejones00@nooch.com"
+                {
+                    isForRentScene = true;
+                    fromAddress = "payments@rentscene.com";
+                    RequesterFirstName = "Rent Scene";
+                    RequesterLastName = "";
+                    logoToDisplay = "rentscenelogo";
+                }
+
+                #endregion Set Up Variables
+
+
+                // Send email to REQUESTER (person who sent this request)
+                #region Email To Requester
+
+                var tokens = new Dictionary<string, string>
+                    {
+                        {"$Logo$", logoToDisplay},
+					    {Constants.PLACEHOLDER_FIRST_NAME, RequesterFirstName},
+					    {Constants.PLACEHOLDER_NEWUSER, RequestReceiverFirstName + " " + RequestReceiverLastName},
+					    {Constants.PLACEHOLDER_TRANSFER_AMOUNT, amountArray[0].ToString()},
+					    {Constants.PLACEHLODER_CENTS, amountArray[1].ToString()},
+					    {Constants.PLACEHOLDER_OTHER_LINK, cancelLink},
+					    {Constants.MEMO, memo}
+				    };
+
+                var toAddress = isTesting ? "testing_request-sender@nooch.com"
+                                          : CommonHelper.GetDecryptedData(requester.UserName);
+
+                try
+                {
+                    Utility.SendEmail("requestSent",  fromAddress, toAddress, null,
+                                                "Your payment request to " + RequestReceiverFirstName + " " + RequestReceiverLastName + " is pending",
+                                                null, tokens, null, null, null);
+
+                    Logger.Info("TDA -> RequestMoneyToExistingButNonregisteredUser -> RequestSent email sent to [" + toAddress + "] successfully.");
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("TDA -> RequestMoneyToExistingButNonregisteredUser -> RequestSent email NOT sent to [" + toAddress +
+                                           "], [Exception: " + ex + "]");
+                }
+
+                #endregion Email To Requester
+
+
+                #region Email To Request Recipient
+
+                // Send email to REQUEST RECIPIENT (person who will pay/reject this request)
+                // Include 'UserType', 'LinkSource', and 'TransType' as encrypted along with request
+                // In this case UserType would = 'Nonregistered'  ->  6KX3VJv3YvoyK+cemdsvMA==
+                //              TransType would = 'Request'
+                //              LinkSource would = 'Email'
+
+                // Check if both user's are actually "Active" and not NonRegistered...
+                string userType = "6KX3VJv3YvoyK+cemdsvMA=="; // "NonRegistered"
+                if (requester.Status == "Active" && requestRecipient.Status == "Active")
+                {
+                    userType = "mx5bTcAYyiOf9I5Py9TiLw=="; // Update to "Existing"
+                }
+
+                string rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
+                                                  "trans/rejectMoney.aspx?TransactionId=" + requestId +
+                                                  "&UserType=" + userType +
+                                                  "&LinkSource=75U7bZRpVVxLNbQuoMQEGQ==" +
+                                                  "&TransType=T3EMY1WWZ9IscHIj3dbcNw==");
+
+                string paylink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
+                                               "trans/payRequest.aspx?TransactionId=" + requestId +
+                                               "&UserType=" + userType);
+
+                var tokens2 = new Dictionary<string, string>
+                    {
+                        {"$Logo$", logoToDisplay},
+                        {Constants.PLACEHOLDER_FIRST_NAME, RequestReceiverFirstName},
+                        {"$UserPicture$", requesterPic},
+                        {Constants.PLACEHOLDER_SENDER_FULL_NAME, RequesterFirstName + " " + RequesterLastName},
+                        {Constants.PLACEHOLDER_TRANSFER_AMOUNT, amountArray[0].ToString()},
+                        {Constants.PLACEHLODER_CENTS, amountArray[1].ToString()},
+                        {Constants.MEMO, memo},
+                        {Constants.PLACEHOLDER_REJECT_LINK, rejectLink},
+                        {Constants.PLACEHOLDER_PAY_LINK, paylink},
+                        {Constants.PLACEHOLDER_FRIEND_FIRST_NAME, RequesterFirstName}
+                    };
+
+                toAddress = (isTesting) ? "testing_request-recip@nooch.com" : CommonHelper.GetDecryptedData(requestRecipient.UserName);
+
+                try
+                {
+                    // ADD CURRENT MONTH IN BEGINNING OF THE SUBJECT, "December Rent Request from Landlord"
+                    string subject = isForRentScene
+                                     ? "$" + wholeAmount + " Payment Request from Rent Scene"
+                                     : "Payment Request from " + RequesterFirstName + " " + RequesterLastName + " - " + "$" + wholeAmount;
+
+                    Utility.SendEmail("requestReceivedToExistingNonRegUser",  fromAddress, toAddress, null,
+                                                subject, null, tokens2, null, null, null);
+
+                    Logger.Info("TDA -> RequestMoneyToExistingButNonregisteredUser - requestReceivedToNewUser email sent to [" + toAddress + "] successfully.");
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("TDA -> RequestMoneyToExistingButNonregisteredUser - requestReceivedToNewUser email NOT sent to [" + toAddress +
+                                           "], [Exception: " + ex + "]");
+                }
+
+                #endregion Email To Request Recipient
+
+
+                // Send SMS to REQUEST RECIPIENT (person who will pay/reject this request)
+
+                // CLIFF (10/20/15) This block works (tested successfully) but commenting out b/c the Deposit-Money landing page
+                //                  needs to be improved for Mobile screen sizes... not a great experience as it currently is.
+                #region Send SMS To Non-Nooch Transfer Recipient
+
+                /* string googleUrlAPIKey = Utility.GetValueFromConfig("GoogleURLAPI");
+
+                // shortening URLs from Google
+                string RejectShortLink = rejectLink;
+                string AcceptShortLink = paylink;
+
+                #region Call Google URL Shortener API
+
+                try
+                {
+                    var cli = new WebClient();
+                    cli.Headers[HttpRequestHeader.ContentType] = "application/json";
+                    string response = cli.UploadString("https://www.googleapis.com/urlshortener/v1/url?key=" + googleUrlAPIKey, "{longUrl:\"" + rejectLink + "\"}");
+                    googleURLShortnerResponseClass googlerejectshortlinkresult = JsonConvert.DeserializeObject<googleURLShortnerResponseClass>(response);
+
+                    if (googlerejectshortlinkresult != null)
+                    {
+                        RejectShortLink = googlerejectshortlinkresult.id;
+                    }
+                    else
+                    {
+                        // Google short URL API broke...
+                        Logger.LogErrorMessage("TDA -> RequestMoneyToExistingButNonregisteredUser - GoogleAPI FAILED for Reject Short Link.");
+                    }
+                    cli.Dispose();
+
+                    // Now shorten Accept link
+
+                    var cli2 = new WebClient();
+                    cli2.Headers[HttpRequestHeader.ContentType] = "application/json";
+                    string response2 = cli2.UploadString("https://www.googleapis.com/urlshortener/v1/url?key=" + googleUrlAPIKey, "{longUrl:\"" + paylink + "\"}");
+                    googleURLShortnerResponseClass googlerejectshortlinkresult2 = JsonConvert.DeserializeObject<googleURLShortnerResponseClass>(response2);
+
+                    if (googlerejectshortlinkresult2 != null)
+                    {
+                        AcceptShortLink = googlerejectshortlinkresult2.id;
+                    }
+                    else
+                    {
+                        // Google short URL API broke...
+                        Logger.LogErrorMessage("TDA -> RequestMoneyToExistingButNonregisteredUser - GoogleAPI FAILED for Accept Short Link.");
+                    }
+                    cli2.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogErrorMessage("TDA -> RequestMoneyToExistingButNonregisteredUser - GoogleAPI FAILED. [Exception: " + ex + "]");
+                }
+
+                #endregion Call Google URL Shortener API
+
+                string toPhoneNumber = requestRecipient.ContactNumber;
+
+                try
+                {
+                    // Example SMS string: "Cliff Canan wants to send you $10 using Nooch, a free app. Click here to pay: {LINK}. Or here to reject: {LINK}"
+
+                    // Make sure URL is short version (if Google API failued, use long version of Pay link and exclude the Reject link to save space)
+                    string SMSContent;
+
+                    if (AcceptShortLink.Length < 30) // Google Short links should be ~ 21 characters
+                    {
+                        string memoTxtForSms = memo;
+                        if (memoTxtForSms.Length < 2)
+                        {
+                            memoTxtForSms = "from you";
+                        }
+
+                        SMSContent = RequesterFirstName + " " + RequesterLastName + " requested $" +
+                                              amountArray[0].ToString() + "." + amountArray[1].ToString() + " " +
+                                              memoTxtForSms +
+                                              " using Nooch. Tap here to pay: " + AcceptShortLink +
+                                              ". Or reject: " + RejectShortLink;
+                    }
+                    else // Google Short link API broke, use long version of Pay link
+                    {
+                        SMSContent = RequesterFirstName + " " + RequesterLastName + " requested $" +
+                                              amountArray[0].ToString() + "." + amountArray[1].ToString() +
+                                              " using Nooch. Tap here to accept: " + AcceptShortLink;
+                    }
+
+                    string result = UtilityDataAccess.SendSMS(toPhoneNumber, SMSContent, "", "");
+
+                    Logger.LogDebugMessage("TDA -> TransferMoneyToNonNoochUserThroughPhoneUsingsynapse. SMS sent to recipient [" + toPhoneNumber + "] successfully. [Msg: " + result + "]");
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogErrorMessage("TDA -> TransferMoneyToNonNoochUserThroughPhoneUsingsynapse. SMS NOT sent to recipient [" + toPhoneNumber +
+                                           "], [Exception:" + ex + "]");
+                }*/
+
+                #endregion Send SMS To Non-Nooch Transfer Recipient
+
+
+                #endregion Send Notifications
+
+                return "Request made successfully.";
+            }
+            else
+            {
+                Logger.Error("TDA -> RequestMoneyToExistingButNonregisteredUser FAILED - Unable to save Transaction in DB - [Requester MemberID:" + requestDto.MemberId + "]");
+                return "Request failed.";
+            }
+        }
+
+
     }
 }

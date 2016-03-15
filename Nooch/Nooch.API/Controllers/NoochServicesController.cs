@@ -835,9 +835,6 @@ namespace Nooch.API.Controllers
         }
 
 
-
-
-
         // to reject request for existing user
         [HttpGet]
         [ActionName("RejectMoneyRequestForExistingNoochUser")]
@@ -858,6 +855,266 @@ namespace Nooch.API.Controllers
 
 
         }
+
+
+        /// <summary>
+        /// For sending a payment (send or request) on behalf of Rent Scene's Nooch account.
+        /// Created by Cliff on 12/17/15.
+        /// </summary>
+        /// <param name="requestInput"></param>
+        /// <param name="requestId"></param>
+        /// <param name="accessToken"></param>
+        /// <returns></returns>
+        [HttpGet]
+        [ActionName("RequestMoneyForRentScene")]
+        public requestFromRentScene RequestMoneyForRentScene(string name, string email, string amount, string memo, string pin, string ip, bool isRequest)
+        {
+            Logger.Info("Service Layer - RequestMoneyForRentScene Initiated - [Name: " + name +
+                                   "], Email: [" + email + "], amount: [" + amount +
+                                   "], memo: [" + memo + "], pin: [" + pin +
+                                   "], ip: [" + ip + "], isRequest: [" + isRequest + "]");
+
+            requestFromRentScene res = new requestFromRentScene();
+            res.success = false;
+            res.isEmailAlreadyReg = false;
+            res.msg = "Service Layer - Initial";
+
+            #region Check for Required Data
+
+            bool isMissingData = false;
+
+            if (String.IsNullOrEmpty(pin))
+            {
+                res.msg = "Missing PIN!";
+                isMissingData = true;
+            }
+            if (String.IsNullOrEmpty(name))
+            {
+                res.msg = "Missing name!";
+                isMissingData = true;
+            }
+            if (String.IsNullOrEmpty(email))
+            {
+                res.msg = "Missing email!";
+                isMissingData = true;
+            }
+            if (String.IsNullOrEmpty(amount))
+            {
+                res.msg = "Missing amount!";
+                isMissingData = true;
+            }
+
+            if (isMissingData)
+            {
+                Logger.Error("Service Layer -> RequestMoneyForRentScene FAILED - Missing required data - Msg is: [" + res.msg + "]");
+                return res;
+            }
+
+            #endregion Check for Required Data
+
+            #region Check If Recipient Already Has A Nooch Account
+
+            //var mda = new MembersDataAccess();
+
+            var memberObj = CommonHelper.GetMemberDetailsByUserName(email);
+
+            if (memberObj != null)
+            {
+                // This email address is already registered!
+                Logger.Error("Service Layer -> RequestMoneyForRentScene FAILED - User already exists with email: [" + email + "]");
+
+                res.isEmailAlreadyReg = true;
+                res.memberId = memberObj.MemberId.ToString();
+                res.name = (!String.IsNullOrEmpty(memberObj.FirstName)) ? CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName))
+                                                                        : "";
+                res.name = (!String.IsNullOrEmpty(memberObj.LastName)) ? res.name + " " + CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.LastName))
+                                                                        : res.name;
+                res.memberStatus = memberObj.Status;
+                res.dateCreated = Convert.ToDateTime(memberObj.DateCreated).ToString("MMM d, yyyy");
+
+
+                //var ada = new AccountDataAccess();
+                var userAndBankInfo = CommonHelper.GetSynapseBankAndUserDetailsforGivenMemberId(memberObj.MemberId.ToString());
+
+                if (userAndBankInfo != null &&
+                    userAndBankInfo.wereBankDetailsFound == true &&
+                    userAndBankInfo.BankDetails != null)
+                {
+                    res.isBankAttached = true;
+                    res.bankStatus = userAndBankInfo.BankDetails.Status;
+                }
+
+                res.msg = "Existing user found!";
+                res.note = "";
+                res.success = true;
+                return res;
+            }
+
+            #endregion Check If Recipient Already Has A Nooch Account
+
+
+            try
+            {
+                var tda = new TransactionsDataAccess();
+
+                string requestId = string.Empty;
+
+                RequestDto requestInput = new RequestDto()
+                {
+                    AddressLine1 = "1500 JFK Blvd",
+                    Amount = Convert.ToDecimal(amount),
+                    City = "Philadelphia",
+                    Country = "US",
+                    Latitude = 39.95332018F,
+                    Longitude = -75.1661824F,
+                    MemberId = "852987e8-d5fe-47e7-a00b-58a80dd15b49",
+                    Memo = memo,
+                    MoneySenderEmailId = email,
+                    Name = name,
+                    PinNumber = pin,
+                    SenderId = "",
+                    State = "PA",
+                    TransactionDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                    ZipCode = "19102",
+                    //isTesting = "true" // REMOVE FOR PRODUCTION!!
+                };
+
+                StringResult tdaRes = new StringResult { Result = tda.RequestMoneyToNonNoochUserUsingSynapse(requestInput, out requestId) };
+
+                res.msg = tdaRes.Result;
+                res.note = requestId;
+
+                if (tdaRes.Result.IndexOf("made successfully") > -1)
+                {
+                    res.success = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Layer - RequestMoneyForRentScene FAILED - [Email: " + email + "]. Exception: [" + ex + "]");
+
+                res.msg = ex.Message;
+
+                Utility.ThrowFaultException(ex);
+            }
+
+            return res;
+        }
+
+
+        /// <summary>
+        /// For sending a payment REQUEST to an EXISTING user on behalf of Rent Scene's Nooch account.
+        /// Had to create this only for use on the makePayment.aspx Page because I didn't know how to make a 
+        /// POST HTTP request from the makePayment.aspx.cs Code-Behind page... so did a GET to here, and this
+        /// will forward along to RequestMoneyToNonNoochUserUsingSynapse().
+        /// Created by Cliff on 12/23/15.
+        /// </summary>
+        /// <param name="requestInput"></param>
+        /// <param name="requestId"></param>
+        /// <param name="accessToken"></param>
+        /// <returns></returns>
+     
+        [HttpGet]
+        [ActionName("RequestMoneyToExistingUserForRentScene")]
+        public requestFromRentScene RequestMoneyToExistingUserForRentScene(string name, string email, string amount, string memo, string pin, string ip, bool isRequest, string memberId, string nameFromServer)
+        {
+            Logger.Info("Service Layer - RequestMoneyToExistingUserForRentScene Initiated - [Name: " + name +
+                                   "], Email: [" + email + "], Amount: [" + amount +
+                                   "], Memo: [" + memo + "], PIN: [" + pin +
+                                   "], IP: [" + ip + "], isRequest: [" + isRequest + "]" +
+                                   "], MemberID: [" + memberId + "], NameFromServer: [" + nameFromServer + "]");
+
+            requestFromRentScene res = new requestFromRentScene();
+            res.success = false;
+            res.isEmailAlreadyReg = false;
+            res.msg = "Service Layer - Initial";
+
+            #region Check for Required Data
+
+            bool isMissingData = false;
+
+            if (String.IsNullOrEmpty(pin))
+            {
+                res.msg = "Missing PIN!";
+                isMissingData = true;
+            }
+            if (String.IsNullOrEmpty(name))
+            {
+                res.msg = "Missing name!";
+                isMissingData = true;
+            }
+            if (String.IsNullOrEmpty(email))
+            {
+                res.msg = "Missing email!";
+                isMissingData = true;
+            }
+            if (String.IsNullOrEmpty(amount))
+            {
+                res.msg = "Missing amount!";
+                isMissingData = true;
+            }
+
+            if (isMissingData)
+            {
+                Logger.Error("Service Layer -> RequestMoneyForRentScene FAILED - Missing required data - Msg is: [" + res.msg + "]");
+                return res;
+            }
+
+            #endregion Check for Required Data
+
+            try
+            {
+                string requestId = string.Empty;
+
+                RequestDto requestInput = new RequestDto()
+                {
+                    AddressLine1 = "1500 JFK Blvd",
+                    Amount = Convert.ToDecimal(amount),
+                    City = "Philadelphia",
+                    Country = "US",
+                    Latitude = 39.95332018F,
+                    Longitude = -75.1661824F,
+                    MemberId = "852987e8-d5fe-47e7-a00b-58a80dd15b49",
+                    Memo = memo,
+                    MoneySenderEmailId = String.IsNullOrEmpty(memberId) ? email
+                                                                        : "",
+                    Name = nameFromServer,
+                    PinNumber = !String.IsNullOrEmpty(pin) ? CommonHelper.GetEncryptedData(pin)
+                                                           : "eeR7e/xjfVaQpm1w7jCh8g==", // "0000" as the default
+                    SenderId = !String.IsNullOrEmpty(memberId) ? memberId
+                                                               : "",
+                    State = "PA",
+                    TransactionDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                    ZipCode = "19102",
+                    //isTesting = "true" // REMOVE FOR PRODUCTION!!
+                };
+
+
+                var tda = new TransactionsDataAccess();
+                StringResult tdaRes = new StringResult { Result = tda.RequestMoneyToExistingButNonregisteredUser(requestInput, out requestId) };
+
+                res.msg = tdaRes.Result;
+                res.note = requestId;
+
+                if (tdaRes.Result.IndexOf("made successfully") > -1)
+                {
+                    res.success = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Layer - RequestMoneyToExistingButNonRegisteredUser FAILED - [Email: " + email + "]. Exception: [" + ex + "]");
+
+                res.msg = ex.Message;
+                res.note = "Outer exception in Service Layer!";
+            }
+
+            return res;
+        }
+
+
+
+
         #endregion
 
 

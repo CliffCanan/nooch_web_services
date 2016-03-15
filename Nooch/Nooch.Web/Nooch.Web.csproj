@@ -263,6 +263,7 @@
     <Content Include="Views\Nooch\AddBank.cshtml" />
     <Content Include="Views\Nooch\BankVerification.cshtml" />
     <Content Include="Views\Nooch\CancelRequest.cshtml" />
+    <Content Include="Views\Nooch\makePayment.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
