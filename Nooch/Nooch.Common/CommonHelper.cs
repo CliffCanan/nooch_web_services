@@ -17,6 +17,7 @@ using Nooch.Common.Entities.SynapseRelatedEntities;
 using Nooch.Common.Resources;
 using Nooch.Common.Rules;
 using Nooch.Data;
+using Nooch.Common.Entities.LandingPagesRelatedEntities;
  
 
 namespace Nooch.Common
@@ -423,6 +424,34 @@ namespace Nooch.Common
             var memberAccountDetails = _dbContext.SynapseBankLoginResults.Where(m => m.MemberId == id && m.IsDeleted== false).ToList();
 
             return memberAccountDetails;
+
+        }
+
+        public static bool RemoveSynapseBankLoginResultsForGivenMemberId(string memberId)
+        {
+            Logger.Info("MDA -> GetSynapseBankAccountDetails - MemberId: [" + memberId + "]");
+
+            var id = Utility.ConvertToGuid(memberId);
+
+            var memberAccountDetails = _dbContext.SynapseBankLoginResults.Where(m => m.MemberId == id && m.IsDeleted == false).ToList();
+
+            try
+            {
+
+
+                foreach (SynapseBankLoginResult v in memberAccountDetails)
+                {
+
+                    v.IsDeleted = true;
+                    _dbContext.SaveChanges();
+                }
+
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
 
         }
         public static SynapseBanksOfMember GetSynapseBankAccountDetails(string memberId)
@@ -2625,7 +2654,8 @@ namespace Nooch.Common
 
             return context;
         }
- 
-        
+
+     
+
     }
 }
