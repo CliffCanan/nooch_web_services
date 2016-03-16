@@ -93,7 +93,6 @@
     <Compile Include="Entities\ResultCancelRequest.cs" />
     <Compile Include="Entities\ResultPayRequest.cs" />
     <Compile Include="Entities\StringResult.cs" />
-    <Compile Include="Entities\synapseClassesMemDataAccess.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\CheckSynapseBankDetails.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\kycInfoResponseFromSynapse.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\NodePermissionCheckResult.cs" />
