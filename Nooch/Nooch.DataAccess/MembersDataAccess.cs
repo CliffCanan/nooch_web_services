@@ -3147,15 +3147,15 @@ namespace Nooch.DataAccess
 
                                     #region Marking Any Existing Synapse Bank Login Entries as Deleted
 
-                                    
-                                    var memberLoginResultsCollection = CommonHelper.GetSynapseBankLoginResulList(id.ToString());
+                                    // why would we do this?
+                                    //var memberLoginResultsCollection = CommonHelper.GetSynapseBankLoginResulList(id.ToString());
 
-                                    foreach (SynapseBankLoginResult v in memberLoginResultsCollection)
-                                    {
-                                        v.IsDeleted = true;
-                                        _dbContext.SaveChanges();
+                                    //foreach (SynapseBankLoginResult v in memberLoginResultsCollection)
+                                    //{
+                                    //    v.IsDeleted = true;
+                                    //    _dbContext.SaveChanges();
                                         
-                                    }
+                                    //}
 
                                     #endregion Marking Any Existing Synapse Bank Login Entries as Deleted
 
@@ -3225,7 +3225,7 @@ namespace Nooch.DataAccess
 
                                         // Array[] of banks ("nodes") expected here
                                         RootBankObject allNodesParsedResult = JsonConvert.DeserializeObject<RootBankObject>(content);
-
+                                         
                                         if (allNodesParsedResult != null)
                                         {
                                             res.Is_MFA = false;
@@ -3243,20 +3243,28 @@ namespace Nooch.DataAccess
                                                 sbm.IsDefault = false;
                                                 Guid memId = Utility.ConvertToGuid(MemberId);
                                                 sbm.MemberId = memId;
-                                                //sbm.account_class = v.account_class;
+                                             //   sbm.account_class = v.account_class;
 
                                                 sbm.account_number_string = CommonHelper.GetEncryptedData(v.info.account_num);
-                                                //sbm.account_type = v.type_synapse;
+                                            //    sbm.account_type = v.type_synapse;
 
                                                 sbm.bank_name = CommonHelper.GetEncryptedData(v.info.bank_name);
                                                 //sbm.bankAdddate = v.date;
-                                                //sbm.bankid = v.bankOid.ToString();
+                                                
+                                                sbm.oid =CommonHelper.GetEncryptedData(v._id.oid.ToString());
                                                 sbm.mfa_verifed = true;
                                                 sbm.name_on_account = CommonHelper.GetEncryptedData(v.info.name_on_account);
                                                 sbm.nickname = CommonHelper.GetEncryptedData(v.info.nickname);
                                                 sbm.routing_number_string = CommonHelper.GetEncryptedData(v.info.routing_num);
+                                                sbm.allowed = v.allowed;
+                                              // sbm.account_class = v.info._class;   Account class is int and it's value is string
+                                               // sbm.account_type = Convert.ToInt32( v.info.type); 
+                                                sbm.balance = v.info.balance.amount;
+                                                sbm.is_active = v.is_active;
+                                                sbm.type_bank = v.info.type;
+                                                sbm.type_synapse = v.type;
+                                                sbm.supp_id = v.extra.supp_id;
 
-                                                
                                                 _dbContext.SynapseBanksOfMembers.Add(sbm);
                                                 _dbContext.SaveChanges();
                                                 

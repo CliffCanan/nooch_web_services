@@ -609,7 +609,7 @@ function submitBnkLgn() {
                     //console.log('Account nickname is: ' + currentBankAccnt.nickname);
 
                     // making html to add in div of banks selection list
-                    bankht = bankht + "<div id='account" + accountnum + "Grp' class='input-group'><span class='input-group-addon'><input type='radio' name='account' id='account" + accountnum + "' value='" + currentBankAccnt.id + "' data-bname='" + currentBankAccnt.bank_name + "' required data-parsley-required-message='Please select which account you would like to link to Nooch.' data-parsley-errors-container='#errorMsgDiv'></span><label class='form-control' id='label"+accountnum+"'><p class='form-control-static acntNm'>";
+                    bankht = bankht + "<div id='account" + accountnum + "Grp' class='input-group'><span class='input-group-addon'><input type='radio' name='account' id='account" + accountnum + "' value='" + currentBankAccnt.bankoid + "' data-bname='" + currentBankAccnt.bank_name + "' required data-parsley-required-message='Please select which account you would like to link to Nooch.' data-parsley-errors-container='#errorMsgDiv'></span><label class='form-control' id='label"+accountnum+"'><p class='form-control-static acntNm'>";
                     bankht = bankht + currentBankAccnt.nickname + "<span class='pull-right'>" + currentBankAccnt.account_number_string+"</span></p></label></div>";
                 });
 
@@ -967,7 +967,7 @@ function MFALogin() {
 
 			if (res.Is_success == true)
 			{
-				console.log('MFALogin response was SUCCESSFUL');
+				console.log('MFALogin response was SUCCESSFUL'+res);
 				//console.log(res);
 
 				// Checking if response contains another MFA
@@ -1032,15 +1032,16 @@ function MFALogin() {
 				{
 					// iterating through each bank
                     var accountnum = 0;
-                    var bankht = "";
+                    var bankht = ""; console.log(res);
                     $.each(res.SynapseBanksList.banks, function (i, val)
-					{
+                    {
+                        
                         var currentBankAccnt = val;
                         accountnum += 1;
                         //console.log('Account nickname is: ' + currentBankAccnt.nickname);
 
                         // making html to add in div of banks selection list
-                        bankht = bankht + "<div id='account" + accountnum + "Grp' class='input-group'><span class='input-group-addon'><input type='radio' name='account' id='account" + accountnum + "' value='" + currentBankAccnt.id + "' data-bname='" + currentBankAccnt.bank_name + "' required data-parsley-required-message='Please select which account you would like to link to Nooch.' data-parsley-errors-container='#errorMsgDiv'></span><label class='form-control' id='label"+accountnum+"'><p class='form-control-static acntNm'>";
+                        bankht = bankht + "<div id='account" + accountnum + "Grp' class='input-group'><span class='input-group-addon'><input type='radio' name='account' id='account" + accountnum + "' value='" + currentBankAccnt.bankoid + "' data-bname='" + currentBankAccnt.bank_name + "' required data-parsley-required-message='Please select which account you would like to link to Nooch.' data-parsley-errors-container='#errorMsgDiv'></span><label class='form-control' id='label" + accountnum + "'><p class='form-control-static acntNm'>";
                         bankht = bankht + currentBankAccnt.nickname + "<span class='pull-right'>" + currentBankAccnt.account_number_string+"</span></p></label></div>";
                     });
 
@@ -1127,11 +1128,13 @@ function mfaErrorAlert() {
 }
 
 function SetDefaultAct() {
+     
     if ($("#addBank-selectAccount").parsley().validate() === true)
 	{
 		var bankId = $("input:radio[name='account']:checked").val();
 		var bankName = $("input:radio[name='account']:checked").data("bname");
-
+		 
+        
 		// ADD THE LOADING BOX
 		$('.addBankContainer-body').block({
 		    message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Linking Account...</span>',
@@ -1153,7 +1156,7 @@ function SetDefaultAct() {
 		$.ajax({
 			type: "POST",
 			url: $('#setDefaultBankUrl').val(),
-			data: "{ MemberId: '" + MEMBER_ID + "',BankName: '" + bankName + "',BankId: '" + bankId + "'}",
+			data: "{ MemberId: '" + MEMBER_ID + "',BankName: '" + bankName + "',BankOId: '" + bankId + "'}",
 			contentType: "application/json; charset=utf-8",
 			dataType: "json",
 			async: "true",
@@ -1163,7 +1166,7 @@ function SetDefaultAct() {
 				console.log("SUCCESS");
 				$('.addBankContainer-body').unblock();
 
-				var res = msg.d;
+				var res = msg;
 
 				// REDIRECT THE USER TO THE RIGHT PLACE
 				if (res.Is_success == true)

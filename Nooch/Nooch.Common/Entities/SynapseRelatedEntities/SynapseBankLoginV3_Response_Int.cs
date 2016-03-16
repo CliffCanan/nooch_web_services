@@ -36,11 +36,15 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
         public info info { get; set; }
         public bool is_active { get; set; }
         public string type { get; set; }
+         
+         
+         
     }
 
     public class _id
     {
         [JsonProperty(PropertyName = "$oid")]
+        
         public string oid { get; set; }
     }
 

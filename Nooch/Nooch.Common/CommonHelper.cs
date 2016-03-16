@@ -2059,17 +2059,17 @@ namespace Nooch.Common
         }
 
  
-        public static SynapseBankSetDefaultResult SetSynapseDefaultBank(string MemberId, string BankName, string BankId)
+        public static SynapseBankSetDefaultResult SetSynapseDefaultBank(string MemberId, string BankName, string BankOId)
         {
             Logger.Info("MDA -> SetSynapseDefaultBank Initiated. [MemberId: " + MemberId + "], [Bank Name: " +
-                                    BankName + "], [BankId: " + BankId + "]");
+                                    BankName + "], [BankOId: " + BankOId + "]");
 
             SynapseBankSetDefaultResult res = new SynapseBankSetDefaultResult();
 
             #region Check query data
             if (String.IsNullOrEmpty(MemberId) ||
                 String.IsNullOrEmpty(BankName) ||
-                String.IsNullOrEmpty(BankId))
+                String.IsNullOrEmpty(BankOId))
             {
                 if (String.IsNullOrEmpty(BankName))
                 {
@@ -2079,7 +2079,7 @@ namespace Nooch.Common
                 {
                     res.Message = "Invalid data - need MemberId";
                 }
-                else if (String.IsNullOrEmpty(BankId))
+                else if (String.IsNullOrEmpty(BankOId))
                 {
                     res.Message = "Invalid data - need Bank Id";
                 }
@@ -2093,7 +2093,7 @@ namespace Nooch.Common
             else
             {
                 Guid memId = Utility.ConvertToGuid(MemberId);
-                int bnkid = Convert.ToInt16(BankId);
+                
 
                 // Get Nooch username (primary email address) from MemberId
                 var noochUserName = GetMemberUsernameByMemberId(MemberId);
@@ -2108,6 +2108,8 @@ namespace Nooch.Common
                     #region Find the bank to be set as Default
                     string bnaknameEncrypted = GetEncryptedData(BankName);
 
+                    string bankOId = GetEncryptedData(BankOId);
+
 
                     //var selectedBank = synapseBankRepository.SelectAll(memberSpecification).FirstOrDefault();
 
@@ -2118,7 +2120,7 @@ namespace Nooch.Common
                     var banksFound = _dbContext.SynapseBanksOfMembers.Where(memberTemp =>
                                         memberTemp.MemberId.Value.Equals(memId) &&
                                         memberTemp.bank_name == bnaknameEncrypted &&
-                                        memberTemp.Id == bnkid).ToList();    /// or this would bankid ?? need to check... -Malkit
+                                        memberTemp.oid == bankOId).ToList();    /// or this would bankid ?? need to check... -Malkit
                     var selectedBank = (from c in banksFound select c)
                                       .OrderByDescending(bank => bank.AddedOn)
                                       .Take(1)
@@ -2156,8 +2158,8 @@ namespace Nooch.Common
                         string fullNameFromBank = selectedBank.name_on_account.ToString();
                         string firstNameFromBank = "";
                         string lastNameFromBank = "";
-                        string emailFromBank = selectedBank.email.ToString().ToLower();
-                        string phoneFromBank = CommonHelper.RemovePhoneNumberFormatting(selectedBank.phone_number);
+                        string emailFromBank = selectedBank.email!=null?selectedBank.email.ToString().ToLower() : "";
+                        string phoneFromBank = selectedBank.phone_number!=null?CommonHelper.RemovePhoneNumberFormatting(selectedBank.phone_number):"";
 
                         bool bankIncludedName = false;
                         bool bankIncludedEmail = false;
@@ -2593,7 +2595,7 @@ namespace Nooch.Common
                     }
                     else
                     {
-                        Logger.Info("MDA -> SetSynapseDefaultBank ERROR: Selected Bank not found in Nooch DB - MemberId: [" + MemberId + "]; BankId: [" + BankId + "]");
+                        Logger.Info("MDA -> SetSynapseDefaultBank ERROR: Selected Bank not found in Nooch DB - MemberId: [" + MemberId + "]; BankId: [" + BankOId + "]");
 
                         res.Message = "Bank not found for given Member";
                         res.Is_success = false;
@@ -2607,7 +2609,7 @@ namespace Nooch.Common
                 #region Member NOT Found
                 else
                 {
-                    Logger.Info("MDA -> SetSynapseDefaultBank ERROR: Member not found in Nooch DB - MemberId: [" + MemberId + "]; BankId: [" + BankId + "]");
+                    Logger.Info("MDA -> SetSynapseDefaultBank ERROR: Member not found in Nooch DB - MemberId: [" + MemberId + "]; BankId: [" + BankOId + "]");
                     res.Message = "Member not found";
                     res.Is_success = false;
                     return res;

@@ -3387,11 +3387,11 @@ namespace Nooch.API.Controllers
 
         [HttpGet]
         [ActionName("SynapseV3AddNode")]
-        public SynapseBankLoginV3_Response_Int SynapseV3AddNode(string MemberId, string BnkName, string BnkUserName, string BnkPw)
+        public SynapseV3BankLoginResult_ServiceRes SynapseV3AddNode(string MemberId, string BnkName, string BnkUserName, string BnkPw)
         {
             Logger.Info("MDA -> SynapseV3AddNode Initiated - MemberId: [" + MemberId + "], BankName: [" + BnkName + "]");
 
-            SynapseBankLoginV3_Response_Int res = new SynapseBankLoginV3_Response_Int();
+            SynapseV3BankLoginResult_ServiceRes res = new SynapseV3BankLoginResult_ServiceRes();
             res.Is_success = false;
 
             #region Check if all required data was passed
@@ -3609,7 +3609,7 @@ namespace Nooch.API.Controllers
                                 sbr.IsCodeBasedAuth = false;  // NO MORE CODE-BASED WITH SYNAPSE V3, EVERY MFA IS THE SAME NOW
                                 sbr.mfaMessage = null; // For Code-Based MFA - NOT USED ANYMORE, SHOULD REMOVE FROM DB
                                 sbr.BankAccessToken = CommonHelper.GetEncryptedData(bankLoginRespFromSynapse["nodes"][0]["_id"]["$oid"].ToString()); // CLIFF (8/21/15): Not sure if this syntax is correct
-                                res.bankMFA = bankLoginRespFromSynapse["nodes"][0]["_id"]["$oid"].ToString();
+                                //res.bankMFA = bankLoginRespFromSynapse["nodes"][0]["_id"]["$oid"].ToString();
 
 
                                 if (bankLoginRespFromSynapse["nodes"][0]["extra"]["mfa"] != null ||
@@ -3622,8 +3622,9 @@ namespace Nooch.API.Controllers
                                     sbr.IsQuestionBasedAuth = true;
                                     sbr.mfaQuestion = bankLoginRespFromSynapse["nodes"][0]["extra"]["mfa"]["message"].ToString().Trim();
                                     sbr.AuthType = "questions";
-
-
+                                    sbr.BankAccessToken = CommonHelper.GetEncryptedData(bankLoginRespFromSynapse["nodes"][0]["_id"]["$oid"].ToString());
+                                    res.bankOid = bankLoginRespFromSynapse["nodes"][0]["_id"]["$oid"].ToString();
+                                    res.bankMFA = res.bankOid;
                                     // Set final values for returning this function
                                     res.Is_MFA = true;
                                     res.errorMsg = "OK";
@@ -3646,7 +3647,36 @@ namespace Nooch.API.Controllers
 
                                     rootBankObj.nodes = nodesarray;
 
-                                    res.SynapseNodesList = rootBankObj;
+                                    // not required when mfa is returned
+                                    //SynapseNodesListClass nodesList = new SynapseNodesListClass();
+                                    //List<SynapseIndividualNodeClass> bankslistextint = new List<SynapseIndividualNodeClass>();
+
+                                    //foreach (nodes bank in nodesarray)
+                                    //{
+                                    //    SynapseIndividualNodeClass b = new SynapseIndividualNodeClass();
+                                    //    b.account_class = bank.info._class;
+                                    //    b.bank_name = bank.info.bank_name;
+                                    //    //b.date = bank.date;
+                                    //    b.oid = bank._id.oid;
+                                    //    b.is_active = bank.is_active;
+                                    //    //b.is_verified = bank.is_verified;
+                                    //    //b.mfa_verifed = bank.mfa_verifed;
+                                    //    b.name_on_account = bank.info.name_on_account;
+                                    //    b.nickname = bank.info.nickname;
+                                    //    b.account_num = (bank.info.account_num);
+
+
+                                    //    bankslistextint.Add(b);
+                                    //}
+                                    //nodesList.nodes = bankslistextint;
+                                    //nodesList.success = true;
+
+                                  //  res.SynapseNodesList = nodesList;
+
+
+                                    res.SynapseNodesList = new SynapseNodesListClass();
+                                    res.SynapseNodesList.nodes = new List<SynapseIndividualNodeClass>();
+
 
                                     #endregion MFA was returned
                                 }
@@ -3703,15 +3733,38 @@ namespace Nooch.API.Controllers
 
                             // Array[] of banks ("nodes") expected here
                             // this old sturcture is unable to parse synapse V3 response  add new AddNodeV3BanksListResult -- to parse
-                            // SynapseV3BanksListClassint allNodesParsedResult = JsonConvert.DeserializeObject<SynapseV3BanksListClassint>(content);
+                             //SynapseV3BanksListClassint allNodesParsedResult = JsonConvert.DeserializeObject<SynapseV3BanksListClassint>(content);
 
                             RootBankObject allNodesParsedResult = JsonConvert.DeserializeObject<RootBankObject>(content);
 
                             if (allNodesParsedResult != null)
                             {
                                 res.Is_MFA = false;
-                                res.SynapseNodesList = allNodesParsedResult;
 
+                                SynapseNodesListClass nodesList = new SynapseNodesListClass();
+                                List<SynapseIndividualNodeClass> bankslistextint = new List<SynapseIndividualNodeClass>();
+
+                                foreach (nodes bank in allNodesParsedResult.nodes)
+                                {
+                                    SynapseIndividualNodeClass b = new SynapseIndividualNodeClass();
+                                    b.account_class = bank.info._class;
+                                    b.bank_name = bank.info.bank_name;
+                                    //b.date = bank.date;
+                                    b.oid = bank._id.oid;
+                                    b.is_active = bank.is_active;
+                                    //b.is_verified = bank.is_verified;
+                                    //b.mfa_verifed = bank.mfa_verifed;
+                                    b.name_on_account = bank.info.name_on_account;
+                                    b.nickname = bank.info.nickname;
+                                    b.account_num = (bank.info.account_num);
+
+
+                                    bankslistextint.Add(b);
+                                }
+                                nodesList.nodes = bankslistextint;
+                                nodesList.success = true;
+
+                                res.SynapseNodesList = nodesList;
                                 Logger.Info("MDA -> SynapseV3AddNode - No MFA - SUCCESSFUL, Now saving all banks found in Bank Array (n = " +
                                                        allNodesParsedResult.nodes.Length + ") for: [" + MemberId + "]");
 
@@ -3748,7 +3801,7 @@ namespace Nooch.API.Controllers
                                         sbm.mfa_verifed = false;
 
                                         // New in V3
-                                        sbm.oid = !String.IsNullOrEmpty(n._id.oid) ? n._id.oid : null;
+                                        sbm.oid = !String.IsNullOrEmpty(n._id.oid) ? CommonHelper.GetEncryptedData( n._id.oid ): null;
                                         sbm.allowed = !String.IsNullOrEmpty(n.allowed) ? n.allowed : "UNKNOWN";
                                         sbm.@class = !String.IsNullOrEmpty(n.info._class) ? n.info._class : "UNKNOWN";
                                         sbm.supp_id = !String.IsNullOrEmpty(n.extra.supp_id) ? n.extra.supp_id : null;
@@ -3904,6 +3957,8 @@ namespace Nooch.API.Controllers
                     //b.mfa_verifed = bank.mfa_verifed;
                     b.name_on_account = bank.info.name_on_account;
                     b.nickname = bank.info.nickname;
+                    b.account_num = (bank.info.account_num);
+                    
 
                     bankslistextint.Add(b);
                 }

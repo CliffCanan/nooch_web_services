@@ -292,7 +292,7 @@ namespace Nooch.Web.Controllers
 
         [HttpPost]
         [ActionName("BankLogin")]
-        public    ActionResult   BankLogin(bankLoginInputFormClass inp)
+        public ActionResult BankLogin(bankLoginInputFormClass inp)
         {
             SynapseBankLoginRequestResult res = new SynapseBankLoginRequestResult();
             res.Is_success = false;
@@ -318,8 +318,8 @@ namespace Nooch.Web.Controllers
                     string serviceMethod = "/SynapseV3AddNode?MemberId=" + inp.memberid + "&BnkName=" + inp.bankname + "&BnkUserName=" + inp.username
                                            + "&BnkPw=" + inp.password ;
 
-                    SynapseBankLoginV3_Response_Int bankLoginResult =
-                        ResponseConverter<SynapseBankLoginV3_Response_Int>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+                    SynapseV3BankLoginResult_ServiceRes bankLoginResult =
+                        ResponseConverter<SynapseV3BankLoginResult_ServiceRes>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
 
                     if (bankLoginResult.Is_success == true)
                     {
@@ -332,22 +332,22 @@ namespace Nooch.Web.Controllers
                             res.MFA_Type = "questions";    // no more code based as per synapse V3 docs
                         }
                         List<SynapseBankClass> synbanksList = new List<SynapseBankClass>();
-                        if (bankLoginResult.SynapseNodesList.nodes.Length>1)
+                        if (bankLoginResult.SynapseNodesList.nodes[0]!=null)
                         {
-                            foreach (nodes bankNode in bankLoginResult.SynapseNodesList.nodes)
+                            foreach (SynapseIndividualNodeClass bankNode in bankLoginResult.SynapseNodesList.nodes)
                             {
                                 SynapseBankClass sbc = new SynapseBankClass();
-                                sbc.account_class = bankNode.info._class;
-                                sbc.account_number_string = bankNode.info.account_num;
-                                sbc.account_type = bankNode.type;
+                                sbc.account_class = bankNode.account_class;
+                                sbc.account_number_string = bankNode.account_num;
+                                sbc.account_type = bankNode.account_type.ToString();
                                 sbc.address = "";
-                                sbc.balance = bankNode.info.balance.amount;
-                                sbc.bank_name = bankNode.info.bank_name;
-                                sbc.bankoid = bankNode._id.ToString();
-                                sbc.account_class = bankNode.info._class;
-                                sbc.nickname = bankNode.info.nickname;
-                                sbc.routing_number_string = bankNode.info.routing_num;
-                                sbc.account_type = bankNode.info.type;
+                                //sbc.balance = bankNode.info.balance.amount;
+                                sbc.bank_name = bankNode.bank_name;
+                                sbc.bankoid = bankNode.oid;
+                                
+                                sbc.nickname = bankNode.nickname;
+                                sbc.routing_number_string = bankNode.routing_num;
+                                
                                 sbc.is_active = bankNode.is_active;
 
                                 synbanksList.Add(sbc);
@@ -523,19 +523,16 @@ namespace Nooch.Web.Controllers
                             sbc.account_number_string = bankNode.account_num;
                             sbc.account_type = bankNode.account_type.ToString();
                             sbc.address = "";
+                            
                             //sbc.balance = bankNode.;
                             sbc.bank_name = bankNode.bank_name;
-                            sbc.bankoid = bankNode.oid;
-                            
+                            sbc.bankoid = bankNode.oid;                            // using this same id to set bank account as default
                             sbc.nickname = bankNode.nickname;
-                            sbc.routing_number_string = bankNode.routing_num;
-                            
+                            sbc.routing_number_string = bankNode.routing_num;                            
                             sbc.is_active = bankNode.is_active;
-
                             synbanksList.Add(sbc);
-
-                        }
-
+                            
+                        }                       
 
                         res.SynapseBanksList = new SynapseBanksListClass()
                         {
@@ -555,8 +552,8 @@ namespace Nooch.Web.Controllers
                             };
                             qbr.response.mfa[0].question = bnkloginresult.mfaMessage;
                             res.SynapseQuestionBasedResponse = qbr;
-                        }
-                      
+                           
+                        }                    
                         
                        
                         res.ERROR_MSG = "OK";
@@ -826,10 +823,10 @@ namespace Nooch.Web.Controllers
 
         [HttpPost]
         [ActionName("SetDefaultBank")]
-        public  SynapseBankSetDefaultResult SetDefaultBank(setDefaultBankInput input)
+        public ActionResult   SetDefaultBank(setDefaultBankInput input)
         {
             Logger.Info("**Add_Bank** CodeBehind -> SetDefaultBank Initiated - [MemberID: " + input.MemberId +
-                                   "], [Bank Name: " + input.BankName + "], [BankID: " + input.BankId + "]");
+                                   "], [Bank Name: " + input.BankName + "], [BankID: " + input.BankOId + "]");
 
             SynapseBankSetDefaultResult res = new SynapseBankSetDefaultResult();
 
@@ -837,7 +834,7 @@ namespace Nooch.Web.Controllers
             {
                 if (String.IsNullOrEmpty(input.MemberId) ||
                 String.IsNullOrEmpty(input.BankName) ||
-                String.IsNullOrEmpty(input.BankId))
+                String.IsNullOrEmpty(input.BankOId))
                 {
                     if (String.IsNullOrEmpty(input.BankName))
                     {
@@ -847,7 +844,7 @@ namespace Nooch.Web.Controllers
                     {
                         res.Message = "Invalid data - need MemberId";
                     }
-                    else if (String.IsNullOrEmpty(input.BankId))
+                    else if (String.IsNullOrEmpty(input.BankOId))
                     {
                         res.Message = "Invalid data - need Bank Id";
                     }
@@ -858,7 +855,7 @@ namespace Nooch.Web.Controllers
                 {
                     string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
 
-                    string serviceMethod = "/SetSynapseDefaultBank?MemberId=" + input.MemberId + "&BankName=" + input.BankName + "&BankId=" + input.BankId;
+                    string serviceMethod = "/SetSynapseDefaultBank?MemberId=" + input.MemberId + "&BankName=" + input.BankName + "&BankId=" + input.BankOId;
                     SynapseBankSetDefaultResult bnkloginresult = ResponseConverter<SynapseBankSetDefaultResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
 
                     res.Is_success = bnkloginresult.Is_success;
@@ -870,7 +867,7 @@ namespace Nooch.Web.Controllers
                 Logger.Error("**Add_Bank** CodeBehind -> SetDefaultBank FAILED - [MemberID: " + input.MemberId +
                                    "], [Exception: " + we.InnerException + "]");
             }
-            return res;
+            return Json(res);
         }
 
         
@@ -911,6 +908,6 @@ namespace Nooch.Web.Controllers
     {
        public string MemberId { get; set; }
        public string BankName { get; set; }
-       public string BankId { get; set; }  
+       public string BankOId { get; set; }  
     }
 }
