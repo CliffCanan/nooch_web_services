@@ -305,6 +305,10 @@
     <Content Include="Views\Nooch\BankVerification.cshtml" />
     <Content Include="Views\Nooch\CancelRequest.cshtml" />
     <Content Include="Views\Nooch\Index.cshtml" />
+    <Content Include="Views\Nooch\makePayment.cshtml" />
+    <Content Include="Views\Nooch\PayRequest.cshtml">
+      <SubType>Code</SubType>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

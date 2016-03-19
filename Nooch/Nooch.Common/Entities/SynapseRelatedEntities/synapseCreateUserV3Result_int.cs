@@ -20,6 +20,7 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
 
         public string memberIdGenerated { get; set; } // Used when creating a new Member from a landing page
         public string ssn_verify_status { get; set; }
+        public string reason { get; set; }
     }
 
     public class createUserV3Result_oauth
