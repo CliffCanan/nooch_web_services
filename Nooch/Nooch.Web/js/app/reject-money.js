@@ -15,7 +15,7 @@ $(document).ready(function () {
         {
             console.log("Transaction no longer pending!");
         }
-
+        $('#createAccountPrompt').hide();
         if (transType == "Invite") 
         {
             $('#SenderAndTransInfodiv .intro-header').text('Payment From').addClass('label-success');
@@ -65,7 +65,7 @@ function areThereErrors() {
 function checkIfStillPending() 
 {
     if (typeof transStatus != 'undefined' &&
-        transStatus != "pending") // Set on Code Behind page
+       transStatus != "pending" && transStatus != "Pending")// Set on Code Behind page
     {
         var alertTitle = "";
         var alertBodyText = "";

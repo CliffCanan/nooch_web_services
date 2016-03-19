@@ -959,7 +959,7 @@ namespace Nooch.Web.Controllers
                     Session["TransType"] = Request.QueryString["TransType"];
 
                     res.errorFromCodeBehind = "0";
-                    res.transStatus = "initial";
+                    
 
 
                     ResultCancelRequest TransDetails = GetTransDetailsGenericMethod(Request.QueryString["TransactionId"]);
@@ -970,8 +970,10 @@ namespace Nooch.Web.Controllers
                         res.TransId = TransDetails.TransId;
                         res.LinkSource = Request.QueryString["LinkSource"];
                         res.UserType = Request.QueryString["UserType"];
+                        res.transStatus = TransDetails.TransStatus;
+                        res.TransAmout = TransDetails.AmountLabel;
 
-                        if (CommonHelper.GetDecryptedData(res.UserType) == "NonRegistered" || CommonHelper.GetDecryptedData(res.UserType) == "Existring")
+                        if (CommonHelper.GetDecryptedData(res.UserType) == "NonRegistered" || CommonHelper.GetDecryptedData(res.UserType) == "Existing")
                         {
                             res.nameLabel = TransDetails.nameLabel;
                             res.senderImage = TransDetails.senderImage;
@@ -1026,6 +1028,45 @@ namespace Nooch.Web.Controllers
             }
 
             return View(res);
+        }
+
+        [HttpGet]
+        public ActionResult RejectMoneyBtnClick(string TransactionId, string UserType, string LinkSource, string TransType)
+        {
+            PageLoadDataRejectMoney res = new PageLoadDataRejectMoney();
+            string serviceMethod = string.Empty;
+            string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+            serviceMethod = "/RejectMoneyCommon?TransactionId=" + TransactionId +
+                            "&UserType=" + UserType +
+                            "&LinkSource=" + LinkSource +
+                            "&TransType=" + TransType;
+            Logger.Info("rejectMoney CodeBehind -> RejectRequest - Full Service URL To Query: [" + String.Concat(serviceUrl, serviceMethod) + "]");
+            var serviceResult = ResponseConverter<StringResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+
+            if (serviceResult.Result == "Success." || serviceResult.Result == "Success")
+            {
+                res.errorFromCodeBehind = "0";
+
+                res.transStatus= "Request rejected successfully.";
+
+                //res.UserType  -- this can be handled client side
+
+                // Check if request is performed by new user
+                //if (SessionHelper.GetSessionValue("UserType").ToString() == "New")
+                //{
+                //    createAccountPrompt.Visible = true; // prompt to create account
+                //}
+
+                Logger.Info("rejectMoney CodeBehind -> RejectRequest SUCCESSFUL - [TransactionId Parameter: " + Request.QueryString["TransactionId"] + "]");
+            }
+            else
+            {
+                Logger.Error("rejectMoney CodeBehind -> RejectRequest FAILED - [Server Result: " + serviceResult.Result + "], " +
+                                       "[TransactionId Parameter: " + Request.QueryString["TransactionId"] + "]");
+                res.errorFromCodeBehind = "1";
+            }
+            return Json(res);
+
         }
     }
 

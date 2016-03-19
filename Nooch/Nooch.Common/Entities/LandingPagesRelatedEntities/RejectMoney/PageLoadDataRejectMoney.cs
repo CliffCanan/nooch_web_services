@@ -20,6 +20,7 @@ namespace Nooch.Common.Entities.LandingPagesRelatedEntities.RejectMoney
         public string UserType { get; set; }
         public string LinkSource { get; set; }
         public string TransType { get; set; }
+        public string TransAmout { get; set; }
 
 
         public bool SenderAndTransInfodiv { get; set; }

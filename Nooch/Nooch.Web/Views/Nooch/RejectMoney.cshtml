@@ -42,7 +42,7 @@
     <div id="SenderAndTransInfodiv" class="depositComplete-TransDetails paymentInfo" >
         <div class="media">
             <div class="transDetails-userpic pull-left">
-                <input type="image" class="media-object" id="senderImage" imageurl="" alt="Other User" />
+                <input type="image" class="media-object" id="senderImage" imageurl="@mod.senderImage" alt="Other User" />
                 
             </div>
 
@@ -50,11 +50,15 @@
                 <span class="intro-header label"></span>
 
                 <div id="senderName">
-                    <div id="nameLabel"></div>
+                    <div id="nameLabel">
+                        @Html.Raw(@mod.nameLabel)
+                    </div>
                     
                 </div>
                 <span class="transfer-amount">
-                    <div id="AmountLabel"></div>
+                    <div id="AmountLabel">
+    @Html.Raw(@mod.TransAmout)
+</div>
                         
                     </span>
             </div>
@@ -79,7 +83,7 @@
 
     <div id="clickToReject" class="clearfix" >
         <p class="depositInstructions animated fadeIn" style="margin: 12px auto 25px;"></p>
-        <input type="button" id="rejectBtn" class="btn btn-default btn-lg center-block animated bounceIn" text="Yes - Confirm" onclick="rejectBtnClicked" />
+        <input type="button" id="rejectBtn" class="btn btn-default btn-lg center-block animated bounceIn" value="Yes - Confirm"  onclick="rejectBtnClicked" />
         
     </div>
 
@@ -87,7 +91,7 @@
         <div class="depositInstructions">
             If you create a Nooch account, you can make payment requests too. For Free. To anyone's email address or phone number, even if they don't have Nooch.
             <br/>
-            <input type="button" ID="btnCreateAccount" class="btn btn-default btn-lg m-t-15 animated bounceIn" Text="Create Account" OnClick=" btnCreateAccount_Click "/>
+            <input type="button" ID="btnCreateAccount" class="btn btn-default btn-lg m-t-15 animated bounceIn" value="Create Account" OnClick=" btnCreateAccount_Click "/>
 
         </div>
     </div>
