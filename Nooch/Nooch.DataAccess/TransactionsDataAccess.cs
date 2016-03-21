@@ -3726,7 +3726,7 @@ namespace Nooch.DataAccess
         #endregion Reject Transaction (All Types) Methods
 
 
-        public static SynapseV3AddTrans_ReusableClass AddTransSynapseV3Reusable(string sender_oauth, string sender_fingerPrint,
+        public  SynapseV3AddTrans_ReusableClass AddTransSynapseV3Reusable(string sender_oauth, string sender_fingerPrint,
             string sender_bank_node_id, string amount, string fee, string receiver_oauth, string receiver_fingerprint,
             string receiver_bank_node_id, string suppID_or_transID, string senderUserName, string receiverUserName, string iPForTransaction, string senderLastName, string recepientLastName)
         {
