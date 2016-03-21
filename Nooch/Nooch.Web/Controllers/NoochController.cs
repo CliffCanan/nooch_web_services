@@ -792,6 +792,180 @@ namespace Nooch.Web.Controllers
             return View();
         }
 
+        public ActionResult PayRequestComplete()
+        {
+            ResultPayRequestComplete rpc = new ResultPayRequestComplete();
+            Logger.Info("PayRequestComplete CodeBehind -> page_load Initiated - 'mem_id' Parameter In URL: [" + Request.QueryString["mem_id"] + "]");
+
+            rpc.paymentSuccess = false;
+
+            try
+            {
+                 
+                    if (!String.IsNullOrEmpty(Request.QueryString["mem_id"]))
+                    {
+                        string[] allQueryStrings = (Request.QueryString["mem_id"]).Split(',');
+
+                        if (allQueryStrings.Length > 1)
+                        {
+                            Response.Write("<script>var errorFromCodeBehind = '0';</script>");
+
+                            string mem_id = allQueryStrings[0];
+                            string tr_id = allQueryStrings[1];
+                            string isForRentScene = allQueryStrings[2];
+
+                            rpc.memId = mem_id;
+
+                            // Check if this payment is for Rent Scene
+                            if (isForRentScene == "true")
+                            {
+                                Logger.Info("PayRequestComplete CodeBehind -> Page_load - RENT SCENE Transaction Detected - TransID: [" + tr_id + "]");
+                                rpc.rs = "true";
+                            }
+
+                            // Getting transaction details to check if transaction is still pending
+                            rpc = GetTransDetailsForPayRequestComplete(tr_id,rpc);
+
+                            if (rpc.IsTransactionStillPending)
+                            {
+                              rpc=  completeTrans(mem_id, tr_id,rpc);
+                            }
+                        }
+                        else
+                        {
+                            Logger.Error("PayRequestComplete CodeBehind -> page_load ERROR - 'mem_id' in query string did not have 2 parts as expected - [mem_id Parameter: " + Request.QueryString["mem_id"] + "]");
+                            Response.Write("<script>var errorFromCodeBehind = '2';</script>");
+                        }
+                    }
+                    else
+                    {
+                        // something wrong with query string
+                        Logger.Error("PayRequestComplete CodeBehind -> page_load ERROR - 'mem_id' in query string was NULL or empty [mem_id Parameter: " + rpc.memId + "]");
+                        Response.Write("<script>var errorFromCodeBehind = '1';</script>");
+                    }
+                
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("payRequestComplete CodeBehind -> page_load OUTER EXCEPTION - mem_id Parameter: [" +
+                                        rpc.memId + "], [Exception: " + ex + "]");
+                rpc.payinfobar = false;
+                Response.Write("<script>var errorFromCodeBehind = '1';</script>");
+            }
+
+            ViewData["OnLoaddata"] = rpc;
+            return View();
+        }
+
+        private ResultPayRequestComplete completeTrans(string MemberIdAfterSynapseAccountCreation, string TransactionId,ResultPayRequestComplete resultPayComplete)
+        {
+            ResultPayRequestComplete rpc = resultPayComplete;
+            try
+            {
+                string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+                string serviceMethod = "/GetTransactionDetailByIdAndMoveMoneyForNewUserDeposit?TransactionId=" + TransactionId +
+                                       "&MemberIdAfterSynapseAccountCreation=" + MemberIdAfterSynapseAccountCreation +
+                                       "&TransactionType=RequestToNewUser";
+
+                if ((rpc.usrTyp == "Existing" || rpc.usrTyp == "Tenant") &&
+                     rpc.payeeMemId.Length > 5)
+                {
+                    serviceMethod = serviceMethod + "&recipMemId=" + rpc.payeeMemId;
+                }
+
+                Logger.Info("payRequestComplete CodeBehind -> completeTrans - About to Query Nooch Service to move money - URL: ["
+                                       + String.Concat(serviceUrl, serviceMethod) + "]");
+
+                TransactionDto transaction = ResponseConverter<TransactionDto>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+
+                if (transaction != null)
+                {
+                    if (transaction.synapseTransResult == "Success")
+                    {
+                       rpc.paymentSuccess = true;
+                    }
+                    else
+                    {
+                        Logger.Error("payRequestComplete CodeBehind -> completeTrans FAILED - TransId: [" + TransactionId + "]");
+
+                        rpc.paymentSuccess = false;
+                        Response.Write("<script>errorFromCodeBehind = 'failed';</script>");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("payRequestComplete CodeBehind -> completeTrans FAILED - TransId: [" + TransactionId +
+                                       "], Exception: [" + ex + "]");
+            }
+
+            return rpc;
+        }
+
+        public ResultPayRequestComplete GetTransDetailsForPayRequestComplete(string TransactionId, ResultPayRequestComplete resultPayRequestComplt)
+        {
+            ResultPayRequestComplete rpc = resultPayRequestComplt;
+            string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+            string serviceMethod = "/GetTransactionDetailByIdForRequestPayPage?TransactionId=" + TransactionId;
+
+            TransactionDto transaction = ResponseConverter<TransactionDto>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+
+            if (transaction == null)
+            {
+                Logger.Error("payRequestComplete CodeBehind -> getTransDetails FAILED - Transaction was Null [TransId: " + TransactionId + "]");
+
+                Response.Write("<script>errorFromCodeBehind = '3';</script>");
+                rpc.IsTransactionStillPending = false;
+                return rpc;
+                 
+            }
+            else
+            {
+                // Logger.LogDebugMessage("** payRequestComplete CodeBehind -> memId.Value: [" + memId.Value + "]");
+                // Logger.LogDebugMessage("** payRequestComplete CodeBehind -> transaction.MemberId: [" + transaction.MemberId + "]");
+                // Logger.LogDebugMessage("** payRequestComplete CodeBehind -> transaction.TransactionType: [" + transaction.TransactionType + "]");
+
+                rpc.senderImage  = transaction.RecepientPhoto;
+                rpc.senderName1 = (!String.IsNullOrEmpty(transaction.RecepientName) && transaction.RecepientName.Length > 2) ?
+                                    transaction.RecepientName :
+                                    transaction.Name;
+                rpc.transAmountd = transaction.Amount.ToString("n2");
+                rpc.transMemo = transaction.Memo;
+
+
+                // Check if this was a Rent request from a Landlord
+                if (!String.IsNullOrEmpty(transaction.TransactionType) &&
+                    transaction.TransactionType == "Rent")
+                {
+                    rpc.usrTyp = "Tenant";
+                    rpc.payeeMemId = !String.IsNullOrEmpty(transaction.MemberId) ? transaction.MemberId : "none";
+                }
+
+                // Check if this was a request to an existing, but 'NonRegistered' User
+                else if (transaction.IsExistingButNonRegUser == true)
+                {
+                    rpc.usrTyp = "Existing";
+                    rpc.payeeMemId = !String.IsNullOrEmpty(transaction.MemberId) ? transaction.MemberId : "none";
+                }
+
+                #region Check If Still Pending
+
+                Response.Write("<script>var isStillPending = true;</script>");
+
+                if (transaction.TransactionStatus != "Pending")
+                {
+                    Response.Write("<script>isStillPending = false;</script>");
+                    rpc.IsTransactionStillPending = false;
+                    return rpc;
+                }
+
+                #endregion Check If Still Pending
+            }
+            rpc.IsTransactionStillPending = true;
+            return rpc;
+        }
+
+
         public ResultPayRequest GetTransDetailsForPayRequest(string TransactionId, ResultPayRequest resultPayRequest)
         {
             ResultPayRequest rpr = resultPayRequest;

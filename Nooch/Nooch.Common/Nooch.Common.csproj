@@ -93,6 +93,7 @@
     <Compile Include="Entities\MobileAppOutputEnities\TransactionDto.cs" />
     <Compile Include="Entities\ResultCancelRequest.cs" />
     <Compile Include="Entities\ResultPayRequest.cs" />
+    <Compile Include="Entities\ResultPayRequestComplete.cs" />
     <Compile Include="Entities\StringResult.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\CheckSynapseBankDetails.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\kycInfoResponseFromSynapse.cs" />

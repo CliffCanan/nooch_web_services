@@ -1,0 +1,104 @@
+﻿@using Nooch.Common.Entities;
+@{
+    Layout = null;
+    ResultPayRequestComplete rpc = (ResultPayRequestComplete)ViewData["OnLoaddata"];
+}
+<!DOCTYPE html>
+
+<html>
+<head  >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nooch | Request Paid</title>
+    <link href="@Url.Content("~/Assets/Css/bootstrap.css")" rel="stylesheet" />
+    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,400italic,500,500italic,700,900" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.4/themes/cupertino/jquery-ui.css" />
+    <link href="@Url.Content("~/Assets/Css/sweetalert-override.min.css")" rel="stylesheet" />
+    <link href="@Url.Content("~/Assets/Css/tweaks.css")" rel="stylesheet" />
+    <link rel="icon" href="../Assets/favicon.ico" />
+</head>
+<body id="body-depositNew" class="no-border" style="background-color: rgba(230, 231, 232, 0.8);">
+
+    <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+        <div class="clearfix">
+            <a class="landingHeaderLogo center-block" href="https://www.nooch.com/">
+                <img src="../Assets/Images/nooch-logo2.svg" class="center-block" alt="Nooch Logo" />
+            </a>
+        </div>
+    </nav>
+
+    <div id="payinfobar" class="depositComplete-TransDetails col-xs-12 col-sm-offset-4 col-sm-4" style="float: none;" >
+        <div class="media">
+            <div class="transDetails-userpic pull-left">
+               
+                <img class="media-object"   id="senderImage" src="@rpc.senderImage" alt="Other User" />
+            </div>
+            <div class="media-body">
+                <span class="intro-header label label-success">Request From</span>
+                <div id="senderName">
+                    <label   id="senderName1"  >@rpc.senderName1</label>
+                </div>
+                <span class="transfer-amount">
+                    $
+                    <label   id="transAmountd"  >@rpc.transAmountd</label>
+                </span>
+            </div>
+        </div>
+        <div id="memo_shell">
+            <div>
+                <label   id="transMemo"  >@rpc.transMemo</label>
+            </div>
+        </div>
+    </div>
+    @if (rpc.paymentSuccess == true) { 
+    <div id="paymentSuccess"  >
+
+        <div id="iconCirclexx" style="width: 100%; text-align: center;" class="floating">
+            <div style="width: 80%; max-width: 122px; margin: 15px auto 10px;">
+                <img src="https://www.nooch.com/email/autoemails/check-green.png" style="display: block; width: 100px; height: auto; margin: 5px auto 15px;" alt="&#10004;" />
+            </div>
+        </div>
+
+        <div id="depositHeaderShell">
+            <div id="depositHeader">
+                <p>Success!</p>
+                <div id="fromText">Your payment has been submitted successfully and is now being processed.  You should see this payment appear on your bank statement within 1-3 business days.</div>
+            </div>
+        </div>
+
+    </div>
+    }
+    <div class="footer">
+        <div>
+            <ul class="list-inline">
+                <li><a href="https://www.nooch.com/overview">About</a></li>
+                <li><a href="https://www.nooch.com/safe">Security</a></li>
+                <li><a href="http://support.nooch.com/">Support Center</a></li>
+                <li><a href="https://www.nooch.com/tos">Legal Stuff</a></li>
+                <li><a href="https://www.nooch.com/blog/">Blog</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <form id="form1" class="hidden">
+        <input type="hidden" id="transType" value="request" />
+    </form>
+
+    <form id="form2"  >
+        <input type="hidden"   id="usrTyp"   value="@rpc.usrTyp" />
+        <input type="hidden" id="payeeMemId"   value="@rpc.payeeMemId" />
+        <input type="hidden" id="memId"   value="@rpc.memId" />
+        <input type="hidden" id="rs"   value="@rpc.rs" />
+    </form>
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+
+    <!-- Bootstrap Plugins -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+
+    <script src="../js/sweetalert.min.js"></script>
+    <script src="../js/app/movemoney-complete-pages.js"></script>
+</body>
+</html>
