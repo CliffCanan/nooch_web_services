@@ -24,7 +24,10 @@ namespace Nooch.Common.Entities
         public string phone { get; set; }
         public string nameInNav { get; set; }
         public bool nameInNavContainer { get; set; }
-
+        public string ssn { get; set; }
+        public string ip { get; set; }
+        public string fngprnt { get; set; }
+        public string pw { get; set; }
  }
 
     public class CreateAccountInDB

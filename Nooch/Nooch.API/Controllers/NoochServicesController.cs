@@ -2626,7 +2626,7 @@ namespace Nooch.API.Controllers
                 var mda = new MembersDataAccess();
                 string result = mda.CreateNonNoochUserAccountAfterRejectMoney(TransId, password, EmailId, UserName);
                 return new StringResult { Result = result };
-            }
+             }
             catch (Exception ex)
             {
                 Utility.ThrowFaultException(ex);
@@ -2684,7 +2684,11 @@ namespace Nooch.API.Controllers
 
                 var tda = new TransactionsDataAccess();
                 string result = tda.RejectMoneyCommon(TransactionId, UserType, LinkSource, TransType);
-                return new StringResult { Result = result };
+                //return new StringResult { Result = result };
+                StringResult Re = new StringResult();
+                Re.Result = result;
+                return Re;
+               
             }
             catch (Exception ex)
             {

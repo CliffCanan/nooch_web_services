@@ -12,6 +12,7 @@ using Nooch.Data;
 using Nooch.Common.Entities;
 using Nooch.Common.Entities.MobileAppOutputEnities;
 using Nooch.DataAccess;
+using Nooch.Common.Entities.LandingPagesRelatedEntities.RejectMoney;
 
 
 namespace Nooch.Web.Controllers
@@ -105,6 +106,63 @@ namespace Nooch.Web.Controllers
         }
 
 
+        public ResultCancelRequest GetTransDetailsGenericMethod(string TransactionId)
+        {
+            ResultCancelRequest rcr = new ResultCancelRequest();
+            string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+            string serviceMethod = "/GetTransactionDetailById?TransactionId=" + TransactionId;
+
+            TransactionDto transaction = ResponseConverter<TransactionDto>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+
+            rcr.IsTransFound = transaction != null;
+            rcr.TransStatus = transaction.TransactionStatus;
+
+
+
+            if (transaction.IsPhoneInvitation && transaction.PhoneNumberInvited.Length > 0)
+            {
+                // senderImage.ImageUrl = "https://www.noochme.com/noochweb/Assets/Images/" + "userpic-default.png";
+                rcr.senderImage = "https://www.noochme.com/noochweb/Assets/Images/" + "userpic-default.png";
+                //nameLabel.Text = transaction.PhoneNumberInvited;
+                rcr.nameLabel = transaction.PhoneNumberInvited;
+            }
+            else if (!String.IsNullOrEmpty(transaction.InvitationSentTo))
+            {
+                //senderImage.ImageUrl = "https://www.noochme.com/noochweb/Assets/Images/" + "userpic-default.png";
+                //nameLabel.Text = transaction.InvitationSentTo;
+                rcr.senderImage = "https://www.noochme.com/noochweb/Assets/Images/" + "userpic-default.png";
+
+                rcr.nameLabel = transaction.InvitationSentTo;
+            }
+            else
+            {
+                //nameLabel.Text = transaction.Name;
+                //senderImage.ImageUrl = transaction.SenderPhoto;
+                rcr.senderImage = transaction.SenderPhoto;
+                rcr.nameLabel = transaction.Name;
+            }
+
+            //AmountLabel.Text = transaction.Amount.ToString("n2");
+            if (transaction.Amount != null)
+                rcr.AmountLabel = transaction.Amount.ToString("n2");
+
+
+            // Reject money page related stuff
+
+            rcr.RecepientName = transaction.RecepientName;
+            rcr.senderImage = transaction.RecepientPhoto;
+
+
+
+            if (!String.IsNullOrEmpty(transaction.TransactionType))
+                rcr.TransType = transaction.TransactionType;
+
+            if (!String.IsNullOrEmpty(transaction.TransactionId))
+                rcr.TransId = transaction.TransactionId;
+
+
+            return rcr;
+        }
         public ResultCancelRequest GetTransDetails(string TransactionId)
         {
             ResultCancelRequest rcr = new ResultCancelRequest();
@@ -157,6 +215,16 @@ namespace Nooch.Web.Controllers
 
             //AmountLabel.Text = transaction.Amount.ToString("n2");
             rcr.AmountLabel = transaction.Amount.ToString("n2");
+
+
+            // Reject money page related stuff
+            if (!String.IsNullOrEmpty(transaction.TransactionType))
+                rcr.TransType = transaction.TransactionType;
+
+            if (!String.IsNullOrEmpty(transaction.TransactionId))
+                rcr.TransId = transaction.TransactionId;
+
+
             return rcr;
         }
 
@@ -865,17 +933,17 @@ namespace Nooch.Web.Controllers
             return Json(res);
         }
 
-        public ActionResult createAccount()
+        public ActionResult createAccount(string rs, string TransId, string type, string memId)
         {
             ResultcreateAccount rca = new ResultcreateAccount();
             try
-            {                       
-               
+            {
+                rca.memId = memId; // memberid is required in all cases and also need at bank login page- Surya
                 if (!String.IsNullOrEmpty(Request.QueryString["rs"]))
                 {
                     Logger.Info("createAccount CodeBehind -> Page_load Initiated - Is a RentScene Payment: [" + Request.QueryString["rs"] + "]");
 
-                    //rs.Value = Request.QueryString["rs"].ToLower();
+                     
                     rca.rs = Request.QueryString["rs"].ToLower();
                 }
                 if (!String.IsNullOrEmpty(Request.QueryString["TransId"]))
@@ -889,7 +957,7 @@ namespace Nooch.Web.Controllers
                 }
                 else if (!String.IsNullOrEmpty(Request.QueryString["type"]))
                 {
-                    //type.Value = Request.QueryString["type"];
+                     
                     rca.type = Request.QueryString["type"];
 
                     if (!String.IsNullOrEmpty(Request.QueryString["memId"]))
@@ -904,17 +972,16 @@ namespace Nooch.Web.Controllers
                     rca.errorId = "2";
                     //InvalidTransaction("This looks like an invalid transaction.  Please try again or contact Nooch support for more information.");
                 }
-                //}
-            }
+                   }
             catch (Exception ex)
             {
-                //errorId.Value = "1";
+                
                 rca.errorId = "1";
 
                 Logger.Error("payRequest CodeBehind -> page_load OUTER EXCEPTION - [TransactionId Parameter: " + Request.QueryString["TransactionId"] +
                                        "], [Exception: " + ex.Message + "]");
             }
-            //}
+    
             ViewData["OnLoaddata"] = rca;
 
             return View();
@@ -1036,14 +1103,19 @@ namespace Nooch.Web.Controllers
         }
 
 
+        [HttpPost]
+        [ActionName("saveMemberInfo")]
 
-        public static genericResponse saveMemberInfo(string memId, string name, string dob, string ssn, string address, string zip, string email, string phone, string fngprnt, string ip)
-        {
-            Logger.Info("Create Account Code-Behind -> saveMemberInfo Initiated - MemberID: [" + memId +
-                                   "], Name: [" + name + "], Email: [" + email +
-                                   "], Phone: [" + phone + "], DOB: [" + dob +
-                                   "], SSN: [" + ssn + "], Address: [" + address +
-                                   "], IP: [" + ip + "]");
+        //public static genericResponse saveMemberInfo(string memId, string name, string dob, string ssn, string address, string zip, string email, string phone, string fngprnt, string ip)
+        public  ActionResult saveMemberInfo(ResultcreateAccount resultcreateAccount)   
+    {
+                
+            ResultcreateAccount rca = resultcreateAccount;
+            Logger.Info("Create Account Code-Behind -> saveMemberInfo Initiated - MemberID: [" + rca.memId +
+                                   "], Name: [" + rca.name + "], Email: [" + rca.email +
+                                   "], Phone: [" + rca.phone + "], DOB: [" + rca.dob +
+                                   "], SSN: [" + rca.ssn + "], Address: [" + rca.address +
+                                   "], IP: [" + rca.ip + "]");
 
             genericResponse res = new genericResponse();
             res.success = false;
@@ -1052,12 +1124,13 @@ namespace Nooch.Web.Controllers
             try
             {
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-                string serviceMethod = "/UpdateMemberProfile?memId=" + memId +
-                                       "&fname=" + name + "&lname=" + name +
-                                       "&email=" + email + "&phone=" + phone +
-                                       "&address=" + address + "&zip=" + zip +
-                                       "&dob=" + dob + "&ssn=" + ssn +
-                                       "&fngprnt=" + fngprnt + "&ip=" + ip;
+                string serviceMethod = "/UpdateMemberProfile?memId=" + rca.memId +
+                                       "&fname=" + rca.name + "&lname=" + rca.name +
+                                       "&email=" + rca.email + "&phone=" + rca.phone +
+                                       "&address=" + rca.address + "&zip=" + rca.zip +
+                                       "&dob=" + rca.dob + "&ssn=" + rca.ssn +
+                                       "&fngprnt=" + rca.fngprnt + "&ip=" + rca.ip +
+                                       "&pw="+"";
 
                 string urlToUse = String.Concat(serviceUrl, serviceMethod);
 
@@ -1076,11 +1149,11 @@ namespace Nooch.Web.Controllers
             }
             catch (Exception ex)
             {
-                Logger.Error("Create Account Code-Behind -> saveMemberInfo FAILED - MemberID: [" + memId + "], Exception: [" + ex.Message + "]");
+                Logger.Error("Create Account Code-Behind -> saveMemberInfo FAILED - MemberID: [" + rca.memId + "], Exception: [" + ex.Message + "]");
                 res.msg = "Code-behind exception during saveMemberInfo";
             }
 
-            return res;
+            return Json(res);
         }
 
         [HttpPost]
@@ -1096,7 +1169,7 @@ namespace Nooch.Web.Controllers
             createAccount.name = CommonHelper.GetEncryptedData(createAccount.name);
             createAccount.email = CommonHelper.GetEncryptedData(createAccount.email);
             createAccount.pw = CommonHelper.GetEncryptedData(createAccount.pw);
-            //createAccount.TransId = Session["TransId"].ToString();
+            createAccount.TransId = Session["TransId"].ToString();
 
             json = "{\"input\":" + scriptSerializer.Serialize(createAccount) + "}";
             string serviceUrl = Utility.GetValueFromConfig("ServiceUrl"); 
@@ -1125,6 +1198,139 @@ namespace Nooch.Web.Controllers
             //}
         }
 
+
+        public ActionResult RejectMoney(string TransactionId, string UserType, string LinkSource, string TransType)
+        {
+            PageLoadDataRejectMoney res = new PageLoadDataRejectMoney();
+
+            Logger.Info("rejectMoney CodeBehind -> Page_load Initiated - [TransactionId Parameter: " + Request.QueryString["TransactionId"] + "]");
+            try
+            {
+
+                // TransId - transaction id from query string
+                // UserType - tells us if user opening link is existing, nonregistered, or completelty brand new user -- need this to show hide create account form later
+                // LinkSource - tells us if user is coming from email link or SMS -- need this later to pre-fill create account form
+
+                if (!String.IsNullOrEmpty(Request.QueryString["TransactionId"]) &&
+                    !String.IsNullOrEmpty(Request.QueryString["UserType"]) &&
+                    !String.IsNullOrEmpty(Request.QueryString["LinkSource"]) &&
+                    !String.IsNullOrEmpty(Request.QueryString["TransType"]))
+                {
+                    Session["TransactionId"] = Request.QueryString["TransactionId"];
+                    Session["UserType"] = Request.QueryString["UserType"];
+                    Session["LinkSource"] = Request.QueryString["LinkSource"];
+                    Session["TransType"] = Request.QueryString["TransType"];
+
+                    res.errorFromCodeBehind = "0";
+                    
+
+
+                    ResultCancelRequest TransDetails = GetTransDetailsGenericMethod(Request.QueryString["TransactionId"]);
+
+                    if (TransDetails.IsTransFound)
+                    {
+                        res.TransType = TransDetails.UserType;
+                        res.TransId = TransDetails.TransId;
+                        res.LinkSource = Request.QueryString["LinkSource"];
+                        res.UserType = Request.QueryString["UserType"];
+                        res.transStatus = TransDetails.TransStatus;
+                        res.TransAmout = TransDetails.AmountLabel;
+
+                        if (CommonHelper.GetDecryptedData(res.UserType) == "NonRegistered" || CommonHelper.GetDecryptedData(res.UserType) == "Existing")
+                        {
+                            res.nameLabel = TransDetails.nameLabel;
+                            res.senderImage = TransDetails.senderImage;
+                        }
+                        else
+                        {
+                            res.nameLabel = TransDetails.RecepientName;
+                            res.senderImage = TransDetails.RecepientPhoto;
+                        }
+
+                        if (TransDetails.TransStatus == "pending")
+                        {
+                            res.clickToReject = true;
+                        }
+                    }
+                    else
+                    {
+                        res.errorFromCodeBehind = "1";
+
+                    }
+
+
+
+                }
+                else
+                {
+
+                    res.SenderAndTransInfodiv = false;
+                    res.clickToReject = false;
+                    res.createAccountPrompt = false;
+
+                    // Use TransResult (inside TransactionResult DIV) to display error message (in addition to .swal() alert)
+                    res.TransactionResult = true;
+                    res.errorFromCodeBehind = "1";
+
+
+
+                    Logger.Error("rejectMoney CodeBehind -> page_load ERROR - One of the required fields in query string was NULL or empty - " +
+                                           "TransactionId Parameter: [" + Request.QueryString["TransactionId"] + "], " +
+                                           "UserType Parameter: [" + Request.QueryString["UserType"] + "], " +
+                                           "LinkSource Parameter: [" + Request.QueryString["LinkSource"] + "], " +
+                                           "TransType Parameter: [" + Request.QueryString["TransType"] + "]");
+                }
+
+            }
+            catch (Exception ex)
+            {
+
+
+                Logger.Error("rejectMoney CodeBehind -> page_load OUTER EXCEPTION - TransactionId Parameter: [" + Request.QueryString["TransactionId"] +
+                                       "], Exception: [" + ex.Message + "]");
+            }
+
+            return View(res);
+        }
+
+        [HttpPost]
+        public ActionResult RejectMoneyBtnClick(string TransactionId, string UserType, string LinkSource, string TransType)
+        {
+            PageLoadDataRejectMoney res = new PageLoadDataRejectMoney();
+            string serviceMethod = string.Empty;
+            string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+            serviceMethod = "/RejectMoneyCommon?TransactionId=" + TransactionId +
+                            "&UserType=" + UserType +
+                            "&LinkSource=" + LinkSource +
+                            "&TransType=" + TransType;
+            Logger.Info("rejectMoney CodeBehind -> RejectRequest - Full Service URL To Query: [" + String.Concat(serviceUrl, serviceMethod) + "]");
+            var serviceResult = ResponseConverter<StringResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+
+            if (serviceResult.Result == "Success." || serviceResult.Result == "Success")
+            {
+                res.errorFromCodeBehind = "0";
+
+                res.transStatus= "Request rejected successfully.";
+
+                //res.UserType  -- this can be handled client side
+
+                // Check if request is performed by new user
+                //if (SessionHelper.GetSessionValue("UserType").ToString() == "New")
+                //{
+                //    createAccountPrompt.Visible = true; // prompt to create account
+                //}
+
+                Logger.Info("rejectMoney CodeBehind -> RejectRequest SUCCESSFUL - [TransactionId Parameter: " + Request.QueryString["TransactionId"] + "]");
+            }
+            else
+            {
+                Logger.Error("rejectMoney CodeBehind -> RejectRequest FAILED - [Server Result: " + serviceResult.Result + "], " +
+                                       "[TransactionId Parameter: " + Request.QueryString["TransactionId"] + "]");
+                res.errorFromCodeBehind = "1";
+            }
+            return Json(res);
+
+        }
 
     }
 

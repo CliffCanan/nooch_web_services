@@ -535,12 +535,10 @@ function createRecord() {
             if (CreateAccountInDbRes != null)
             {
                 //memIdGen = CreateAccountInDbRes.note.trim();
-                //  CreateAccountInDbRes.MemberId.trim();
+                // CreateAccountInDbRes.MemberId.trim();
                
-              
-                var memberID = $('#memId').attr('value');
-                alert(memberID);
-                // HIDE THE WIZARD
+                  var memberID = $('#memId').attr('value');
+                 // HIDE THE WIZARD
                 $('#idWizContainer').slideUp()
 
                 // THEN DISPLAY SUCCESS ALERT...
@@ -624,14 +622,14 @@ function saveMemberInfo() {
              "', 'email':'" + userEmVal +
              "', 'phone':'" + userPhVal +
              "', 'fngprnt':'" + fngprntVal +
-             "', 'ip':'" + ipVal + "'}",
+             "', 'ip':'" + ipVal +
+             "', 'pw':'" + '' + "'}",
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         async: "true",
         cache: "false",
         success: function (msg) {
-
-            var result = msg;
+             var result = msg;
             console.log("SUCCESS -> Save Member Info result is... [next line]");
             console.log(result);
 

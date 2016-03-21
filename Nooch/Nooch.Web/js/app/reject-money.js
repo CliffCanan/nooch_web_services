@@ -1,8 +1,13 @@
 var transType = $('#TransType').val();
 
+
 $(document).ready(function () {
 
     console.log("errorFromCodeBehind is: " + errorFromCodeBehind);
+
+
+    //$('#clickToReject').hide();
+    //$('#createAccountPrompt').hide();
 
     if (areThereErrors() == false)
     {
@@ -10,7 +15,7 @@ $(document).ready(function () {
         {
             console.log("Transaction no longer pending!");
         }
-
+        $('#createAccountPrompt').hide();
         if (transType == "Invite") 
         {
             $('#SenderAndTransInfodiv .intro-header').text('Payment From').addClass('label-success');
@@ -60,23 +65,29 @@ function areThereErrors() {
 function checkIfStillPending() 
 {
     if (typeof transStatus != 'undefined' &&
-        transStatus != "pending") // Set on Code Behind page
+       transStatus != "pending" && transStatus != "Pending")// Set on Code Behind page
     {
         var alertTitle = "";
         var alertBodyText = "";
 
+        $('#SenderAndTransInfodiv').hide();
+        $('#clickToReject').hide();
+        $('#createAccountPrompt').hide();
         if (transStatus == "success")
         {
+          
             alertTitle = "Payment Already Completed";
             alertBodyText = "Looks like this payment was already paid successfully.";
         }
         else if (transStatus == "cancelled")
         {
+            
             alertTitle = "Payment Already Cancelled";
             alertBodyText = "Looks like " + $('#nameLabel').text() + " already cancelled this payment.&nbsp; You're off the hook!";
         }
         else if (transStatus == "rejected")
         {
+          
             alertTitle = "Payment Already Rejected";
             alertBodyText = "Looks like you already rejected this payment.";
         }
@@ -119,11 +130,11 @@ function checkIfStillPending()
 }
 
 
-function rejectThisRequest() {
-    /*console.log("rejectThisRequestReached!");
+function rejectBtnClicked(){
+    console.log("rejectThisRequestReached!");
 
-    // ADD THE LOADING BOX
-    $('#body-depositNew').block({
+     //ADD THE LOADING BOX
+    $("#body-depositNew").block({
         message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Rejecting This Request...</span>',
         css: {
             border: 'none',
@@ -144,27 +155,21 @@ function rejectThisRequest() {
     var linkSource = getParameterByName('LinkSource');
     var transType = getParameterByName('TransType');
 
+    //alert(transId);
+  
     $.ajax({
         type: "POST",
-        url: "reject-money.aspx/RejectThisRequest",
-        data: "{'TransId':'" + transId +
-              "', 'UserType':'" + userType +
-              "', 'LinkSource':'" + linkSource +
-              "', 'TransType':'" + transType + "'}",
-        contentType: "application/json; charset=utf-8",
-        dataType: "json",
-        async: "true",
-        cache: "false",
-        success: function (msg) {
-
+       url: $('#rejectMoneyLink').val()+"?TransactionId="+transId+"&UserType="+userType+"&LinkSource="+userType+"&TransType="+transType,
+       
+       success: function (msg) {    
             console.log("SUCCESS -> 'RegisterUserWithSynpResult' is... ");
             console.log(msg);
-            console.log(msg.d);
+            
 
-            // Hide the Loading Block
+        //     Hide the Loading Block
             $('#body-depositNew').unblock();
 
-            if (msg = "success")
+            if (msg.errorFromCodeBehind = "0")
             {
                 $("#fromText").html("Request Rejected Successfully");
 
@@ -187,7 +192,7 @@ function rejectThisRequest() {
             }
         },
         Error: function (x, e) {
-            // Hide the Loading Block
+          //   Hide the Loading Block
             $('#body-depositNew').unblock();
 
             console.log("ERROR --> 'x', then 'e' is... ");
@@ -196,7 +201,7 @@ function rejectThisRequest() {
 
             showErrorAlert('3');
         }
-    });*/
+    });
 }
 
 
@@ -211,15 +216,30 @@ function showErrorAlert(errorNum) {
         alertTitle = "Errors Are The Worst!";
         alertBodyText = "We had trouble finding that transaction.  Please try again and if you continue to see this message, contact <span style='font-weight:600;'>Nooch Support</span>:" +
                         "<br/><a href='mailto:support@nooch.com' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>support@nooch.com</a>";
+
+
+        $('#SenderAndTransInfodiv').hide();
+        $('#clickToReject').hide();
+        $('#createAccountPrompt').hide();
+        
+
     }
     else if (errorNum == '2')
     {
         alertTitle = "Errors Are Annoying";
         alertBodyText = "Terrible sorry, but it looks like we had trouble processing your data.  Please refresh this page and try again and if you continue to see this message, contact <span style='font-weight:600;'>Nooch Support</span>:" +
                         "<br/><a href='mailto:support@nooch.com' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>support@nooch.com</a>";
+        $('#SenderAndTransInfodiv').hide();
+        $('#clickToReject').hide();
+        $('#createAccountPrompt').hide();
+
     }
     else if (errorNum == '3')
     {
+        $('#SenderAndTransInfodiv').hide();
+        $('#clickToReject').hide();
+        $('#createAccountPrompt').hide();
+
         alertTitle = "Errors Are Annoying";
         alertBodyText = "Our apologies, but we were not able to reject that request.  Please try again or contact <span style='font-weight:600;'>Nooch Support</span>:" +
                         "<br/><a href='mailto:support@nooch.com' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>support@nooch.com</a>";
