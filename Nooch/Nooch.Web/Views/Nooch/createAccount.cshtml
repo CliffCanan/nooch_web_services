@@ -1,0 +1,266 @@
+﻿@using Nooch.Common.Entities;
+@{
+    Layout = null;
+    ResultcreateAccount rca = (ResultcreateAccount)ViewData["OnLoaddata"];
+}
+
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="../Assets/Css/bootstrap.css" rel="stylesheet" />
+    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,400italic,500,500italic,700,900" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.4/themes/cupertino/jquery-ui.css" />
+    <link rel="stylesheet" href="@Url.Content("~/Assets/Css/sweetalert-override.min.css")" />
+
+    <link rel="stylesheet" href="https://cdn.materialdesignicons.com/1.2.65/css/materialdesignicons.min.css" />
+    <link rel="stylesheet" href="@Url.Content("~/Assets/Css/bootstrap-select.min.css")" />
+    <link rel="stylesheet" href="@Url.Content("~/Assets/Css/chosen.min.css") " />
+    <link rel="stylesheet" href="@Url.Content("~/Assets/Css/bootstrap-datetimepicker.min.css")" />
+    <link rel="stylesheet" href="@Url.Content("/Assets/Css/jquery.steps.css")" />
+
+    <link rel="stylesheet" href="@Url.Content("~/Assets/Css/tweaks.css")" />
+    <link rel="icon" href="../Assets/favicon.ico" />
+</head>
+
+<body id="body-depositNew" class="createAccountPg">
+    @*<input type="hidden" value="@Session["TransId"].ToString()" />*@
+    <form id="form1">
+        <input type="hidden" id="transId" value="@rca.transId" />
+        <input type="hidden" id="memId" value="@rca.memId" />
+        <input type="hidden" id="errorId" value="@rca.errorId" />
+         
+        <input type="hidden" id="transType" value="@rca.transType" />
+        <input type="hidden" id="sentTo" value="@rca.sentTo" />
+        <input type="hidden" id="type" value="@rca.type" />
+        <input type="hidden" id="name" value="@rca.name" />
+        <input type="hidden" id="address" value="@rca.address" />
+        <input type="hidden" id="city" value="@rca.city" />
+        <input type="hidden" id="zip" value="@rca.zip" />
+        <input type="hidden" id=" dob" value="@rca.dob" />
+        <input type="hidden" id=" email" value="@rca.email" />
+        <input type="hidden" id="phone" value="@rca.phone" />
+        <input type="hidden" id="rs" value="@rca.rs" />
+    </form>
+
+    <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+        <div class="clearfix">
+            <div class="m-l-15">
+                <a class="landingHeaderLogo" href="https://www.nooch.com/" style="float:left;">
+                    <img src="../Assets/Images/nooch-logo2.svg" class="center-block" alt="Nooch Logo" />
+                </a>
+                <div runat="server" id="nameInNavContainer" visible="@rca.nameInNavContainer" class="text-center" style="position:absolute; left:10%; width:80%;">
+                    <asp:Label runat="server" ID="nameInNav" CssClass="m-t-15 m-b-5 center-block f-600 h4"></asp:Label>
+                    <h5 class="m-t-5">Business Registration</h5>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+
+    <div id="pwFormShell" style="width: 85%; max-width: 420px; margin: 10px auto;">
+    </div>
+
+
+    <div id="checkEmailMsg" class="row hidden" runat="server">
+        <div style="width: 90%; margin: 5px auto;">
+            <div id="createPWSuccessText">Success!</div>
+            <div id="checkEmailText">Check your email</div>
+            <div id="checkEmailText2">We just sent you a confirmation email to get started.</div>
+        </div>
+    </div>
+
+    <div class="resultDiv col-md-6 col-md-offset-3 col-lg-4 col-lg-offset-4 hidden">
+        <i class="mdi mdi-account-check"></i>
+        <h2>Thanks, You're All Set</h2>
+        <p>Thanks for submitting your ID information. &nbsp;That helps us keep Rent Scene safe for everyone. &nbsp;We only use this information to prevent ID fraud and never share it without your permission.</p>
+    </div>
+
+    <div class="col-xs-12 col-md-10 col-md-offset-1 col-lg-6 col-lg-offset-3 m-t-15 hidden" id="idWizContainer">
+        <div class="row animated fadeInDown">
+            <div id="idVerWiz" class="">
+
+                <h3><i class="mdi mdi-account m-r-5"></i>Profile Info</h3>
+                <section>
+
+                    <form id="idVerForm1" role="form">
+                        <div class="well well-sm">
+                            <div class="f-15">To protect your account from identity theft<span class="ast">*</span>, please complete the following fields.</div>
+                        </div>
+
+                        <dl class="dl-horizontal" id="nameGrp">
+                            <dt class="p-t-10 withIcon">
+                                Legal Name<br />
+                                <i class="mdi mdi-information-outline help-icon f-15 m-l-5" data-trigger="hover" data-toggle="popover" data-placement="auto" data-content="Please enter YOUR full legal name."></i>
+                            </dt>
+                            <dd>
+                                <div class="form-group">
+                                    <div class="fg-line">
+                                        <input id="idVer-name" type="text" class="form-control capitalize" value="" placeholder="eg. Arnold Palmer" required />
+                                    </div>
+                                </div>
+                            </dd>
+                        </dl>
+
+                        <dl class="dl-horizontal" id="dobGrp">
+                            <dt class="p-t-10 withIcon">
+                                Date of Birth<br />
+                                <i class="mdi mdi-information-outline help-icon f-15 m-l-5" data-trigger="hover" data-toggle="popover" data-placement="auto" data-content="A date of birth is needed to verify a user's identity. Don't worry - nobody sees this!"></i>
+                            </dt>
+                            <dd>
+                                <div class="form-group withIcon datePickerGrp">
+                                    <i class="mdi mdi-calendar"></i>
+                                    <div class="dtp-container dropdown fg-line">
+                                        <input id="idVer-dob" type='text' class="form-control date-picker" data-toggle="dropdown" placeholder="eg. 08/05/1978" />
+                                    </div>
+                                </div>
+                            </dd>
+                        </dl>
+
+                        <dl class="dl-horizontal" id="ssnGrp">
+                            <dt class="p-t-10">SSN<small>Last 4 Digits Only</small></dt>
+                            <dd>
+                                <div class="form-group">
+                                    <div class="dtp-container dropdown fg-line">
+                                        <span id="ssnPrefix">XXX - XX -</span>
+                                        <input id="idVer-ssn" type='text' class="form-control" value="" placeholder="1234" />
+                                    </div>
+                                </div>
+                            </dd>
+                        </dl>
+
+                    </form>
+
+                </section>
+
+                <h3><i class="mdi mdi-map-marker m-r-5"></i>Address</h3>
+                <section>
+
+                    <div class="well wellsm">
+                        <div class="f-15">
+                            Please enter your <span class="f-700">current personal</span> street address and ZIP code.
+                            <i class="mdi mdi-information-outline c-gray f-15 m-l-5" data-trigger="click" data-toggle="popover" data-placement="left" data-content="Please enter the following information about YOU, the person creating this account." data-original-title="Contact Info"></i>
+                        </div>
+                    </div>
+
+                    <dl class="dl-horizontal" id="addressGrp">
+                        <dt class="p-t-10 withIcon">
+                            Street Address<br />
+                            <i class="mdi mdi-information-outline help-icon f-15 m-l-5 pull-right" data-trigger="hover" data-toggle="popover" data-placement="auto" data-content="Proving you know your personal address and zip code helps verify your identity."></i>
+                        </dt>
+                        <dd>
+                            <div class="form-group">
+                                <div class="dtp-container dropdown fg-line">
+                                    <input id="idVer-address" type='text' class="form-control" value="" placeholder="1600 Pennsylvania Ave" />
+                                </div>
+                            </div>
+                        </dd>
+                    </dl>
+
+                    <dl class="dl-horizontal" id="zipGrp">
+                        <dt class="p-t-10">ZIP Code</dt>
+                        <dd>
+                            <div class="form-group">
+                                <div class="dtp-container dropdown fg-line">
+                                    <input id="idVer-zip" type='text' class="form-control" value="" placeholder="eg. 90210" />
+                                </div>
+                            </div>
+                        </dd>
+                    </dl>
+
+                </section>
+
+                <h3><i class="mdi mdi-email-open m-r-5"></i>Contact Info</h3>
+                <section>
+
+                    <div class="well well-sm m-b-25">
+                        <div class="f-15">Please confirm your <span>email address</span> and phone number. &nbsp;We will only use this to contact you about your business account.</div>
+                    </div>
+
+                    <dl class="dl-horizontal" id="emailGrp">
+                        <dt class="p-t-10">Email Address</dt>
+                        <dd>
+                            <div class="form-group">
+                                <div class="dtp-container dropdown fg-line">
+                                    <input id="idVer-email" type='text' class="form-control" value="" placeholder="" />
+                                </div>
+                            </div>
+                        </dd>
+                    </dl>
+
+                    <dl class="dl-horizontal" id="phoneGrp">
+                        <dt class="p-t-10 withIcon">
+                            Phone Number<br />
+                            <i class="mdi mdi-information-outline help-icon f-15 m-l-5 pull-right" data-trigger="hover" data-toggle="popover" data-placement="auto" data-content="Protect your account the most by entering a cell phone number. We'll send an SMS to verify that you own the number."></i>
+                        </dt>
+                        <dd>
+                            <div class="form-group">
+                                <div class="dtp-container dropdown fg-line">
+                                    <input id="idVer-phone" type='tel' class="form-control" value="" />
+                                </div>
+                            </div>
+                        </dd>
+                    </dl>
+
+                </section>
+
+            </div>
+        </div>
+    </div>
+
+
+    <div class="errorMessage hidden"></div>
+
+
+    <div id="AddBankDiv" class="hidden">
+        <div class="clearfix">
+            <iframe id="frame" src="" width="100%" height="300"></iframe>
+        </div>
+    </div>
+
+
+    <div class="footer footer-login">
+        <div>
+            <ul class="list-inline">
+                <li><a href="https://www.nooch.com/overview">About</a></li>
+                <li><a href="https://www.nooch.com/safe">Security</a></li>
+                <li><a href="http://support.nooch.com/">Support Center</a></li>
+                <li><a href="https://www.nooch.com/tos">Legal Stuff</a></li>
+                <li><a href="https://www.nooch.com/blog/">Blog</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+
+    <!-- Bootstrap Plugins -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+
+    <!-- Other Plugins -->
+    <script src="../js/jasny-bootstrap.min.js"></script>
+    <!-- Input Mask-->
+    <script src="../js/jquery.blockUI.min.js"></script>
+    <script src="../js/input-mask.min.js"></script>
+    <script src="../js/bootstrap-select.min.js"></script>
+    <script src="../js/chosen.jquery.min.js"></script>
+    <script src="../js/moment.min.js"></script>
+    <script src="../js/bootstrap-datetimepicker.min.js"></script>
+    <script src="../js/jquery.steps.min.js"></script>
+    <script src="../js/fingerprint2.min.js"></script>
+    <script type="text/javascript">
+        var ipusr;
+    </script>
+    <script type="text/javascript" src="https://www.l2.io/ip.js?var=ipusr"></script>
+    <script src="../js/sweetalert.min.js"></script>
+
+    <!-- Custom Scripts -->
+    <script src="../js/app/create-Account.js"></script>
+
+
+
+</body>
+</html>

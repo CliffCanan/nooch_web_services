@@ -8,14 +8,11 @@ using Nooch.Common;
 using Nooch.Common.Entities.LandingPagesRelatedEntities;
 using Nooch.Common.Entities.SynapseRelatedEntities;
 using Nooch.Web.Common;
- 
 using Nooch.Data;
 using Nooch.Common.Entities;
-
- 
 using Nooch.Common.Entities.MobileAppOutputEnities;
- 
- 
+using Nooch.DataAccess;
+
 
 namespace Nooch.Web.Controllers
 {
@@ -29,8 +26,8 @@ namespace Nooch.Web.Controllers
 
         public ActionResult AddBank(string MemberId)
         {
-            if(!String.IsNullOrEmpty(MemberId))
-            return View();
+            if (!String.IsNullOrEmpty(MemberId))
+                return View();
             return RedirectToAction("Index");
         }
 
@@ -39,14 +36,14 @@ namespace Nooch.Web.Controllers
         {
 
 
-            BankVerification bankVerification = new BankVerification();           
+            BankVerification bankVerification = new BankVerification();
             string strUserAgent = Request.UserAgent.ToLower();
 
             if (strUserAgent != null)
             {
                 if (Request.Browser.IsMobileDevice || strUserAgent.Contains("iphone") || strUserAgent.Contains("mobile") || strUserAgent.Contains("iOS"))
                 {
-                                   
+
                     bankVerification.openAppText = true;
                 }
             }
@@ -61,7 +58,7 @@ namespace Nooch.Web.Controllers
             if (result.Result)
             {
                 Logger.Info("Bank Verification Browser Page -> Bank Account Verified Successfully! - Result from Nooch Services was: [" + result.Result + "]");
-              
+
                 bankVerification.Div1 = true;
                 bankVerification.Div2 = false;
 
@@ -69,12 +66,12 @@ namespace Nooch.Web.Controllers
             else
             {
                 Logger.Error("Bank Verification Browser Page -> Bank Account Verification FAILED - Result was: [" + result.Result + "]");
-               
+
                 bankVerification.Div1 = false;
                 bankVerification.Div2 = true;
             }
             ViewData["OnLoadData"] = bankVerification;
-            
+
             return View();
         }
 
@@ -98,7 +95,6 @@ namespace Nooch.Web.Controllers
                 rcr.paymentInfo = "false";
                 //reslt1.Visible = false;
                 //reslt.Text = "This looks like an invalid transaction - sorry about that!  Please try again or contact Nooch support for more information.";
-
                 //paymentInfo.Visible = false;
 
             }
@@ -119,8 +115,8 @@ namespace Nooch.Web.Controllers
 
             if (transaction != null)
             {
-               CancelMoneyRequest(Request.QueryString["TransactionId"], Request.QueryString["MemberId"], Request.QueryString["UserType"]);
-              //  CancelMoneyRequest(TransactionId, MemberId, UserType);
+                CancelMoneyRequest(Request.QueryString["TransactionId"], Request.QueryString["MemberId"], Request.QueryString["UserType"]);
+                //  CancelMoneyRequest(TransactionId, MemberId, UserType);
             }
 
             if (transaction.TransactionStatus != "Pending")
@@ -128,7 +124,7 @@ namespace Nooch.Web.Controllers
                 rcr.reslt1 = "false";
                 rcr.reslt = "Looks like this request is no longer pending. You may have cancelled it already or the recipient has already responded by accepting or rejecting.";
                 rcr.paymentInfo = "true";
-                
+
                 //reslt1.Visible = false;
                 //paymentInfo.Visible = true;
                 //reslt.Text = "Looks like this request is no longer pending. You may have cancelled it already or the recipient has already responded by accepting or rejecting.";
@@ -138,10 +134,10 @@ namespace Nooch.Web.Controllers
 
             if (transaction.IsPhoneInvitation && transaction.PhoneNumberInvited.Length > 0)
             {
-               // senderImage.ImageUrl = "https://www.noochme.com/noochweb/Assets/Images/" + "userpic-default.png";
-               rcr.senderImage = "https://www.noochme.com/noochweb/Assets/Images/" + "userpic-default.png";
+                // senderImage.ImageUrl = "https://www.noochme.com/noochweb/Assets/Images/" + "userpic-default.png";
+                rcr.senderImage = "https://www.noochme.com/noochweb/Assets/Images/" + "userpic-default.png";
                 //nameLabel.Text = transaction.PhoneNumberInvited;
-               rcr.nameLabel = transaction.PhoneNumberInvited;
+                rcr.nameLabel = transaction.PhoneNumberInvited;
             }
             else if (!String.IsNullOrEmpty(transaction.InvitationSentTo))
             {
@@ -210,11 +206,11 @@ namespace Nooch.Web.Controllers
                 }
             }
         }
-        
+
         [HttpPost]
         [ActionName("CheckBankDetails")]
         public ActionResult CheckBankDetails(string bankname)
-       {
+        {
             // Get bank details
             BankNameCheckStatus res = new BankNameCheckStatus();
             res.IsSuccess = false;
@@ -252,7 +248,7 @@ namespace Nooch.Web.Controllers
             return Json(res);
         }
 
-        public  BankLoginResult RegisterUserWithSynapse(string memberid)
+        public BankLoginResult RegisterUserWithSynapse(string memberid)
         {
             Logger.Info("**Add_Bank** CodeBehind -> RegisterUserWithSynapse Initiated - [MemberID: " + memberid + "]");
 
@@ -296,7 +292,7 @@ namespace Nooch.Web.Controllers
         {
             SynapseBankLoginRequestResult res = new SynapseBankLoginRequestResult();
             res.Is_success = false;
-            
+
 
             try
             {
@@ -316,7 +312,7 @@ namespace Nooch.Web.Controllers
                     //string serviceMethod = "/SynapseBankLoginRequest?BankName=" + inp.bankname + "&MemberId=" + inp.memberid + "&IsPinRequired=" + inp.IsPinRequired
                     //    + "&UserName=" + inp.username + "&Password=" + inp.password + "&PinNumber=" + inp.PinNumber;
                     string serviceMethod = "/SynapseV3AddNode?MemberId=" + inp.memberid + "&BnkName=" + inp.bankname + "&BnkUserName=" + inp.username
-                                           + "&BnkPw=" + inp.password ;
+                                           + "&BnkPw=" + inp.password;
 
                     SynapseV3BankLoginResult_ServiceRes bankLoginResult =
                         ResponseConverter<SynapseV3BankLoginResult_ServiceRes>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
@@ -325,14 +321,14 @@ namespace Nooch.Web.Controllers
                     {
                         res.Is_success = true;
                         res.Is_MFA = bankLoginResult.Is_MFA;
-                       
+
                         if (bankLoginResult.Is_MFA)
                         {
                             res.Bank_Access_Token = bankLoginResult.bankMFA;
                             res.MFA_Type = "questions";    // no more code based as per synapse V3 docs
                         }
                         List<SynapseBankClass> synbanksList = new List<SynapseBankClass>();
-                        if (bankLoginResult.SynapseNodesList.nodes[0]!=null)
+                        if (bankLoginResult.SynapseNodesList.nodes[0] != null)
                         {
                             foreach (SynapseIndividualNodeClass bankNode in bankLoginResult.SynapseNodesList.nodes)
                             {
@@ -344,10 +340,10 @@ namespace Nooch.Web.Controllers
                                 //sbc.balance = bankNode.info.balance.amount;
                                 sbc.bank_name = bankNode.bank_name;
                                 sbc.bankoid = bankNode.oid;
-                                
+
                                 sbc.nickname = bankNode.nickname;
                                 sbc.routing_number_string = bankNode.routing_num;
-                                
+
                                 sbc.is_active = bankNode.is_active;
 
                                 synbanksList.Add(sbc);
@@ -362,7 +358,7 @@ namespace Nooch.Web.Controllers
                         };
 
                         res.ERROR_MSG = "OK";
-                       // res.ssn_verify_status = bankLoginResult.ssn_verify_status; // Should match the ssn_verify_status from Registering User...
+                        // res.ssn_verify_status = bankLoginResult.ssn_verify_status; // Should match the ssn_verify_status from Registering User...
                     }
                     else
                     {
@@ -384,7 +380,7 @@ namespace Nooch.Web.Controllers
                                             accountCreateResult.ssn_verify_status + "], but ssn_verify_status from BankLogin was: [" +
                                             res.ssn_verify_status + "]");
                 }
-                
+
             }
             catch (Exception we)
             {
@@ -424,7 +420,7 @@ namespace Nooch.Web.Controllers
                     res.Is_MFA = bankAddRes.Is_MFA;
                     if (bankAddRes.Is_MFA)
                     {
-                    res.MFA_Type = "question";    // no more code based as per synapse V3 docs
+                        res.MFA_Type = "question";    // no more code based as per synapse V3 docs
                     }
                     List<SynapseBankClass> synbanksList = new List<SynapseBankClass>();
 
@@ -432,7 +428,7 @@ namespace Nooch.Web.Controllers
                     {
                         SynapseBankClass sbc = new SynapseBankClass();
                         sbc.account_class = bankNode.info._class;
-                        sbc.account_number_string= bankNode.info.account_num;
+                        sbc.account_number_string = bankNode.info.account_num;
                         sbc.account_type = bankNode.type;
                         sbc.address = "";
                         sbc.balance = bankNode.info.balance.amount;
@@ -476,12 +472,12 @@ namespace Nooch.Web.Controllers
             }
         }
 
- 
+
 
         // method to call verify bank mfa - to be used with bank login type MFA's
         [HttpPost]
         [ActionName("MFALogin")]
-        public  ActionResult MFALogin(MFALoginInputClassForm inp)
+        public ActionResult MFALogin(MFALoginInputClassForm inp)
         {
             SynapseBankLoginRequestResult res = new SynapseBankLoginRequestResult();
 
@@ -502,7 +498,7 @@ namespace Nooch.Web.Controllers
                 try
                 {
                     //json = "{\"input\":" + scriptSerializer.Serialize(inpu) + "}";
-                    json =  scriptSerializer.Serialize(inpu) ;
+                    json = scriptSerializer.Serialize(inpu);
 
                     string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
                     string serviceMethod = "/SynapseV3MFABankVerify";
@@ -523,16 +519,16 @@ namespace Nooch.Web.Controllers
                             sbc.account_number_string = bankNode.account_num;
                             sbc.account_type = bankNode.account_type.ToString();
                             sbc.address = "";
-                            
+
                             //sbc.balance = bankNode.;
                             sbc.bank_name = bankNode.bank_name;
                             sbc.bankoid = bankNode.oid;                            // using this same id to set bank account as default
                             sbc.nickname = bankNode.nickname;
-                            sbc.routing_number_string = bankNode.routing_num;                            
+                            sbc.routing_number_string = bankNode.routing_num;
                             sbc.is_active = bankNode.is_active;
                             synbanksList.Add(sbc);
-                            
-                        }                       
+
+                        }
 
                         res.SynapseBanksList = new SynapseBanksListClass()
                         {
@@ -546,16 +542,16 @@ namespace Nooch.Web.Controllers
                             qbr.is_mfa = true;
                             qbr.response = new SynapseQuestionBasedMFAResponseIntClass()
                             {
-                                type="questions",
-                                access_token="",
+                                type = "questions",
+                                access_token = "",
                                 mfa = new SynapseQuestionClass[1]
                             };
                             qbr.response.mfa[0].question = bnkloginresult.mfaMessage;
                             res.SynapseQuestionBasedResponse = qbr;
-                           
-                        }                    
-                        
-                       
+
+                        }
+
+
                         res.ERROR_MSG = "OK";
                     }
                     else
@@ -574,7 +570,7 @@ namespace Nooch.Web.Controllers
                                   "], [Exception: " + ec + "]");
                 }
 
-                
+
             }
             catch (Exception we)
             {
@@ -582,15 +578,14 @@ namespace Nooch.Web.Controllers
                                    "], [Exception: " + we + "]");
             }
 
-            return Json( res);
+            return Json(res);
         }
-
 
 
         // method to call verify bank mfa - to be used with routing and account number login
         [HttpPost]
         [ActionName("MFALoginWithRoutingAndAccountNumber")]
-        public  SynapseBankLoginRequestResult MFALoginWithRoutingAndAccountNumber(string bank, string memberid, string MicroDepositOne, string MicroDepositTwo, string ba)
+        public SynapseBankLoginRequestResult MFALoginWithRoutingAndAccountNumber(string bank, string memberid, string MicroDepositOne, string MicroDepositTwo, string ba)
         {
             SynapseBankLoginRequestResult res = new SynapseBankLoginRequestResult();
 
@@ -600,7 +595,7 @@ namespace Nooch.Web.Controllers
 
                 // preparing data for POST type request
 
-        
+
                 var scriptSerializer = new JavaScriptSerializer();
                 string json;
 
@@ -665,58 +660,58 @@ namespace Nooch.Web.Controllers
 
             try
             {
-              
-                
-                    if (!String.IsNullOrEmpty(Request.QueryString["TransactionId"]))
+
+
+                if (!String.IsNullOrEmpty(Request.QueryString["TransactionId"]))
+                {
+                    if (!String.IsNullOrEmpty(Request.QueryString["UserType"]))
                     {
-                        if (!String.IsNullOrEmpty(Request.QueryString["UserType"]))
+                        string n = Request.QueryString["UserType"].ToString();
+                        rpr.usrTyp = CommonHelper.GetDecryptedData(n);
+
+                        if (rpr.usrTyp == "NonRegistered" ||
+                           rpr.usrTyp == "Existing")
                         {
-                            string n = Request.QueryString["UserType"].ToString();
-                            rpr.usrTyp = CommonHelper.GetDecryptedData(n);
-
-                            if (rpr.usrTyp == "NonRegistered" ||
-                               rpr.usrTyp == "Existing")
-                            {
-                                Logger.Info("payRequest CodeBehind -> Page_load - UserType is: [" + rpr.usrTyp + "]");
-                            }
+                            Logger.Info("payRequest CodeBehind -> Page_load - UserType is: [" + rpr.usrTyp + "]");
                         }
-
-                        // Check if this is a RENT Payment request (from a Landlord)
-                        if (Request.Params.AllKeys.Contains("IsRentTrans"))
-                        {
-                            if (Request["IsRentTrans"].ToLower() == "true")
-                            {
-                                Logger.Info("payRequest CodeBehind -> Page_load - RENT PAYMENT Detected");
-
-                               rpr.transType = "rent";
-                               rpr.usrTyp = "tenant";
-                            }
-                        }
-
-                        // Check if this payment is for Rent Scene
-                        if (Request.Params.AllKeys.Contains("rs") && Request["rs"] == "1")
-                        {
-                            Logger.Info("payRequest CodeBehind -> Page_load - RENT SCENE Transaction Detected");
-                            rpr.rs = "true";
-                        }
-
-                        Response.Write("<script>var errorFromCodeBehind = '0';</script>");
-
-                    rpr= GetTransDetailsForPayRequest(Request.QueryString["TransactionId"].ToString(),rpr);
                     }
-                    else
+
+                    // Check if this is a RENT Payment request (from a Landlord)
+                    if (Request.Params.AllKeys.Contains("IsRentTrans"))
                     {
-                        // something wrong with query string
-                        Response.Write("<script>var errorFromCodeBehind = '1';</script>");
-                       rpr.payreqInfo= false;
-                    }
-                
+                        if (Request["IsRentTrans"].ToLower() == "true")
+                        {
+                            Logger.Info("payRequest CodeBehind -> Page_load - RENT PAYMENT Detected");
 
-              rpr.PayorInitialInfo = false;
+                            rpr.transType = "rent";
+                            rpr.usrTyp = "tenant";
+                        }
+                    }
+
+                    // Check if this payment is for Rent Scene
+                    if (Request.Params.AllKeys.Contains("rs") && Request["rs"] == "1")
+                    {
+                        Logger.Info("payRequest CodeBehind -> Page_load - RENT SCENE Transaction Detected");
+                        rpr.rs = "true";
+                    }
+
+                    Response.Write("<script>var errorFromCodeBehind = '0';</script>");
+
+                    rpr = GetTransDetailsForPayRequest(Request.QueryString["TransactionId"].ToString(), rpr);
+                }
+                else
+                {
+                    // something wrong with query string
+                    Response.Write("<script>var errorFromCodeBehind = '1';</script>");
+                    rpr.payreqInfo = false;
+                }
+
+
+                rpr.PayorInitialInfo = false;
             }
             catch (Exception ex)
             {
-               rpr.payreqInfo = false;
+                rpr.payreqInfo = false;
                 Response.Write("<script>var errorFromCodeBehind = '1';</script>");
 
                 Logger.Error("payRequest CodeBehind -> page_load OUTER EXCEPTION - [TransactionId Parameter: " + Request.QueryString["TransactionId"] +
@@ -726,7 +721,7 @@ namespace Nooch.Web.Controllers
             return View();
         }
 
-        public ResultPayRequest GetTransDetailsForPayRequest(string TransactionId,ResultPayRequest resultPayRequest)
+        public ResultPayRequest GetTransDetailsForPayRequest(string TransactionId, ResultPayRequest resultPayRequest)
         {
             ResultPayRequest rpr = resultPayRequest;
             Logger.Info("payRequest CodeBehind -> GetTransDetails Initiated - TransactionID: [" + TransactionId + "]");
@@ -758,10 +753,10 @@ namespace Nooch.Web.Controllers
 
                 rpr.transMemo = transaction.Memo;
 
-               rpr.senderImage= transaction.RecepientPhoto;
-               rpr.senderName1= (!String.IsNullOrEmpty(transaction.RecepientName) && transaction.RecepientName.Length > 2) ?
-                                    transaction.RecepientName :
-                                    transaction.Name;
+                rpr.senderImage = transaction.RecepientPhoto;
+                rpr.senderName1 = (!String.IsNullOrEmpty(transaction.RecepientName) && transaction.RecepientName.Length > 2) ?
+                                     transaction.RecepientName :
+                                     transaction.Name;
 
                 string s = transaction.Amount.ToString("n2");
                 string[] s1 = s.Split('.');
@@ -797,7 +792,7 @@ namespace Nooch.Web.Controllers
                     }
                     else
                     {
-                        rpr.nonRegUsrContainer= true;
+                        rpr.nonRegUsrContainer = true;
                     }
                 }
 
@@ -811,7 +806,7 @@ namespace Nooch.Web.Controllers
                 }
 
                 // Now check what TYPE of invitation (phone or email)
-                rpr.invitationType  = transaction.IsPhoneInvitation == true ? "p" : "e";
+                rpr.invitationType = transaction.IsPhoneInvitation == true ? "p" : "e";
 
                 if (!String.IsNullOrEmpty(transaction.InvitationSentTo))
                 {
@@ -823,7 +818,7 @@ namespace Nooch.Web.Controllers
 
         [HttpPost]
         [ActionName("SetDefaultBank")]
-        public ActionResult   SetDefaultBank(setDefaultBankInput input)
+        public ActionResult SetDefaultBank(setDefaultBankInput input)
         {
             Logger.Info("**Add_Bank** CodeBehind -> SetDefaultBank Initiated - [MemberID: " + input.MemberId +
                                    "], [Bank Name: " + input.BankName + "], [BankID: " + input.BankOId + "]");
@@ -870,44 +865,304 @@ namespace Nooch.Web.Controllers
             return Json(res);
         }
 
-        
+        public ActionResult createAccount()
+        {
+            ResultcreateAccount rca = new ResultcreateAccount();
+            try
+            {                       
+               
+                if (!String.IsNullOrEmpty(Request.QueryString["rs"]))
+                {
+                    Logger.Info("createAccount CodeBehind -> Page_load Initiated - Is a RentScene Payment: [" + Request.QueryString["rs"] + "]");
+
+                    //rs.Value = Request.QueryString["rs"].ToLower();
+                    rca.rs = Request.QueryString["rs"].ToLower();
+                }
+                if (!String.IsNullOrEmpty(Request.QueryString["TransId"]))
+                {
+                    Logger.Info("createAccount CodeBehind -> Page_load Initiated - [TransactionId Parameter: " + Request.QueryString["TransactionId"] + "]");
+
+
+                    Session["TransId"] = Request.QueryString["TransId"];
+
+                    rca = GetTransDetailsForCreateAccount(Request.QueryString["TransId"].ToString(), rca);
+                }
+                else if (!String.IsNullOrEmpty(Request.QueryString["type"]))
+                {
+                    //type.Value = Request.QueryString["type"];
+                    rca.type = Request.QueryString["type"];
+
+                    if (!String.IsNullOrEmpty(Request.QueryString["memId"]))
+                    {
+                        Logger.Info("createAccount CodeBehind -> Page_load Initiated - [MemberID Parameter: " + Request.QueryString["memId"] + "]");
+                        
+                        rca = GetMemberDetailsForCreateAccount(Request.QueryString["memId"], rca);
+                    }
+                }
+                else
+                {
+                    rca.errorId = "2";
+                    //InvalidTransaction("This looks like an invalid transaction.  Please try again or contact Nooch support for more information.");
+                }
+                //}
+            }
+            catch (Exception ex)
+            {
+                //errorId.Value = "1";
+                rca.errorId = "1";
+
+                Logger.Error("payRequest CodeBehind -> page_load OUTER EXCEPTION - [TransactionId Parameter: " + Request.QueryString["TransactionId"] +
+                                       "], [Exception: " + ex.Message + "]");
+            }
+            //}
+            ViewData["OnLoaddata"] = rca;
+
+            return View();
+        }
+
+
+        public ResultcreateAccount GetTransDetailsForCreateAccount(string TransactionId,ResultcreateAccount resultcreateAccount)
+        {
+            ResultcreateAccount rca = resultcreateAccount;
+            Logger.Info("createAccount Code Behind -> GetTransDetails Initiated - TransactionId: [" + TransactionId + "]");
+
+            string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+            string serviceMethod = "/GetTransactionDetailById?TransactionId=" + TransactionId;
+            TransactionDto transaction = ResponseConverter<TransactionDto>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+
+            if (transaction == null)
+            {
+                rca.errorId = "3";
+            }
+            else
+            {
+                rca.transId = transaction.TransactionId;
+                if (transaction.IsPhoneInvitation == true)
+                {
+                    rca.transType = "phone";
+                    rca.sentTo = transaction.PhoneNumberInvited;
+                }
+                else
+                {
+                    rca.transType = "em";
+                    rca.sentTo = transaction.InvitationSentTo;
+                }
+
+                rca.errorId = "0";
+            }
+            return rca;
+        }
+
+
+        public ResultcreateAccount GetMemberDetailsForCreateAccount(string memberId, ResultcreateAccount resultcreateAccount)
+        {
+            ResultcreateAccount rca = resultcreateAccount;
+            try
+            {
+                Logger.Info("createAccount Code Behind -> GetMemberDetails Initiated - MemberID: [" + memberId + "]");
+
+                string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+                string serviceMethod = "/GetMemberDetailsForLandingPage?memberId=" + memberId;
+
+                Logger.Info("createAccount Code Behind -> GetMemberDetails - URL to Query: [" + String.Concat(serviceUrl, serviceMethod) + "]");
+
+                MemberDto member = ResponseConverter<MemberDto>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+
+                if (member == null)
+                {
+                    rca.errorId = "4";
+                }
+                else
+                {
+                    rca.memId = member.MemberId.ToString();
+                    rca.name = member.FirstName + " " + member.LastName;
+                    rca.address = member.Address;
+                    rca.city = member.City;
+                    rca.zip = member.Zip;
+                    rca.dob = member.DateOfBirth;
+                    rca.email = member.UserName;
+                    rca.phone = member.ContactNumber;
+
+                    if (member.companyName !=null && member.companyName.Length > 3)
+                    {
+                        rca.nameInNav = member.companyName;
+                        //rca.nameInNavContainer.Visible = true;
+                        rca.nameInNavContainer = true;
+
+                        if (rca.nameInNav == "Realty Mark llc")
+                        {
+                            rca.nameInNav = "Realty Mark LLC";
+                        }
+                    }
+                    else if (rca.name.Length > 2)
+                    {
+                        rca.nameInNav = rca.name;
+                        //rca.nameInNavContainer.Visible = true;
+                        rca.nameInNavContainer = true;
+
+                        if (rca.name == "Realty Mark llc")
+                        {
+                            rca.name = "";
+                            rca.nameInNav = "Realty Mark LLC";
+                        }
+                    }
+
+                    rca.errorId = "0";
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("createAccount Code Behind -> GetMemberDetails FAILED - Outer Exception: [" + ex + "]");
+            }
+            return rca;
+        }
+
+
+        protected void createPassword_Click()
+        {
+            string serviceMethod = string.Empty;
+            string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+            //serviceMethod = "/CreateNonNoochUserAccountAfterRejectMoney?TransId=" + Request.QueryString["TransId"].ToString() + "&password=" + password.Text + "&EmailId=" + userNameText.Text + "&UserName="+nameText.Text;
+
+            var serviceResult = ResponseConverter<Nooch.Common.Entities.StringResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+            if (serviceResult.Result == "Thanks for registering! Check your email to complete activation.")
+            {
+                //checkEmailMsg.Visible = true;
+            }
+            else
+            {
+                //checkEmailMsg.Visible = true;
+            }
+        }
+
+
+
+        public static genericResponse saveMemberInfo(string memId, string name, string dob, string ssn, string address, string zip, string email, string phone, string fngprnt, string ip)
+        {
+            Logger.Info("Create Account Code-Behind -> saveMemberInfo Initiated - MemberID: [" + memId +
+                                   "], Name: [" + name + "], Email: [" + email +
+                                   "], Phone: [" + phone + "], DOB: [" + dob +
+                                   "], SSN: [" + ssn + "], Address: [" + address +
+                                   "], IP: [" + ip + "]");
+
+            genericResponse res = new genericResponse();
+            res.success = false;
+            res.msg = "Initial - code behind";
+
+            try
+            {
+                string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+                string serviceMethod = "/UpdateMemberProfile?memId=" + memId +
+                                       "&fname=" + name + "&lname=" + name +
+                                       "&email=" + email + "&phone=" + phone +
+                                       "&address=" + address + "&zip=" + zip +
+                                       "&dob=" + dob + "&ssn=" + ssn +
+                                       "&fngprnt=" + fngprnt + "&ip=" + ip;
+
+                string urlToUse = String.Concat(serviceUrl, serviceMethod);
+
+                Logger.Info("Create Account Code-Behind -> saveMemberInfo CHECKPOINT #1 - URL To Use: [" + urlToUse + "]");
+
+                genericResponse response = ResponseConverter<genericResponse>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+
+                Logger.Info("Create Account Code-Behind -> saveMemberInfo RESULT.Success: [" + response.success + "]");
+                Logger.Info("Create Account Code-Behind -> saveMemberInfo RESULT.Msg: [" + response.msg + "]");
+
+                if (response.success == true)
+                {
+                    res.success = true;
+                    res.msg = "Successfully updated member record on server!";
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Create Account Code-Behind -> saveMemberInfo FAILED - MemberID: [" + memId + "], Exception: [" + ex.Message + "]");
+                res.msg = "Code-behind exception during saveMemberInfo";
+            }
+
+            return res;
+        }
+
+        [HttpPost]
+        [ActionName("CreateAccountInDB")]
+        public ActionResult CreateAccountInDB(CreateAccountInDB createAccountInDB)
+        {
+            CreateAccountInDB createAccount= createAccountInDB;
+           
+            string serviceMethod = string.Empty;
+            var scriptSerializer = new JavaScriptSerializer();
+            string json;            
+
+            createAccount.name = CommonHelper.GetEncryptedData(createAccount.name);
+            createAccount.email = CommonHelper.GetEncryptedData(createAccount.email);
+            createAccount.pw = CommonHelper.GetEncryptedData(createAccount.pw);
+            //createAccount.TransId = Session["TransId"].ToString();
+
+            json = "{\"input\":" + scriptSerializer.Serialize(createAccount) + "}";
+            string serviceUrl = Utility.GetValueFromConfig("ServiceUrl"); 
+            serviceMethod = "/CreateNonNoochUserAccountAfterRejectMoney?TransId=" + Session["TransId"].ToString() + "&password=" + createAccount.pw + "&EmailId=" + createAccount.email + "&UserName=" + createAccount.name;
+            var serviceResult = ResponseConverter<Nooch.Common.Entities.StringResult>.CallServicePostMethod(String.Concat(serviceUrl, serviceMethod), json);           
+       
+            createAccount.result = serviceResult.Result;    
+                   
+            return Json(createAccount);
+
+            //return serviceResult.Result;
+            //if (serviceResult.Result == "Thanks for registering! Check your email to complete activation.")
+            //{
+
+            //    pwFormShell.Visible = false;
+            //    transResult.Text = serviceResult.Result;
+            //    checkEmailMsg.Visible = true;
+
+            //} 
+            //else {
+            //    transResult.Visible = true;
+            //    transResult.Text = serviceResult.Result;
+
+            //    pwFormShell.Visible = false;
+            //    checkEmailMsg.Visible = true;
+            //}
+        }
+
+
     }
 
     public class bankLoginInputFormClass
     {
-        public string username  { get; set; }
+        public string username { get; set; }
         public string password { get; set; }
         public string memberid { get; set; }
         public string bankname { get; set; }
         public bool IsPinRequired { get; set; }
-        public string PinNumber { get; set; } 
+        public string PinNumber { get; set; }
     }
 
 
     public class bankaddInputFormClass
     {
-        public string memberid  { get; set; }
+        public string memberid { get; set; }
         public string fullname { get; set; }
         public string routing { get; set; }
         public string account { get; set; }
         public string nickname { get; set; }
         public string cl { get; set; }
-        public string type { get; set; } 
+        public string type { get; set; }
     }
 
     public class MFALoginInputClassForm
     {
-        public string bank { get; set; }  
-            public string memberid { get; set; } 
+        public string bank { get; set; }
+        public string memberid { get; set; }
         public string MFA { get; set; }
-        public string ba { get; set; } 
+        public string ba { get; set; }
     }
 
 
     public class setDefaultBankInput
     {
-       public string MemberId { get; set; }
-       public string BankName { get; set; }
-       public string BankOId { get; set; }  
+        public string MemberId { get; set; }
+        public string BankName { get; set; }
+        public string BankOId { get; set; }
     }
 }

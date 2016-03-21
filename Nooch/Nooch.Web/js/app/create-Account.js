@@ -7,6 +7,7 @@ var TYPE = $('#type').val();
 var RENTSCENE = $('#rs').val();
 var COMPANY = "Nooch";
 var memIdGen = "";
+var memid = $('#memId').val();
 
 $(document).ready(function () {
     var isSmScrn = false;
@@ -503,35 +504,42 @@ function createRecord() {
 
     $.ajax({
         type: "POST",
-        url: "createAccount.aspx/CreateAccountInDB",
+        //url: "createAccount.aspx/CreateAccountInDB",
+        url: "CreateAccountInDB",
+       
         data: "{'name':'" + userNameVal +
-              "', 'dob':'" + dobVal +
-              "', 'ssn':'" + ssnVal +
-              "', 'address':'" + addressVal +
-              "', 'zip':'" + zipVal +
+              //"', 'dob':'" + dobVal +
+              //"', 'ssn':'" + ssnVal +
+              //"', 'address':'" + addressVal +
+              //"', 'zip':'" + zipVal +
               "', 'email':'" + userEmVal +
-              "', 'phone':'" + userPhVal +
-              "', 'fngprnt':'" + fngprntVal +
-              "', 'ip':'" + ipVal +
-              "', 'pw':'" + '' + "'}",
+              //"', 'phone':'" + userPhVal +
+              //"', 'fngprnt':'" + fngprntVal +
+              //"', 'ip':'" + ipVal +
+              "', 'pw':'" + ssnVal + "'}",
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         async: "true",
         cache: "false",
         success: function (msg) {
-
-            var CreateAccountInDbRes = msg.d;
+      
+            var CreateAccountInDbRes = msg;
             console.log("SUCCESS -> 'CreateAccountInDB' Result is... ");
             console.log(CreateAccountInDbRes);
 
             // Hide the Loading Block
-            $('.modal-content').unblock();
+            $('.modal-content').unblock();       
 
-            if (CreateAccountInDbRes.success == true &&
-			    CreateAccountInDbRes.note.length > 5)
+            //if (CreateAccountInDbRes.success == true &&
+            //    CreateAccountInDbRes.note.length > 5) 
+            if (CreateAccountInDbRes != null)
             {
-                memIdGen = CreateAccountInDbRes.note.trim();
-
+                //memIdGen = CreateAccountInDbRes.note.trim();
+                //  CreateAccountInDbRes.MemberId.trim();
+               
+              
+                var memberID = $('#memId').attr('value');
+                alert(memberID);
                 // HIDE THE WIZARD
                 $('#idWizContainer').slideUp()
 
@@ -552,7 +560,8 @@ function createRecord() {
 
                 $('#AddBankDiv').removeClass('hidden');
 
-                $("#frame").attr("src", "https://www.noochme.com/noochweb/trans/Add-Bank.aspx?MemberId=" + CreateAccountInDbRes.note + "&redUrl=createaccnt");
+                //$("#frame").attr("src", "https://www.noochme.com/noochweb/trans/Add-Bank.aspx?MemberId=" + CreateAccountInDbRes.note + "&redUrl=createaccnt");
+                $("#frame").attr("src", "AddBank?MemberId=" + memberID + "&redUrl=createaccnt");
             }
             else if (CreateAccountInDbRes.msg.indexOf("already a"))
             {
@@ -604,7 +613,8 @@ function saveMemberInfo() {
 
     $.ajax({
         type: "POST",
-        url: "createAccount.aspx/saveMemberInfo",
+        //url: "createAccount.aspx/saveMemberInfo",
+        url: "saveMemberInfo",
         data: "{'memId':'" + memId +
              "', 'name':'" + userNameVal +
              "', 'dob':'" + dobVal +
@@ -621,7 +631,7 @@ function saveMemberInfo() {
         cache: "false",
         success: function (msg) {
 
-            var result = msg.d;
+            var result = msg;
             console.log("SUCCESS -> Save Member Info result is... [next line]");
             console.log(result);
 
@@ -779,7 +789,7 @@ $('body').bind('addBankComplete', function ()
             cache: "false",
             success: function (msg)
             {
-                var setPw = msg.d;
+                var setPw = msg;
                 console.log("SUCCESS -> 'RegisterUserWithSynpResult' is... ");
                 console.log(setPw);
 
@@ -823,6 +833,7 @@ function areThereErrors() {
 
     if (errorId != "0")
     {
+     
         console.log('areThereErrors -> errorId is: [' + errorId + "]");
 
         // Position the footer absolutely so it's at the bottom of the screen (it's normally pushed down by the body content)

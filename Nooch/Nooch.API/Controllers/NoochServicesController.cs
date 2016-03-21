@@ -2896,7 +2896,6 @@ namespace Nooch.API.Controllers
         }
 
 
-
         [HttpGet]
         [ActionName("SynapseV3AddNodeWithAccountNumberAndRoutingNumber")]
         public SynapseBankLoginV3_Response_Int SynapseV3AddNodeWithAccountNumberAndRoutingNumber(string MemberId, string bankNickName, string account_num, string routing_num, string accounttype, string accountclass)

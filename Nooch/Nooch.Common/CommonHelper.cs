@@ -18,7 +18,7 @@ using Nooch.Common.Resources;
 using Nooch.Common.Rules;
 using Nooch.Data;
 using Nooch.Common.Entities.LandingPagesRelatedEntities;
- 
+
 
 namespace Nooch.Common
 {
@@ -106,7 +106,7 @@ namespace Nooch.Common
             // Return char and concat substring.
             return char.ToUpper(s[0]) + s.Substring(1);
         }
-        
+
         public static bool IsValidRequest(string accessToken, string memberId)
         {
             if (!string.IsNullOrEmpty(accessToken) || !string.IsNullOrEmpty(memberId))
@@ -167,7 +167,7 @@ namespace Nooch.Common
                 return false;
             }
         }
-        
+
         public static MemberBusinessDto GetMemberByUdId(string udId)
         {
             Logger.Info("MemberDataAccess - GetMemberByUdId[ udId:" + udId + "].");
@@ -187,7 +187,7 @@ namespace Nooch.Common
                 Status = "You are not a nooch member. Please register to become a nooch member."
             };
         }
-        
+
         public static string GetMemberIdByUserName(string userName)
         {
 
@@ -399,20 +399,20 @@ namespace Nooch.Common
             {
                 var id = GetEncryptedData(userName);
 
-               // var noochMember = _dbContext.Members.FirstOrDefault(m => m.UserName == userName && m.IsDeleted == false);
+                // var noochMember = _dbContext.Members.FirstOrDefault(m => m.UserName == userName && m.IsDeleted == false);
                 var noochMember = _dbContext.Members.FirstOrDefault(m => m.UserName == id && m.IsDeleted == false);
 
                 if (noochMember != null)
                 {
                     return noochMember;
                 }
-               
+
             }
             catch (Exception ex)
             {
                 Logger.Error("MDA -> GetMemberDetails FAILED - UserName [ENC:]: [" + userName + "], [Exception: " + ex + "]");
-            } 
-           // return new Member(); 
+            }
+            // return new Member(); 
             return null;
         }
         public static List<SynapseBankLoginResult> GetSynapseBankLoginResulList(string memberId)
@@ -421,7 +421,7 @@ namespace Nooch.Common
 
             var id = Utility.ConvertToGuid(memberId);
 
-            var memberAccountDetails = _dbContext.SynapseBankLoginResults.Where(m => m.MemberId == id && m.IsDeleted== false).ToList();
+            var memberAccountDetails = _dbContext.SynapseBankLoginResults.Where(m => m.MemberId == id && m.IsDeleted == false).ToList();
 
             return memberAccountDetails;
 
@@ -472,7 +472,7 @@ namespace Nooch.Common
 
             var id = Utility.ConvertToGuid(memberId);
 
-            var memberAccountDetails = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == id && m.IsDeleted== false);
+            var memberAccountDetails = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
 
             return memberAccountDetails;
 
@@ -990,7 +990,7 @@ namespace Nooch.Common
         }
 
 
-        public static  submitIdVerificationInt sendUserSsnInfoToSynapseV3(string MemberId)
+        public static submitIdVerificationInt sendUserSsnInfoToSynapseV3(string MemberId)
         {
             Logger.Info("MDA -> sendUserSsnInfoToSynapseV3 Initialized - [MemberId: " + MemberId + "]");
 
@@ -1003,439 +1003,439 @@ namespace Nooch.Common
 
             var memberEntity = GetMemberDetails(MemberId);
 
-                if (memberEntity != null)
+            if (memberEntity != null)
+            {
+                string usersFirstName = UppercaseFirst(GetDecryptedData(memberEntity.FirstName));
+                string usersLastName = UppercaseFirst(GetDecryptedData(memberEntity.LastName));
+
+                string usersAddress = "";
+                string usersCity = "";
+                string usersZip = "";
+
+                DateTime usersDob;
+                string usersDobDay = "";
+                string usersDobMonth = "";
+                string usersDobYear = "";
+
+                string usersSsnLast4 = "";
+
+                string usersSynapseOauthKey = "";
+                string usersFingerprint = "";
+
+                try
                 {
-                    string usersFirstName = UppercaseFirst(GetDecryptedData(memberEntity.FirstName));
-                    string usersLastName = UppercaseFirst(GetDecryptedData(memberEntity.LastName));
+                    #region Check User For All Required Data
 
-                    string usersAddress = "";
-                    string usersCity = "";
-                    string usersZip = "";
+                    bool isMissingSomething = false;
+                    // Member found, now check that they have added a full Address (including city, zip), SSN, & DoB
 
-                    DateTime usersDob;
-                    string usersDobDay = "";
-                    string usersDobMonth = "";
-                    string usersDobYear = "";
+                    // Check for Fingerprint (UDID1 in the database)
+                    if (string.IsNullOrEmpty(memberEntity.UDID1.ToString()))
+                    {
+                        isMissingSomething = true;
+                        res.message = "MDA - Missing UDID";
+                    }
+                    else
+                    {
+                        usersFingerprint = memberEntity.UDID1;
+                    }
 
-                    string usersSsnLast4 = "";
+                    // Check for Address
+                    if (string.IsNullOrEmpty(memberEntity.Address.ToString()))
+                    {
+                        isMissingSomething = true;
+                        res.message += " MDA - Missing Address";
+                    }
+                    else
+                    {
+                        usersAddress = GetDecryptedData(memberEntity.Address);
+                    }
 
-                    string usersSynapseOauthKey = "";
-                    string usersFingerprint = "";
+                    // Check for City
+                    if (string.IsNullOrEmpty(memberEntity.City.ToString()))
+                    {
+                        isMissingSomething = true;
+                        res.message += " MDA - Missing City";
+                    }
+                    else
+                    {
+                        usersCity = GetDecryptedData(memberEntity.City);
+                    }
+
+                    // Check for ZIP
+                    if (string.IsNullOrEmpty(memberEntity.Zipcode.ToString()))
+                    {
+                        isMissingSomething = true;
+                        res.message += " MDA - Missing ZIP";
+                    }
+                    else
+                    {
+                        usersZip = GetDecryptedData(memberEntity.Zipcode);
+                    }
+
+                    // Check for SSN
+                    if (string.IsNullOrEmpty(memberEntity.SSN.ToString()))
+                    {
+                        isMissingSomething = true;
+                        res.message += " MDA - Missing SSN";
+                    }
+                    else
+                    {
+                        usersSsnLast4 = GetDecryptedData(memberEntity.SSN);
+                    }
+
+                    // Check for Date Of Birth (Not encrypted)
+                    if (string.IsNullOrEmpty(memberEntity.DateOfBirth.ToString()))
+                    {
+                        isMissingSomething = true;
+                        res.message += " MDA - Missing Date of Birth";
+                    }
+                    else
+                    {
+                        usersDob = Convert.ToDateTime(memberEntity.DateOfBirth);
+
+                        // We have DOB, now we must parse it into day, month, & year
+                        usersDobDay = usersDob.Day.ToString();
+                        usersDobMonth = usersDob.Month.ToString();
+                        usersDobYear = usersDob.Year.ToString();
+                    }
+                    // Return if any data was missing in previous block
+                    if (isMissingSomething)
+                    {
+                        Logger.Error("MDA -> sendUserSsnInfoToSynapseV3 ABORTED: Member has no DoB. [MemberId: " + MemberId + "], [Message: " + res.message + "]");
+                        return res;
+                    }
+
+
+                    // Now check if user already has a Synapse User account (would have a record in SynapseCreateUserResults.dbo)
+
+                    var usersSynapseDetails = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
+
+                    if (usersSynapseDetails == null)
+                    {
+                        Logger.Info("MDA -> sendUserSsnInfoToSynapseV3 ABORTED: Member's Synapse User Details not found. [MemberId: " + MemberId + "]");
+                        return res;
+                    }
+                    else
+                    {
+                        usersSynapseOauthKey = GetDecryptedData(usersSynapseDetails.access_token);
+                    }
+
+                    #endregion Check User For All Required Data
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("MDA -> sendUserSsnInfoToSynapseV3 FAILED on checking for all required data - [MemberID: " +
+                                           MemberId + "], [Exception: " + ex + "]");
+                }
+
+                // Update Member's DB record from NULL to false (update to true later on if Verification from Synapse is completely successful)
+                Logger.Info("MDA -> sendUserSsnInfoToSynapseV3 - About to set IsVerifiedWithSynapse to False before calling Synapse: [MemberID: " + MemberId + "]");
+                memberEntity.IsVerifiedWithSynapse = false;
+
+                #region Send SSN Info To Synapse
+
+                try
+                {
+                    #region Call Synapse V3 /user/doc/add API
+
+                    Logger.Info("MDA -> sendUserSsnInfoToSynapseV3 - Checkpoint 10693 - About To Query Synapse");
+
+                    synapseAddKycInfoInputV3Class synapseInput = new synapseAddKycInfoInputV3Class();
+
+                    SynapseV3Input_login login = new SynapseV3Input_login();
+                    login.oauth_key = usersSynapseOauthKey;
+                    synapseInput.login = login;
+
+                    addKycInfoInput_user_doc doc = new addKycInfoInput_user_doc();
+                    doc.birth_day = usersDobDay;
+                    doc.birth_month = usersDobMonth;
+                    doc.birth_year = usersDobYear;
+                    doc.name_first = usersFirstName;
+                    doc.name_last = usersLastName;
+                    doc.address_street1 = usersAddress;
+                    doc.address_postal_code = usersZip;
+                    doc.address_country_code = "US";
+
+                    doc.document_value = usersSsnLast4;
+                    doc.document_type = "SSN";
+
+                    addKycInfoInput_user user = new addKycInfoInput_user();
+                    user.fingerprint = usersFingerprint;
+                    user.doc = doc;
+
+                    synapseInput.user = user;
+
+                    string baseAddress = "https://sandbox.synapsepay.com/api/v3/user/doc/add";
+                    //string baseAddress = "https://synapsepay.com/api/v3/user/doc/add";
+
+                    // CLIFF (10/10/15): Adding the following for testing purposes only
+                    #region For Testing
+                    if (GetDecryptedData(memberEntity.UserName).IndexOf("jones00") > -1)
+                    {
+                        Logger.Info("****  sendUserSSNInfoToSynapseV3 -> JUST A TEST BLOCK REACHED!  ****");
+                        baseAddress = "https://sandbox.synapsepay.com/api/v3/user/doc/add";
+                    }
+                    else if (memberEntity.MemberId.ToString().ToLower() == "b3a6cf7b-561f-4105-99e4-406a215ccf60")
+                    {
+                        doc.name_last = "Satell";
+                        doc.document_value = "7562";
+                    }
 
                     try
                     {
-                        #region Check User For All Required Data
-
-                        bool isMissingSomething = false;
-                        // Member found, now check that they have added a full Address (including city, zip), SSN, & DoB
-
-                        // Check for Fingerprint (UDID1 in the database)
-                        if (string.IsNullOrEmpty(memberEntity.UDID1.ToString()))
-                        {
-                            isMissingSomething = true;
-                            res.message = "MDA - Missing UDID";
-                        }
-                        else
-                        {
-                            usersFingerprint = memberEntity.UDID1;
-                        }
-
-                        // Check for Address
-                        if (string.IsNullOrEmpty(memberEntity.Address.ToString()))
-                        {
-                            isMissingSomething = true;
-                            res.message += " MDA - Missing Address";
-                        }
-                        else
-                        {
-                            usersAddress = GetDecryptedData(memberEntity.Address);
-                        }
-
-                        // Check for City
-                        if (string.IsNullOrEmpty(memberEntity.City.ToString()))
-                        {
-                            isMissingSomething = true;
-                            res.message += " MDA - Missing City";
-                        }
-                        else
-                        {
-                            usersCity = GetDecryptedData(memberEntity.City);
-                        }
-
-                        // Check for ZIP
-                        if (string.IsNullOrEmpty(memberEntity.Zipcode.ToString()))
-                        {
-                            isMissingSomething = true;
-                            res.message += " MDA - Missing ZIP";
-                        }
-                        else
-                        {
-                            usersZip = GetDecryptedData(memberEntity.Zipcode);
-                        }
-
-                        // Check for SSN
-                        if (string.IsNullOrEmpty(memberEntity.SSN.ToString()))
-                        {
-                            isMissingSomething = true;
-                            res.message += " MDA - Missing SSN";
-                        }
-                        else
-                        {
-                            usersSsnLast4 = GetDecryptedData(memberEntity.SSN);
-                        }
-
-                        // Check for Date Of Birth (Not encrypted)
-                        if (string.IsNullOrEmpty(memberEntity.DateOfBirth.ToString()))
-                        {
-                            isMissingSomething = true;
-                            res.message += " MDA - Missing Date of Birth";
-                        }
-                        else
-                        {
-                            usersDob = Convert.ToDateTime(memberEntity.DateOfBirth);
-
-                            // We have DOB, now we must parse it into day, month, & year
-                            usersDobDay = usersDob.Day.ToString();
-                            usersDobMonth = usersDob.Month.ToString();
-                            usersDobYear = usersDob.Year.ToString();
-                        }
-                        // Return if any data was missing in previous block
-                        if (isMissingSomething)
-                        {
-                            Logger.Error("MDA -> sendUserSsnInfoToSynapseV3 ABORTED: Member has no DoB. [MemberId: " + MemberId + "], [Message: " + res.message + "]");
-                            return res;
-                        }
-
-
-                        // Now check if user already has a Synapse User account (would have a record in SynapseCreateUserResults.dbo)
-                        
-                        var usersSynapseDetails = _dbContext.SynapseCreateUserResults.FirstOrDefault(m=>m.MemberId==id && m.IsDeleted==false);
-
-                        if (usersSynapseDetails == null)
-                        {
-                            Logger.Info("MDA -> sendUserSsnInfoToSynapseV3 ABORTED: Member's Synapse User Details not found. [MemberId: " + MemberId + "]");
-                            return res;
-                        }
-                        else
-                        {
-                            usersSynapseOauthKey = GetDecryptedData(usersSynapseDetails.access_token);
-                        }
-
-                        #endregion Check User For All Required Data
+                        Logger.Info("Payload to send to Synapse: [OauthKey: " + login.oauth_key +
+                            "], [Birth_day: " + doc.birth_day + "], [Birth_month: " + doc.birth_month +
+                            "], [Birth_year: " + doc.birth_year + "], [name_first: " + doc.name_first +
+                            "], [name_last: " + doc.name_last + "], [ssn: " + doc.document_value +
+                            "], [address_street1: " + doc.address_street1 + "], [post_code: " + doc.address_postal_code +
+                            "], [country_code: " + doc.address_country_code + "], [Fingerprint: " + user.fingerprint +
+                            "], [BASE_ADDRESS: " + baseAddress + "].");
                     }
                     catch (Exception ex)
                     {
-                        Logger.Error("MDA -> sendUserSsnInfoToSynapseV3 FAILED on checking for all required data - [MemberID: " +
-                                               MemberId + "], [Exception: " + ex + "]");
+                        Logger.Error("MDA -> sendUserSSNInfoToSynapseV3 - Couldn't log Synapse SSN Payload. [Exception: " + ex + "]");
                     }
+                    #endregion For Testing
 
-                    // Update Member's DB record from NULL to false (update to true later on if Verification from Synapse is completely successful)
-                    Logger.Info("MDA -> sendUserSsnInfoToSynapseV3 - About to set IsVerifiedWithSynapse to False before calling Synapse: [MemberID: " + MemberId + "]");
-                    memberEntity.IsVerifiedWithSynapse = false;
 
-                    #region Send SSN Info To Synapse
+                    var http = (HttpWebRequest)WebRequest.Create(new Uri(baseAddress));
+                    http.Accept = "application/json";
+                    http.ContentType = "application/json";
+                    http.Method = "POST";
 
-                    try
+                    string parsedContent = JsonConvert.SerializeObject(synapseInput);
+                    ASCIIEncoding encoding = new ASCIIEncoding();
+                    Byte[] bytes = encoding.GetBytes(parsedContent);
+
+                    Stream newStream = http.GetRequestStream();
+                    newStream.Write(bytes, 0, bytes.Length);
+                    newStream.Close();
+
+                    var response = http.GetResponse();
+                    var stream = response.GetResponseStream();
+                    var sr = new StreamReader(stream);
+                    var content = sr.ReadToEnd();
+
+                    synapseResponse = JsonConvert.DeserializeObject<kycInfoResponseFromSynapse>(content);
+
+                    #endregion Call Synapse V3 /user/doc/add API
+
+
+                    // NOW WE MUST PARSE THE SYNAPSE RESPONSE. THERE ARE 3 POSSIBLE SCENARIOS:
+                    // 1.) SSN Validation was successful. Synapse returns {"success": true}
+                    // 2.) SSN Validation was PARTLY successful.  Synapse returns: "success":true... 
+                    //     plus an object "question_set", containing a series of questions and array of multiple choice answers for each question.
+                    //     We will display the questions to the user via the IDVerification.aspx page (already built-in to the Add-Bank process)
+                    // 3.) SSN Validation Failed  (not sure what Synapse returns for this... their docs are not clear).
+
+                    if (synapseResponse != null)
                     {
-                        #region Call Synapse V3 /user/doc/add API
-
-                        Logger.Info("MDA -> sendUserSsnInfoToSynapseV3 - Checkpoint 10693 - About To Query Synapse");
-
-                        synapseAddKycInfoInputV3Class synapseInput = new synapseAddKycInfoInputV3Class();
-
-                        SynapseV3Input_login login = new SynapseV3Input_login();
-                        login.oauth_key = usersSynapseOauthKey;
-                        synapseInput.login = login;
-
-                        addKycInfoInput_user_doc doc = new addKycInfoInput_user_doc();
-                        doc.birth_day = usersDobDay;
-                        doc.birth_month = usersDobMonth;
-                        doc.birth_year = usersDobYear;
-                        doc.name_first = usersFirstName;
-                        doc.name_last = usersLastName;
-                        doc.address_street1 = usersAddress;
-                        doc.address_postal_code = usersZip;
-                        doc.address_country_code = "US";
-
-                        doc.document_value = usersSsnLast4;
-                        doc.document_type = "SSN";
-
-                        addKycInfoInput_user user = new addKycInfoInput_user();
-                        user.fingerprint = usersFingerprint;
-                        user.doc = doc;
-
-                        synapseInput.user = user;
-
-                        string baseAddress = "https://sandbox.synapsepay.com/api/v3/user/doc/add";
-                        //string baseAddress = "https://synapsepay.com/api/v3/user/doc/add";
-
-                        // CLIFF (10/10/15): Adding the following for testing purposes only
-                        #region For Testing
-                        if (GetDecryptedData(memberEntity.UserName).IndexOf("jones00") > -1)
+                        if (synapseResponse.success == true)
                         {
-                            Logger.Info("****  sendUserSSNInfoToSynapseV3 -> JUST A TEST BLOCK REACHED!  ****");
-                            baseAddress = "https://sandbox.synapsepay.com/api/v3/user/doc/add";
-                        }
-                        else if (memberEntity.MemberId.ToString().ToLower() == "b3a6cf7b-561f-4105-99e4-406a215ccf60")
-                        {
-                            doc.name_last = "Satell";
-                            doc.document_value = "7562";
-                        }
+                            Logger.Info("MDA -> sendUserSsnInfoToSynapseV3 - Synapse returned SUCCESS = TRUE");
 
-                        try
-                        {
-                            Logger.Info("Payload to send to Synapse: [OauthKey: " + login.oauth_key +
-                                "], [Birth_day: " + doc.birth_day + "], [Birth_month: " + doc.birth_month +
-                                "], [Birth_year: " + doc.birth_year + "], [name_first: " + doc.name_first +
-                                "], [name_last: " + doc.name_last + "], [ssn: " + doc.document_value +
-                                "], [address_street1: " + doc.address_street1 + "], [post_code: " + doc.address_postal_code +
-                                "], [country_code: " + doc.address_country_code + "], [Fingerprint: " + user.fingerprint +
-                                "], [BASE_ADDRESS: " + baseAddress + "].");
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Error("MDA -> sendUserSSNInfoToSynapseV3 - Couldn't log Synapse SSN Payload. [Exception: " + ex + "]");
-                        }
-                        #endregion For Testing
+                            res.success = true;
 
-
-                        var http = (HttpWebRequest)WebRequest.Create(new Uri(baseAddress));
-                        http.Accept = "application/json";
-                        http.ContentType = "application/json";
-                        http.Method = "POST";
-
-                        string parsedContent = JsonConvert.SerializeObject(synapseInput);
-                        ASCIIEncoding encoding = new ASCIIEncoding();
-                        Byte[] bytes = encoding.GetBytes(parsedContent);
-
-                        Stream newStream = http.GetRequestStream();
-                        newStream.Write(bytes, 0, bytes.Length);
-                        newStream.Close();
-
-                        var response = http.GetResponse();
-                        var stream = response.GetResponseStream();
-                        var sr = new StreamReader(stream);
-                        var content = sr.ReadToEnd();
-
-                        synapseResponse = JsonConvert.DeserializeObject<kycInfoResponseFromSynapse>(content);
-
-                        #endregion Call Synapse V3 /user/doc/add API
-
-
-                        // NOW WE MUST PARSE THE SYNAPSE RESPONSE. THERE ARE 3 POSSIBLE SCENARIOS:
-                        // 1.) SSN Validation was successful. Synapse returns {"success": true}
-                        // 2.) SSN Validation was PARTLY successful.  Synapse returns: "success":true... 
-                        //     plus an object "question_set", containing a series of questions and array of multiple choice answers for each question.
-                        //     We will display the questions to the user via the IDVerification.aspx page (already built-in to the Add-Bank process)
-                        // 3.) SSN Validation Failed  (not sure what Synapse returns for this... their docs are not clear).
-
-                        if (synapseResponse != null)
-                        {
-                            if (synapseResponse.success == true)
+                            // Great, we have at least partial success.  Now check if further verification is needed by checking if Synapse returned a 'question_set' object.
+                            if (synapseResponse.question_set != null)
                             {
-                                Logger.Info("MDA -> sendUserSsnInfoToSynapseV3 - Synapse returned SUCCESS = TRUE");
+                                // Further Verification is needed...
+                                res.message = "additional questions needed";
 
-                                res.success = true;
-
-                                // Great, we have at least partial success.  Now check if further verification is needed by checking if Synapse returned a 'question_set' object.
-                                if (synapseResponse.question_set != null)
+                                // Now make sure an Array[] set of 'questions' was returned (could be up to 5 questions, each with 5 possible answer choices)
+                                if (synapseResponse.question_set.questions != null)
                                 {
-                                    // Further Verification is needed...
-                                    res.message = "additional questions needed";
+                                    Logger.Info("MDA -> sendUserSsnInfoToSynapseV3 - Question_Set was returned, further validation will be needed. Saving ID Verification Questions...");
 
-                                    // Now make sure an Array[] set of 'questions' was returned (could be up to 5 questions, each with 5 possible answer choices)
-                                    if (synapseResponse.question_set.questions != null)
+                                    // Saving these questions in DB.  
+
+                                    // UPDATE (9/29/15):
+                                    // The user will have to answer these on the IDVerification.aspx page.
+                                    // That's why I updated the sendSSN function to not be void and return success + a message. Based on that value,
+                                    // the Add-Bank page will direct the user either to the IDVerification page (via iFrame), or not if questions are not needed.
+
+                                    Guid memGuid = Utility.ConvertToGuid(MemberId);
+
+                                    // Loop through each question set (question/answers/id)
+                                    #region Iterate through each question to save in DB
+
+                                    foreach (synapseIdVerificationQuestionAnswerSet question in synapseResponse.question_set.questions)
                                     {
-                                        Logger.Info("MDA -> sendUserSsnInfoToSynapseV3 - Question_Set was returned, further validation will be needed. Saving ID Verification Questions...");
+                                        SynapseIdVerificationQuestion questionForDb = new SynapseIdVerificationQuestion();
 
-                                        // Saving these questions in DB.  
+                                        Guid memId = memGuid;
+                                        questionForDb.MemberId = memId;
+                                        questionForDb.QuestionSetId = synapseResponse.question_set.id;
+                                        questionForDb.SynpQuestionId = question.id;
 
-                                        // UPDATE (9/29/15):
-                                        // The user will have to answer these on the IDVerification.aspx page.
-                                        // That's why I updated the sendSSN function to not be void and return success + a message. Based on that value,
-                                        // the Add-Bank page will direct the user either to the IDVerification page (via iFrame), or not if questions are not needed.
+                                        questionForDb.DateCreated = DateTime.Now;
+                                        questionForDb.submitted = false;
 
-                                        Guid memGuid = Utility.ConvertToGuid(MemberId);
+                                        questionForDb.person_id = synapseResponse.question_set.person_id;
+                                        questionForDb.time_limit = synapseResponse.question_set.time_limit;
+                                        questionForDb.score = synapseResponse.question_set.score;
+                                        questionForDb.updated_at = synapseResponse.question_set.updated_at.ToString();
+                                        questionForDb.livemode = synapseResponse.question_set.livemode;
+                                        questionForDb.expired = synapseResponse.question_set.expired;
+                                        questionForDb.created_at = synapseResponse.question_set.created_at.ToString();
 
-                                        // Loop through each question set (question/answers/id)
-                                        #region Iterate through each question to save in DB
+                                        questionForDb.Question = question.question;
 
-                                        foreach (synapseIdVerificationQuestionAnswerSet question in synapseResponse.question_set.questions)
-                                        {
-                                            SynapseIdVerificationQuestion questionForDb = new SynapseIdVerificationQuestion();
+                                        questionForDb.Choice1Id = question.answers[0].id;
+                                        questionForDb.Choice1Text = question.answers[0].answer;
 
-                                            Guid memId = memGuid;
-                                            questionForDb.MemberId = memId;
-                                            questionForDb.QuestionSetId = synapseResponse.question_set.id;
-                                            questionForDb.SynpQuestionId = question.id;
+                                        questionForDb.Choice2Id = question.answers[1].id;
+                                        questionForDb.Choice2Text = question.answers[1].answer;
 
-                                            questionForDb.DateCreated = DateTime.Now;
-                                            questionForDb.submitted = false;
+                                        questionForDb.Choice3Id = question.answers[2].id;
+                                        questionForDb.Choice3Text = question.answers[2].answer;
 
-                                            questionForDb.person_id = synapseResponse.question_set.person_id;
-                                            questionForDb.time_limit = synapseResponse.question_set.time_limit;
-                                            questionForDb.score = synapseResponse.question_set.score;
-                                            questionForDb.updated_at = synapseResponse.question_set.updated_at.ToString();
-                                            questionForDb.livemode = synapseResponse.question_set.livemode;
-                                            questionForDb.expired = synapseResponse.question_set.expired;
-                                            questionForDb.created_at = synapseResponse.question_set.created_at.ToString();
+                                        questionForDb.Choice4Id = question.answers[3].id;
+                                        questionForDb.Choice4Text = question.answers[3].answer;
 
-                                            questionForDb.Question = question.question;
+                                        questionForDb.Choice5Id = question.answers[4].id;
+                                        questionForDb.Choice5Text = question.answers[4].answer;
+                                        _dbContext.SynapseIdVerificationQuestions.Add(questionForDb);
+                                        _dbContext.SaveChanges();
 
-                                            questionForDb.Choice1Id = question.answers[0].id;
-                                            questionForDb.Choice1Text = question.answers[0].answer;
-
-                                            questionForDb.Choice2Id = question.answers[1].id;
-                                            questionForDb.Choice2Text = question.answers[1].answer;
-
-                                            questionForDb.Choice3Id = question.answers[2].id;
-                                            questionForDb.Choice3Text = question.answers[2].answer;
-
-                                            questionForDb.Choice4Id = question.answers[3].id;
-                                            questionForDb.Choice4Text = question.answers[3].answer;
-
-                                            questionForDb.Choice5Id = question.answers[4].id;
-                                            questionForDb.Choice5Text = question.answers[4].answer;
-                                            _dbContext.SynapseIdVerificationQuestions.Add(questionForDb);
-                                            _dbContext.SaveChanges();
-                                            
-                                        }
-                                        #endregion Iterate through each question to save in DB
                                     }
-                                }
-                                else if (synapseResponse.user != null)
-                                {
-                                    // User is verified completely -- in this case response in same of register use with Synapse...
-                                    // Just update permission in CreateSynapseUserResults table
-
-                                    #region Update Permission in CreateSynapseUserResults Table
-                                    try
-                                    {
-                                        // Get existing record from Create Synapse User Results table for this Member
-
-                                        var synapseRes = _dbContext.SynapseCreateUserResults.FirstOrDefault(m=>m.MemberId==id && m.IsDeleted==false);
-
-                                        if (synapseRes != null)
-                                        {
-                                            synapseRes.permission = synapseResponse.user.permission;
-                                            _dbContext.SaveChanges();
-                                            
-                                        }
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        Logger.Error("MDA -> sendUserSsnInfoToSynapseV3 - EXCEPTION on trying to update User's record in CreateSynapseUserResults Table - " +
-                                                               "[MemberID: " + MemberId + "], [Exception: " + ex + "]");
-                                    }
-                                    #endregion Update Permission in CreateSynapseUserResults Table
-
-                                    // Update Member's DB record
-                                    memberEntity.IsVerifiedWithSynapse = true;
-                                    memberEntity.ValidatedDate = DateTime.Now;
-
-                                    res.message = "complete success";
+                                    #endregion Iterate through each question to save in DB
                                 }
                             }
-                            else
+                            else if (synapseResponse.user != null)
                             {
-                                // Response from Synapse had 'success' != true
-                                Logger.Info("MDA -> sendUserSsnInfoToSynapseV3 FAILED: Synapse Result \"success != true\" - [MemberId: " + MemberId + "]");
-                                res.message = "SSN response from synapse was false";
+                                // User is verified completely -- in this case response in same of register use with Synapse...
+                                // Just update permission in CreateSynapseUserResults table
+
+                                #region Update Permission in CreateSynapseUserResults Table
+                                try
+                                {
+                                    // Get existing record from Create Synapse User Results table for this Member
+
+                                    var synapseRes = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
+
+                                    if (synapseRes != null)
+                                    {
+                                        synapseRes.permission = synapseResponse.user.permission;
+                                        _dbContext.SaveChanges();
+
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.Error("MDA -> sendUserSsnInfoToSynapseV3 - EXCEPTION on trying to update User's record in CreateSynapseUserResults Table - " +
+                                                           "[MemberID: " + MemberId + "], [Exception: " + ex + "]");
+                                }
+                                #endregion Update Permission in CreateSynapseUserResults Table
+
+                                // Update Member's DB record
+                                memberEntity.IsVerifiedWithSynapse = true;
+                                memberEntity.ValidatedDate = DateTime.Now;
+
+                                res.message = "complete success";
                             }
                         }
                         else
                         {
-                            // Response from Synapse was null
-                            Logger.Info("MDA -> sendUserSsnInfoToSynapseV3 FAILED: Synapse Result was NULL - [MemberId: " + MemberId + "]");
-                            res.message = "SSN response from synapse was null";
+                            // Response from Synapse had 'success' != true
+                            Logger.Info("MDA -> sendUserSsnInfoToSynapseV3 FAILED: Synapse Result \"success != true\" - [MemberId: " + MemberId + "]");
+                            res.message = "SSN response from synapse was false";
                         }
-
                     }
-                    catch (WebException we)
+                    else
                     {
-                        var httpStatusCode = ((HttpWebResponse)we.Response).StatusCode;
-
-                        Logger.Error("MDA -> sendUserSsnInfoToSynapseV3 FAILED (Outer) - [errorCode: " + httpStatusCode.ToString() + "], [Message" + we.Message + "]");
-
-                        res.message = "MDA exception";
-
-                        var response = new StreamReader(we.Response.GetResponseStream()).ReadToEnd();
-                        JObject errorJsonFromSynapse = JObject.Parse(response);
-
-                        // CLIFF (10/10/15): Synapse lists all possible V3 error codes in the docs -> Introduction -> Errors
-                        //                   We might have to do different things depending on which error is returned... for now just pass
-                        //                   back the error number & msg to the function that called this method.
-                        string error_code = errorJsonFromSynapse["error_code"].ToString();
-                        string errorMsg = errorJsonFromSynapse["error"]["en"].ToString();
-
-                        if (!String.IsNullOrEmpty(errorMsg) &&
-                            (errorMsg.IndexOf("Unable to verify") > -1 ||
-                             errorMsg.IndexOf("submit a valid copy of passport") > -1))
-                        {
-                            Logger.Info("****  THIS USER'S SSN INFO WAS NOT VERIFIED AT ALL. MUST INVESTIGATE WHY (COULD BE TYPO WITH PERSONAL INFO). " +
-                                                  "DETERMINE IF NECESSARY TO ASK FOR DRIVER'S LICENSE.  ****");
-
-                            memberEntity.AdminNotes = "SSN INFO WAS INVALID WHEN SENT TO SYNAPSE. NEED TO COLLECT DRIVER'S LICENSE.";
-
-                            // Email Nooch Admin about this user for manual follow-up (Send email to Cliff)
-                            #region Notify Nooch Admin About Failed SSN Validation
-                            try
-                            {
-                                StringBuilder st = new StringBuilder();
-
-                                string city = !String.IsNullOrEmpty(memberEntity.City) ? CommonHelper.GetDecryptedData(memberEntity.City) : "NONE";
-
-                                st.Append("<table border='1' cellpadding='6' style='border-collapse:collapse;text-align:center;'>" +
-                                          "<tr><th>PARAMETER</th><th>VALUE</th></tr>");
-                                st.Append("<tr><td><strong>Name</strong></td><td>" + usersFirstName + " " + usersLastName + "</td></tr>");
-                                st.Append("<tr><td><strong>MemberId</strong></td><td>" + MemberId + "</td></tr>");
-                                st.Append("<tr><td><strong>Nooch_ID</strong></td><td>" + memberEntity.Nooch_ID + "</td></tr>");
-                                st.Append("<tr><td><strong>DOB</strong></td><td>" + Convert.ToDateTime(memberEntity.DateOfBirth).ToString("MMMM dd, yyyy") + "</td></tr>");
-                                st.Append("<tr><td><strong>SSN</strong></td><td>" + usersSsnLast4 + "</td></tr>");
-                                st.Append("<tr><td><strong>Address</strong></td><td>" + usersAddress + "</td></tr>");
-                                st.Append("<tr><td><strong>City</strong></td><td>" + city + "</td></tr>");
-                                st.Append("<tr><td><strong>ZIP</strong></td><td>" + usersZip + "</td></tr>");
-                                st.Append("<tr><td><strong>Contact #</strong></td><td>" + CommonHelper.FormatPhoneNumber(memberEntity.ContactNumber) + "</td></tr>");
-                                st.Append("<tr><td><strong>Phone Verified?</strong></td><td>" + memberEntity.IsVerifiedPhone.ToString() + "</td></tr>");
-                                st.Append("<tr><td><strong>IsVerifiedWithSynapse</strong></td><td>" + memberEntity.IsVerifiedWithSynapse.ToString() + "</td></tr>");
-                                st.Append("<tr><td><strong>Status</strong></td><td><strong>" + memberEntity.Status + "</strong></td></tr>");
-                                st.Append("</table>");
-
-                                StringBuilder completeEmailTxt = new StringBuilder();
-                                string s = "<html><body><h2>Nooch SSN Verification Failure</h2><p style='margin:0 auto 20px;'>The following Nooch user just triggered an SSN Verification attempt, but failed:</p>"
-                                           + st.ToString() +
-                                           "<br/><br/><small>This email was generated automatically during <strong>[MDA -> sendUserSsnInfoToSynapse]</strong>.</small></body></html>";
-
-                                completeEmailTxt.Append(s);
-                                Utility.SendEmail(null,  "SSNFAILURE@nooch.com", "cliff@nooch.com",
-                                                            null, "NOOCH USER'S SSN (V3) VALIDATION FAILED", null, null, null, null, completeEmailTxt.ToString());
-                            }
-                            catch (Exception ex)
-                            {
-                                Logger.Error("MDA -> sendUserSsnInfoToSynapseV3 FAILED - Attempted to notify Nooch Admin via email but got Exception: [" + ex + "]");
-                            }
-                            #endregion Notify Nooch Admin About Failed SSN Validation
-
-
-                            // Now try to send ID verification document (IF AVAILABLE... WHICH IT PROBABLY WON'T BE)
-                            // CLIFF (10/10/15): I guess we will have to add more code depending on what the response for this next line is...
-                            submitDocumentToSynapseV3(memberEntity.MemberId.ToString(), memberEntity.Photo);
-                        }
+                        // Response from Synapse was null
+                        Logger.Info("MDA -> sendUserSsnInfoToSynapseV3 FAILED: Synapse Result was NULL - [MemberId: " + MemberId + "]");
+                        res.message = "SSN response from synapse was null";
                     }
 
-                    // Save changes to Members DB
-                    memberEntity.DateModified = DateTime.Now;
-                    _dbContext.SaveChanges();
-
-                    #endregion Parse Synapse Response
                 }
-                else
+                catch (WebException we)
                 {
-                    // Member not found in Nooch DB
-                    Logger.Info("MDA -> sendUserSsnInfoToSynapseV3 FAILED: Member not found - [MemberId: " + MemberId + "]");
-                    res.message = "Member not found";
+                    var httpStatusCode = ((HttpWebResponse)we.Response).StatusCode;
+
+                    Logger.Error("MDA -> sendUserSsnInfoToSynapseV3 FAILED (Outer) - [errorCode: " + httpStatusCode.ToString() + "], [Message" + we.Message + "]");
+
+                    res.message = "MDA exception";
+
+                    var response = new StreamReader(we.Response.GetResponseStream()).ReadToEnd();
+                    JObject errorJsonFromSynapse = JObject.Parse(response);
+
+                    // CLIFF (10/10/15): Synapse lists all possible V3 error codes in the docs -> Introduction -> Errors
+                    //                   We might have to do different things depending on which error is returned... for now just pass
+                    //                   back the error number & msg to the function that called this method.
+                    string error_code = errorJsonFromSynapse["error_code"].ToString();
+                    string errorMsg = errorJsonFromSynapse["error"]["en"].ToString();
+
+                    if (!String.IsNullOrEmpty(errorMsg) &&
+                        (errorMsg.IndexOf("Unable to verify") > -1 ||
+                         errorMsg.IndexOf("submit a valid copy of passport") > -1))
+                    {
+                        Logger.Info("****  THIS USER'S SSN INFO WAS NOT VERIFIED AT ALL. MUST INVESTIGATE WHY (COULD BE TYPO WITH PERSONAL INFO). " +
+                                              "DETERMINE IF NECESSARY TO ASK FOR DRIVER'S LICENSE.  ****");
+
+                        memberEntity.AdminNotes = "SSN INFO WAS INVALID WHEN SENT TO SYNAPSE. NEED TO COLLECT DRIVER'S LICENSE.";
+
+                        // Email Nooch Admin about this user for manual follow-up (Send email to Cliff)
+                        #region Notify Nooch Admin About Failed SSN Validation
+                        try
+                        {
+                            StringBuilder st = new StringBuilder();
+
+                            string city = !String.IsNullOrEmpty(memberEntity.City) ? CommonHelper.GetDecryptedData(memberEntity.City) : "NONE";
+
+                            st.Append("<table border='1' cellpadding='6' style='border-collapse:collapse;text-align:center;'>" +
+                                      "<tr><th>PARAMETER</th><th>VALUE</th></tr>");
+                            st.Append("<tr><td><strong>Name</strong></td><td>" + usersFirstName + " " + usersLastName + "</td></tr>");
+                            st.Append("<tr><td><strong>MemberId</strong></td><td>" + MemberId + "</td></tr>");
+                            st.Append("<tr><td><strong>Nooch_ID</strong></td><td>" + memberEntity.Nooch_ID + "</td></tr>");
+                            st.Append("<tr><td><strong>DOB</strong></td><td>" + Convert.ToDateTime(memberEntity.DateOfBirth).ToString("MMMM dd, yyyy") + "</td></tr>");
+                            st.Append("<tr><td><strong>SSN</strong></td><td>" + usersSsnLast4 + "</td></tr>");
+                            st.Append("<tr><td><strong>Address</strong></td><td>" + usersAddress + "</td></tr>");
+                            st.Append("<tr><td><strong>City</strong></td><td>" + city + "</td></tr>");
+                            st.Append("<tr><td><strong>ZIP</strong></td><td>" + usersZip + "</td></tr>");
+                            st.Append("<tr><td><strong>Contact #</strong></td><td>" + CommonHelper.FormatPhoneNumber(memberEntity.ContactNumber) + "</td></tr>");
+                            st.Append("<tr><td><strong>Phone Verified?</strong></td><td>" + memberEntity.IsVerifiedPhone.ToString() + "</td></tr>");
+                            st.Append("<tr><td><strong>IsVerifiedWithSynapse</strong></td><td>" + memberEntity.IsVerifiedWithSynapse.ToString() + "</td></tr>");
+                            st.Append("<tr><td><strong>Status</strong></td><td><strong>" + memberEntity.Status + "</strong></td></tr>");
+                            st.Append("</table>");
+
+                            StringBuilder completeEmailTxt = new StringBuilder();
+                            string s = "<html><body><h2>Nooch SSN Verification Failure</h2><p style='margin:0 auto 20px;'>The following Nooch user just triggered an SSN Verification attempt, but failed:</p>"
+                                       + st.ToString() +
+                                       "<br/><br/><small>This email was generated automatically during <strong>[MDA -> sendUserSsnInfoToSynapse]</strong>.</small></body></html>";
+
+                            completeEmailTxt.Append(s);
+                            Utility.SendEmail(null, "SSNFAILURE@nooch.com", "cliff@nooch.com",
+                                                        null, "NOOCH USER'S SSN (V3) VALIDATION FAILED", null, null, null, null, completeEmailTxt.ToString());
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Error("MDA -> sendUserSsnInfoToSynapseV3 FAILED - Attempted to notify Nooch Admin via email but got Exception: [" + ex + "]");
+                        }
+                        #endregion Notify Nooch Admin About Failed SSN Validation
+
+
+                        // Now try to send ID verification document (IF AVAILABLE... WHICH IT PROBABLY WON'T BE)
+                        // CLIFF (10/10/15): I guess we will have to add more code depending on what the response for this next line is...
+                        submitDocumentToSynapseV3(memberEntity.MemberId.ToString(), memberEntity.Photo);
+                    }
                 }
-            
+
+                // Save changes to Members DB
+                memberEntity.DateModified = DateTime.Now;
+                _dbContext.SaveChanges();
+
+                #endregion Parse Synapse Response
+            }
+            else
+            {
+                // Member not found in Nooch DB
+                Logger.Info("MDA -> sendUserSsnInfoToSynapseV3 FAILED: Member not found - [MemberId: " + MemberId + "]");
+                res.message = "Member not found";
+            }
+
 
             return res;
         }
@@ -1449,142 +1449,142 @@ namespace Nooch.Common
 
             GenericInternalResponseForSynapseMethods res = new GenericInternalResponseForSynapseMethods();
 
-            
-                #region Get User's Synapse OAuth Consumer Key
 
-                string usersSynapseOauthKey = "";
+            #region Get User's Synapse OAuth Consumer Key
 
-                
-                var usersSynapseDetails = _dbContext.SynapseCreateUserResults.FirstOrDefault(m=>m.MemberId==id && m.IsDeleted==false);
+            string usersSynapseOauthKey = "";
 
-                if (usersSynapseDetails == null)
+
+            var usersSynapseDetails = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
+
+            if (usersSynapseDetails == null)
+            {
+                Logger.Info("MDA -> submitDocumentToSynapseV3 ABORTED: Member's Synapse User Details not found. [MemberId: " + MemberId + "]");
+
+                res.message = "Could not find this member's account info";
+
+                return res;
+            }
+            else
+            {
+                usersSynapseOauthKey = CommonHelper.GetDecryptedData(usersSynapseDetails.access_token);
+            }
+
+            #endregion Get User's Synapse OAuth Consumer Key
+
+
+            #region Get User's Fingerprint
+
+            string usersFingerprint = "";
+
+
+            var member = GetMemberDetails(id.ToString());
+
+            if (member == null)
+            {
+                Logger.Info("MDA -> submitDocumentToSynapseV3 ABORTED: Member not found. [MemberId: " + MemberId + "]");
+                res.message = "Member not found";
+
+                return res;
+            }
+            else
+            {
+                if (String.IsNullOrEmpty(member.UDID1))
                 {
-                    Logger.Info("MDA -> submitDocumentToSynapseV3 ABORTED: Member's Synapse User Details not found. [MemberId: " + MemberId + "]");
-
-                    res.message = "Could not find this member's account info";
+                    Logger.Info("MDA -> submitDocumentToSynapseV3 ABORTED: Member's Fingerprint not found. [MemberId: " + MemberId + "]");
+                    res.message = "Could not find this member's fingerprint";
 
                     return res;
                 }
                 else
                 {
-                    usersSynapseOauthKey = CommonHelper.GetDecryptedData(usersSynapseDetails.access_token);
+                    usersFingerprint = member.UDID1;
                 }
+            }
 
-                #endregion Get User's Synapse OAuth Consumer Key
+            #endregion Get User's Fingerprint
 
 
-                #region Get User's Fingerprint
+            #region Call Synapse /user/doc/attachments/add API
 
-                string usersFingerprint = "";
+            submitDocToSynapseV3Class answers = new submitDocToSynapseV3Class();
 
-                
-                var member = GetMemberDetails(id.ToString());
+            SynapseV3Input_login s_log = new SynapseV3Input_login();
+            s_log.oauth_key = usersSynapseOauthKey;
+            answers.login = s_log;
+            //answers.login.oauth_key = usersSynapseOauthKey;
 
-                if (member == null)
+
+            submitDocToSynapse_user sdtu = new submitDocToSynapse_user();
+            submitDocToSynapse_user_doc doc = new submitDocToSynapse_user_doc();
+            doc.attachment = "data:text/csv;base64," + ConvertImageURLToBase64(ImageUrl).Replace("\\", "");
+
+            sdtu.fingerprint = usersFingerprint;
+
+            sdtu.doc = doc;
+
+            answers.user = sdtu;
+
+            //answers.user.doc.attachment = "data:text/csv;base64," + ConvertImageURLToBase64(ImageUrl).Replace("\\", ""); // NEED TO GET THE ACTUAL DOC... EITHER PASS THE BYTES TO THIS METHOD, OR GET FROM DB
+            //answers.user.fingerprint = usersFingerprint;
+
+            string baseAddress = "https://sandbox.synapsepay.com/api/v3/user/doc/attachments/add";
+            //string baseAddress = "https://synapsepay.com/api/v3/user/doc/attachments/add";
+
+            try
+            {
+                var http = (HttpWebRequest)WebRequest.Create(new Uri(baseAddress));
+                http.Accept = "application/json";
+                http.ContentType = "application/json";
+                http.Method = "POST";
+
+                string parsedContent = JsonConvert.SerializeObject(answers);
+                ASCIIEncoding encoding = new ASCIIEncoding();
+                Byte[] bytes = encoding.GetBytes(parsedContent);
+
+                Stream newStream = http.GetRequestStream();
+                newStream.Write(bytes, 0, bytes.Length);
+                newStream.Close();
+
+                var response = http.GetResponse();
+                var stream = response.GetResponseStream();
+                var sr = new StreamReader(stream);
+                var content = sr.ReadToEnd();
+
+                kycInfoResponseFromSynapse resFromSynapse = new kycInfoResponseFromSynapse();
+
+                resFromSynapse = JsonConvert.DeserializeObject<kycInfoResponseFromSynapse>(content);
+
+                if (resFromSynapse != null)
                 {
-                    Logger.Info("MDA -> submitDocumentToSynapseV3 ABORTED: Member not found. [MemberId: " + MemberId + "]");
-                    res.message = "Member not found";
+                    if (resFromSynapse.success.ToString().ToLower() == "true")
+                    {
+                        Logger.Info("MDA -> submitDocumentToSynapseV3 SUCCESSFUL - [MemberID: " + MemberId + "]");
 
-                    return res;
+                        res.success = true;
+
+                        res.message = "";
+                    }
+                    else
+                    {
+                        res.message = "Got a response, but success was not true";
+                        Logger.Info("MDA -> submitDocumentToSynapseV3 FAILED - Got Synapse response, but success was NOT 'true' - [MemberID: " + MemberId + "]");
+                    }
                 }
                 else
                 {
-                    if (String.IsNullOrEmpty(member.UDID1))
-                    {
-                        Logger.Info("MDA -> submitDocumentToSynapseV3 ABORTED: Member's Fingerprint not found. [MemberId: " + MemberId + "]");
-                        res.message = "Could not find this member's fingerprint";
-
-                        return res;
-                    }
-                    else
-                    {
-                        usersFingerprint = member.UDID1;
-                    }
+                    res.message = "Verification response was null";
+                    Logger.Info("MDA -> submitDocumentToSynapseV3 FAILED - Synapse response was NULL - [MemberID: " + MemberId + "]");
                 }
+            }
+            catch (WebException ex)
+            {
+                res.message = "MDA Exception #9575";
+                Logger.Info("MDA -> submitDocumentToSynapseV3 FAILED - Catch [Exception: " + ex + "]");
+            }
 
-                #endregion Get User's Fingerprint
+            #endregion Call Synapse /user/doc/attachments/add API
 
-
-                #region Call Synapse /user/doc/attachments/add API
-
-                submitDocToSynapseV3Class answers = new submitDocToSynapseV3Class();
-
-                SynapseV3Input_login s_log = new SynapseV3Input_login();
-                s_log.oauth_key = usersSynapseOauthKey;
-                answers.login = s_log;
-                //answers.login.oauth_key = usersSynapseOauthKey;
-
-
-                submitDocToSynapse_user sdtu = new submitDocToSynapse_user();
-                submitDocToSynapse_user_doc doc = new submitDocToSynapse_user_doc();
-                doc.attachment = "data:text/csv;base64," + ConvertImageURLToBase64(ImageUrl).Replace("\\", "");
-
-                sdtu.fingerprint = usersFingerprint;
-
-                sdtu.doc = doc;
-
-                answers.user = sdtu;
-
-                //answers.user.doc.attachment = "data:text/csv;base64," + ConvertImageURLToBase64(ImageUrl).Replace("\\", ""); // NEED TO GET THE ACTUAL DOC... EITHER PASS THE BYTES TO THIS METHOD, OR GET FROM DB
-                //answers.user.fingerprint = usersFingerprint;
-
-                string baseAddress = "https://sandbox.synapsepay.com/api/v3/user/doc/attachments/add";
-                //string baseAddress = "https://synapsepay.com/api/v3/user/doc/attachments/add";
-
-                try
-                {
-                    var http = (HttpWebRequest)WebRequest.Create(new Uri(baseAddress));
-                    http.Accept = "application/json";
-                    http.ContentType = "application/json";
-                    http.Method = "POST";
-
-                    string parsedContent = JsonConvert.SerializeObject(answers);
-                    ASCIIEncoding encoding = new ASCIIEncoding();
-                    Byte[] bytes = encoding.GetBytes(parsedContent);
-
-                    Stream newStream = http.GetRequestStream();
-                    newStream.Write(bytes, 0, bytes.Length);
-                    newStream.Close();
-
-                    var response = http.GetResponse();
-                    var stream = response.GetResponseStream();
-                    var sr = new StreamReader(stream);
-                    var content = sr.ReadToEnd();
-
-                    kycInfoResponseFromSynapse resFromSynapse = new kycInfoResponseFromSynapse();
-
-                    resFromSynapse = JsonConvert.DeserializeObject<kycInfoResponseFromSynapse>(content);
-
-                    if (resFromSynapse != null)
-                    {
-                        if (resFromSynapse.success.ToString().ToLower() == "true")
-                        {
-                            Logger.Info("MDA -> submitDocumentToSynapseV3 SUCCESSFUL - [MemberID: " + MemberId + "]");
-
-                            res.success = true;
-
-                            res.message = "";
-                        }
-                        else
-                        {
-                            res.message = "Got a response, but success was not true";
-                            Logger.Info("MDA -> submitDocumentToSynapseV3 FAILED - Got Synapse response, but success was NOT 'true' - [MemberID: " + MemberId + "]");
-                        }
-                    }
-                    else
-                    {
-                        res.message = "Verification response was null";
-                        Logger.Info("MDA -> submitDocumentToSynapseV3 FAILED - Synapse response was NULL - [MemberID: " + MemberId + "]");
-                    }
-                }
-                catch (WebException ex)
-                {
-                    res.message = "MDA Exception #9575";
-                    Logger.Info("MDA -> submitDocumentToSynapseV3 FAILED - Catch [Exception: " + ex + "]");
-                }
-
-                #endregion Call Synapse /user/doc/attachments/add API
-            
 
             return res;
         }
@@ -1779,7 +1779,7 @@ namespace Nooch.Common
                                                    "CheckTokenResult.msg: [" + checkTokenResult.msg + "], MemberID: [" + memberId + "]");
 
                             res.UserDetailsErrMessage = checkTokenResult.msg;
-                            
+
                         }
                     }
                     else
@@ -1788,7 +1788,7 @@ namespace Nooch.Common
                                                    "CheckTokenResult was NULL, MemberID: [" + memberId + "]");
 
                         res.UserDetailsErrMessage = "Unable to check user's Oauth Token";
-                        
+
                     }
 
                     #endregion Check If OAuth Key Still Valid
@@ -1800,26 +1800,26 @@ namespace Nooch.Common
 
                     res.UserDetails = null;
                     res.UserDetailsErrMessage = "User synapse details not found.";
-                    
+
                 }
 
                 #region Get The User's Synapse Bank Details
 
                 // Now get the user's bank account details
-                
+
                 var defaultBank = GetSynapseBankAccountDetails(id.ToString());
 
                 if (defaultBank != null)
                 {
                     // Found a Synapse bank account for this user
                     res.wereBankDetailsFound = true;
-                    res.BankDetails =new SynapseDetailsClass_BankDetails();
+                    res.BankDetails = new SynapseDetailsClass_BankDetails();
                     res.BankDetails.AddedOn = defaultBank.AddedOn;
-                    res.BankDetails.Status= defaultBank.Status;
-                    res.BankDetails.bankid= defaultBank.bankid;
-                    res.BankDetails.email= defaultBank.email;
+                    res.BankDetails.Status = defaultBank.Status;
+                    res.BankDetails.bankid = defaultBank.bankid;
+                    res.BankDetails.email = defaultBank.email;
                     res.BankDetails.bank_oid = defaultBank.oid;
-                    res.BankDetails.account_type= defaultBank.type_synapse;
+                    res.BankDetails.account_type = defaultBank.type_synapse;
                     res.AccountDetailsErrMessage = "OK";
                 }
                 else
@@ -1860,182 +1860,182 @@ namespace Nooch.Common
 
                 // check for this is not needed.
                 // Will be calling login/refresh access token service to confirm if saved oAtuh token matches with token coming in response, if not then will update the token.
-                if (synCreateUserObject!=null)
+                if (synCreateUserObject != null)
                 {
 
 
-                        var noochMemberObject = GetMemberDetails(synCreateUserObject.MemberId.ToString());
+                    var noochMemberObject = GetMemberDetails(synCreateUserObject.MemberId.ToString());
 
-                        //refreshToken = GetDecryptedData(refreshToken);
-                        #region Found Refresh Token
-                        Logger.Info("MDA -> refreshSynapseV2OautKey - Found Member By Original OAuth Key (enc): [" +
-                                                    oauthKey +
-                                                    "]");
+                    //refreshToken = GetDecryptedData(refreshToken);
+                    #region Found Refresh Token
+                    Logger.Info("MDA -> refreshSynapseV2OautKey - Found Member By Original OAuth Key (enc): [" +
+                                                oauthKey +
+                                                "]");
 
-                        SynapseV3RefreshOauthKeyAndSign_Input input = new SynapseV3RefreshOauthKeyAndSign_Input();
+                    SynapseV3RefreshOauthKeyAndSign_Input input = new SynapseV3RefreshOauthKeyAndSign_Input();
 
-                        string SynapseClientId = Utility.GetValueFromConfig("SynapseClientId");
-                        string SynapseClientSecret = Utility.GetValueFromConfig("SynapseClientSecret");
+                    string SynapseClientId = Utility.GetValueFromConfig("SynapseClientId");
+                    string SynapseClientSecret = Utility.GetValueFromConfig("SynapseClientSecret");
 
-                        input.login = new createUser_login2()
+                    input.login = new createUser_login2()
+                    {
+                        //email = GetDecryptedData(synCreateUserObject.NonNoochUserEmail), //why cant we get login feilds from members table ?
+                        email = GetDecryptedData(noochMemberObject.UserName),
+                        password = GetDecryptedData(noochMemberObject.Password)
+                    };
+
+                    input.client = new createUser_client()
+                    {
+                        client_id = SynapseClientId,
+                        client_secret = SynapseClientSecret
+                    };
+
+                    SynapseV3RefreshOAuthToken_User_Input user = new SynapseV3RefreshOAuthToken_User_Input();
+
+                    user._id = new synapseSearchUserResponse_Id1()
+                    {
+                        oid = synCreateUserObject.user_id
+                    };
+                    user.fingerprint = noochMemberObject.UDID1;
+
+                    user.ip = GetRecentOrDefaultIPOfMember(noochMemberObject.MemberId);
+                    input.user = user;
+
+                    string UrlToHit = "https://synapsepay.com/api/v3/user/signin";
+
+
+                    if (useSynapseSandbox)
+                    {
+                        Logger.Info(
+                            "MDA -> refreshSynapseV2OautKey - TEST USER DETECTED - useSynapseSandbox is: [" +
+                            useSynapseSandbox + "] - About to ping Synapse Sandbox /user/refresh...");
+                        UrlToHit = "https://sandbox.synapsepay.com/api/v3/user/signin";
+                    }
+
+                    var http = (HttpWebRequest)WebRequest.Create(new Uri(UrlToHit));
+                    http.Accept = "application/json";
+                    http.ContentType = "application/json";
+                    http.Method = "POST";
+
+                    string parsedContent = JsonConvert.SerializeObject(input);
+                    ASCIIEncoding encoding = new ASCIIEncoding();
+                    Byte[] bytes = encoding.GetBytes(parsedContent);
+
+                    Stream newStream = http.GetRequestStream();
+                    newStream.Write(bytes, 0, bytes.Length);
+                    newStream.Close();
+
+                    try
+                    {
+                        var response = http.GetResponse();
+                        var stream = response.GetResponseStream();
+                        var sr = new StreamReader(stream);
+                        var content = sr.ReadToEnd();
+
+                        //Logger.LogDebugMessage("MDA -> refreshSynapseV2OautKey Checkpoint #1 - About to parse Synapse Response");
+
+                        synapseCreateUserV3Result_int refreshResultFromSyn = new synapseCreateUserV3Result_int();
+
+                        refreshResultFromSyn = JsonConvert.DeserializeObject<synapseCreateUserV3Result_int>(content);
+
+                        JObject refreshResponse = JObject.Parse(content);
+
+                        Logger.Info("MDA -> refreshSynapseV2OautKey - Just Parsed Synapse Response: [" +
+                                    refreshResponse + "]");
+
+                        if (refreshResultFromSyn.success.ToString() == "true" ||
+                            (refreshResponse["success"] != null && Convert.ToBoolean(refreshResponse["success"])))
                         {
-                            //email = GetDecryptedData(synCreateUserObject.NonNoochUserEmail), //why cant we get login feilds from members table ?
-                            email = GetDecryptedData(noochMemberObject.UserName),
-                            password = GetDecryptedData(noochMemberObject.Password)
-                        };
-
-                        input.client = new createUser_client()
-                        {
-                            client_id = SynapseClientId,
-                            client_secret = SynapseClientSecret
-                        };
-
-                        SynapseV3RefreshOAuthToken_User_Input user = new SynapseV3RefreshOAuthToken_User_Input();
-                    
-                        user._id= new synapseSearchUserResponse_Id1()
-                        {
-                            oid = synCreateUserObject.user_id
-                        };
-                        user.fingerprint =  noochMemberObject.UDID1;
-
-                        user.ip = GetRecentOrDefaultIPOfMember(noochMemberObject.MemberId);
-                        input.user = user;
-
-                        string UrlToHit = "https://synapsepay.com/api/v3/user/signin";
-
-
-                        if (useSynapseSandbox)
-                        {
-                            Logger.Info(
-                                "MDA -> refreshSynapseV2OautKey - TEST USER DETECTED - useSynapseSandbox is: [" +
-                                useSynapseSandbox + "] - About to ping Synapse Sandbox /user/refresh...");
-                            UrlToHit = "https://sandbox.synapsepay.com/api/v3/user/signin";
-                        }
-
-                        var http = (HttpWebRequest)WebRequest.Create(new Uri(UrlToHit));
-                        http.Accept = "application/json";
-                        http.ContentType = "application/json";
-                        http.Method = "POST";
-
-                        string parsedContent = JsonConvert.SerializeObject(input);
-                        ASCIIEncoding encoding = new ASCIIEncoding();
-                        Byte[] bytes = encoding.GetBytes(parsedContent);
-
-                        Stream newStream = http.GetRequestStream();
-                        newStream.Write(bytes, 0, bytes.Length);
-                        newStream.Close();
-
-                        try
-                        {
-                            var response = http.GetResponse();
-                            var stream = response.GetResponseStream();
-                            var sr = new StreamReader(stream);
-                            var content = sr.ReadToEnd();
-
-                            //Logger.LogDebugMessage("MDA -> refreshSynapseV2OautKey Checkpoint #1 - About to parse Synapse Response");
-
-                            synapseCreateUserV3Result_int refreshResultFromSyn = new synapseCreateUserV3Result_int();
-                            
-                            refreshResultFromSyn = JsonConvert.DeserializeObject<synapseCreateUserV3Result_int>(content);
-
-                            JObject refreshResponse = JObject.Parse(content);
-
-                            Logger.Info("MDA -> refreshSynapseV2OautKey - Just Parsed Synapse Response: [" +
-                                        refreshResponse + "]");
-
-                            if (refreshResultFromSyn.success.ToString() == "true" ||
-                                (refreshResponse["success"] != null && Convert.ToBoolean(refreshResponse["success"])))
+                            // checking if token is same as saved in db
+                            if (synCreateUserObject.access_token ==
+                                GetEncryptedData(refreshResultFromSyn.oauth.oauth_key))
                             {
-                                // checking if token is same as saved in db
-                                if (synCreateUserObject.access_token ==
-                                    GetEncryptedData(refreshResultFromSyn.oauth.oauth_key))
-                                {
-                                    // same as earlier..no change
-                                    synCreateUserObject.access_token =
-                                    GetEncryptedData(refreshResultFromSyn.oauth.oauth_key);
-                                    synCreateUserObject.refresh_token =
-                                        GetEncryptedData(refreshResultFromSyn.oauth.refresh_token);
-                                    synCreateUserObject.expires_in = refreshResultFromSyn.oauth.expires_in;
-                                    synCreateUserObject.expires_at= refreshResultFromSyn.oauth.expires_at;
+                                // same as earlier..no change
+                                synCreateUserObject.access_token =
+                                GetEncryptedData(refreshResultFromSyn.oauth.oauth_key);
+                                synCreateUserObject.refresh_token =
+                                    GetEncryptedData(refreshResultFromSyn.oauth.refresh_token);
+                                synCreateUserObject.expires_in = refreshResultFromSyn.oauth.expires_in;
+                                synCreateUserObject.expires_at = refreshResultFromSyn.oauth.expires_at;
 
 
-                                }
-                                else
-                                {
-                                    // changed.. time to update
-                                    synCreateUserObject.access_token =
-                                      GetEncryptedData(refreshResultFromSyn.oauth.oauth_key);
-                                    synCreateUserObject.refresh_token =
-                                        GetEncryptedData(refreshResultFromSyn.oauth.refresh_token);
-                                    synCreateUserObject.expires_in = refreshResultFromSyn.oauth.expires_in;
-                                    synCreateUserObject.expires_at = refreshResultFromSyn.oauth.expires_at;
-                                }
+                            }
+                            else
+                            {
+                                // changed.. time to update
+                                synCreateUserObject.access_token =
+                                  GetEncryptedData(refreshResultFromSyn.oauth.oauth_key);
+                                synCreateUserObject.refresh_token =
+                                    GetEncryptedData(refreshResultFromSyn.oauth.refresh_token);
+                                synCreateUserObject.expires_in = refreshResultFromSyn.oauth.expires_in;
+                                synCreateUserObject.expires_at = refreshResultFromSyn.oauth.expires_at;
+                            }
 
-                                
-                                int a = _dbContext.SaveChanges();
 
-                                if (a > 0)
-                                {
-                                    Logger.Info(
-                                        "MDA -> refreshSynapseV2OautKey - SUCCESS From Synapse and Successfully added to Nooch DB - " +
-                                        "Original Oauth Key (encr): [" + oauthKey + "], " +
-                                        "Value for new, refreshed OAuth Key (encr): [" +
-                                        synCreateUserObject.access_token + "]");
+                            int a = _dbContext.SaveChanges();
 
-                                    res.success = true;
-                                    res.oauth_consumer_key = synCreateUserObject.access_token;
-                                    res.oauth_refresh_token = synCreateUserObject.refresh_token;
-                                    res.user_oid = synCreateUserObject.user_id;
-                                    res.msg = "Oauth key refreshed successfully";
-                                }
-                                else
-                                {
-                                    Logger.Error(
-                                        "MDA -> refreshSynapseV2OautKey FAILED - Error saving new key in Nooch DB - " +
-                                        "Original Oauth Key: [" + oauthKey + "], " +
-                                        "Value for new, refreshed OAuth Key: [" + synCreateUserObject.access_token + "]");
+                            if (a > 0)
+                            {
+                                Logger.Info(
+                                    "MDA -> refreshSynapseV2OautKey - SUCCESS From Synapse and Successfully added to Nooch DB - " +
+                                    "Original Oauth Key (encr): [" + oauthKey + "], " +
+                                    "Value for new, refreshed OAuth Key (encr): [" +
+                                    synCreateUserObject.access_token + "]");
 
-                                    res.msg = "Failed to save new OAuth key in Nooch DB.";
-                                }
+                                res.success = true;
+                                res.oauth_consumer_key = synCreateUserObject.access_token;
+                                res.oauth_refresh_token = synCreateUserObject.refresh_token;
+                                res.user_oid = synCreateUserObject.user_id;
+                                res.msg = "Oauth key refreshed successfully";
                             }
                             else
                             {
                                 Logger.Error(
-                                    "MDA -> refreshSynapseV2OautKey FAILED - Error from Synapse service, no 'success' key found - " +
-                                    "Original Oauth Key: [" + oauthKey + "]");
-                                res.msg = "Service error.";
+                                    "MDA -> refreshSynapseV2OautKey FAILED - Error saving new key in Nooch DB - " +
+                                    "Original Oauth Key: [" + oauthKey + "], " +
+                                    "Value for new, refreshed OAuth Key: [" + synCreateUserObject.access_token + "]");
+
+                                res.msg = "Failed to save new OAuth key in Nooch DB.";
                             }
                         }
-                        catch (WebException we)
+                        else
                         {
-                            #region Synapse V3 Sig in/ refresh  Exception
+                            Logger.Error(
+                                "MDA -> refreshSynapseV2OautKey FAILED - Error from Synapse service, no 'success' key found - " +
+                                "Original Oauth Key: [" + oauthKey + "]");
+                            res.msg = "Service error.";
+                        }
+                    }
+                    catch (WebException we)
+                    {
+                        #region Synapse V3 Sig in/ refresh  Exception
 
-                            var httpStatusCode = ((HttpWebResponse)we.Response).StatusCode;
-                            string http_code = httpStatusCode.ToString();
+                        var httpStatusCode = ((HttpWebResponse)we.Response).StatusCode;
+                        string http_code = httpStatusCode.ToString();
 
-                            var response = new StreamReader(we.Response.GetResponseStream()).ReadToEnd();
-                            JObject errorJsonFromSynapse = JObject.Parse(response);
+                        var response = new StreamReader(we.Response.GetResponseStream()).ReadToEnd();
+                        JObject errorJsonFromSynapse = JObject.Parse(response);
 
-                            string reason = errorJsonFromSynapse["reason"].ToString();
+                        string reason = errorJsonFromSynapse["reason"].ToString();
 
-                            Logger.Error("MDA -> refreshSynapseV2OautKey WEBEXCEPTION - HTTP Code: [" + http_code +
-                                         "], Error Msg: [" + reason + "], Original Oauth Key (enc): [" + oauthKey + "]");
+                        Logger.Error("MDA -> refreshSynapseV2OautKey WEBEXCEPTION - HTTP Code: [" + http_code +
+                                     "], Error Msg: [" + reason + "], Original Oauth Key (enc): [" + oauthKey + "]");
 
-                            if (!String.IsNullOrEmpty(reason))
-                            {
-                                res.msg = "Webexception on refresh attempt: [" + reason + "]";
-                            }
-                            else
-                            {
-                                Logger.Error(
-                                    "MDA -> refreshSynapseV2OautKey FAILED: Synapse Error, but *reason* was null for [Original Oauth Key (enc): " +
-                                    oauthKey + "], [Exception: " + we.InnerException + "]");
-                            }
+                        if (!String.IsNullOrEmpty(reason))
+                        {
+                            res.msg = "Webexception on refresh attempt: [" + reason + "]";
+                        }
+                        else
+                        {
+                            Logger.Error(
+                                "MDA -> refreshSynapseV2OautKey FAILED: Synapse Error, but *reason* was null for [Original Oauth Key (enc): " +
+                                oauthKey + "], [Exception: " + we.InnerException + "]");
+                        }
 
-                            #endregion Synapse V3 Sig in/ refresh  Exception
-                        } 
-                        #endregion
-                  
+                        #endregion Synapse V3 Sig in/ refresh  Exception
+                    }
+                    #endregion
+
                 }
                 else
                 {
@@ -2058,7 +2058,7 @@ namespace Nooch.Common
             return res;
         }
 
- 
+
         public static SynapseBankSetDefaultResult SetSynapseDefaultBank(string MemberId, string BankName, string BankOId)
         {
             Logger.Info("MDA -> SetSynapseDefaultBank Initiated. [MemberId: " + MemberId + "], [Bank Name: " +
@@ -2093,7 +2093,7 @@ namespace Nooch.Common
             else
             {
                 Guid memId = Utility.ConvertToGuid(MemberId);
-                
+
 
                 // Get Nooch username (primary email address) from MemberId
                 var noochUserName = GetMemberUsernameByMemberId(MemberId);
@@ -2158,8 +2158,8 @@ namespace Nooch.Common
                         string fullNameFromBank = selectedBank.name_on_account.ToString();
                         string firstNameFromBank = "";
                         string lastNameFromBank = "";
-                        string emailFromBank = selectedBank.email!=null?selectedBank.email.ToString().ToLower() : "";
-                        string phoneFromBank = selectedBank.phone_number!=null?CommonHelper.RemovePhoneNumberFormatting(selectedBank.phone_number):"";
+                        string emailFromBank = selectedBank.email != null ? selectedBank.email.ToString().ToLower() : "";
+                        string phoneFromBank = selectedBank.phone_number != null ? CommonHelper.RemovePhoneNumberFormatting(selectedBank.phone_number) : "";
 
                         bool bankIncludedName = false;
                         bool bankIncludedEmail = false;
@@ -2620,18 +2620,18 @@ namespace Nooch.Common
 
         private static void SetOtherBanksInactiveForGivenMemberId(Guid memId)
         {
-             
-                var selectedBank =
-                    _dbContext.SynapseBanksOfMembers.Where(memberTemp =>
-                            memberTemp.MemberId.Value.Equals(memId) && memberTemp.IsDefault != false).ToList();
-                foreach (SynapseBanksOfMember sbank in selectedBank)
-                {
-                    sbank.IsDefault = false;
-                    _dbContext.SaveChanges(); 
-                }
-            
+
+            var selectedBank =
+                _dbContext.SynapseBanksOfMembers.Where(memberTemp =>
+                        memberTemp.MemberId.Value.Equals(memId) && memberTemp.IsDefault != false).ToList();
+            foreach (SynapseBanksOfMember sbank in selectedBank)
+            {
+                sbank.IsDefault = false;
+                _dbContext.SaveChanges();
+            }
+
         }
- 
+
 
         public static DbContext GetDbContextFromEntity(object entity)
         {
@@ -2657,7 +2657,6 @@ namespace Nooch.Common
             return context;
         }
 
-     
-
+        
     }
 }
