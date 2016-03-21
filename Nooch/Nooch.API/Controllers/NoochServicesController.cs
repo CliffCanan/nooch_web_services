@@ -4187,8 +4187,63 @@ namespace Nooch.API.Controllers
             return res;
         }
 
-      
+        [HttpGet]
+        [ActionName("GetTransactionDetailByIdAndMoveMoneyForNewUserDeposit")]
+        public TransactionDto GetTransactionDetailByIdAndMoveMoneyForNewUserDeposit(string TransactionId, string MemberIdAfterSynapseAccountCreation, string TransactionType, string recipMemId)
+        {
+            try
+            {
+                Logger.Info("Service Layer - GetTransactionDetailByIdAndMoveMoneyForNewUserDeposit Initiated - TransType: [" + TransactionType +
+                                       "], TransId: [" + TransactionId + "],  MemberIdAfterSynapseAccountCreation: [" + MemberIdAfterSynapseAccountCreation +
+                                       "], RecipientMemberID: [" + recipMemId + "]");
 
+                var tda = new TransactionsDataAccess();
+                Transaction tr = tda.GetTransactionById(TransactionId);
+
+                if (tr != null)
+                {
+                    TransactionDto trans = new TransactionDto();
+                    trans.AdminNotes = tr.AdminName;
+                    trans.IsPrePaidTransaction = tr.IsPrepaidTransaction;
+                    trans.FirstName = tr.Member.FirstName;
+                    trans.LastName = tr.Member.LastName;
+                    trans.Name = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(tr.Member.FirstName)) + " " +
+                                 CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(tr.Member.LastName));
+                    trans.RecepientName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(tr.Member1.FirstName)) + " " +
+                                          CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(tr.Member1.LastName));
+                    trans.SenderPhoto = tr.Member.Photo ?? "";
+                    trans.RecepientPhoto = tr.Member1.Photo ?? "";
+                    trans.MemberId = tr.Member.MemberId.ToString();
+                    trans.RecepientId = tr.Member1.MemberId.ToString();
+                    trans.TransactionId = tr.TransactionId.ToString();
+                    trans.TransactionStatus = tr.TransactionStatus;
+                    trans.TransactionType = tr.TransactionType;
+                    trans.TransDate = tr.TransactionDate.Value;
+                    trans.TransactionFee = tr.TransactionFee.Value;
+                    trans.InvitationSentTo = (tr.InvitationSentTo != null) ? CommonHelper.GetDecryptedData(tr.InvitationSentTo) : "";
+                    trans.Amount = tr.Amount;
+
+                    MembersDataAccess mda = new MembersDataAccess();
+
+                    if (String.IsNullOrEmpty(recipMemId))
+                    {
+                        recipMemId = "";
+                    }
+
+                    string mdaRes = mda.GetTokensAndTransferMoneyToNewUser(TransactionId, MemberIdAfterSynapseAccountCreation, TransactionType, recipMemId);
+
+                    trans.synapseTransResult = mdaRes;
+
+                    return trans;
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Layer -> GetTransactionDetailByIdAndMoveMoneyForNewUserDeposit FAILED - [Exception: " + ex + "]");
+            }
+
+            return null;
+        }
          
  
         #endregion

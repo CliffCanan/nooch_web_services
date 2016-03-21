@@ -1722,6 +1722,9 @@ namespace Nooch.Common
                 var id = Utility.ConvertToGuid(memberId);
 
 
+                // member table details
+                Member memberObject = GetMemberDetails(memberId);
+
                 // Checking user details for given MemberID
 
                 var createSynapseUserObj = GetSynapseCreateaUserDetails(id.ToString());
@@ -1771,6 +1774,7 @@ namespace Nooch.Common
                             res.UserDetails = new SynapseDetailsClass_UserDetails();
                             res.UserDetails.access_token = CommonHelper.GetDecryptedData(checkTokenResult.oauth_consumer_key);  // NOTe :: Giving in encrypted format
                             res.UserDetails.user_id = checkTokenResult.user_oid;
+                            res.UserDetails.user_fingerprints = memberObject.UDID1;
                             res.UserDetailsErrMessage = "OK";
                         }
                         else
