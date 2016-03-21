@@ -1,0 +1,129 @@
+﻿@using Nooch.Common.Entities.LandingPagesRelatedEntities.RejectMoney
+
+@{
+    Layout = null;
+
+    PageLoadDataRejectMoney mod = (PageLoadDataRejectMoney)Model;
+}
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="@Url.Content("~/Assets/Css/bootstrap.css")" rel="stylesheet" />
+    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,400italic,500,500italic,700,900" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.4/themes/cupertino/jquery-ui.css" />
+    <link rel="stylesheet" href="@Url.Content("~/Assets/Css/sweetalert-override.min.css")" />
+    <link href="@Url.Content("~/Assets/Css/tweaks.css")" rel="stylesheet" />
+    <link rel="icon" href="@Url.Content("~/Assets/favicon.ico")" />
+    
+    <title>Nooch | Request Rejected</title>
+</head>
+
+<body id="body-depositNew" class="no-border">
+
+
+<form id="form1">
+    <input type="hidden" id="TransType" />
+    <input type="hidden" id="LinkSource" />
+    <input type="hidden" id="UserType" />
+    <input type="hidden" id="TransId" />
+    
+
+    <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+        <div class="clearfix">
+            <a class="landingHeaderLogo center-block" href="https://www.nooch.com/">
+                <img src="@Url.Content("~/Assets/Images/nooch-logo2.svg")" class="center-block" alt="Nooch Logo"/>
+            </a>
+        </div>
+    </nav>
+
+    <div id="SenderAndTransInfodiv" class="depositComplete-TransDetails paymentInfo" >
+        <div class="media">
+            <div class="transDetails-userpic pull-left">
+                <input type="image" class="media-object" id="senderImage" imageurl="@mod.senderImage" alt="Other User" />
+                
+            </div>
+
+            <div class="media-body">
+                <span class="intro-header label"></span>
+
+                <div id="senderName">
+                    <div id="nameLabel">
+                        @Html.Raw(@mod.nameLabel)
+                    </div>
+                    
+                </div>
+                <span class="transfer-amount">
+                    <div id="AmountLabel">
+    @Html.Raw(@mod.TransAmout)
+</div>
+                        
+                    </span>
+            </div>
+        </div>
+    </div>
+
+    <div id="iconCircleFA" class="floating white-text col-sm-8 col-sm-offset-2 p-5" >
+        <span class="fa-stack fa-lg">
+                <i class="fa fa-circle fa-stack-1x"></i>
+                <i class="fa fa-times-circle fa-stack-1x fa-lg fa-inverse red-text"></i>
+            </span>
+    </div>
+
+    <div id="TransactionResult" class="clearfix" >
+        <div id="depositHeader">
+            <div id="fromText">
+                <div id="transResult" class="f-600"></div>
+                
+            </div>
+        </div>
+    </div>
+
+    <div id="clickToReject" class="clearfix" >
+        <p class="depositInstructions animated fadeIn" style="margin: 12px auto 25px;"></p>
+        <input type="button" id="rejectBtn" class="btn btn-default btn-lg center-block animated bounceIn" value="Yes - Confirm"  onclick="rejectBtnClicked" />
+        
+    </div>
+
+    <div id="createAccountPrompt" >
+        <div class="depositInstructions">
+            If you create a Nooch account, you can make payment requests too. For Free. To anyone's email address or phone number, even if they don't have Nooch.
+            <br/>
+            <input type="button" ID="btnCreateAccount" class="btn btn-default btn-lg m-t-15 animated bounceIn" value="Create Account" OnClick=" btnCreateAccount_Click "/>
+
+        </div>
+    </div>
+
+    <div class="footer footer-landing">
+        <div>
+            <ul class="list-inline">
+                <li><a href="https://www.nooch.com/overview">Security</a></li>
+                <li><a href="http://support.nooch.com/">Support Center</a></li>
+                <li><a href="https://www.nooch.com/tos">Legal Stuff</a></li>
+                <li><a href="https://www.nooch.com/blog/">Blog</a></li>
+            </ul>
+        </div>
+    </div>
+
+</form>
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+
+    <!-- Bootstrap Plugins -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+
+<script src="@Url.Content("~/js/sweetalert.min.js")"></script>
+
+<script type="text/javascript">
+    var errorFromCodeBehind = '@mod.errorFromCodeBehind';
+    var transStatus = '@mod.transStatus';
+</script>
+
+<script src="@Url.Content("~/js/app/reject-money.js")"></script>
+</body>
+</html>
+

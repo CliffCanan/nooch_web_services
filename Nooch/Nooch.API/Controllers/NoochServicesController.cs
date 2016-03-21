@@ -2875,7 +2875,7 @@ namespace Nooch.API.Controllers
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Layer -> RegisterExistingUserWithSynapseV2 FAILED - [MemberID: " + memberId + "], [Name: " + fullname +
+                Logger.Error("Service Layer -> RegisterExistingUserWithSynapsev3 FAILED - [MemberID: " + memberId + "], [Name: " + fullname +
                                        ", [Email of New User: " + email + "], [Exception: " + ex.ToString() + "]");
                 return null;
             }
@@ -3322,7 +3322,7 @@ namespace Nooch.API.Controllers
                                     sbm.IsDefault = false;
                                     sbm.MemberId = Utility.ConvertToGuid(MemberId);
 
-                                    // Holdovers from V2
+                                    // Holdovers from v3
                                     sbm.account_number_string = !String.IsNullOrEmpty(n.info.account_num) ? CommonHelper.GetEncryptedData(n.info.account_num) : null;
                                     sbm.bank_name = !String.IsNullOrEmpty(n.info.bank_name) ? CommonHelper.GetEncryptedData(n.info.bank_name) : null;
                                     sbm.name_on_account = !String.IsNullOrEmpty(n.info.name_on_account) ? CommonHelper.GetEncryptedData(n.info.name_on_account) : null;
@@ -3332,7 +3332,7 @@ namespace Nooch.API.Controllers
                                     sbm.Status = "Not Verified";
                                     // CLIFF (10/11/15): We were using this "bankid" to identify the bank in other places.  Now we need to use oid (below) instead.
                                     // sbm.bankid = !String.IsNullOrEmpty(n._id.oid) ? n._id.oid : null;
-                                    // These 2 values were *int* IN V2, but now both are strings...
+                                    // These 2 values were *int* IN v3, but now both are strings...
                                     //sbm.account_class = v.account_class;
                                     //sbm.account_type = v.type_synapse;
 
@@ -3860,7 +3860,7 @@ namespace Nooch.API.Controllers
                                         sbm.IsDefault = false;
                                         sbm.MemberId = Utility.ConvertToGuid(MemberId);
 
-                                        // Holdovers from V2
+                                        // Holdovers from v3
                                         sbm.account_number_string = !String.IsNullOrEmpty(n.info.account_num) ? CommonHelper.GetEncryptedData(n.info.account_num) : null;
                                         sbm.bank_name = !String.IsNullOrEmpty(n.info.bank_name) ? CommonHelper.GetEncryptedData(n.info.bank_name) : null;
                                         sbm.name_on_account = !String.IsNullOrEmpty(n.info.name_on_account) ? CommonHelper.GetEncryptedData(n.info.name_on_account) : null;
@@ -3870,7 +3870,7 @@ namespace Nooch.API.Controllers
                                         sbm.Status = "Not Verified";
                                         // CLIFF (10/11/15): We were using this "bankid" to identify the bank in other places.  Now we need to use oid (below) instead.
                                         // sbm.bankid = !String.IsNullOrEmpty(n._id.oid) ? n._id.oid : null;
-                                        // These 2 values were *int* IN V2, but now both are strings...
+                                        // These 2 values were *int* IN v3, but now both are strings...
                                         //sbm.account_class = v.account_class;
                                         //sbm.account_type = v.type_synapse;
 

@@ -1746,6 +1746,7 @@ namespace Nooch.DataAccess
                     createUser_login logins = new createUser_login();
                     logins.email = CommonHelper.GetDecryptedData(noochMember.UserName);
                     logins.password = CommonHelper.GetDecryptedData(noochMember.Password);
+                    //logins.password = "";
                     logins.read_only = true; // CLIFF (10/10/12) - I think we might want to keep this false (which is default) - will ask Synapse to clarify
 
                     payload.logins = new createUser_login[1];
@@ -2026,7 +2027,7 @@ namespace Nooch.DataAccess
                                 try
                                 {
                                     // Now: SEND USER'S SSN INFO TO SYNAPSE
-                                    submitIdVerificationInt submitSsn = CommonHelper.sendUserSsnInfoToSynapseV3("");
+                                    submitIdVerificationInt submitSsn = CommonHelper.sendUserSsnInfoToSynapseV3(memberId);
                                     res.ssn_verify_status = submitSsn.message;
 
                                     // Next if/else are all just for logging
