@@ -2115,6 +2115,1233 @@ namespace Nooch.DataAccess
         }
 
 
+        public synapseCreateUserV3Result_int RegisterExistingUserWithSynapseV3(string transId, string memberId, string userEmail, string userPhone, string userName, string pw, string ssn, string dob, string address, string zip, string fngprnt, string ip)
+        {
+            Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 Initiated. [Name: " + userName +
+                                   "], Email: [" + userEmail +
+                                   "], Phone: [" + userPhone +
+                                   "], TransId: [" + transId + "]");
+
+            synapseCreateUserV3Result_int res = new synapseCreateUserV3Result_int();
+            res.success = false;
+            res.reason = "Initial";
+             
+
+            #region Check To Make Sure All Data Was Passed
+
+            // First check critical data necessary for just creating the user
+            if (String.IsNullOrEmpty(userName) ||
+                String.IsNullOrEmpty(userEmail) ||
+                String.IsNullOrEmpty(userPhone))
+            {
+                string missingData = "";
+
+                if (String.IsNullOrEmpty(userName))
+                {
+                    missingData = missingData + "Users' Name";
+                }
+                if (String.IsNullOrEmpty(userEmail))
+                {
+                    missingData = missingData + " Email";
+                }
+                if (String.IsNullOrEmpty(userPhone))
+                {
+                    missingData = missingData + " Phone";
+                }
+
+                Logger.Error ("MDA -> RegisterExistingUserWithSynapseV2 FAILED - Missing Critical Data: [" + missingData.Trim() + "]");
+
+                res.reason = "Missing critical data: " + missingData.Trim();
+                return res;
+            }
+
+            if (String.IsNullOrEmpty(ssn) || String.IsNullOrEmpty(dob) ||
+                String.IsNullOrEmpty(address) || String.IsNullOrEmpty(zip) ||
+                String.IsNullOrEmpty(fngprnt) || String.IsNullOrEmpty(ip))
+            {
+                string missingData2 = "";
+
+                if (String.IsNullOrEmpty(ssn))
+                {
+                    missingData2 = missingData2 + "SSN";
+                }
+                if (String.IsNullOrEmpty(dob))
+                {
+                    missingData2 = missingData2 + " DOB";
+                }
+                if (String.IsNullOrEmpty(address))
+                {
+                    missingData2 = missingData2 + "Address";
+                }
+                if (String.IsNullOrEmpty(zip))
+                {
+                    missingData2 = missingData2 + " ZIP";
+                }
+                if (String.IsNullOrEmpty(fngprnt))
+                {
+                    missingData2 = missingData2 + " Fingerprint";
+                }
+                if (String.IsNullOrEmpty(ip))
+                {
+                    missingData2 = missingData2 + " IP";
+                }
+
+                Logger.Error("MDA -> RegisterExistingUserWithSynapseV2 - Missing Non-Critical Data: [" + missingData2.Trim() + "]");
+            }
+
+            #endregion Check To Make Sure All Data Was Passed
+
+
+            #region Check If Given Phone Already Exists
+
+            string memberIdFromPhone =CommonHelper.GetMemberIdByContactNumber(userPhone);
+            if (!String.IsNullOrEmpty(memberIdFromPhone))
+            {
+                res.reason = "Given phone number already registered.";
+                return res;
+            }
+
+            #endregion Check if given email or phone already exists
+
+            Guid memGuid = Utility.ConvertToGuid(memberId);
+          
+            var memberObj = _dbContext.Members.Where(memberTemp =>
+                               memberTemp.MemberId.Equals(memGuid) &&
+                               memberTemp.IsDeleted == false).FirstOrDefault();
+             
+        
+
+            if (memberObj != null)
+            {
+                #region Update Member's Record in Members.dbo
+
+                // Add member details based on given name, email, phone, & other parameters
+                if (userName.IndexOf('+') > -1)
+                {
+                    userName.Replace("+", " ");
+                }
+                string[] namearray = userName.Split(' ');
+                string FirstName = CommonHelper.GetEncryptedData(namearray[0]);
+                string LastName = " ";
+
+                // Example Name Formats: Most Common: 1.) Charles Smith
+                //                       Possible Variations: 2.) Charles   3.) Charles H. Smith
+                //                       4.) CJ Smith   5.) C.J. Smith   6.)  Charles Andrew Thomas Smith
+
+                if (namearray.Length > 1)
+                {
+                    if (namearray.Length == 2)
+                    {
+                        // For regular First & Last name: Charles Smith
+                        LastName = CommonHelper.GetEncryptedData(namearray[1]);
+                    }
+                    else if (namearray.Length == 3)
+                    {
+                        // For 3 names, could be a middle name or middle initial: Charles H. Smith or Charles Andrew Smith
+                        LastName = CommonHelper.GetEncryptedData(namearray[2]);
+                    }
+                    else
+                    {
+                        // For more than 3 names (some people have 2 or more middle names)
+                        LastName = CommonHelper.GetEncryptedData(namearray[namearray.Length - 1]);
+                    }
+                }
+
+                // Convert string Date of Birth to DateTime
+                if (String.IsNullOrEmpty(dob)) // ...it shouldn't ever be empty for this method
+                {
+                    Logger.Info("MDA -> RegisterExistingUserWithSynapseV2 - DOB was NULL, reassigning it to 'Jan 20, 1981' - [Name: " + userName + "], [TransId: " + transId + "]");
+                    dob = "01/20/1981";
+                }
+                DateTime dateofbirth;
+                if (!DateTime.TryParse(dob, out dateofbirth))
+                {
+                    Logger.Info("MDA -> RegisterExistingUserWithSynapseV2 - DOB was NULL - [Name: " + userName + "], [TransId: " + transId + "]");
+                }
+
+                string pinNumber = Utility.GetRandomPinNumber();
+                pinNumber = CommonHelper.GetEncryptedData(pinNumber);
+                memberObj.SecondaryEmail = memberObj.UserName; // In case the supplied email is different than what the Landlord used to invite, saving the original email here as secondary, and updating UserName in next line
+                memberObj.UserName = CommonHelper.GetEncryptedData(userEmail.Trim()); // Username might be different if user changes the email on the payRequest page
+                memberObj.UserNameLowerCase = CommonHelper.GetEncryptedData(userEmail.Trim().ToLower());
+                memberObj.FirstName = FirstName;
+                memberObj.LastName = LastName;
+                memberObj.ContactNumber = userPhone;
+                memberObj.Address = !String.IsNullOrEmpty(address) ? CommonHelper.GetEncryptedData(address) : null;
+                memberObj.Zipcode = !String.IsNullOrEmpty(zip) ? CommonHelper.GetEncryptedData(zip) : null;
+                memberObj.SSN = !String.IsNullOrEmpty(ssn) ? CommonHelper.GetEncryptedData(ssn) : null;
+                memberObj.DateOfBirth = dateofbirth;
+                memberObj.Status = "Active";
+                memberObj.UDID1 = !String.IsNullOrEmpty(fngprnt) ? fngprnt : null;
+                memberObj.DateModified = DateTime.Now;
+                if (!String.IsNullOrEmpty(pw))
+                {
+                    memberObj.Password = CommonHelper.GetEncryptedData(pw);
+                }
+
+                int dbUpdatedSuccessfully = _dbContext.SaveChanges(); 
+
+                #endregion Update Member's Record in Members.dbo
+
+                // Now add the IP address record to the MembersIPAddress Table
+                try
+                {
+                    UpdateMemberIPAddressAndDeviceId(memberId, ip, null);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("MDA -> RegisterExistingUserWithSynapseV2 EXCEPTION on trying to save new Member's IP Address - " +
+                                           "[MemberID: " + memberId + "], [Exception: " + ex + "]");
+                }
+
+                #region Update Tenant Record If For A Tenant
+
+                if (memberObj.Type == "Tenant")
+                {
+                    try
+                    { 
+                       
+                        var tenantObj = _dbContext.Tenants.Where(memberTemp =>
+                                            memberTemp.MemberId == memGuid &&
+                                            memberTemp.IsDeleted == false).FirstOrDefault();
+
+                        if (tenantObj != null)
+                        {
+                            Logger.Info("MDA -> RegisterExistingUserWithSynapseV2 - This is a TENANT - About to update Tenants Table " +
+                                                  "MemberID: [" + memberId + "]");
+
+                            tenantObj.FirstName = FirstName;
+                            tenantObj.LastName = LastName;
+                            tenantObj.eMail = memberObj.UserName;
+
+                            tenantObj.DateOfBirth = dateofbirth;
+
+                            tenantObj.PhoneNumber = userPhone;
+                            tenantObj.AddressLineOne = memberObj.Address;
+                            tenantObj.Zip = memberObj.Zipcode;
+                            tenantObj.SSN = memberObj.SSN;
+
+                            #region Check If Email Should Be Verified
+
+                            // Now compare the Email address this user entered with the email the Landlord entered to invite this tenant.
+                            // If the emails match, we can set this user's "IsEmailVerified" to "true" because they would have had to click the 
+                            // link in the 'RequestReceived' email in order to submit their info.
+                            try
+                            {
+                                Guid transGuid = new Guid(transId);
+
+                                var emailUsedToInvite = (from trans in _dbContext.Transactions
+                                                         where trans.TransactionId == transGuid
+                                                         select trans.InvitationSentTo).FirstOrDefault();
+
+                                if (!String.IsNullOrEmpty(emailUsedToInvite))
+                                {
+                                    if (emailUsedToInvite.Trim().ToLower() == userEmail.Trim().ToLower())
+                                    {
+                                        Logger.Info("MDA -> RegisterExistingUserWithSynapseV2 - Email provided by new user [" + userEmail +
+                                                               "] matches Email from transaction ('InvitationSentTo') [" + emailUsedToInvite + "] - " +
+                                                               "Marking Tenant's Email as Verified in Tenants Table.");
+
+                                        tenantObj.IsEmailVerified = true;
+                                    }
+                                    else
+                                    {
+                                        Logger.Info("MDA -> RegisterExistingUserWithSynapseV2 - Email provided by new user [" + userEmail +
+                                                               "] does NOTE match Email from transaction ('InvitationSentTo') [" + emailUsedToInvite + "] - " +
+                                                               "Marking Tenant's Email as UN-Verified in Tenants Table.");
+
+                                        tenantObj.IsEmailVerified = false;
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.Error("MDA -> RegisterExistingUserWithSynapseV2 - Error on comparing email provided by new user [" + userEmail +
+                                                       "] with Email from transaction ('InvitationSentTo') - Exception: [" + ex.Message + "]");
+
+                                tenantObj.IsEmailVerified = false;
+                            }
+
+                            #endregion Check If Email Should Be Verified
+
+                            tenantObj.DateModified = DateTime.Now;
+
+                            if (_dbContext.SaveChanges() > 0)
+                            {
+                                Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 - Saved changes to TENANT table successfully - " +
+                                                       "MemberID: [" + memberId + "]");
+                            }
+                            else
+                            {
+                                Logger.Error("MDA -> RegisterExistingUserWithSynapseV3 - FAILED to save changes to TENANT table - " +
+                                                       "MemberID: [" + memberId + "]");
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error("MDA -> RegisterExistingUserWithSynapseV3 EXCEPTION on checking if this user is a TENANT - " +
+                                               "[MemberID: " + memberId + "], [Exception: " + ex + "]");
+                    }
+                }
+
+                #endregion Update Tenant Record If For A Tenant
+
+                #region Member Updated In Nooch DB Successfully
+
+                if (dbUpdatedSuccessfully > 0)
+                {
+                    Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 - Nooch Member UPDATED SUCCESSFULLY IN DB (via Browser Landing Page) - " +
+                                           "[UserName: " + userEmail + "], [MemberId: " + memberId + "]");
+
+                    bool didUserAddPw = false;
+
+                    #region Check If PW Was Supplied To Create Full Account
+
+                    if (!String.IsNullOrEmpty(pw))
+                    {
+                        didUserAddPw = true;
+
+                        #region Send New Account Email To New User
+
+                        var fromAddress = Utility.GetValueFromConfig("welcomeMail");
+                        var firstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName));
+                        var lastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.LastName));
+
+                        var link = "";
+
+                        var tokens = new Dictionary<string, string>
+                            {
+                                {Constants.PLACEHOLDER_FIRST_NAME, firstName},
+                                {Constants.PLACEHOLDER_LAST_NAME, lastName},
+                                {Constants.PLACEHOLDER_OTHER_LINK, link}
+                            };
+                        try
+                        {
+                            Utility.SendEmail(Constants.TEMPLATE_REGISTRATION,  
+                                fromAddress, userEmail, null, "Confirm your email on Nooch", link,
+                                tokens, null, null, null);
+
+                            Logger.Info("MDA - Registration mail sent to [" + userEmail + "] successfully.");
+                        }
+                        catch (Exception)
+                        {
+                            Logger.Error("MDA - Member activation mail NOT sent to [" + userEmail + "]");
+                        }
+
+                        #endregion Send New Account Email To New User
+
+
+                        #region Temp PIN Email
+
+                        // Email user the auto-generated PIN
+                        var tokens2 = new Dictionary<string, string>
+                            {
+                                {Constants.PLACEHOLDER_FIRST_NAME, firstName},
+                                {Constants.PLACEHOLDER_PINNUMBER, CommonHelper.GetDecryptedData(pinNumber)}
+                            };
+                        try
+                        {
+                            Utility.SendEmail("pinSetForNewUser",   fromAddress, userEmail, null,
+                                "Your temporary Nooch PIN", null, tokens2, null, null, null);
+
+                            Logger.Info("MDA -> RegisterExistingUserWithSynapseV2 - Temp PIN email sent to [" + userEmail + "] successfully.");
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Error("MDA -> RegisterExistingUserWithSynapseV2 - Temp PIN email NOT sent to [" + userEmail + "], [Exception: " + ex + "]");
+                        }
+
+                        #endregion Temp PIN Email
+                    }
+
+                    #endregion Check If PW Was Supplied To Create Full Account
+
+                    // NOW WE HAVE CREATED A NEW NOOCH USER RECORD AND SENT THE REGISTRATION EMAIL (IF THE USER PROVIDED A PW TO CREATE AN ACCOUNT)
+                    // NEXT, ATTEMPT TO CREATE A SYNAPSE ACCOUNT FOR THIS USER
+                    #region Create User with Synapse
+
+                   
+                    // RegisterUserSynapseResultClassint createSynapseUserResult = new RegisterUserSynapseResultClassint();
+                    synapseCreateUserV3Result_int createSynapseUserResult = new synapseCreateUserV3Result_int();
+                    try
+                    {
+                        // Now call Synapse create user service
+                        Logger.Info("** MDA -> RegisterExistingUserWithSynapseV2 ABOUT TO CALL CREATE SYNAPSE USER METHOD  **");
+                        createSynapseUserResult = RegisterUserWithSynapseV3(memberObj.MemberId.ToString(),true);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error("MDA -> RegisterExistingUserWithSynapseV2 - createSynapseUser FAILED - [Username: " + userEmail +
+                                               "], [Exception: " + ex.Message + "]");
+                    }
+
+                    if (createSynapseUserResult != null)
+                    {
+                        res.ssn_verify_status = "did not check yet";
+
+                        #region Created Synapse User Successfully
+
+                        if (createSynapseUserResult.success == true &&
+                            !String.IsNullOrEmpty(createSynapseUserResult.oauth.oauth_key))
+                        {
+                            Logger.Info("MDA -> RegisterExistingUserWithSynapseV2 - Synapse User created SUCCESSFULLY (LN: 6796) - " +
+                                                   "[oauth_consumer_key: " + createSynapseUserResult.oauth_consumer_key + "]. Now attempting to save in Nooch DB.");
+
+                          //   Entry in SynapseCreateUser Has been already done from RegisterUserWithSynapseV3 method  //
+
+                            // Synapse User created successfully - Now make entry in [SynapseCreateUserResults] table
+                            //SynapseCreateUserResult nr = new SynapseCreateUserResult();
+                            //nr.MemberId = memberObj.MemberId;
+                            //nr.DateCreated = DateTime.Now;
+                            //nr.access_token = CommonHelper.GetEncryptedData(createSynapseUserResult.oauth_consumer_key);
+                            //nr.expires_in = createSynapseUserResult.oauth.expires_in;
+                            //nr.reason = createSynapseUserResult.reason;
+                            //nr.refresh_token = CommonHelper.GetEncryptedData(createSynapseUserResult.oauth.refresh_token);
+                            //nr.success = Convert.ToBoolean(res.success);
+                            //nr.username = CommonHelper.GetEncryptedData(createSynapseUserResult.user.logins[0].email);
+                            //nr.user_id = createSynapseUserResult.user._id.id;
+                            //nr.IsDeleted = false;
+                            //nr.ModifiedOn = DateTime.Now;
+                            //nr.IsForNonNoochUser = false;
+                            //nr.NonNoochUserEmail = userEmail;
+                            //nr.TransactionIdFromWhichInvited = Utility.ConvertToGuid(transId);
+                            //nr.HasNonNoochUserSignedUp = didUserAddPw;
+
+                            //int addRecordToSynapseCreateUserTable = _dbContext.SaveChanges();
+
+                            //  if (addRecordToSynapseCreateUserTable > 0)                                
+                            if (createSynapseUserResult.success == true)                                // asuming createSynapseUserResult.success to be equals addRecordToSynapseCreateUserTable > 0
+                                
+                            {
+                                if (!String.IsNullOrEmpty(res.reason) &&
+                                    res.reason.IndexOf("Email already registered") > -1)
+                                {
+                                    // THIS HAPPENS WHEN THE USER ALREADY EXISTS AND WE USED 'force_create'='no'
+                                    res.reason = "User already existed, successfully received consumer_key.";
+
+                                    Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 SUCCESS -> [Reason: " + res.reason + "], [Email: " + userEmail + "], [user_id: " + res.user_id + "]");
+                                }
+
+                                // EXPECTED OUTCOME for most users creating a new Synapse Account.
+                                // Synapse doesn't always return a "reason" anymore (they used to but stopped sending it for newly created users apparently)
+                                else
+                                {
+                                    Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 SUCCESS - [Email: " + userEmail + "], [user_id: " + createSynapseUserResult.user_id +
+                                                           "]. Now about to attempt to send SSN info to Synapse.");
+
+                                    // Now attempt to verify user's ID by sending SSN, DOB, name, & address to Synapse
+                                     /* No need of the following code any more as this has already been done in RegisterUserWithSynapseV3 method
+                                    try
+                                    {
+                                       
+                                        submitIdVerificationInt submitSsn = CommonHelper.sendUserSsnInfoToSynapseV3(memberObj.MemberId.ToString());
+                                        res.ssn_verify_status = submitSsn.message;
+
+                                        // Next if/else are all just for logging
+                                        if (submitSsn.success == true)
+                                        {
+                                            if (!String.IsNullOrEmpty(submitSsn.message) &&
+                                                submitSsn.message.IndexOf("additional") > -1)
+                                            {
+                                                Logger.Info("MDA -> RegisterExistingUserWithSynapseV2 - SSN Info verified, but have additional questions - [Email: " + userEmail + "], [submitSsn.message: " + submitSsn.message + "]");
+                                            }
+                                            else if (!String.IsNullOrEmpty(submitSsn.message) &&
+                                                 submitSsn.message.IndexOf("Already") > -1)
+                                            {
+                                                Logger.Info("MDA -> RegisterExistingUserWithSynapseV2 - SSN Info Already Verified - [Email: " + userEmail + "], [submitSsn.message: " + submitSsn.message + "]");
+                                            }
+                                            else
+                                            {
+                                                Logger.Info("MDA -> RegisterExistingUserWithSynapseV2 - SSN Info verified completely :-) - [Email: " + userEmail + "], [submitSsn.message: " + submitSsn.message + "]");
+                                            }
+                                        }
+                                        else
+                                        {
+                                            Logger.Info("MDA -> RegisterExistingUserWithSynapseV2 - SSN Info verified FAILED :-(  [Email: " + userEmail + "], [submitSsn.message: " + submitSsn.message + "]");
+                                        }
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Logger.Error("MDA -> RegisterExistingUserWithSynapseV2 - Attempted sendUserSsnInfoToSynapse but got Exception: [" + ex.Message + "]");
+                                    }
+                                      */
+                                }
+                                createUserV3Result_oauth oath = new createUserV3Result_oauth();
+                                res = createSynapseUserResult;
+                                res.success = true;
+                                oath.oauth_key = createSynapseUserResult.oauth.oauth_key; // Already know it's not NULL, so don't need to re-check
+                                res.user_id = !String.IsNullOrEmpty(createSynapseUserResult.user._id.id) ? createSynapseUserResult.user._id.id : "";
+                                oath.expires_in = !String.IsNullOrEmpty(createSynapseUserResult.oauth.expires_in) ? createSynapseUserResult.oauth.expires_in : "";
+                                res.oauth = oath;
+                                res.memberIdGenerated = memberObj.MemberId.ToString();
+                                res.error_code = createSynapseUserResult.error_code;
+                                res.errorMsg = createSynapseUserResult.errorMsg;
+                                
+                            }
+                            else
+                            {
+                                Logger.Error("MDA -> RegisterExistingUserWithSynapseV3 - FAILED to add record to SynapseCreateUserResults.dbo - [user_id: " + res.user_id + "]");
+                            }
+                        }
+
+                        #endregion Created Synapse User Successfully
+
+                        else
+                        {
+                            Logger.Error("MDA -> RegisterExistingUserWithSynapseV3 FAILED - Synapse Create user service failed (but wasn't null) - " +
+                                                   "[Reason: " + res.reason + "], [MemberID: " + memberId + "]");
+                            res.reason =createSynapseUserResult.reason;
+                        }
+                    }
+                    else
+                    {
+                        Logger.Error("MDA -> RegisterExistingUserWithSynapseV3 - createSynapseUser FAILED & Returned NULL");
+                        res.success = false;
+                        res.reason = !String.IsNullOrEmpty(createSynapseUserResult.reason) ? createSynapseUserResult.reason : "Reg NonNooch User w/ Syn: Error 5927.";
+                    }
+
+                    #endregion Create User with Synapse
+                }
+
+                #endregion Member Updated In Nooch DB Successfully
+
+                else
+                {
+                    Logger.Error("MDA -> RegisterExistingUserWithSynapseV2 - FAILED to add new Member to DB");
+
+                    res.success = false;
+                    res.reason = "Failed to save new Nooch Member in DB.";
+                }
+            }
+            else
+            {
+                Logger.Error("MDA -> RegisterExistingUserWithSynapseV2 - FAILED - MemberID not found in DB - [MemberID: " + memberId + "]");
+                res.success = false;
+                res.reason = "MemberID not found in DB.";
+            }
+
+            return res;
+        }
+
+        public synapseCreateUserV3Result_int RegisterNonNoochUserWithSynapseV3(string transId, string userEmail, string userPhone, string userName, string pw, string ssn, string dob, string address, string zip, string fngprnt, string ip)
+        {
+            // What's the plan? -- Store new Nooch member, then create Synpase user, then check if user supplied a (is password.Length > 0)
+            // then store data in new added field in SynapseCreateUserResults table for later use
+
+            Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 Initiated. [Name: " + userName +
+                                   "], Email: [" + userEmail + "], Phone: [" + userPhone +
+                                   "], DOB: [" + dob + "], SSN: [" + ssn +
+                                   "], Address: [" + address + "], ZIP: [" + zip +
+                                   "], IP: [" + ip + "], Fngprnt: [" + fngprnt +
+                                   "], TransId: [" + transId + "]");
+ 
+            synapseCreateUserV3Result_int res = new synapseCreateUserV3Result_int();
+            res.success = false;
+            res.reason = "Initial";
+
+            string NewUsersNoochMemId = "";
+
+
+            #region Check To Make Sure All Data Was Passed
+
+            // First check critical data necessary for just creating the user
+            if (String.IsNullOrEmpty(userName) ||
+                String.IsNullOrEmpty(userEmail) ||
+                String.IsNullOrEmpty(userPhone))
+            {
+                string missingData = "";
+
+                if (String.IsNullOrEmpty(userName))
+                {
+                    missingData = missingData + "Users' Name";
+                }
+                if (String.IsNullOrEmpty(userEmail))
+                {
+                    missingData = missingData + " Email";
+                }
+                if (String.IsNullOrEmpty(userPhone))
+                {
+                    missingData = missingData + " Phone";
+                }
+
+                Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 FAILED - Missing Critical Data: [" + missingData.Trim() + "]");
+
+                res.reason = "Missing critical data: " + missingData.Trim();
+                return res;
+            }
+
+            if (String.IsNullOrEmpty(ssn) || String.IsNullOrEmpty(dob) ||
+                String.IsNullOrEmpty(address) || String.IsNullOrEmpty(zip) ||
+                String.IsNullOrEmpty(fngprnt) || String.IsNullOrEmpty(ip))
+            {
+                string missingData2 = "";
+
+                if (String.IsNullOrEmpty(ssn))
+                {
+                    missingData2 = missingData2 + "SSN";
+                }
+                if (String.IsNullOrEmpty(dob))
+                {
+                    missingData2 = missingData2 + " DOB";
+                }
+                if (String.IsNullOrEmpty(address))
+                {
+                    missingData2 = missingData2 + "Address";
+                }
+                if (String.IsNullOrEmpty(zip))
+                {
+                    missingData2 = missingData2 + " ZIP";
+                }
+                if (String.IsNullOrEmpty(fngprnt))
+                {
+                    missingData2 = missingData2 + " Fingerprint";
+                }
+                if (String.IsNullOrEmpty(ip))
+                {
+                    missingData2 = missingData2 + " IP";
+                }
+
+                Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 - Missing Non-Critical Data: [" + missingData2.Trim() + "]. Continuing on...");
+            }
+
+            #endregion Check To Make Sure All Data Was Passed
+
+
+            #region Check if given Email and Phone already exist
+
+            string memberIdFromPhone =CommonHelper.GetMemberIdByContactNumber(userPhone);
+            if (!String.IsNullOrEmpty(memberIdFromPhone))
+            {
+                res.reason = "Given phone number already registered.";
+                return res;
+            }
+
+            string memberIdFromEmail =CommonHelper.GetMemberIdByUserName(userEmail);
+            if (!String.IsNullOrEmpty(memberIdFromEmail))
+            {
+                res.reason = "Given email already registered.";
+                return res;
+            }
+
+            #endregion Check if given email or phone already exists
+
+
+            // Set up member details based on given name, email, phone, & other parameters
+            string noochRandomId = GetRandomNoochId();
+
+            if (!String.IsNullOrEmpty(noochRandomId))
+            {
+                #region Get Invite Code ID from transaction
+
+                string inviteCode = "";
+
+                try
+                {
+                    Guid tid = Utility.ConvertToGuid(transId);
+ 
+                    var transDetail = _dbContext.Transactions.Where(transIdTemp => transIdTemp.TransactionId == tid).FirstOrDefault();
+
+                    if (transDetail != null)
+                    {
+                        inviteCode = transDetail.Member.InviteCodeId.ToString();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 -> FAILED to lookup Invite Code from Transaction - " +
+                                           "TransID: [" + transId + "], Exception: [" + ex + "]");
+                }
+
+                #endregion Get Invite Code ID from transaction
+
+                #region Create New Nooch Member Record in Members.dbo
+
+                #region Parse And Format Data To Save
+
+                if (userName.IndexOf('+') > -1)
+                {
+                    userName.Replace("+", " ");
+                }
+                string[] namearray = userName.Split(' ');
+                string FirstName = CommonHelper.GetEncryptedData(namearray[0]);
+                string LastName = " ";
+
+                // Example Name Formats: Most Common: 1.) Charles Smith
+                //                       Possible Variations: 2.) Charles   3.) Charles H. Smith
+                //                       4.) CJ Smith   5.) C.J. Smith   6.)  Charles Andrew Thomas Smith
+
+                if (namearray.Length > 1)
+                {
+                    if (namearray.Length == 2)
+                    {
+                        // For regular First & Last name: Charles Smith
+                        LastName = CommonHelper.GetEncryptedData(namearray[1]);
+                    }
+                    else if (namearray.Length == 3)
+                    {
+                        // For 3 names, could be a middle name or middle initial: Charles H. Smith or Charles Andrew Smith
+                        LastName = CommonHelper.GetEncryptedData(namearray[2]);
+                    }
+                    else
+                    {
+                        // For more than 3 names (some people have 2 or more middle names)
+                        LastName = CommonHelper.GetEncryptedData(namearray[namearray.Length - 1]);
+                    }
+                }
+
+                // Convert string Date of Birth to DateTime
+                if (String.IsNullOrEmpty(dob)) // ...it shouldn't ever be empty for this method
+                {
+                    Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - DOB was NULL, reassigning it to 'Jan 20, 1980' - [Name: " + userName + "], [TransId: " + transId + "]");
+                    dob = "01/20/1981";
+                }
+                DateTime dateofbirth;
+                if (!DateTime.TryParse(dob, out dateofbirth))
+                {
+                    Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - DOB was NULL - [Name: " + userName + "], [TransId: " + transId + "]");
+                }
+
+                string userNameLowerCase = userEmail.Trim().ToLower();
+                string userNameLowerCaseEncr = CommonHelper.GetEncryptedData(userNameLowerCase);
+
+                string pinNumber = Utility.GetRandomPinNumber();
+                pinNumber = CommonHelper.GetEncryptedData(pinNumber);
+
+                #endregion Parse And Format Data To Save
+
+               
+
+                var member = new Member
+                {
+                    Nooch_ID = noochRandomId,
+                    MemberId = Guid.NewGuid(),
+                    FirstName = FirstName,
+                    LastName = LastName,
+                    UserName = userNameLowerCaseEncr,
+                    UserNameLowerCase = userNameLowerCaseEncr,
+                    SecondaryEmail = userNameLowerCaseEncr,
+                    RecoveryEmail = userNameLowerCaseEncr,
+                    ContactNumber = userPhone,
+                    Address = !String.IsNullOrEmpty(address) ? CommonHelper.GetEncryptedData(address) : null,
+                    Zipcode = !String.IsNullOrEmpty(zip) ? CommonHelper.GetEncryptedData(zip) : null,
+                    SSN = !String.IsNullOrEmpty(ssn) ? CommonHelper.GetEncryptedData(ssn) : null,
+                    DateOfBirth = dateofbirth,
+                    Password = !String.IsNullOrEmpty(pw) ? CommonHelper.GetEncryptedData(pw) : CommonHelper.GetEncryptedData("jibb3r;jawn"),
+                    PinNumber = pinNumber,
+                    Status = Constants.STATUS_NON_REGISTERED,
+                    IsDeleted = false,
+                    DateCreated = DateTime.Now,
+                    Type = "Personal",
+                    Photo = Utility.GetValueFromConfig("PhotoUrl") + "gv_no_photo.png",
+                    UDID1 = !String.IsNullOrEmpty(fngprnt) ? fngprnt : null,
+                    IsVerifiedWithSynapse = false
+                };
+
+                 
+
+                if (inviteCode.Length > 0)
+                {
+                    member.InviteCodeIdUsed = Utility.ConvertToGuid(inviteCode);
+                }
+
+                // ADD NEWLY CREATED MEMBER TO NOOCH DB
+                
+                int addNewMemberToDB=0;
+                try
+                {
+                    _dbContext.Members.Add(member);
+                    addNewMemberToDB = _dbContext.SaveChanges();
+                }
+                catch (Exception ex)
+                {
+                    throw ex;
+                }
+                #endregion Create New Nooch Member Record in Members.dbo
+
+                NewUsersNoochMemId = member.MemberId.ToString();
+
+                // LASTLY, ADD THE IP ADDRESS RECORD TO THE MembersIPAddress Table =
+                // (waited until after the member was actually added to the Members table above... shouldn't actually matter b/c 
+                // the UpdateIPAddress method will just create a new record if one doesn't exist, but just to be safe.)
+                try
+                {
+                    UpdateMemberIPAddressAndDeviceId(NewUsersNoochMemId, ip, null);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 EXCEPTION on trying to save new Member's IP Address - " +
+                                           "MemberID: [" + NewUsersNoochMemId + "], [Exception: " + ex + "]");
+                }
+
+                #region Member Added to Nooch DB Successfully
+
+                if (addNewMemberToDB > 0)
+                {
+                    Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - New Nooch Member successfully added to DB (via Browser Landing Page) - " +
+                                           "UserName: [" + userEmail + "], MemberID: " + member.MemberId + "]");
+
+                    #region Set Up & Save Nooch Notification Settings
+
+                    var memberNotificationSettings = new MemberNotification
+                    {
+                        NotificationId = Guid.NewGuid(),
+
+                         
+                        MemberId=member.MemberId,
+
+                        FriendRequest = true,
+                        InviteRequestAccept = true,
+                        TransferSent = true,
+                        TransferReceived = true,
+                        TransferAttemptFailure = true,
+                        NoochToBank = true,
+                        BankToNooch = true,
+                        EmailFriendRequest = true,
+                        EmailInviteRequestAccept = true,
+                        EmailTransferSent = true,
+                        EmailTransferReceived = true,
+                        EmailTransferAttemptFailure = true,
+                        TransferUnclaimed = true,
+                        BankToNoochRequested = true,
+                        BankToNoochCompleted = true,
+                        NoochToBankRequested = true,
+                        NoochToBankCompleted = true,
+                        InviteReminder = true,
+                        LowBalance = true,
+                        ValidationRemainder = true,
+                        ProductUpdates = true,
+                        NewAndUpdate = true,
+                        DateCreated = DateTime.Now
+                    };
+
+                    _dbContext.MemberNotifications.Add(memberNotificationSettings);
+                    _dbContext.SaveChanges();
+
+                    #endregion Set Up & Save Nooch Notification Settings
+
+                    #region Set up & Save Privacy Settings
+                     
+
+                    var memberPrivacySettings = new MemberPrivacySetting
+                    {
+                        
+                        MemberId=member.MemberId,
+
+                        AllowSharing = true,
+                        ShowInSearch = true,
+                        DateCreated = DateTime.Now
+                    };
+                    _dbContext.MemberPrivacySettings.Add(memberPrivacySettings);
+                    _dbContext.SaveChanges();
+                    
+                    #endregion Set up & Save Privacy Settings
+
+
+                    // WE ARE ADDING EVERY PERSON TO DB IN ORDER TO HAVE THE INFO TO CREATE A SYNAPSE USER
+                    // ...EVEN IF THE NON-NOOCH USER DOES NOT PROVIDE A PW TO 'CREATE' A NOOCH ACCOUNT.
+                    // SO NOW THAT THE USER HAS JUST BEEN  CREATED, CHECK IF THEY WANTED A FULL NOOCH ACCOUNT
+                    // BY CHECKING IF A PW WAS PROVIDED & THEN SEND NEW USER EMAILS
+
+                    bool didUserAddPw = false;
+
+                    #region Check If PW Was Supplied To Create Full Account
+
+                    if (!String.IsNullOrEmpty(pw))
+                    {
+                        didUserAddPw = true;
+
+                        #region Generate & Save Nooch Authentication Token
+
+                        var tokenId = Guid.NewGuid();
+                        var requestId = Guid.Empty;
+                        // save the token details into authentication tokens table  
+                        var token = new AuthenticationToken
+                        {
+                            TokenId = tokenId,
+                            MemberId = member.MemberId,
+                            IsActivated = false,
+                            DateGenerated = DateTime.Now,
+                            FriendRequestId = requestId  // CLIFF (7/28/15): What is this? It's always being set to an empty GUID...
+                        };
+                        
+                        bool status = _dbContext.SaveChanges()>0;  
+
+                        #endregion Generate & Save Nooch Authentication Token
+
+
+                        #region Send New Account Email To New User
+
+                        var fromAddress = Utility.GetValueFromConfig("welcomeMail");
+                        var firstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(member.FirstName));
+                        var lastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(member.LastName));
+
+                        // Add link with autogenerated token for the email verification URL
+                        var link = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
+                                                "/Registration/Activation.aspx?tokenId=" + tokenId);
+
+                        var tokens = new Dictionary<string, string>
+                            {
+                                {Constants.PLACEHOLDER_FIRST_NAME, firstName},
+                                {Constants.PLACEHOLDER_LAST_NAME, lastName},
+                                {Constants.PLACEHOLDER_OTHER_LINK, link}
+                            };
+                        try
+                        {
+                            Utility.SendEmail(Constants.TEMPLATE_REGISTRATION, 
+                                fromAddress, userEmail, null,
+                                "Confirm your email on Nooch", link,
+                                tokens, null, null, null);
+
+                            Logger.Info("MDA - Registration mail sent to [" + userEmail + "] successfully.");
+                        }
+                        catch (Exception)
+                        {
+                            Logger.Info("MDA - Member activation mail NOT sent to [" + userEmail + "]");
+                        }
+
+                        #endregion Send New Account Email To New User
+
+
+                        #region Temp PIN Email
+
+                        // Email user the auto-generated PIN
+                        var tokens2 = new Dictionary<string, string>
+                            {
+                                {Constants.PLACEHOLDER_FIRST_NAME, firstName},
+                                {Constants.PLACEHOLDER_PINNUMBER, CommonHelper.GetDecryptedData(pinNumber)}
+                            };
+                        try
+                        {
+                            Utility.SendEmail("pinSetForNewUser",  fromAddress, userEmail, null,
+                                "Your temporary Nooch PIN", null, tokens2, null, null, null);
+
+                            Logger.Info("MDA -> RegisterNonNoochUserWithSynapse - Temp PIN email sent to [" + userEmail + "] successfully.");
+                        }
+                        catch (Exception)
+                        {
+                            Logger.Info("MDA -> RegisterNonNoochUserWithSynapse - Temp PIN email NOT sent to [" + userEmail + "]. Problem sending email.");
+                        }
+
+                        #endregion Temp PIN Email
+                    }
+
+                    #endregion Check If PW Was Supplied To Create Full Account
+
+                    // NOW WE HAVE CREATED A NEW NOOCH USER RECORD AND SENT THE REGISTRATION EMAIL (IF THE USER PROVIDED A PW TO CREATE AN ACCOUNT)
+                    // NEXT, ATTEMPT TO CREATE A SYNAPSE ACCOUNT FOR THIS USER
+                    #region Create User with Synapse
+
+                   // var synapseCreateUserRepo = new Repository<SynapseCreateUserResults, NoochDataEntities>(noochConnection);
+
+                    synapseCreateUserV3Result_int createSynapseUserResult = new synapseCreateUserV3Result_int();
+                    try
+                    {
+                        // Now call Synapse create user service
+                        Logger.Info("** MDA -> RegisterExistingUserWithSynapseV2 ABOUT TO CALL CREATE SYNAPSE USER METHOD  **");
+                        createSynapseUserResult = RegisterUserWithSynapseV3(member.MemberId.ToString(), true);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 - createSynapseUser FAILED - [Exception: " + ex.Message + "]");
+                    }
+
+                    if (createSynapseUserResult != null)
+                    {
+                        res.ssn_verify_status = "did not check yet";
+
+                        #region Created Synapse User Successfully
+
+                        if (createSynapseUserResult.success == true &&
+                            !String.IsNullOrEmpty(createSynapseUserResult.oauth.oauth_key))
+                        {
+                            Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - Synapse User created SUCCESSFULLY (LN: 6009) - " +
+                                                   "[oauth_consumer_key: " + createSynapseUserResult.oauth_consumer_key + "]. Now attempting to save in Nooch DB.");
+                            // Synapse User created successfully
+                            // Now make entry in [SynapseCreateUserResults] table
+                            //   Entry in SynapseCreateUser Has been already done from RegisterUserWithSynapseV3 method  //
+
+                            //SynapseCreateUserResults nr = new SynapseCreateUserResults();
+                            //nr.MemberId = Utility.ConvertToGuid(NewUsersNoochMemId);
+                            //nr.DateCreated = DateTime.Now;
+                            //nr.access_token = CommonHelper.GetEncryptedData(createSynapseUserResult.oauth_consumer_key);
+                            //nr.expires_in = createSynapseUserResult.expires_in;
+                            //nr.reason = createSynapseUserResult.reason;
+                            //nr.refresh_token = CommonHelper.GetEncryptedData(createSynapseUserResult.refresh_token);
+                            //nr.success = Convert.ToBoolean(res.success);
+                            //nr.username = CommonHelper.GetEncryptedData(createSynapseUserResult.username);
+                            //nr.user_id = createSynapseUserResult.user_id;
+                            //nr.IsDeleted = false;
+                            //nr.ModifiedOn = DateTime.Now;
+                            //nr.IsForNonNoochUser = false;
+                            //nr.NonNoochUserEmail = member.UserName;
+                            //nr.TransactionIdFromWhichInvited = Utility.ConvertToGuid(transId);
+                            //nr.HasNonNoochUserSignedUp = didUserAddPw;
+
+                            //int addRecordToSynapseCreateUserTable = synapseCreateUserRepo.AddEntity(nr);
+
+                            if (createSynapseUserResult.success==true)
+                            {
+                                if (!String.IsNullOrEmpty(res.reason) &&
+                                    res.reason.IndexOf("Email already registered") > -1)
+                                {
+                                    // THIS HAPPENS WHEN THE USER ALREADY EXISTS AND WE USED 'force_create'='no'
+                                    res.reason = "User already existed, successfully received consumer_key.";
+
+                                    Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 SUCCESS -> [Reason: " + res.reason + "], [Email: " + userEmail + "], [user_id: " + res.user_id + "]");
+                                }
+
+                                // EXPECTED OUTCOME for most users creating a new Synapse Account.
+                                // Synapse doesn't always return a "reason" anymore (they used to but stopped sending it for newly created users apparently)
+                                else
+                                {
+                                    Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 SUCCESS - [Email: " + userEmail + "], [user_id: " + createSynapseUserResult.user_id +
+                                                           "]. Now about to attempt to send SSN info to Synapse.");
+
+                                    // Now attempt to verify user's ID by sending SSN, DOB, name, & address to Synapse
+                                    /* No need of the following code any more as this has already been done in RegisterUserWithSynapseV3 method
+                               
+                                  try
+                                  {
+                                      submitIdVerificationInt submitSsn = sendUserSsnInfoToSynapse(member.MemberId.ToString());
+                                      res.ssn_verify_status = submitSsn.message;
+
+                                      // Next if/else are all just for logging
+                                      if (submitSsn.success == true)
+                                      {
+                                          if (!String.IsNullOrEmpty(submitSsn.message) &&
+                                              submitSsn.message.IndexOf("additional") > -1)
+                                          {
+                                              Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - SSN Info verified, but have additional questions - [Email: " + userEmail + "], [submitSsn.message: " + submitSsn.message + "]");
+                                          }
+                                          else if (!String.IsNullOrEmpty(submitSsn.message) &&
+                                                   submitSsn.message.IndexOf("Already") > -1)
+                                          {
+                                              Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - SSN Info Already Verified - [Email: " + userEmail + "], [submitSsn.message: " + submitSsn.message + "]");
+                                          }
+                                          else
+                                          {
+                                              Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - SSN Info verified completely :-) - [Email: " + userEmail + "], [submitSsn.message: " + submitSsn.message + "]");
+                                          }
+                                      }
+                                      else
+                                      {
+                                          Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - SSN Info verified FAILED :-(  [Email: " + userEmail + "], [submitSsn.message: " + submitSsn.message + "]");
+                                      }
+                                  }
+                                  catch (Exception ex)
+                                  {
+                                      Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 - Attempted sendUserSsnInfoToSynapse but got Exception: [" + ex.Message + "]");
+                                  }
+                                     */
+                                }
+
+                                 
+
+
+                                createUserV3Result_oauth oath = new createUserV3Result_oauth();
+                                res = createSynapseUserResult;
+                                res.success = true;
+                                oath.oauth_key = createSynapseUserResult.oauth.oauth_key; // Already know it's not NULL, so don't need to re-check
+                                res.user_id = !String.IsNullOrEmpty(createSynapseUserResult.user._id.id) ? createSynapseUserResult.user._id.id : "";
+                                oath.expires_in = !String.IsNullOrEmpty(createSynapseUserResult.oauth.expires_in) ? createSynapseUserResult.oauth.expires_in : "";
+                                res.oauth = oath;
+                                res.memberIdGenerated = member.MemberId.ToString();
+                                res.error_code = createSynapseUserResult.error_code;
+                                res.errorMsg = createSynapseUserResult.errorMsg;
+                            }
+                            else
+                            {
+                                Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 - FAILED to add record to SynapseCreateUserResults.dbo - [user_id: " + res.user_id + "]");
+                            }
+                        }
+
+                        #endregion Created Synapse User Successfully
+
+                        else
+                        {
+                            // CLIFF (9/26/15): I DON'T THINK THIS BLOCK IS NEEDED... THIS METHOD IS ONLY FOR *BRAND NEW* NOOCH USERS COMING FROM A LANDING PAGE...
+
+                            #region Create Synapse User Response -> Reason: 'Email Already Registered'
+
+                            if (createSynapseUserResult.reason == "Email already registered.")
+                            {
+                                // Case when synapse returned email already registered... chances are we have user id in SynapseCreateUserResults table
+                                // Checking Nooch DB
+
+                                string MemberIdFromtransId = GetNonNoochUserTempRegisterIdFromTransId(transId);
+
+                                if (MemberIdFromtransId.Length > 0)
+                                {
+                                    Guid memGuid = Utility.ConvertToGuid(MemberIdFromtransId);
+
+
+                                 
+                                    var synapseRes = _dbContext.SynapseCreateUserResults.Where(memberTemp =>
+                                                        memberTemp.MemberId.Value == memGuid &&
+                                                        memberTemp.IsDeleted == false).FirstOrDefault(); 
+                                    if (synapseRes != null)
+                                    {
+                                        res.success = true;
+                                        res.reason = "Account already in Nooch DB for that email";
+                                        res.user_id = synapseRes.user_id.ToString();
+                                        res.oauth.oauth_key = CommonHelper.GetDecryptedData(synapseRes.access_token);
+                                        res.oauth.refresh_token = CommonHelper.GetDecryptedData(synapseRes.refresh_token);
+                                        res.memberIdGenerated = memGuid.ToString();
+
+                                        return res;
+                                    }
+                                    else
+                                    {
+                                        // (7/27/15) Cliff: We should use 'force_create'='no' in the /user/create call to Synapse. Then Synapse will return the user's Oauth key if found.
+                                        Logger.Info("MDA -> RegisterNonNoochUserWithSynapse[transId: " + transId +
+                                                               "] Synapse 401 Error User Already Registered BUT not found in Nooch DB.");
+
+                                        res.reason = "Account already registered, but not found in Nooch DB.";
+                                    }
+                                }
+                                else
+                                {
+                                    res.reason = createSynapseUserResult.reason;
+                                }
+                            }
+
+                            #endregion Create Synapse User Response -> Reason: 'Email Already Registered'
+
+                            else
+                            {
+                                res.reason = createSynapseUserResult.reason;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 - createSynapseUser FAILED & Returned NULL");
+
+                        res.reason = !String.IsNullOrEmpty(createSynapseUserResult.reason) ? createSynapseUserResult.reason : "Reg NonNooch User w/ Syn: Error 5927.";
+                    }
+
+                    #endregion Create User with Synapse
+
+
+                    #region Send Email To Referrer (If Applicable)
+
+                    if (!String.IsNullOrEmpty(inviteCode))
+                    {
+                        try
+                        {
+                            Guid invideCodeGuid = Utility.ConvertToGuid(inviteCode);
+
+                            
+ 
+                            var inviteCodeObj = _dbContext.InviteCodes.Where(inviteTemp => inviteTemp.InviteCodeId == invideCodeGuid).FirstOrDefault();  
+
+                            if (inviteCodeObj == null)
+                            {
+                                Logger.Info("MDA - RegisterNonNoochUserWithSynapseV3 - Could not find Invite Code - [Invite Code ID: " + inviteCode + "]");
+                            }
+                            else if (inviteCodeObj.count >= inviteCodeObj.totalAllowed)
+                            {
+                                Logger.Info("MDA - RegisterNonNoochUserWithSynapseV3 - Invite Code limit of [" + inviteCodeObj.totalAllowed +
+                                                       "] exceeded for Code: [" + inviteCodeObj.code + "]");
+                            }
+                            else
+                            {
+                                if (inviteCode.ToLower() != "nocode")
+                                {
+                                    try
+                                    {
+                                        // Sending email to user who invited this user (Based on the invite code provided during registration)
+                                        SendEmailToInvitor(inviteCodeObj.InviteCodeId, userNameLowerCase, userName);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 - EXCEPTION (Inner) trying to send Email To Referrer - [Exception: " + ex + "]");
+                                    }
+                                }
+
+                                // Now update invite code count
+                                inviteCodeObj.count++;
+                                _dbContext.SaveChanges();
+                               
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 - EXCEPTION (Outer) trying to send Email To Referrer - [Exception: " + ex + "]");
+                        }
+                    }
+
+                    #endregion Send Email To Referrer (If Applicable)
+                }
+
+                #endregion Member Added to Nooch DB Successfully
+
+                else
+                {
+                    Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 - FAILED to add new Member to DB");
+
+                    res.reason = "Failed to save new Nooch Member in DB.";
+                }
+            }
+            else
+            {
+                Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 - FAILED - couldn't generate a Nooch ID.");
+
+                res.reason = "Duplicate Nooch_Id generated, contact Nooch support."; // CLIFF (7/28/15): Well actually it wouldn't be a duplicate since it would have to be null...
+            }
+
+            return res;
+        }
+
+
+        public string GetNonNoochUserTempRegisterIdFromTransId(string TransId)
+        {
+            Logger.Info("MDA -> GetNonNoochUserTempRegisterIdFromTransId Initiated - [TransID: " + TransId + "]");
+
+            string nonNoochUserId = "";
+
+            try
+            {
+                Guid TransIDGUId = Utility.ConvertToGuid(TransId);
+
+                 
+                var theTransaction = _dbContext.Transactions.Where(pr => pr.TransactionId.Equals(TransIDGUId)).FirstOrDefault();
+
+                if (theTransaction != null)
+                {
+                    // Transaction found! Now check if user came into Nooch via an Email or SMS invite/request.
+                    if (theTransaction.PhoneNumberInvited != null &&
+                        theTransaction.IsPhoneInvitation == true)
+                    {
+                        string memberIdFromPhone =CommonHelper.GetMemberIdByContactNumber(CommonHelper.GetDecryptedData(theTransaction.PhoneNumberInvited));
+
+                        if (!String.IsNullOrEmpty(memberIdFromPhone))
+                        {
+                            nonNoochUserId = memberIdFromPhone;
+                        }
+                    }
+                    if ((theTransaction.IsPhoneInvitation == null || theTransaction.IsPhoneInvitation == false) &&
+                         theTransaction.InvitationSentTo != null)
+                    {
+                        string memberIdFromEmail =CommonHelper.GetMemberIdByUserName(CommonHelper.GetDecryptedData(theTransaction.InvitationSentTo));
+
+                        if (!String.IsNullOrEmpty(memberIdFromEmail))
+                        {
+                            nonNoochUserId = memberIdFromEmail;
+                        }
+                    }
+
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("MDA -> GetNonNoochUserTempRegisterIdFromTransId FAILED - [TransID: " + TransId + "], [Exception: " + ex.Message + "]");
+            }
+            return nonNoochUserId;
+        }
+
+
         public GenericInternalResponseForSynapseMethods submitDocumentToSynapseV3(string MemberId, string ImageUrl)
         {
             Logger.Info("MDA -> submitDocumentToSynapseV3 Initialized - [MemberId: " + MemberId + "]");
@@ -4243,6 +5470,7 @@ namespace Nooch.DataAccess
                     return "Either transaction already paid or transaction not found";
                 }
 
+
             }
             catch (Exception ex)
             {
@@ -4251,6 +5479,7 @@ namespace Nooch.DataAccess
 
             return "Unkown Failure";
         }
+
 
     }
 }
