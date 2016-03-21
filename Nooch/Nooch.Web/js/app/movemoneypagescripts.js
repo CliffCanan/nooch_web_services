@@ -57,15 +57,17 @@ $(document).ready(function () {
 
     if (areThereErrors() == false)
     {
+        
         if (checkIfStillPending() == true)
         {
             //console.log(checkIfStillPending());
-
+            
             console.log("UserType is: [" + USERTYPE + "]");
 
             if (USERTYPE != "NonRegistered" &&
                 USERTYPE != "Existing") // Only other option is "New"
             {
+                 
                 setTimeout(bindEmail, 700);
 
                 // Hide old form
@@ -113,6 +115,7 @@ $(document).ready(function () {
             else if (USERTYPE == "NonRegistered" && 
                      $('#bnkName').val() == "no bank found")
             {
+                
                 swal({
                     title: "Secure, Private Payments",
                     text: "To complete this payment, you can securely link any US checking account using your online banking account:" +
@@ -138,9 +141,11 @@ $(document).ready(function () {
 
                     console.log("redUrlForAddBank IS: [" + redUrlForAddBank + "]");
 
-                    $("#frame").attr("src", "https://www.noochme.com/noochweb/trans/Add-Bank.aspx?MemberId=" + MemID_EXISTING +
-                                            "&redUrl=" + redUrlForAddBank);
+                     //$("#frame").attr("src", "https://www.noochme.com/noochweb/trans/Add-Bank.aspx?MemberId=" + MemID_EXISTING +
+                     //                      "&redUrl=" + redUrlForAddBank);
 
+                    $("#frame").attr("src", "/nooch/addbank?memberid=" + MemID_EXISTING +
+                                          "&redUrl=" + redUrlForAddBank);
                     $('#AddBankDiv').removeClass('hidden').addClass('bounceIn');
                 });
             }
@@ -617,7 +622,7 @@ function createRecord() {
     }
     else // must be a Request or Rent payment (which also uses the payRequest page)
     {
-        urlToUse = "payRequest.aspx/RegisterUserWithSynp";
+        urlToUse = "RegisterUserWithSynp";
     }
     //console.log("URL to use: " + urlToUse);
 
@@ -648,7 +653,7 @@ function createRecord() {
         cache: "false",
         success: function (msg) {
 
-            var RegisterUserWithSynpResult = msg.d;
+            var RegisterUserWithSynpResult = msg;
             console.log("SUCCESS -> 'RegisterUserWithSynpResult' is... ");
             console.log(RegisterUserWithSynpResult);
 
@@ -786,8 +791,11 @@ function idVerifiedSuccess() {
 
             console.log("redUrlForAddBank IS: [" + redUrlForAddBank + "]");
 
-            $("#frame").attr("src", "https://www.noochme.com/noochweb/trans/Add-Bank.aspx?MemberId=" + memIdGen +
-                                    "&redUrl=" + redUrlForAddBank);
+            //$("#frame").attr("src", "Nooch/Add-Bank.aspx?MemberId=" + memIdGen +
+            //                        "&redUrl=" + redUrlForAddBank);
+
+            $("#frame").attr("src", "/nooch/addbank?memberid=" + memIdGen +
+                                          "&redUrl=" + redUrlForAddBank);
 
             $('#AddBankDiv').removeClass('hidden').addClass('bounceIn');
         });

@@ -2826,7 +2826,7 @@ namespace Nooch.API.Controllers
         [HttpGet]
         [ActionName("RegisterUserWithSynapseV3")]
         public synapseCreateUserV3Result_int RegisterUserWithSynapseV3(string memberId)
-        {
+            {
             try
             {
                 MembersDataAccess mda = new MembersDataAccess();
@@ -2842,6 +2842,83 @@ namespace Nooch.API.Controllers
             {
                 Logger.Error("Service Layer -> RegisterUserWithSynapseV3 FAILED. [Exception: " + ex.ToString() + "]");
 
+                return null;
+            }
+        }
+
+        [HttpGet]
+        [ActionName("RegisterExistingUserWithSynapseV3")]
+        public RegisterUserSynapseResultClassExt RegisterExistingUserWithSynapseV3(string transId, string memberId, string email, string phone, string fullname, string pw, string ssn, string dob, string address, string zip, string fngprnt, string ip)
+        {
+            Logger.Info("Service Layer -> RegisterExistingUserWithSynapseV3 Initiated - MemberID: [" + memberId + "], " +
+                                   "Name: [" + fullname + "], Email: [" + email + "]");
+
+            try
+            {
+                MembersDataAccess mda = new MembersDataAccess();
+                RegisterUserSynapseResultClassExt nc = new RegisterUserSynapseResultClassExt();
+                synapseCreateUserV3Result_int res = mda.RegisterExistingUserWithSynapseV3(transId, memberId, email, phone, fullname, pw, ssn, dob, address, zip, fngprnt, ip);
+                if (res.success==true)
+                {
+                    nc.access_token = res.oauth.oauth_key;
+                    nc.expires_in = res.oauth.expires_in;
+                    nc.reason = res.reason;
+                    nc.refresh_token = res.oauth.refresh_token;
+                    nc.success = res.success.ToString();
+                    nc.user_id = res.user_id;
+                    nc.username = res.user.logins[0].email;
+                    nc.memberIdGenerated = res.memberIdGenerated;
+                    nc.ssn_verify_status = res.ssn_verify_status;
+                }
+                else
+                {
+                    nc.reason = res.reason;
+                    nc.success = res.success.ToString();
+                }
+                return nc;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Layer -> RegisterExistingUserWithSynapsev3 FAILED - [MemberID: " + memberId + "], [Name: " + fullname +
+                                       ", [Email of New User: " + email + "], [Exception: " + ex.ToString() + "]");
+                return null;
+            }
+        }
+
+        [HttpGet]
+        [ActionName("RegisterNonNoochUserWithSynapse")]
+        public RegisterUserSynapseResultClassExt RegisterNonNoochUserWithSynapse(string transId, string email, string phone, string fullname, string pw, string ssn, string dob, string address, string zip, string fngprnt, string ip)
+        {
+            try
+            {
+                MembersDataAccess mda = new MembersDataAccess();
+                synapseCreateUserV3Result_int res = mda.RegisterNonNoochUserWithSynapseV3(transId, email, phone, fullname, pw, ssn, dob, address, zip, fngprnt, ip);
+
+                RegisterUserSynapseResultClassExt nc = new RegisterUserSynapseResultClassExt();
+                if (res.success == true)
+                {
+                    nc.access_token = res.oauth.oauth_key;
+                    nc.expires_in = res.oauth.expires_in;
+                    nc.reason = res.reason;
+                    nc.refresh_token = res.oauth.refresh_token;
+                    nc.success = res.success.ToString();
+                    nc.user_id = res.user_id;
+                    nc.username = res.user.logins[0].email;
+                    nc.memberIdGenerated = res.memberIdGenerated;
+                    nc.ssn_verify_status = res.ssn_verify_status;
+                }
+                else
+                {
+                    nc.reason = res.reason;
+                    nc.success = res.success.ToString();
+                }
+                return nc;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Layer -> RegisterNonNoochUserWithSynapseV3 FAILED. [New Usr Name: " + fullname +
+                                       "], Email of New User: [" + email + "], TransactionID: [" + transId +
+                                       "], Exception: [" + ex.ToString() + "]");
                 return null;
             }
         }
@@ -3248,7 +3325,7 @@ namespace Nooch.API.Controllers
                                     sbm.IsDefault = false;
                                     sbm.MemberId = Utility.ConvertToGuid(MemberId);
 
-                                    // Holdovers from V2
+                                    // Holdovers from v3
                                     sbm.account_number_string = !String.IsNullOrEmpty(n.info.account_num) ? CommonHelper.GetEncryptedData(n.info.account_num) : null;
                                     sbm.bank_name = !String.IsNullOrEmpty(n.info.bank_name) ? CommonHelper.GetEncryptedData(n.info.bank_name) : null;
                                     sbm.name_on_account = !String.IsNullOrEmpty(n.info.name_on_account) ? CommonHelper.GetEncryptedData(n.info.name_on_account) : null;
@@ -3258,7 +3335,7 @@ namespace Nooch.API.Controllers
                                     sbm.Status = "Not Verified";
                                     // CLIFF (10/11/15): We were using this "bankid" to identify the bank in other places.  Now we need to use oid (below) instead.
                                     // sbm.bankid = !String.IsNullOrEmpty(n._id.oid) ? n._id.oid : null;
-                                    // These 2 values were *int* IN V2, but now both are strings...
+                                    // These 2 values were *int* IN v3, but now both are strings...
                                     //sbm.account_class = v.account_class;
                                     //sbm.account_type = v.type_synapse;
 
@@ -3431,7 +3508,7 @@ namespace Nooch.API.Controllers
             #endregion Check if all required data was passed
 
             try
-            {
+            { 
                 
                     #region Get the Member's Details
 
@@ -3786,7 +3863,7 @@ namespace Nooch.API.Controllers
                                         sbm.IsDefault = false;
                                         sbm.MemberId = Utility.ConvertToGuid(MemberId);
 
-                                        // Holdovers from V2
+                                        // Holdovers from v3
                                         sbm.account_number_string = !String.IsNullOrEmpty(n.info.account_num) ? CommonHelper.GetEncryptedData(n.info.account_num) : null;
                                         sbm.bank_name = !String.IsNullOrEmpty(n.info.bank_name) ? CommonHelper.GetEncryptedData(n.info.bank_name) : null;
                                         sbm.name_on_account = !String.IsNullOrEmpty(n.info.name_on_account) ? CommonHelper.GetEncryptedData(n.info.name_on_account) : null;
@@ -3796,7 +3873,7 @@ namespace Nooch.API.Controllers
                                         sbm.Status = "Not Verified";
                                         // CLIFF (10/11/15): We were using this "bankid" to identify the bank in other places.  Now we need to use oid (below) instead.
                                         // sbm.bankid = !String.IsNullOrEmpty(n._id.oid) ? n._id.oid : null;
-                                        // These 2 values were *int* IN V2, but now both are strings...
+                                        // These 2 values were *int* IN v3, but now both are strings...
                                         //sbm.account_class = v.account_class;
                                         //sbm.account_type = v.type_synapse;
 
@@ -4190,7 +4267,64 @@ namespace Nooch.API.Controllers
             return res;
         }
 
-      
+
+        [HttpGet]
+        [ActionName("GetTransactionDetailByIdAndMoveMoneyForNewUserDeposit")]
+        public TransactionDto GetTransactionDetailByIdAndMoveMoneyForNewUserDeposit(string TransactionId, string MemberIdAfterSynapseAccountCreation, string TransactionType, string recipMemId)
+        {
+            try
+            {
+                Logger.Info("Service Layer - GetTransactionDetailByIdAndMoveMoneyForNewUserDeposit Initiated - TransType: [" + TransactionType +
+                                       "], TransId: [" + TransactionId + "],  MemberIdAfterSynapseAccountCreation: [" + MemberIdAfterSynapseAccountCreation +
+                                       "], RecipientMemberID: [" + recipMemId + "]");
+
+                var tda = new TransactionsDataAccess();
+                Transaction tr = tda.GetTransactionById(TransactionId);
+
+                if (tr != null)
+                {
+                    TransactionDto trans = new TransactionDto();
+                    trans.AdminNotes = tr.AdminName;
+                    trans.IsPrePaidTransaction = tr.IsPrepaidTransaction;
+                    trans.FirstName = tr.Member.FirstName;
+                    trans.LastName = tr.Member.LastName;
+                    trans.Name = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(tr.Member.FirstName)) + " " +
+                                 CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(tr.Member.LastName));
+                    trans.RecepientName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(tr.Member1.FirstName)) + " " +
+                                          CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(tr.Member1.LastName));
+                    trans.SenderPhoto = tr.Member.Photo ?? "";
+                    trans.RecepientPhoto = tr.Member1.Photo ?? "";
+                    trans.MemberId = tr.Member.MemberId.ToString();
+                    trans.RecepientId = tr.Member1.MemberId.ToString();
+                    trans.TransactionId = tr.TransactionId.ToString();
+                    trans.TransactionStatus = tr.TransactionStatus;
+                    trans.TransactionType = tr.TransactionType;
+                    trans.TransDate = tr.TransactionDate.Value;
+                    trans.TransactionFee = tr.TransactionFee.Value;
+                    trans.InvitationSentTo = (tr.InvitationSentTo != null) ? CommonHelper.GetDecryptedData(tr.InvitationSentTo) : "";
+                    trans.Amount = tr.Amount;
+
+                    MembersDataAccess mda = new MembersDataAccess();
+
+                    if (String.IsNullOrEmpty(recipMemId))
+                    {
+                        recipMemId = "";
+                    }
+
+                    string mdaRes = mda.GetTokensAndTransferMoneyToNewUser(TransactionId, MemberIdAfterSynapseAccountCreation, TransactionType, recipMemId);
+
+                    trans.synapseTransResult = mdaRes;
+
+                    return trans;
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Layer -> GetTransactionDetailByIdAndMoveMoneyForNewUserDeposit FAILED - [Exception: " + ex + "]");
+            }
+
+            return null;
+        }
 
          
  

@@ -99,6 +99,8 @@
     <Compile Include="Entities\SynapseRelatedEntities\CheckSynapseBankDetails.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\kycInfoResponseFromSynapse.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\NodePermissionCheckResult.cs" />
+    <Compile Include="Entities\SynapseRelatedEntities\RegisterUserSynapseResultClassExt.cs" />
+    <Compile Include="Entities\SynapseRelatedEntities\RegisterUserSynapseResultClassint.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\SynapseBankSetDefaultResult.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\SynapseRemoveBankV3_Input.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\SynapseV3AddTrans_ReusableClass.cs" />
@@ -121,6 +123,7 @@
     <Compile Include="Entities\SynapseRelatedEntities\SynapseV3RefreshOauthKeyAndSign_Input.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\synapseV3ShowUserInput.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\SynapseV3VerifyNode_ServiceInput.cs" />
+    <Compile Include="Entities\SynapseRelatedEntities\synapse_user_create_input_class_int.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Resources\Constants.Designer.cs" />
