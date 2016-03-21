@@ -130,10 +130,10 @@ function checkIfStillPending()
 }
 
 
-function rejectThisRequest() {
-    /*console.log("rejectThisRequestReached!");
+function rejectBtnClicked() {
+    console.log("rejectThisRequestReached!");
 
-    // ADD THE LOADING BOX
+     //ADD THE LOADING BOX
     $('#body-depositNew').block({
         message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Rejecting This Request...</span>',
         css: {
@@ -156,26 +156,18 @@ function rejectThisRequest() {
     var transType = getParameterByName('TransType');
 
     $.ajax({
-        type: "POST",
-        url: "reject-money.aspx/RejectThisRequest",
-        data: "{'TransId':'" + transId +
-              "', 'UserType':'" + userType +
-              "', 'LinkSource':'" + linkSource +
-              "', 'TransType':'" + transType + "'}",
-        contentType: "application/json; charset=utf-8",
-        dataType: "json",
-        async: "true",
-        cache: "false",
+        type: "GET",
+        url: $('#rejectMoneyLink').val()+"&TransactionId="+transId+"&UserType="+userType+"&LinkSource="+userType+"&TransType="+transType,
         success: function (msg) {
 
             console.log("SUCCESS -> 'RegisterUserWithSynpResult' is... ");
             console.log(msg);
             console.log(msg.d);
 
-            // Hide the Loading Block
+        //     Hide the Loading Block
             $('#body-depositNew').unblock();
 
-            if (msg = "success")
+            if (msg.errorFromCodeBehind = "0")
             {
                 $("#fromText").html("Request Rejected Successfully");
 
@@ -198,7 +190,7 @@ function rejectThisRequest() {
             }
         },
         Error: function (x, e) {
-            // Hide the Loading Block
+          //   Hide the Loading Block
             $('#body-depositNew').unblock();
 
             console.log("ERROR --> 'x', then 'e' is... ");
@@ -207,7 +199,7 @@ function rejectThisRequest() {
 
             showErrorAlert('3');
         }
-    });*/
+    });
 }
 
 
