@@ -130,11 +130,11 @@ function checkIfStillPending()
 }
 
 
-function rejectBtnClicked() {
+function rejectBtnClicked(){
     console.log("rejectThisRequestReached!");
 
      //ADD THE LOADING BOX
-    $('#body-depositNew').block({
+    $("#body-depositNew").block({
         message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Rejecting This Request...</span>',
         css: {
             border: 'none',
@@ -155,14 +155,16 @@ function rejectBtnClicked() {
     var linkSource = getParameterByName('LinkSource');
     var transType = getParameterByName('TransType');
 
+    //alert(transId);
+  
     $.ajax({
-        type: "GET",
-        url: $('#rejectMoneyLink').val()+"&TransactionId="+transId+"&UserType="+userType+"&LinkSource="+userType+"&TransType="+transType,
-        success: function (msg) {
-
+        type: "POST",
+       url: $('#rejectMoneyLink').val()+"?TransactionId="+transId+"&UserType="+userType+"&LinkSource="+userType+"&TransType="+transType,
+       
+       success: function (msg) {    
             console.log("SUCCESS -> 'RegisterUserWithSynpResult' is... ");
             console.log(msg);
-            console.log(msg.d);
+            
 
         //     Hide the Loading Block
             $('#body-depositNew').unblock();

@@ -26,6 +26,6 @@ namespace Nooch.Common.Entities
         public String type { get; set; }
         public String rs { get; set; }
     }
-    
-    
+
+       
 }

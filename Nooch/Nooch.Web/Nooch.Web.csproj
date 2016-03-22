@@ -304,13 +304,21 @@
     <Content Include="Views\Nooch\AddBank.cshtml" />
     <Content Include="Views\Nooch\BankVerification.cshtml" />
     <Content Include="Views\Nooch\CancelRequest.cshtml" />
+ 
     <Content Include="Views\Nooch\Index.cshtml" />
+ 
+    <Content Include="Views\Nooch\Index.cshtml" /> 
     <Content Include="Views\Nooch\makePayment.cshtml" />
+    <Content Include="Views\Nooch\PayRequest.cshtml" />
+    <Content Include="Views\Nooch\createAccount.cshtml" />
+    <Content Include="Views\Nooch\RejectMoney.cshtml" /> 
+	<Content Include="Views\Nooch\PayRequestComplete.cshtml" />
     <Content Include="Views\Nooch\PayRequest.cshtml">
       <SubType>Code</SubType>
     </Content>
-    <Content Include="Views\Nooch\RejectMoney.cshtml" />
-    <Content Include="Views\Nooch\PayRequestComplete.cshtml" />
+ 
+    
+ 
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
