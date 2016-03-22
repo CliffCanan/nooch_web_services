@@ -4326,7 +4326,30 @@ namespace Nooch.API.Controllers
             return null;
         }
 
-         
+
+        [HttpGet]
+        [ActionName("getIdVerificationQuestionsV3")]
+        public synapseIdVerificationQuestionsForDisplay getIdVerificationQuestionsV3(string memberid)
+        {
+            Logger.Info("Service Layer -> getIdVerificationQuestionsV3 Initiated - [MemberId: " + memberid + "]");
+            synapseIdVerificationQuestionsForDisplay res = new synapseIdVerificationQuestionsForDisplay();
+            res.memberId = memberid;
+
+            try
+            {
+                var mda = new MembersDataAccess();
+                res = mda.getIdVerificationQuestionsV2(memberid);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Layer -> getVerificationQuestionsV2 FAILED. [Exception: " + ex.InnerException + "]");
+
+                res.success = false;
+                res.msg = "Service layer exception :-(";
+            }
+
+            return res;
+        }
  
         #endregion
 

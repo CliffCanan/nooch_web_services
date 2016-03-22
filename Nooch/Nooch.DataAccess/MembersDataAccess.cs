@@ -4731,6 +4731,124 @@ namespace Nooch.DataAccess
         }
 
 
+
+        public synapseIdVerificationQuestionsForDisplay getIdVerificationQuestionsV2(string MemberId)
+        {
+            Logger.Info("MDA -> getIdVerificationQuestionsV2 Initialized - [MemberId: " + MemberId + "]");
+
+            synapseIdVerificationQuestionsForDisplay response = new synapseIdVerificationQuestionsForDisplay();
+            response.success = false;
+            response.memberId = MemberId;
+
+
+            // CLIFF (10/1/15): NEED TO ADD A BLOCK TO CHECK THE MEMBERS TABLE AND SEE IF THIS USER'S IsVerifiedWithSynapse IS ALREADY TRUE
+            //                  IF IT IS, THEN DON'T NEED TO RE-ASK THESE QUESTIONS, PASS BACK MESSAGE TO CLIENT AND HANDLE APPROPRIATELY
+
+            Member noochMember = GetMemberDetails(MemberId);
+            if (noochMember.IsVerifiedWithSynapse == true)
+            {
+                Logger.Info("MDA -> getIdVerificationQuestionsV2 ABORTED: Member's ID already verified with Synapse  :-) - [Member's Name: " +
+                                      CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(noochMember.FirstName)) + " " +
+                                      CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(noochMember.LastName)) + "], MemberId: " + MemberId + "]");
+                response.msg = "ID already verified successfully";
+            }
+
+
+            var id = Utility.ConvertToGuid(MemberId);
+
+
+                // NOTE (9/29/15): It's very important to get the questions in the right order
+            List<SynapseIdVerificationQuestion> questions =
+                _dbContext.SynapseIdVerificationQuestions.Where(m => m.MemberId == id && m.submitted == false)
+                    .ToList()
+                    .OrderByDescending(m => m.DateCreated).Take(5).ToList<SynapseIdVerificationQuestion>();
+                    
+
+                if (questions.Count==0)
+                {
+                    Logger.Info("MDA -> getIdVerificationQuestionsV2 ABORTED: Member's Synapse User Details not found. [MemberId: " + MemberId + "]");
+
+                    return null;
+                }
+                else if (questions.Count > 1)
+                {
+                    #region Questions Found In DB
+
+                    // Check to make sure each of the "QuestionSetId" is the same for each question
+                    if (questions[0].QuestionSetId.ToString() != questions[1].QuestionSetId.ToString() ||
+                        questions[0].QuestionSetId.ToString() != questions[2].QuestionSetId.ToString() ||
+                        questions[0].QuestionSetId.ToString() != questions[4].QuestionSetId.ToString())
+                    {
+                        Logger.Info("MDA -> getIdVerificationQuestionsV2 ABORTED: Multiple qeustionSetIds found among the questions. [MemberId: " + MemberId + "]");
+                        response.msg = "Multiple qeustionSetIds found among the questions";
+                        return null;
+                    }
+                    else
+                    {
+                        synapseIdVerificationQuestionsForDisplay questsToReturn = new synapseIdVerificationQuestionsForDisplay();
+
+                        response.success = true;
+                        response.submitted = questions[0].submitted == true ? true : false;
+                        response.qSetId = questions[0].QuestionSetId;
+                        response.dateCreated = questions[0].DateCreated.ToString();
+
+                        List<synapseIdVerificationQuestionAnswerSet> entireQuestionList = new List<synapseIdVerificationQuestionAnswerSet>();
+
+                        foreach (SynapseIdVerificationQuestion x in questions)
+                        {
+                            synapseIdVerificationQuestionAnswerSet oneQuestionAnswerObj = new synapseIdVerificationQuestionAnswerSet();
+
+                            oneQuestionAnswerObj.id = (Int16)x.Id;
+                            oneQuestionAnswerObj.question = x.Question;
+
+                            oneQuestionAnswerObj.answers = new List<synapseIdVerificationAnswerChoices>();
+                            List<synapseIdVerificationAnswerChoices> allQs = new List<synapseIdVerificationAnswerChoices>();
+
+                            for (int i = 0; i < 5; i++)
+                            {
+                                synapseIdVerificationAnswerChoices b = new synapseIdVerificationAnswerChoices();
+                                if (i == 0)
+                                {
+                                    b.id = Convert.ToInt16(x.Choice1Id);
+                                    b.answer = x.Choice1Text;
+                                }
+                                if (i == 1)
+                                {
+                                    b.id = Convert.ToInt16(x.Choice2Id);
+                                    b.answer = x.Choice2Text;
+                                }
+                                if (i == 2)
+                                {
+                                    b.id = Convert.ToInt16(x.Choice3Id);
+                                    b.answer = x.Choice3Text;
+                                }
+                                if (i == 3)
+                                {
+                                    b.id = Convert.ToInt16(x.Choice4Id);
+                                    b.answer = x.Choice4Text;
+                                }
+                                if (i == 4)
+                                {
+                                    b.id = Convert.ToInt16(x.Choice5Id);
+                                    b.answer = x.Choice5Text;
+                                }
+                                allQs.Add(b);
+                            }
+                            oneQuestionAnswerObj.answers = allQs;
+
+                            entireQuestionList.Add(oneQuestionAnswerObj);
+                        }
+
+                        response.questionList = entireQuestionList;
+                    }
+
+                    #endregion Questions Found In DB
+                }
+            
+
+            return response;
+        }
+
         #endregion
 
 

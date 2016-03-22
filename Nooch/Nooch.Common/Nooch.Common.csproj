@@ -103,6 +103,7 @@
     <Compile Include="Entities\SynapseRelatedEntities\RegisterUserSynapseResultClassExt.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\RegisterUserSynapseResultClassint.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\SynapseBankSetDefaultResult.cs" />
+    <Compile Include="Entities\SynapseRelatedEntities\synapseIdVerificationQuestionsForDisplay.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\SynapseRemoveBankV3_Input.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\SynapseV3AddTrans_ReusableClass.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\SaveVerificationIdDocument.cs" />
