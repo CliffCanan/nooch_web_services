@@ -1,0 +1,378 @@
+﻿@using Nooch.Common.Entities;
+@{
+    Layout = null;
+    ResultDepositMoney rdm = (ResultDepositMoney)ViewData["OnLoaddata"];
+}
+
+
+<!DOCTYPE html>
+
+<html>
+<head  >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="@Url.Content("~/Assets/Css/bootstrap.css")" rel="stylesheet" />
+  
+    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,400italic,500,500italic,700,900" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.4/themes/cupertino/jquery-ui.css" />
+    <link href="@Url.Content("~/Assets/Css/sweetalert-override.min.css")" rel="stylesheet" />
+     
+
+    <link rel="stylesheet" href="https://cdn.materialdesignicons.com/1.2.65/css/materialdesignicons.min.css" />
+    <link href="@Url.Content("~/Assets/Css/bootstrap-select.min.css")" rel="stylesheet" />
+    <link href="@Url.Content("~/Assets/Css/chosen.min.css")" rel="stylesheet" />
+    <link href="@Url.Content("~/Assets/Css/bootstrap-datetimepicker.min.css")" rel="stylesheet" />
+    <link href="@Url.Content("~/Assets/Css/jquery.steps.css")" rel="stylesheet" />
+    <link href="@Url.Content("~/Assets/Css/tweaks.css")" rel="stylesheet" />
+    <link href="@Url.Content("~/Assets/Css/favicon.ico")" rel="stylesheet" />
+ 
+</head>
+
+<body id="body-depositNew" class="no-border deposit-money-pg" style="background-color: rgba(230, 231, 232, 0.8);">
+
+    <form id="form1"  >
+         
+        <input type="hidden" ID="pymnt_status" Value="@rdm.pymnt_status" runat="server" />
+        <input type="hidden" ID="transId"  Value="@rdm.transId" />
+        <input type="hidden" value="@rdm.invitationSentto" ID="invitationSentto"  />
+        <input type="hidden" ID="invitationType" value="@rdm.invitationType" />
+        <input type="hidden" ID="transType"    Value="send" />
+        <input type="hidden" ID="rs"  Value="@rdm.rs" />
+    </form>
+
+    <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+        <div class="clearfix">
+            <a class="landingHeaderLogo center-block" href="https://www.nooch.com/">
+                <img src="../Assets/Images/nooch-logo2.svg" class="center-block" alt="Nooch Logo" />
+            </a>
+        </div>
+    </nav>
+
+    @if (rdm.payreqInfo == true) { 
+    <div  id="payreqInfo" >
+
+        <div id="depositHeader">
+            <div>Deposit This Payment</div>
+            <div id="fromText">From</div>
+            <input type="image" class="media-object"   ID="senderImage" src="@rdm.senderImage" alt="Sender" />
+            <span id="senderName">
+             <label   ID="senderName1" Text="Nooch User">@rdm.senderName1</label>
+            </span>
+        </div>
+
+        <div id="amountShell">
+            <div>
+                <span id="dollarSign">$</span>
+                <Label ID="transAmountd" >@rdm.transAmountd</Label>
+                <span id="cents">
+                    <Label  ID="transAmountc"  >@rdm.transAmountc</Label>
+                </span>
+            </div>
+        </div>
+
+        <div id="memo_shell">
+            <div>
+                <Label  ID="transMemo" >@rdm.transMemo</Label>
+            </div>
+        </div>
+
+        <div id="relaunchIdwiz" class="hidden m-t-25 text-center animated bounceIn">
+            <button type="button" class="btn btn-lg btn-default"><i class="mdi mdi-checkbox-marked-outline m-r-15"></i>Complete This Payment</button>
+        </div>
+
+    </div>
+    }
+    <div class="errorMessage hidden"></div>
+
+    <br />
+
+    <div id="PayorInitialInfo" class="hidden animated bounceInUp"  >
+
+        <div class="row">
+
+            <form name="PayorInitialInfoForm" id="PayorInitialInfoForm" class="form-horizontal">
+
+                <div class="instructions">
+                    <h4>Get Started</h4>
+                    <p>To deposit this payment, start by entering your name, email, and phone number (these should match what is on your bank).</p>
+                </div>
+
+                <div class="form-group hasInputIcon" id="usrNameGrp">
+                    <label class="col-xs-3 control-label">Full Name</label>
+                    <div class="col-xs-9">
+                        <div class="input-group m-b">
+                            <span class="input-group-addon"><i class="fa fa-user"></i></span>
+                            <input type="text" class="form-control" id="userName" name="userName" parsley-trigger="change focusout" data-parsley-required="true" data-parsley-minlength="4" placeholder="i.e. Michael Jordan" maxlength="30" data-parsley-required-message="Enter the name (First & Last) associated with your online banking account." data-parsley-minlength-message="Hmmm, that looks too short..." data-parsley-errors-container="#usrNameGrp .errorMsg" data-parsley-trim-value="true">
+                        </div>
+                        <div class="errorMsg"></div>
+                    </div>
+                </div>
+
+                <div class="form-group hasInputIcon" id="usrEmailGrp">
+                    <label class="col-xs-3 control-label">Email Address</label>
+                    <div class="col-xs-9">
+                        <div class="input-group m-b">
+                            <span class="input-group-addon"><i class="fa fa-at"></i></span>
+                            <input type="email" class="form-control" id="userEmail" name="userEmail" data-parsley-type="email" parsley-trigger="change focusout" data-parsley-required="true" data-parsley-minlength="4" placeholder="i.e. airjordan@gmail.com" maxlength="30" data-parsley-required-message="Enter the email address associated with your online banking account." data-parsley-minlength-message="Hmmm, that looks too short..." data-parsley-errors-container="#usrEmailGrp .errorMsg">
+                        </div>
+                        <div class="errorMsg"></div>
+                    </div>
+                </div>
+
+                <div class="form-group hasInputIcon" id="usrPhoneGrp">
+                    <label class="col-xs-3 control-label">Phone</label>
+                    <div class="col-xs-9">
+                        <div class="input-group m-b">
+                            <span class="input-group-addon"><i class="fa fa-mobile"></i></span>
+                            <input type="num" class="form-control" id="userPhone" name="userPhone" data-parsley-type="alphanum" parsley-trigger="change focusout" data-parsley-required="true" data-parsley-minlength="9" placeholder="(XXX) XXX-XXXX" maxlength="15" data-mask="(999) 999-9999" data-parsley-errors-container="#usrPhoneGrp .errorMsg">
+                        </div>
+                        <div class="errorMsg"></div>
+                    </div>
+                </div>
+
+                <input type="tel" class="form-control" id="userPhoneHddn" name="userPhoneHddn" data-parsley-type="digits" parsley-trigger="change focusout" data-parsley-required="true" data-parsley-minlength="9" maxlength="11" data-parsley-required-message="Enter the phone number associated with your online banking account." data-parsley-minlength-message="Hmmm, that looks too short..." data-parsley-class-handler="#userPhone" data-parsley-errors-container="#usrPhoneGrp .errorMsg">
+
+                <div class="form-group">
+                    <div class="col-xs-offset-3 col-xs-9">
+                        <button type="submit" class="btn btn-primary center-block">Continue&nbsp;&nbsp;<i class="fa fa-arrow-circle-right fa-fw"></i></button>
+                    </div>
+                </div>
+
+            </form>
+
+            <form name="crtPwFrm" id="crtPwFrm" class="form-horizontal" style="display: none;">
+
+                <div class="instructions">
+                    <h4>Optional</h4>
+                    <p>If you create a password we'll create a Nooch account so you can send or receive money again without re-linking your bank.</p>
+                    <p>You do <strong>not</strong> have to create a Nooch account to complete this 1-time payment. Just select 'Continue'.</p>
+                </div>
+
+                <div class="form-group hasInputIcon" id="usrPwGrp">
+                    <label class="col-xs-3 control-label">
+                        Password<br />
+                        <small>Optional</small>
+                    </label>
+                    <div class="col-xs-9">
+                        <div class="input-group m-b">
+                            <span class="input-group-addon"><i class="fa fa-key"></i></span>
+                            <input type="password" class="form-control" id="userPassword" name="userPassword" parsley-type="alphanum" parsley-trigger="change focusout" data-parsley-minlength="5" placeholder="Create your Password  *Optional*" maxlength="20" data-parsley-minlength-message="Hmmm, that is a little short..." data-parsley-errors-container="#usrPwGrp .errorMsg">
+                        </div>
+                        <div class="errorMsg"></div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="col-xs-6">
+                        <button type="button" class="btn btn-default pull-right" onclick="backAstep()"><i class="fa fa-hand-o-left fa-fw"></i>&nbsp;Back</button>
+                    </div>
+                    <div>
+                        <button type="submit" class="btn btn-primary pull-left" id="">Continue</button>
+                    </div>
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    <div id="AddBankDiv" class="hidden animated">
+        <div class="clearfix">
+            <iframe id="frame" src="" width="100%" height="300"></iframe>
+        </div>
+    </div>
+
+    <div class="footer footer-login">
+        <div>
+            <ul class="list-inline">
+                <li><a href="https://www.nooch.com/overview">About</a></li>
+                <li><a href="https://www.nooch.com/safe">Security</a></li>
+                <li><a href="http://support.nooch.com/">Support Center</a></li>
+                <li><a href="https://www.nooch.com/tos">Legal Stuff</a></li>
+                <li><a href="https://www.nooch.com/blog/">Blog</a></li>
+            </ul>
+        </div>
+    </div>
+
+
+    <!-- Modal ID Verification -->
+    <div class="modal fade" id="idVer" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h4 class="modal-title">Identity Verification <i class="mdi mdi-verified text-success m-l-10"></i></h4>
+                    <button type="button" class="btn btn-default btn-icon modalclose"><i class="mdi mdi-close"></i></button>
+                </div>
+
+                <div class="modal-body">
+
+                    <div class="row">
+
+                        <div id="idVerWiz" class="col-sm-12">
+
+                            <h3><i class="mdi mdi-account m-r-5"></i>Profile Info</h3>
+                            <section>
+
+                                <form id="idVerForm1" role="form">
+                                    <div class="well well-sm">
+                                        <div>Please help us prevent identity theft<span class="ast desk-only">*</span> by completing the following fields.</div>
+                                    </div>
+
+                                    <dl class="dl-horizontal" id="nameGrp">
+                                        <dt class="p-t-10 withIcon">
+                                            Legal Name<br />
+                                            <i class="mdi mdi-information-outline help-icon f-15 m-l-5" data-trigger="hover" data-toggle="popover" data-placement="auto" data-content="Please enter your full legal name."></i>
+                                        </dt>
+                                        <dd>
+                                            <div class="form-group">
+                                                <div class="fg-line">
+                                                    <input id="idVer-name" type="text" class="form-control capitalize" value="" placeholder="First & Last Name" required />
+                                                </div>
+                                            </div>
+                                        </dd>
+                                    </dl>
+
+                                    <dl class="dl-horizontal" id="dobGrp">
+                                        <dt class="p-t-10 withIcon">
+                                            Date of Birth<br />
+                                            <i class="mdi mdi-information-outline help-icon f-15 m-l-5" data-trigger="hover" data-toggle="popover" data-placement="auto" data-content="A date of birth is needed to verify a user's identity. Don't worry - nobody sees this!"></i>
+                                        </dt>
+                                        <dd>
+                                            <div class="form-group withIcon datePickerGrp">
+                                                <i class="mdi mdi-calendar"></i>
+                                                <div class="dtp-container dropdown fg-line">
+                                                    <input id="idVer-dob" type='text' class="form-control date-picker" data-toggle="dropdown" placeholder="eg. 08/05/1978" />
+                                                </div>
+                                            </div>
+                                        </dd>
+                                    </dl>
+
+                                    <dl class="dl-horizontal" id="ssnGrp">
+                                        <dt class="p-t-10">SSN<small>Last 4 Digits Only</small></dt>
+                                        <dd>
+                                            <div class="form-group">
+                                                <div class="dtp-container dropdown fg-line">
+                                                    <span id="ssnPrefix">XXX - XX -</span>
+                                                    <input id="idVer-ssn" type='text' class="form-control" value="" placeholder="1234" />
+                                                </div>
+                                            </div>
+                                        </dd>
+                                    </dl>
+
+                                </form>
+
+                            </section>
+
+                            <h3><i class="mdi mdi-map-marker m-r-5"></i>Address</h3>
+                            <section>
+
+                                <div class="well wellsm">
+                                    <div class="f-16">
+                                        Please enter your <span class="f-700">current</span> street address.
+                                    </div>
+                                </div>
+
+                                <dl class="dl-horizontal" id="addressGrp">
+                                    <dt class="p-t-10">Street Address</dt>
+                                    <dd>
+                                        <div class="form-group">
+                                            <div class="dtp-container dropdown fg-line">
+                                                <input id="idVer-address" type='text' class="form-control" value="" placeholder="1600 Pennsylvania Ave" />
+                                            </div>
+                                        </div>
+                                    </dd>
+                                </dl>
+
+                                <dl class="dl-horizontal" id="zipGrp">
+                                    <dt class="p-t-10">ZIP Code</dt>
+                                    <dd>
+                                        <div class="form-group">
+                                            <div class="dtp-container dropdown fg-line">
+                                                <input id="idVer-zip" type='text' class="form-control" value="" placeholder="eg. 90210" />
+                                            </div>
+                                        </div>
+                                    </dd>
+                                </dl>
+
+                            </section>
+
+                            <h3><i class="mdi mdi-email-open m-r-5"></i>Contact Info</h3>
+                            <section>
+
+                                <div class="well well-sm m-b-25">
+                                    <div class="f-15">Please confirm your <span>email address</span> and phone number. &nbsp;We will only use this to contact you about this payment.</div>
+                                </div>
+
+                                <dl class="dl-horizontal" id="emailGrp">
+                                    <dt class="p-t-10">Email Address</dt>
+                                    <dd>
+                                        <div class="form-group">
+                                            <div class="dtp-container dropdown fg-line">
+                                                <input id="idVer-email" type='text' class="form-control" value="" placeholder="" />
+                                            </div>
+                                        </div>
+                                    </dd>
+                                </dl>
+
+                                <dl class="dl-horizontal" id="phoneGrp">
+                                    <dt class="p-t-10">Phone Number</dt>
+                                    <dd>
+                                        <div class="form-group">
+                                            <div class="dtp-container dropdown fg-line">
+                                                <input id="idVer-phone" type='tel' class="form-control" value="" />
+                                            </div>
+                                        </div>
+                                    </dd>
+                                </dl>
+
+                            </section>
+
+                        </div>
+
+                        <div id="idVerContainer" class="animated hidden">
+                            <div class="clearfix">
+                                <iframe id="iframeIdVer" src="" width="100%" height="300"></iframe>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+
+    <!-- Bootstrap Plugins -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+
+    <!-- Other Plugins -->
+    <script src="../js/jasny-bootstrap.min.js"></script>
+    <!-- Input Mask-->
+    <script src="../js/jquery.blockUI.min.js"></script>
+    <!--<script src="//cdn.jsdelivr.net/velocity/1.2.2/velocity.min.js"></script>
+    <script src="//cdn.jsdelivr.net/velocity/1.2.2/velocity.ui.min.js"></script>-->
+
+    <script src="../js/input-mask.min.js"></script>
+    <script src="../js/bootstrap-select.min.js"></script>
+    <script src="../js/chosen.jquery.min.js"></script>
+    <script src="../js/moment.min.js"></script>
+    <script src="../js/bootstrap-datetimepicker.min.js"></script>
+    <script src="../js/jquery.steps.min.js"></script>
+
+    <script src="../js/fingerprint2.min.js"></script>
+    <script type="text/javascript">
+        var ipusr;
+    </script>
+    <script type="text/javascript" src="https://www.l2.io/ip.js?var=ipusr"></script>
+    <script src="../js/sweetalert.min.js"></script>
+
+    <!-- Custom Scripts -->
+    <script src="../js/app/movemoneypagescripts.js"></script>
+</body>
+</html>
