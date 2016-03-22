@@ -3,7 +3,7 @@ console.log("transType is: [" + TRANS_TYPE + "]");
 var FOR_RENTSCENE = $('#rs').val();
 
 $(document).ready(function () {
-
+    
     console.log("errorFromCodeBehind is: " + errorFromCodeBehind);
 
     if (FOR_RENTSCENE == "true")
