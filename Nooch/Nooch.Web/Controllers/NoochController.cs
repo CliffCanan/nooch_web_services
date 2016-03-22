@@ -720,7 +720,101 @@ namespace Nooch.Web.Controllers
             return res;
         }
 
+        public ActionResult DepositMoney() {
 
+            ResultDepositMoney rdm = new ResultDepositMoney();
+            Logger.Info("DepositMoney CodeBehind -> Page_load Initiated - [TransactionId Parameter: " + Request.QueryString["TransactionId"] + "]");
+
+            try
+            {
+                 
+                    if (!String.IsNullOrEmpty(Request.QueryString["TransactionId"]))
+                    {
+                        // Check if this payment is for Rent Scene
+                        if (Request.Params.AllKeys.Contains("rs") && Request["rs"] == "1")
+                        {
+                            Logger.Info("DepositMoney CodeBehind -> Page_load - RENT SCENE Transaction Detected");
+                            rdm.rs = "true";
+                        }
+
+
+                       rdm= GetTransDetailsForDepositMoney(Request.QueryString["TransactionId"].ToString(), rdm);
+                        Response.Write("<script>var errorFromCodeBehind = '0';</script>");
+                    }
+                    else
+                    {
+                        // something wrong with query string
+                        Response.Write("<script>var errorFromCodeBehind = '1';</script>");
+                        rdm.payreqInfo  = false;
+                    }
+               
+                rdm.PayorInitialInfo = false;
+            }
+            catch (Exception ex)
+            {
+                rdm.payreqInfo = false;
+                Response.Write("<script>var errorFromCodeBehind = '1';</script>");
+
+                Logger.Error("DepositMoney CodeBehind -> page_load OUTER EXCEPTION - [TransactionID: " + Request.QueryString["TransactionId"] +
+                                       "], [Exception: " + ex.Message + "]");
+            }
+            ViewData["OnLoaddata"] = rdm;
+            return View();
+         }
+
+        public ResultDepositMoney GetTransDetailsForDepositMoney(string TransactionId,ResultDepositMoney resultDepositMoney)
+        {
+            ResultDepositMoney rdm = resultDepositMoney;
+            Logger.Info("DepositMoney CodeBehind -> GetTransDetails Initiated - TransactionID: [" + TransactionId + "]");
+
+            string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+            string serviceMethod = "/GetTransactionDetailByIdForRequestPayPage?TransactionId=" + TransactionId;
+
+            Logger.Info("DepositMoney CodeBehind -> GetTransDetails - URL to query: [" + String.Concat(serviceUrl, serviceMethod) + "]");
+
+            TransactionDto transaction = ResponseConverter<TransactionDto>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+
+            if (transaction == null)
+            {
+                Logger.Error("DepositMoney CodeBehind -> GetTransDetails FAILED - Transaction Not Found - TransactionId: [" + TransactionId + "]");
+
+                rdm.payreqInfo  = false;
+                rdm.pymnt_status = "0";
+                Response.Write("<script>errorFromCodeBehind = '1';</script>");
+            }
+            else
+            {
+                rdm.transId = transaction.TransactionId;
+                rdm.pymnt_status = transaction.TransactionStatus.ToLower();
+
+                rdm.transMemo = transaction.Memo;
+
+                rdm.senderImage = transaction.SenderPhoto;
+                rdm.senderName1 = transaction.Name;
+
+                string s = transaction.Amount.ToString("n2");
+                string[] s1 = s.Split('.');
+                if (s1.Length == 2)
+                {
+                    rdm.transAmountd = s1[0].ToString();
+                    rdm.transAmountc = s1[1].ToString();
+                }
+                else
+                {
+                    rdm.transAmountd = s1[0].ToString();
+                    rdm.transAmountc = "00";
+                }
+
+                // Now check what TYPE of invitation (phone or email)
+                rdm.invitationType = transaction.IsPhoneInvitation == true ? "p" : "e";
+
+                if (!String.IsNullOrEmpty(transaction.InvitationSentTo))
+                {
+                    rdm.invitationSentto = transaction.InvitationSentTo;
+                }
+            }
+            return rdm;
+        }
         public ActionResult PayRequest()
         {
             ResultPayRequest rpr = new ResultPayRequest();
