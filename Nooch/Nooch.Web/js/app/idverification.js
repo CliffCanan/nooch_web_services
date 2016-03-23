@@ -206,7 +206,7 @@ function submitAnswers() {
 
     $.ajax({
         type: "POST",
-        url: "idverification.aspx/submitResponses",
+        url: "submitResponses",
         data: "{'memId':'" + memid +
               "', 'qSetId':'" + $('#qsetId').val() +
               "', 'a1':'" + answer1 +
@@ -222,7 +222,7 @@ function submitAnswers() {
             console.log("Ajax SUCCESS reached");
             console.log(response);
 
-            var submitAnswersResponse = response.d;
+            var submitAnswersResponse = response;
 
             if (submitAnswersResponse.isSuccess.toString() == "true")
             {

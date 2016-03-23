@@ -315,6 +315,7 @@
       <SubType>Code</SubType>
     </Content>
     <Content Include="Views\Nooch\DepositMoney.cshtml" />
+    <Content Include="Views\Nooch\idVerification.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
