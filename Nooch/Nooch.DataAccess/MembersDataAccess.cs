@@ -2125,7 +2125,7 @@ namespace Nooch.DataAccess
             synapseCreateUserV3Result_int res = new synapseCreateUserV3Result_int();
             res.success = false;
             res.reason = "Initial";
-             
+
 
             #region Check To Make Sure All Data Was Passed
 
@@ -2149,7 +2149,7 @@ namespace Nooch.DataAccess
                     missingData = missingData + " Phone";
                 }
 
-                Logger.Error ("MDA -> RegisterExistingUserWithSynapseV2 FAILED - Missing Critical Data: [" + missingData.Trim() + "]");
+                Logger.Error("MDA -> RegisterExistingUserWithSynapseV2 FAILED - Missing Critical Data: [" + missingData.Trim() + "]");
 
                 res.reason = "Missing critical data: " + missingData.Trim();
                 return res;
@@ -2194,7 +2194,7 @@ namespace Nooch.DataAccess
 
             #region Check If Given Phone Already Exists
 
-            string memberIdFromPhone =CommonHelper.GetMemberIdByContactNumber(userPhone);
+            string memberIdFromPhone = CommonHelper.GetMemberIdByContactNumber(userPhone);
             if (!String.IsNullOrEmpty(memberIdFromPhone))
             {
                 res.reason = "Given phone number already registered.";
@@ -2204,12 +2204,12 @@ namespace Nooch.DataAccess
             #endregion Check if given email or phone already exists
 
             Guid memGuid = Utility.ConvertToGuid(memberId);
-          
+
             var memberObj = _dbContext.Members.Where(memberTemp =>
                                memberTemp.MemberId.Equals(memGuid) &&
                                memberTemp.IsDeleted == false).FirstOrDefault();
-             
-        
+
+
 
             if (memberObj != null)
             {
@@ -2279,7 +2279,7 @@ namespace Nooch.DataAccess
                     memberObj.Password = CommonHelper.GetEncryptedData(pw);
                 }
 
-                int dbUpdatedSuccessfully = _dbContext.SaveChanges(); 
+                int dbUpdatedSuccessfully = _dbContext.SaveChanges();
 
                 #endregion Update Member's Record in Members.dbo
 
@@ -2299,8 +2299,8 @@ namespace Nooch.DataAccess
                 if (memberObj.Type == "Tenant")
                 {
                     try
-                    { 
-                       
+                    {
+
                         var tenantObj = _dbContext.Tenants.Where(memberTemp =>
                                             memberTemp.MemberId == memGuid &&
                                             memberTemp.IsDeleted == false).FirstOrDefault();
@@ -2418,7 +2418,7 @@ namespace Nooch.DataAccess
                             };
                         try
                         {
-                            Utility.SendEmail(Constants.TEMPLATE_REGISTRATION,  
+                            Utility.SendEmail(Constants.TEMPLATE_REGISTRATION,
                                 fromAddress, userEmail, null, "Confirm your email on Nooch", link,
                                 tokens, null, null, null);
 
@@ -2442,7 +2442,7 @@ namespace Nooch.DataAccess
                             };
                         try
                         {
-                            Utility.SendEmail("pinSetForNewUser",   fromAddress, userEmail, null,
+                            Utility.SendEmail("pinSetForNewUser", fromAddress, userEmail, null,
                                 "Your temporary Nooch PIN", null, tokens2, null, null, null);
 
                             Logger.Info("MDA -> RegisterExistingUserWithSynapseV2 - Temp PIN email sent to [" + userEmail + "] successfully.");
@@ -2461,14 +2461,14 @@ namespace Nooch.DataAccess
                     // NEXT, ATTEMPT TO CREATE A SYNAPSE ACCOUNT FOR THIS USER
                     #region Create User with Synapse
 
-                   
+
                     // RegisterUserSynapseResultClassint createSynapseUserResult = new RegisterUserSynapseResultClassint();
                     synapseCreateUserV3Result_int createSynapseUserResult = new synapseCreateUserV3Result_int();
                     try
                     {
                         // Now call Synapse create user service
                         Logger.Info("** MDA -> RegisterExistingUserWithSynapseV2 ABOUT TO CALL CREATE SYNAPSE USER METHOD  **");
-                        createSynapseUserResult = RegisterUserWithSynapseV3(memberObj.MemberId.ToString(),true);
+                        createSynapseUserResult = RegisterUserWithSynapseV3(memberObj.MemberId.ToString(), true);
                     }
                     catch (Exception ex)
                     {
@@ -2488,7 +2488,7 @@ namespace Nooch.DataAccess
                             Logger.Info("MDA -> RegisterExistingUserWithSynapseV2 - Synapse User created SUCCESSFULLY (LN: 6796) - " +
                                                    "[oauth_consumer_key: " + createSynapseUserResult.oauth_consumer_key + "]. Now attempting to save in Nooch DB.");
 
-                          //   Entry in SynapseCreateUser Has been already done from RegisterUserWithSynapseV3 method  //
+                            //   Entry in SynapseCreateUser Has been already done from RegisterUserWithSynapseV3 method  //
 
                             // Synapse User created successfully - Now make entry in [SynapseCreateUserResults] table
                             //SynapseCreateUserResult nr = new SynapseCreateUserResult();
@@ -2512,7 +2512,6 @@ namespace Nooch.DataAccess
 
                             //  if (addRecordToSynapseCreateUserTable > 0)                                
                             if (createSynapseUserResult.success == true)                                // asuming createSynapseUserResult.success to be equals addRecordToSynapseCreateUserTable > 0
-                                
                             {
                                 if (!String.IsNullOrEmpty(res.reason) &&
                                     res.reason.IndexOf("Email already registered") > -1)
@@ -2531,41 +2530,41 @@ namespace Nooch.DataAccess
                                                            "]. Now about to attempt to send SSN info to Synapse.");
 
                                     // Now attempt to verify user's ID by sending SSN, DOB, name, & address to Synapse
-                                     /* No need of the following code any more as this has already been done in RegisterUserWithSynapseV3 method
-                                    try
-                                    {
+                                    /* No need of the following code any more as this has already been done in RegisterUserWithSynapseV3 method
+                                   try
+                                   {
                                        
-                                        submitIdVerificationInt submitSsn = CommonHelper.sendUserSsnInfoToSynapseV3(memberObj.MemberId.ToString());
-                                        res.ssn_verify_status = submitSsn.message;
+                                       submitIdVerificationInt submitSsn = CommonHelper.sendUserSsnInfoToSynapseV3(memberObj.MemberId.ToString());
+                                       res.ssn_verify_status = submitSsn.message;
 
-                                        // Next if/else are all just for logging
-                                        if (submitSsn.success == true)
-                                        {
-                                            if (!String.IsNullOrEmpty(submitSsn.message) &&
-                                                submitSsn.message.IndexOf("additional") > -1)
-                                            {
-                                                Logger.Info("MDA -> RegisterExistingUserWithSynapseV2 - SSN Info verified, but have additional questions - [Email: " + userEmail + "], [submitSsn.message: " + submitSsn.message + "]");
-                                            }
-                                            else if (!String.IsNullOrEmpty(submitSsn.message) &&
-                                                 submitSsn.message.IndexOf("Already") > -1)
-                                            {
-                                                Logger.Info("MDA -> RegisterExistingUserWithSynapseV2 - SSN Info Already Verified - [Email: " + userEmail + "], [submitSsn.message: " + submitSsn.message + "]");
-                                            }
-                                            else
-                                            {
-                                                Logger.Info("MDA -> RegisterExistingUserWithSynapseV2 - SSN Info verified completely :-) - [Email: " + userEmail + "], [submitSsn.message: " + submitSsn.message + "]");
-                                            }
-                                        }
-                                        else
-                                        {
-                                            Logger.Info("MDA -> RegisterExistingUserWithSynapseV2 - SSN Info verified FAILED :-(  [Email: " + userEmail + "], [submitSsn.message: " + submitSsn.message + "]");
-                                        }
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        Logger.Error("MDA -> RegisterExistingUserWithSynapseV2 - Attempted sendUserSsnInfoToSynapse but got Exception: [" + ex.Message + "]");
-                                    }
-                                      */
+                                       // Next if/else are all just for logging
+                                       if (submitSsn.success == true)
+                                       {
+                                           if (!String.IsNullOrEmpty(submitSsn.message) &&
+                                               submitSsn.message.IndexOf("additional") > -1)
+                                           {
+                                               Logger.Info("MDA -> RegisterExistingUserWithSynapseV2 - SSN Info verified, but have additional questions - [Email: " + userEmail + "], [submitSsn.message: " + submitSsn.message + "]");
+                                           }
+                                           else if (!String.IsNullOrEmpty(submitSsn.message) &&
+                                                submitSsn.message.IndexOf("Already") > -1)
+                                           {
+                                               Logger.Info("MDA -> RegisterExistingUserWithSynapseV2 - SSN Info Already Verified - [Email: " + userEmail + "], [submitSsn.message: " + submitSsn.message + "]");
+                                           }
+                                           else
+                                           {
+                                               Logger.Info("MDA -> RegisterExistingUserWithSynapseV2 - SSN Info verified completely :-) - [Email: " + userEmail + "], [submitSsn.message: " + submitSsn.message + "]");
+                                           }
+                                       }
+                                       else
+                                       {
+                                           Logger.Info("MDA -> RegisterExistingUserWithSynapseV2 - SSN Info verified FAILED :-(  [Email: " + userEmail + "], [submitSsn.message: " + submitSsn.message + "]");
+                                       }
+                                   }
+                                   catch (Exception ex)
+                                   {
+                                       Logger.Error("MDA -> RegisterExistingUserWithSynapseV2 - Attempted sendUserSsnInfoToSynapse but got Exception: [" + ex.Message + "]");
+                                   }
+                                     */
                                 }
                                 createUserV3Result_oauth oath = new createUserV3Result_oauth();
                                 res = createSynapseUserResult;
@@ -2577,7 +2576,7 @@ namespace Nooch.DataAccess
                                 res.memberIdGenerated = memberObj.MemberId.ToString();
                                 res.error_code = createSynapseUserResult.error_code;
                                 res.errorMsg = createSynapseUserResult.errorMsg;
-                                
+
                             }
                             else
                             {
@@ -2591,7 +2590,7 @@ namespace Nooch.DataAccess
                         {
                             Logger.Error("MDA -> RegisterExistingUserWithSynapseV3 FAILED - Synapse Create user service failed (but wasn't null) - " +
                                                    "[Reason: " + res.reason + "], [MemberID: " + memberId + "]");
-                            res.reason =createSynapseUserResult.reason;
+                            res.reason = createSynapseUserResult.reason;
                         }
                     }
                     else
@@ -2635,7 +2634,7 @@ namespace Nooch.DataAccess
                                    "], Address: [" + address + "], ZIP: [" + zip +
                                    "], IP: [" + ip + "], Fngprnt: [" + fngprnt +
                                    "], TransId: [" + transId + "]");
- 
+
             synapseCreateUserV3Result_int res = new synapseCreateUserV3Result_int();
             res.success = false;
             res.reason = "Initial";
@@ -2710,14 +2709,14 @@ namespace Nooch.DataAccess
 
             #region Check if given Email and Phone already exist
 
-            string memberIdFromPhone =CommonHelper.GetMemberIdByContactNumber(userPhone);
+            string memberIdFromPhone = CommonHelper.GetMemberIdByContactNumber(userPhone);
             if (!String.IsNullOrEmpty(memberIdFromPhone))
             {
                 res.reason = "Given phone number already registered.";
                 return res;
             }
 
-            string memberIdFromEmail =CommonHelper.GetMemberIdByUserName(userEmail);
+            string memberIdFromEmail = CommonHelper.GetMemberIdByUserName(userEmail);
             if (!String.IsNullOrEmpty(memberIdFromEmail))
             {
                 res.reason = "Given email already registered.";
@@ -2739,7 +2738,7 @@ namespace Nooch.DataAccess
                 try
                 {
                     Guid tid = Utility.ConvertToGuid(transId);
- 
+
                     var transDetail = _dbContext.Transactions.Where(transIdTemp => transIdTemp.TransactionId == tid).FirstOrDefault();
 
                     if (transDetail != null)
@@ -2810,7 +2809,7 @@ namespace Nooch.DataAccess
 
                 #endregion Parse And Format Data To Save
 
-               
+
 
                 var member = new Member
                 {
@@ -2838,7 +2837,7 @@ namespace Nooch.DataAccess
                     IsVerifiedWithSynapse = false
                 };
 
-                 
+
 
                 if (inviteCode.Length > 0)
                 {
@@ -2846,8 +2845,8 @@ namespace Nooch.DataAccess
                 }
 
                 // ADD NEWLY CREATED MEMBER TO NOOCH DB
-                
-                int addNewMemberToDB=0;
+
+                int addNewMemberToDB = 0;
                 try
                 {
                     _dbContext.Members.Add(member);
@@ -2887,8 +2886,8 @@ namespace Nooch.DataAccess
                     {
                         NotificationId = Guid.NewGuid(),
 
-                         
-                        MemberId=member.MemberId,
+
+                        MemberId = member.MemberId,
 
                         FriendRequest = true,
                         InviteRequestAccept = true,
@@ -2921,12 +2920,12 @@ namespace Nooch.DataAccess
                     #endregion Set Up & Save Nooch Notification Settings
 
                     #region Set up & Save Privacy Settings
-                     
+
 
                     var memberPrivacySettings = new MemberPrivacySetting
                     {
-                        
-                        MemberId=member.MemberId,
+
+                        MemberId = member.MemberId,
 
                         AllowSharing = true,
                         ShowInSearch = true,
@@ -2934,7 +2933,7 @@ namespace Nooch.DataAccess
                     };
                     _dbContext.MemberPrivacySettings.Add(memberPrivacySettings);
                     _dbContext.SaveChanges();
-                    
+
                     #endregion Set up & Save Privacy Settings
 
 
@@ -2964,8 +2963,8 @@ namespace Nooch.DataAccess
                             DateGenerated = DateTime.Now,
                             FriendRequestId = requestId  // CLIFF (7/28/15): What is this? It's always being set to an empty GUID...
                         };
-                        
-                        bool status = _dbContext.SaveChanges()>0;  
+
+                        bool status = _dbContext.SaveChanges() > 0;
 
                         #endregion Generate & Save Nooch Authentication Token
 
@@ -2988,7 +2987,7 @@ namespace Nooch.DataAccess
                             };
                         try
                         {
-                            Utility.SendEmail(Constants.TEMPLATE_REGISTRATION, 
+                            Utility.SendEmail(Constants.TEMPLATE_REGISTRATION,
                                 fromAddress, userEmail, null,
                                 "Confirm your email on Nooch", link,
                                 tokens, null, null, null);
@@ -3013,7 +3012,7 @@ namespace Nooch.DataAccess
                             };
                         try
                         {
-                            Utility.SendEmail("pinSetForNewUser",  fromAddress, userEmail, null,
+                            Utility.SendEmail("pinSetForNewUser", fromAddress, userEmail, null,
                                 "Your temporary Nooch PIN", null, tokens2, null, null, null);
 
                             Logger.Info("MDA -> RegisterNonNoochUserWithSynapse - Temp PIN email sent to [" + userEmail + "] successfully.");
@@ -3032,7 +3031,7 @@ namespace Nooch.DataAccess
                     // NEXT, ATTEMPT TO CREATE A SYNAPSE ACCOUNT FOR THIS USER
                     #region Create User with Synapse
 
-                   // var synapseCreateUserRepo = new Repository<SynapseCreateUserResults, NoochDataEntities>(noochConnection);
+                    // var synapseCreateUserRepo = new Repository<SynapseCreateUserResults, NoochDataEntities>(noochConnection);
 
                     synapseCreateUserV3Result_int createSynapseUserResult = new synapseCreateUserV3Result_int();
                     try
@@ -3080,7 +3079,7 @@ namespace Nooch.DataAccess
 
                             //int addRecordToSynapseCreateUserTable = synapseCreateUserRepo.AddEntity(nr);
 
-                            if (createSynapseUserResult.success==true)
+                            if (createSynapseUserResult.success == true)
                             {
                                 if (!String.IsNullOrEmpty(res.reason) &&
                                     res.reason.IndexOf("Email already registered") > -1)
@@ -3136,7 +3135,7 @@ namespace Nooch.DataAccess
                                      */
                                 }
 
-                                 
+
 
 
                                 createUserV3Result_oauth oath = new createUserV3Result_oauth();
@@ -3176,10 +3175,10 @@ namespace Nooch.DataAccess
                                     Guid memGuid = Utility.ConvertToGuid(MemberIdFromtransId);
 
 
-                                 
+
                                     var synapseRes = _dbContext.SynapseCreateUserResults.Where(memberTemp =>
                                                         memberTemp.MemberId.Value == memGuid &&
-                                                        memberTemp.IsDeleted == false).FirstOrDefault(); 
+                                                        memberTemp.IsDeleted == false).FirstOrDefault();
                                     if (synapseRes != null)
                                     {
                                         res.success = true;
@@ -3232,9 +3231,9 @@ namespace Nooch.DataAccess
                         {
                             Guid invideCodeGuid = Utility.ConvertToGuid(inviteCode);
 
-                            
- 
-                            var inviteCodeObj = _dbContext.InviteCodes.Where(inviteTemp => inviteTemp.InviteCodeId == invideCodeGuid).FirstOrDefault();  
+
+
+                            var inviteCodeObj = _dbContext.InviteCodes.Where(inviteTemp => inviteTemp.InviteCodeId == invideCodeGuid).FirstOrDefault();
 
                             if (inviteCodeObj == null)
                             {
@@ -3263,7 +3262,7 @@ namespace Nooch.DataAccess
                                 // Now update invite code count
                                 inviteCodeObj.count++;
                                 _dbContext.SaveChanges();
-                               
+
                             }
                         }
                         catch (Exception ex)
@@ -3305,7 +3304,7 @@ namespace Nooch.DataAccess
             {
                 Guid TransIDGUId = Utility.ConvertToGuid(TransId);
 
-                 
+
                 var theTransaction = _dbContext.Transactions.Where(pr => pr.TransactionId.Equals(TransIDGUId)).FirstOrDefault();
 
                 if (theTransaction != null)
@@ -3314,7 +3313,7 @@ namespace Nooch.DataAccess
                     if (theTransaction.PhoneNumberInvited != null &&
                         theTransaction.IsPhoneInvitation == true)
                     {
-                        string memberIdFromPhone =CommonHelper.GetMemberIdByContactNumber(CommonHelper.GetDecryptedData(theTransaction.PhoneNumberInvited));
+                        string memberIdFromPhone = CommonHelper.GetMemberIdByContactNumber(CommonHelper.GetDecryptedData(theTransaction.PhoneNumberInvited));
 
                         if (!String.IsNullOrEmpty(memberIdFromPhone))
                         {
@@ -3324,7 +3323,7 @@ namespace Nooch.DataAccess
                     if ((theTransaction.IsPhoneInvitation == null || theTransaction.IsPhoneInvitation == false) &&
                          theTransaction.InvitationSentTo != null)
                     {
-                        string memberIdFromEmail =CommonHelper.GetMemberIdByUserName(CommonHelper.GetDecryptedData(theTransaction.InvitationSentTo));
+                        string memberIdFromEmail = CommonHelper.GetMemberIdByUserName(CommonHelper.GetDecryptedData(theTransaction.InvitationSentTo));
 
                         if (!String.IsNullOrEmpty(memberIdFromEmail))
                         {
@@ -4757,96 +4756,336 @@ namespace Nooch.DataAccess
             var id = Utility.ConvertToGuid(MemberId);
 
 
-                // NOTE (9/29/15): It's very important to get the questions in the right order
+            // NOTE (9/29/15): It's very important to get the questions in the right order
             List<SynapseIdVerificationQuestion> questions =
                 _dbContext.SynapseIdVerificationQuestions.Where(m => m.MemberId == id && m.submitted == false)
                     .ToList()
                     .OrderByDescending(m => m.DateCreated).Take(5).ToList<SynapseIdVerificationQuestion>();
-                    
 
-                if (questions.Count==0)
+
+            if (questions.Count == 0)
+            {
+                Logger.Info("MDA -> getIdVerificationQuestionsV2 ABORTED: Member's Synapse User Details not found. [MemberId: " + MemberId + "]");
+
+                return null;
+            }
+            else if (questions.Count > 1)
+            {
+                #region Questions Found In DB
+
+                // Check to make sure each of the "QuestionSetId" is the same for each question
+                if (questions[0].QuestionSetId.ToString() != questions[1].QuestionSetId.ToString() ||
+                    questions[0].QuestionSetId.ToString() != questions[2].QuestionSetId.ToString() ||
+                    questions[0].QuestionSetId.ToString() != questions[4].QuestionSetId.ToString())
                 {
-                    Logger.Info("MDA -> getIdVerificationQuestionsV2 ABORTED: Member's Synapse User Details not found. [MemberId: " + MemberId + "]");
-
+                    Logger.Info("MDA -> getIdVerificationQuestionsV2 ABORTED: Multiple qeustionSetIds found among the questions. [MemberId: " + MemberId + "]");
+                    response.msg = "Multiple qeustionSetIds found among the questions";
                     return null;
                 }
-                else if (questions.Count > 1)
+                else
                 {
-                    #region Questions Found In DB
+                    synapseIdVerificationQuestionsForDisplay questsToReturn = new synapseIdVerificationQuestionsForDisplay();
 
-                    // Check to make sure each of the "QuestionSetId" is the same for each question
-                    if (questions[0].QuestionSetId.ToString() != questions[1].QuestionSetId.ToString() ||
-                        questions[0].QuestionSetId.ToString() != questions[2].QuestionSetId.ToString() ||
-                        questions[0].QuestionSetId.ToString() != questions[4].QuestionSetId.ToString())
+                    response.success = true;
+                    response.submitted = questions[0].submitted == true ? true : false;
+                    response.qSetId = questions[0].QuestionSetId;
+                    response.dateCreated = questions[0].DateCreated.ToString();
+
+                    List<synapseIdVerificationQuestionAnswerSet> entireQuestionList = new List<synapseIdVerificationQuestionAnswerSet>();
+
+                    foreach (SynapseIdVerificationQuestion x in questions)
                     {
-                        Logger.Info("MDA -> getIdVerificationQuestionsV2 ABORTED: Multiple qeustionSetIds found among the questions. [MemberId: " + MemberId + "]");
-                        response.msg = "Multiple qeustionSetIds found among the questions";
-                        return null;
+                        synapseIdVerificationQuestionAnswerSet oneQuestionAnswerObj = new synapseIdVerificationQuestionAnswerSet();
+
+                        oneQuestionAnswerObj.id = (Int16)x.Id;
+                        oneQuestionAnswerObj.question = x.Question;
+
+                        oneQuestionAnswerObj.answers = new List<synapseIdVerificationAnswerChoices>();
+                        List<synapseIdVerificationAnswerChoices> allQs = new List<synapseIdVerificationAnswerChoices>();
+
+                        for (int i = 0; i < 5; i++)
+                        {
+                            synapseIdVerificationAnswerChoices b = new synapseIdVerificationAnswerChoices();
+                            if (i == 0)
+                            {
+                                b.id = Convert.ToInt16(x.Choice1Id);
+                                b.answer = x.Choice1Text;
+                            }
+                            if (i == 1)
+                            {
+                                b.id = Convert.ToInt16(x.Choice2Id);
+                                b.answer = x.Choice2Text;
+                            }
+                            if (i == 2)
+                            {
+                                b.id = Convert.ToInt16(x.Choice3Id);
+                                b.answer = x.Choice3Text;
+                            }
+                            if (i == 3)
+                            {
+                                b.id = Convert.ToInt16(x.Choice4Id);
+                                b.answer = x.Choice4Text;
+                            }
+                            if (i == 4)
+                            {
+                                b.id = Convert.ToInt16(x.Choice5Id);
+                                b.answer = x.Choice5Text;
+                            }
+                            allQs.Add(b);
+                        }
+                        oneQuestionAnswerObj.answers = allQs;
+
+                        entireQuestionList.Add(oneQuestionAnswerObj);
+                    }
+
+                    response.questionList = entireQuestionList;
+                }
+
+                #endregion Questions Found In DB
+            }
+
+
+            return response;
+        }
+
+
+        public submitIdVerificationInt submitIdVerificationAnswersToSynapseV3(string MemberId, string questionSetId, string quest1id, string quest2id, string quest3id, string quest4id, string quest5id, string answer1id, string answer2id, string answer3id, string answer4id, string answer5id)
+        {
+            Logger.Info("MDA -> submitIdVerificationAnswersToSynapseV3 Initialized - [MemberId: " + MemberId + "], [questionSetId: " + questionSetId + "]");
+
+            submitIdVerificationInt res = new submitIdVerificationInt();
+            res.success = false;
+
+            #region Check User For All Required Data
+
+            // Check for MemberId
+            if (string.IsNullOrEmpty(MemberId.ToString()))
+            {
+                Logger.Info("MDA -> submitIdVerificationAnswersToSynapseV3 ABORTED: No MemberID sent");
+                res.message = "Missing a MemberId";
+                return res;
+            }
+
+            // Check for QuestionSetId
+            if (string.IsNullOrEmpty(questionSetId.ToString()))
+            {
+                Logger.Info("MDA -> submitIdVerificationAnswersToSynapseV3 ABORTED: No Question Set ID Sent. [MemberId: " + MemberId + "]");
+                res.message = "Missing a Question Set ID";
+                return res;
+            }
+
+            // Check for 5 total answers
+            if (String.IsNullOrEmpty(answer1id) || String.IsNullOrEmpty(answer2id) || String.IsNullOrEmpty(answer3id) || String.IsNullOrEmpty(answer4id) || String.IsNullOrEmpty(answer5id))
+            {
+                Logger.Info("MDA -> submitIdVerificationAnswersToSynapseV3 ABORTED: Missing at least 1 answer. [MemberId: " + MemberId + "]");
+                res.message = "Missing at least 1 answer";
+                return res;
+            }
+
+            #endregion Check User For All Required Data
+
+            var id = Utility.ConvertToGuid(MemberId);
+
+
+            // Now check if user already has a Synapse User account (would have a record in SynapseCreateUserResults.dbo)
+            #region Get User's Synapse OAuth Consumer Key
+
+            string usersSynapseOauthKey = "";
+
+
+            var usersSynapseDetails = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
+
+            if (usersSynapseDetails == null)
+            {
+                Logger.Info("MDA -> submitIdVerificationAnswersToSynapse ABORTED: Member's Synapse User Details not found. [MemberId: " + MemberId + "]");
+                res.message = "Could not find this member's account info";
+                return res;
+            }
+            else
+            {
+                usersSynapseOauthKey = CommonHelper.GetDecryptedData(usersSynapseDetails.access_token);
+            }
+
+            #endregion Get User's Synapse OAuth Consumer Key
+
+            synapseSubmitIdAnswers_answers_input input = new synapseSubmitIdAnswers_answers_input();
+
+            input.login = new SynapseV3Input_login() { oauth_key = CommonHelper.GetDecryptedData(usersSynapseDetails.access_token) };
+
+
+
+            // Finally, set the user's answers
+            synapseSubmitIdAnswers_Input_quest[] quest = new synapseSubmitIdAnswers_Input_quest[5];
+            quest[0] = new synapseSubmitIdAnswers_Input_quest { question_id = Convert.ToInt16(quest1id), answer_id = Convert.ToInt16(answer1id) };
+            quest[1] = new synapseSubmitIdAnswers_Input_quest { question_id = Convert.ToInt16(quest2id), answer_id = Convert.ToInt16(answer2id) };
+            quest[2] = new synapseSubmitIdAnswers_Input_quest { question_id = Convert.ToInt16(quest3id), answer_id = Convert.ToInt16(answer3id) };
+            quest[3] = new synapseSubmitIdAnswers_Input_quest { question_id = Convert.ToInt16(quest4id), answer_id = Convert.ToInt16(answer4id) };
+            quest[4] = new synapseSubmitIdAnswers_Input_quest { question_id = Convert.ToInt16(quest5id), answer_id = Convert.ToInt16(answer5id) };
+
+
+            input.doc = new synapseSubmitIdAnswers_docSet();
+            input.doc.question_set_id = questionSetId;
+            input.doc.answers = new synapseSubmitIdAnswers_Input_quest[5];
+            input.doc.answers = quest;
+
+
+
+
+            #region Call Synapse /user/ssn/answer API
+
+
+            string baseAddress = "https://sandbox.synapsepay.com/api/v3/user/doc/verify";
+            // set here for live server
+            //string baseAddress = "https://synapsepay.com/api/v3/user/doc/verify";
+
+
+
+            try
+            {
+                var http = (HttpWebRequest)WebRequest.Create(new Uri(baseAddress));
+                http.Accept = "application/json";
+                http.ContentType = "application/json";
+                http.Method = "POST";
+
+                string parsedContent = JsonConvert.SerializeObject(input);
+                ASCIIEncoding encoding = new ASCIIEncoding();
+                Byte[] bytes = encoding.GetBytes(parsedContent);
+
+                Stream newStream = http.GetRequestStream();
+
+                newStream.Write(bytes, 0, bytes.Length);
+                newStream.Close();
+
+                var response = http.GetResponse();
+                var stream = response.GetResponseStream();
+                var sr = new StreamReader(stream);
+                var content = sr.ReadToEnd();
+
+                var resFromSynapse = JsonConvert.DeserializeObject<kycInfoResponseFromSynapse>(content);
+
+                if (resFromSynapse != null)
+                {
+                    #region Get Member Record To Update
+
+
+                    var memberEntity = GetMemberDetails(MemberId);
+
+                    #endregion Get Member Record To Update
+
+                    if (resFromSynapse.success.ToString().ToLower() == "true")
+                    {
+                        Logger.Info("MDA -> submitIdVerificationAnswersToSynapse SUCCESSFUL - [MemberID: " + MemberId + "]");
+
+                        res.success = true;
+                        res.message = "Ok";
+
+                        // Now we have to update the "DateSubmitted" value for EACH question in the DB (should be exactly 5 per 'QuestionSetId')
+                        #region Mark All 5 Questions as 'Submitted' in Nooch DB
+
+
+
+                        List<SynapseIdVerificationQuestion> listOfQuestionsToUpdate =
+                            _dbContext.SynapseIdVerificationQuestions.Where(m => m.QuestionSetId == questionSetId && m.MemberId == id).Distinct().OrderByDescending(o => o.DateCreated)
+                                        .ToList();
+
+
+                        if (listOfQuestionsToUpdate.Count > 0)
+                        {
+                            short n = 0;
+                            foreach (SynapseIdVerificationQuestion q in listOfQuestionsToUpdate)
+                            {
+                                if (n > 5)
+                                {
+                                    Logger.Info("MDA -> submitIdVerificationAnswersToSynapse - Unexpected: More than 5 answers (n = " + n + ") found in DB... Could be a problem somewhere");
+                                }
+                                q.submitted = true;
+                                q.DateResponseSent = DateTime.Now;
+
+                                bool b = _dbContext.SaveChanges() > 0;
+                                if (b)
+                                {
+                                    n += 1;
+                                }
+                            }
+
+                            if (n > 3) // It should be exactly 5, but setting to > 3 in case there's ever only 4 questions from Synapse
+                            {
+                                Logger.Info("MDA -> submitIdVerificationAnswersToSynapse - All Questions Marked as Submitted in DB for: [Question Set ID: " + questionSetId + "]");
+                            }
+                            else
+                            {
+                                Logger.Info("MDA -> submitIdVerificationAnswersToSynapse - Unexpected: < 4 Questions were Marked as Submitted in DB. [Question Set ID: " + questionSetId + "]");
+                            }
+                        }
+                        else
+                        {
+                            Logger.Info("MDA -> submitIdVerificationAnswersToSynapse FAILED TO UPDATE DB: List of Banks to Update was null - [MemberId: " + MemberId + "]");
+                        }
+
+                        #endregion Mark All 5 Questions as 'Submitted' in Nooch DB
+
+                        // Update Member's DB record
+                        if (memberEntity != null)
+                        {
+                            memberEntity.IsVerifiedWithSynapse = true;
+                            memberEntity.ValidatedDate = DateTime.Now;
+                            memberEntity.DateModified = DateTime.Now;
+
+                            DbContext dbc = CommonHelper.GetDbContextFromEntity(memberEntity);
+                            dbc.SaveChanges();
+
+
+
+                            // Get existing record from Create Synapse User Results table for this Member
+
+                            var synapseRes = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
+
+                            if (synapseRes != null)
+                            {
+                                synapseRes.permission = resFromSynapse.user.permission;
+                                _dbContext.SaveChanges();
+                            }
+
+                        }
+
                     }
                     else
                     {
-                        synapseIdVerificationQuestionsForDisplay questsToReturn = new synapseIdVerificationQuestionsForDisplay();
-
-                        response.success = true;
-                        response.submitted = questions[0].submitted == true ? true : false;
-                        response.qSetId = questions[0].QuestionSetId;
-                        response.dateCreated = questions[0].DateCreated.ToString();
-
-                        List<synapseIdVerificationQuestionAnswerSet> entireQuestionList = new List<synapseIdVerificationQuestionAnswerSet>();
-
-                        foreach (SynapseIdVerificationQuestion x in questions)
-                        {
-                            synapseIdVerificationQuestionAnswerSet oneQuestionAnswerObj = new synapseIdVerificationQuestionAnswerSet();
-
-                            oneQuestionAnswerObj.id = (Int16)x.Id;
-                            oneQuestionAnswerObj.question = x.Question;
-
-                            oneQuestionAnswerObj.answers = new List<synapseIdVerificationAnswerChoices>();
-                            List<synapseIdVerificationAnswerChoices> allQs = new List<synapseIdVerificationAnswerChoices>();
-
-                            for (int i = 0; i < 5; i++)
-                            {
-                                synapseIdVerificationAnswerChoices b = new synapseIdVerificationAnswerChoices();
-                                if (i == 0)
-                                {
-                                    b.id = Convert.ToInt16(x.Choice1Id);
-                                    b.answer = x.Choice1Text;
-                                }
-                                if (i == 1)
-                                {
-                                    b.id = Convert.ToInt16(x.Choice2Id);
-                                    b.answer = x.Choice2Text;
-                                }
-                                if (i == 2)
-                                {
-                                    b.id = Convert.ToInt16(x.Choice3Id);
-                                    b.answer = x.Choice3Text;
-                                }
-                                if (i == 3)
-                                {
-                                    b.id = Convert.ToInt16(x.Choice4Id);
-                                    b.answer = x.Choice4Text;
-                                }
-                                if (i == 4)
-                                {
-                                    b.id = Convert.ToInt16(x.Choice5Id);
-                                    b.answer = x.Choice5Text;
-                                }
-                                allQs.Add(b);
-                            }
-                            oneQuestionAnswerObj.answers = allQs;
-
-                            entireQuestionList.Add(oneQuestionAnswerObj);
-                        }
-
-                        response.questionList = entireQuestionList;
+                        res.message = "Got a response, but verification was not successful";
+                        Logger.Info("MDA -> submitIdVerificationAnswersToSynapse FAILED - Got Synapse response, but success was NOT 'true' - [MemberID: " + MemberId + "]");
                     }
-
-                    #endregion Questions Found In DB
                 }
-            
+                else
+                {
+                    res.message = "Verification response was null";
+                    Logger.Info("MDA -> submitIdVerificationAnswersToSynapse FAILED - Synapse response was NULL - [MemberID: " + MemberId + "]");
+                }
+            }
+            catch (WebException we)
+            {
+                res.message = "MDA Exception #9304";
 
-            return response;
+                var errorCode = ((HttpWebResponse)we.Response).StatusCode;
+
+                Logger.Info("MDA -> submitIdVerificationAnswersToSynapse FAILED - Outer Catch. Member: [" + MemberId + "]. WebEx: [" + errorCode.ToString() + "]");
+
+                if (errorCode.ToString() == "Unauthorized")
+                {
+                    var resp = new StreamReader(we.Response.GetResponseStream()).ReadToEnd();
+                    JObject jsonfromsynapse = JObject.Parse(resp);
+                    JToken token = jsonfromsynapse["reason"];
+
+                    if (token != null)
+                    {
+                        res.message = jsonfromsynapse["reason"].ToString();
+                    }
+                }
+            }
+
+            #endregion Call Synapse /user/ssn/answer API
+
+            return res;
+
         }
 
         #endregion
