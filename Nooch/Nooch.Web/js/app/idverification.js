@@ -5,16 +5,21 @@ var was_error = $("#was_error").val();
 var error_msg = $("#error_msg").val();
 var from = $("#from").val();
 var RED_URL = $("#redUrl").val();
+var qsetId = $("#qsetId").val();
 var isCompleted = false;
+var quest1id = $("#quest1id").val();
+var quest2id = $("#quest2id").val();
+var quest3id = $("#quest3id").val();
+var quest4id = $("#quest4id").val();
+var quest5id = $("#quest5id").val();
 
-console.log("ID Ver Loaded for: [" + memid +"]");
+console.log("ID Ver Loaded for: [" + memid + "]");
 console.log("FROM: [" + from + "]");
 console.log("RED_URL: [" + RED_URL + "]");
 
-$(document).ready(function() {	
+$(document).ready(function () {
 
-    if (areThereErrors() == false)
-    {
+    if (areThereErrors() == false) {
         $("#idVerWizard").steps({
             headerTag: "h3",
             bodyTag: "section",
@@ -110,13 +115,11 @@ $(document).ready(function() {
             onFinishing: function (event, currentIndex) {
                 // CHECK TO MAKE SURE ALL FIELDS WERE COMPLETED
                 if (currentIndex == 4) {
-                    if ($('input[name=question5]:checked').length > 0)
-                    {
+                    if ($('input[name=question5]:checked').length > 0) {
                         updateValidationUi(5, true);
                         return true;
                     }
-                    else
-                    {
+                    else {
                         updateValidationUi(5, false);
                         return false;
                     }
@@ -156,8 +159,7 @@ $(document).ready(function() {
             }
         }
     }
-    else
-    {
+    else {
         console.log("161. There was an error: [" + error_msg + "] :-(");
     }
 });
@@ -165,13 +167,11 @@ $(document).ready(function() {
 
 function submitAnswers() {
 
-    if (from == "lndngpg")
-    {
+    if (from == "lndngpg") {
         console.log("TRIGGERING addblockLdg IN PARENT");
         window.parent.$('body').trigger('addblockLdg');
     }
-    else
-    {
+    else {
         $('.idVerify-container').block({
             message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Submitting responses...</span>',
             css: {
@@ -195,25 +195,36 @@ function submitAnswers() {
     var answer4 = $('input[name="question4"]:checked').val();
     var answer5 = $('input[name="question5"]:checked').val();
 
+ 
     console.log("Submitting answers... " +
-                "{'memId':'" + memid +
-              "', 'qSetId':'" + $('#qsetId').val() +
-              "', 'a1':'" + answer1 +
-              "', 'a2':'" + answer2 +
-              "', 'a3':'" + answer3 +
-              "', 'a4':'" + answer4 +
-              "', 'a5':'" + answer5 + "'}");
+                "{'MemberId':'" + memid +
+              "', 'questionSetId':'" + qsetId +
+              "', 'quest1id':'" + quest1id +
+              "', 'quest2id':'" + quest2id +
+              "', 'quest3id':'" + quest3id +
+              "', 'quest4id':'" + quest4id +
+              "', 'quest5id':'" + quest5id +
+              "', 'answer1id':'" + answer1 +
+              "', 'answer2id':'" + answer2 +
+              "', 'answer3id':'" + answer3 +
+              "', 'answer4id':'" + answer4 +
+              "', 'answer5id':'" + answer5 + "'}");
 
     $.ajax({
         type: "POST",
-        url: "idverification.aspx/submitResponses",
-        data: "{'memId':'" + memid +
-              "', 'qSetId':'" + $('#qsetId').val() +
-              "', 'a1':'" + answer1 +
-              "', 'a2':'" + answer2 +
-              "', 'a3':'" + answer3 +
-              "', 'a4':'" + answer4 +
-              "', 'a5':'" + answer5 + "'}",
+        url: "submitResponses",
+        data: "{'MemberId':'" + memid +   
+              "', 'questionSetId':'" + qsetId +
+              "', 'quest1id':'" + quest1id +
+              "', 'quest2id':'" + quest2id +
+              "', 'quest3id':'" + quest3id +
+              "', 'quest4id':'" + quest4id +
+              "', 'quest5id':'" + quest5id +
+              "', 'answer1id':'" + answer1 +
+              "', 'answer2id':'" + answer2 +
+              "', 'answer3id':'" + answer3 +
+              "', 'answer4id':'" + answer4 +
+              "', 'answer5id':'" + answer5 + "'}",
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         async: "true",
@@ -222,10 +233,9 @@ function submitAnswers() {
             console.log("Ajax SUCCESS reached");
             console.log(response);
 
-            var submitAnswersResponse = response.d;
+            var submitAnswersResponse = response;
 
-            if (submitAnswersResponse.isSuccess.toString() == "true")
-            {
+            if (submitAnswersResponse.isSuccess.toString() == "true") {
                 isCompleted = true;
 
                 console.log("AJAX Success - 'FROM' is: " + from);
@@ -260,8 +270,7 @@ function submitAnswers() {
                         }, 750);
                     });
                 }
-                else
-                {
+                else {
                     console.log("TRIGGERING local COMPLETE");
                     $('.idVerify-container').unblock();
 
@@ -291,8 +300,7 @@ function submitAnswers() {
 
                 isCompleted = true; //(see note in error handler)
 
-                if (from == "lndngpg")
-                {
+                if (from == "lndngpg") {
                     window.parent.$('body').trigger('complete');
                 }
                 else if (from == "llapp") // FROM LANDLORD APP
@@ -300,8 +308,7 @@ function submitAnswers() {
                     console.log("TRIGGERING addblockLdg IN LL APP");
                     window.parent.$('body').trigger('ExraIdVerComplete');
                 }
-                else
-                {
+                else {
                     $('.idVerify-container').unblock();
                     displayLoadingBox("Finishing...");
                     setTimeout(function () {
@@ -315,8 +322,7 @@ function submitAnswers() {
             // (9.29/15) Setting to true even in case of error so that the User can continue adding a bank.
             //           We can re-ask the verification questions later, but don't want to lose the user entirely.
             isCompleted = true;
-            if (from == "lndngpg")
-            {
+            if (from == "lndngpg") {
                 window.parent.$('body').trigger('complete');
             }
             else if (from == "llapp") // FROM LANDLORD APP
@@ -324,8 +330,7 @@ function submitAnswers() {
                 console.log("TRIGGERING addblockLdg IN LL APP");
                 window.parent.$('body').trigger('ExraIdVerComplete');
             }
-            else
-            {
+            else {
                 showErrorAlert('2');
             }
         }
@@ -361,20 +366,16 @@ function areThereErrors() {
 
         // Handle Errors: If coming from another page via iFrame, trigger error in parent window
         //                Otherwise, show error on this page.
-        if (from == "lndngpg")
-        {
-            if (error_msg == "Answers already submitted for this user")
-            {
+        if (from == "lndngpg") {
+            if (error_msg == "Answers already submitted for this user") {
                 isCompleted = true;
             }
-            else
-            {
+            else {
                 isCompleted = false;
             }
             window.parent.$('body').trigger('complete');
         }
-        else if (error_msg == "Answers already submitted for this user")
-        {
+        else if (error_msg == "Answers already submitted for this user") {
             swal({
                 title: "ID Already Verified",
                 text: "",
@@ -386,8 +387,7 @@ function areThereErrors() {
                 window.top.location.href = RED_URL;
             });
         }
-        else
-        {
+        else {
             showErrorAlert('1');
         }
 
@@ -400,13 +400,11 @@ function areThereErrors() {
 
 
 function showErrorAlert(errorNum) {
-    if (from == "lndngpg")
-    {
+    if (from == "lndngpg") {
         isCompleted = false;
         window.parent.$('body').trigger('complete');
     }
-    else
-    {
+    else {
         var alertTitle = "";
         var alertBodyText = "";
         var shouldShowErrorDiv = true;
@@ -426,16 +424,14 @@ function showErrorAlert(errorNum) {
                             "<br/><a href='mailto:support@nooch.com' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>support@nooch.com</a>";
         }
 
-        if (shouldShowErrorDiv == true)
-        {
+        if (shouldShowErrorDiv == true) {
             $(".navbar").removeClass('hidden');
             $("#idVerify").fadeOut();
             $(".errorMessage").removeClass('hidden');
             $(".errorMessage").html(alertBodyText);
             $(".errorMessage a").addClass("btn btn-default m-t-20 animated bounceIn");
         }
-        else
-        {
+        else {
             $(".navbar").addClass('hidden');
             $(".errorMessage").addClass('hidden');
         }
@@ -453,15 +449,13 @@ function showErrorAlert(errorNum) {
             allowEscapeKey: false,
             html: true
         }, function (isConfirm) {
-            if (isConfirm)
-            {
+            if (isConfirm) {
                 displayLoadingBox("Working...");
                 setTimeout(function () {
                     window.top.location.href = RED_URL;
                 }, 500);
             }
-            else
-            {
+            else {
                 window.open("mailto:support@nooch.com");
             }
         });

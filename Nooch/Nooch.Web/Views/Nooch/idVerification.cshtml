@@ -1,0 +1,467 @@
+﻿@using Nooch.Common.Entities;
+@{
+    Layout = null;
+    idVerification idv = (idVerification)ViewData["OnLoaddata"];
+    }
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Nooch | ID Verification</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="../Assets/Css/bootstrap.css" rel="stylesheet" />
+    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.4/themes/cupertino/jquery-ui.css" />
+    <link rel="stylesheet" href="@Url.Content("~/Assets/Css/sweetalert-override.min.css")" />
+
+    <link rel="stylesheet" href="@Url.Content("~/Assets/Css/AddBankTweaks.css")" />
+    <link rel="stylesheet" href="@Url.Content("~/Assets/Css/jquery.steps.css")" />
+    <link rel="stylesheet" href="@Url.Content("~/Assets/Css/idverification.css")" />
+    <link rel="icon" href="../Assets/favicon.ico" />
+</head>
+
+<body class="body" id="idQuestionsPage" style="overflow: hidden;" data-role="page">
+
+    <form id="form1">
+        <input type="hidden" id="memid" value="@idv.memid" />
+        <input type="hidden" id="qsetId" value="@idv.qsetId" />
+        <input type="hidden" id="from" value="@idv.from" />
+        <input type="hidden" id="redUrl" value="https://nooch.com" />
+        <input type="hidden" id="was_error" value="@idv.was_error" />
+        <input type="hidden" id="error_msg" value="@idv.error_msg" />
+        <input type="hidden" id="quest1id" value="@idv.quest1id" />
+        <input type="hidden" id="quest2id" value="@idv.quest2id" />
+        <input type="hidden" id="quest3id" value="@idv.quest3id" />
+        <input type="hidden" id="quest4id" value="@idv.quest4id" />
+        <input type="hidden" id="quest5id" value="@idv.quest5id" />
+
+    </form>
+
+    <nav class="navbar navbar-default navbar-fixed-top hidden" role="navigation">
+        <div class="clearfix">
+            <a class="landingHeaderLogo center-block" href="https://www.nooch.com/">
+                <img src="../Assets/Images/nooch-logo2.svg" class="center-block" alt="Nooch Logo" />
+            </a>
+        </div>
+    </nav>
+
+    <form id="idVerify">
+
+        <div class="idVerify-container raised-view">
+
+            <div class="addBank-heading">
+                <span>Verify Your Identity</span>
+                <a class="hide" id="bckbtn">
+                    <span style="font-size: 94%;" class="fa fa-chevron-left white-text"></span>
+                </a>
+            </div>
+
+            <div class="addBankContainer-body">
+
+                <span class="fa-stack fa-lg text-center" id="userVerification-icon">
+                    <i class="fa fa-circle fa-stack-2x"></i>
+                    <i class="fa fa-user fa-stack-1x fa-inverse"></i>
+                </span>
+
+                <div id="" class="clearfix">
+
+                    <form id="" role="form">
+
+                        <div class="row">
+
+                            <div id="idVerWizard" class="col-xs-12 hidden">
+
+                                <div class="questionTitleLabel">
+                                    <span>Question <span id="questionNum">1</span><span style="font-weight: normal;"> of </span>5</span>
+                                </div>
+
+                                <h3>Q1</h3>
+                                <section>
+
+                                    <div class="well m-b-10 animated flipInX">
+                                        <div class="f-300 text-center">
+                                            @*<asp:Label runat="server" ID="question1text" Text="Start easy: can you read this?"></asp:Label>*@
+                                            @*<label id="question1text"> "Start easy: can you read this?"</label>*@ 
+                                            <div id="question1text"> Start easy: can you read this?</div> 
+                                            <div id="question1text">@idv.question1text</div>
+                                        </div>
+                                    </div>
+
+                                    <div id="step1Feedback" class="feedbackContainer">
+                                        <div class="alert alert-danger animated hidden" role="alert">
+                                            <i class="fa fa-warning m-r-10"></i>Please select one of the options.
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group" id="q1Grp">
+                                        <div class="radio">
+                                            <label>
+                                                <input type="radio" name="question1" id="q1r1" value="1" />
+                                                <i class="input-helper"></i>
+                                                <span>
+                                                    @*<asp:Label runat="server" ID="question1_choice1" Text="Choice Number 1"></asp:Label>*@
+                                                    <div id="question1_choice1" >@idv.question1_choice1</div>
+                                                </span>
+                                            </label>
+                                        </div>
+                                        <div class="radio">
+                                            <label>
+                                                <input type="radio" name="question1" id="q1r2" value="2" />
+                                                <i class="input-helper"></i>
+                                                <span>
+                                                    @*<asp:Label runat="server" ID="question1_choice2" Text="Choice Number 1"></asp:Label>*@
+                                                    <div id="question1_choice2">@idv.question1_choice2</div>
+                                                </span>
+                                            </label>
+                                        </div>
+                                        <div class="radio">
+                                            <label>
+                                                <input type="radio" name="question1" id="q1r3" value="3" />
+                                                <i class="input-helper"></i>
+                                                <span>
+                                                    @*<asp:Label runat="server" ID="question1_choice3" Text="Choice Number 1"></asp:Label>*@
+                                                    <div id="question1_choice3">@idv.question1_choice3</div>
+                                                </span>
+                                            </label>
+                                        </div>
+                                        <div class="radio">
+                                            <label>
+                                                <input type="radio" name="question1" id="q1r4" value="4" />
+                                                <i class="input-helper"></i>
+                                                <span>
+                                                    @*<asp:Label runat="server" ID="question1_choice4" Text="Choice Number 1"></asp:Label>*@
+                                                    <div id="question1_choice4">@idv.question1_choice4</div>
+                                                </span>
+                                            </label>
+                                        </div>
+                                        <div class="radio">
+                                            <label>
+                                                <input type="radio" name="question1" id="q1r5" value="5" />
+                                                <i class="input-helper"></i>
+                                                <span>
+                                                    @*<asp:Label runat="server" ID="question1_choice5" Text="Choice Number 1"></asp:Label>*@
+                                                    <div id="question1_choice5">@idv.question1_choice5</div>
+                                                </span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                </section>
+
+                                <h3>Q2</h3>
+                                <section>
+
+                                    <div class="well m-b-10">
+                                        <div class="f-300 text-center">
+                                            @*<asp:Label runat="server" ID="question2text" Text="Another question"></asp:Label>*@
+                                            <div id="question2text"> Another question</div> 
+                                            <div id="question2text">@idv.question2text</div>
+                                        </div>                                        
+                                    </div>
+
+                                    <div id="step2Feedback" class="feedbackContainer">
+                                        <div class="alert alert-danger animated hidden" role="alert">
+                                            <i class="fa fa-warning m-r-10"></i>Please select one of the options.
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group" id="q2Grp">
+                                        <div class="radio">
+                                            <label>
+                                                <input type="radio" name="question2" id="q2r1" value="1" />
+                                                <i class="input-helper"></i>
+                                                <span>
+                                                    @*<asp:Label runat="server" ID="question2_choice1" Text="Choice Number 1"></asp:Label>*@
+                                                    <div id="question2_choice1">@idv.question2_choice1</div>
+                                                </span>
+                                            </label>
+                                        </div>
+                                        <div class="radio">
+                                            <label>
+                                                <input type="radio" name="question2" id="q2r2" value="2" />
+                                                <i class="input-helper"></i>
+                                                <span>
+                                                    @*<asp:Label runat="server" ID="question2_choice2" Text="Choice Number 1"></asp:Label>*@
+                                                    <div id="question2_choice2">@idv.question2_choice2</div>
+                                                </span>
+                                            </label>
+                                        </div>
+                                        <div class="radio">
+                                            <label>
+                                                <input type="radio" name="question2" id="q2r3" value="3" />
+                                                <i class="input-helper"></i>
+                                                <span>
+                                                    @*<asp:Label runat="server" ID="question2_choice3" Text="Choice Number 1"></asp:Label>*@
+                                                    <div id="question2_choice3">@idv.question2_choice3</div>
+                                                </span>
+                                            </label>
+                                        </div>
+                                        <div class="radio">
+                                            <label>
+                                                <input type="radio" name="question2" id="q2r4" value="4" />
+                                                <i class="input-helper"></i>
+                                                <span>
+                                                    @*<asp:Label runat="server" ID="question2_choice4" Text="Choice Number 1"></asp:Label>*@
+                                                    <div id="question2_choice4">@idv.question2_choice4</div>
+                                                </span>
+                                            </label>
+                                        </div>
+                                        <div class="radio">
+                                            <label>
+                                                <input type="radio" name="question2" id="q2r5" value="5" />
+                                                <i class="input-helper"></i>
+                                                <span>
+                                                    @*<asp:Label runat="server" ID="question2_choice5" Text="Choice Number 1"></asp:Label>*@
+                                                    <div id="question2_choice5">@idv.question2_choice5</div>
+                                                </span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                </section>
+
+                                <h3>Q3</h3>
+                                <section>
+                                    <div class="well m-b-10">
+                                        <div class="f-300 text-center">
+                                            @*<asp:Label runat="server" ID="question3text" Text="And another one..."></asp:Label>*@
+                                            <div id="question3text">And another one...</div>
+                                            <div id="question3text">@idv.question3text</div>        
+                                        </div>
+                                    </div>
+
+                                    <div id="step3Feedback" class="feedbackContainer">
+                                        <div class="alert alert-danger animated hidden" role="alert">
+                                            <i class="fa fa-warning m-r-10"></i>Please select one of the options.
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group" id="q3Grp">
+                                        <div class="radio">
+                                            <label>
+                                                <input type="radio" name="question3" id="q3r1" value="1" />
+                                                <i class="input-helper"></i>
+                                                <span>
+                                                    @*<asp:Label runat="server" ID="question3_choice1" Text="Choice Number 1"></asp:Label>*@
+                                                    <div id="question3_choice1">@idv.question3_choice1</div>
+                                                </span>
+                                            </label>
+                                        </div>
+                                        <div class="radio">
+                                            <label>
+                                                <input type="radio" name="question3" id="q3r2" value="2" />
+                                                <i class="input-helper"></i>
+                                                <span>
+                                                    @*<asp:Label runat="server" ID="question3_choice2" Text="Choice Number 1"></asp:Label>*@
+                                                    <div id="question3_choice2">@idv.question3_choice2</div>
+                                                </span>
+                                            </label>
+                                        </div>
+                                        <div class="radio">
+                                            <label>
+                                                <input type="radio" name="question3" id="q3r3" value="3" />
+                                                <i class="input-helper"></i>
+                                                <span>
+                                                    @*<asp:Label runat="server" ID="question3_choice3" Text="Choice Number 1"></asp:Label>*@
+                                                    <div id="question3_choice3">@idv.question3_choice3</div>
+                                                </span>
+                                            </label>
+                                        </div>
+                                        <div class="radio">
+                                            <label>
+                                                <input type="radio" name="question3" id="q3r4" value="4" />
+                                                <i class="input-helper"></i>
+                                                <span>
+                                                    @*<asp:Label runat="server" ID="question3_choice4" Text="Choice Number 1"></asp:Label>*@
+                                                    <div id="question3_choice4">@idv.question3_choice4</div>
+                                                </span>
+                                            </label>
+                                        </div>
+                                        <div class="radio">
+                                            <label>
+                                                <input type="radio" name="question3" id="q3r5" value="5" />
+                                                <i class="input-helper"></i>
+                                                <span>
+                                                    @*<asp:Label runat="server" ID="question3_choice5" Text="Choice Number 1"></asp:Label>*@
+                                                    <div id="question3_choice5">@idv.question3_choice5</div>
+                                                </span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                </section>
+
+                                <h3>Q4</h3>
+                                <section>
+
+                                    <div class="well m-b-10">
+                                        <div class="f-300 text-center">
+                                            @*<asp:Label runat="server" ID="question4text" Text="Almost done!"></asp:Label>*@
+                                            <div id="question4text">Almost done!</div>
+                                            <div id="question4text">@idv.question4text</div>
+                                        </div>
+                                    </div>
+
+                                    <div id="step4Feedback" class="feedbackContainer">
+                                        <div class="alert alert-danger animated hidden" role="alert">
+                                            <i class="fa fa-warning m-r-10"></i>Please select one of the options.
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group" id="q4Grp">
+                                        <div class="radio">
+                                            <label>
+                                                <input type="radio" name="question4" id="q4r1" value="1" />
+                                                <i class="input-helper"></i>
+                                                <span>
+                                                    @*<asp:Label runat="server" ID="question4_choice1" Text="Choice Number 1"></asp:Label>*@
+                                                    <div id="question4_choice1">@idv.question4_choice1</div>
+                                                </span>
+                                            </label>
+                                        </div>
+                                        <div class="radio">
+                                            <label>
+                                                <input type="radio" name="question4" id="q4r2" value="2" />
+                                                <i class="input-helper"></i>
+                                                <span>
+                                                    @*<asp:Label runat="server" ID="question4_choice2" Text="Choice Number 1"></asp:Label>*@
+                                                    <div id="question4_choice4">@idv.question4_choice2</div>
+                                                </span>
+                                            </label>
+                                        </div>
+                                        <div class="radio">
+                                            <label>
+                                                <input type="radio" name="question4" id="q4r3" value="3" />
+                                                <i class="input-helper"></i>
+                                                <span>
+                                                    @*<asp:Label runat="server" ID="question4_choice3" Text="Choice Number 1"></asp:Label>*@
+                                                    <div id="question4_choice3">@idv.question4_choice3</div>
+                                                </span>
+                                            </label>
+                                        </div>
+                                        <div class="radio">
+                                            <label>
+                                                <input type="radio" name="question4" id="q4r4" value="4" />
+                                                <i class="input-helper"></i>
+                                                <span>
+                                                    @*<asp:Label runat="server" ID="question4_choice4" Text="Choice Number 1"></asp:Label>*@
+                                                    <div id="question4_choice4">@idv.question4_choice4</div>
+                                                </span>
+                                            </label>
+                                        </div>
+                                        <div class="radio">
+                                            <label>
+                                                <input type="radio" name="question4" id="q4r5" value="5" />
+                                                <i class="input-helper"></i>
+                                                <span>
+                                                    @*<asp:Label runat="server" ID="question4_choice5" Text="Choice Number 1"></asp:Label>*@
+                                                    <div id="question4_choice5">@idv.question4_choice5</div>
+                                                </span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                </section>
+
+                                <h3>Q5</h3>
+                                <section>
+                                    <div class="well m-b-10">
+                                        <div class="f-300 text-center">
+                                            @*<asp:Label runat="server" ID="question5text" Text="Whew, last one!"></asp:Label>*@
+                                            <div id="question4text">Whew, last one!</div>
+                                            <div id="question5text">@idv.question5text</div>                                           
+                                        </div>
+                                    </div>
+
+                                    <div id="step5Feedback" class="feedbackContainer">
+                                        <div class="alert alert-danger animated hidden" role="alert">
+                                            <i class="fa fa-warning m-r-10"></i>Please select one of the options.
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group" id="q5Grp">
+                                        <div class="radio">
+                                            <label>
+                                                <input type="radio" name="question5" id="q5r1" value="1" />
+                                                <i class="input-helper"></i>
+                                                <span>
+                                                    @*<asp:Label runat="server" ID="question5_choice1" Text="Choice Number 1"></asp:Label>*@
+                                                    <div id="question5_choice1">@idv.question5_choice1</div>                                                    
+                                                </span>
+                                            </label>
+                                        </div>
+                                        <div class="radio">
+                                            <label>
+                                                <input type="radio" name="question5" id="q5r2" value="2" />
+                                                <i class="input-helper"></i>
+                                                <span>
+                                                    @*<asp:Label runat="server" ID="question5_choice2" Text="Choice Number 1"></asp:Label>*@
+                                                    <div id="question5_choice2">@idv.question5_choice2</div>
+                                                </span>
+                                            </label>
+                                        </div>
+                                        <div class="radio">
+                                            <label>
+                                                <input type="radio" name="question5" id="q5r3" value="3" />
+                                                <i class="input-helper"></i>
+                                                <span>
+                                                    @*<asp:Label runat="server" ID="question5_choice3" Text="Choice Number 1"></asp:Label>*@
+                                                    <div id="question5_choice3">@idv.question5_choice3</div>
+                                                </span>
+                                            </label>
+                                        </div>
+                                        <div class="radio">
+                                            <label>
+                                                <input type="radio" name="question5" id="q5r4" value="4" />
+                                                <i class="input-helper"></i>
+                                                <span>
+                                                    @*<asp:Label runat="server" ID="question5_choice4" Text="Choice Number 1"></asp:Label>*@
+                                                    <div id="question5_choice4">@idv.question5_choice4</div>
+                                                </span>
+                                            </label>
+                                        </div>
+                                        <div class="radio">
+                                            <label>
+                                                <input type="radio" name="question5" id="q5r5" value="5" />
+                                                <i class="input-helper"></i>
+                                                <span>
+                                                    @*<asp:Label runat="server" ID="question5_choice5" Text="Choice Number 1"></asp:Label>*@
+                                                    <div id="question5_choice5">@idv.question5_choice5</div>
+                                                </span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                </section>
+
+                            </div>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </form>
+
+    <div class="col-sm-6 col-sm-offset-3 col-lg-4 col-lg-offset-4 errorMessage hidden" style="margin-top:90px;"></div>
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+
+    <!-- Bootstrap Plugins -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+
+    <script src="../js/jquery.blockUI.min.js"></script>
+    <script src="../js/jquery.steps.min.js"></script>
+
+    <script src="../js/app/idverification.js"></script>
+    <script src="../js/sweetalert.min.js"></script>
+</body>
+</html>
+

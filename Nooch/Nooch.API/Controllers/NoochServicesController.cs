@@ -4326,7 +4326,61 @@ namespace Nooch.API.Controllers
             return null;
         }
 
-         
+
+        [HttpGet]
+        [ActionName("getIdVerificationQuestionsV3")]
+        public synapseIdVerificationQuestionsForDisplay getIdVerificationQuestionsV3(string memberid)
+        {
+            Logger.Info("Service Layer -> getIdVerificationQuestionsV3 Initiated - [MemberId: " + memberid + "]");
+            synapseIdVerificationQuestionsForDisplay res = new synapseIdVerificationQuestionsForDisplay();
+            res.memberId = memberid;
+
+            try
+            {
+                var mda = new MembersDataAccess();
+                res = mda.getIdVerificationQuestionsV3(memberid);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Layer -> getVerificationQuestionsV2 FAILED. [Exception: " + ex.InnerException + "]");
+
+                res.success = false;
+                res.msg = "Service layer exception :-(";
+            }
+
+            return res;
+        }
+
+
+        [HttpGet]
+        [ActionName("submitIdVerificationAswersV3")]
+        public synapseV3GenericResponse submitIdVerificationAswersV3(string MemberId, string questionSetId, string quest1id, string quest2id, string quest3id, string quest4id, string quest5id, string answer1id, string answer2id, string answer3id, string answer4id, string answer5id)
+        {
+            Logger.Info("Service Layer -> submitIdVerificationAswersV2 Initiated - [MemberId: " + MemberId + "]");
+
+            synapseV3GenericResponse res = new synapseV3GenericResponse();
+            res.isSuccess = false;
+
+            try
+            {
+                var mda = new MembersDataAccess();
+                submitIdVerificationInt mdaResult = mda.submitIdVerificationAnswersToSynapseV3( MemberId, questionSetId, quest1id,  quest2id,  quest3id,  quest4id,  quest5id,  answer1id,  answer2id,  answer3id,  answer4id,  answer5id);
+
+                res.isSuccess = mdaResult.success;
+                res.msg = mdaResult.message;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Layer -> submitIdVerificationAswersV2 FAILED. [Exception: " + ex + "]");
+
+                res.msg = "Exception in service layer";
+
+                throw  new Exception("Server Error.");
+            }
+
+            return res;
+        }
+
  
         #endregion
 

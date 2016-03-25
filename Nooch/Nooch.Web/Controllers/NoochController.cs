@@ -13,6 +13,7 @@ using Nooch.Common.Entities;
 using Nooch.Common.Entities.MobileAppOutputEnities;
 using Nooch.DataAccess;
 using Nooch.Common.Entities.LandingPagesRelatedEntities.RejectMoney;
+using System.Net;
 
 
 namespace Nooch.Web.Controllers
@@ -1612,12 +1613,10 @@ namespace Nooch.Web.Controllers
                 //checkEmailMsg.Visible = true;
             }
         }
-
-
+        
         [HttpPost]
         [ActionName("saveMemberInfo")]
 
-        //public static genericResponse saveMemberInfo(string memId, string name, string dob, string ssn, string address, string zip, string email, string phone, string fngprnt, string ip)
         public  ActionResult saveMemberInfo(ResultcreateAccount resultcreateAccount)   
     {
                 
@@ -1841,6 +1840,235 @@ namespace Nooch.Web.Controllers
             }
             return Json(res);
 
+        }
+
+        
+        public ActionResult idVerification()
+        {
+            idVerification idv = new idVerification();
+            Logger.Info("idVerification CodeBehind -> Page_load Initiated - ['memid' Parameter: " + Request.QueryString["memid"] + "]");
+            idv.error_msg = "initial";
+            idv.from = "unknown";
+            idv.redUrl = "https://www.nooch.com";
+
+            try
+            {
+                if (!String.IsNullOrEmpty(Request.QueryString["from"]))
+                {
+                    idv.from = Request.QueryString["from"].ToString();
+
+                    if (idv.from == "addbnk" &&
+                        !String.IsNullOrEmpty(Request.QueryString["redUrl"]))
+                    {
+                        idv.redUrl = Request.QueryString["redUrl"].ToString();
+                    }
+                }
+
+                if (!String.IsNullOrEmpty(Request.QueryString["memid"]))
+                {
+                    idv.memid = Request.QueryString["memid"].ToString();
+                    idv = getIdVerificationQuestionsV3(Request.QueryString["memid"].ToString(), idv);
+                }
+                else
+                {
+                    // something wrong with query string
+                    idv.was_error = "true";
+                    idv.error_msg = "Bad query string";
+                }
+            }
+            catch (Exception ex)
+            {
+                idv.was_error = "true";
+                idv.error_msg = "Code behind exception";
+
+                Logger.Error("idVerification CodeBehind -> page_load OUTER EXCEPTION - ['memid' Parameter: " +
+                                       Request.QueryString["memid"] + "], [Exception: " + ex.Message + "]");
+            }
+            ViewData["OnLoaddata"] = idv;
+            return View();
+        }
+
+        // Get the ID Verification questions for this user from the SynapseIdVerificationQuestions Table (there should be 5 questions, each with 5 possible answer choices)
+        public idVerification getIdVerificationQuestionsV3(string memberId, idVerification IdVerification)
+        {
+            idVerification idv = IdVerification;
+            try
+            {
+                string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+                string serviceMethod = "/getIdVerificationQuestionsV3?memberid=" + memberId;
+
+                synapseV2_IdVerQsForDisplay_Int questionsFromDb =
+                    ResponseConverter<synapseV2_IdVerQsForDisplay_Int>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+
+                if (questionsFromDb == null)
+                {
+                    Logger.Error("idVerification CodeBehind -> getVerificationQuestionsV2 - Could Not Find Member ['memid' Parameter: " +
+                                           Request.QueryString["memid"] + "]");
+
+                    idv.was_error = "true";
+                    idv.error_msg = "Member not found";
+                }
+                else if (questionsFromDb.success == true)
+                {
+                    idv.was_error = "false";
+                    idv.error_msg = "OK";
+
+                    // Set the QuestionSetId value (Hidden Input)                
+                    if (!String.IsNullOrEmpty(questionsFromDb.qSetId))
+                    {
+                        idv.qsetId = questionsFromDb.qSetId.ToString();                        
+                    }
+                    else
+                    {
+                        // No QuestionSetId returned from DB... that's a problem!!
+                        idv.was_error = "true";
+                        idv.error_msg = "No Question Set found for this member";
+                    }
+                   
+
+                    #region Set Text For Each Question & Answer Choices
+
+                    // THESE NEED TO BE SENT FROM THE DB IN THE CORRECT ORDER BY 'SynpQuestionId'... otherwise we won't match the answers with the right question
+
+                    if (!String.IsNullOrEmpty(questionsFromDb.questionList[0].question))
+                    {
+                        idv.question1text = questionsFromDb.questionList[0].question;
+                        idv.question1_choice1 = questionsFromDb.questionList[0].answers[0].answer;
+                        idv.question1_choice2 = questionsFromDb.questionList[0].answers[1].answer;
+                        idv.question1_choice3 = questionsFromDb.questionList[0].answers[2].answer;
+                        idv.question1_choice4 = questionsFromDb.questionList[0].answers[3].answer;
+                        idv.question1_choice5 = questionsFromDb.questionList[0].answers[4].answer;
+                        idv.quest1id = questionsFromDb.questionList[0].id;
+                    }
+
+                    if (!String.IsNullOrEmpty(questionsFromDb.questionList[1].question))
+                    {
+                        idv.question2text = questionsFromDb.questionList[1].question;
+                        idv.question2_choice1 = questionsFromDb.questionList[1].answers[0].answer;
+                        idv.question2_choice2 = questionsFromDb.questionList[1].answers[1].answer;
+                        idv.question2_choice3 = questionsFromDb.questionList[1].answers[2].answer;
+                        idv.question2_choice4 = questionsFromDb.questionList[1].answers[3].answer;
+                        idv.question2_choice5 = questionsFromDb.questionList[1].answers[4].answer;
+                        idv.quest2id = questionsFromDb.questionList[1].id;
+                    }
+
+                    if (!String.IsNullOrEmpty(questionsFromDb.questionList[2].question))
+                    {
+                        idv.question3text = questionsFromDb.questionList[2].question;
+                        idv.question3_choice1 = questionsFromDb.questionList[2].answers[0].answer;
+                        idv.question3_choice2 = questionsFromDb.questionList[2].answers[1].answer;
+                        idv.question3_choice3 = questionsFromDb.questionList[2].answers[2].answer;
+                        idv.question3_choice4 = questionsFromDb.questionList[2].answers[3].answer;
+                        idv.question3_choice5 = questionsFromDb.questionList[2].answers[4].answer;
+                        idv.quest3id = questionsFromDb.questionList[2].id;
+                    }
+
+                    if (!String.IsNullOrEmpty(questionsFromDb.questionList[3].question))
+                    {
+                        idv.question4text = questionsFromDb.questionList[3].question;
+                        idv.question4_choice1 = questionsFromDb.questionList[3].answers[0].answer;
+                        idv.question4_choice2 = questionsFromDb.questionList[3].answers[1].answer;
+                        idv.question4_choice3 = questionsFromDb.questionList[3].answers[2].answer;
+                        idv.question4_choice4 = questionsFromDb.questionList[3].answers[3].answer;
+                        idv.question4_choice5 = questionsFromDb.questionList[3].answers[4].answer;
+                        idv.quest4id = questionsFromDb.questionList[3].id;
+                    }
+
+                    if (!String.IsNullOrEmpty(questionsFromDb.questionList[4].question))
+                    {
+                        idv.question5text = questionsFromDb.questionList[4].question;
+                        idv.question5_choice1 = questionsFromDb.questionList[4].answers[0].answer;
+                        idv.question5_choice2 = questionsFromDb.questionList[4].answers[1].answer;
+                        idv.question5_choice3 = questionsFromDb.questionList[4].answers[2].answer;
+                        idv.question5_choice4 = questionsFromDb.questionList[4].answers[3].answer;
+                        idv.question5_choice5 = questionsFromDb.questionList[4].answers[4].answer;
+                        idv.quest5id = questionsFromDb.questionList[4].id;
+                    }
+
+                    #endregion Set Text For Each Question & Answer Choices
+
+                }
+                else if (questionsFromDb.msg == "ID already verified successfully" ||
+                         questionsFromDb.submitted == true)
+                {
+                    // THIS USER ALREADY SUBMITTED THE ANSWERS, SO THEY SHOULDN'T BE HERE...
+                    Logger.Error("idVerification CodeBehind -> getVerificationQuestionsV2 - Answers Already Submitted (Shouldn't be here then) - " +
+                                           "Member [MemberID from URL query string: " + Request.QueryString["memid"] + "]");
+                    idv.was_error = "true";
+                    idv.error_msg = "Answers already submitted for this user";
+                }
+                else
+                {
+                    idv.was_error = "true";
+                    idv.error_msg = "Codebehind - error getting questions";
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("idVerification CodeBehind -> getVerificationQuestionsV2 FAILED - ['memid' Parameter: " + Request.QueryString["memid"] + "], [Exception: " + ex + "]");
+            }
+            return idv;
+        }
+
+
+        // Submit the user's answers       
+        public ActionResult submitResponses(string MemberId, string questionSetId, string quest1id, string quest2id, string quest3id, string quest4id, string quest5id, string answer1id, string answer2id, string answer3id, string answer4id, string answer5id)
+        {
+            Logger.Info("idVerification CodeBehind -> submitResponses Initiated");
+
+            synapseV3GenericResponse res = new synapseV3GenericResponse();
+
+            try
+            {
+
+                if (String.IsNullOrEmpty(MemberId) || String.IsNullOrEmpty(questionSetId))
+                {
+                    if (String.IsNullOrEmpty(MemberId))
+                    {
+                        res.msg = "Invalid Data - Need a MemberID!";
+                    }
+                    else if (String.IsNullOrEmpty(questionSetId))
+                    {
+                        res.msg = "Invalid Data - Missing a Question Set ID";
+                    }
+
+                    Logger.Info("idVerification CodeBehind -> submitResponses ABORTED - [" + res.msg + "]");
+
+                    res.isSuccess = false;
+                }
+                // Check for 5 total answers
+                else if (answer1id == null || answer2id == null || answer3id == null || answer4id == null || answer5id== null)
+                {
+                    Logger.Info("idVerification CodeBehind -> submitResponses ABORTED: Missing at least 1 answer. [MemberId: " + MemberId + "]");
+
+                    res.isSuccess = false;
+                    res.msg = "Missing at least 1 answer (should have 5 total answers).";
+                }
+                else
+                {
+                    Logger.Info("idVerification CodeBehind -> submitResponses Initiated");
+
+                    // All required data exists, now send to NoochService.svc
+                    string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+                    //string serviceMethod = "/submitIdVerificationAswersV3?memberId=" + memId + "&qSetId=" + qSetId + "&a1=" + a1 + "&a2=" + a2 +
+                    //                       "&a3=" + a3 + "&a4=" + a4 + "&a5=" + a5;
+                    string serviceMethod = "/submitIdVerificationAswersV3?memberId=" + MemberId + "&questionSetId=" + questionSetId + "&quest1id=" + quest1id +
+                        "&quest2id=" + quest2id +"&quest3id=" + quest3id + "&quest4id=" + quest4id + "&quest5id=" + quest5id+ "&answer1id="+ answer1id+ "&answer2id="+ answer2id +
+                        "&answer3id="+ answer3id+ "&answer4id=" +answer4id+ "&answer5id="+answer5id ;
+                                            
+                synapseV3GenericResponse svcResponse =
+                        ResponseConverter<synapseV3GenericResponse>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+
+                    res.isSuccess = svcResponse.isSuccess;
+                    res.msg = svcResponse.msg;
+                }
+            }
+            catch (WebException we)
+            {
+                Logger.Error("idVerification CodeBehind -> submitResponses FAILED - [WebException: " + we.Status + "]");
+            }
+
+            return Json(res);
         }
 
     }

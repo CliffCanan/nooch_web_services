@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Nooch.Common.Entities.SynapseRelatedEntities
 {
-    // RESPONSE CLASS for BOTH **/user/doc/add**  AND  **/user/doc/verify**  AND ** /user/doc/attachment/add **
+    // RESPONSE CLASS for  **/user/doc/add**  AND  **/user/doc/verify**  AND ** /user/doc/attachment/add **
     public class kycInfoResponseFromSynapse
     {
 
@@ -52,4 +52,37 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
         public short id { get; set; }
         public string answer { get; set; }
     }
+
+
+
+
+    public class synapseIdVerificationAnswersInput
+    {
+        public SynapseV3Input_login login { get; set; }
+
+        public synapseSubmitIdAnswers_answers_input user { get; set; }
+    }
+
+
+    public class synapseSubmitIdAnswers_answers_input
+    {
+        //public SynapseV3Input_login login { get; set; }
+        public synapseSubmitIdAnswers_docSet doc { get; set; }
+
+        public string fingerprint { get; set; }
+
+    }
+
+    public class synapseSubmitIdAnswers_docSet
+    {
+        public string question_set_id { get; set; }
+        public synapseSubmitIdAnswers_Input_quest[] answers { get; set; }
+    }
+
+    public class synapseSubmitIdAnswers_Input_quest
+    {
+        public int question_id { get; set; }
+        public int answer_id { get; set; }
+    }
+
 }
