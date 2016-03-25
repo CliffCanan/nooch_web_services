@@ -2831,7 +2831,7 @@ namespace Nooch.API.Controllers
             {
                 MembersDataAccess mda = new MembersDataAccess();
                 // for testing
-                synapseCreateUserV3Result_int res = mda.RegisterUserWithSynapseV3(memberId,true);
+                synapseCreateUserV3Result_int res = mda.RegisterUserWithSynapseV3(memberId);
                 //for live 
                 //synapseCreateUserV3Result_int res = mda.RegisterUserWithSynapseV3(memberId, false);
 
@@ -3140,8 +3140,9 @@ namespace Nooch.API.Controllers
                 node.extra = extra;
                 bankloginParameters.node = node;
 
-                string UrlToHit = "https://sandbox.synapsepay.com/api/v3/node/add";
-                //string UrlToHit = "https://synapsepay.com/api/v3/node/add";
+                string UrlToHit = "";
+                UrlToHit = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/node/add" : "https://synapsepay.com/api/v3/node/add";
+                
 
                 #endregion Setup Call To SynapseV3 /node/add
 
@@ -3617,8 +3618,9 @@ namespace Nooch.API.Controllers
                     node.extra = extra;
                     bankloginParameters.node = node;
 
-                    string UrlToHit = "https://sandbox.synapsepay.com/api/v3/node/add";
-                    //string UrlToHit = "https://synapsepay.com/api/v3/node/add";
+                    string UrlToHit = "";
+                    UrlToHit = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/node/add" : "https://synapsepay.com/api/v3/node/add";
+                    
 
                     #endregion Setup Call To SynapseV3 /node/add
 

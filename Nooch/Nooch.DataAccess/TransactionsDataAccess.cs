@@ -3925,8 +3925,9 @@ namespace Nooch.DataAccess
 
                     #region Calling Synapse V3 TRANSACTION ADD
 
-                    string UrlToHitV3 = "https://sandbox.synapsepay.com/api/v3/trans/add";
-                    //string UrlToHit = "https://synapsepay.com/api/v3/trans/add";
+                    string UrlToHitV3 = "";
+                    UrlToHitV3 = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/trans/add" : "https://synapsepay.com/api/v3/trans/add";
+                    
 
                     try
                     {

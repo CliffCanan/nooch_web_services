@@ -1166,12 +1166,13 @@ namespace Nooch.Common
 
                     synapseInput.user = user;
 
-                    string baseAddress = "https://sandbox.synapsepay.com/api/v3/user/doc/add";
-                    //string baseAddress = "https://synapsepay.com/api/v3/user/doc/add";
+                    string baseAddress = "";
+                    baseAddress = Convert.ToBoolean( Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/doc/add" : "https://synapsepay.com/api/v3/user/doc/add";
+                    
 
                     // CLIFF (10/10/15): Adding the following for testing purposes only
                     #region For Testing
-                    if (GetDecryptedData(memberEntity.UserName).IndexOf("jones00") > -1)
+                    if (Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")))
                     {
                         Logger.Info("****  sendUserSSNInfoToSynapseV3 -> JUST A TEST BLOCK REACHED!  ****");
                         baseAddress = "https://sandbox.synapsepay.com/api/v3/user/doc/add";
@@ -1467,7 +1468,7 @@ namespace Nooch.Common
             }
             else
             {
-                usersSynapseOauthKey = CommonHelper.GetDecryptedData(usersSynapseDetails.access_token);
+                usersSynapseOauthKey = GetDecryptedData(usersSynapseDetails.access_token);
             }
 
             #endregion Get User's Synapse OAuth Consumer Key
@@ -1527,9 +1528,9 @@ namespace Nooch.Common
 
             //answers.user.doc.attachment = "data:text/csv;base64," + ConvertImageURLToBase64(ImageUrl).Replace("\\", ""); // NEED TO GET THE ACTUAL DOC... EITHER PASS THE BYTES TO THIS METHOD, OR GET FROM DB
             //answers.user.fingerprint = usersFingerprint;
-
-            string baseAddress = "https://sandbox.synapsepay.com/api/v3/user/doc/attachments/add";
-            //string baseAddress = "https://synapsepay.com/api/v3/user/doc/attachments/add";
+            string baseAddress = "";
+            baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/doc/attachments/add" : "https://synapsepay.com/api/v3/user/doc/attachments/add";
+            
 
             try
             {
@@ -1612,8 +1613,12 @@ namespace Nooch.Common
                 input.client = client;
                 input.filter = filter;
 
-                //string UrlToHit = "https://synapsepay.com/api/v3/user/search";
-                string UrlToHit = "https://sandbox.synapsepay.com/api/v3/user/search";
+
+
+
+                
+                string UrlToHit = "";
+                UrlToHit = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/search" : "https://synapsepay.com/api/v3/user/search";
 
                 var http = (HttpWebRequest)WebRequest.Create(new Uri(UrlToHit));
                 http.Accept = "application/json";
@@ -1746,10 +1751,10 @@ namespace Nooch.Common
                     // CLIFF (10/22/15): Added this block for testing - if you use an email that includes "jones00" in it, 
                     //                   then this method will use the Synapse (v3) SANDBOX.  Leaving this here in case we
                     //                   want to test in the future the same way.
-                    bool shouldUseSynapseSandbox = false;
+                    bool shouldUseSynapseSandbox = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox"));
                     string memberUsername = GetMemberUsernameByMemberId(memberId);
 
-                    if (memberUsername.ToLower().IndexOf("jones00") > -1)
+                    if (shouldUseSynapseSandbox)
                     {
                         shouldUseSynapseSandbox = true;
                         Logger.Info("**  ADA -> GetSynapseBankAndUserDetailsforGivenMemberId -> TESTING USER DETECTED - [" +
@@ -1760,8 +1765,8 @@ namespace Nooch.Common
 
                     #region Check If OAuth Key Still Valid
                     // if testing
-                    synapseV3checkUsersOauthKey checkTokenResult = refreshSynapseV3OautKey(createSynapseUserObj.access_token,
-                                                                                                           true);
+                    synapseV3checkUsersOauthKey checkTokenResult = refreshSynapseV3OautKey(createSynapseUserObj.access_token
+                                                                                                           );
                     // if live
                     //synapseV3checkUsersOauthKey checkTokenResult = refreshSynapseV3OautKey(createSynapseUserObj.access_token,
                     //                                                                   false);
@@ -1772,7 +1777,7 @@ namespace Nooch.Common
                         if (checkTokenResult.success == true)
                         {
                             res.UserDetails = new SynapseDetailsClass_UserDetails();
-                            res.UserDetails.access_token = CommonHelper.GetDecryptedData(checkTokenResult.oauth_consumer_key);  // NOTe :: Giving in encrypted format
+                            res.UserDetails.access_token = GetDecryptedData(checkTokenResult.oauth_consumer_key);  // NOTe :: Giving in encrypted format
                             res.UserDetails.user_id = checkTokenResult.user_oid;
                             res.UserDetails.user_fingerprints = memberObject.UDID1;
                             res.UserDetailsErrMessage = "OK";
@@ -1846,9 +1851,9 @@ namespace Nooch.Common
 
 
         // oAuth token needs to be in encrypted format
-        public static synapseV3checkUsersOauthKey refreshSynapseV3OautKey(string oauthKey, bool useSynapseSandbox)
+        public static synapseV3checkUsersOauthKey refreshSynapseV3OautKey(string oauthKey)
         {
-            Logger.Info("MDA -> refreshSynapseV2OautKey Initiated - User's Original OAuth Key (enc): [" + oauthKey + "]");
+            Logger.Info("MDA -> synapseV3checkUsersOauthKey Initiated - User's Original OAuth Key (enc): [" + oauthKey + "]");
 
             synapseV3checkUsersOauthKey res = new synapseV3checkUsersOauthKey();
             res.success = false;
@@ -1872,7 +1877,7 @@ namespace Nooch.Common
 
                     //refreshToken = GetDecryptedData(refreshToken);
                     #region Found Refresh Token
-                    Logger.Info("MDA -> refreshSynapseV2OautKey - Found Member By Original OAuth Key (enc): [" +
+                    Logger.Info("MDA -> synapseV3checkUsersOauthKey - Found Member By Original OAuth Key (enc): [" +
                                                 oauthKey +
                                                 "]");
 
@@ -1905,15 +1910,16 @@ namespace Nooch.Common
                     user.ip = GetRecentOrDefaultIPOfMember(noochMemberObject.MemberId);
                     input.user = user;
 
-                    string UrlToHit = "https://synapsepay.com/api/v3/user/signin";
+                    string UrlToHit = "";
+                    UrlToHit = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/signin" : "https://synapsepay.com/api/v3/user/signin";
 
 
-                    if (useSynapseSandbox)
+                    if (Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")))
                     {
                         Logger.Info(
-                            "MDA -> refreshSynapseV2OautKey - TEST USER DETECTED - useSynapseSandbox is: [" +
-                            useSynapseSandbox + "] - About to ping Synapse Sandbox /user/refresh...");
-                        UrlToHit = "https://sandbox.synapsepay.com/api/v3/user/signin";
+                            "MDA -> synapseV3checkUsersOauthKey - TEST USER DETECTED - useSynapseSandbox is: [" +
+                            Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) + "] - About to ping Synapse Sandbox /user/refresh...");
+                        UrlToHit = "";
                     }
 
                     var http = (HttpWebRequest)WebRequest.Create(new Uri(UrlToHit));
@@ -1944,7 +1950,7 @@ namespace Nooch.Common
 
                         JObject refreshResponse = JObject.Parse(content);
 
-                        Logger.Info("MDA -> refreshSynapseV2OautKey - Just Parsed Synapse Response: [" +
+                        Logger.Info("MDA -> synapseV3checkUsersOauthKey - Just Parsed Synapse Response: [" +
                                     refreshResponse + "]");
 
                         if (refreshResultFromSyn.success.ToString() == "true" ||
@@ -1981,7 +1987,9 @@ namespace Nooch.Common
                             if (a > 0)
                             {
                                 Logger.Info(
+
                                     "MDA -> refreshSynapseV3OautKey - SUCCESS From Synapse and Successfully added to Nooch DB - " +
+
                                     "Original Oauth Key (encr): [" + oauthKey + "], " +
                                     "Value for new, refreshed OAuth Key (encr): [" +
                                     synCreateUserObject.access_token + "]");
@@ -1995,7 +2003,9 @@ namespace Nooch.Common
                             else
                             {
                                 Logger.Error(
+
                                     "MDA -> refreshSynapseV3OautKey FAILED - Error saving new key in Nooch DB - " +
+
                                     "Original Oauth Key: [" + oauthKey + "], " +
                                     "Value for new, refreshed OAuth Key: [" + synCreateUserObject.access_token + "]");
 
@@ -2005,7 +2015,9 @@ namespace Nooch.Common
                         else
                         {
                             Logger.Error(
+
                                 "MDA -> refreshSynapseV3OautKey FAILED - Error from Synapse service, no 'success' key found - " +
+
                                 "Original Oauth Key: [" + oauthKey + "]");
                             res.msg = "Service error.";
                         }
@@ -2022,7 +2034,7 @@ namespace Nooch.Common
 
                         string reason = errorJsonFromSynapse["reason"].ToString();
 
-                        Logger.Error("MDA -> refreshSynapseV2OautKey WEBEXCEPTION - HTTP Code: [" + http_code +
+                        Logger.Error("MDA -> synapseV3checkUsersOauthKey WEBEXCEPTION - HTTP Code: [" + http_code +
                                      "], Error Msg: [" + reason + "], Original Oauth Key (enc): [" + oauthKey + "]");
 
                         if (!String.IsNullOrEmpty(reason))
@@ -2032,7 +2044,7 @@ namespace Nooch.Common
                         else
                         {
                             Logger.Error(
-                                "MDA -> refreshSynapseV2OautKey FAILED: Synapse Error, but *reason* was null for [Original Oauth Key (enc): " +
+                                "MDA -> synapseV3checkUsersOauthKey FAILED: Synapse Error, but *reason* was null for [Original Oauth Key (enc): " +
                                 oauthKey + "], [Exception: " + we.InnerException + "]");
                         }
 
@@ -2045,7 +2057,9 @@ namespace Nooch.Common
                 {
                     // no record found for given oAuth token in synapse createuser results table
                     Logger.Error(
+
                                    "MDA -> refreshSynapseV3OautKey FAILED -  no record found for given oAuth key found - " +
+
                                    "Original Oauth Key: (enc) [" + oauthKey + "]");
                     res.msg = "Service error.";
                 }
@@ -2053,7 +2067,7 @@ namespace Nooch.Common
             }
             catch (Exception ex)
             {
-                Logger.Error("MDA -> refreshSynapseV2OautKey FAILED: Outer Catch Error - Original OAuth Key (enc): [" + oauthKey +
+                Logger.Error("MDA -> synapseV3checkUsersOauthKey FAILED: Outer Catch Error - Original OAuth Key (enc): [" + oauthKey +
                                        "], [Exception: " + ex + "]");
 
                 res.msg = "Nooch Server Error: Outer Exception.";
@@ -2153,17 +2167,17 @@ namespace Nooch.Common
 
                         #region Check if Bank included user info & Compare to Nooch info
 
-                        string noochEmailAddress = CommonHelper.GetDecryptedData(MemberInfoInNoochDb.UserName).ToLower();
-                        string noochPhoneNumber = CommonHelper.RemovePhoneNumberFormatting(MemberInfoInNoochDb.ContactNumber);
-                        string noochFirstName = CommonHelper.GetDecryptedData(MemberInfoInNoochDb.FirstName).ToLower();
-                        string noochLastName = CommonHelper.GetDecryptedData(MemberInfoInNoochDb.LastName).ToLower();
+                        string noochEmailAddress = GetDecryptedData(MemberInfoInNoochDb.UserName).ToLower();
+                        string noochPhoneNumber = RemovePhoneNumberFormatting(MemberInfoInNoochDb.ContactNumber);
+                        string noochFirstName = GetDecryptedData(MemberInfoInNoochDb.FirstName).ToLower();
+                        string noochLastName = GetDecryptedData(MemberInfoInNoochDb.LastName).ToLower();
                         string noochFullName = noochFirstName + " " + noochLastName;
 
                         string fullNameFromBank = selectedBank.name_on_account.ToString();
                         string firstNameFromBank = "";
                         string lastNameFromBank = "";
-                        string emailFromBank = selectedBank.email != null ? selectedBank.email.ToString().ToLower() : "";
-                        string phoneFromBank = selectedBank.phone_number != null ? CommonHelper.RemovePhoneNumberFormatting(selectedBank.phone_number) : "";
+                        string emailFromBank = selectedBank.email != null ? selectedBank.email.ToLower() : "";
+                        string phoneFromBank = selectedBank.phone_number != null ? RemovePhoneNumberFormatting(selectedBank.phone_number) : "";
 
                         bool bankIncludedName = false;
                         bool bankIncludedEmail = false;
@@ -2182,7 +2196,7 @@ namespace Nooch.Common
                             bankIncludedName = true;
 
                             // Name was included with Bank, now decrypt it to compare with User's Name
-                            fullNameFromBank = CommonHelper.GetDecryptedData(fullNameFromBank).ToLower();
+                            fullNameFromBank = GetDecryptedData(fullNameFromBank).ToLower();
 
                             #region Parse Name
                             // Parse & compare NAME from Nooch account w/ NAME from this bank account

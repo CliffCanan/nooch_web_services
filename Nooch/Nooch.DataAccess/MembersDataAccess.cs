@@ -1319,9 +1319,8 @@ namespace Nooch.DataAccess
 
 
 
-                    var memdetails = _dbContext.Members.Where(memberTemp =>
-                                (memberTemp.UserName == userNameLowerCase || memberTemp.UserNameLowerCase == userNameLowerCase) &&
-                                memberTemp.IsDeleted == false).FirstOrDefault();
+                    var memdetails = _dbContext.Members.FirstOrDefault(memberTemp => (memberTemp.UserName == userNameLowerCase || memberTemp.UserNameLowerCase == userNameLowerCase) &&
+                                                                                     memberTemp.IsDeleted == false);
 
                     if (memdetails == null)
                     {
@@ -1530,7 +1529,7 @@ namespace Nooch.DataAccess
                                         Guid invideCodeGuid = Utility.ConvertToGuid(inviteCode);
 
 
-                                        var inviteCodeObj = _dbContext.InviteCodes.Where(inviteTemp => inviteTemp.InviteCodeId == invideCodeGuid).FirstOrDefault();
+                                        var inviteCodeObj = _dbContext.InviteCodes.FirstOrDefault(inviteTemp => inviteTemp.InviteCodeId == invideCodeGuid);
 
                                         if (inviteCodeObj == null)
                                         {
@@ -1689,7 +1688,7 @@ namespace Nooch.DataAccess
 
         #region synapse related methods
 
-        public synapseCreateUserV3Result_int RegisterUserWithSynapseV3(string memberId, bool isSandbox)
+        public synapseCreateUserV3Result_int RegisterUserWithSynapseV3(string memberId)
         {
             Logger.Info("MDA -> RegisterUserWithSynapseV3 Initiated - [Member: " + memberId + "]");
 
@@ -1795,12 +1794,9 @@ namespace Nooch.DataAccess
                 extra.is_business = false; // CLIFF (10/10/12): For Landlords, this could potentially be true... but we'll figure that out later
 
                 payload.extra = extra;
-                var baseAddress = "https://synapsepay.com/api/v3/user/create";
-                if (isSandbox)
-                {
-                    baseAddress = "https://sandbox.synapsepay.com/api/v3/user/create";
-                }
-                //var baseAddress = "https://synapsepay.com/api/v3/user/create";
+                var baseAddress = "";
+                baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/create" : "https://synapsepay.com/api/v3/user/create";
+                
 
                 try
                 {
@@ -2205,9 +2201,8 @@ namespace Nooch.DataAccess
 
             Guid memGuid = Utility.ConvertToGuid(memberId);
 
-            var memberObj = _dbContext.Members.Where(memberTemp =>
-                               memberTemp.MemberId.Equals(memGuid) &&
-                               memberTemp.IsDeleted == false).FirstOrDefault();
+            var memberObj = _dbContext.Members.FirstOrDefault(memberTemp => memberTemp.MemberId.Equals(memGuid) &&
+                                                                            memberTemp.IsDeleted == false);
 
 
 
@@ -2301,9 +2296,8 @@ namespace Nooch.DataAccess
                     try
                     {
 
-                        var tenantObj = _dbContext.Tenants.Where(memberTemp =>
-                                            memberTemp.MemberId == memGuid &&
-                                            memberTemp.IsDeleted == false).FirstOrDefault();
+                        var tenantObj = _dbContext.Tenants.FirstOrDefault(memberTemp => memberTemp.MemberId == memGuid &&
+                                                                                        memberTemp.IsDeleted == false);
 
                         if (tenantObj != null)
                         {
@@ -2468,7 +2462,7 @@ namespace Nooch.DataAccess
                     {
                         // Now call Synapse create user service
                         Logger.Info("** MDA -> RegisterExistingUserWithSynapseV2 ABOUT TO CALL CREATE SYNAPSE USER METHOD  **");
-                        createSynapseUserResult = RegisterUserWithSynapseV3(memberObj.MemberId.ToString(), true);
+                        createSynapseUserResult = RegisterUserWithSynapseV3(memberObj.MemberId.ToString());
                     }
                     catch (Exception ex)
                     {
@@ -2739,7 +2733,7 @@ namespace Nooch.DataAccess
                 {
                     Guid tid = Utility.ConvertToGuid(transId);
 
-                    var transDetail = _dbContext.Transactions.Where(transIdTemp => transIdTemp.TransactionId == tid).FirstOrDefault();
+                    var transDetail = _dbContext.Transactions.FirstOrDefault(transIdTemp => transIdTemp.TransactionId == tid);
 
                     if (transDetail != null)
                     {
@@ -3038,7 +3032,7 @@ namespace Nooch.DataAccess
                     {
                         // Now call Synapse create user service
                         Logger.Info("** MDA -> RegisterExistingUserWithSynapseV2 ABOUT TO CALL CREATE SYNAPSE USER METHOD  **");
-                        createSynapseUserResult = RegisterUserWithSynapseV3(member.MemberId.ToString(), true);
+                        createSynapseUserResult = RegisterUserWithSynapseV3(member.MemberId.ToString());
                     }
                     catch (Exception ex)
                     {
@@ -3430,8 +3424,10 @@ namespace Nooch.DataAccess
             //answers.user.doc.attachment = "data:text/csv;base64," + ConvertImageURLToBase64(ImageUrl).Replace("\\", ""); // NEED TO GET THE ACTUAL DOC... EITHER PASS THE BYTES TO THIS METHOD, OR GET FROM DB
             //answers.user.fingerprint = usersFingerprint;
 
-            string baseAddress = "https://sandbox.synapsepay.com/api/v3/user/doc/attachments/add";
-            //string baseAddress = "https://synapsepay.com/api/v3/user/doc/attachments/add";
+            string baseAddress = "";
+
+            baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/doc/attachments/add" : "https://synapsepay.com/api/v3/user/doc/attachments/add";
+            
 
             try
             {
@@ -3983,8 +3979,9 @@ namespace Nooch.DataAccess
                         //bankLoginPars.node._id.oid = BankId;
                         //bankLoginPars.node.verify.mfa = MfaResponse;
 
-                        string UrlToHit = "https://sandbox.synapsepay.com/api/v3/node/verify";
-                        //string UrlToHit = "https://synapsepay.com/api/v3/node/verify";
+                        string UrlToHit = "";
+                        UrlToHit = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/node/verify" : "https://synapsepay.com/api/v3/node/verify";
+                        
 
                         // Calling Synapse Bank Login service (Link a Bank Account)
 
@@ -4337,8 +4334,9 @@ namespace Nooch.DataAccess
                         //bankLoginPars.node._id.oid = BankId;
                         //bankLoginPars.node.verify.mfa = MfaResponse;
 
-                        string UrlToHit = "https://sandbox.synapsepay.com/api/v3/node/verify";
-                        //string UrlToHit = "https://synapsepay.com/api/v3/node/verify";
+                        string UrlToHit = "";
+                        UrlToHit = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/node/verify" : "https://synapsepay.com/api/v3/node/verify";
+                        
 
                         // Calling Synapse Bank Login service (Link a Bank Account)
 
@@ -4668,8 +4666,9 @@ namespace Nooch.DataAccess
                 //removeBankPars.node._id.oid = bankAccountsFound[0].ToString();
                 removeBankPars.node = nodem;
 
-                string baseAddress = "https://sandbox.synapsepay.com/api/v3/node/remove";
-                //string baseAddress = "https://sandbox.synapsepay.com/api/v3/node/remove";
+                string baseAddress = "";
+                baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/node/remove" : "https://synapsepay.com/api/v3/node/remove";
+                
 
                 try
                 {
@@ -4939,12 +4938,9 @@ namespace Nooch.DataAccess
             #region Call Synapse /user/ssn/answer API
 
 
-            string baseAddress = "https://sandbox.synapsepay.com/api/v3/user/doc/verify";
-            // set here for live server
-            //string baseAddress = "https://synapsepay.com/api/v3/user/doc/verify";
-
-
-
+            string baseAddress = "";
+            baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/doc/verify" : "https://synapsepay.com/api/v3/user/doc/verify";
+            
             try
             {
                 var http = (HttpWebRequest)WebRequest.Create(new Uri(baseAddress));
@@ -5170,8 +5166,8 @@ namespace Nooch.DataAccess
 
             int id = Convert.ToInt16(bankId);
 
-            var memberBank = _dbContext.SynapseBanksOfMembers.Where(member => member.Id.Equals(id) &&
-                                     (member.Status != "Verified" || member.Status == null)).FirstOrDefault();
+            var memberBank = _dbContext.SynapseBanksOfMembers.FirstOrDefault(member => member.Id.Equals(id) &&
+                                                                                       (member.Status != "Verified" || member.Status == null));
 
             if (memberBank == null)
             {
