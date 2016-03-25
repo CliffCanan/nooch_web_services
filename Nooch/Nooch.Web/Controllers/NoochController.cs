@@ -76,6 +76,164 @@ namespace Nooch.Web.Controllers
             return View();
         }
 
+        public ActionResult DepositMoneyComplete() {
+            ResultDepositMoneyComplete rdmc = new ResultDepositMoneyComplete();
+            Logger.Info("DepositMoneyComplete CodeBehind -> page_load Initiated - 'mem_id' Parameter In URL: [" + Request.QueryString["mem_id"] + "]");
+
+            rdmc.paymentSuccess = false;
+
+            try
+            {
+                 
+                    if (!String.IsNullOrEmpty(Request.QueryString["mem_id"]))
+                    {
+                        string[] allQueryStrings = (Request.QueryString["mem_id"]).Split(',');
+
+                        if (allQueryStrings.Length > 1)
+                        {
+                            Response.Write("<script>var errorFromCodeBehind = '0';</script>");
+
+                            string mem_id = allQueryStrings[0];
+                            string tr_id = allQueryStrings[1];
+                            string isForRentScene = allQueryStrings[2];
+
+                            // Check if this payment is for Rent Scene
+                            if (isForRentScene == "true")
+                            {
+                                Logger.Info("DepositMoneyComplete CodeBehind -> Page_load - RENT SCENE Transaction Detected - TransID: [" + tr_id + "]");
+                                rdmc.rs = "true";
+                            }
+
+                            // Getting transaction details to check if transaction is still pending
+                            rdmc=  GetTransDetailsForDepositMoneyComplete(tr_id, rdmc);
+                            
+                            if (rdmc.IsTransactionStillPending)
+                            {
+                               rdmc= finishTransaction(mem_id, tr_id,rdmc);
+                            }
+                        }
+                        else
+                        {
+                            Logger.Error("DepositMoneyComplete CodeBehind -> page_load ERROR - 'mem_id' in query string did not have 2 parts as expected - [mem_id Parameter: " + Request.QueryString["mem_id"] + "]");
+                            Response.Write("<script>var errorFromCodeBehind = '2';</script>");
+                        }
+                    }
+                    else
+                    {
+                        // something wrong with query string
+                        Logger.Error("depositMoneyComplete CodeBehind -> page_load ERROR - 'mem_id' in query string was NULL or empty [mem_id Parameter: " + Request.QueryString["mem_id"] + "]");
+                        Response.Write("<script>var errorFromCodeBehind = '1';</script>");
+                    }
+                
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("depositMoneyComplete CodeBehind -> page_load OUTER EXCEPTION - [mem_id Parameter: " + Request.QueryString["mem_id"] +
+                                       "], [Exception: " + ex + "]");
+                rdmc.payinfobar = false;
+                Response.Write("<script>var errorFromCodeBehind = '1';</script>");
+            }
+            ViewData["OnLoaddata"] = rdmc;
+            return View();
+        }
+        private ResultDepositMoneyComplete finishTransaction(string MemberIdAfterSynapseAccountCreation, string TransactionId,ResultDepositMoneyComplete resultDepositMoneyComplete)
+        {
+            ResultDepositMoneyComplete rdmc = resultDepositMoneyComplete;
+            try
+            {
+                string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+                string serviceMethod = "/GetTransactionDetailByIdAndMoveMoneyForNewUserDeposit?TransactionId=" + TransactionId +
+                                       "&MemberIdAfterSynapseAccountCreation=" + MemberIdAfterSynapseAccountCreation +
+                                       "&TransactionType=SentToNewUser"; ;
+                if ((rdmc.usrTyp == "Existing" || rdmc.usrTyp == "Tenant") &&
+                     rdmc.payeeMemId.Length > 5)
+                {
+                    serviceMethod = serviceMethod + "&recipMemId=" + rdmc.payeeMemId;
+                }
+                Logger.Info("DepositMoneyComplete CodeBehind -> finishTransaction - About to Query Nooch Service to move money - URL: ["
+                                      + String.Concat(serviceUrl, serviceMethod) + "]");
+
+                TransactionDto transaction = ResponseConverter<TransactionDto>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+
+                if (transaction != null)
+                {
+                    if (transaction.synapseTransResult == "Success")
+                    {
+                        rdmc.paymentSuccess = true;
+                    }
+                    else
+                    {
+                        Logger.Error("DepositMoneyComplete CodeBehind -> completeTrans FAILED - TransId: [" + TransactionId + "]");
+
+                        rdmc.paymentSuccess = false;
+                        Response.Write("<script>errorFromCodeBehind = 'failed';</script>");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("depositMoneyComplete CodeBehind -> completeTrans FAILED - TransId: [" + TransactionId +
+                                       "], Exception: [" + ex + "]");
+            }
+            return rdmc;
+        }
+
+        public ResultDepositMoneyComplete GetTransDetailsForDepositMoneyComplete(string TransactionId,ResultDepositMoneyComplete resultDepositMoneyComplete)
+        {
+            ResultDepositMoneyComplete rdmc = resultDepositMoneyComplete;
+            string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+            string serviceMethod = "/GetTransactionDetailByIdForRequestPayPage?TransactionId=" + TransactionId;
+
+            TransactionDto transaction = ResponseConverter<TransactionDto>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+
+            if (transaction == null)
+            {
+                Logger.Error("depositMoneyComplete CodeBehind -> getTransDetails FAILED - Transaction was NULL [TransId: " + TransactionId + "]");
+
+                Response.Write("<script>errorFromCodeBehind = '3';</script>");
+                rdmc.IsTransactionStillPending = false;
+                return  rdmc;
+            }
+            else
+            {
+                rdmc.senderImage = transaction.SenderPhoto;
+                rdmc.senderName1  = transaction.Name;
+                rdmc.transAmountd = transaction.Amount.ToString("n2");
+                rdmc.transMemo = transaction.Memo;
+
+                // Check if this was a Rent request from a Landlord
+                if (!String.IsNullOrEmpty(transaction.TransactionType) &&
+                    transaction.TransactionType == "Rent")
+                {
+                    rdmc.usrTyp = "Tenant";
+                    rdmc.payeeMemId = !String.IsNullOrEmpty(transaction.MemberId) ? transaction.MemberId : "none";
+                }
+
+                // Check if this was a request to an existing, but 'NonRegistered' User
+                else if (transaction.IsExistingButNonRegUser == true)
+                {
+                    rdmc.usrTyp = "Existing";
+                    rdmc.payeeMemId = !String.IsNullOrEmpty(transaction.MemberId) ? transaction.MemberId : "none";
+                }
+
+                #region Check If Still Pending
+
+                Response.Write("<script>var isStillPending = true;</script>");
+
+                if (transaction.TransactionStatus != "Pending")
+                {
+                    Response.Write("<script>isStillPending = false;</script>");
+                    rdmc.IsTransactionStillPending = false;
+                    return rdmc;
+                }
+
+                #endregion Check If Still Pending
+            }
+
+            rdmc.IsTransactionStillPending = true;
+            return rdmc;
+        }
+
         public ActionResult CancelRequest()
         {
 

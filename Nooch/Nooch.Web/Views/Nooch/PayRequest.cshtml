@@ -30,7 +30,7 @@
 <body id="body-depositNew" class="no-border pay-request-pg" style="background-color: rgba(230, 231, 232, 0.8);">
 
     <form id="form1" >
-        
+        <input type="hidden" id="addBank_Url" value="@Url.Action("AddBank","Nooch")" />
         <input type="hidden" ID="pymnt_status"   Value="@rpr.pymnt_status" />
         <input type="hidden" ID="transId"   Value="@rpr.transId" />
         <input type="hidden" ID="invitationSentto" value="@rpr.invitationSentto"  />

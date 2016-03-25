@@ -130,8 +130,8 @@ $(document).ready(function () {
                     html: true,
                     customClass: "securityAlert confirmBtnFullWidth"
                 }, function () {
-                    redUrlForAddBank = (transType == "send") ? "https://www.noochme.com/noochweb/trans/depositMoneycomplete.aspx?mem_id="
-                                                             : "https://www.noochme.com/noochweb/trans/payRequestComplete.aspx?mem_id=";
+                    redUrlForAddBank = (transType == "send") ? "https://www.noochme.com/noochweb/nooch/depositMoneycomplete?mem_id="
+                                                             : "https://www.noochme.com/noochweb/nooch/payRequestComplete?mem_id=";
 
                     redUrlForAddBank = redUrlForAddBank + MemID_EXISTING + "," + TRANSID;
 
@@ -144,7 +144,7 @@ $(document).ready(function () {
                      //$("#frame").attr("src", "https://www.noochme.com/noochweb/trans/Add-Bank.aspx?MemberId=" + MemID_EXISTING +
                      //                      "&redUrl=" + redUrlForAddBank);
 
-                    $("#frame").attr("src", "/nooch/addbank?memberid=" + MemID_EXISTING +
+                    $("#frame").attr("src",$('#addBank_Url').val()+  "?memberid=" + MemID_EXISTING +
                                           "&redUrl=" + redUrlForAddBank);
                     $('#AddBankDiv').removeClass('hidden').addClass('bounceIn');
                 });
@@ -780,8 +780,8 @@ function idVerifiedSuccess() {
             customClass: "idVerSuccessAlert"
         }, function () {
             
-            redUrlForAddBank = (transType == "send") ? "https://www.noochme.com/noochweb/trans/depositMoneycomplete.aspx?mem_id="
-                                                     : "https://www.noochme.com/noochweb/trans/payRequestComplete.aspx?mem_id=";
+            redUrlForAddBank = (transType == "send") ? "https://www.noochme.com/noochweb/nooch/depositMoneycomplete?mem_id="
+                                                     : "https://www.noochme.com/noochweb/nooch/payRequestComplete?mem_id=";
             
             redUrlForAddBank = redUrlForAddBank + memIdGen + "," + TRANSID;
 
@@ -794,7 +794,7 @@ function idVerifiedSuccess() {
             //$("#frame").attr("src", "Nooch/Add-Bank.aspx?MemberId=" + memIdGen +
             //                        "&redUrl=" + redUrlForAddBank);
 
-            $("#frame").attr("src", "/nooch/addbank?memberid=" + memIdGen +
+            $("#frame").attr("src", $('#addBank_Url').val()+ "?memberid=" + memIdGen +
                                           "&redUrl=" + redUrlForAddBank);
 
             $('#AddBankDiv').removeClass('hidden').addClass('bounceIn');
