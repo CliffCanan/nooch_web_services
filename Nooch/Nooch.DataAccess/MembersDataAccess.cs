@@ -1918,7 +1918,7 @@ namespace Nooch.DataAccess
                 if (res.success == true &&
                     !String.IsNullOrEmpty(res.oauth.oauth_key))
                 {
-                    res.user_id = !String.IsNullOrEmpty(res.user.client.id) ? res.user.client.id : "";
+                    res.user_id = !String.IsNullOrEmpty(res.user._id.id) ? res.user._id.id : "";
                     res.ssn_verify_status = "did not check yet";
 
                     // Mark any existing Synapse 'Create User' results for this user as Deleted
@@ -1965,7 +1965,7 @@ namespace Nooch.DataAccess
                         newSynapseUser.expires_in = res.oauth.expires_at;
                         newSynapseUser.refresh_token = CommonHelper.GetEncryptedData(res.oauth.refresh_token);
                         newSynapseUser.username = CommonHelper.GetEncryptedData(res.user.logins[0].email);
-                        newSynapseUser.user_id = res.user.client.id; // this is no more int... this will be string from now onwards
+                        newSynapseUser.user_id = res.user._id.id; // this is no more int... this will be string from now onwards
 
                         // LETS USE THE EXISTING V2 DB TABLE FOR V3: 'SynapseCreateUserResults'... all the same, PLUS a few additional parameters (none are that important, but we should store them):
                         // NEED TO ADD THE FOLLOWING PARAMETERS TO DATABASE: is_business (bool); legal_name (string); permission (string); phone number (string); photos (string)
