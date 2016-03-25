@@ -282,6 +282,12 @@ namespace Nooch.Common
                 }
                 mailMessage.IsBodyHtml = true;
                 mailMessage.Subject = subjectString;
+
+
+
+                if (Convert.ToBoolean(GetValueFromConfig("IsRunningOnSandBox")))
+                    toAddress = GetValueFromConfig("SandboxEmailsRecepientEmail");
+
                 mailMessage.To.Add(toAddress);
 
                 if (!String.IsNullOrEmpty(bccMailId))
