@@ -3760,6 +3760,7 @@ namespace Nooch.DataAccess
                     foreach (synapseSearchUserResponse_User senderUser in senderPermissions.users)
                     {
                         // iterating each node inside
+                        
                         if (senderUser.nodes != null && senderUser.nodes.Length > 0)
                         {
                             NodePermissionCheckResult nodePermCheckRes = CommonHelper.IsNodeActiveInGivenSetOfNodes(senderUser.nodes, sender_bank_node_id);

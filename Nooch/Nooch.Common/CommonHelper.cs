@@ -1697,7 +1697,7 @@ namespace Nooch.Common
 
             foreach (synapseSearchUserResponse_Node node in allNodes)
             {
-                if (node._id != null && node._id.oid == nodeToMatch)
+                if (node._id != null && (node._id.oid == nodeToMatch) || (node._id.oid == CommonHelper.GetDecryptedData(nodeToMatch)))
                 {
                     if (!String.IsNullOrEmpty(node.allowed))
                     {
@@ -1981,7 +1981,7 @@ namespace Nooch.Common
                             if (a > 0)
                             {
                                 Logger.Info(
-                                    "MDA -> refreshSynapseV2OautKey - SUCCESS From Synapse and Successfully added to Nooch DB - " +
+                                    "MDA -> refreshSynapseV3OautKey - SUCCESS From Synapse and Successfully added to Nooch DB - " +
                                     "Original Oauth Key (encr): [" + oauthKey + "], " +
                                     "Value for new, refreshed OAuth Key (encr): [" +
                                     synCreateUserObject.access_token + "]");
@@ -1995,7 +1995,7 @@ namespace Nooch.Common
                             else
                             {
                                 Logger.Error(
-                                    "MDA -> refreshSynapseV2OautKey FAILED - Error saving new key in Nooch DB - " +
+                                    "MDA -> refreshSynapseV3OautKey FAILED - Error saving new key in Nooch DB - " +
                                     "Original Oauth Key: [" + oauthKey + "], " +
                                     "Value for new, refreshed OAuth Key: [" + synCreateUserObject.access_token + "]");
 
@@ -2005,7 +2005,7 @@ namespace Nooch.Common
                         else
                         {
                             Logger.Error(
-                                "MDA -> refreshSynapseV2OautKey FAILED - Error from Synapse service, no 'success' key found - " +
+                                "MDA -> refreshSynapseV3OautKey FAILED - Error from Synapse service, no 'success' key found - " +
                                 "Original Oauth Key: [" + oauthKey + "]");
                             res.msg = "Service error.";
                         }
@@ -2045,7 +2045,7 @@ namespace Nooch.Common
                 {
                     // no record found for given oAuth token in synapse createuser results table
                     Logger.Error(
-                                   "MDA -> refreshSynapseV2OautKey FAILED -  no record found for given oAuth key found - " +
+                                   "MDA -> refreshSynapseV3OautKey FAILED -  no record found for given oAuth key found - " +
                                    "Original Oauth Key: (enc) [" + oauthKey + "]");
                     res.msg = "Service error.";
                 }
