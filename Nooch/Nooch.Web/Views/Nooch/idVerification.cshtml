@@ -2,7 +2,7 @@
 @{
     Layout = null;
     idVerification idv = (idVerification)ViewData["OnLoaddata"];
-}
+    }
 
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -29,6 +29,12 @@
         <input type="hidden" id="redUrl" value="https://nooch.com" />
         <input type="hidden" id="was_error" value="@idv.was_error" />
         <input type="hidden" id="error_msg" value="@idv.error_msg" />
+        <input type="hidden" id="quest1id" value="@idv.quest1id" />
+        <input type="hidden" id="quest2id" value="@idv.quest2id" />
+        <input type="hidden" id="quest3id" value="@idv.quest3id" />
+        <input type="hidden" id="quest4id" value="@idv.quest4id" />
+        <input type="hidden" id="quest5id" value="@idv.quest5id" />
+
     </form>
 
     <nav class="navbar navbar-default navbar-fixed-top hidden" role="navigation">

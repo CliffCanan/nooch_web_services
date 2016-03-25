@@ -60,19 +60,18 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
     {
         public SynapseV3Input_login login { get; set; }
 
-
         public synapseSubmitIdAnswers_answers_input user { get; set; }
     }
 
 
     public class synapseSubmitIdAnswers_answers_input
     {
-        public SynapseV3Input_login login { get; set; }
+        //public SynapseV3Input_login login { get; set; }
         public synapseSubmitIdAnswers_docSet doc { get; set; }
 
+        public string fingerprint { get; set; }
+
     }
-
-
 
     public class synapseSubmitIdAnswers_docSet
     {

@@ -1758,7 +1758,7 @@ namespace Nooch.Web.Controllers
                     // Set the QuestionSetId value (Hidden Input)                
                     if (!String.IsNullOrEmpty(questionsFromDb.qSetId))
                     {
-                        idv.qsetId = questionsFromDb.qSetId.ToString();
+                        idv.qsetId = questionsFromDb.qSetId.ToString();                        
                     }
                     else
                     {
@@ -1766,6 +1766,7 @@ namespace Nooch.Web.Controllers
                         idv.was_error = "true";
                         idv.error_msg = "No Question Set found for this member";
                     }
+                   
 
                     #region Set Text For Each Question & Answer Choices
 
@@ -1779,6 +1780,7 @@ namespace Nooch.Web.Controllers
                         idv.question1_choice3 = questionsFromDb.questionList[0].answers[2].answer;
                         idv.question1_choice4 = questionsFromDb.questionList[0].answers[3].answer;
                         idv.question1_choice5 = questionsFromDb.questionList[0].answers[4].answer;
+                        idv.quest1id = questionsFromDb.questionList[0].id;
                     }
 
                     if (!String.IsNullOrEmpty(questionsFromDb.questionList[1].question))
@@ -1789,6 +1791,7 @@ namespace Nooch.Web.Controllers
                         idv.question2_choice3 = questionsFromDb.questionList[1].answers[2].answer;
                         idv.question2_choice4 = questionsFromDb.questionList[1].answers[3].answer;
                         idv.question2_choice5 = questionsFromDb.questionList[1].answers[4].answer;
+                        idv.quest2id = questionsFromDb.questionList[1].id;
                     }
 
                     if (!String.IsNullOrEmpty(questionsFromDb.questionList[2].question))
@@ -1799,6 +1802,7 @@ namespace Nooch.Web.Controllers
                         idv.question3_choice3 = questionsFromDb.questionList[2].answers[2].answer;
                         idv.question3_choice4 = questionsFromDb.questionList[2].answers[3].answer;
                         idv.question3_choice5 = questionsFromDb.questionList[2].answers[4].answer;
+                        idv.quest3id = questionsFromDb.questionList[2].id;
                     }
 
                     if (!String.IsNullOrEmpty(questionsFromDb.questionList[3].question))
@@ -1809,6 +1813,7 @@ namespace Nooch.Web.Controllers
                         idv.question4_choice3 = questionsFromDb.questionList[3].answers[2].answer;
                         idv.question4_choice4 = questionsFromDb.questionList[3].answers[3].answer;
                         idv.question4_choice5 = questionsFromDb.questionList[3].answers[4].answer;
+                        idv.quest4id = questionsFromDb.questionList[3].id;
                     }
 
                     if (!String.IsNullOrEmpty(questionsFromDb.questionList[4].question))
@@ -1819,6 +1824,7 @@ namespace Nooch.Web.Controllers
                         idv.question5_choice3 = questionsFromDb.questionList[4].answers[2].answer;
                         idv.question5_choice4 = questionsFromDb.questionList[4].answers[3].answer;
                         idv.question5_choice5 = questionsFromDb.questionList[4].answers[4].answer;
+                        idv.quest5id = questionsFromDb.questionList[4].id;
                     }
 
                     #endregion Set Text For Each Question & Answer Choices
@@ -1848,7 +1854,7 @@ namespace Nooch.Web.Controllers
 
 
         // Submit the user's answers       
-        public synapseV3GenericResponse submitResponses(string memId, string qSetId, string a1, string a2, string a3, string a4, string a5)
+        public ActionResult submitResponses(string MemberId, string questionSetId, string quest1id, string quest2id, string quest3id, string quest4id, string quest5id, string answer1id, string answer2id, string answer3id, string answer4id, string answer5id)
         {
             Logger.Info("idVerification CodeBehind -> submitResponses Initiated");
 
@@ -1857,13 +1863,13 @@ namespace Nooch.Web.Controllers
             try
             {
 
-                if (String.IsNullOrEmpty(memId) || String.IsNullOrEmpty(qSetId))
+                if (String.IsNullOrEmpty(MemberId) || String.IsNullOrEmpty(questionSetId))
                 {
-                    if (String.IsNullOrEmpty(memId))
+                    if (String.IsNullOrEmpty(MemberId))
                     {
                         res.msg = "Invalid Data - Need a MemberID!";
                     }
-                    else if (String.IsNullOrEmpty(qSetId))
+                    else if (String.IsNullOrEmpty(questionSetId))
                     {
                         res.msg = "Invalid Data - Missing a Question Set ID";
                     }
@@ -1873,9 +1879,9 @@ namespace Nooch.Web.Controllers
                     res.isSuccess = false;
                 }
                 // Check for 5 total answers
-                else if (a1 == null || a2 == null || a3 == null || a4 == null || a5== null)
+                else if (answer1id == null || answer2id == null || answer3id == null || answer4id == null || answer5id== null)
                 {
-                    Logger.Info("idVerification CodeBehind -> submitResponses ABORTED: Missing at least 1 answer. [MemberId: " + memId + "]");
+                    Logger.Info("idVerification CodeBehind -> submitResponses ABORTED: Missing at least 1 answer. [MemberId: " + MemberId + "]");
 
                     res.isSuccess = false;
                     res.msg = "Missing at least 1 answer (should have 5 total answers).";
@@ -1886,10 +1892,13 @@ namespace Nooch.Web.Controllers
 
                     // All required data exists, now send to NoochService.svc
                     string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-                    string serviceMethod = "/submitIdVerificationAswersV2?memberId=" + memId + "&qSetId=" + qSetId + "&a1=" + a1 + "&a2=" + a2 +
-                                           "&a3=" + a3 + "&a4=" + a4 + "&a5=" + a5;
-
-                    synapseV3GenericResponse svcResponse =
+                    //string serviceMethod = "/submitIdVerificationAswersV3?memberId=" + memId + "&qSetId=" + qSetId + "&a1=" + a1 + "&a2=" + a2 +
+                    //                       "&a3=" + a3 + "&a4=" + a4 + "&a5=" + a5;
+                    string serviceMethod = "/submitIdVerificationAswersV3?memberId=" + MemberId + "&questionSetId=" + questionSetId + "&quest1id=" + quest1id +
+                        "&quest2id=" + quest2id +"&quest3id=" + quest3id + "&quest4id=" + quest4id + "&quest5id=" + quest5id+ "&answer1id="+ answer1id+ "&answer2id="+ answer2id +
+                        "&answer3id="+ answer3id+ "&answer4id=" +answer4id+ "&answer5id="+answer5id ;
+                                            
+                synapseV3GenericResponse svcResponse =
                         ResponseConverter<synapseV3GenericResponse>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
 
                     res.isSuccess = svcResponse.isSuccess;
@@ -1901,7 +1910,7 @@ namespace Nooch.Web.Controllers
                 Logger.Error("idVerification CodeBehind -> submitResponses FAILED - [WebException: " + we.Status + "]");
             }
 
-            return res;
+            return Json(res);
         }
 
     }

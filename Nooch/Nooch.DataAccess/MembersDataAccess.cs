@@ -4731,7 +4731,7 @@ namespace Nooch.DataAccess
 
 
 
-        public synapseIdVerificationQuestionsForDisplay getIdVerificationQuestionsV2(string MemberId)
+        public synapseIdVerificationQuestionsForDisplay getIdVerificationQuestionsV3(string MemberId)
         {
             Logger.Info("MDA -> getIdVerificationQuestionsV2 Initialized - [MemberId: " + MemberId + "]");
 
@@ -4797,8 +4797,8 @@ namespace Nooch.DataAccess
                     {
                         synapseIdVerificationQuestionAnswerSet oneQuestionAnswerObj = new synapseIdVerificationQuestionAnswerSet();
 
-                        oneQuestionAnswerObj.id = (Int16)x.Id;
-                        oneQuestionAnswerObj.question = x.Question;
+                        oneQuestionAnswerObj.id = (Int16)x.SynpQuestionId;
+                        oneQuestionAnswerObj.question = x.Question;        
 
                         oneQuestionAnswerObj.answers = new List<synapseIdVerificationAnswerChoices>();
                         List<synapseIdVerificationAnswerChoices> allQs = new List<synapseIdVerificationAnswerChoices>();
@@ -4810,6 +4810,7 @@ namespace Nooch.DataAccess
                             {
                                 b.id = Convert.ToInt16(x.Choice1Id);
                                 b.answer = x.Choice1Text;
+                                
                             }
                             if (i == 1)
                             {
@@ -4843,7 +4844,6 @@ namespace Nooch.DataAccess
 
                 #endregion Questions Found In DB
             }
-
 
             return response;
         }
@@ -4885,7 +4885,7 @@ namespace Nooch.DataAccess
             #endregion Check User For All Required Data
 
             var id = Utility.ConvertToGuid(MemberId);
-
+            var memberEntity = GetMemberDetails(MemberId);
 
             // Now check if user already has a Synapse User account (would have a record in SynapseCreateUserResults.dbo)
             #region Get User's Synapse OAuth Consumer Key
@@ -4908,12 +4908,22 @@ namespace Nooch.DataAccess
 
             #endregion Get User's Synapse OAuth Consumer Key
 
-            synapseSubmitIdAnswers_answers_input input = new synapseSubmitIdAnswers_answers_input();
+            //synapseSubmitIdAnswers_answers_input input = new synapseSubmitIdAnswers_answers_input();
+            synapseIdVerificationAnswersInput input = new synapseIdVerificationAnswersInput();
 
             input.login = new SynapseV3Input_login() { oauth_key = CommonHelper.GetDecryptedData(usersSynapseDetails.access_token) };
 
 
 
+           
+
+            input.user = new synapseSubmitIdAnswers_answers_input();
+            input.user.fingerprint = memberEntity.UDID1;
+         
+            input.user.doc = new synapseSubmitIdAnswers_docSet();
+            input.user.doc.question_set_id = questionSetId;
+           
+            input.user.doc.answers = new synapseSubmitIdAnswers_Input_quest[5];
             // Finally, set the user's answers
             synapseSubmitIdAnswers_Input_quest[] quest = new synapseSubmitIdAnswers_Input_quest[5];
             quest[0] = new synapseSubmitIdAnswers_Input_quest { question_id = Convert.ToInt16(quest1id), answer_id = Convert.ToInt16(answer1id) };
@@ -4921,13 +4931,8 @@ namespace Nooch.DataAccess
             quest[2] = new synapseSubmitIdAnswers_Input_quest { question_id = Convert.ToInt16(quest3id), answer_id = Convert.ToInt16(answer3id) };
             quest[3] = new synapseSubmitIdAnswers_Input_quest { question_id = Convert.ToInt16(quest4id), answer_id = Convert.ToInt16(answer4id) };
             quest[4] = new synapseSubmitIdAnswers_Input_quest { question_id = Convert.ToInt16(quest5id), answer_id = Convert.ToInt16(answer5id) };
-
-
-            input.doc = new synapseSubmitIdAnswers_docSet();
-            input.doc.question_set_id = questionSetId;
-            input.doc.answers = new synapseSubmitIdAnswers_Input_quest[5];
-            input.doc.answers = quest;
-
+            input.user.doc.answers = quest;
+            //input.user.fingerprint = "";
 
 
 
@@ -4968,7 +4973,7 @@ namespace Nooch.DataAccess
                     #region Get Member Record To Update
 
 
-                    var memberEntity = GetMemberDetails(MemberId);
+                   
 
                     #endregion Get Member Record To Update
 

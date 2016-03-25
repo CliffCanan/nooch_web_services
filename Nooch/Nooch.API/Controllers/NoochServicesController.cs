@@ -4338,7 +4338,7 @@ namespace Nooch.API.Controllers
             try
             {
                 var mda = new MembersDataAccess();
-                res = mda.getIdVerificationQuestionsV2(memberid);
+                res = mda.getIdVerificationQuestionsV3(memberid);
             }
             catch (Exception ex)
             {
