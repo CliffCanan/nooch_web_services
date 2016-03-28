@@ -5350,32 +5350,32 @@ namespace Nooch.DataAccess
 
                         #region Check If Testing
 
-                        bool isTesting = false;
+                        bool isTesting = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")); ;
 
-                        try
-                        {
-                            Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser -> Transaction.Members.MemberId: [" + Transaction.Member.MemberId + "]");
+                        //try
+                        //{
+                        //    Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser -> Transaction.Members.MemberId: [" + Transaction.Member.MemberId + "]");
 
-                            if (Transaction.Member.MemberId.ToString() == "00bd3972-d900-429d-8a0d-28a5ac4a75d7...")
-                            {
-                                Logger.Info("** MDA -> GetTokensAndTransferMoneyToNewUser - THIS WAS A TEST TRANSACTION to TEAM NOOCH ! **");
-                                isTesting = true;
-                            }
+                        //    if (Transaction.Member.MemberId.ToString() == "00bd3972-d900-429d-8a0d-28a5ac4a75d7...")
+                        //    {
+                        //        Logger.Info("** MDA -> GetTokensAndTransferMoneyToNewUser - THIS WAS A TEST TRANSACTION to TEAM NOOCH ! **");
+                        //        isTesting = true;
+                        //    }
 
-                            newUsersEmail = newUsersEmail.ToLower();
+                        //    newUsersEmail = newUsersEmail.ToLower();
 
-                            if (newUsersEmail.IndexOf("jones00") > -1)
-                            {
-                                Logger.Info("**  MDA -> GetTokensAndTransferMoneyToNewUser -> THIS IS A TEST USER **  [UserName: " +
-                                                      newUsersEmail + "]. Continuing On!  **");
-                                isTesting = true;
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Error("**  MDA -> GetTokensAndTransferMoneyToNewUser -> ERROR while checking if this is a test transaction - " +
-                                                   "Exception: [" + ex + "]. Continuing on...  **");
-                        }
+                        //    if (newUsersEmail.IndexOf("jones00") > -1)
+                        //    {
+                        //        Logger.Info("**  MDA -> GetTokensAndTransferMoneyToNewUser -> THIS IS A TEST USER **  [UserName: " +
+                        //                              newUsersEmail + "]. Continuing On!  **");
+                        //        isTesting = true;
+                        //    }
+                        //}
+                        //catch (Exception ex)
+                        //{
+                        //    Logger.Error("**  MDA -> GetTokensAndTransferMoneyToNewUser -> ERROR while checking if this is a test transaction - " +
+                        //                           "Exception: [" + ex + "]. Continuing on...  **");
+                        //}
 
                         #endregion Check If Testing
 
@@ -5448,7 +5448,7 @@ namespace Nooch.DataAccess
                                 string moneyRecipientLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(recipient.LastName));
 
                                 SynapseV3AddTrans_ReusableClass Call_Synapse_Order_API_Result = tda.AddTransSynapseV3Reusable(SenderUserAndBankDetails.UserDetails.access_token,
-                                    SenderUserAndBankDetails.UserDetails.user_fingerprints, SenderUserAndBankDetails.BankDetails.bank_oid,
+                                    SenderUserAndBankDetails.UserDetails.user_fingerprints,  SenderUserAndBankDetails.BankDetails.bank_oid,
                                    Transaction.Amount.ToString(), facilitator_fee, RecipientUserAndBankDetails.UserDetails.user_id, RecipientUserAndBankDetails.UserDetails.user_fingerprints,
                                    RecipientUserAndBankDetails.BankDetails.bank_oid, Transaction.TransactionId.ToString(), CommonHelper.GetDecryptedData(sender.UserName), CommonHelper.GetDecryptedData(recipient.UserName), CommonHelper.GetRecentOrDefaultIPOfMember(sender.MemberId),
                                    moneySenderLastName, moneyRecipientLastName
@@ -5463,13 +5463,13 @@ namespace Nooch.DataAccess
                                 {
                                     Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser -> Synapse Order API was SUCCESSFUL");
 
-                                    if (!isTesting)
-                                    {
+                                    //if (!isTesting)
+                                    //{
                                         // If testing, keep this transaction as 'Pending' so we can more easily re-test with the same transaction.
                                         Transaction.TransactionStatus = "Success";
 
                                         _dbContext.SaveChanges();
-                                    }
+                                    //}
 
 
 

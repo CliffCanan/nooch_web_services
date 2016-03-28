@@ -310,17 +310,9 @@
     <Content Include="Views\Nooch\createAccount.cshtml" />
     <Content Include="Views\Nooch\RejectMoney.cshtml" />
     <Content Include="Views\Nooch\PayRequestComplete.cshtml" />
-  
-      <Content Include="Views\Nooch\PayRequest.cshtml">
-      <SubType>Code</SubType>
-    </Content>
-   
     <Content Include="Views\Nooch\DepositMoney.cshtml" />
- 
     <Content Include="Views\Nooch\DepositMoneyComplete.cshtml" />
- 
     <Content Include="Views\Nooch\idVerification.cshtml" />
- 
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

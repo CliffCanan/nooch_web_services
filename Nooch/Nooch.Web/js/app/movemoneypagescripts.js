@@ -149,6 +149,27 @@ $(document).ready(function () {
                     $('#AddBankDiv').removeClass('hidden').addClass('bounceIn');
                 });
             }
+            else if ((USERTYPE == "Registered" || USERTYPE == "Existing") &&
+                $('#bnkName').val() != "no bank found") {
+                // user is already a nooch member and has bank added
+                if ($('#memidexst').val().length > 0) {
+                    MemID_EXISTING = $('#memidexst').val();
+                    //redUrlForAddBank = (transType == "send") ? "https://www.noochme.com/noochweb/nooch/depositMoneycomplete?mem_id="
+                    //                                        : "https://www.noochme.com/noochweb/nooch/payRequestComplete?mem_id=";
+                    redUrlForAddBank = (transType == "send") ? "http://localhost:2061/Nooch/DepositMoneyComplete?mem_id="
+                                                            : "http://localhost:2061/Nooch/PayRequestComplete?mem_id=";
+
+                    redUrlForAddBank = redUrlForAddBank + MemID_EXISTING + "," + TRANSID;
+
+                    redUrlForAddBank = (FOR_RENTSCENE == "true") ? redUrlForAddBank + ",true"
+                                                                 : redUrlForAddBank + ",false";
+
+
+                    console.log("redUrlForAddBank IS: [" + redUrlForAddBank + "]");
+
+                    window.location=redUrlForAddBank;
+                }
+            }
 
             $('#idVer .modalclose').click(function () {
                 cancelIdVer();

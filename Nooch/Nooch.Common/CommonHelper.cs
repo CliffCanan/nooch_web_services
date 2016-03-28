@@ -1827,7 +1827,7 @@ namespace Nooch.Common
                     res.BankDetails.Status = defaultBank.Status;
                     res.BankDetails.bankid = defaultBank.bankid;
                     res.BankDetails.email = defaultBank.email;
-                    res.BankDetails.bank_oid = defaultBank.oid;
+                    res.BankDetails.bank_oid = GetDecryptedData( defaultBank.oid);
                     res.BankDetails.account_type = defaultBank.type_synapse;
                     res.AccountDetailsErrMessage = "OK";
                 }
@@ -1919,7 +1919,7 @@ namespace Nooch.Common
                         Logger.Info(
                             "MDA -> synapseV3checkUsersOauthKey - TEST USER DETECTED - useSynapseSandbox is: [" +
                             Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) + "] - About to ping Synapse Sandbox /user/refresh...");
-                        UrlToHit = "";
+                        //UrlToHit = "";
                     }
 
                     var http = (HttpWebRequest)WebRequest.Create(new Uri(UrlToHit));
