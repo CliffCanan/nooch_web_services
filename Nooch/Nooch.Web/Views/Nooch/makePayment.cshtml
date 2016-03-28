@@ -74,10 +74,10 @@
 
 <body id="body-depositNew" class="createAccountPg">
 
-    <form id="form1" runat="server">
-        <asp:HiddenField runat="server" ID="errorId" value="@onLoadD.errorId"/>
-        <asp:HiddenField runat="server" ID="type" value="@onLoadD.type" />
-        <asp:HiddenField runat="server" ID="rs" value="@onLoadD.rs" />
+    <form id="form1" >
+        <input type="hidden"  ID="errorId" value="@onLoadD.errorId"/>
+        <input type="hidden"  ID="type" value="@onLoadD.type" />
+        <input type="hidden"  ID="rs" value="@onLoadD.rs" />
     </form>
 
     <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
