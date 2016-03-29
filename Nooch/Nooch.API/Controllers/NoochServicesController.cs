@@ -270,8 +270,6 @@ namespace Nooch.API.Controllers
         {
             try
             {
-
-
                 return new BoolResult { Result = CommonHelper.IsMemberActivated(tokenId) };
             }
             catch (Exception ex)
@@ -279,7 +277,6 @@ namespace Nooch.API.Controllers
                 Logger.Error("Service Layer -> IsMemberActivated Failed - [tokenId: " + tokenId + "]. Exception -> " + ex);
                 return new BoolResult();
             }
-
         }
 
 

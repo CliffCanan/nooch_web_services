@@ -2071,6 +2071,7 @@ namespace Nooch.Web.Controllers
             return Json(res);
         }
 
+        #region MakePayment
         public ActionResult makePayment()
         {
             HiddenField hkf = new HiddenField();
@@ -2236,7 +2237,148 @@ namespace Nooch.Web.Controllers
 
             return Json(res);
         }
-     
+        #endregion 
+
+
+        //not compleate code problem with js file and GetPayeeDetails method
+        #region payAnyone
+        public ActionResult payAnyone()
+        {
+            ResultpayAnyone payAnyone = new ResultpayAnyone();
+
+            if (!String.IsNullOrEmpty(Request.QueryString["pay"]))
+            {
+                     payAnyone= GetPayeesNoochDetails(Request.QueryString["pay"].ToString(), payAnyone);
+            }
+            else
+            {
+                // Something wrong with query string
+              //ScriptManager.RegisterStartupScript(this, GetType(), "showErrorModal", "showErrorModal('2');", true);
+                //payreqInfo.Visible = false;
+                //PayorInitialInfo.Visible = false;
+                payAnyone.payreqInfo = false;
+                payAnyone.PayorInitialInfo = false;
+                payAnyone.ErrorID = "2";
+
+            }
+            ViewData["OnLoaddata"] = payAnyone;
+            return View();
+        }
+        public ResultpayAnyone GetPayeesNoochDetails(string memberTag, ResultpayAnyone resultpayAnyone)
+        {
+            ResultpayAnyone payAnyone = resultpayAnyone;
+            string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+            string serviceMethod = "/GetPayeeDetails?memberTag=" + memberTag;
+
+            MemberDto member = ResponseConverter<MemberDto>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+
+            if (member == null)
+            {
+                //payreqInfo.Visible = false;
+                //hidfield.Value = "0";
+                // ScriptManager.RegisterStartupScript(this, GetType(), "showErrorModal", "showErrorModal('2');", true);
+                payAnyone.payreqInfo = false;
+                payAnyone.hidfield = "0";
+                payAnyone.ErrorID = "2";
+               
+            }
+            else
+            {
+                //payeeName1.Text = member.FirstName + " " + member.LastName;
+                //payeeName2.Text = member.FirstName + " " + member.LastName;
+                //payeeImage.ImageUrl = member.PhotoUrl;
+                payAnyone.payeeName1 = member.FirstName + " " + member.LastName;
+                payAnyone.payeeName2 = member.FirstName + " " + member.LastName;
+                payAnyone.payeeImage = member.PhotoUrl;
+
+            }
+            return resultpayAnyone;
+        }
+        // Register user with Synapse      
+        public  RegisterUserSynapseResultClassExt RegisterUserWithSynp(string transId, string userEmail, string userPhone, string userName, string userPassword)
+        {
+            RegisterUserSynapseResultClassExt res = new RegisterUserSynapseResultClassExt();
+
+            try
+            {
+                string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+                userPhone = CommonHelper.RemovePhoneNumberFormatting(userPhone);
+                string serviceMethod = "/RegisterNonNoochUserWithSynapse?transId=" + transId + "&userEmail=" + userEmail + "&userPhone=" + userPhone + "&userName=" + userName + "&password=" + userPassword;
+
+                RegisterUserSynapseResultClassExt transaction = ResponseConverter<RegisterUserSynapseResultClassExt>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+                if (transaction.success == "false")
+                {
+                    res.success = "false";
+                    res.reason = transaction.reason;
+                    res.memberIdGenerated = "";
+                }
+                if (transaction.success == "true")
+                {
+                    res.success = "true";
+                    res.reason = "OK";
+                    res.memberIdGenerated = transaction.memberIdGenerated;
+                }
+                return res;
+            }
+            catch (Exception ex)
+            {
+                Logger.Info("payRequest Page -> Register Synapse User attempt FAILED Failed, Reason: [" + ex.ToString() + "]. TransId: [" + transId + "].");
+                return res;
+            }
+        }
+        #endregion 
+
+        
+        #region Activation
+        public ActionResult Activation()
+        {
+            ResultActivation resultActivation = new ResultActivation(); 
+            Logger.Info("Email Activation Page -> Initiated");
+
+            
+            string strUserAgent = Request.UserAgent.ToLower();
+
+            if (strUserAgent != null &&
+                (Request.Browser.IsMobileDevice || strUserAgent.Contains("iphone") || strUserAgent.Contains("mobile") || strUserAgent.Contains("iOS")))
+            {
+                //openAppText.Visible = true;
+                resultActivation.openAppText = true;
+            }
+
+            string tokenId = Request.QueryString["tokenId"].Trim();
+            string type = null;
+            if (Request.QueryString.AllKeys.Any(k => k == "type"))
+            {
+                type = Request.QueryString["type"].Trim();
+
+                if (type == "ll")// For Landlords
+                {
+                    resultActivation.toLandlordApp = true;
+                }
+            }
+
+
+            string serviceUrl = Utility.GetValueFromConfig("ServiceUrl") + "/IsMemberActivated?tokenID=" + tokenId.Trim();
+
+            var result = ResponseConverter<BoolResult>.ConvertToCustomEntity(serviceUrl);
+
+            if (!result.Result)
+            {
+                serviceUrl = Utility.GetValueFromConfig("ServiceUrl") + "/MemberActivation?tokenId=" + tokenId.Trim();
+                ResponseConverter<BoolResult>.ConvertToCustomEntity(serviceUrl);
+
+                resultActivation.success = true;
+                resultActivation.error = false;
+            }
+            else
+            {
+                resultActivation.success = false;
+                resultActivation.error = true;
+            }
+            ViewData["OnLoaddata"] = resultActivation;
+            return View();
+        }
+        #endregion 
 
     }
 

@@ -93,10 +93,12 @@
     <Compile Include="Entities\MobileAppOutputEnities\PendingTransCoutResult.cs" />
     <Compile Include="Entities\MobileAppOutputEnities\PhoneEmailListDto.cs" />
     <Compile Include="Entities\MobileAppOutputEnities\TransactionDto.cs" />
+    <Compile Include="Entities\ResultActivation.cs" />
     <Compile Include="Entities\ResultCancelRequest.cs" />
     <Compile Include="Entities\ResultcreateAccount.cs" />
     <Compile Include="Entities\ResultDepositMoney.cs" />
     <Compile Include="Entities\ResultDepositMoneyComplete.cs" />
+    <Compile Include="Entities\ResultpayAnyone.cs" />
     <Compile Include="Entities\ResultPayRequest.cs" />
     <Compile Include="Entities\ResultPayRequestComplete.cs" />
     <Compile Include="Entities\StringResult.cs" />
