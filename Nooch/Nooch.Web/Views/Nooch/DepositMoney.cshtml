@@ -31,7 +31,8 @@
 <body id="body-depositNew" class="no-border deposit-money-pg" style="background-color: rgba(230, 231, 232, 0.8);">
 
     <form id="form1"  >
-         
+       
+        <input type="hidden" id="addBank_Url" value="@Url.Action("AddBank","Nooch")" />
         <input type="hidden" ID="pymnt_status" Value="@rdm.pymnt_status" runat="server" />
         <input type="hidden" ID="transId"  Value="@rdm.transId" />
         <input type="hidden" value="@rdm.invitationSentto" ID="invitationSentto"  />

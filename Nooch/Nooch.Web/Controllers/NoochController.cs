@@ -1396,7 +1396,73 @@ namespace Nooch.Web.Controllers
             }
         }
 
-        [HttpPost]
+
+        public ActionResult RegisterUserWithSynpForDepositMoney(string transId, string memberId, string userEm, string userPh, string userName, string userPw, string ssn, string dob, string address, string zip, string fngprnt, string ip)
+        {
+            Logger.Info("DepositMoney Code Behind -> RegisterNonNoochUserWithSynapse Initiated");
+
+            RegisterUserSynapseResultClassExt res = new RegisterUserSynapseResultClassExt();
+            res.success = "false";
+            res.memberIdGenerated = "";
+            res.reason = "Unknown";
+
+            try
+            {
+                string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+                userPh = CommonHelper.RemovePhoneNumberFormatting(userPh);
+
+                Logger.Info("DepositMoney Code Behind -> RegisterUserWithSynp -> PARAMETERS: transId: " + transId +
+                                       ", memberId (If existing user): " + memberId + ", userEm: " + userEm +
+                                       ", userPh: " + userPh + ", userPw: " + userPw +
+                                       ", ssn: " + ssn + ", dob: " + dob +
+                                       ", address: " + address + ", zip: " + zip);
+
+
+                string serviceMethod = "/RegisterNonNoochUserWithSynapse?transId=" + transId +
+                                    "&email=" + userEm +
+                                    "&phone=" + userPh +
+                                    "&fullname=" + userName +
+                                    "&pw=" + userPw +
+                                    "&ssn=" + ssn +
+                                    "&dob=" + dob +
+                                    "&address=" + address +
+                                    "&zip=" + zip +
+                                    "&fngprnt=" + fngprnt +
+                                    "&ip=" + ip;
+
+                Logger.Info("DepositMoney Code-Behind -> RegisterUserWithSynp - Full Query String: [ " + String.Concat(serviceUrl, serviceMethod) + " ]");
+
+                RegisterUserSynapseResultClassExt regUserResponse = ResponseConverter<RegisterUserSynapseResultClassExt>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+
+                if (regUserResponse.success == "True")
+                {
+                    res.success = "true";
+                    res.reason = "OK";
+                    res.memberIdGenerated = regUserResponse.memberIdGenerated;
+                }
+                else if (regUserResponse.success == "False")
+                {
+                    Logger.Error("DepositMoney Code-Behind -> RegisterUserWithSynp FAILED - SERVER RETURNED 'success' = 'false' - [TransID: " + transId + "]");
+                    res.reason = regUserResponse.reason;
+                }
+                else
+                {
+                    Logger.Error("DepositMoney Code-Behind -> RegisterUserWithSynp FAILED - UNKNOWN ERROR FROM SERVER - [TransID: " + transId + "]");
+                }
+
+                res.ssn_verify_status = regUserResponse.ssn_verify_status;
+
+                return Json(res);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("DepositMoney Code-Behind -> RegisterUserWithSynp attempt FAILED Failed, Reason: [" + res.reason + "], " +
+                                       "TransId: [" + transId + "], [Exception: " + ex + "]");
+                return Json(res);
+            }
+        }
+
+            [HttpPost]
         [ActionName("SetDefaultBank")]
         public ActionResult SetDefaultBank(setDefaultBankInput input)
         {
