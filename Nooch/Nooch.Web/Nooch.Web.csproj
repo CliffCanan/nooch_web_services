@@ -313,6 +313,8 @@
     <Content Include="Views\Nooch\DepositMoney.cshtml" />
     <Content Include="Views\Nooch\DepositMoneyComplete.cshtml" />
     <Content Include="Views\Nooch\idVerification.cshtml" />
+    <Content Include="Views\Nooch\payAnyone.cshtml" />
+    <Content Include="Views\Nooch\Activation.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

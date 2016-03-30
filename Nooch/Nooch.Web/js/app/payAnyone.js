@@ -147,7 +147,7 @@ function createRecord() {
 
     $.ajax({
         type: "POST",
-        url: "payRequest.aspx/RegisterUserWithSynp",
+        url: "RegisterUserWithSynp",
         data: "{ transId: '" + $('#hidfield').val() + "',userEmail: '" + $('#userEmail').val() + "',userPhone: '" + $('#userPhone').val() + "',userName: '" + $('#userName').val() + "',userPassword: '" + $('#userPassword').val() + "'}",
         contentType: "application/json; charset=utf-8",
         dataType: "json",
@@ -156,7 +156,7 @@ function createRecord() {
         success: function (msg) {
 			$('#body-depositNew').unblock();
 
-            var RegisterUserWithSynpResult = msg.d;
+            var RegisterUserWithSynpResult = msg;
             console.log("SUCCESS --> 'RegisterUserWithSynpResult' is... ");
             console.log(RegisterUserWithSynpResult);
 			resultReason = RegisterUserWithSynpResult.reason;
