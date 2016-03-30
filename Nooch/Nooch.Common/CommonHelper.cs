@@ -76,6 +76,64 @@ namespace Nooch.Common
             return sourcePhone;
         }
 
+
+        public static string ForgotPassword(string userName)
+        {
+            Logger.Info("MDA -> GetPassword - [userName: " + userName + "]");
+
+            var getMember = GetMemberDetailsByUserName(userName);
+
+            try
+            {
+                if (getMember != null)
+                {
+                    bool status = false;
+
+
+                    //----------------
+                    var fromAddress = Utility.GetValueFromConfig("adminMail");
+
+                    var tokens = new Dictionary<string, string>
+                    {
+                        {
+                            Constants.PLACEHOLDER_FIRST_NAME,
+                            UppercaseFirst(GetDecryptedData(getMember.FirstName)) + " " +
+                            UppercaseFirst(GetDecryptedData(getMember.LastName))
+                        },
+                        {Constants.PLACEHOLDER_LAST_NAME, GetDecryptedData(getMember.LastName)},
+                        {
+                            Constants.PLACEHOLDER_PASSWORDLINK,
+                            String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
+                                "/ForgotPassword/ResetPassword.aspx?memberId=" + getMember.MemberId)
+                        }
+                    };
+                    PasswordResetRequest prr = new PasswordResetRequest();
+                    prr.RequestedOn = DateTime.Now;
+                    prr.MemberId = getMember.MemberId;
+                    _dbContext.PasswordResetRequests.Add(prr);
+                    int i = _dbContext.SaveChanges();
+                    if (i > 0)
+                    {
+                        status = true;
+                        Utility.SendEmail(Constants.TEMPLATE_FORGOT_PASSWORD, fromAddress, GetDecryptedData(getMember.UserName), null, "Reset your Nooch password"
+                    , null, tokens, null, null, null);
+                    }
+
+
+                    //--------------
+
+
+                    return status
+                        ? "Your reset password link has been sent to your mail successfully."
+                        : "Problem occured while sending mail.";
+                }
+                return "Problem occured while sending mail.";
+            }
+            catch (Exception)
+            {
+                return "Problem occured while sending mail.";
+            }
+        }
         public static string RemovePhoneNumberFormatting(string sourceNum)
         {
             sourceNum.Trim();
@@ -1167,8 +1225,8 @@ namespace Nooch.Common
                     synapseInput.user = user;
 
                     string baseAddress = "";
-                    baseAddress = Convert.ToBoolean( Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/doc/add" : "https://synapsepay.com/api/v3/user/doc/add";
-                    
+                    baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/doc/add" : "https://synapsepay.com/api/v3/user/doc/add";
+
 
                     // CLIFF (10/10/15): Adding the following for testing purposes only
                     #region For Testing
@@ -1530,7 +1588,7 @@ namespace Nooch.Common
             //answers.user.fingerprint = usersFingerprint;
             string baseAddress = "";
             baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/doc/attachments/add" : "https://synapsepay.com/api/v3/user/doc/attachments/add";
-            
+
 
             try
             {
@@ -1616,7 +1674,7 @@ namespace Nooch.Common
 
 
 
-                
+
                 string UrlToHit = "";
                 UrlToHit = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/search" : "https://synapsepay.com/api/v3/user/search";
 
@@ -1827,7 +1885,7 @@ namespace Nooch.Common
                     res.BankDetails.Status = defaultBank.Status;
                     res.BankDetails.bankid = defaultBank.bankid;
                     res.BankDetails.email = defaultBank.email;
-                    res.BankDetails.bank_oid = GetDecryptedData( defaultBank.oid);
+                    res.BankDetails.bank_oid = GetDecryptedData(defaultBank.oid);
                     res.BankDetails.account_type = defaultBank.type_synapse;
                     res.AccountDetailsErrMessage = "OK";
                 }
@@ -2685,130 +2743,130 @@ namespace Nooch.Common
 
             Guid memId = Utility.ConvertToGuid(MemberId);
 
-             
-                bool ipSavedSuccessfully = false;
-                bool udidIdSavedSuccessfully = false;
 
-                #region Save IP Address
+            bool ipSavedSuccessfully = false;
+            bool udidIdSavedSuccessfully = false;
 
-                if (!String.IsNullOrEmpty(IP))
+            #region Save IP Address
+
+            if (!String.IsNullOrEmpty(IP))
+            {
+                try
                 {
-                    try
+
+                    var ipAddressesFound = _dbContext.MembersIPAddresses.Where(memberTemp => memberTemp.MemberId.Value.Equals(memId)).ToList();
+
+                    if (ipAddressesFound.Count > 5)
                     {
-                         
-                        var ipAddressesFound = _dbContext.MembersIPAddresses.Where(memberTemp => memberTemp.MemberId.Value.Equals(memId)).ToList();
+                        // If there are already 5 entries, update the one added first (the oldest)
+                        var lastIpFound = (from c in ipAddressesFound select c)
+                                          .OrderBy(m => m.ModifiedOn)
+                                          .Take(1)
+                                          .SingleOrDefault();
 
-                        if (ipAddressesFound.Count > 5)
+                        lastIpFound.ModifiedOn = DateTime.Now;
+                        lastIpFound.Ip = IP;
+
+                        int a = _dbContext.SaveChanges();
+
+                        if (a > 0)
                         {
-                            // If there are already 5 entries, update the one added first (the oldest)
-                            var lastIpFound = (from c in ipAddressesFound select c)
-                                              .OrderBy(m => m.ModifiedOn)
-                                              .Take(1)
-                                              .SingleOrDefault();
-
-                            lastIpFound.ModifiedOn = DateTime.Now;
-                            lastIpFound.Ip = IP;
-
-                            int a = _dbContext.SaveChanges();
-
-                            if (a > 0)
-                            {
-                                Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId SUCCESS For Saving IP Address (1) - [MemberId: " + MemberId + "]");
-                                ipSavedSuccessfully = true;
-                            }
-                            else
-                            {
-                                Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId FAILED Trying To Saving IP Address (1) in DB - [MemberId: " + MemberId + "]");
-                            }
+                            Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId SUCCESS For Saving IP Address (1) - [MemberId: " + MemberId + "]");
+                            ipSavedSuccessfully = true;
                         }
                         else
                         {
-                            // Otherwise, make a new entry
-                            MembersIPAddress mip = new MembersIPAddress();
-                            mip.MemberId = memId;
-                            mip.ModifiedOn = DateTime.Now;
-                            mip.Ip = IP;
-
-                            int b = _dbContext.SaveChanges(); 
-
-                            if (b > 0)
-                            {
-                                Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId SUCCESS For Saving IP Address (2) - [MemberId: " + MemberId + "]");
-                                ipSavedSuccessfully = true;
-                            }
-                            else
-                            {
-                                Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId FAILED Trying To Saving IP Address (2) in DB - [MemberId: " + MemberId + "]");
-                            }
+                            Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId FAILED Trying To Saving IP Address (1) in DB - [MemberId: " + MemberId + "]");
                         }
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId FAILED For Saving IP Address - [Exception: " + ex + "]");
-                    }
-                }
-                else
-                {
-                    Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId - No IP Address Passed - [MemberId: " + MemberId + "]");
-                }
+                        // Otherwise, make a new entry
+                        MembersIPAddress mip = new MembersIPAddress();
+                        mip.MemberId = memId;
+                        mip.ModifiedOn = DateTime.Now;
+                        mip.Ip = IP;
 
-                #endregion Save IP Address
+                        int b = _dbContext.SaveChanges();
 
-
-                #region Save Device ID
-
-                if (!String.IsNullOrEmpty(DeviceId))
-                {
-                    try
-                    {
-                        // CLIFF (8/12/15): This "Device ID" will be stored in Nooch's DB as "UDID1" and is specifically for Synapse's "Fingerprint" requirement...
-                        //                  NOT for push notifications, which should use the "DeviceToken" in Nooch's DB.  (Confusing, but they are different values)
-                        
-                        var member = _dbContext.Members.Where(memberTemp => memberTemp.MemberId == memId).FirstOrDefault();
-                        if (member != null)
+                        if (b > 0)
                         {
-                            member.UDID1 = DeviceId;
-                            member.DateModified = DateTime.Now;
-                        }
-                        int c = _dbContext.SaveChanges();
-
-                        if (c > 0)
-                        {
-                            Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId SUCCESS For Saving Device ID - [MemberId: " + MemberId + "]");
-                            udidIdSavedSuccessfully = true;
+                            Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId SUCCESS For Saving IP Address (2) - [MemberId: " + MemberId + "]");
+                            ipSavedSuccessfully = true;
                         }
                         else
                         {
-                            Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId FAILED Trying To Saving Device ID in DB - [MemberId: " + MemberId + "]");
+                            Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId FAILED Trying To Saving IP Address (2) in DB - [MemberId: " + MemberId + "]");
                         }
                     }
-                    catch (Exception ex)
+                }
+                catch (Exception ex)
+                {
+                    Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId FAILED For Saving IP Address - [Exception: " + ex + "]");
+                }
+            }
+            else
+            {
+                Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId - No IP Address Passed - [MemberId: " + MemberId + "]");
+            }
+
+            #endregion Save IP Address
+
+
+            #region Save Device ID
+
+            if (!String.IsNullOrEmpty(DeviceId))
+            {
+                try
+                {
+                    // CLIFF (8/12/15): This "Device ID" will be stored in Nooch's DB as "UDID1" and is specifically for Synapse's "Fingerprint" requirement...
+                    //                  NOT for push notifications, which should use the "DeviceToken" in Nooch's DB.  (Confusing, but they are different values)
+
+                    var member = _dbContext.Members.Where(memberTemp => memberTemp.MemberId == memId).FirstOrDefault();
+                    if (member != null)
                     {
-                        Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId FAILED For Saving Device ID - [Exception: " + ex + "]");
+                        member.UDID1 = DeviceId;
+                        member.DateModified = DateTime.Now;
+                    }
+                    int c = _dbContext.SaveChanges();
+
+                    if (c > 0)
+                    {
+                        Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId SUCCESS For Saving Device ID - [MemberId: " + MemberId + "]");
+                        udidIdSavedSuccessfully = true;
+                    }
+                    else
+                    {
+                        Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId FAILED Trying To Saving Device ID in DB - [MemberId: " + MemberId + "]");
                     }
                 }
-                else
+                catch (Exception ex)
                 {
-                    Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId - No Device ID Passed - [MemberId: " + MemberId + "]");
+                    Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId FAILED For Saving Device ID - [Exception: " + ex + "]");
                 }
+            }
+            else
+            {
+                Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId - No Device ID Passed - [MemberId: " + MemberId + "]");
+            }
 
-                #endregion Save Device ID
+            #endregion Save Device ID
 
-                if (ipSavedSuccessfully && udidIdSavedSuccessfully)
-                {
-                    return "Both IP and DeviceID saved successfully.";
-                }
-                else if (ipSavedSuccessfully)
-                {
-                    return "Only IP address saved successfully, not DeviceID.";
-                }
-                else if (udidIdSavedSuccessfully)
-                {
-                    return "Only DeviceID saved successfully, not IP Address.";
-                }
+            if (ipSavedSuccessfully && udidIdSavedSuccessfully)
+            {
+                return "Both IP and DeviceID saved successfully.";
+            }
+            else if (ipSavedSuccessfully)
+            {
+                return "Only IP address saved successfully, not DeviceID.";
+            }
+            else if (udidIdSavedSuccessfully)
+            {
+                return "Only DeviceID saved successfully, not IP Address.";
+            }
 
-                return "Neither IP address nor DeviceID were saved.";
-            
+            return "Neither IP address nor DeviceID were saved.";
+
         }
 
         public static string GetMemberIdByContactNumber(string userContactNumber)
@@ -2817,21 +2875,21 @@ namespace Nooch.Common
 
             string trimmedContactNum = CommonHelper.RemovePhoneNumberFormatting(userContactNumber);
 
-            
 
-            
-                var noochMember = _dbContext.Members.Where(memberTemp =>
-                                    memberTemp.ContactNumber.Equals(trimmedContactNum) &&
-                                    memberTemp.IsDeleted == false).FirstOrDefault();
 
-                if (noochMember != null)
-                {
-                    return   noochMember.MemberId.ToString();
-                }
-    
+
+            var noochMember = _dbContext.Members.Where(memberTemp =>
+                                memberTemp.ContactNumber.Equals(trimmedContactNum) &&
+                                memberTemp.IsDeleted == false).FirstOrDefault();
+
+            if (noochMember != null)
+            {
+                return noochMember.MemberId.ToString();
+            }
+
 
             return null;
         }
-               
+
     }
 }

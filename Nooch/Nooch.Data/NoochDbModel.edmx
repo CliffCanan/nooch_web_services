@@ -257,6 +257,14 @@
           <Property Name="DateModified" Type="datetime" />
           <Property Name="DisputeTrackingId" Type="varchar" MaxLength="5" />
         </EntityType>
+        <EntityType Name="PasswordResetRequests">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="MemberId" Type="uniqueidentifier" />
+          <Property Name="RequestedOn" Type="datetime" />
+        </EntityType>
         <EntityType Name="Properties">
           <Key>
             <PropertyRef Name="PropertyId" />
@@ -613,6 +621,18 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <Association Name="FK_PasswordResetRequests_Members">
+          <End Role="Members" Type="Self.Members" Multiplicity="0..1" />
+          <End Role="PasswordResetRequests" Type="Self.PasswordResetRequests" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Members">
+              <PropertyRef Name="MemberId" />
+            </Principal>
+            <Dependent Role="PasswordResetRequests">
+              <PropertyRef Name="MemberId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
         <Association Name="FK_SynapseBankLoginResults_Members">
           <End Role="Members" Type="Self.Members" Multiplicity="0..1" />
           <End Role="SynapseBankLoginResults" Type="Self.SynapseBankLoginResults" Multiplicity="*" />
@@ -687,6 +707,7 @@
           <EntitySet Name="Members" EntityType="Self.Members" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="MembersIPAddresses" EntityType="Self.MembersIPAddresses" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Notifications" EntityType="Self.Notifications" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="PasswordResetRequests" EntityType="Self.PasswordResetRequests" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Properties" EntityType="Self.Properties" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="PropertyUnits" EntityType="Self.PropertyUnits" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="SDNSearchResults" EntityType="Self.SDNSearchResults" Schema="dbo" store:Type="Tables" />
@@ -709,6 +730,10 @@
           <AssociationSet Name="FK_MemberPrivacySettings_Members" Association="Self.FK_MemberPrivacySettings_Members">
             <End Role="Members" EntitySet="Members" />
             <End Role="MemberPrivacySettings" EntitySet="MemberPrivacySettings" />
+          </AssociationSet>
+          <AssociationSet Name="FK_PasswordResetRequests_Members" Association="Self.FK_PasswordResetRequests_Members">
+            <End Role="Members" EntitySet="Members" />
+            <End Role="PasswordResetRequests" EntitySet="PasswordResetRequests" />
           </AssociationSet>
           <AssociationSet Name="FK_SynapseBankLoginResults_Members" Association="Self.FK_SynapseBankLoginResults_Members">
             <End Role="Members" EntitySet="Members" />
@@ -897,6 +922,7 @@
           <NavigationProperty Name="Transactions1" Relationship="NOOCHModel.FK_Transactions_Members3" FromRole="Member" ToRole="Transaction" />
           <NavigationProperty Name="MemberNotifications" Relationship="NOOCHModel.FK_MemberNotifications_Members" FromRole="Member" ToRole="MemberNotification" />
           <NavigationProperty Name="SynapseBankLoginResults" Relationship="NOOCHModel.FK_SynapseBankLoginResults_Members" FromRole="Member" ToRole="SynapseBankLoginResult" />
+          <NavigationProperty Name="PasswordResetRequests" Relationship="NOOCHModel.FK_PasswordResetRequests_Members" FromRole="Member" ToRole="PasswordResetRequest" />
         </EntityType>
         <EntityType Name="User">
           <Key>
@@ -971,6 +997,11 @@
           <Parameter Name="searchtext" Mode="In" Type="String" />
           </FunctionImport>
           <EntitySet Name="SDNSearchResults" EntityType="NOOCHModel.SDNSearchResult" />
+          <EntitySet Name="PasswordResetRequests" EntityType="NOOCHModel.PasswordResetRequest" />
+          <AssociationSet Name="FK_PasswordResetRequests_Members" Association="NOOCHModel.FK_PasswordResetRequests_Members">
+            <End Role="Member" EntitySet="Members" />
+            <End Role="PasswordResetRequest" EntitySet="PasswordResetRequests" />
+          </AssociationSet>
         </EntityContainer>
         <EntityType Name="MemberPrivacySetting">
           <Key>
@@ -1480,6 +1511,27 @@
           <Property Name="subper" Type="Int32" />
           <Property Name="lastper" Type="Int32" />
         </EntityType>
+        <EntityType Name="PasswordResetRequest">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="MemberId" Type="Guid" />
+          <Property Name="RequestedOn" Type="DateTime" Precision="3" />
+          <NavigationProperty Name="Member" Relationship="NOOCHModel.FK_PasswordResetRequests_Members" FromRole="PasswordResetRequest" ToRole="Member" />
+        </EntityType>
+        <Association Name="FK_PasswordResetRequests_Members">
+          <End Type="NOOCHModel.Member" Role="Member" Multiplicity="0..1" />
+          <End Type="NOOCHModel.PasswordResetRequest" Role="PasswordResetRequest" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Member">
+              <PropertyRef Name="MemberId" />
+            </Principal>
+            <Dependent Role="PasswordResetRequest">
+              <PropertyRef Name="MemberId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
       </Schema>
     </edmx:ConceptualModels>
     <!-- C-S mapping content -->
@@ -2118,6 +2170,15 @@
                 <ScalarProperty Name="LastName" ColumnName="LastName" />
                 <ScalarProperty Name="SDN_NAME" ColumnName="SDN_NAME" />
                 <ScalarProperty Name="ent_num" ColumnName="ent_num" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="PasswordResetRequests">
+            <EntityTypeMapping TypeName="NOOCHModel.PasswordResetRequest">
+              <MappingFragment StoreEntitySet="PasswordResetRequests">
+                <ScalarProperty Name="RequestedOn" ColumnName="RequestedOn" />
+                <ScalarProperty Name="MemberId" ColumnName="MemberId" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>

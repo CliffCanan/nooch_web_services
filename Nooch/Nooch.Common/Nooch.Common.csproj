@@ -76,6 +76,7 @@
     <Compile Include="Entities\LandingPagesRelatedEntities\RejectMoney\PageLoadDataRejectMoney.cs" />
     <Compile Include="Entities\LandingPagesRelatedEntities\SynapseBankLoginRequestResult.cs" />
     <Compile Include="Entities\MobileAppInputEntities\SaveMemberDOB_Input.cs" />
+    <Compile Include="Entities\MobileAppInputEntities\StringInput.cs" />
     <Compile Include="Entities\MobileAppOutputEnities\DisputeResultEntity.cs" />
     <Compile Include="Entities\GameThriveResponseClass.cs" />
     <Compile Include="Entities\googleURLShortnerResponseClass.cs" />
