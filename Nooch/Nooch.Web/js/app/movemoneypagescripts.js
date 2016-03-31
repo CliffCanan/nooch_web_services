@@ -130,8 +130,12 @@ $(document).ready(function () {
                     html: true,
                     customClass: "securityAlert confirmBtnFullWidth"
                 }, function () {
-                    redUrlForAddBank = (transType == "send") ? "https://www.noochme.com/noochweb/nooch/depositMoneycomplete?mem_id="
-                                                             : "https://www.noochme.com/noochweb/nooch/payRequestComplete?mem_id=";
+                    //redUrlForAddBank = (transType == "send") ? "https://www.noochme.com/noochweb/nooch/depositMoneycomplete?mem_id="
+                    //                                         : "https://www.noochme.com/noochweb/nooch/payRequestComplete?mem_id=";
+
+                    redUrlForAddBank = (transType == "send") ? "http://localhost:2061/Nooch/DepositMoneyComplete?mem_id="
+                                                            : "http://localhost:2061/Nooch/PayRequestComplete?mem_id=";
+
 
                     redUrlForAddBank = redUrlForAddBank + MemID_EXISTING + "," + TRANSID;
 
@@ -140,6 +144,8 @@ $(document).ready(function () {
 
 
                     console.log("redUrlForAddBank IS: [" + redUrlForAddBank + "]");
+                     
+                     
 
                      //$("#frame").attr("src", "https://www.noochme.com/noochweb/trans/Add-Bank.aspx?MemberId=" + MemID_EXISTING +
                      //                      "&redUrl=" + redUrlForAddBank);
@@ -166,6 +172,7 @@ $(document).ready(function () {
 
 
                     console.log("redUrlForAddBank IS: [" + redUrlForAddBank + "]");
+                    
 
                     window.location=redUrlForAddBank;
                 }
@@ -639,7 +646,7 @@ function createRecord() {
     var urlToUse = "";
     if (transType == "send")
     {
-        urlToUse = "depositMoney.aspx/RegisterUserWithSynp";
+        urlToUse = "RegisterUserWithSynpForDepositMoney";
     }
     else // must be a Request or Rent payment (which also uses the payRequest page)
     {
@@ -801,8 +808,11 @@ function idVerifiedSuccess() {
             customClass: "idVerSuccessAlert"
         }, function () {
             
-            redUrlForAddBank = (transType == "send") ? "https://www.noochme.com/noochweb/nooch/depositMoneycomplete?mem_id="
-                                                     : "https://www.noochme.com/noochweb/nooch/payRequestComplete?mem_id=";
+            //redUrlForAddBank = (transType == "send") ? "https://www.noochme.com/noochweb/nooch/depositMoneycomplete?mem_id="
+            //                                         : "https://www.noochme.com/noochweb/nooch/payRequestComplete?mem_id=";
+            redUrlForAddBank = (transType == "send") ? "http://localhost:2061/Nooch/DepositMoneyComplete?mem_id="
+                                                            : "http://localhost:2061/Nooch/PayRequestComplete?mem_id=";
+
             
             redUrlForAddBank = redUrlForAddBank + memIdGen + "," + TRANSID;
 
@@ -811,6 +821,7 @@ function idVerifiedSuccess() {
 
 
             console.log("redUrlForAddBank IS: [" + redUrlForAddBank + "]");
+ 
 
             //$("#frame").attr("src", "Nooch/Add-Bank.aspx?MemberId=" + memIdGen +
             //                        "&redUrl=" + redUrlForAddBank);
@@ -1168,8 +1179,10 @@ function payBtnClicked()
         {
             var redUrlToSendTo = "";
 
-            redUrlToSendTo = (transType == "send") ? "https://www.noochme.com/noochweb/trans/depositMoneycomplete.aspx?mem_id="
-                                                     : "https://www.noochme.com/noochweb/trans/payRequestComplete.aspx?mem_id=";
+            //redUrlToSendTo = (transType == "send") ? "https://www.noochme.com/noochweb/trans/depositMoneycomplete.aspx?mem_id="
+            //                                         : "https://www.noochme.com/noochweb/trans/payRequestComplete.aspx?mem_id=";
+            redUrlForAddBank = (transType == "send") ? "http://localhost:2061/Nooch/DepositMoneyComplete?mem_id="
+                                                            : "http://localhost:2061/Nooch/PayRequestComplete?mem_id=";
 
             redUrlToSendTo = redUrlToSendTo + MemID_EXISTING + "," + TRANSID;
 
@@ -1177,6 +1190,7 @@ function payBtnClicked()
                                                        : redUrlToSendTo + ",false";
 
             console.log("redUrlForAddBank IS: [" + redUrlToSendTo + "]");
+         
 
             window.location = redUrlToSendTo;
         }

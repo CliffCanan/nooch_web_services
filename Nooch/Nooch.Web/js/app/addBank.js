@@ -1199,9 +1199,10 @@ function SetDefaultAct() {
 
 
 function sendToRedUrl() {
-
+  
     console.log("RED_URL is: [" + RED_URL + "]");
-
+     
+   
     // First, check if this is a Landlord
     if (fromLandlordApp == "yes")
     {
@@ -1277,7 +1278,8 @@ function sendToRedUrl() {
             console.log("AddBank -> TRIGGERING COMPLETE IN PARENT - Success!");
             window.parent.$('body').trigger('addBankComplete');
         }
-        else // All Others - most likely no RED_URL was passed in URL, so defaulting to a Sweet Alert
+         
+        else if (RED_URL.indexOf('DepositMoneyComplete') > 1) 
         {
             swal({
                 title: "Bank Linked Successfully",
@@ -1305,15 +1307,57 @@ function sendToRedUrl() {
                     }
                 });
 
-                setTimeout(function ()
-                {
-                    window.top.location.href = "https://www.nooch.com/";
+                setTimeout(function () {
+                    window.top.location.href = RED_URL;
+                    // window.top.location.href = "http://localhost:2061/Nooch/DepositMoneyComplete?mem_id=" + MEMBER_ID;
                 }, 400);
             });
 
             //window.location = RED_URL;
         }
-    }
+
+         
+
+
+        else    // All Others - most likely no RED_URL was passed in URL, so defaulting to a Sweet Alert
+            {
+                swal({
+                    title: "Bank Linked Successfully",
+                    text: "<p>Thanks for completing this <strong>one-time</strong> process. &nbsp;Now you can make secure payments with anyone and never share your bank details!</p>",
+                    type: "success",
+                    confirmButtonColor: "#3fabe1",
+                    confirmButtonText: "Awesome",
+                    customClass: "largeText",
+                    html: true
+                }, function (isConfirm) {
+                    $('.addBankContainer-body').block({
+                        message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Finishing...</span>',
+                        css: {
+                            border: 'none',
+                            padding: '20px 8px 14px',
+                            backgroundColor: '#000',
+                            '-webkit-border-radius': '12px',
+                            '-moz-border-radius': '12px',
+                            'border-radius': '12px',
+                            opacity: '.75',
+                            width: '80%',
+                            left: '10%',
+                            top: '25px',
+                            color: '#fff'
+                        }
+                    });
+
+                    setTimeout(function ()
+                    {
+                        window.top.location.href = "https://www.nooch.com/";
+                        // window.top.location.href = "http://localhost:2061/Nooch/DepositMoneyComplete?mem_id=" + MEMBER_ID;
+                    }, 400);
+                });
+
+                //window.location = RED_URL;
+            }
+        }
+    
 }
 
 /*function checkOrUncheckSelectedAccount() {}*/
@@ -1360,6 +1404,8 @@ $(document).ready(function () {
     }
 
     RED_URL = getParameterByName('redUrl');
+
+    $('#red_url').val(RED_URL);
 
     // Check if RED_URL is empty (wasn't passed in URL) or a variation of 'nooch.com'
     // The redirection will hit a 404 unless the entire URL is sent, including the protocol ('https')
