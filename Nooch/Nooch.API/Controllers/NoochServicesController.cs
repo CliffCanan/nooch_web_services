@@ -4437,5 +4437,117 @@ namespace Nooch.API.Controllers
             return new BoolResult();
         }
 
+        [HttpGet]
+        [ActionName("GetSynapseBankAccountDetails")]
+        public SynapseAccoutDetailsInput GetSynapseBankAccountDetails(string memberId, string accessToken)
+        {
+            // Logger.LogDebugMessage("Service layer -> GetSynapseBankAccountDetails Initiated - memberId: [" + memberId + "]");
+
+            if (CommonHelper.IsValidRequest(accessToken, memberId))
+            {
+                try
+                {
+                    
+                    var accountCollection = CommonHelper.GetSynapseBankAccountDetails(memberId);
+
+                    if (accountCollection != null)
+                    {
+                        string appPath = Utility.GetValueFromConfig("ApplicationURL");
+
+                        SynapseAccoutDetailsInput o = new SynapseAccoutDetailsInput();
+
+                        o.BankName = CommonHelper.GetDecryptedData(accountCollection.bank_name);
+                        o.BankNickName = CommonHelper.GetDecryptedData(accountCollection.nickname);
+                        switch (o.BankName)
+                        {
+                            case "Ally":
+                                {
+                                    o.BankImageURL = String.Concat(appPath, "Assets/Images/bankPictures/ally.png");
+                                }
+                                break;
+                            case "Bank of America":
+                                {
+                                    o.BankImageURL = String.Concat(appPath, "Assets/Images/bankPictures/bankofamerica.png");
+                                }
+                                break;
+                            case "Wells Fargo":
+                                {
+                                    o.BankImageURL = String.Concat(appPath, "Assets/Images/bankPictures/WellsFargo.png");
+                                }
+                                break;
+                            case "Chase":
+                                {
+                                    o.BankImageURL = String.Concat(appPath, "Assets/Images/bankPictures/chase.png");
+                                }
+                                break;
+                            case "Citibank":
+                                {
+                                    o.BankImageURL = String.Concat(appPath, "Assets/Images/bankPictures/citibank.png");
+                                }
+                                break;
+                            case "TD Bank":
+                                {
+                                    o.BankImageURL = String.Concat(appPath, "Assets/Images/bankPictures/td.png");
+                                }
+                                break;
+                            case "Capital One 360":
+                                {
+                                    o.BankImageURL = String.Concat(appPath, "Assets/Images/bankPictures/capone360.png");
+                                }
+                                break;
+                            case "US Bank":
+                                {
+                                    o.BankImageURL = String.Concat(appPath, "Assets/Images/bankPictures/usbank.png");
+                                }
+                                break;
+                            case "PNC":
+                                {
+                                    o.BankImageURL = String.Concat(appPath, "Assets/Images/bankPictures/pnc.png");
+                                }
+                                break;
+                            case "SunTrust":
+                                {
+                                    o.BankImageURL = String.Concat(appPath, "Assets/Images/bankPictures/suntrust.png");
+                                }
+                                break;
+                            case "USAA":
+                                {
+                                    o.BankImageURL = String.Concat(appPath, "Assets/Images/bankPictures/usaa.png");
+                                }
+                                break;
+
+                            case "First Tennessee":
+                                {
+                                    o.BankImageURL = String.Concat(appPath, "Assets/Images/bankPictures/firsttennessee.png");
+                                }
+                                break;
+                            default:
+                                {
+                                    o.BankImageURL = String.Concat(appPath, "Assets/Images/bankPictures/no.png");
+                                }
+                                break;
+                        }
+                        o.AccountName = CommonHelper.GetDecryptedData(accountCollection.account_number_string);
+                        o.AccountStatus = accountCollection.Status;
+                        o.MemberId = memberId;
+
+                        return o;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service layer -> GetSynapseBankAccountDetails FAILED - MemberId: [" + memberId + "]. Exception: [" + ex + "]");
+                    throw new Exception("Server Error.");    
+                }
+
+                return new SynapseAccoutDetailsInput();
+            }
+            else
+            {
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
+
+
     }
 }
