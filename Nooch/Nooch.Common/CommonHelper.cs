@@ -246,11 +246,12 @@ namespace Nooch.Common
             };
         }
 
-        public static Member GetMemberDetailsByUdId(string udId)
+        public static Member GetMemberDetailsByMemberId(string udId)
         {
+            Guid memGuid = new Guid(udId);
             Logger.Info("CommonHelper - GetMemberDetailsByUdId[ udId:" + udId + "].");
 
-            var member = _dbContext.Members.FirstOrDefault(m => m.UDID1 == udId && m.IsDeleted == false);
+            var member = _dbContext.Members.FirstOrDefault(m => m.MemberId == memGuid && m.IsDeleted == false);
             return member;
         }
 
@@ -2910,7 +2911,7 @@ namespace Nooch.Common
             {
                 MemberFBId = GetEncryptedData(MemberFBId.ToLower());
 
-                var noochMember = GetMemberDetailsByUdId(MemberId);
+                var noochMember = GetMemberDetailsByMemberId(MemberId);
 
                 if (noochMember != null)
                 {

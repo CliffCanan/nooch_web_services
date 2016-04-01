@@ -1297,9 +1297,9 @@ namespace Nooch.API.Controllers
 
         [HttpGet]
         [ActionName("GetTransactionsList")]
-        public Collection<TransactionDto> GetTransactionsList(string member, string category, int pageSize, int pageIndex, string accessToken, string SubListType)
+        public Collection<TransactionDto> GetTransactionsList(string memberId, string listType, int pSize, int pIndex, string accessToken, string SubListType)
         {
-            if (CommonHelper.IsValidRequest(accessToken, member))
+            if (CommonHelper.IsValidRequest(accessToken, memberId))
             {
                 try
                 {
@@ -1309,7 +1309,7 @@ namespace Nooch.API.Controllers
 
                     int totalRecordsCount = 0;
 
-                    var transactionListEntities = tda.GetTransactionsList(member, category, pageSize, pageIndex, SubListType, out totalRecordsCount);
+                    var transactionListEntities = tda.GetTransactionsList(memberId, listType, pSize, pIndex, SubListType, out totalRecordsCount);
 
                     if (transactionListEntities != null && transactionListEntities.Count > 0)
                     {
@@ -1331,7 +1331,7 @@ namespace Nooch.API.Controllers
 
 
                                 //the sender is same as the current member than display the names of receipients.
-                                if (trans.Member.MemberId.ToString() == member)
+                                if (trans.Member.MemberId.ToString() == memberId)
                                 {
                                     // Member is Receiver in this transaction
                                     obj.FirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member1.FirstName));
@@ -1346,7 +1346,7 @@ namespace Nooch.API.Controllers
                                     obj.Amount = Math.Round((trans.Amount + trFee), 2);
                                 }
 
-                                if (trans.Member1.MemberId.ToString() == member)
+                                if (trans.Member1.MemberId.ToString() == memberId)
                                 {
                                     //the receiver is same as the current member than display the names of sender.
                                     obj.FirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member.FirstName));
@@ -1355,7 +1355,7 @@ namespace Nooch.API.Controllers
                                     obj.Amount = Math.Round(trans.Amount, 2);
                                 }
 
-                                if (trans.Member.MemberId.ToString() == member && trans.TransactionType == "T3EMY1WWZ9IscHIj3dbcNw==")
+                                if (trans.Member.MemberId.ToString() == memberId && trans.TransactionType == "T3EMY1WWZ9IscHIj3dbcNw==")
                                 {
                                     obj.FirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member1.FirstName));
                                     obj.LastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member1.LastName));
@@ -1375,7 +1375,7 @@ namespace Nooch.API.Controllers
                                     obj.InvitationSentTo = CommonHelper.GetDecryptedData(trans.PhoneNumberInvited);
                                 }
 
-                                if (category.Equals("SENT") || category.Equals("RECEIVED") || category.Equals("DISPUTED") || category.Equals("ALL"))
+                                if (listType.Equals("SENT") || listType.Equals("RECEIVED") || listType.Equals("DISPUTED") || listType.Equals("ALL"))
                                 {
                                     obj.DisputeStatus = !string.IsNullOrEmpty(trans.DisputeStatus) ? CommonHelper.GetDecryptedData(trans.DisputeStatus) : null;
                                     obj.DisputeId = trans.DisputeTrackingId;
@@ -1404,7 +1404,7 @@ namespace Nooch.API.Controllers
                             catch (Exception ex)
                             {
                                 Logger.Error("Service Layer - GetTransactionsList ERROR - Inner Exception during loop through all transactions - " +
-                                                       "MemberID: [" + member + "], TransID: [" + trans.TransactionId +
+                                                       "MemberID: [" + memberId + "], TransID: [" + trans.TransactionId +
                                                        "], Amount: [" + trans.Amount.ToString("n2") + "], Exception: [" + ex + "]");
                                 continue;
                             }
@@ -1414,7 +1414,7 @@ namespace Nooch.API.Controllers
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Layer - GetTransactionsList FAILED - MemberID: [" + member + "], Exception: [" + ex + "]");
+                    Logger.Error("Service Layer - GetTransactionsList FAILED - MemberID: [" + memberId + "], Exception: [" + ex + "]");
                     throw ex;
                 }
                 return new Collection<TransactionDto>();
@@ -4575,7 +4575,7 @@ namespace Nooch.API.Controllers
                 {
                     //Logger.LogDebugMessage("Service Layer -> GetMyDetails Initiated - MemberId: [" + memberId + "]");
 
-                    var myDetails = CommonHelper.GetMemberDetailsByUdId(memberId);
+                    var myDetails = CommonHelper.GetMemberDetailsByMemberId(memberId);
 
                     //Check address, city, cell phone to check whether the profile is a valid profile or not
                     bool isvalidprofile = !string.IsNullOrEmpty(myDetails.Address) &&
