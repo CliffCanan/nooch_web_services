@@ -4447,7 +4447,7 @@ namespace Nooch.API.Controllers
             {
                 try
                 {
-                    
+
                     var accountCollection = CommonHelper.GetSynapseBankAccountDetails(memberId);
 
                     if (accountCollection != null)
@@ -4537,7 +4537,7 @@ namespace Nooch.API.Controllers
                 catch (Exception ex)
                 {
                     Logger.Error("Service layer -> GetSynapseBankAccountDetails FAILED - MemberId: [" + memberId + "]. Exception: [" + ex + "]");
-                    throw new Exception("Server Error.");    
+                    throw new Exception("Server Error.");
                 }
 
                 return new SynapseAccoutDetailsInput();
@@ -4560,9 +4560,73 @@ namespace Nooch.API.Controllers
             }
             catch (Exception ex)
             {
-                Logger.Error("Service layer -> SaveMembersFBId Error - MemberId: [" + MemberId + "] Error -> "+ex);
+                Logger.Error("Service layer -> SaveMembersFBId Error - MemberId: [" + MemberId + "] Error -> " + ex);
             }
             return new StringResult();
+        }
+
+        [HttpGet]
+        [ActionName("GetMyDetails")]
+        public MySettingsInput GetMyDetails(string memberId, string accessToken)
+        {
+            if (CommonHelper.IsValidRequest(accessToken, memberId))
+            {
+                try
+                {
+                    //Logger.LogDebugMessage("Service Layer -> GetMyDetails Initiated - MemberId: [" + memberId + "]");
+
+                    var myDetails = CommonHelper.GetMemberDetailsByUdId(memberId);
+
+                    //Check address, city, cell phone to check whether the profile is a valid profile or not
+                    bool isvalidprofile = !string.IsNullOrEmpty(myDetails.Address) &&
+                                          !string.IsNullOrEmpty(myDetails.City) &&
+                                          !string.IsNullOrEmpty(myDetails.Zipcode) &&
+                                          !string.IsNullOrEmpty(myDetails.ContactNumber) &&
+                                          myDetails.IsVerifiedPhone == true &&
+                                          !string.IsNullOrEmpty(myDetails.SSN) &&
+                                          myDetails.DateOfBirth != null;
+
+                    var settings = new MySettingsInput
+                    {
+                        UserName = myDetails.UserName,
+                        FirstName = myDetails.FirstName,
+                        LastName = myDetails.LastName,
+                        Password = myDetails.Password,
+                        ContactNumber = myDetails.ContactNumber,
+                        SecondaryMail = myDetails.SecondaryEmail,
+                        RecoveryMail = myDetails.RecoveryEmail,
+                        ShowInSearch = Convert.ToBoolean(myDetails.ShowInSearch),
+                        Address = myDetails.Address,
+                        City = myDetails.City,
+                        State = myDetails.State,
+                        Zipcode = myDetails.Zipcode,
+                        IsVerifiedPhone = myDetails.IsVerifiedPhone ?? false,
+                        IsValidProfile = isvalidprofile,
+
+                        //PinNumber = myDetails.PinNumber,  // Cliff: don't need to send this to the app
+                        //AllowPushNotifications = Convert.ToBoolean(myDetails.AllowPushNotifications), // Don't need to send this to the app
+                        //Photo = (myDetails.Photo == null) ? Utility.GetValueFromConfig("PhotoUrl") : myDetails.Photo, //CLIFF: this is already being sent in the GetMemberDetails service
+                        //FacebookAcctLogin = myDetails.FacebookAccountLogin, //CLIFF: this is already being sent in the GetMemberDetails service
+                        //UseFacebookPicture = Convert.ToBoolean(myDetails.UseFacebookPicture),
+                        //Country = myDetails.Country,
+                        //ClearTransactionHistory = Convert.ToBoolean(myDetails.ClearTransactionHistory),
+                        //TimeZoneKey = CommonHelper.GetDecryptedData(myDetails.TimeZoneKey),
+                        //IsBankVerified = bankVerified
+                    };
+
+                    return settings;
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception("Server Error.");
+                }
+
+
+            }
+            else
+            {
+                throw new Exception("Invalid OAuth 2 Access");
+            }
         }
 
     }
