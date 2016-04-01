@@ -246,6 +246,15 @@ namespace Nooch.Common
             };
         }
 
+        public static Member GetMemberDetailsByUdId(string udId)
+        {
+            Logger.Info("CommonHelper - GetMemberDetailsByUdId[ udId:" + udId + "].");
+
+            var member = _dbContext.Members.FirstOrDefault(m => m.UDID1 == udId && m.IsDeleted == false);
+            return member;
+        }
+
+
         public static string GetMemberIdByUserName(string userName)
         {
 
@@ -2889,6 +2898,48 @@ namespace Nooch.Common
 
 
             return null;
+        }
+
+
+        public static string SaveMemberFBId(string MemberId, string MemberFBId, string IsConnect)
+        {
+
+            Logger.Info("MDA -> SaveMembersFBId - MemberId: [" + MemberId + "]");
+
+            try
+            {
+                MemberFBId = GetEncryptedData(MemberFBId.ToLower());
+
+                var noochMember = GetMemberDetailsByUdId(MemberId);
+
+                if (noochMember != null)
+                {
+                    if (IsConnect == "YES")
+                    {
+                        // update nooch member password
+                        noochMember.FacebookAccountLogin = MemberFBId.Replace(" ", "+");
+                    }
+                    else
+                    {
+                        noochMember.FacebookAccountLogin = null;
+                    }
+                    noochMember.DateModified = DateTime.Now;
+
+                    DbContext dbc = GetDbContextFromEntity(noochMember);
+
+                    int i = dbc.SaveChanges();
+                    return i > 0 ? "Success" : "Failure";
+                }
+                else
+                {
+                    return "Failure";
+                }
+
+            }
+            catch (Exception)
+            {
+                return "Failure";
+            }
         }
 
     }

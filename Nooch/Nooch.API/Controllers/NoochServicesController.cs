@@ -4548,6 +4548,22 @@ namespace Nooch.API.Controllers
             }
         }
 
+        [HttpGet]
+        [ActionName("SaveMembersFBId")]
+        public StringResult SaveMembersFBId(string MemberId, string MemberfaceBookId, string IsConnect)
+        {
+            try
+            {
+                //Logger.LogDebugMessage("Service layer -> SaveMembersFBId - MemberId: [" + MemberId + "]");
+
+                return new StringResult { Result = CommonHelper.SaveMemberFBId(MemberId, MemberfaceBookId, IsConnect) };
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service layer -> SaveMembersFBId Error - MemberId: [" + MemberId + "] Error -> "+ex);
+            }
+            return new StringResult();
+        }
 
     }
 }
