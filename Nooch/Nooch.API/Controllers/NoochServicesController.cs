@@ -4575,7 +4575,7 @@ namespace Nooch.API.Controllers
                 {
                     //Logger.LogDebugMessage("Service Layer -> GetMyDetails Initiated - MemberId: [" + memberId + "]");
 
-                    var myDetails = CommonHelper.GetMemberDetailsByMemberId(memberId);
+                    var myDetails = CommonHelper.GetMemberDetails(memberId);
 
                     //Check address, city, cell phone to check whether the profile is a valid profile or not
                     bool isvalidprofile = !string.IsNullOrEmpty(myDetails.Address) &&
@@ -4622,6 +4622,51 @@ namespace Nooch.API.Controllers
                 }
 
 
+            }
+            else
+            {
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
+
+        [HttpGet]
+        [ActionName("MySettings")]
+        StringResult MySettings(MySettingsInput mySettings, string accessToken)
+        {
+            if (CommonHelper.IsValidRequest(accessToken, mySettings.MemberId))
+            {
+                try
+                {
+                    Logger.Info("Service Layer -> MySettings Initiated - [MemberId: " + mySettings.MemberId + "]");
+
+                    var mda = new MembersDataAccess();
+                    string fileContent = null;
+                    int contentLength = 0;
+                    string fileExtension = null;
+
+                    if (mySettings.AttachmentFile != null)
+                    {
+                        fileContent = mySettings.AttachmentFile.FileContent;
+                        contentLength = mySettings.AttachmentFile.FileContent.Length;
+                        fileExtension = mySettings.AttachmentFile.FileExtension;
+                    }
+
+                    return new StringResult
+                    {
+                        Result = mda.MySettings(mySettings.MemberId, mySettings.FirstName.ToLower(), mySettings.LastName.ToLower(),
+                            mySettings.Password, mySettings.SecondaryMail, mySettings.RecoveryMail, mySettings.TertiaryMail,
+                            mySettings.FacebookAcctLogin, mySettings.UseFacebookPicture, fileContent, contentLength, fileExtension,
+                            mySettings.ContactNumber, mySettings.Address, mySettings.City, mySettings.State,
+                            mySettings.Zipcode, mySettings.Country, mySettings.TimeZoneKey, mySettings.Picture, mySettings.ShowInSearch)
+                    };
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Layer -> MySettings FAILED - [MemberId: " + mySettings.MemberId + "], [Exception: " + ex + "]");
+                    return new StringResult();
+                    
+                }
+                
             }
             else
             {

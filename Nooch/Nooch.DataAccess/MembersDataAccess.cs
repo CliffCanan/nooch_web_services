@@ -16,6 +16,7 @@ using Nooch.Common.Entities.SynapseRelatedEntities;
 using Nooch.Common.Resources;
 using Nooch.Common.Rules;
 using Nooch.Data;
+using System.Web;
 
 namespace Nooch.DataAccess
 {
@@ -5836,6 +5837,177 @@ namespace Nooch.DataAccess
             }
 
             return "Unkown Failure";
+        }
+
+
+        public string MySettings(string memberId, string firstName, string lastName, string password,
+            string secondaryMail, string recoveryMail, string tertiaryMail, string facebookAcctLogin,
+            bool useFacebookPicture, string fileContent, int contentLength, string fileExtension,
+            string contactNumber, string address, string city, string state, string zipCode, string country,
+            string timeZoneKey, byte[] Picture, bool showinSearchb)
+        {
+            Logger.Info("MDA -> MySettings (Updating User's Profile) - [MemberID: " + memberId + "]");
+
+
+                string folderPath = Utility.GetValueFromConfig("PhotoPath");
+                string fileName = memberId;
+                var id = Utility.ConvertToGuid(memberId);
+
+            var member = CommonHelper.GetMemberDetails(memberId);
+
+                if (member != null)
+                {
+                    try
+                    {
+                        #region Encrypt each piece of data
+
+                        member.FirstName = CommonHelper.GetEncryptedData(firstName.Split(' ')[0]);
+
+                        if (firstName.IndexOf(' ') > 0)
+                        {
+                            member.LastName = CommonHelper.GetEncryptedData(firstName.Split(' ')[1]);
+                        }
+
+                        if (member.Password != null && member.Password == "")
+                        {
+                            member.Password = CommonHelper.GetEncryptedData(CommonHelper.GetDecryptedData(password)
+                                                          .Replace(" ", "+"));
+                        }
+
+                        if (!String.IsNullOrEmpty(secondaryMail))
+                        {
+                            member.SecondaryEmail = CommonHelper.GetEncryptedData(secondaryMail);
+                        }
+
+                        if (!String.IsNullOrEmpty(recoveryMail))
+                        {
+                            member.RecoveryEmail = CommonHelper.GetEncryptedData(recoveryMail);
+                        }
+
+                        if (!String.IsNullOrEmpty(tertiaryMail))
+                        {
+                            member.TertiaryEmail = CommonHelper.GetEncryptedData(tertiaryMail);
+                        }
+
+                        if (contentLength > 0)
+                        {
+                            member.Photo = Utility.UploadPhoto(folderPath, fileName, fileExtension, fileContent, contentLength);
+                        }
+
+                        if (!String.IsNullOrEmpty(facebookAcctLogin))
+                        {
+                            member.FacebookAccountLogin = facebookAcctLogin;
+                        }
+
+                        if (!String.IsNullOrEmpty(address))
+                        {
+                            member.Address = CommonHelper.GetEncryptedData(address);
+                        }
+                        if (!String.IsNullOrEmpty(city))
+                        {
+                            member.City = CommonHelper.GetEncryptedData(city);
+                        }
+                        if (!String.IsNullOrEmpty(state))
+                        {
+                            member.State = CommonHelper.GetEncryptedData(state);
+                        }
+                        if (!String.IsNullOrEmpty(zipCode))
+                        {
+                            member.Zipcode = CommonHelper.GetEncryptedData(zipCode);
+                        }
+                        if (!String.IsNullOrEmpty(country))
+                        {
+                            member.Country = country;
+                        }
+                        if (!string.IsNullOrEmpty(timeZoneKey))
+                        {
+                            member.TimeZoneKey = CommonHelper.GetEncryptedData(timeZoneKey);
+                        }
+
+                        #endregion Encrypt each piece of data
+
+                        //Logger.LogDebugMessage("MDA -> MySettings CHECKPOINT #23 - contactNumber (sent from app): [" + contactNumber + "]");
+                        //Logger.LogDebugMessage("MDA -> MySettings CHECKPOINT #23 - member.ContactNumber (from DB): [" + member.ContactNumber + "]");
+
+                        if (!String.IsNullOrEmpty(contactNumber) &&
+                            (String.IsNullOrEmpty(member.ContactNumber) ||
+                            CommonHelper.RemovePhoneNumberFormatting(member.ContactNumber) != CommonHelper.RemovePhoneNumberFormatting(contactNumber)))
+                        {
+                            if (!IsPhoneNumberAlreadyRegistered(contactNumber))
+                            {
+                                member.ContactNumber = contactNumber;
+                                member.IsVerifiedPhone = false;
+
+                                #region SendingSMSVerificaion
+
+                                try
+                                {
+                                    string fname = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(member.FirstName));
+                                    string MessageBody = "Hi " + fname + ", This is Nooch - just need to verify this is your phone number. Please reply 'Go' to confirm your phone number.";
+
+                                    string SMSresult = Utility.SendSMS(contactNumber, MessageBody);
+
+                                    Logger.Info("MySettings --> SMS Verification sent to [" + contactNumber + "] successfully.");
+                                }
+                                catch (Exception)
+                                {
+                                    Logger.Error("MySettings --> SMS Verification NOT sent to [" +
+                                        contactNumber + "]. Problem occurred in sending SMS.");
+                                }
+
+                                #endregion
+                            }
+                            else
+                            {
+                                return "Phone Number already registered with Nooch";
+                            }
+                        }
+
+                        if (Picture != null)
+                        {
+                            // make  image from bytes
+                            string filename = HttpContext.Current.Server.MapPath("UploadedPhotos") + "/Photos/" +
+                                              member.MemberId.ToString() + ".png";
+
+                            using (FileStream fs = new FileStream(filename, FileMode.Create, FileAccess.ReadWrite))
+                            {
+                                fs.Write(Picture, 0, (int)Picture.Length);
+                            }
+
+                            member.Photo = Utility.GetValueFromConfig("PhotoUrl") + member.MemberId + ".png";
+                        }
+                        else
+                        {
+                            // check if image is already there
+                            if (member.Photo == null)
+                            {
+                                member.Photo = Utility.GetValueFromConfig("PhotoUrl") + "gv_no_photo.png";
+                            }
+                        }
+
+                        if (showinSearchb != null)
+                        {
+                            member.ShowInSearch = showinSearchb;
+                        }
+
+                        member.DateModified = DateTime.Now;
+                        // CLIFF (7/30/15): We used to set the Validated Date here automatically when the user completed their profile.
+                        //                  But now we also need users to send SSN and DoB, so will set the Validated Date in SaveMemberSSN()
+                        // member.ValidatedDate = DateTime.Now;
+                        DbContext dbc = CommonHelper.GetDbContextFromEntity(member);
+                        int value = dbc.SaveChanges();
+
+                        return value > 0 ? "Your details have been updated successfully." : "Failure";
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error("MDA -> MySettings (Updating User's Profile) FAILED - [MemberID: " + memberId + "], [Exception: " + ex.Message + "]");
+
+                        return ex.InnerException.Message;
+                    }
+                }
+                return "Member not found.";
+            
         }
 
     }
