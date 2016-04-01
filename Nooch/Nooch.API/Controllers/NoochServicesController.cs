@@ -4698,5 +4698,30 @@ namespace Nooch.API.Controllers
                 throw new Exception("Invalid OAuth 2 Access");
             }
         }
+
+        [HttpGet]
+        [ActionName("ResetPin")]
+        StringResult ResetPin(string memberId, string oldPin, string newPin, string accessToken)
+        {
+            if (CommonHelper.IsValidRequest(accessToken, memberId))
+            {
+                try
+                {
+                    Logger.Info("Service Layer - ResetPin - MemberId: [" + memberId + "]");
+                    var mda = new MembersDataAccess();
+                    return new StringResult { Result = mda.ResetPin(memberId, oldPin, newPin) };
+                }
+                catch (Exception ex)
+                {
+                    Logger.Info("Service Layer - ResetPin - MemberId: [" + memberId + "]");
+                    return new StringResult() { Result = "Server Error." };
+                }
+                
+            }
+            else
+            {
+                return new StringResult(){Result = "Invalid oAuth Access Token."};
+            }
+        }
     }
 }

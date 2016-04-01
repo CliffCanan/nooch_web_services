@@ -6010,5 +6010,24 @@ namespace Nooch.DataAccess
             
         }
 
+
+
+        public string ResetPin(string memberId, string oldPin, string newPin)
+        {
+            Logger.Info("MDA -> ResetPin - MemberId: [" + memberId + "]");
+            
+                var id = Utility.ConvertToGuid(memberId);
+                
+            var memOldPin = oldPin.Replace(" ", "+");
+            var noochMember = _dbContext.Members.FirstOrDefault(m => m.MemberId == id && m.PinNumber == memOldPin);
+            if (noochMember == null) return "Incorrect pin. Please check your current pin.";
+            // update nooch member pin number
+            noochMember.PinNumber = newPin.Replace(" ", "+");
+            noochMember.DateModified = DateTime.Now;
+            return _dbContext.SaveChanges() > 0
+                ? "Pin changed successfully."
+                : "Incorrect pin. Please check your current pin.";
+        }
+
     }
 }
