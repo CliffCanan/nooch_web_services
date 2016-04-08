@@ -3808,7 +3808,7 @@ namespace Nooch.DataAccess
                 if (recepientPermissions.users != null && recepientPermissions.users.Length > 0)
                 {
                     foreach (synapseSearchUserResponse_User recUser in recepientPermissions.users)
-                    {
+                    {   
                         // iterating each node inside
                         if (recUser.nodes != null && recUser.nodes.Length > 0)
                         {

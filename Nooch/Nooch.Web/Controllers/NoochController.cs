@@ -879,7 +879,9 @@ namespace Nooch.Web.Controllers
             return res;
         }
 
-        public ActionResult DepositMoney() {
+        public ActionResult DepositMoney() 
+        
+        {
 
             ResultDepositMoney rdm = new ResultDepositMoney();
             Logger.Info("DepositMoney CodeBehind -> Page_load Initiated - [TransactionId Parameter: " + Request.QueryString["TransactionId"] + "]");
@@ -894,6 +896,18 @@ namespace Nooch.Web.Controllers
                         {
                             Logger.Info("DepositMoney CodeBehind -> Page_load - RENT SCENE Transaction Detected");
                             rdm.rs = "true";
+                        }
+
+                        if (!String.IsNullOrEmpty(Request.QueryString["UserType"]))
+                        {
+                            string n = Request.QueryString["UserType"].ToString();
+                            rdm.usrTyp = CommonHelper.GetDecryptedData(n);
+
+                            if (rdm.usrTyp == "NonRegistered" ||
+                               rdm.usrTyp == "Existing")
+                            {
+                                Logger.Info("DepositMoney CodeBehind -> Page_load - UserType is: [" + rdm.usrTyp + "]");
+                            }
                         }
 
 
@@ -963,6 +977,10 @@ namespace Nooch.Web.Controllers
                     rdm.transAmountd = s1[0].ToString();
                     rdm.transAmountc = "00";
                 }
+
+                rdm.memidexst = !String.IsNullOrEmpty(transaction.RecepientId)
+                                     ? transaction.RecepientId
+                                     : "";
 
                 // Now check what TYPE of invitation (phone or email)
                 rdm.invitationType = transaction.IsPhoneInvitation == true ? "p" : "e";

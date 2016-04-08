@@ -25,6 +25,7 @@ $(document).ready(function () {
 
         if (USERTYPE != "NonRegistered" && USERTYPE != "Existing")
         {
+             
             var targetWdth = '30%';
             var ms = 1250;
             if ($(window).width() > 1100) {
@@ -67,7 +68,7 @@ $(document).ready(function () {
             if (USERTYPE != "NonRegistered" &&
                 USERTYPE != "Existing") // Only other option is "New"
             {
-                 
+                
                 setTimeout(bindEmail, 700);
 
                 // Hide old form
