@@ -531,6 +531,7 @@ namespace Nooch.Common
             var id = Utility.ConvertToGuid(memberId);
 
             var memberAccountDetails = _dbContext.SynapseBanksOfMembers.FirstOrDefault(m => m.MemberId == id && m.IsDefault == true);
+            _dbContext.Entry(memberAccountDetails).Reload();
 
             return memberAccountDetails;
 
