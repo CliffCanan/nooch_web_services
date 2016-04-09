@@ -6196,5 +6196,76 @@ namespace Nooch.DataAccess
                 return ex.ToString();
             }
         }
+
+
+
+
+        public string SetShowInSearch(string memberId, bool showInSearch)
+        {
+            Logger.Info("MDA -> SetShowInSearch - memberId: [" + memberId + "]");
+
+            
+
+                var id = Utility.ConvertToGuid(memberId);
+
+                // code to update setting in members table 
+                
+            var memberSettings = _dbContext.Members.FirstOrDefault(m => m.MemberId == id);
+                    
+                if (memberSettings != null)
+                {
+                    // member found
+                    memberSettings.ShowInSearch = showInSearch;
+                    _dbContext.SaveChanges();
+                    _dbContext.Entry(memberSettings).Reload();
+                    
+                }
+                else
+                {
+                    return "Failure";
+                }
+
+                
+            var memberPrivacySettings = _dbContext.MemberPrivacySettings.FirstOrDefault(m => m.MemberId == id);
+                    
+
+                if (memberPrivacySettings == null)
+                {
+                    var privacySettings = new MemberPrivacySetting
+                    {
+                        
+                        MemberId = id,
+                        ShowInSearch = showInSearch,
+                        DateCreated = DateTime.Now
+                    };
+
+                    _dbContext.MemberPrivacySettings.Add(privacySettings);
+                    int r = _dbContext.SaveChanges();
+                    if (r > 0)
+                    {
+                    
+                        return "ShowInSearch flag is added successfully."; 
+                        
+                    }
+                    return "Failure"; 
+
+                    
+                }
+                memberPrivacySettings.ShowInSearch = showInSearch;
+                memberPrivacySettings.DateModified = DateTime.Now;
+                
+                int r2 = _dbContext.SaveChanges();
+                if (r2 > 0)
+                {
+                    _dbContext.Entry(memberPrivacySettings).Reload();
+                    return "ShowInSearch flag is updated successfully.";
+
+                }
+                else
+                {
+                    return  "Failure";
+                }
+                
+        }
     }
 }

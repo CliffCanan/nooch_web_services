@@ -4818,19 +4818,19 @@ namespace Nooch.API.Controllers
                     Logger.Error("Service Layer Error- MemberEmailNotificationSettings - memberId: [" + memberNotificationSettings.MemberId + "] Error : [" + ex + " ].");
                     throw new Exception("Server Error.");
                 }
-                
+
             }
             else
             {
                 throw new Exception("Invalid OAuth 2 Access");
             }
         }
-        
+
         [HttpPost]
         [ActionName("MemberPushNotificationSettings")]
         public StringResult MemberPushNotificationSettings(MemberNotificationsNewStringTypeSettings memberNotificationSettings, string accessToken)
         {
-            if  (CommonHelper.IsValidRequest(accessToken, memberNotificationSettings.MemberId))
+            if (CommonHelper.IsValidRequest(accessToken, memberNotificationSettings.MemberId))
             {
                 try
                 {
@@ -4845,7 +4845,7 @@ namespace Nooch.API.Controllers
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Layer Error- MemberPushNotificationSettings - memberId: [" +memberNotificationSettings.MemberId+ "] Error : [" + ex + " ].");
+                    Logger.Error("Service Layer Error- MemberPushNotificationSettings - memberId: [" + memberNotificationSettings.MemberId + "] Error : [" + ex + " ].");
                     throw new Exception("Server Error.");
                 }
 
@@ -4856,7 +4856,24 @@ namespace Nooch.API.Controllers
             }
         }
 
+        [HttpGet]
+        [ActionName("SetShowInSearch")]
+        public StringResult SetShowInSearch(string memberId, bool search, string accessToken)
+        {
+            try
+            {
+                Logger.Info("Service Layer - SetShowInSearch Initiated - MemberId: [" + memberId + "]");
+                var mda = new MembersDataAccess();
+                return new StringResult { Result = mda.SetShowInSearch(memberId, search) };
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Layer Error- SetShowInSearch - memberId: [" + memberId + "] Error : [" + ex + " ].");
+                throw new Exception("Server Error.");
+            }
 
+
+        }
 
 
 
