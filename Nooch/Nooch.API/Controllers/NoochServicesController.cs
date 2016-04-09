@@ -4724,7 +4724,7 @@ namespace Nooch.API.Controllers
             }
         }
 
-        // to update member notification settings
+        // to get member notification settings
         [HttpGet]
         [ActionName("GetMemberNotificationSettings")]
         public MemberNotificationSettingsInput GetMemberNotificationSettings(string memberId, string accessToken)
@@ -4784,6 +4784,46 @@ namespace Nooch.API.Controllers
                 throw new Exception("Invalid OAuth 2 Access");
             }
         }
+
+        // to save email notification settings of users
+
+        [HttpPost]
+        [ActionName("SaveMemberSSN")]
+        public StringResult MemberEmailNotificationSettings(
+            MemberNotificationsNewStringTypeSettings memberNotificationSettings, string accessToken)
+        {
+            if (CommonHelper.IsValidRequest(accessToken, memberNotificationSettings.MemberId))
+            {
+                try
+                {
+                    Logger.Info("Service Layer - MemberEmailNotificationSettings - memberId: [" + memberNotificationSettings.MemberId + "]");
+
+                    return new StringResult
+                    {
+                        Result = new MembersDataAccess().MemberEmailNotificationSettings("",
+                            memberNotificationSettings.MemberId, null, null,
+                            (memberNotificationSettings.EmailTransferSent == "1") ? true : false, (memberNotificationSettings.EmailTransferReceived == "1") ? true : false, (memberNotificationSettings.EmailTransferAttemptFailure == "1") ? true : false,
+                            (memberNotificationSettings.TransferUnclaimed == "1") ? true : false, (memberNotificationSettings.BankToNoochRequested == "1") ? true : false, (memberNotificationSettings.BankToNoochCompleted == "1") ? true : false,
+                            (memberNotificationSettings.NoochToBankRequested == "1") ? true : false, (memberNotificationSettings.NoochToBankCompleted == "1") ? true : false, null,
+                            null, null, null, null)
+                    };
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Layer Error- MemberEmailNotificationSettings - memberId: [" + memberNotificationSettings.MemberId + "] Error : [" + ex + " ].");
+                    throw new Exception("Server Error.");
+                }
+                
+            }
+            else
+            {
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
+        
+
+
+
 
 
     }

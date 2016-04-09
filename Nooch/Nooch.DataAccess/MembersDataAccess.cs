@@ -6046,6 +6046,88 @@ namespace Nooch.DataAccess
 
         }
 
+        // to save email notification settings for the give user
+        public string MemberEmailNotificationSettings(string notificationId, string memberId, bool? friendRequest,
+            bool? inviteRequestAccept, bool transferSent, bool transferReceived, bool transferAttemptFailure,
+            bool transferUnclaimed, bool bankToNoochRequested, bool bankToNoochCompleted, bool? noochToBankRequested,
+            bool noochToBankCompleted, bool? inviteReminder, bool? lowBalance, bool? validationRemainder,
+            bool? productUpdates, bool? newAndUpdate)
+        {
+            int i = 0;
+            try
+            {
+                Logger.Info("MDA -> MemberEmailNotificationSettings - MemberId: [" + memberId + "]");
+
+                var id = Utility.ConvertToGuid(notificationId);
+                var memId = Utility.ConvertToGuid(memberId);
+
+                
+                    i++;
+                    
+                    var memberNotifications =
+                        _dbContext.MemberNotifications.FirstOrDefault(m => m.MemberId == memId);
+                    i++;
+                    if (id == Guid.Empty && memberNotifications == null)
+                    {
+                        i++;
+                        var memberNotification = new MemberNotification
+                        {
+                            NotificationId = Guid.NewGuid(),
+
+                            
+
+                            MemberId = Utility.ConvertToGuid(memberId),
+
+                            EmailFriendRequest = friendRequest,
+                            EmailInviteRequestAccept = inviteRequestAccept,
+                            EmailTransferSent = transferSent,
+                            EmailTransferReceived = transferReceived,
+                            EmailTransferAttemptFailure = transferAttemptFailure,
+                            TransferUnclaimed = transferUnclaimed,
+                            BankToNoochRequested = bankToNoochRequested,
+                            BankToNoochCompleted = bankToNoochCompleted,
+                            NoochToBankRequested = noochToBankRequested,
+                            NoochToBankCompleted = noochToBankCompleted,
+                            InviteReminder = inviteReminder,
+                            LowBalance = lowBalance,
+                            ValidationRemainder = validationRemainder,
+                            ProductUpdates = productUpdates,
+                            NewAndUpdate = newAndUpdate,
+                            DateCreated = DateTime.Now
+                        };
+                        i++;
+                        _dbContext.MemberNotifications.Add(memberNotification);
+                        return _dbContext.SaveChanges() > 0 ? "Success" : "Failure";
+                    }
+                    i++;
+
+                    memberNotifications.MemberId= Utility.ConvertToGuid(memberId);
+                    memberNotifications.EmailFriendRequest = friendRequest;
+                    memberNotifications.EmailInviteRequestAccept = inviteRequestAccept;
+                    memberNotifications.EmailTransferSent = transferSent;
+                    memberNotifications.EmailTransferReceived = transferReceived;
+                    memberNotifications.EmailTransferAttemptFailure = transferAttemptFailure;
+                    memberNotifications.TransferUnclaimed = transferUnclaimed;
+                    memberNotifications.BankToNoochRequested = bankToNoochRequested;
+                    memberNotifications.BankToNoochCompleted = bankToNoochCompleted;
+                    memberNotifications.NoochToBankRequested = noochToBankRequested;
+                    memberNotifications.NoochToBankCompleted = noochToBankCompleted;
+                    memberNotifications.InviteReminder = inviteReminder;
+                    memberNotifications.LowBalance = lowBalance;
+                    memberNotifications.ValidationRemainder = validationRemainder;
+                    memberNotifications.ProductUpdates = productUpdates;
+                    memberNotifications.NewAndUpdate = newAndUpdate;
+                    memberNotifications.DateModified = DateTime.Now;
+
+                    return _dbContext.SaveChanges() > 0 ? "Success" : "Failure";
+                
+            }
+            catch (Exception ex)
+            {
+                return ex.ToString() + i.ToString();
+            }
+        }
+
 
     }
 }
