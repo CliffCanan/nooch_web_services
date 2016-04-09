@@ -27,6 +27,7 @@ namespace Nooch.DataAccess
         public MembersDataAccess()
         {
             _dbContext = new NOOCHEntities();
+            
         }
         public Member GetMemberByGuid(Guid memberGuid)
         {
@@ -6024,9 +6025,20 @@ namespace Nooch.DataAccess
             // update nooch member pin number
             noochMember.PinNumber = newPin.Replace(" ", "+");
             noochMember.DateModified = DateTime.Now;
-            return _dbContext.SaveChanges() > 0
-                ? "Pin changed successfully."
-                : "Incorrect pin. Please check your current pin.";
+            int r = _dbContext.SaveChanges();
+
+            if (r > 0)
+            {
+            _dbContext.Entry(noochMember).Reload();
+                return "Pin changed successfully.";
+            }
+            else
+            {
+                return "Incorrect pin. Please check your current pin.";
+                
+            }
+                
+                
         }
 
         // to get member notification settings

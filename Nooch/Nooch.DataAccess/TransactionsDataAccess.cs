@@ -27,7 +27,7 @@ namespace Nooch.DataAccess
 
         public TransactionsDataAccess()
         {
-            _dbContext = new NOOCHEntities();
+             _dbContext = new NOOCHEntities();
         }
 
 

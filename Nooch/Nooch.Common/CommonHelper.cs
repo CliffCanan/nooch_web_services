@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Data.Entity;
 using System.Data.Entity.Core.Objects;
 using System.IO;
@@ -25,7 +26,15 @@ namespace Nooch.Common
     public static class CommonHelper
     {
         private const string Chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        private static NOOCHEntities _dbContext = new NOOCHEntities();
+        private static NOOCHEntities _dbContext = null;
+
+        static CommonHelper()
+        {
+            _dbContext = new NOOCHEntities();
+        }
+
+        
+
         public static string GetEncryptedData(string sourceData)
         {
             try
@@ -719,7 +728,7 @@ namespace Nooch.Common
         private static string IncreaseInvalidPinAttemptCount(
             Member memberEntity, int pinRetryCountInDb)
         {
-            Member mem = _dbContext.Members.Find(memberEntity);
+            var mem = _dbContext.Members.Find(memberEntity.MemberId);
 
 
             mem.InvalidPinAttemptCount = pinRetryCountInDb + 1;
@@ -734,10 +743,10 @@ namespace Nooch.Common
         {
 
             var id = Utility.ConvertToGuid(memberId);
-
+            
 
             var memberEntity = _dbContext.Members.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
-
+            _dbContext.Entry(memberEntity).Reload();
 
             if (memberEntity != null)
             {

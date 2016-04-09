@@ -30,7 +30,12 @@ namespace Nooch.API.Controllers
     public class NoochServicesController : ApiController
     {
 
-        private readonly NOOCHEntities _dbContext = new NOOCHEntities();
+        private readonly NOOCHEntities _dbContext = null;
+
+        public NoochServicesController()
+        {
+            _dbContext = new NOOCHEntities();
+        }
 
         //public IEnumerable<string> Get()
         //{
