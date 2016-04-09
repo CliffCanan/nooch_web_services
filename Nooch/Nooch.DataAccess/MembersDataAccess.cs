@@ -1797,7 +1797,7 @@ namespace Nooch.DataAccess
                 payload.extra = extra;
                 var baseAddress = "";
                 baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/create" : "https://synapsepay.com/api/v3/user/create";
-                
+
 
                 try
                 {
@@ -3428,7 +3428,7 @@ namespace Nooch.DataAccess
             string baseAddress = "";
 
             baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/doc/attachments/add" : "https://synapsepay.com/api/v3/user/doc/attachments/add";
-            
+
 
             try
             {
@@ -3982,7 +3982,7 @@ namespace Nooch.DataAccess
 
                         string UrlToHit = "";
                         UrlToHit = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/node/verify" : "https://synapsepay.com/api/v3/node/verify";
-                        
+
 
                         // Calling Synapse Bank Login service (Link a Bank Account)
 
@@ -4337,7 +4337,7 @@ namespace Nooch.DataAccess
 
                         string UrlToHit = "";
                         UrlToHit = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/node/verify" : "https://synapsepay.com/api/v3/node/verify";
-                        
+
 
                         // Calling Synapse Bank Login service (Link a Bank Account)
 
@@ -4669,7 +4669,7 @@ namespace Nooch.DataAccess
 
                 string baseAddress = "";
                 baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/node/remove" : "https://synapsepay.com/api/v3/node/remove";
-                
+
 
                 try
                 {
@@ -4798,7 +4798,7 @@ namespace Nooch.DataAccess
                         synapseIdVerificationQuestionAnswerSet oneQuestionAnswerObj = new synapseIdVerificationQuestionAnswerSet();
 
                         oneQuestionAnswerObj.id = (Int16)x.SynpQuestionId;
-                        oneQuestionAnswerObj.question = x.Question;        
+                        oneQuestionAnswerObj.question = x.Question;
 
                         oneQuestionAnswerObj.answers = new List<synapseIdVerificationAnswerChoices>();
                         List<synapseIdVerificationAnswerChoices> allQs = new List<synapseIdVerificationAnswerChoices>();
@@ -4810,7 +4810,7 @@ namespace Nooch.DataAccess
                             {
                                 b.id = Convert.ToInt16(x.Choice1Id);
                                 b.answer = x.Choice1Text;
-                                
+
                             }
                             if (i == 1)
                             {
@@ -4915,14 +4915,14 @@ namespace Nooch.DataAccess
 
 
 
-           
+
 
             input.user = new synapseSubmitIdAnswers_answers_input();
             input.user.fingerprint = memberEntity.UDID1;
-         
+
             input.user.doc = new synapseSubmitIdAnswers_docSet();
             input.user.doc.question_set_id = questionSetId;
-           
+
             input.user.doc.answers = new synapseSubmitIdAnswers_Input_quest[5];
             // Finally, set the user's answers
             synapseSubmitIdAnswers_Input_quest[] quest = new synapseSubmitIdAnswers_Input_quest[5];
@@ -4941,7 +4941,7 @@ namespace Nooch.DataAccess
 
             string baseAddress = "";
             baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/doc/verify" : "https://synapsepay.com/api/v3/user/doc/verify";
-            
+
             try
             {
                 var http = (HttpWebRequest)WebRequest.Create(new Uri(baseAddress));
@@ -4970,7 +4970,7 @@ namespace Nooch.DataAccess
                     #region Get Member Record To Update
 
 
-                   
+
 
                     #endregion Get Member Record To Update
 
@@ -5449,7 +5449,7 @@ namespace Nooch.DataAccess
                                 string moneyRecipientLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(recipient.LastName));
 
                                 SynapseV3AddTrans_ReusableClass Call_Synapse_Order_API_Result = tda.AddTransSynapseV3Reusable(SenderUserAndBankDetails.UserDetails.access_token,
-                                    SenderUserAndBankDetails.UserDetails.user_fingerprints,  SenderUserAndBankDetails.BankDetails.bank_oid,
+                                    SenderUserAndBankDetails.UserDetails.user_fingerprints, SenderUserAndBankDetails.BankDetails.bank_oid,
                                    Transaction.Amount.ToString(), facilitator_fee, RecipientUserAndBankDetails.UserDetails.user_id, RecipientUserAndBankDetails.UserDetails.user_fingerprints,
                                    RecipientUserAndBankDetails.BankDetails.bank_oid, Transaction.TransactionId.ToString(), CommonHelper.GetDecryptedData(sender.UserName), CommonHelper.GetDecryptedData(recipient.UserName), CommonHelper.GetRecentOrDefaultIPOfMember(sender.MemberId),
                                    moneySenderLastName, moneyRecipientLastName
@@ -5466,10 +5466,10 @@ namespace Nooch.DataAccess
 
                                     //if (!isTesting)
                                     //{
-                                        // If testing, keep this transaction as 'Pending' so we can more easily re-test with the same transaction.
-                                        Transaction.TransactionStatus = "Success";
+                                    // If testing, keep this transaction as 'Pending' so we can more easily re-test with the same transaction.
+                                    Transaction.TransactionStatus = "Success";
 
-                                        _dbContext.SaveChanges();
+                                    _dbContext.SaveChanges();
                                     //}
 
 
@@ -5849,165 +5849,165 @@ namespace Nooch.DataAccess
             Logger.Info("MDA -> MySettings (Updating User's Profile) - [MemberID: " + memberId + "]");
 
 
-                string folderPath = Utility.GetValueFromConfig("PhotoPath");
-                string fileName = memberId;
-                var id = Utility.ConvertToGuid(memberId);
+            string folderPath = Utility.GetValueFromConfig("PhotoPath");
+            string fileName = memberId;
+            var id = Utility.ConvertToGuid(memberId);
 
             var member = CommonHelper.GetMemberDetails(memberId);
 
-                if (member != null)
+            if (member != null)
+            {
+                try
                 {
-                    try
+                    #region Encrypt each piece of data
+
+                    member.FirstName = CommonHelper.GetEncryptedData(firstName.Split(' ')[0]);
+
+                    if (firstName.IndexOf(' ') > 0)
                     {
-                        #region Encrypt each piece of data
+                        member.LastName = CommonHelper.GetEncryptedData(firstName.Split(' ')[1]);
+                    }
 
-                        member.FirstName = CommonHelper.GetEncryptedData(firstName.Split(' ')[0]);
+                    if (member.Password != null && member.Password == "")
+                    {
+                        member.Password = CommonHelper.GetEncryptedData(CommonHelper.GetDecryptedData(password)
+                                                      .Replace(" ", "+"));
+                    }
 
-                        if (firstName.IndexOf(' ') > 0)
-                        {
-                            member.LastName = CommonHelper.GetEncryptedData(firstName.Split(' ')[1]);
-                        }
+                    if (!String.IsNullOrEmpty(secondaryMail))
+                    {
+                        member.SecondaryEmail = CommonHelper.GetEncryptedData(secondaryMail);
+                    }
 
-                        if (member.Password != null && member.Password == "")
-                        {
-                            member.Password = CommonHelper.GetEncryptedData(CommonHelper.GetDecryptedData(password)
-                                                          .Replace(" ", "+"));
-                        }
+                    if (!String.IsNullOrEmpty(recoveryMail))
+                    {
+                        member.RecoveryEmail = CommonHelper.GetEncryptedData(recoveryMail);
+                    }
 
-                        if (!String.IsNullOrEmpty(secondaryMail))
-                        {
-                            member.SecondaryEmail = CommonHelper.GetEncryptedData(secondaryMail);
-                        }
+                    if (!String.IsNullOrEmpty(tertiaryMail))
+                    {
+                        member.TertiaryEmail = CommonHelper.GetEncryptedData(tertiaryMail);
+                    }
 
-                        if (!String.IsNullOrEmpty(recoveryMail))
-                        {
-                            member.RecoveryEmail = CommonHelper.GetEncryptedData(recoveryMail);
-                        }
+                    if (contentLength > 0)
+                    {
+                        member.Photo = Utility.UploadPhoto(folderPath, fileName, fileExtension, fileContent, contentLength);
+                    }
 
-                        if (!String.IsNullOrEmpty(tertiaryMail))
-                        {
-                            member.TertiaryEmail = CommonHelper.GetEncryptedData(tertiaryMail);
-                        }
+                    if (!String.IsNullOrEmpty(facebookAcctLogin))
+                    {
+                        member.FacebookAccountLogin = facebookAcctLogin;
+                    }
 
-                        if (contentLength > 0)
-                        {
-                            member.Photo = Utility.UploadPhoto(folderPath, fileName, fileExtension, fileContent, contentLength);
-                        }
+                    if (!String.IsNullOrEmpty(address))
+                    {
+                        member.Address = CommonHelper.GetEncryptedData(address);
+                    }
+                    if (!String.IsNullOrEmpty(city))
+                    {
+                        member.City = CommonHelper.GetEncryptedData(city);
+                    }
+                    if (!String.IsNullOrEmpty(state))
+                    {
+                        member.State = CommonHelper.GetEncryptedData(state);
+                    }
+                    if (!String.IsNullOrEmpty(zipCode))
+                    {
+                        member.Zipcode = CommonHelper.GetEncryptedData(zipCode);
+                    }
+                    if (!String.IsNullOrEmpty(country))
+                    {
+                        member.Country = country;
+                    }
+                    if (!string.IsNullOrEmpty(timeZoneKey))
+                    {
+                        member.TimeZoneKey = CommonHelper.GetEncryptedData(timeZoneKey);
+                    }
 
-                        if (!String.IsNullOrEmpty(facebookAcctLogin))
-                        {
-                            member.FacebookAccountLogin = facebookAcctLogin;
-                        }
+                    #endregion Encrypt each piece of data
 
-                        if (!String.IsNullOrEmpty(address))
-                        {
-                            member.Address = CommonHelper.GetEncryptedData(address);
-                        }
-                        if (!String.IsNullOrEmpty(city))
-                        {
-                            member.City = CommonHelper.GetEncryptedData(city);
-                        }
-                        if (!String.IsNullOrEmpty(state))
-                        {
-                            member.State = CommonHelper.GetEncryptedData(state);
-                        }
-                        if (!String.IsNullOrEmpty(zipCode))
-                        {
-                            member.Zipcode = CommonHelper.GetEncryptedData(zipCode);
-                        }
-                        if (!String.IsNullOrEmpty(country))
-                        {
-                            member.Country = country;
-                        }
-                        if (!string.IsNullOrEmpty(timeZoneKey))
-                        {
-                            member.TimeZoneKey = CommonHelper.GetEncryptedData(timeZoneKey);
-                        }
+                    //Logger.LogDebugMessage("MDA -> MySettings CHECKPOINT #23 - contactNumber (sent from app): [" + contactNumber + "]");
+                    //Logger.LogDebugMessage("MDA -> MySettings CHECKPOINT #23 - member.ContactNumber (from DB): [" + member.ContactNumber + "]");
 
-                        #endregion Encrypt each piece of data
-
-                        //Logger.LogDebugMessage("MDA -> MySettings CHECKPOINT #23 - contactNumber (sent from app): [" + contactNumber + "]");
-                        //Logger.LogDebugMessage("MDA -> MySettings CHECKPOINT #23 - member.ContactNumber (from DB): [" + member.ContactNumber + "]");
-
-                        if (!String.IsNullOrEmpty(contactNumber) &&
-                            (String.IsNullOrEmpty(member.ContactNumber) ||
-                            CommonHelper.RemovePhoneNumberFormatting(member.ContactNumber) != CommonHelper.RemovePhoneNumberFormatting(contactNumber)))
+                    if (!String.IsNullOrEmpty(contactNumber) &&
+                        (String.IsNullOrEmpty(member.ContactNumber) ||
+                        CommonHelper.RemovePhoneNumberFormatting(member.ContactNumber) != CommonHelper.RemovePhoneNumberFormatting(contactNumber)))
+                    {
+                        if (!IsPhoneNumberAlreadyRegistered(contactNumber))
                         {
-                            if (!IsPhoneNumberAlreadyRegistered(contactNumber))
+                            member.ContactNumber = contactNumber;
+                            member.IsVerifiedPhone = false;
+
+                            #region SendingSMSVerificaion
+
+                            try
                             {
-                                member.ContactNumber = contactNumber;
-                                member.IsVerifiedPhone = false;
+                                string fname = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(member.FirstName));
+                                string MessageBody = "Hi " + fname + ", This is Nooch - just need to verify this is your phone number. Please reply 'Go' to confirm your phone number.";
 
-                                #region SendingSMSVerificaion
+                                string SMSresult = Utility.SendSMS(contactNumber, MessageBody);
 
-                                try
-                                {
-                                    string fname = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(member.FirstName));
-                                    string MessageBody = "Hi " + fname + ", This is Nooch - just need to verify this is your phone number. Please reply 'Go' to confirm your phone number.";
-
-                                    string SMSresult = Utility.SendSMS(contactNumber, MessageBody);
-
-                                    Logger.Info("MySettings --> SMS Verification sent to [" + contactNumber + "] successfully.");
-                                }
-                                catch (Exception)
-                                {
-                                    Logger.Error("MySettings --> SMS Verification NOT sent to [" +
-                                        contactNumber + "]. Problem occurred in sending SMS.");
-                                }
-
-                                #endregion
+                                Logger.Info("MySettings --> SMS Verification sent to [" + contactNumber + "] successfully.");
                             }
-                            else
+                            catch (Exception)
                             {
-                                return "Phone Number already registered with Nooch";
-                            }
-                        }
-
-                        if (Picture != null)
-                        {
-                            // make  image from bytes
-                            string filename = HttpContext.Current.Server.MapPath("UploadedPhotos") + "/Photos/" +
-                                              member.MemberId.ToString() + ".png";
-
-                            using (FileStream fs = new FileStream(filename, FileMode.Create, FileAccess.ReadWrite))
-                            {
-                                fs.Write(Picture, 0, (int)Picture.Length);
+                                Logger.Error("MySettings --> SMS Verification NOT sent to [" +
+                                    contactNumber + "]. Problem occurred in sending SMS.");
                             }
 
-                            member.Photo = Utility.GetValueFromConfig("PhotoUrl") + member.MemberId + ".png";
+                            #endregion
                         }
                         else
                         {
-                            // check if image is already there
-                            if (member.Photo == null)
-                            {
-                                member.Photo = Utility.GetValueFromConfig("PhotoUrl") + "gv_no_photo.png";
-                            }
+                            return "Phone Number already registered with Nooch";
                         }
-
-                        if (showinSearchb != null)
-                        {
-                            member.ShowInSearch = showinSearchb;
-                        }
-
-                        member.DateModified = DateTime.Now;
-                        // CLIFF (7/30/15): We used to set the Validated Date here automatically when the user completed their profile.
-                        //                  But now we also need users to send SSN and DoB, so will set the Validated Date in SaveMemberSSN()
-                        // member.ValidatedDate = DateTime.Now;
-                        DbContext dbc = CommonHelper.GetDbContextFromEntity(member);
-                        int value = dbc.SaveChanges();
-
-                        return value > 0 ? "Your details have been updated successfully." : "Failure";
                     }
-                    catch (Exception ex)
+
+                    if (Picture != null)
                     {
-                        Logger.Error("MDA -> MySettings (Updating User's Profile) FAILED - [MemberID: " + memberId + "], [Exception: " + ex.Message + "]");
+                        // make  image from bytes
+                        string filename = HttpContext.Current.Server.MapPath("UploadedPhotos") + "/Photos/" +
+                                          member.MemberId.ToString() + ".png";
 
-                        return ex.InnerException.Message;
+                        using (FileStream fs = new FileStream(filename, FileMode.Create, FileAccess.ReadWrite))
+                        {
+                            fs.Write(Picture, 0, (int)Picture.Length);
+                        }
+
+                        member.Photo = Utility.GetValueFromConfig("PhotoUrl") + member.MemberId + ".png";
                     }
+                    else
+                    {
+                        // check if image is already there
+                        if (member.Photo == null)
+                        {
+                            member.Photo = Utility.GetValueFromConfig("PhotoUrl") + "gv_no_photo.png";
+                        }
+                    }
+
+                    if (showinSearchb != null)
+                    {
+                        member.ShowInSearch = showinSearchb;
+                    }
+
+                    member.DateModified = DateTime.Now;
+                    // CLIFF (7/30/15): We used to set the Validated Date here automatically when the user completed their profile.
+                    //                  But now we also need users to send SSN and DoB, so will set the Validated Date in SaveMemberSSN()
+                    // member.ValidatedDate = DateTime.Now;
+                    DbContext dbc = CommonHelper.GetDbContextFromEntity(member);
+                    int value = dbc.SaveChanges();
+
+                    return value > 0 ? "Your details have been updated successfully." : "Failure";
                 }
-                return "Member not found.";
-            
+                catch (Exception ex)
+                {
+                    Logger.Error("MDA -> MySettings (Updating User's Profile) FAILED - [MemberID: " + memberId + "], [Exception: " + ex.Message + "]");
+
+                    return ex.InnerException.Message;
+                }
+            }
+            return "Member not found.";
+
         }
 
 
@@ -6015,9 +6015,9 @@ namespace Nooch.DataAccess
         public string ResetPin(string memberId, string oldPin, string newPin)
         {
             Logger.Info("MDA -> ResetPin - MemberId: [" + memberId + "]");
-            
-                var id = Utility.ConvertToGuid(memberId);
-                
+
+            var id = Utility.ConvertToGuid(memberId);
+
             var memOldPin = oldPin.Replace(" ", "+");
             var noochMember = _dbContext.Members.FirstOrDefault(m => m.MemberId == id && m.PinNumber == memOldPin);
             if (noochMember == null) return "Incorrect pin. Please check your current pin.";
@@ -6028,6 +6028,24 @@ namespace Nooch.DataAccess
                 ? "Pin changed successfully."
                 : "Incorrect pin. Please check your current pin.";
         }
+
+        // to get member notification settings
+        public MemberNotification GetMemberNotificationSettings(string memberId)
+        {
+            //Logger.LogDebugMessage("MDA -> GetMemberNotificationSettings Initiated - [MemberId: " + memberId + "]");
+
+
+            Guid memId = Utility.ConvertToGuid(memberId);
+
+
+            var memberNotifications =
+                _dbContext.MemberNotifications.FirstOrDefault(m => m.MemberId == memId);
+
+
+            return memberNotifications;
+
+        }
+
 
     }
 }

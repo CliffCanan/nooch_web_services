@@ -75,6 +75,7 @@
     <Compile Include="Entities\LandingPagesRelatedEntities\BankNameCheckStatus.cs" />
     <Compile Include="Entities\LandingPagesRelatedEntities\RejectMoney\PageLoadDataRejectMoney.cs" />
     <Compile Include="Entities\LandingPagesRelatedEntities\SynapseBankLoginRequestResult.cs" />
+    <Compile Include="Entities\MobileAppInputEntities\MemberNotificationSettingsInput.cs" />
     <Compile Include="Entities\MobileAppInputEntities\MySettingsInput.cs" />
     <Compile Include="Entities\MobileAppInputEntities\SaveMemberDOB_Input.cs" />
     <Compile Include="Entities\MobileAppInputEntities\StringInput.cs" />
