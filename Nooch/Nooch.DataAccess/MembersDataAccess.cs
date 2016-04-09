@@ -6128,6 +6128,61 @@ namespace Nooch.DataAccess
             }
         }
 
+        public string MemberPushNotificationSettings(string notificationId, string memberId, bool friendRequest,
+            bool inviteRequestAccept, bool transferReceived, bool transferAttemptFailure, bool noochToBank, bool bankToNooch)
+        {
+            try
+            {
+                Logger.Info("MDA -> MemberPushNotificationSettings - MemberId: [" + memberId + "]");
 
+                var id = Utility.ConvertToGuid(notificationId);
+                var memId = Utility.ConvertToGuid(memberId);
+
+                
+                    
+                    var memberNotifications =
+                        _dbContext.MemberNotifications.FirstOrDefault(m => m.MemberId == memId);
+
+                    if (id == Guid.Empty && memberNotifications == null)
+                    {
+                        var memberNotification = new MemberNotification
+                        {
+                            NotificationId = Guid.NewGuid(),
+                            MemberId = Utility.ConvertToGuid(memberId),
+
+
+                            
+                            FriendRequest = friendRequest,
+                            InviteRequestAccept = inviteRequestAccept,
+                            TransferReceived = transferReceived,
+                            TransferAttemptFailure = transferAttemptFailure,
+                            NoochToBank = noochToBank,
+                            BankToNooch = bankToNooch,
+                            DateCreated = DateTime.Now
+                        };
+                        _dbContext.MemberNotifications.Add(memberNotification);
+                        return _dbContext.SaveChanges() > 0 ? "Success" : "Failure";
+
+                        
+                    }
+
+
+                    memberNotifications.MemberId = Utility.ConvertToGuid(memberId);
+                    memberNotifications.FriendRequest = friendRequest;
+                    memberNotifications.InviteRequestAccept = inviteRequestAccept;
+                    memberNotifications.TransferReceived = transferReceived;
+                    memberNotifications.TransferAttemptFailure = transferAttemptFailure;
+                    memberNotifications.NoochToBank = noochToBank;
+                    memberNotifications.BankToNooch = bankToNooch;
+                    memberNotifications.DateModified = DateTime.Now;
+                    return _dbContext.SaveChanges() > 0 ? "Success" : "Failure";
+                    
+                
+            }
+            catch (Exception ex)
+            {
+                return ex.ToString();
+            }
+        }
     }
 }

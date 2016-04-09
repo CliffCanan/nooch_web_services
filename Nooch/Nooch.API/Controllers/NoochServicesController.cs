@@ -4788,7 +4788,7 @@ namespace Nooch.API.Controllers
         // to save email notification settings of users
 
         [HttpPost]
-        [ActionName("SaveMemberSSN")]
+        [ActionName("MemberEmailNotificationSettings")]
         public StringResult MemberEmailNotificationSettings(
             MemberNotificationsNewStringTypeSettings memberNotificationSettings, string accessToken)
         {
@@ -4821,6 +4821,35 @@ namespace Nooch.API.Controllers
             }
         }
         
+        [HttpPost]
+        [ActionName("MemberPushNotificationSettings")]
+        public StringResult MemberPushNotificationSettings(MemberNotificationsNewStringTypeSettings memberNotificationSettings, string accessToken)
+        {
+            if  (CommonHelper.IsValidRequest(accessToken, memberNotificationSettings.MemberId))
+            {
+                try
+                {
+                    Logger.Info("Service Layer - MemberPushNotificationSettings - [MemberId: " + memberNotificationSettings.MemberId + "]");
+                    return new StringResult
+                    {
+                        Result = new MembersDataAccess().MemberPushNotificationSettings(memberNotificationSettings.NotificationId,
+                            memberNotificationSettings.MemberId, (memberNotificationSettings.FriendRequest == "1") ? true : false, (memberNotificationSettings.InviteRequestAccept == "1") ? true : false,
+                            (memberNotificationSettings.TransferReceived == "1") ? true : false, (memberNotificationSettings.TransferAttemptFailure == "1") ? true : false,
+                            (memberNotificationSettings.NoochToBank == "1") ? true : false, (memberNotificationSettings.BankToNooch == "1") ? true : false)
+                    };
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Layer Error- MemberPushNotificationSettings - memberId: [" +memberNotificationSettings.MemberId+ "] Error : [" + ex + " ].");
+                    throw new Exception("Server Error.");
+                }
+
+            }
+            else
+            {
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
 
 
 
