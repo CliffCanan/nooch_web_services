@@ -2239,10 +2239,7 @@ namespace Nooch.Common
                                         memberTemp.MemberId.Value.Equals(memId) &&
                                         memberTemp.bank_name == bnaknameEncrypted &&
                                         memberTemp.oid == bankOId).ToList();    /// or this would bankid ?? need to check... -Malkit
-                    if(banksFound != null)
-                    {
-                        _dbContext.Entry(banksFound).Reload();
-                    }
+                   
                     var selectedBank = (from c in banksFound select c)
                                       .OrderByDescending(bank => bank.AddedOn)
                                       .Take(1)
@@ -2711,6 +2708,7 @@ namespace Nooch.Common
                         _dbContext.SaveChanges();
                         res.Message = "Success";
                         res.Is_success = true;
+                        _dbContext.Entry(MemberInfoInNoochDb).Reload();
                         return res;
                     }
                     else
