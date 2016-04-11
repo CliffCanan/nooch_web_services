@@ -6096,9 +6096,7 @@ namespace Nooch.DataAccess
                         i++;
                         var memberNotification = new MemberNotification
                         {
-                            NotificationId = Guid.NewGuid(),
-
-                            
+                            NotificationId = Guid.NewGuid(),                           
 
                             MemberId = Utility.ConvertToGuid(memberId),
 
@@ -6255,7 +6253,7 @@ namespace Nooch.DataAccess
                     int r = _dbContext.SaveChanges();
                     if (r > 0)
                     {
-                    
+                        _dbContext.Entry(memberSettings).Reload();
                         return "ShowInSearch flag is added successfully."; 
                         
                     }

@@ -6,7 +6,6 @@ using System.Net;
 using System.Net.Http;
 using System.Web.Helpers;
 using System.Web.Http;
-
 using AutoMapper;
 using Nooch.Common;
 using Nooch.Common.Cryptography.Algorithms;
@@ -3283,6 +3282,8 @@ namespace Nooch.API.Controllers
 
                             if (i > 0)
                             {
+                                _dbContext.Entry(sbr).Reload();
+
                                 // Return if MFA, otherwise continue on and parse the banks
                                 if (res.Is_MFA)
                                 {
@@ -3378,6 +3379,7 @@ namespace Nooch.API.Controllers
 
                                     if (addBankToDB == 1)
                                     {
+                                        _dbContext.Entry(sbm).Reload();
                                         Logger.Info("MDA -> SynapseV3AddNode -SUCCESSFULLY Added Bank to DB - [MemberID: " + MemberId + "]");
 
                                         numOfBanksSavedSuccessfully += 1;
@@ -3914,6 +3916,8 @@ namespace Nooch.API.Controllers
 
                                     _dbContext.SynapseBanksOfMembers.Add(sbm);
                                     int addBankToDB = _dbContext.SaveChanges();
+                                    _dbContext.Entry(sbm).Reload();
+
 
                                     if (addBankToDB == 1)
                                     {
@@ -4225,6 +4229,8 @@ namespace Nooch.API.Controllers
 
             if (bdetails != null)
             {
+                _dbContext.Entry(bdetails).Reload();
+
                 res.IsBankFound = true;
                 res.Message = "OK";
                 res.IsPinRequired = Convert.ToBoolean(bdetails.IsPinRequired);

@@ -27,7 +27,7 @@ namespace Nooch.DataAccess
 
         public TransactionsDataAccess()
         {
-             _dbContext = new NOOCHEntities();
+            _dbContext = new NOOCHEntities();
         }
 
 
@@ -150,18 +150,18 @@ namespace Nooch.DataAccess
                 Logger.Info("TDA -> CancelMoneyRequestForNonNoochUser Initiated - " +
                                        "TransactionID: [" + TransactionId + "], MemberId: [" + MemberId + "]");
 
-                
-                
 
-                var res =  _dbContext.Transactions.FirstOrDefault(m=>m.Member.MemberId==memGuid && m.TransactionId==transid
-                    && m.TransactionStatus=="Pending" && (m.TransactionType=="T3EMY1WWZ9IscHIj3dbcNw==" || m.TransactionType=="DrRr1tU1usk7nNibjtcZkA=="));
-                
+
+
+                var res = _dbContext.Transactions.FirstOrDefault(m => m.Member.MemberId == memGuid && m.TransactionId == transid
+                    && m.TransactionStatus == "Pending" && (m.TransactionType == "T3EMY1WWZ9IscHIj3dbcNw==" || m.TransactionType == "DrRr1tU1usk7nNibjtcZkA=="));
+
 
                 if (res != null)
                 {
                     res.TransactionStatus = "Cancelled";
-
                     int i = _dbContext.SaveChanges();
+                    _dbContext.Entry(res).Reload();
 
                     if (i > 0)
                     {
@@ -320,21 +320,21 @@ namespace Nooch.DataAccess
                 Guid memGuid = Utility.ConvertToGuid(MemberId);
                 Guid transid = Utility.ConvertToGuid(TransactionId);
 
-                
+
 
                 Logger.Info("TDA -> CancelMoneyRequestForExistingNoochUser Initiated for: [" + MemberId + "]");
 
                 var res = _dbContext.Transactions.FirstOrDefault(m => m.Member1.MemberId == memGuid && m.TransactionId == transid
                     && m.TransactionStatus == "Pending" && (m.TransactionType == "T3EMY1WWZ9IscHIj3dbcNw==" || m.TransactionType == "DrRr1tU1usk7nNibjtcZkA=="));
-                     
+
                 if (res != null)
                 {
                     res.TransactionStatus = "Cancelled";
-
                     int i = _dbContext.SaveChanges();
 
                     if (i > 0)
                     {
+                        _dbContext.Entry(res).Reload();
                         string memo = "";
                         if (!string.IsNullOrEmpty(res.Memo))
                         {
@@ -357,7 +357,7 @@ namespace Nooch.DataAccess
                         try
                         {
                             // email notification
-                            Utility.SendEmail("requestCancelledToSender",  fromAddress, toAddress, null, "Nooch payment request to " + CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(res.Member.FirstName)) + " cancelled", null, tokens, null, null, null);
+                            Utility.SendEmail("requestCancelledToSender", fromAddress, toAddress, null, "Nooch payment request to " + CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(res.Member.FirstName)) + " cancelled", null, tokens, null, null, null);
                             Logger.Info("CancelMoneyRequestForExistingNoochUser --> requestCancelledToSender email sent to Sender: [" + toAddress + "] successfully.");
                         }
                         catch (Exception)
@@ -376,7 +376,7 @@ namespace Nooch.DataAccess
                         var toAddress2 = CommonHelper.GetDecryptedData(res.Member.UserName);
                         try
                         {
-                            Utility.SendEmail("requestCancelledToRecipient",  fromAddress, toAddress2, null, "Nooch payment request cancelled", null, tokens2, null, null, null);
+                            Utility.SendEmail("requestCancelledToRecipient", fromAddress, toAddress2, null, "Nooch payment request cancelled", null, tokens2, null, null, null);
                             Logger.Info("CancelMoneyRequestForExistingNoochUser --> requestCancelledToRecipient email sent to [" + toAddress2 + "] successfully.");
                         }
                         catch (Exception)
@@ -413,14 +413,13 @@ namespace Nooch.DataAccess
             {
                 Guid memGuid = Utility.ConvertToGuid(MemberId);
                 Guid transGuid = Utility.ConvertToGuid(TransactionId);
-               
 
                 Logger.Info("TransactionDataAccess - CancelMoneyTransferForSender[ CancelMoneyTransferForSender:" + MemberId + "].");
 
-                
 
-                var res = _dbContext.Transactions.FirstOrDefault(m=>m.TransactionStatus=="Pending"
-                    && m.TransactionType == "5dt4HUwCue532sNmw3LKDQ==" && m.TransactionId==transGuid && m.Member.MemberId==memGuid);
+
+                var res = _dbContext.Transactions.FirstOrDefault(m => m.TransactionStatus == "Pending"
+                    && m.TransactionType == "5dt4HUwCue532sNmw3LKDQ==" && m.TransactionId == transGuid && m.Member.MemberId == memGuid);
                 if (res != null)
                 {
                     // found and update
@@ -428,6 +427,7 @@ namespace Nooch.DataAccess
                     int i = _dbContext.SaveChanges();
                     if (i > 1)
                     {
+                        _dbContext.Entry(res).Reload();
                         // updated
                         // send mail to Money Sender
                         var tokens = new Dictionary<string, string>
@@ -467,7 +467,7 @@ namespace Nooch.DataAccess
                         try
                         {
                             // email notification
-                            Utility.SendEmail("transferCancelledToRecipient",  fromAddress, toAddress2, null, "Nooch transfer", null, tokens2, null, null, null);
+                            Utility.SendEmail("transferCancelledToRecipient", fromAddress, toAddress2, null, "Nooch transfer", null, tokens2, null, null, null);
                             Logger.Info("TransferReceived - TransferReceived status mail sent to [" + toAddress + "].");
                         }
                         catch (Exception)
@@ -514,19 +514,20 @@ namespace Nooch.DataAccess
                 Guid memGuid = Utility.ConvertToGuid(MemberId);
                 Guid transid = Utility.ConvertToGuid(TransactionId);
 
-                
-                var transObj = _dbContext.Transactions.FirstOrDefault(m=>m.TransactionStatus=="pending" && m.Member.MemberId==memGuid
-                    && m.TransactionId==transid && (m.TransactionType=="T3EMY1WWZ9IscHIj3dbcNw==" || m.TransactionType=="DrRr1tU1usk7nNibjtcZkA=="))
+
+                var transObj = _dbContext.Transactions.FirstOrDefault(m => m.TransactionStatus == "pending" && m.Member.MemberId == memGuid
+                    && m.TransactionId == transid && (m.TransactionType == "T3EMY1WWZ9IscHIj3dbcNw==" || m.TransactionType == "DrRr1tU1usk7nNibjtcZkA=="))
                 ;
-                
+
 
                 if (transObj != null)
                 {
                     transObj.TransactionStatus = "Cancelled";
-                    int i =_dbContext.SaveChanges();
+                    int i = _dbContext.SaveChanges();
 
                     if (i > 0)
                     {
+                        _dbContext.Entry(transObj).Reload();
                         string s22 = transObj.Amount.ToString("n2");
                         string[] s32 = s22.Split('.');
                         string senderFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transObj.Member.FirstName));
@@ -575,7 +576,7 @@ namespace Nooch.DataAccess
 
                         try
                         {
-                            Utility.SendEmail("transferCancelledToSender",  fromAddress, toAddress,
+                            Utility.SendEmail("transferCancelledToSender", fromAddress, toAddress,
                                                         null, "Your payment has been cancelled", null, tokens, null, null, null);
 
                             Logger.Info("TDA -> CancelMoneyTransferToNonMemberForSender - transferCancelledToSender email sent to [" + toAddress + "].");
@@ -616,9 +617,9 @@ namespace Nooch.DataAccess
 
                             try
                             {
-                            Utility.SendEmail("transferCancelledToRecipient", fromAddress, toAddress2, null,
-                                    senderFullName + " cancelled a $" + s32[0]+ "." + s32[1] + " payment to you",
-                                    null, tokens2, null, null, null);
+                                Utility.SendEmail("transferCancelledToRecipient", fromAddress, toAddress2, null,
+                                        senderFullName + " cancelled a $" + s32[0] + "." + s32[1] + " payment to you",
+                                        null, tokens2, null, null, null);
 
                                 Logger.Info("TDA -> CancelMoneyTransferToNonMemberForSender - transferCancelledToRecipient email sent to [" + toAddress + "] successfully");
                             }
@@ -668,7 +669,7 @@ namespace Nooch.DataAccess
 
             try
             {
-                
+
                 var TransId = Utility.ConvertToGuid(TransactionId);
                 var MemId = Utility.ConvertToGuid(MemberId);
 
@@ -681,14 +682,15 @@ namespace Nooch.DataAccess
                     #region Requests - Both Types
 
 
-                    var trans = _dbContext.Transactions.FirstOrDefault(m=>m.Member1.MemberId==MemId && m.TransactionId== TransId
+                    var trans = _dbContext.Transactions.FirstOrDefault(m => m.Member1.MemberId == MemId && m.TransactionId == TransId
                         && m.TransactionStatus == "Pending" && m.TransactionType == "T3EMY1WWZ9IscHIj3dbcNw=="
                         );
-                    
-                    
+
+
 
                     if (trans != null)
                     {
+                        _dbContext.Entry(trans).Reload();
                         #region Setup Common Variables
 
                         string fromAddress = Utility.GetValueFromConfig("transfersMail");
@@ -773,7 +775,7 @@ namespace Nooch.DataAccess
                             // Sending Request reminder email to Non-Nooch user
                             try
                             {
-                                Utility.SendEmail(templateToUse,  fromAddress, toAddress, null,
+                                Utility.SendEmail(templateToUse, fromAddress, toAddress, null,
                                                             senderFirstName + " " + senderLastName + " requested " + "$" + s22.ToString() + " - Reminder",
                                                             null, tokens2, null, null, null);
 
@@ -911,7 +913,7 @@ namespace Nooch.DataAccess
 
                             try
                             {
-                                Utility.SendEmail(templateToUse,  fromAddress,
+                                Utility.SendEmail(templateToUse, fromAddress,
                                     toAddress, null, senderFirstName + " " + senderLastName + " requested " + "$" + s22.ToString() + " with Nooch - Reminder",
                                     null, tokens2, null, null, null);
 
@@ -975,11 +977,11 @@ namespace Nooch.DataAccess
                 {
                     #region InvitationReminderToNewUser
 
-                    
 
-                    var trans = _dbContext.Transactions.FirstOrDefault(m=>m.Member1.MemberId==MemId
+
+                    var trans = _dbContext.Transactions.FirstOrDefault(m => m.Member1.MemberId == MemId
                         && m.TransactionId == TransId && m.TransactionStatus == "Pending" && (m.TransactionType == "5dt4HUwCue532sNmw3LKDQ==" || m.TransactionType == "DrRr1tU1usk7nNibjtcZkA==")
-                        ) ;
+                        );
 
                     if (trans != null)
                     {
@@ -1193,7 +1195,7 @@ namespace Nooch.DataAccess
                 return "Not allowed to request money from yourself.";
             }
 
-            
+
             var requester = CommonHelper.GetMemberDetails(requestDto.MemberId);
 
             var sender = new Member();
@@ -1208,7 +1210,7 @@ namespace Nooch.DataAccess
                 return "Either sending user or requesting user does not exist.";
             }
             // Validate PIN of requesting user
-            
+
             string validPinNumberResult = CommonHelper.ValidatePinNumber(requestDto.MemberId, requestDto.PinNumber);
             if (validPinNumberResult != "Success")
             {
@@ -1264,14 +1266,14 @@ namespace Nooch.DataAccess
                     var transaction = new Transaction
                     {
                         TransactionId = Guid.NewGuid(),
-                        SenderId = 
-                        
+                        SenderId =
+
                                 Utility.ConvertToGuid(senders[i]),
-                                RecipientId = 
-                            
-                                
-                                Utility.ConvertToGuid(requestDto.MemberId),
-                        
+                        RecipientId =
+
+
+                        Utility.ConvertToGuid(requestDto.MemberId),
+
                         Picture = (requestDto.Picture != null) ? requestDto.Picture : null,
                         Amount = requestDto.Amount - transactionFee,
                         TransactionDate = DateTime.Now,
@@ -1280,7 +1282,7 @@ namespace Nooch.DataAccess
                         TransactionStatus = "Pending",
                         TransactionType = CommonHelper.GetEncryptedData("Request"),
                         DeviceId = requestDto.DeviceId,
-                        TransactionTrackingId =  CommonHelper.GetRandomTransactionTrackingId(),
+                        TransactionTrackingId = CommonHelper.GetRandomTransactionTrackingId(),
                         TransactionFee = transactionFee,
 
                         GeoLocation = new GeoLocation
@@ -1305,6 +1307,7 @@ namespace Nooch.DataAccess
 
                     if (dbResult > 0)
                     {
+                        _dbContext.Entry(transaction).Reload();
                         requestId = transaction.TransactionId.ToString();
 
                         // BELOW CODE ADDED BY CLIFF (11/26/14) FOR SENDING EMAILS FOR WHEN THERE ARE MULTIPLE RECIPIENTS
@@ -1387,7 +1390,7 @@ namespace Nooch.DataAccess
 
                             try
                             {
-                                Utility.SendEmail("requestSent",fromAddress, toAddress, null,
+                                Utility.SendEmail("requestSent", fromAddress, toAddress, null,
                                     "Your Nooch requests to " + senders.Length + " people is pending", null,
                                     tokens, null, null, null);
 
@@ -1487,12 +1490,12 @@ namespace Nooch.DataAccess
                 {
                     TransactionId = Guid.NewGuid(),
 
-                    SenderId=
-                    
+                    SenderId =
+
                                         Utility.ConvertToGuid(requestDto.SenderId),
-                                        RecipientId = 
-                                        Utility.ConvertToGuid(requestDto.MemberId),
-                    
+                    RecipientId =
+                    Utility.ConvertToGuid(requestDto.MemberId),
+
                     Amount = requestDto.Amount,
                     TransactionDate = DateTime.Now,
                     Picture = (requestDto.Picture != null) ? requestDto.Picture : null,
@@ -1527,6 +1530,7 @@ namespace Nooch.DataAccess
 
                 if (dbResult > 0)
                 {
+                    _dbContext.Entry(transaction).Reload();
                     requestId = transaction.TransactionId.ToString();
 
                     #region Send Notifications To Both Users
@@ -1615,7 +1619,7 @@ namespace Nooch.DataAccess
 
                         var toAddress = CommonHelper.GetDecryptedData(requester.UserName);
 
-                        Utility.SendEmail(templateToUse_Sender,  fromAddress, toAddress, null,
+                        Utility.SendEmail(templateToUse_Sender, fromAddress, toAddress, null,
                                                     "Your payment request to " + RequestReceiverFirstName + " " + RequestReceiverLastName + " is pending", null,
                                                     tokens, null, null, null);
 
@@ -1722,7 +1726,7 @@ namespace Nooch.DataAccess
 
                         var toAddress = CommonHelper.GetDecryptedData(transaction.Member.UserName);
 
-                        Utility.SendEmail(templateToUse,  fromAddress, toAddress, null,
+                        Utility.SendEmail(templateToUse, fromAddress, toAddress, null,
                                                     RequesterFirstName + " " + RequesterLastName + " requested " + "$" + wholeAmount,
                                                     null, tokens2, null, null, null);
 
@@ -1802,74 +1806,73 @@ namespace Nooch.DataAccess
                                                                                     (m.TransactionType ==
                                                                                      "DrRr1tU1usk7nNibjtcZkA==" ||
                                                                                      m.TransactionType ==
-                                                                                     "T3EMY1WWZ9IscHIj3dbcNw=="))
-                    ;
-                
+                                                                                     "T3EMY1WWZ9IscHIj3dbcNw=="));
 
-                    if (transactionDetail != null)
+
+                if (transactionDetail != null)
+                {
+                    #region IfSomethingFound
+
+                    transactionDetail.TransactionStatus = "Rejected";
+                    _dbContext.SaveChanges();
+                    _dbContext.Entry(transactionDetail).Reload();
+
+                    string SenderFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member1.FirstName));
+                    string SenderLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member1.LastName));
+                    string RejectorFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member.FirstName));
+                    string RejectorLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member.LastName));
+
+                    string wholeAmount = transactionDetail.Amount.ToString("n2");
+                    string[] s3 = wholeAmount.Split('.');
+
+                    string memo = "";
+                    if (!string.IsNullOrEmpty(transactionDetail.Memo))
                     {
-                        #region IfSomethingFound
-
-                        transactionDetail.TransactionStatus = "Rejected";
-                        _dbContext.SaveChanges();
-                        
-
-                        string SenderFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member1.FirstName));
-                        string SenderLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member1.LastName));
-                        string RejectorFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member.FirstName));
-                        string RejectorLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member.LastName));
-
-                        string wholeAmount = transactionDetail.Amount.ToString("n2");
-                        string[] s3 = wholeAmount.Split('.');
-
-                        string memo = "";
-                        if (!string.IsNullOrEmpty(transactionDetail.Memo))
+                        if (transactionDetail.Memo.Length > 3)
                         {
-                            if (transactionDetail.Memo.Length > 3)
-                            {
-                                string firstThreeChars = transactionDetail.Memo.Substring(0, 3).ToLower();
-                                bool startWithFor = firstThreeChars.Equals("for");
+                            string firstThreeChars = transactionDetail.Memo.Substring(0, 3).ToLower();
+                            bool startWithFor = firstThreeChars.Equals("for");
 
-                                if (startWithFor)
-                                {
-                                    memo = transactionDetail.Memo.ToString();
-                                }
-                                else
-                                {
-                                    memo = "For " + transactionDetail.Memo.ToString();
-                                }
+                            if (startWithFor)
+                            {
+                                memo = transactionDetail.Memo.ToString();
                             }
                             else
                             {
                                 memo = "For " + transactionDetail.Memo.ToString();
                             }
                         }
-
-                        #region Push Notification to Request Sender
-                        // sending push notification to money sender
-                        
-                        var noochMemberfornotification = CommonHelper.GetMemberNotificationSettings(transactionDetail.Member1.MemberId.ToString());
-
-                        if (noochMemberfornotification != null)
+                        else
                         {
-                            try
-                            {
-                                string mailBodyText = RejectorFirstName + " " + RejectorLastName + " just rejected your Nooch payment request for $" + wholeAmount + ".";
-                                Utility.SendNotificationMessage(mailBodyText, 1, null,
-                                    transactionDetail.Member1.DeviceToken,
-                                    Utility.GetValueFromConfig("AppKey"), Utility.GetValueFromConfig("MasterSecret"));
-                            }
-                            catch (Exception)
-                            {
-                                Logger.Error("RejectMoneyRequestForExistingNoochUser - Push notification not sent to [" + transactionDetail.Member1.UDID1 + "].");
-                            }
+                            memo = "For " + transactionDetail.Memo.ToString();
                         }
+                    }
 
-                        #endregion
+                    #region Push Notification to Request Sender
+                    // sending push notification to money sender
 
-                        // Sending email to request sender about rejection
+                    var noochMemberfornotification = CommonHelper.GetMemberNotificationSettings(transactionDetail.Member1.MemberId.ToString());
 
-                        var tokens = new Dictionary<string, string>
+                    if (noochMemberfornotification != null)
+                    {
+                        try
+                        {
+                            string mailBodyText = RejectorFirstName + " " + RejectorLastName + " just rejected your Nooch payment request for $" + wholeAmount + ".";
+                            Utility.SendNotificationMessage(mailBodyText, 1, null,
+                                transactionDetail.Member1.DeviceToken,
+                                Utility.GetValueFromConfig("AppKey"), Utility.GetValueFromConfig("MasterSecret"));
+                        }
+                        catch (Exception)
+                        {
+                            Logger.Error("RejectMoneyRequestForExistingNoochUser - Push notification not sent to [" + transactionDetail.Member1.UDID1 + "].");
+                        }
+                    }
+
+                    #endregion
+
+                    // Sending email to request sender about rejection
+
+                    var tokens = new Dictionary<string, string>
 							{
 								{Constants.PLACEHOLDER_FIRST_NAME, SenderFirstName},
 								{Constants.PLACEHOLDER_RECEPIENT_FULL_NAME, RejectorFirstName + " " + RejectorLastName},
@@ -1879,27 +1882,27 @@ namespace Nooch.DataAccess
 								{Constants.MEMO, memo}
 							};
 
-                        var fromAddress = Utility.GetValueFromConfig("transfersMail");
-                        var toAddress = CommonHelper.GetDecryptedData(transactionDetail.Member1.UserName);
+                    var fromAddress = Utility.GetValueFromConfig("transfersMail");
+                    var toAddress = CommonHelper.GetDecryptedData(transactionDetail.Member1.UserName);
 
-                        try
-                        {
-                            Utility.SendEmail("requestDeniedToSender", 
-                                fromAddress, toAddress, null,
-                                RejectorFirstName + " " + RejectorLastName + " denied your payment request for $" + wholeAmount, null,
-                                tokens, null, null, null);
+                    try
+                    {
+                        Utility.SendEmail("requestDeniedToSender",
+                            fromAddress, toAddress, null,
+                            RejectorFirstName + " " + RejectorLastName + " denied your payment request for $" + wholeAmount, null,
+                            tokens, null, null, null);
 
-                            Logger.Info("TDA -> rejectMoneyRequestForExistingNoochUser -> requestDeniedToSender email sent to [" + toAddress + "] successfully.");
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Error("TDA -> rejectMoneyRequestForExistingNoochUser -> requestDeniedToSender email NOT sent to [" + toAddress +
-                                                   "], Exception: [" + ex.Message + "]");
-                        }
+                        Logger.Info("TDA -> rejectMoneyRequestForExistingNoochUser -> requestDeniedToSender email sent to [" + toAddress + "] successfully.");
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error("TDA -> rejectMoneyRequestForExistingNoochUser -> requestDeniedToSender email NOT sent to [" + toAddress +
+                                               "], Exception: [" + ex.Message + "]");
+                    }
 
-                        // sending email to user who rejected this request
+                    // sending email to user who rejected this request
 
-                        var tokens2 = new Dictionary<string, string>
+                    var tokens2 = new Dictionary<string, string>
 							{
 								{Constants.PLACEHOLDER_FIRST_NAME, RejectorFirstName},
 								{Constants.PLACEHOLDER_SENDER_FULL_NAME, SenderFirstName + " " + SenderLastName},
@@ -1908,32 +1911,32 @@ namespace Nooch.DataAccess
 								{Constants.MEMO, memo}
 							};
 
-                        toAddress = CommonHelper.GetDecryptedData(transactionDetail.Member.UserName);
+                    toAddress = CommonHelper.GetDecryptedData(transactionDetail.Member.UserName);
 
-                        try
-                        {
-                        Utility.SendEmail("requestDeniedToRecipient", 
+                    try
+                    {
+                        Utility.SendEmail("requestDeniedToRecipient",
                                 fromAddress, toAddress, null,
                                 "You rejected a Nooch request from " + SenderFirstName + " " + SenderLastName, null,
                                 tokens2, null, null, null);
 
-                            Logger.Info("rejectMoneyRequestForExistingNoochUser -> requestDeniedToRecipient email sent to [" + toAddress + "] successfully.");
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Error("rejectMoneyRequestForExistingNoochUser -> requestDeniedToRecipient email NOT sent to [" +
-                                                   toAddress + "], Exception: [" + ex.Message + "]");
-                        }
-
-                        return "Request Rejected Successfully.";
-
-                        #endregion
+                        Logger.Info("rejectMoneyRequestForExistingNoochUser -> requestDeniedToRecipient email sent to [" + toAddress + "] successfully.");
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        return "";
+                        Logger.Error("rejectMoneyRequestForExistingNoochUser -> requestDeniedToRecipient email NOT sent to [" +
+                                               toAddress + "], Exception: [" + ex.Message + "]");
                     }
-                
+
+                    return "Request Rejected Successfully.";
+
+                    #endregion
+                }
+                else
+                {
+                    return "";
+                }
+
             }
             catch (Exception ex)
             {
@@ -1955,11 +1958,14 @@ namespace Nooch.DataAccess
                 var transId = Utility.ConvertToGuid(transactionId);
 
                 var transactionDetail = _dbContext.Transactions.Where(c => c.TransactionId == transId).FirstOrDefault();
-                   
-                   // var transactionDetail = transactionRepository.SelectAll(transactionSpecification, new[] { "Members", "Members1" }).FirstOrDefault();
 
-                    return transactionDetail;
-             
+                // var transactionDetail = transactionRepository.SelectAll(transactionSpecification, new[] { "Members", "Members1" }).FirstOrDefault();
+                if (transactionDetail != null)
+                {
+                    _dbContext.Entry(transactionDetail).Reload();
+                }
+                return transactionDetail;
+
             }
             catch (Exception ex)
             {
@@ -1977,178 +1983,179 @@ namespace Nooch.DataAccess
 
             try
             {
-               
-                    var id = Utility.ConvertToGuid(memberId);
-                     
 
-                    //ClearTransactionHistory functionality 
-                    var member = _dbContext.Members.Where(u => u.MemberId == id).FirstOrDefault();
+                var id = Utility.ConvertToGuid(memberId);
 
-                    if (member != null)
-                    {
-                        //if (member.ClearTransactionHistory.HasValue && member.ClearTransactionHistory.Value)
-                        //{
-                        //    return new List<Transactions>();
-                        //}
 
-                        // get admin member id.
-                        // CLIFF (7/27/15): Don't understand the point of this block... it's trying to lookup a Member by using the adminMail username? Why??
-                        /* membersAccountRepository = new Repository<Members, NoochDataEntities>(noochConnection);
+                //ClearTransactionHistory functionality 
+                var member = _dbContext.Members.Where(u => u.MemberId == id).FirstOrDefault();
+
+                if (member != null)
+                {
+                    _dbContext.Entry(member).Reload();
+                    //if (member.ClearTransactionHistory.HasValue && member.ClearTransactionHistory.Value)
+                    //{
+                    //    return new List<Transactions>();
+                    //}
+
+                    // get admin member id.
+                    // CLIFF (7/27/15): Don't understand the point of this block... it's trying to lookup a Member by using the adminMail username? Why??
+                    /* membersAccountRepository = new Repository<Members, NoochDataEntities>(noochConnection);
                     
-                           string adminUserName = Utility.GetValueFromConfig("adminMail");
-                           adminUserName = CommonHelper.GetEncryptedData(adminUserName);
-                           var adminAccountSpecification = new Specification<Members>
-                           {
-                               Predicate = accountTemp => accountTemp.UserName.Equals(adminUserName)
-                           };
-                           var adminAccount = membersAccountRepository.SelectAll(adminAccountSpecification, new[] { "AccountDetails" }).FirstOrDefault();
-                           var adminId = adminAccount.MemberId; */
+                       string adminUserName = Utility.GetValueFromConfig("adminMail");
+                       adminUserName = CommonHelper.GetEncryptedData(adminUserName);
+                       var adminAccountSpecification = new Specification<Members>
+                       {
+                           Predicate = accountTemp => accountTemp.UserName.Equals(adminUserName)
+                       };
+                       var adminAccount = membersAccountRepository.SelectAll(adminAccountSpecification, new[] { "AccountDetails" }).FirstOrDefault();
+                       var adminId = adminAccount.MemberId; */
 
-                        
-                        var transactions = new List<Transaction>();
 
-                        var transactionTypeTransfer = CommonHelper.GetEncryptedData(Constants.TRANSACTION_TYPE_TRANSFER);
-                        var transactionTypeDonation = CommonHelper.GetEncryptedData(Constants.TRANSACTION_TYPE_DONATION);
-                        var transactionTypeRequest = CommonHelper.GetEncryptedData(Constants.TRANSACTION_TYPE_REQUEST);
-                        var transactionTypeDisputed = "+C1+zhVafHdXQXCIqjU/Zg==";
-                        var transactionPredicate = "";
-                        
+                    var transactions = new List<Transaction>();
 
-                        if (SubListType != "")
+                    var transactionTypeTransfer = CommonHelper.GetEncryptedData(Constants.TRANSACTION_TYPE_TRANSFER);
+                    var transactionTypeDonation = CommonHelper.GetEncryptedData(Constants.TRANSACTION_TYPE_DONATION);
+                    var transactionTypeRequest = CommonHelper.GetEncryptedData(Constants.TRANSACTION_TYPE_REQUEST);
+                    var transactionTypeDisputed = "+C1+zhVafHdXQXCIqjU/Zg==";
+                    var transactionPredicate = "";
+
+
+                    if (SubListType != "")
+                    {
+                        #region whenSomethingisPassedForSubList
+
+
+
+                        if (listType.ToUpper().Equals("SENT"))
                         {
-                            #region whenSomethingisPassedForSubList
+                            transactions = _dbContext.Transactions.Where(entity => entity.Member.MemberId == id &&
+                                        (entity.TransactionType == transactionTypeTransfer || entity.TransactionType == transactionTypeDonation) &&
+                                         entity.TransactionStatus == SubListType).ToList();
 
-                           
-
-                                if (listType.ToUpper().Equals("SENT"))
-                                {
-                                    transactions = _dbContext.Transactions.Where(entity => entity.Member.MemberId == id &&
-                                                (entity.TransactionType == transactionTypeTransfer || entity.TransactionType == transactionTypeDonation) &&
-                                                 entity.TransactionStatus == SubListType).ToList();
-
-
-                                }
-                                else if (listType.ToUpper().Equals("RECEIVED"))
-                                {
-
-
-                                    transactions = _dbContext.Transactions.Where(entity =>
-                                                entity.Member1.MemberId == id &&
-                                                entity.TransactionType == transactionTypeTransfer &&
-                                                entity.TransactionStatus == SubListType).ToList();
-                                }
-                                else if (listType.ToUpper().Equals("DISPUTED"))
-                                {
-
-                                    transactions = _dbContext.Transactions.Where(entity =>
-                                                ((entity.Member1.MemberId == id || entity.Member.MemberId == id) &&
-                                                  entity.DisputeStatus != null && entity.TransactionType == transactionTypeDisputed) &&
-                                                  entity.TransactionStatus == SubListType).ToList();
-                                }
-                                else if (listType.ToUpper().Equals("ALL") && SubListType == "Pending") // CR
-                                {
-
-                                    transactions = _dbContext.Transactions.Where(entity =>
-                                                (entity.Member.MemberId == id || entity.Member1.MemberId == id) &&
-                                                 entity.TransactionStatus == SubListType).ToList();
-                                }
-                                else if (listType.ToUpper().Equals("ALL") && SubListType == "Success") // CR
-                                {
-
-                                    transactions = _dbContext.Transactions.Where(entity =>
-                                                (entity.Member.MemberId == id || entity.Member1.MemberId == id) &&
-                                                (entity.TransactionStatus == SubListType || entity.TransactionStatus == "Cancelled" || entity.TransactionStatus == "Rejected")).ToList();
-                                }
-                                else if (listType.ToUpper().Equals("DONATION"))
-                                {
-
-                                    transactions = _dbContext.Transactions.Where(entity =>
-                                                (entity.Member1.MemberId == id || entity.Member.MemberId == id) &&
-                                                 entity.TransactionType == transactionTypeDonation &&
-                                                 entity.TransactionStatus == SubListType).ToList();
-
-                                }
-                                else if (listType.ToUpper().Equals("REQUEST"))
-                                {
-                                    transactions = _dbContext.Transactions.Where(entity =>
-                                                (entity.Member1.MemberId == id || entity.Member.MemberId == id) &&
-                                                 entity.TransactionType == transactionTypeRequest &&
-                                                (entity.TransactionStatus == SubListType || entity.TransactionStatus == "Cancelled" || entity.TransactionStatus == "Rejected")).ToList();
-                                }
-
-                            #endregion
-                         
-                           
-                        }
-                        else
-                        {
-                            #region WhenNothingIsPassedForSubList
-
-                            if (listType.ToUpper().Equals("SENT"))
-                            {
-                                transactions = _dbContext.Transactions.Where(entity =>
-                                            entity.Member.MemberId == id &&
-                                           (entity.TransactionType == transactionTypeTransfer || entity.TransactionType == transactionTypeDonation)).ToList();
-
-                            }
-                            else if (listType.ToUpper().Equals("RECEIVED"))
-                            {
-
-                                transactions = _dbContext.Transactions.Where(entity =>
-                                            entity.Member1.MemberId == id &&
-                                            entity.TransactionType == transactionTypeTransfer).ToList();
-
-                            }
-                            else if (listType.ToUpper().Equals("DISPUTED"))
-                            {
-                                transactions = _dbContext.Transactions.Where(entity =>
-                                           (entity.Member1.MemberId == id || entity.Member.MemberId == id) &&
-                                            entity.DisputeStatus != null &&
-                                            entity.TransactionType == transactionTypeDisputed).ToList();
-                            }
-                            else if (listType.ToUpper().Equals("ALL"))
-                            {
-                                transactions = _dbContext.Transactions.Where(entity =>
-                                            entity.Member.MemberId == id || entity.Member1.MemberId == id).ToList();
-
-                            }
-                            else if (listType.ToUpper().Equals("DONATION"))
-                            {
-
-                                transactions = _dbContext.Transactions.Where(entity =>
-                                            (entity.Member1.MemberId == id || entity.Member.MemberId == id) &&
-                                             entity.TransactionType == transactionTypeDonation).ToList();
-                            }
-                            else if (listType.ToUpper().Equals("REQUEST"))
-                            {
-
-                                transactions = _dbContext.Transactions.Where(entity =>
-                                            (entity.Member1.MemberId == id || entity.Member.MemberId == id) &&
-                                             entity.TransactionType == transactionTypeRequest).ToList();
-                            }
-                            #endregion
 
                         }
-
-                        totalRecordsCount = transactions.Count();
-
-                        if (pageSize == 0 && pageIndex == 0)
+                        else if (listType.ToUpper().Equals("RECEIVED"))
                         {
-                            transactions = transactions.Take(1000).ToList();
+
+
+                            transactions = _dbContext.Transactions.Where(entity =>
+                                        entity.Member1.MemberId == id &&
+                                        entity.TransactionType == transactionTypeTransfer &&
+                                        entity.TransactionStatus == SubListType).ToList();
                         }
-                        else
+                        else if (listType.ToUpper().Equals("DISPUTED"))
                         {
-                            transactions = transactions.Skip(pageSize * pageIndex).Take(pageSize).ToList();
-                     
+
+                            transactions = _dbContext.Transactions.Where(entity =>
+                                        ((entity.Member1.MemberId == id || entity.Member.MemberId == id) &&
+                                          entity.DisputeStatus != null && entity.TransactionType == transactionTypeDisputed) &&
+                                          entity.TransactionStatus == SubListType).ToList();
+                        }
+                        else if (listType.ToUpper().Equals("ALL") && SubListType == "Pending") // CR
+                        {
+
+                            transactions = _dbContext.Transactions.Where(entity =>
+                                        (entity.Member.MemberId == id || entity.Member1.MemberId == id) &&
+                                         entity.TransactionStatus == SubListType).ToList();
+                        }
+                        else if (listType.ToUpper().Equals("ALL") && SubListType == "Success") // CR
+                        {
+
+                            transactions = _dbContext.Transactions.Where(entity =>
+                                        (entity.Member.MemberId == id || entity.Member1.MemberId == id) &&
+                                        (entity.TransactionStatus == SubListType || entity.TransactionStatus == "Cancelled" || entity.TransactionStatus == "Rejected")).ToList();
+                        }
+                        else if (listType.ToUpper().Equals("DONATION"))
+                        {
+
+                            transactions = _dbContext.Transactions.Where(entity =>
+                                        (entity.Member1.MemberId == id || entity.Member.MemberId == id) &&
+                                         entity.TransactionType == transactionTypeDonation &&
+                                         entity.TransactionStatus == SubListType).ToList();
+
+                        }
+                        else if (listType.ToUpper().Equals("REQUEST"))
+                        {
+                            transactions = _dbContext.Transactions.Where(entity =>
+                                        (entity.Member1.MemberId == id || entity.Member.MemberId == id) &&
+                                         entity.TransactionType == transactionTypeRequest &&
+                                        (entity.TransactionStatus == SubListType || entity.TransactionStatus == "Cancelled" || entity.TransactionStatus == "Rejected")).ToList();
                         }
 
-                        if (transactions.Count > 0)
+                        #endregion
+
+
+                    }
+                    else
+                    {
+                        #region WhenNothingIsPassedForSubList
+
+                        if (listType.ToUpper().Equals("SENT"))
                         {
-                            return new List<Transaction>(transactions);
+                            transactions = _dbContext.Transactions.Where(entity =>
+                                        entity.Member.MemberId == id &&
+                                       (entity.TransactionType == transactionTypeTransfer || entity.TransactionType == transactionTypeDonation)).ToList();
+
                         }
+                        else if (listType.ToUpper().Equals("RECEIVED"))
+                        {
+
+                            transactions = _dbContext.Transactions.Where(entity =>
+                                        entity.Member1.MemberId == id &&
+                                        entity.TransactionType == transactionTypeTransfer).ToList();
+
+                        }
+                        else if (listType.ToUpper().Equals("DISPUTED"))
+                        {
+                            transactions = _dbContext.Transactions.Where(entity =>
+                                       (entity.Member1.MemberId == id || entity.Member.MemberId == id) &&
+                                        entity.DisputeStatus != null &&
+                                        entity.TransactionType == transactionTypeDisputed).ToList();
+                        }
+                        else if (listType.ToUpper().Equals("ALL"))
+                        {
+                            transactions = _dbContext.Transactions.Where(entity =>
+                                        entity.Member.MemberId == id || entity.Member1.MemberId == id).ToList();
+
+                        }
+                        else if (listType.ToUpper().Equals("DONATION"))
+                        {
+
+                            transactions = _dbContext.Transactions.Where(entity =>
+                                        (entity.Member1.MemberId == id || entity.Member.MemberId == id) &&
+                                         entity.TransactionType == transactionTypeDonation).ToList();
+                        }
+                        else if (listType.ToUpper().Equals("REQUEST"))
+                        {
+
+                            transactions = _dbContext.Transactions.Where(entity =>
+                                        (entity.Member1.MemberId == id || entity.Member.MemberId == id) &&
+                                         entity.TransactionType == transactionTypeRequest).ToList();
+                        }
+                        #endregion
+
+                    }
+
+                    totalRecordsCount = transactions.Count();
+
+                    if (pageSize == 0 && pageIndex == 0)
+                    {
+                        transactions = transactions.Take(1000).ToList();
+                    }
+                    else
+                    {
+                        transactions = transactions.Skip(pageSize * pageIndex).Take(pageSize).ToList();
+
+                    }
+
+                    if (transactions.Count > 0)
+                    {
+                        return new List<Transaction>(transactions);
                     }
                 }
-            
+            }
+
             catch (Exception ex)
             {
                 Logger.Error("TDA -> GetTransactionsList EXCEPTION - [MemberId: " + memberId + "], [Exception: " + ex.Message + "]");
@@ -2160,49 +2167,50 @@ namespace Nooch.DataAccess
         public Transaction GetLatestReceivedTransaction(string memberId)
         {
             Logger.Info("TDA -> GetLatestReceivedTransaction - memberId: [" + memberId + "]");
-             
-                var id = Utility.ConvertToGuid(memberId);
 
-       
-                //ClearTransactionHistory functionality 
-                
-                var member = _dbContext.Members.Where(u => u.MemberId == id).FirstOrDefault();
-                if (member != null)
+            var id = Utility.ConvertToGuid(memberId);
+
+
+            //ClearTransactionHistory functionality 
+
+            var member = _dbContext.Members.Where(u => u.MemberId == id).FirstOrDefault();
+            if (member != null)
+            {
+                _dbContext.Entry(member).Reload();
+                var transaction = new Transaction();
+
+                var transactionType = CommonHelper.GetEncryptedData(Constants.TRANSACTION_TYPE_TRANSFER);
+
+                //transactionSpecification.Predicate = entity => entity.Members1.MemberId == id && entity.TransactionType == transactionType;
+
+
+
+
+                var disputedTransaction =
+                    _dbContext.Transactions.Where(t => t.Member1.MemberId == id && ((t.TransactionType == transactionType) && (t.DisputeStatus != null))).OrderByDescending(c => c.DisputeDate).FirstOrDefault();
+
+
+
+                var receivedTransaction =
+                   _dbContext.Transactions.Where(entity => entity.Member1.MemberId == id && entity.TransactionType == transactionType).OrderByDescending(c => c.DisputeDate).FirstOrDefault();
+
+                if (disputedTransaction != null)
                 {
-                 
-                    var transaction = new Transaction();
-
-                    var transactionType = CommonHelper.GetEncryptedData(Constants.TRANSACTION_TYPE_TRANSFER);
-
-                    //transactionSpecification.Predicate = entity => entity.Members1.MemberId == id && entity.TransactionType == transactionType;
-
-                    
-
-                    
-                    var disputedTransaction =
-                        _dbContext.Transactions.Where(t => t.Member1.MemberId == id && ((t.TransactionType == transactionType) && (t.DisputeStatus != null))).OrderByDescending(c => c.DisputeDate).FirstOrDefault();
-                    
-
-
-                    var receivedTransaction =
-                       _dbContext.Transactions.Where(entity => entity.Member1.MemberId == id && entity.TransactionType == transactionType ).OrderByDescending(c => c.DisputeDate).FirstOrDefault();
-
-                    if (disputedTransaction != null)
-                    {
-                        transaction = disputedTransaction.DisputeDate > receivedTransaction.TransactionDate ? disputedTransaction : receivedTransaction;
-                    }
-                    else
-                    {
-                        transaction = receivedTransaction;
-                    }
-
-                    if (transaction != null)
-                    {
-                        return transaction;
-                    }
+                    _dbContext.Entry(disputedTransaction).Reload();
+                    transaction = disputedTransaction.DisputeDate > receivedTransaction.TransactionDate ? disputedTransaction : receivedTransaction;
                 }
-                return new Transaction();
-             
+                else
+                {
+                    transaction = receivedTransaction;
+                }
+
+                if (transaction != null)
+                {
+                    return transaction;
+                }
+            }
+            return new Transaction();
+
         }
 
         public List<Transaction> GetTransactionsSearchList(string memberId, string friendName, string listType, int pageSize, int pageIndex, string sublist)
@@ -2210,247 +2218,249 @@ namespace Nooch.DataAccess
             try
             {
                 Logger.Info("TDA -> GetTransactionSearchList Initiated - [MemberId: " + memberId + "]");
-              
-                    var id = Utility.ConvertToGuid(memberId);
 
-                     
+                var id = Utility.ConvertToGuid(memberId);
 
-                    //ClearTransactionHistory functionality 
-                    var member = _dbContext.Members.Where(u=>u.MemberId==id).FirstOrDefault();
-
-                    //if (member.ClearTransactionHistory.HasValue && member.ClearTransactionHistory.Value)
-                    //{
-                    //    return new List<Transactions>();
-                    //}
-
-                    //membersAccountRepository = new Repository<Members, NoochDataEntities>(noochConnection);
-                    // get admin member id.
-                    string adminUserName = Utility.GetValueFromConfig("adminMail");
-                     
-                 
-                    var transactions = new List<Transaction>();
-
-                    friendName = CommonHelper.GetEncryptedData(friendName);
-
-                    var transactionTypeTransfer = CommonHelper.GetEncryptedData(Constants.TRANSACTION_TYPE_TRANSFER);
-                    var transactionTypeDonation = CommonHelper.GetEncryptedData(Constants.TRANSACTION_TYPE_DONATION);
-                    var transactionTypeRequest = CommonHelper.GetEncryptedData(Constants.TRANSACTION_TYPE_REQUEST);
-                    var totalRecordsCount=0;
-                    var transactionTypeDisputed = "+C1+zhVafHdXQXCIqjU/Zg==";
-
-                    if (sublist != "")
-                    {
-
-                        #region If Something Sent for SubList
-
-                        if (listType.ToUpper().Equals("SENT"))
-                        {
-                               transactions = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id) && entity.TransactionType == transactionTypeTransfer && entity.TransactionStatus == sublist).ToList();
-                               totalRecordsCount = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id) && entity.TransactionType == transactionTypeTransfer && entity.TransactionStatus == sublist).Count();
-                           
-                        }
-                        else if (listType.ToUpper().Equals("ALL") && sublist == "Success")
-                        {
-                           
-                               totalRecordsCount = _dbContext.Transactions.Where( entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) && (entity.TransactionStatus == sublist || entity.TransactionStatus == "Cancelled" || entity.TransactionStatus == "Rejected")).Count();
-                               transactions = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) && (entity.TransactionStatus == sublist || entity.TransactionStatus == "Cancelled" || entity.TransactionStatus == "Rejected")).ToList();
-                        }
-                        else if (listType.ToUpper().Equals("ALL") && sublist == "Pending")
-                        {
-                            //transactionSpecification.Predicate = entity => (entity.Members.MemberId == id || entity.Members1.MemberId == id) && entity.TransactionStatus == sublist;
-                          totalRecordsCount = _dbContext.Transactions.Where( entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) && entity.TransactionStatus == sublist).Count();
-                          transactions = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) && entity.TransactionStatus == sublist).ToList();
-                        }
-                        else if (listType.ToUpper().Equals("DONATION") && sublist != "Pending")
-                        {
-                             
-                             totalRecordsCount = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) &&
-                                entity.TransactionType == transactionTypeDonation && entity.TransactionStatus == sublist).Count();
-                             transactions = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) &&
-                                 entity.TransactionType == transactionTypeDonation && entity.TransactionStatus == sublist).ToList();
-                        }
-                        else if (listType.ToUpper().Equals("RECEIVED") && sublist != "Pending")
-                        {
-         
-                            totalRecordsCount = _dbContext.Transactions.Where(entity => entity.Member1.MemberId == id &&
-                                                                          (entity.Member.FirstName.Contains(friendName) || entity.Member.LastName.Contains(friendName)) &&
-                                                                           entity.TransactionType == transactionTypeTransfer && entity.TransactionStatus == sublist).Count();
-                            transactions = _dbContext.Transactions.Where(entity => entity.Member1.MemberId == id &&
-                                                                          (entity.Member.FirstName.Contains(friendName) || entity.Member.LastName.Contains(friendName)) &&
-                                                                           entity.TransactionType == transactionTypeTransfer && entity.TransactionStatus == sublist).ToList();
-                        }
-                        else if (listType.ToUpper().Equals("REQUEST") && sublist == "Success")
-                        {
-                           
-                             totalRecordsCount = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) &&
-                                                                            entity.TransactionType == transactionTypeRequest &&
-                                                                           (entity.TransactionStatus == sublist || entity.TransactionStatus == "cancelled" || entity.TransactionStatus == "Rejected")).Count();
-                             transactions = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) &&
-                                                                            entity.TransactionType == transactionTypeRequest &&
-                                                                           (entity.TransactionStatus == sublist || entity.TransactionStatus == "cancelled" || entity.TransactionStatus == "Rejected")).ToList();
-                        }
-                        else if (listType.ToUpper().Equals("REQUEST") && sublist == "Pending")
-                        {
-                            
-                             totalRecordsCount = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) &&
-                                                                            entity.TransactionType == transactionTypeRequest && entity.TransactionStatus == sublist).Count();
-                             transactions = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) &&
-                                                                             entity.TransactionType == transactionTypeRequest && entity.TransactionStatus == sublist).ToList();
-                        }
-                        else if (listType.ToUpper().Equals("TRANSFER"))
-                        {
-                          
-                            totalRecordsCount = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) &&
-                                                                            entity.TransactionType == transactionTypeTransfer && entity.TransactionStatus == sublist).Count();
-                            transactions = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) &&
-                                                                            entity.TransactionType == transactionTypeTransfer && entity.TransactionStatus == sublist).ToList();
-                        }
-                        else if (listType.ToUpper().Equals("DISPUTED"))
-                        {
-                       
-                            totalRecordsCount = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) &&
-                                                                            entity.DisputeStatus != null && entity.TransactionStatus == sublist).Count();
-                           
-
-
-                            //transactions = transactionRepository.SelectAll(transactionSpecification, new[] { "Members", "Members1" },
-                            //                                    "TransactionDate", "desc", 0, 0).ToList();
-                              transactions = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) &&
-                                                                            entity.DisputeStatus != null && entity.TransactionStatus == sublist).ToList();
-
-                            if (transactions.Any(x => x.Member.MemberId == id))
-                            {
-                               
-                             totalRecordsCount = _dbContext.Transactions.Where(entity => (entity.Member1.FirstName.Contains(friendName) || entity.Member1.LastName.Contains(friendName)) &&
-                                                                                entity.DisputeStatus != null && entity.TransactionType == transactionTypeDisputed && entity.TransactionStatus == sublist).Count();
-                             transactions = _dbContext.Transactions.Where(entity => (entity.Member1.FirstName.Contains(friendName) || entity.Member1.LastName.Contains(friendName)) &&
-                                                                             entity.DisputeStatus != null && entity.TransactionType == transactionTypeDisputed && entity.TransactionStatus == sublist).ToList();
-                            }
-                            else
-                            {
-                                 
-                                 totalRecordsCount = _dbContext.Transactions.Where(entity => (entity.Member.FirstName.Contains(friendName) ||
-                                    entity.Member.LastName.Contains(friendName)) && entity.DisputeStatus != null &&
-                                entity.TransactionType == transactionTypeDisputed && entity.TransactionStatus == sublist).Count();
-
-                                 transactions = _dbContext.Transactions.Where(entity => (entity.Member.FirstName.Contains(friendName) ||
-                                     entity.Member.LastName.Contains(friendName)) && entity.DisputeStatus != null &&
-                                 entity.TransactionType == transactionTypeDisputed && entity.TransactionStatus == sublist).ToList();
-
-
-                            }
-                        }
-
-                        #endregion
-                    }
-
-                    else
-                    {
-                        #region If Nothing Sent for SubList
-
-                        if (listType.ToUpper().Equals("ALL"))
-                        {
- 
-                           totalRecordsCount = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) &&
-                                                                           (entity.Member.FirstName.Contains(friendName) || entity.Member.LastName.Contains(friendName))).Count();
-                           transactions = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) &&
-                                                                          (entity.Member.FirstName.Contains(friendName) || entity.Member.LastName.Contains(friendName))).ToList();
-
-                        }
-                        else if (listType.ToUpper().Equals("TRANSFER"))
-                        {
-                           totalRecordsCount = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) &&
-                                                                           (entity.Member.FirstName.Contains(friendName) || entity.Member.LastName.Contains(friendName)) &&
-                                                                            entity.TransactionType == transactionTypeTransfer).Count();
-                           transactions = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) &&
-                                                                          (entity.Member.FirstName.Contains(friendName) || entity.Member.LastName.Contains(friendName)) &&
-                                                                           entity.TransactionType == transactionTypeTransfer).ToList();
-                        }
-                        else if (listType.ToUpper().Equals("SENT"))
-                        {
-                             
-                             totalRecordsCount = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id) &&
-                                                                           (entity.Member.FirstName.Contains(friendName) || entity.Member.LastName.Contains(friendName)) &&
-                                                                            entity.TransactionType == transactionTypeTransfer).Count();
-                             transactions = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id) &&
-                                                                            (entity.Member.FirstName.Contains(friendName) || entity.Member.LastName.Contains(friendName)) &&
-                                                                             entity.TransactionType == transactionTypeTransfer).ToList();
-                        }
-                        else if (listType.ToUpper().Equals("RECEIVED"))
-                        {
-                            
-                             totalRecordsCount = _dbContext.Transactions.Where(entity => entity.Member1.MemberId == id &&
-                                                                          (entity.Member.FirstName.Contains(friendName) || entity.Member.LastName.Contains(friendName)) &&
-                                                                           entity.TransactionType == transactionTypeTransfer).Count();
-                             transactions = _dbContext.Transactions.Where(entity => entity.Member1.MemberId == id &&
-                                                                           (entity.Member.FirstName.Contains(friendName) || entity.Member.LastName.Contains(friendName)) &&
-                                                                            entity.TransactionType == transactionTypeTransfer).ToList();
-                        }
-                        else if (listType.ToUpper().Equals("REQUEST"))
-                        {
-
-                            totalRecordsCount = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) &&
-                                                                           (entity.Member.FirstName.Contains(friendName) || entity.Member.LastName.Contains(friendName)) &&
-                                                                            entity.TransactionType == transactionTypeRequest).Count();
-                            transactions = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) &&
-                                                                          (entity.Member.FirstName.Contains(friendName) || entity.Member.LastName.Contains(friendName)) &&
-                                                                           entity.TransactionType == transactionTypeRequest).ToList();
-
-
-                        }
-                        else if (listType.ToUpper().Equals("DONATION"))
-                        {
-                          
-                             totalRecordsCount = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) &&
-                                                                            entity.TransactionType == transactionTypeDonation).Count();
-                             transactions = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) &&
-                                                                             entity.TransactionType == transactionTypeDonation).ToList();
-                        }
-                        else if (listType.ToUpper().Equals("DISPUTED"))
-                        {
-                            
-                            totalRecordsCount = _dbContext.Transactions.Where( entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) &&
-                                                                           (entity.Member.FirstName.Contains(friendName) || entity.Member.LastName.Contains(friendName)) &&
-                                                                            entity.DisputeStatus != null).Count();
-
-                            transactions =  _dbContext.Transactions.Where( entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) &&
-                                                                           (entity.Member.FirstName.Contains(friendName) || entity.Member.LastName.Contains(friendName)) &&
-                                                                            entity.DisputeStatus != null).ToList();
-
-                            if (transactions.Any(x => x.Member.MemberId == id))
-                            {
-                                
-                                totalRecordsCount = _dbContext.Transactions.Where(entity => (entity.Member1.FirstName.Contains(friendName) || entity.Member1.LastName.Contains(friendName)) &&
-                                                                                entity.DisputeStatus != null && entity.TransactionType == transactionTypeDisputed).Count();
-                                transactions = _dbContext.Transactions.Where(entity => (entity.Member1.FirstName.Contains(friendName) || entity.Member1.LastName.Contains(friendName)) &&
-                                                                              entity.DisputeStatus != null && entity.TransactionType == transactionTypeDisputed).ToList();
-                            }
-                            else
-                            {
-                               totalRecordsCount = _dbContext.Transactions.Where( entity => (entity.Member.FirstName.Contains(friendName) || entity.Member.LastName.Contains(friendName)) &&
-                                                                                entity.DisputeStatus != null && entity.TransactionType == transactionTypeDisputed).Count();
-                               transactions = _dbContext.Transactions.Where(entity => (entity.Member.FirstName.Contains(friendName) || entity.Member.LastName.Contains(friendName)) &&
-                                                                               entity.DisputeStatus != null && entity.TransactionType == transactionTypeDisputed).ToList();
-                            }
-                        }
-
-                        #endregion
-                    }                  
-
-                    if (pageSize == 0 && pageIndex == 0)
-                    {
-
-                        transactions = transactions.Take(1000).ToList();
-                    }
-                    else
-                    {
-                        transactions = transactions.Skip(pageSize * pageIndex).Take(pageSize).ToList();                       
-                        
-                    }
-
-                    return transactions;
+                //ClearTransactionHistory functionality 
+                var member = _dbContext.Members.Where(u => u.MemberId == id).FirstOrDefault();
+                if (member != null)
+                {
+                    _dbContext.Entry(member).Reload();
                 }
-            
+
+                //if (member.ClearTransactionHistory.HasValue && member.ClearTransactionHistory.Value)
+                //{
+                //    return new List<Transactions>();
+                //}
+
+                //membersAccountRepository = new Repository<Members, NoochDataEntities>(noochConnection);
+                // get admin member id.
+                string adminUserName = Utility.GetValueFromConfig("adminMail");
+
+
+                var transactions = new List<Transaction>();
+
+                friendName = CommonHelper.GetEncryptedData(friendName);
+
+                var transactionTypeTransfer = CommonHelper.GetEncryptedData(Constants.TRANSACTION_TYPE_TRANSFER);
+                var transactionTypeDonation = CommonHelper.GetEncryptedData(Constants.TRANSACTION_TYPE_DONATION);
+                var transactionTypeRequest = CommonHelper.GetEncryptedData(Constants.TRANSACTION_TYPE_REQUEST);
+                var totalRecordsCount = 0;
+                var transactionTypeDisputed = "+C1+zhVafHdXQXCIqjU/Zg==";
+
+                if (sublist != "")
+                {
+
+                    #region If Something Sent for SubList
+
+                    if (listType.ToUpper().Equals("SENT"))
+                    {
+                        transactions = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id) && entity.TransactionType == transactionTypeTransfer && entity.TransactionStatus == sublist).ToList();
+                        totalRecordsCount = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id) && entity.TransactionType == transactionTypeTransfer && entity.TransactionStatus == sublist).Count();
+
+                    }
+                    else if (listType.ToUpper().Equals("ALL") && sublist == "Success")
+                    {
+
+                        totalRecordsCount = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) && (entity.TransactionStatus == sublist || entity.TransactionStatus == "Cancelled" || entity.TransactionStatus == "Rejected")).Count();
+                        transactions = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) && (entity.TransactionStatus == sublist || entity.TransactionStatus == "Cancelled" || entity.TransactionStatus == "Rejected")).ToList();
+                    }
+                    else if (listType.ToUpper().Equals("ALL") && sublist == "Pending")
+                    {
+                        //transactionSpecification.Predicate = entity => (entity.Members.MemberId == id || entity.Members1.MemberId == id) && entity.TransactionStatus == sublist;
+                        totalRecordsCount = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) && entity.TransactionStatus == sublist).Count();
+                        transactions = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) && entity.TransactionStatus == sublist).ToList();
+                    }
+                    else if (listType.ToUpper().Equals("DONATION") && sublist != "Pending")
+                    {
+
+                        totalRecordsCount = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) &&
+                           entity.TransactionType == transactionTypeDonation && entity.TransactionStatus == sublist).Count();
+                        transactions = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) &&
+                            entity.TransactionType == transactionTypeDonation && entity.TransactionStatus == sublist).ToList();
+                    }
+                    else if (listType.ToUpper().Equals("RECEIVED") && sublist != "Pending")
+                    {
+
+                        totalRecordsCount = _dbContext.Transactions.Where(entity => entity.Member1.MemberId == id &&
+                                                                      (entity.Member.FirstName.Contains(friendName) || entity.Member.LastName.Contains(friendName)) &&
+                                                                       entity.TransactionType == transactionTypeTransfer && entity.TransactionStatus == sublist).Count();
+                        transactions = _dbContext.Transactions.Where(entity => entity.Member1.MemberId == id &&
+                                                                      (entity.Member.FirstName.Contains(friendName) || entity.Member.LastName.Contains(friendName)) &&
+                                                                       entity.TransactionType == transactionTypeTransfer && entity.TransactionStatus == sublist).ToList();
+                    }
+                    else if (listType.ToUpper().Equals("REQUEST") && sublist == "Success")
+                    {
+
+                        totalRecordsCount = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) &&
+                                                                       entity.TransactionType == transactionTypeRequest &&
+                                                                      (entity.TransactionStatus == sublist || entity.TransactionStatus == "cancelled" || entity.TransactionStatus == "Rejected")).Count();
+                        transactions = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) &&
+                                                                       entity.TransactionType == transactionTypeRequest &&
+                                                                      (entity.TransactionStatus == sublist || entity.TransactionStatus == "cancelled" || entity.TransactionStatus == "Rejected")).ToList();
+                    }
+                    else if (listType.ToUpper().Equals("REQUEST") && sublist == "Pending")
+                    {
+
+                        totalRecordsCount = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) &&
+                                                                       entity.TransactionType == transactionTypeRequest && entity.TransactionStatus == sublist).Count();
+                        transactions = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) &&
+                                                                        entity.TransactionType == transactionTypeRequest && entity.TransactionStatus == sublist).ToList();
+                    }
+                    else if (listType.ToUpper().Equals("TRANSFER"))
+                    {
+
+                        totalRecordsCount = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) &&
+                                                                        entity.TransactionType == transactionTypeTransfer && entity.TransactionStatus == sublist).Count();
+                        transactions = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) &&
+                                                                        entity.TransactionType == transactionTypeTransfer && entity.TransactionStatus == sublist).ToList();
+                    }
+                    else if (listType.ToUpper().Equals("DISPUTED"))
+                    {
+
+                        totalRecordsCount = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) &&
+                                                                        entity.DisputeStatus != null && entity.TransactionStatus == sublist).Count();
+
+
+
+                        //transactions = transactionRepository.SelectAll(transactionSpecification, new[] { "Members", "Members1" },
+                        //                                    "TransactionDate", "desc", 0, 0).ToList();
+                        transactions = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) &&
+                                                                      entity.DisputeStatus != null && entity.TransactionStatus == sublist).ToList();
+
+                        if (transactions.Any(x => x.Member.MemberId == id))
+                        {
+
+                            totalRecordsCount = _dbContext.Transactions.Where(entity => (entity.Member1.FirstName.Contains(friendName) || entity.Member1.LastName.Contains(friendName)) &&
+                                                                               entity.DisputeStatus != null && entity.TransactionType == transactionTypeDisputed && entity.TransactionStatus == sublist).Count();
+                            transactions = _dbContext.Transactions.Where(entity => (entity.Member1.FirstName.Contains(friendName) || entity.Member1.LastName.Contains(friendName)) &&
+                                                                            entity.DisputeStatus != null && entity.TransactionType == transactionTypeDisputed && entity.TransactionStatus == sublist).ToList();
+                        }
+                        else
+                        {
+
+                            totalRecordsCount = _dbContext.Transactions.Where(entity => (entity.Member.FirstName.Contains(friendName) ||
+                               entity.Member.LastName.Contains(friendName)) && entity.DisputeStatus != null &&
+                           entity.TransactionType == transactionTypeDisputed && entity.TransactionStatus == sublist).Count();
+
+                            transactions = _dbContext.Transactions.Where(entity => (entity.Member.FirstName.Contains(friendName) ||
+                                entity.Member.LastName.Contains(friendName)) && entity.DisputeStatus != null &&
+                            entity.TransactionType == transactionTypeDisputed && entity.TransactionStatus == sublist).ToList();
+
+
+                        }
+                    }
+
+                    #endregion
+                }
+
+                else
+                {
+                    #region If Nothing Sent for SubList
+
+                    if (listType.ToUpper().Equals("ALL"))
+                    {
+
+                        totalRecordsCount = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) &&
+                                                                        (entity.Member.FirstName.Contains(friendName) || entity.Member.LastName.Contains(friendName))).Count();
+                        transactions = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) &&
+                                                                       (entity.Member.FirstName.Contains(friendName) || entity.Member.LastName.Contains(friendName))).ToList();
+
+                    }
+                    else if (listType.ToUpper().Equals("TRANSFER"))
+                    {
+                        totalRecordsCount = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) &&
+                                                                        (entity.Member.FirstName.Contains(friendName) || entity.Member.LastName.Contains(friendName)) &&
+                                                                         entity.TransactionType == transactionTypeTransfer).Count();
+                        transactions = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) &&
+                                                                       (entity.Member.FirstName.Contains(friendName) || entity.Member.LastName.Contains(friendName)) &&
+                                                                        entity.TransactionType == transactionTypeTransfer).ToList();
+                    }
+                    else if (listType.ToUpper().Equals("SENT"))
+                    {
+
+                        totalRecordsCount = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id) &&
+                                                                      (entity.Member.FirstName.Contains(friendName) || entity.Member.LastName.Contains(friendName)) &&
+                                                                       entity.TransactionType == transactionTypeTransfer).Count();
+                        transactions = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id) &&
+                                                                       (entity.Member.FirstName.Contains(friendName) || entity.Member.LastName.Contains(friendName)) &&
+                                                                        entity.TransactionType == transactionTypeTransfer).ToList();
+                    }
+                    else if (listType.ToUpper().Equals("RECEIVED"))
+                    {
+
+                        totalRecordsCount = _dbContext.Transactions.Where(entity => entity.Member1.MemberId == id &&
+                                                                     (entity.Member.FirstName.Contains(friendName) || entity.Member.LastName.Contains(friendName)) &&
+                                                                      entity.TransactionType == transactionTypeTransfer).Count();
+                        transactions = _dbContext.Transactions.Where(entity => entity.Member1.MemberId == id &&
+                                                                      (entity.Member.FirstName.Contains(friendName) || entity.Member.LastName.Contains(friendName)) &&
+                                                                       entity.TransactionType == transactionTypeTransfer).ToList();
+                    }
+                    else if (listType.ToUpper().Equals("REQUEST"))
+                    {
+
+                        totalRecordsCount = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) &&
+                                                                       (entity.Member.FirstName.Contains(friendName) || entity.Member.LastName.Contains(friendName)) &&
+                                                                        entity.TransactionType == transactionTypeRequest).Count();
+                        transactions = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) &&
+                                                                      (entity.Member.FirstName.Contains(friendName) || entity.Member.LastName.Contains(friendName)) &&
+                                                                       entity.TransactionType == transactionTypeRequest).ToList();
+
+
+                    }
+                    else if (listType.ToUpper().Equals("DONATION"))
+                    {
+
+                        totalRecordsCount = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) &&
+                                                                       entity.TransactionType == transactionTypeDonation).Count();
+                        transactions = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) &&
+                                                                        entity.TransactionType == transactionTypeDonation).ToList();
+                    }
+                    else if (listType.ToUpper().Equals("DISPUTED"))
+                    {
+
+                        totalRecordsCount = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) &&
+                                                                       (entity.Member.FirstName.Contains(friendName) || entity.Member.LastName.Contains(friendName)) &&
+                                                                        entity.DisputeStatus != null).Count();
+
+                        transactions = _dbContext.Transactions.Where(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id) &&
+                                                                       (entity.Member.FirstName.Contains(friendName) || entity.Member.LastName.Contains(friendName)) &&
+                                                                        entity.DisputeStatus != null).ToList();
+
+                        if (transactions.Any(x => x.Member.MemberId == id))
+                        {
+
+                            totalRecordsCount = _dbContext.Transactions.Where(entity => (entity.Member1.FirstName.Contains(friendName) || entity.Member1.LastName.Contains(friendName)) &&
+                                                                            entity.DisputeStatus != null && entity.TransactionType == transactionTypeDisputed).Count();
+                            transactions = _dbContext.Transactions.Where(entity => (entity.Member1.FirstName.Contains(friendName) || entity.Member1.LastName.Contains(friendName)) &&
+                                                                          entity.DisputeStatus != null && entity.TransactionType == transactionTypeDisputed).ToList();
+                        }
+                        else
+                        {
+                            totalRecordsCount = _dbContext.Transactions.Where(entity => (entity.Member.FirstName.Contains(friendName) || entity.Member.LastName.Contains(friendName)) &&
+                                                                             entity.DisputeStatus != null && entity.TransactionType == transactionTypeDisputed).Count();
+                            transactions = _dbContext.Transactions.Where(entity => (entity.Member.FirstName.Contains(friendName) || entity.Member.LastName.Contains(friendName)) &&
+                                                                            entity.DisputeStatus != null && entity.TransactionType == transactionTypeDisputed).ToList();
+                        }
+                    }
+
+                    #endregion
+                }
+
+                if (pageSize == 0 && pageIndex == 0)
+                {
+
+                    transactions = transactions.Take(1000).ToList();
+                }
+                else
+                {
+                    transactions = transactions.Skip(pageSize * pageIndex).Take(pageSize).ToList();
+
+                }
+
+                return transactions;
+            }
+
             catch (Exception ex)
             {
                 Logger.Error("TDA -> GetTransactionsSearchList FAILED - MemberID: [" + memberId + "], Exception: [" + ex.Message + "]");
@@ -2467,42 +2477,42 @@ namespace Nooch.DataAccess
         public Transaction GetTransactionDetail(string memberId, string listType, string transactionId)
         {
             Logger.Info("TDA - GetTransactionDetail Initiated -[MemberId: " + memberId + "], [TransactionId: " + transactionId + "]");
-           
-                var id = Utility.ConvertToGuid(memberId);
-                var txnId = Utility.ConvertToGuid(transactionId);
 
-                 
-                var transactions = new Transaction();
-              
+            var id = Utility.ConvertToGuid(memberId);
+            var txnId = Utility.ConvertToGuid(transactionId);
 
-                if (listType.ToUpper().Equals("SENT"))
-                {
 
-                    transactions = _dbContext.Transactions.FirstOrDefault(entity => entity.Member.MemberId == id && entity.TransactionId == txnId);
-                }
-                else if (listType.ToUpper().Equals("RECEIVED"))
-                {
+            var transactions = new Transaction();
 
-                    transactions = _dbContext.Transactions.FirstOrDefault(entity => entity.Member1.MemberId == id && entity.TransactionId == txnId);
-                }
-                else if (listType.ToUpper().Equals("DISPUTED"))
-                {
 
-                    transactions = _dbContext.Transactions.FirstOrDefault(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id)
-                                                                           && entity.DisputeStatus != null && entity.TransactionId == txnId);
-                }
-                else // for withdraw
-                {
-                    transactions = _dbContext.Transactions.FirstOrDefault(entity => (entity.Member1.MemberId == id || entity.Member.MemberId == id) &&
-                                                                                    entity.TransactionId == txnId);                   
-                }                
+            if (listType.ToUpper().Equals("SENT"))
+            {
 
-                if (transactions != null)
-                {
-                    return transactions;
-                }
-                return new Transaction();
-            
+                transactions = _dbContext.Transactions.FirstOrDefault(entity => entity.Member.MemberId == id && entity.TransactionId == txnId);
+            }
+            else if (listType.ToUpper().Equals("RECEIVED"))
+            {
+
+                transactions = _dbContext.Transactions.FirstOrDefault(entity => entity.Member1.MemberId == id && entity.TransactionId == txnId);
+            }
+            else if (listType.ToUpper().Equals("DISPUTED"))
+            {
+
+                transactions = _dbContext.Transactions.FirstOrDefault(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id)
+                                                                       && entity.DisputeStatus != null && entity.TransactionId == txnId);
+            }
+            else // for withdraw
+            {
+                transactions = _dbContext.Transactions.FirstOrDefault(entity => (entity.Member1.MemberId == id || entity.Member.MemberId == id) &&
+                                                                                entity.TransactionId == txnId);
+            }
+
+            if (transactions != null)
+            {
+                return transactions;
+            }
+            return new Transaction();
+
         }
 
         #region Dispute Related Methods
@@ -2532,118 +2542,120 @@ namespace Nooch.DataAccess
             var category = listType.ToUpper();
             var transaction = new Transaction();
             var sender = new Member();
-          
-                var notifications = new Collection<Notification>();
+
+            var notifications = new Collection<Notification>();
+            if (category.Equals("SENT"))
+            {
+                transaction = _dbContext.Transactions.Where(transactionTemp => transactionTemp.TransactionId == txnId).FirstOrDefault();
+            }
+
+            if (transaction != null)
+            {
+                _dbContext.Entry(transaction).Reload();
+                string disputeTrackingId = GetRandomDisputeTrackingId();
+                transaction.DisputeTrackingId = disputeTrackingId;
+                DisputeTId = disputeTrackingId.ToString();
+                DisputeTransId = transaction.TransactionId.ToString();
+                transaction.Subject = "Dispute recorded successfully.";
+
+                var disputeStatus = CommonHelper.GetEncryptedData(Constants.DISPUTE_STATUS_REPORTED);
+
+                transaction.DisputeStatus = disputeStatus;
+                transaction.TransactionStatus = "Pending";
+                transaction.TransactionType = "+C1+zhVafHdXQXCIqjU/Zg==";
+
                 if (category.Equals("SENT"))
-                {                
-                      transaction = _dbContext.Transactions.Where(transactionTemp => transactionTemp.TransactionId == txnId).FirstOrDefault();
-                }
-                
-                if (transaction != null)
                 {
-                    string disputeTrackingId = GetRandomDisputeTrackingId();
-                    transaction.DisputeTrackingId = disputeTrackingId;
-                    DisputeTId = disputeTrackingId.ToString();
-                    DisputeTransId = transaction.TransactionId.ToString();
-                    transaction.Subject = "Dispute recorded successfully.";
+                    transaction.RaisedBy = "Sender";
+                    timeZoneKey = !string.IsNullOrEmpty(transaction.Member.TimeZoneKey) ? transaction.Member.TimeZoneKey : null;
+                }
 
-                    var disputeStatus = CommonHelper.GetEncryptedData(Constants.DISPUTE_STATUS_REPORTED);
+                transaction.DisputeDate = DateTime.Now;
+                transaction.RaisedById = senderId;
 
-                    transaction.DisputeStatus = disputeStatus;
-                    transaction.TransactionStatus = "Pending";
-                    transaction.TransactionType = "+C1+zhVafHdXQXCIqjU/Zg==";
+                int result = _dbContext.SaveChanges();
+
+                var mda = new MembersDataAccess();
+                var notifSettings = CommonHelper.GetMemberNotificationSettingsByUserName(CommonHelper.GetDecryptedData(transaction.Member.UserName));
+
+                if (result > 0)
+                {
+                    CreateNotifications(memberId, notifications, transaction.Member.UserName, "Support", disputeTrackingId, bodyText);
+                    foreach (var m in notifications)
+                    {
+                        _dbContext.Notifications.Add(m);
+                        _dbContext.SaveChanges();
+                    }
 
                     if (category.Equals("SENT"))
                     {
-                        transaction.RaisedBy = "Sender";
-                        timeZoneKey = !string.IsNullOrEmpty(transaction.Member.TimeZoneKey) ? transaction.Member.TimeZoneKey : null;
+                        sender = _dbContext.Members.Where(memberTemp => memberTemp.MemberId == senderId).FirstOrDefault();
                     }
 
-                    transaction.DisputeDate = DateTime.Now;
-                    transaction.RaisedById = senderId;
-                     
-                    int result = _dbContext.SaveChanges();
-
-                    var mda = new MembersDataAccess();
-                    var notifSettings = CommonHelper.GetMemberNotificationSettingsByUserName(CommonHelper.GetDecryptedData(transaction.Member.UserName));
-
-                    if (result > 0)
+                    if (sender != null)
                     {
-                        CreateNotifications(memberId, notifications, transaction.Member.UserName, "Support", disputeTrackingId, bodyText);                      
-                        foreach (var m in notifications)
-                        {                           
-                                _dbContext.Notifications.Add(m);
-                                _dbContext.SaveChanges();
-                        }
-                       
-                        if (category.Equals("SENT"))
-                        {                        
-                            sender = _dbContext.Members.Where(memberTemp => memberTemp.MemberId == senderId).FirstOrDefault();
-                        }
-                       
-                        if (sender != null)
-                        {
-                            sender.Status = Constants.STATUS_SUSPENDED;
-                            sender.DateModified = DateTime.Now;                         
-                            _dbContext.SaveChanges();                           
-                            #region Send Email To User About Account Suspension
+                        sender.Status = Constants.STATUS_SUSPENDED;
+                        sender.DateModified = DateTime.Now;
+                        _dbContext.SaveChanges();
+                        _dbContext.Entry(sender).Reload();
+                        #region Send Email To User About Account Suspension
 
-                            var tokens = new Dictionary<string, string>
+                        var tokens = new Dictionary<string, string>
 							 {
 								 {Constants.PLACEHOLDER_FIRST_NAME, CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(sender.FirstName))}
 							 };
 
-                            try
-                            {
-                                var fromAddress = Utility.GetValueFromConfig("adminMail");
-                                string emailAddress = CommonHelper.GetDecryptedData(sender.UserName);
-                                Logger.Error("SupendMember - Attempt to send mail for Supend Member[ memberId:" + sender.MemberId + "].");
-
-                                Utility.SendEmail("userSuspended", fromAddress, emailAddress, null, "Your Nooch account has been suspended.", null, tokens, null, null, null); //'MailPriority.High' removed this bez of missmatch para -Surya
-                            }
-                            catch (Exception)
-                            {
-                                Logger.Error("TDA -> Raise Dispute - Supend Member email NOT send to [" + sender.MemberId + "]. Problem sending email.");
-                            }
-
-                            #endregion Send Email To User About Account Suspension
-                        }
-
-
                         try
                         {
-                            string supportMail = Utility.GetValueFromConfig("supportMail");
-                            string s2 = transaction.Amount.ToString("n2");
-                            string[] s3 = s2.Split('.');
-                            string transferToUsername = "";
+                            var fromAddress = Utility.GetValueFromConfig("adminMail");
+                            string emailAddress = CommonHelper.GetDecryptedData(sender.UserName);
+                            Logger.Error("SupendMember - Attempt to send mail for Supend Member[ memberId:" + sender.MemberId + "].");
 
-                            if (transaction.TransactionType == "DrRr1tU1usk7nNibjtcZkA==" && transaction.InvitationSentTo != null)
-                            {
-                                transferToUsername = CommonHelper.GetDecryptedData(transaction.InvitationSentTo);
-                            }
-                            else if (transaction.TransactionType == "5dt4HUwCue532sNmw3LKDQ==" && transaction.RaisedBy == "Sender")
-                            {
-                                transferToUsername = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transaction.Member1.FirstName)) + " " +
-                                                     CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transaction.Member1.LastName));
-                            }
-                            else if (transaction.TransactionType == "5dt4HUwCue532sNmw3LKDQ==" && transaction.RaisedById == receiverId)
-                            {
-                                transferToUsername = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transaction.Member.FirstName)) + " " +
-                                                     CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transaction.Member.LastName));
-                            }
-                            else if (transaction.TransactionType == "T3EMY1WWZ9IscHIj3dbcNw==")
-                            {
-                                transferToUsername = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transaction.Member.FirstName)) + " " +
-                                                     CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transaction.Member.LastName));
-                            }
-                            else
-                            {
-                                transferToUsername = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transaction.Member1.FirstName)) + " " +
-                                                     CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transaction.Member1.LastName));
-                            }
-                            // get name and other details of sender to send email
+                            Utility.SendEmail("userSuspended", fromAddress, emailAddress, null, "Your Nooch account has been suspended.", null, tokens, null, null, null); //'MailPriority.High' removed this bez of missmatch para -Surya
+                        }
+                        catch (Exception)
+                        {
+                            Logger.Error("TDA -> Raise Dispute - Supend Member email NOT send to [" + sender.MemberId + "]. Problem sending email.");
+                        }
 
-                            var tokens = new Dictionary<string, string>
+                        #endregion Send Email To User About Account Suspension
+                    }
+
+
+                    try
+                    {
+                        string supportMail = Utility.GetValueFromConfig("supportMail");
+                        string s2 = transaction.Amount.ToString("n2");
+                        string[] s3 = s2.Split('.');
+                        string transferToUsername = "";
+
+                        if (transaction.TransactionType == "DrRr1tU1usk7nNibjtcZkA==" && transaction.InvitationSentTo != null)
+                        {
+                            transferToUsername = CommonHelper.GetDecryptedData(transaction.InvitationSentTo);
+                        }
+                        else if (transaction.TransactionType == "5dt4HUwCue532sNmw3LKDQ==" && transaction.RaisedBy == "Sender")
+                        {
+                            transferToUsername = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transaction.Member1.FirstName)) + " " +
+                                                 CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transaction.Member1.LastName));
+                        }
+                        else if (transaction.TransactionType == "5dt4HUwCue532sNmw3LKDQ==" && transaction.RaisedById == receiverId)
+                        {
+                            transferToUsername = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transaction.Member.FirstName)) + " " +
+                                                 CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transaction.Member.LastName));
+                        }
+                        else if (transaction.TransactionType == "T3EMY1WWZ9IscHIj3dbcNw==")
+                        {
+                            transferToUsername = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transaction.Member.FirstName)) + " " +
+                                                 CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transaction.Member.LastName));
+                        }
+                        else
+                        {
+                            transferToUsername = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transaction.Member1.FirstName)) + " " +
+                                                 CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transaction.Member1.LastName));
+                        }
+                        // get name and other details of sender to send email
+
+                        var tokens = new Dictionary<string, string>
 												 {
 													 {Constants.PLACEHOLDER_FIRST_NAME, CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(sender.FirstName))},
 													 {Constants.PLACEHOLDER_NEWUSER,transferToUsername},
@@ -2653,30 +2665,30 @@ namespace Nooch.DataAccess
 													 {Constants.PLACEHOLDER_DISPUTEID, DisputeTId}
 												 };
 
-                            Utility.SendEmail("disputeRaised", supportMail, CommonHelper.GetDecryptedData(transaction.Member.UserName), null, subject, null, tokens, ccCollection, bccCollection, bodyText); 
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Error("TDA -> RaiseDispute - Dispute raised email NOT sent to [" + CommonHelper.GetDecryptedData(transaction.Member.UserName) + "], [Exception: " + ex + "]");
-
-                            return new DisputeResultEntity
-                            {
-                                Result = "Failure"
-                            };
-                        }
+                        Utility.SendEmail("disputeRaised", supportMail, CommonHelper.GetDecryptedData(transaction.Member.UserName), null, subject, null, tokens, ccCollection, bccCollection, bodyText);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error("TDA -> RaiseDispute - Dispute raised email NOT sent to [" + CommonHelper.GetDecryptedData(transaction.Member.UserName) + "], [Exception: " + ex + "]");
 
                         return new DisputeResultEntity
                         {
-                            Result = "Dispute has been reported for this transaction. Please note your dispute tracking id: " + disputeTrackingId,
-                            DisputeId = disputeTrackingId,
-                            DisputeDate = !string.IsNullOrEmpty(timeZoneKey) ? mda.GMTTimeZoneConversion(DateTime.Now.ToString(), timeZoneKey) : DateTime.Now.ToString()
+                            Result = "Failure"
                         };
                     }
+
+                    return new DisputeResultEntity
+                    {
+                        Result = "Dispute has been reported for this transaction. Please note your dispute tracking id: " + disputeTrackingId,
+                        DisputeId = disputeTrackingId,
+                        DisputeDate = !string.IsNullOrEmpty(timeZoneKey) ? mda.GMTTimeZoneConversion(DateTime.Now.ToString(), timeZoneKey) : DateTime.Now.ToString()
+                    };
                 }
-                return new DisputeResultEntity
-                {
-                    Result = "Transaction not found."
-                };            
+            }
+            return new DisputeResultEntity
+            {
+                Result = "Transaction not found."
+            };
         }
 
         /// <summary>
@@ -2689,23 +2701,23 @@ namespace Nooch.DataAccess
         {
             var random = new Random();
             int j = 1;
-                    
-                for (int i = 0; i <= j; i++)
-                {
-                    var randomId = new string(
-                        Enumerable.Repeat(Chars, 5)
-                                  .Select(s => s[random.Next(s.Length)])
-                                  .ToArray());                   
-                
-                    var transactionEntity = _dbContext.Transactions.Where(memberTemp => memberTemp.DisputeTrackingId == randomId).FirstOrDefault();
-                   
-                    if (transactionEntity == null)
-                    {
-                        return randomId;
-                    }
 
-                    j += i + 1;
+            for (int i = 0; i <= j; i++)
+            {
+                var randomId = new string(
+                    Enumerable.Repeat(Chars, 5)
+                              .Select(s => s[random.Next(s.Length)])
+                              .ToArray());
+
+                var transactionEntity = _dbContext.Transactions.Where(memberTemp => memberTemp.DisputeTrackingId == randomId).FirstOrDefault();
+
+                if (transactionEntity == null)
+                {
+                    return randomId;
                 }
+
+                j += i + 1;
+            }
             return null;
         }
 
@@ -2742,6 +2754,8 @@ namespace Nooch.DataAccess
                     transactionDetail.TransactionStatus = userResponse;
 
                     _dbContext.SaveChanges();
+                    _dbContext.Entry(transactionDetail).Reload();
+
 
                     // 'Members' IS THE REQUEST REJECTOR
                     // 'Members1' IS THE REQUEST SENDER
@@ -2907,7 +2921,7 @@ namespace Nooch.DataAccess
             try
             {
                 var transId = Utility.ConvertToGuid(transactionId);
-               
+
                 var transactionDetail = new Transaction();
 
                 transactionDetail = _dbContext.Transactions.FirstOrDefault(memberTemp => memberTemp.TransactionId == transId && memberTemp.TransactionStatus == "Pending"
@@ -2915,13 +2929,13 @@ namespace Nooch.DataAccess
 
 
                 if (transactionDetail != null)
-                {
+                {                    
                     #region IfSomethingFound
 
                     transactionDetail.TransactionStatus = "Rejected";
-               
-                    _dbContext.SaveChanges();
 
+                    _dbContext.SaveChanges();
+                    _dbContext.Entry(transactionDetail).Reload();
                     string TransRecipientEmail = "";
                     string TransRecipientPhone = "";
                     string receiverPhoneNumFormatted = "";
@@ -2956,7 +2970,7 @@ namespace Nooch.DataAccess
                     // sending push notification to money sender
                     Guid RecId = Utility.ConvertToGuid(transactionDetail.Member.MemberId.ToString());
 
-                   
+
                     var noochMemberfornotification = new Member();
                     noochMemberfornotification = _dbContext.Members.FirstOrDefault(memberTemp =>
                             memberTemp.MemberId.Equals(transactionDetail.Member1.MemberId) &&
@@ -2968,6 +2982,8 @@ namespace Nooch.DataAccess
                     {
                         try
                         {
+                            _dbContext.Entry(noochMemberfornotification).Reload();
+
                             Utility.SendNotificationMessage(pushBodyText, 1, null,
                           noochMemberfornotification.DeviceToken,
                           Utility.GetValueFromConfig("AppKey"), Utility.GetValueFromConfig("MasterSecret"));
@@ -3021,7 +3037,7 @@ namespace Nooch.DataAccess
 								{Constants.MEMO, memo}
 							};
 
-                    var fromAddress = Utility.GetValueFromConfig("transfersMail"); 
+                    var fromAddress = Utility.GetValueFromConfig("transfersMail");
                     var toAddress = CommonHelper.GetDecryptedData(transactionDetail.Member1.UserName);
 
                     try
@@ -3098,7 +3114,7 @@ namespace Nooch.DataAccess
                 else
                 {
                     return "";
-                }            
+                }
             }
             catch (Exception)
             {
@@ -3117,7 +3133,7 @@ namespace Nooch.DataAccess
             try
             {
                 var transId = Utility.ConvertToGuid(TrannsactionId);
-               
+
                 var transactionDetail = new Transaction();
                 transactionDetail = _dbContext.Transactions.FirstOrDefault(memberTemp => memberTemp.TransactionId == transId &&
                             memberTemp.TransactionStatus == "Pending" &&
@@ -3128,8 +3144,9 @@ namespace Nooch.DataAccess
                 {
                     #region IfSomethingFound
 
-                    transactionDetail.TransactionStatus = "Rejected";                    
+                    transactionDetail.TransactionStatus = "Rejected";
                     _dbContext.SaveChanges();
+                    _dbContext.Entry(transactionDetail).Reload();
 
                     string wholeAmount = transactionDetail.Amount.ToString("n2");
                     string[] s3 = wholeAmount.Split('.');
@@ -3160,7 +3177,7 @@ namespace Nooch.DataAccess
                     #region Push Notification to Request Sender
 
                     Guid RecId = Utility.ConvertToGuid(transactionDetail.Member.MemberId.ToString());
-                                        
+
                     var noochMemberfornotification = new Member();
 
                     noochMemberfornotification = _dbContext.Members.FirstOrDefault(memberTemp =>
@@ -3230,7 +3247,7 @@ namespace Nooch.DataAccess
 								{Constants.MEMO, memo}
 							};
 
-                    var fromAddress = Utility.GetValueFromConfig("transfersMail");    
+                    var fromAddress = Utility.GetValueFromConfig("transfersMail");
                     var toAddress = CommonHelper.GetDecryptedData(transactionDetail.Member1.UserName);
 
                     try
@@ -3326,15 +3343,16 @@ namespace Nooch.DataAccess
                 var transactionDetail = new Transaction();
                 transactionDetail = _dbContext.Transactions.FirstOrDefault(entity => entity.TransactionId == transId && entity.TransactionStatus == "Pending" //&& (memberTemp.TransactionType == "DrRr1tU1usk7nNibjtcZkA==" || memberTemp.TransactionType == "T3EMY1WWZ9IscHIj3dbcNw==")   -- need to discuss with Cliff
                     );
-                             
-                
+
+
                 if (transactionDetail != null)
                 {
                     #region If Transaction Found
 
                     transactionDetail.TransactionStatus = "Rejected";
                     int saveChanges = _dbContext.SaveChanges();
-                    
+                    _dbContext.Entry(transactionDetail).Reload();
+
                     string wholeAmount = transactionDetail.Amount.ToString("n2");
                     string[] s3 = wholeAmount.Split('.');
 
@@ -3365,7 +3383,7 @@ namespace Nooch.DataAccess
 
                     #region Setting all variables depending upon trans type
 
-                    string fromAddress = Utility.GetValueFromConfig("transfersMail");  
+                    string fromAddress = Utility.GetValueFromConfig("transfersMail");
                     string toAddress = "";
 
                     string SenderFirstName = "";
@@ -3447,7 +3465,7 @@ namespace Nooch.DataAccess
                                             memberTemp.IsDeleted == false &&
                                             memberTemp.ContactNumber != null &&
                                             memberTemp.IsVerifiedPhone == true);
-                       
+
 
                         if (memberObj != null && !String.IsNullOrEmpty(memberObj.DeviceToken))
                         {
@@ -3575,7 +3593,7 @@ namespace Nooch.DataAccess
                                 memberTemp.IsDeleted == false && memberTemp.ContactNumber != null &&
                                 memberTemp.IsVerifiedPhone == true);
 
-                        
+
                         if (noochMemberfornotification != null)
                         {
                             try
@@ -3726,7 +3744,7 @@ namespace Nooch.DataAccess
         #endregion Reject Transaction (All Types) Methods
 
 
-        public  SynapseV3AddTrans_ReusableClass AddTransSynapseV3Reusable(string sender_oauth, string sender_fingerPrint,
+        public SynapseV3AddTrans_ReusableClass AddTransSynapseV3Reusable(string sender_oauth, string sender_fingerPrint,
             string sender_bank_node_id, string amount, string fee, string receiver_oauth, string receiver_fingerprint,
             string receiver_bank_node_id, string suppID_or_transID, string senderUserName, string receiverUserName, string iPForTransaction, string senderLastName, string recepientLastName)
         {
@@ -3760,7 +3778,7 @@ namespace Nooch.DataAccess
                     foreach (synapseSearchUserResponse_User senderUser in senderPermissions.users)
                     {
                         // iterating each node inside
-                        
+
                         if (senderUser.nodes != null && senderUser.nodes.Length > 0)
                         {
                             NodePermissionCheckResult nodePermCheckRes = CommonHelper.IsNodeActiveInGivenSetOfNodes(senderUser.nodes, sender_bank_node_id);
@@ -3808,7 +3826,7 @@ namespace Nooch.DataAccess
                 if (recepientPermissions.users != null && recepientPermissions.users.Length > 0)
                 {
                     foreach (synapseSearchUserResponse_User recUser in recepientPermissions.users)
-                    {   
+                    {
                         // iterating each node inside
                         if (recUser.nodes != null && recUser.nodes.Length > 0)
                         {
@@ -3927,7 +3945,7 @@ namespace Nooch.DataAccess
 
                     string UrlToHitV3 = "";
                     UrlToHitV3 = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/trans/add" : "https://synapsepay.com/api/v3/trans/add";
-                    
+
 
                     try
                     {
@@ -4011,9 +4029,9 @@ namespace Nooch.DataAccess
         /// </summary>
         /// <param name="requestDto"></param>
         /// <param name="requestId"></param>
-        public  string RequestMoneyToNonNoochUserUsingSynapse(RequestDto requestDto, out string requestId)
+        public string RequestMoneyToNonNoochUserUsingSynapse(RequestDto requestDto, out string requestId)
         {
-            
+
             var checkuser = CommonHelper.GetMemberDetailsByUserName(requestDto.MoneySenderEmailId);
 
             if (checkuser == null)
@@ -4088,9 +4106,9 @@ namespace Nooch.DataAccess
                 var transaction = new Transaction
                 {
                     TransactionId = Guid.NewGuid(),
-                    SenderId=Utility.ConvertToGuid(requestDto.MemberId),
-                    RecipientId=Utility.ConvertToGuid(requestDto.MemberId),
-                    
+                    SenderId = Utility.ConvertToGuid(requestDto.MemberId),
+                    RecipientId = Utility.ConvertToGuid(requestDto.MemberId),
+
                     Amount = requestDto.Amount,
                     TransactionDate = DateTime.Now,
                     Picture = (requestDto.Picture != null) ? requestDto.Picture : null,
@@ -4130,6 +4148,8 @@ namespace Nooch.DataAccess
                 {
                     _dbContext.Transactions.Add(transaction);
                     dbResult = _dbContext.SaveChanges();
+                    _dbContext.Entry(transaction).Reload();
+
                 }
 
                 if (dbResult > 0)
@@ -4207,7 +4227,7 @@ namespace Nooch.DataAccess
 
                     try
                     {
-                        Utility.SendEmail("requestSent",  fromAddress, RequesterEmail, null,
+                        Utility.SendEmail("requestSent", fromAddress, RequesterEmail, null,
                                                     "Your payment request to " + recipientsEmail + " is pending",
                                                     null, tokens, null, null, null);
 
@@ -4257,7 +4277,7 @@ namespace Nooch.DataAccess
                                          ? "Payment Request from Rent Scene"
                                          : RequesterFirstName + " " + RequesterLastName + " requested " + "$" + s22.ToString() + " with Nooch";
 
-                        Utility.SendEmail("requestReceivedToNewUser",  fromAddress,
+                        Utility.SendEmail("requestReceivedToNewUser", fromAddress,
                                                     recipientsEmail, null, subject, null, tokens2,
                                                     null, null, null);
 
@@ -4314,7 +4334,7 @@ namespace Nooch.DataAccess
                 return "Not allowed to request money from yourself.";
             }
 
-            
+
             var requester = CommonHelper.GetMemberDetails(requestDto.MemberId);
             var requestRecipient = CommonHelper.GetMemberDetails(requestDto.SenderId);
 
@@ -4428,13 +4448,9 @@ namespace Nooch.DataAccess
             var transaction = new Transaction
             {
                 TransactionId = Guid.NewGuid(),
-                SenderId =
-                requestRecipient.MemberId,
-                
-                RecipientId =
-                
-                                             requester.MemberId
-                ,
+                SenderId =  requestRecipient.MemberId,
+
+                RecipientId = requester.MemberId,
                 Amount = requestDto.Amount,
                 TransactionDate = DateTime.Now,
                 Picture = (requestDto.Picture != null) ? requestDto.Picture : null,
@@ -4477,8 +4493,9 @@ namespace Nooch.DataAccess
             else
             {
                 _dbContext.Transactions.Add(transaction);
-
                 dbResult = _dbContext.SaveChanges();
+                _dbContext.Entry(transaction).Reload();
+
             }
 
             #endregion Create New Transaction Record In DB
@@ -4569,7 +4586,7 @@ namespace Nooch.DataAccess
 
                 try
                 {
-                    Utility.SendEmail("requestSent",  fromAddress, toAddress, null,
+                    Utility.SendEmail("requestSent", fromAddress, toAddress, null,
                                                 "Your payment request to " + RequestReceiverFirstName + " " + RequestReceiverLastName + " is pending",
                                                 null, tokens, null, null, null);
 
@@ -4632,7 +4649,7 @@ namespace Nooch.DataAccess
                                      ? "$" + wholeAmount + " Payment Request from Rent Scene"
                                      : "Payment Request from " + RequesterFirstName + " " + RequesterLastName + " - " + "$" + wholeAmount;
 
-                    Utility.SendEmail("requestReceivedToExistingNonRegUser",  fromAddress, toAddress, null,
+                    Utility.SendEmail("requestReceivedToExistingNonRegUser", fromAddress, toAddress, null,
                                                 subject, null, tokens2, null, null, null);
 
                     Logger.Info("TDA -> RequestMoneyToExistingButNonregisteredUser - requestReceivedToNewUser email sent to [" + toAddress + "] successfully.");
