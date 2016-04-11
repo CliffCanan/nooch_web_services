@@ -809,6 +809,7 @@ namespace Nooch.Common
 
                     memberEntity.DateModified = DateTime.Now;
                     _dbContext.SaveChanges();
+                    _dbContext.Entry(memberEntity).Reload();
 
                     pinRetryCountInDb = memberEntity.InvalidPinAttemptCount.Equals(null)
                         ? 0
@@ -851,6 +852,7 @@ namespace Nooch.Common
                     memberEntity.InvalidPinAttemptTime = DateTime.Now;
                     memberEntity.Status = Constants.STATUS_SUSPENDED;
                     _dbContext.SaveChanges();
+                    _dbContext.Entry(memberEntity).Reload();
 
 
                     #region SendingEmailToUser
@@ -907,6 +909,7 @@ namespace Nooch.Common
 
                 if (memberObj != null)
                 {
+                    _dbContext.Entry(memberObj).Reload();
                     return !String.IsNullOrEmpty(memberObj.TransferLimit) ? memberObj.TransferLimit : "0";
                 }
                 return "0";
@@ -962,13 +965,13 @@ namespace Nooch.Common
         {
             //Logger.Info("MDA -> GetMemberNotificationSettings Initiated - [MemberId: " + memberId + "]");
 
-
-
             Guid memId = Utility.ConvertToGuid(memberId);
 
-
             var memberNotifications = _dbContext.MemberNotifications.FirstOrDefault(m => m.Member.MemberId == memId);
-
+            if (memberNotifications !=null)
+            { 
+                 _dbContext.Entry(memberNotifications).Reload();
+            }
             return memberNotifications;
 
         }
@@ -1011,6 +1014,7 @@ namespace Nooch.Common
 
                 if (landlordObj != null)
                 {
+                    _dbContext.Entry(landlordObj).Reload();
                     return landlordObj;
                 }
 
@@ -1080,9 +1084,12 @@ namespace Nooch.Common
 
 
             var memberIP = _dbContext.MembersIPAddresses.OrderByDescending(m => m.ModifiedOn).FirstOrDefault(m => m.MemberId == MemberIdPassed);
-
-            RecentIpOfUser = memberIP.Ip != null ? memberIP.Ip.ToString() : "54.201.43.89";
-
+            if(memberIP != null)
+            {
+                _dbContext.Entry(memberIP).Reload();
+            }
+            RecentIpOfUser = memberIP.Ip != null ? memberIP.Ip.ToString() : "54.201.43.89";         
+            
             return RecentIpOfUser;
         }
 
@@ -1215,6 +1222,7 @@ namespace Nooch.Common
                     }
                     else
                     {
+                        _dbContext.Entry(usersSynapseDetails).Reload();
                         usersSynapseOauthKey = GetDecryptedData(usersSynapseDetails.access_token);
                     }
 
@@ -1417,6 +1425,7 @@ namespace Nooch.Common
                                     {
                                         synapseRes.permission = synapseResponse.user.permission;
                                         _dbContext.SaveChanges();
+                                        _dbContext.Entry(synapseRes).Reload();
 
                                     }
                                 }
@@ -1524,7 +1533,6 @@ namespace Nooch.Common
                 // Save changes to Members DB
                 memberEntity.DateModified = DateTime.Now;
                 _dbContext.SaveChanges();
-
                 #endregion Parse Synapse Response
             }
             else
@@ -1533,8 +1541,6 @@ namespace Nooch.Common
                 Logger.Info("MDA -> sendUserSsnInfoToSynapseV3 FAILED: Member not found - [MemberId: " + MemberId + "]");
                 res.message = "Member not found";
             }
-
-
             return res;
         }
 
@@ -1554,7 +1560,7 @@ namespace Nooch.Common
 
 
             var usersSynapseDetails = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
-
+            
             if (usersSynapseDetails == null)
             {
                 Logger.Info("MDA -> submitDocumentToSynapseV3 ABORTED: Member's Synapse User Details not found. [MemberId: " + MemberId + "]");
@@ -1565,11 +1571,12 @@ namespace Nooch.Common
             }
             else
             {
+                _dbContext.Entry(usersSynapseOauthKey).Reload();
                 usersSynapseOauthKey = GetDecryptedData(usersSynapseDetails.access_token);
+               
             }
 
             #endregion Get User's Synapse OAuth Consumer Key
-
 
             #region Get User's Fingerprint
 
@@ -1709,10 +1716,6 @@ namespace Nooch.Common
 
                 input.client = client;
                 input.filter = filter;
-
-
-
-
 
                 string UrlToHit = "";
                 UrlToHit = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/search" : "https://synapsepay.com/api/v3/user/search";
@@ -1969,7 +1972,7 @@ namespace Nooch.Common
                 if (synCreateUserObject != null)
                 {
 
-
+                    _dbContext.Entry(synCreateUserObject).Reload();
                     var noochMemberObject = GetMemberDetails(synCreateUserObject.MemberId.ToString());
 
                     //refreshToken = GetDecryptedData(refreshToken);
@@ -2080,7 +2083,7 @@ namespace Nooch.Common
 
 
                             int a = _dbContext.SaveChanges();
-
+                            _dbContext.Entry(synCreateUserObject).Reload();
                             if (a > 0)
                             {
                                 Logger.Info(
@@ -2236,6 +2239,10 @@ namespace Nooch.Common
                                         memberTemp.MemberId.Value.Equals(memId) &&
                                         memberTemp.bank_name == bnaknameEncrypted &&
                                         memberTemp.oid == bankOId).ToList();    /// or this would bankid ?? need to check... -Malkit
+                    if(banksFound != null)
+                    {
+                        _dbContext.Entry(banksFound).Reload();
+                    }
                     var selectedBank = (from c in banksFound select c)
                                       .OrderByDescending(bank => bank.AddedOn)
                                       .Take(1)
@@ -2702,8 +2709,6 @@ namespace Nooch.Common
 
                         // FINALLY, UPDATE THIS BANK IN NOOCH DB
                         _dbContext.SaveChanges();
-
-
                         res.Message = "Success";
                         res.Is_success = true;
                         return res;
@@ -2739,6 +2744,10 @@ namespace Nooch.Common
             var selectedBank =
                 _dbContext.SynapseBanksOfMembers.Where(memberTemp =>
                         memberTemp.MemberId.Value.Equals(memId) && memberTemp.IsDefault != false).ToList();
+            if (selectedBank != null)
+            {
+                _dbContext.Entry(selectedBank).Reload();
+            }
             foreach (SynapseBanksOfMember sbank in selectedBank)
             {
                 sbank.IsDefault = false;
@@ -2807,7 +2816,7 @@ namespace Nooch.Common
                         lastIpFound.Ip = IP;
 
                         int a = _dbContext.SaveChanges();
-
+                        _dbContext.Entry(lastIpFound).Reload();
                         if (a > 0)
                         {
                             Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId SUCCESS For Saving IP Address (1) - [MemberId: " + MemberId + "]");
@@ -2827,7 +2836,7 @@ namespace Nooch.Common
                         mip.Ip = IP;
 
                         int b = _dbContext.SaveChanges();
-
+                        _dbContext.Entry(mip).Reload();
                         if (b > 0)
                         {
                             Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId SUCCESS For Saving IP Address (2) - [MemberId: " + MemberId + "]");
@@ -2868,7 +2877,7 @@ namespace Nooch.Common
                         member.DateModified = DateTime.Now;
                     }
                     int c = _dbContext.SaveChanges();
-
+                    _dbContext.Entry(member).Reload();
                     if (c > 0)
                     {
                         Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId SUCCESS For Saving Device ID - [MemberId: " + MemberId + "]");
@@ -2923,6 +2932,7 @@ namespace Nooch.Common
 
             if (noochMember != null)
             {
+                _dbContext.Entry(noochMember).Reload();
                 return noochMember.MemberId.ToString();
             }
 
@@ -2956,7 +2966,7 @@ namespace Nooch.Common
                     noochMember.DateModified = DateTime.Now;
 
                     DbContext dbc = GetDbContextFromEntity(noochMember);
-
+                    _dbContext.Entry(dbc).Reload();
                     int i = dbc.SaveChanges();
                     return i > 0 ? "Success" : "Failure";
                 }

@@ -86,8 +86,8 @@ namespace Nooch.API.Controllers
                 try
                 {
                     MembersDataAccess mda = new MembersDataAccess();
-                    string res = mda.UpdateMemberIpAddressAndDeviceId(member.MemberId, member.IpAddress, member.DeviceId);
-                    return new StringResult() { Result = mda.UpdateMemberIpAddressAndDeviceId(member.MemberId, member.IpAddress, member.DeviceId) };
+                    string res = CommonHelper.UpdateMemberIPAddressAndDeviceId(member.MemberId, member.IpAddress, member.DeviceId);
+                    return new StringResult() { Result = CommonHelper.UpdateMemberIPAddressAndDeviceId(member.MemberId, member.IpAddress, member.DeviceId) };
                 }
                 catch (Exception ex)
                 {
@@ -2417,7 +2417,7 @@ namespace Nooch.API.Controllers
                         {
                             try
                             {
-                                mda.UpdateMemberIPAddressAndDeviceId(memId, ip, "");
+                                CommonHelper.UpdateMemberIPAddressAndDeviceId(memId, ip, "");
                             }
                             catch (Exception ex)
                             {

@@ -964,7 +964,7 @@ namespace Nooch.Web.Controllers
 
                 rdm.senderImage = transaction.SenderPhoto;
                 rdm.senderName1 = transaction.Name;
-
+                rdm.bnkName = transaction.BankName;
                 string s = transaction.Amount.ToString("n2");
                 string[] s1 = s.Split('.');
                 if (s1.Length == 2)

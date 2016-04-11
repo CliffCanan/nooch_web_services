@@ -65,6 +65,8 @@ $(document).ready(function () {
             
             console.log("UserType is: [" + USERTYPE + "]");
 
+
+
             if (USERTYPE != "NonRegistered" &&
                 USERTYPE != "Existing") // Only other option is "New"
             {
