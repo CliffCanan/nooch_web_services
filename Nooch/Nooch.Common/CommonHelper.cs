@@ -288,6 +288,11 @@ namespace Nooch.Common
                 _dbContext.Members.FirstOrDefault(
                     m => m.MemberId == memGuid && m.IsDeleted == false);
 
+            if (noochMember != null)
+            {
+                _dbContext.Entry(noochMember).Reload();
+            }
+
             return noochMember != null ? GetDecryptedData(noochMember.UserName) : null;
         }
         public static string GetPhoneNumberByMemberId(string MemberId)
@@ -298,6 +303,10 @@ namespace Nooch.Common
             var noochMember =
                 _dbContext.Members.FirstOrDefault(
                     m => m.MemberId == memGuid && m.IsDeleted == false);
+            if (noochMember != null)
+            {
+                _dbContext.Entry(noochMember).Reload();
+            }
 
             return noochMember != null ? noochMember.ContactNumber : null;
         }
@@ -306,6 +315,11 @@ namespace Nooch.Common
             var noochMember =
                 _dbContext.Members.FirstOrDefault(
                     m => m.ContactNumber == memberPhone && m.IsDeleted == false);
+
+            if (noochMember != null)
+            {
+                _dbContext.Entry(noochMember).Reload();
+            }
 
             return noochMember != null ? noochMember.MemberId.ToString() : null;
         }
