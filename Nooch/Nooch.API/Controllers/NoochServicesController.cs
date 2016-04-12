@@ -6,7 +6,6 @@ using System.Net;
 using System.Net.Http;
 using System.Web.Helpers;
 using System.Web.Http;
-
 using AutoMapper;
 using Nooch.Common;
 using Nooch.Common.Cryptography.Algorithms;
@@ -30,7 +29,12 @@ namespace Nooch.API.Controllers
     public class NoochServicesController : ApiController
     {
 
-        private readonly NOOCHEntities _dbContext = new NOOCHEntities();
+        private readonly NOOCHEntities _dbContext = null;
+
+        public NoochServicesController()
+        {
+            _dbContext = new NOOCHEntities();
+        }
 
         //public IEnumerable<string> Get()
         //{
@@ -81,8 +85,8 @@ namespace Nooch.API.Controllers
                 try
                 {
                     MembersDataAccess mda = new MembersDataAccess();
-                    string res = mda.UpdateMemberIpAddressAndDeviceId(member.MemberId, member.IpAddress, member.DeviceId);
-                    return new StringResult() { Result = mda.UpdateMemberIpAddressAndDeviceId(member.MemberId, member.IpAddress, member.DeviceId) };
+                    string res = CommonHelper.UpdateMemberIPAddressAndDeviceId(member.MemberId, member.IpAddress, member.DeviceId);
+                    return new StringResult() { Result = CommonHelper.UpdateMemberIPAddressAndDeviceId(member.MemberId, member.IpAddress, member.DeviceId) };
                 }
                 catch (Exception ex)
                 {
@@ -2412,7 +2416,7 @@ namespace Nooch.API.Controllers
                         {
                             try
                             {
-                                mda.UpdateMemberIPAddressAndDeviceId(memId, ip, "");
+                                CommonHelper.UpdateMemberIPAddressAndDeviceId(memId, ip, "");
                             }
                             catch (Exception ex)
                             {
@@ -3278,6 +3282,8 @@ namespace Nooch.API.Controllers
 
                             if (i > 0)
                             {
+                                _dbContext.Entry(sbr).Reload();
+
                                 // Return if MFA, otherwise continue on and parse the banks
                                 if (res.Is_MFA)
                                 {
@@ -3373,6 +3379,7 @@ namespace Nooch.API.Controllers
 
                                     if (addBankToDB == 1)
                                     {
+                                        _dbContext.Entry(sbm).Reload();
                                         Logger.Info("MDA -> SynapseV3AddNode -SUCCESSFULLY Added Bank to DB - [MemberID: " + MemberId + "]");
 
                                         numOfBanksSavedSuccessfully += 1;
@@ -3909,6 +3916,8 @@ namespace Nooch.API.Controllers
 
                                     _dbContext.SynapseBanksOfMembers.Add(sbm);
                                     int addBankToDB = _dbContext.SaveChanges();
+                                    _dbContext.Entry(sbm).Reload();
+
 
                                     if (addBankToDB == 1)
                                     {
@@ -4220,6 +4229,8 @@ namespace Nooch.API.Controllers
 
             if (bdetails != null)
             {
+                _dbContext.Entry(bdetails).Reload();
+
                 res.IsBankFound = true;
                 res.Message = "OK";
                 res.IsPinRequired = Convert.ToBoolean(bdetails.IsPinRequired);
@@ -4631,7 +4642,7 @@ namespace Nooch.API.Controllers
 
         [HttpPost]
         [ActionName("MySettings")]
-       public StringResult MySettings(MySettingsInput mySettings, string accessToken)
+        public StringResult MySettings(MySettingsInput mySettings, string accessToken)
         {
             if (CommonHelper.IsValidRequest(accessToken, mySettings.MemberId))
             {
@@ -4664,9 +4675,9 @@ namespace Nooch.API.Controllers
                 {
                     Logger.Error("Service Layer -> MySettings FAILED - [MemberId: " + mySettings.MemberId + "], [Exception: " + ex + "]");
                     return new StringResult();
-                    
+
                 }
-                
+
             }
             else
             {
@@ -4683,13 +4694,13 @@ namespace Nooch.API.Controllers
                 try
                 {
                     Logger.Info("Service layer - ValidatePinNumber [memberId: " + memberId + "]");
-                    
+
                     return new StringResult { Result = CommonHelper.ValidatePinNumber(memberId, pinNo.Replace(" ", "+")) };
                 }
                 catch (Exception ex)
                 {
                     Logger.Error("Service layer - ValidatePinNumber FAILED [memberId: " + memberId + "]. Exception: [" + ex + "]");
-                    
+
                 }
                 return new StringResult();
             }
@@ -4701,7 +4712,7 @@ namespace Nooch.API.Controllers
 
         [HttpGet]
         [ActionName("ResetPin")]
-        StringResult ResetPin(string memberId, string oldPin, string newPin, string accessToken)
+        public StringResult ResetPin(string memberId, string oldPin, string newPin, string accessToken)
         {
             if (CommonHelper.IsValidRequest(accessToken, memberId))
             {
@@ -4716,12 +4727,161 @@ namespace Nooch.API.Controllers
                     Logger.Info("Service Layer - ResetPin - MemberId: [" + memberId + "]");
                     return new StringResult() { Result = "Server Error." };
                 }
-                
+
             }
             else
             {
-                return new StringResult(){Result = "Invalid oAuth Access Token."};
+                return new StringResult() { Result = "Invalid oAuth Access Token." };
             }
         }
+
+        // to get member notification settings
+        [HttpGet]
+        [ActionName("GetMemberNotificationSettings")]
+        public MemberNotificationSettingsInput GetMemberNotificationSettings(string memberId, string accessToken)
+        {
+            if (CommonHelper.IsValidRequest(accessToken, memberId))
+            {
+                try
+                {
+                    Logger.Info("Service Layer - GetMemberNotificationSettings - memberId: [" + memberId + "]");
+                    var notification = new MembersDataAccess().GetMemberNotificationSettings(memberId);
+                    if (notification != null)
+                    {
+
+                        return new MemberNotificationSettingsInput
+                        {
+                            NotificationId = notification.NotificationId.ToString(),
+                            MemberId = memberId,
+                            FriendRequest = notification.FriendRequest ?? false,
+                            InviteRequestAccept = notification.InviteRequestAccept ?? false,
+                            TransferSent = notification.TransferSent ?? false,
+                            TransferReceived = notification.TransferReceived ?? false,
+                            TransferAttemptFailure = notification.TransferAttemptFailure ?? false,
+                            EmailFriendRequest = notification.EmailFriendRequest ?? false,
+                            EmailInviteRequestAccept = notification.EmailInviteRequestAccept ?? false,
+                            EmailTransferSent = notification.EmailTransferSent ?? false,
+                            EmailTransferReceived = notification.EmailTransferReceived ?? false,
+                            EmailTransferAttemptFailure = notification.EmailTransferAttemptFailure ?? false,
+                            NoochToBank = notification.NoochToBank ?? false,
+                            BankToNooch = notification.BankToNooch ?? false,
+                            TransferUnclaimed = notification.TransferUnclaimed ?? false,
+                            BankToNoochRequested = notification.BankToNoochRequested ?? false,
+                            BankToNoochCompleted = notification.BankToNoochCompleted ?? false,
+                            NoochToBankRequested = notification.NoochToBankRequested ?? false,
+                            NoochToBankCompleted = notification.NoochToBankCompleted ?? false,
+                            InviteReminder = notification.InviteReminder ?? false,
+                            LowBalance = notification.LowBalance ?? false,
+                            ValidationRemainder = notification.ValidationRemainder ?? false,
+                            ProductUpdates = notification.ProductUpdates ?? false,
+                            NewAndUpdate = notification.NewAndUpdate ?? false
+                        };
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Layer Error- GetMemberNotificationSettings - memberId: [" + memberId + "] Error : [" + ex + " ].");
+                    throw new Exception("Server Error.");
+                }
+
+
+            }
+            else
+            {
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
+
+        // to save email notification settings of users
+
+        [HttpPost]
+        [ActionName("MemberEmailNotificationSettings")]
+        public StringResult MemberEmailNotificationSettings(
+            MemberNotificationsNewStringTypeSettings memberNotificationSettings, string accessToken)
+        {
+            if (CommonHelper.IsValidRequest(accessToken, memberNotificationSettings.MemberId))
+            {
+                try
+                {
+                    Logger.Info("Service Layer - MemberEmailNotificationSettings - memberId: [" + memberNotificationSettings.MemberId + "]");
+
+                    return new StringResult
+                    {
+                        Result = new MembersDataAccess().MemberEmailNotificationSettings("",
+                            memberNotificationSettings.MemberId, null, null,
+                            (memberNotificationSettings.EmailTransferSent == "1") ? true : false, (memberNotificationSettings.EmailTransferReceived == "1") ? true : false, (memberNotificationSettings.EmailTransferAttemptFailure == "1") ? true : false,
+                            (memberNotificationSettings.TransferUnclaimed == "1") ? true : false, (memberNotificationSettings.BankToNoochRequested == "1") ? true : false, (memberNotificationSettings.BankToNoochCompleted == "1") ? true : false,
+                            (memberNotificationSettings.NoochToBankRequested == "1") ? true : false, (memberNotificationSettings.NoochToBankCompleted == "1") ? true : false, null,
+                            null, null, null, null)
+                    };
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Layer Error- MemberEmailNotificationSettings - memberId: [" + memberNotificationSettings.MemberId + "] Error : [" + ex + " ].");
+                    throw new Exception("Server Error.");
+                }
+
+            }
+            else
+            {
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
+
+        [HttpPost]
+        [ActionName("MemberPushNotificationSettings")]
+        public StringResult MemberPushNotificationSettings(MemberNotificationsNewStringTypeSettings memberNotificationSettings, string accessToken)
+        {
+            if (CommonHelper.IsValidRequest(accessToken, memberNotificationSettings.MemberId))
+            {
+                try
+                {
+                    Logger.Info("Service Layer - MemberPushNotificationSettings - [MemberId: " + memberNotificationSettings.MemberId + "]");
+                    return new StringResult
+                    {
+                        Result = new MembersDataAccess().MemberPushNotificationSettings(memberNotificationSettings.NotificationId,
+                            memberNotificationSettings.MemberId, (memberNotificationSettings.FriendRequest == "1") ? true : false, (memberNotificationSettings.InviteRequestAccept == "1") ? true : false,
+                            (memberNotificationSettings.TransferReceived == "1") ? true : false, (memberNotificationSettings.TransferAttemptFailure == "1") ? true : false,
+                            (memberNotificationSettings.NoochToBank == "1") ? true : false, (memberNotificationSettings.BankToNooch == "1") ? true : false)
+                    };
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Layer Error- MemberPushNotificationSettings - memberId: [" + memberNotificationSettings.MemberId + "] Error : [" + ex + " ].");
+                    throw new Exception("Server Error.");
+                }
+
+            }
+            else
+            {
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
+
+        [HttpGet]
+        [ActionName("SetShowInSearch")]
+        public StringResult SetShowInSearch(string memberId, bool search, string accessToken)
+        {
+            try
+            {
+                Logger.Info("Service Layer - SetShowInSearch Initiated - MemberId: [" + memberId + "]");
+                var mda = new MembersDataAccess();
+                return new StringResult { Result = mda.SetShowInSearch(memberId, search) };
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Layer Error- SetShowInSearch - memberId: [" + memberId + "] Error : [" + ex + " ].");
+                throw new Exception("Server Error.");
+            }
+
+
+        }
+
+
+
     }
 }
