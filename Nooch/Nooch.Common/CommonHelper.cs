@@ -2574,11 +2574,11 @@ namespace Nooch.Common
 
                                 var firstNameForEmail = String.IsNullOrEmpty(firstNameFromBank)
                                                         ? ""
-                                                        : " " + CommonHelper.UppercaseFirst(firstNameFromBank); // Adding the extra space at the beginning of the FirstName for the Email template: So it's either "Hi," or "Hi John,"
-                                var fullNameFromBankTitleCase = CommonHelper.UppercaseFirst(firstNameFromBank) + " " +
-                                                                CommonHelper.UppercaseFirst(lastNameFromBank);
+                                                        : " " + UppercaseFirst(firstNameFromBank); // Adding the extra space at the beginning of the FirstName for the Email template: So it's either "Hi," or "Hi John,"
+                                var fullNameFromBankTitleCase = UppercaseFirst(firstNameFromBank) + " " +
+                                                                UppercaseFirst(lastNameFromBank);
                                 var link = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
-                                                        "/trans/BankVerification.aspx?tokenId=" + CommonHelper.GetEncryptedData(selectedBank.Id.ToString()));
+                                                        "Nooch/BankVerification?tokenId=" + GetEncryptedData(selectedBank.Id.ToString()));
 
                                 var tokens = new Dictionary<string, string>
                                             {

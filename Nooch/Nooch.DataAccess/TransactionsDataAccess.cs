@@ -699,7 +699,7 @@ namespace Nooch.DataAccess
                         string senderLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member.LastName));
 
                         string payLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
-                                                       "trans/payRequest.aspx?TransactionId=" + trans.TransactionId);
+                                                       "Nooch/PayRequest?TransactionId=" + trans.TransactionId);
 
                         string s22 = trans.Amount.ToString("n2");
                         string[] s32 = s22.Split('.');
@@ -750,7 +750,7 @@ namespace Nooch.DataAccess
                             #region If invited by email
 
                             string rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
-                                                              "trans/rejectMoney.aspx?TransactionId=" + trans.TransactionId +
+                                                              "Nooch/RejectMoney?TransactionId=" + trans.TransactionId +
                                                               "&UserType=U6De3haw2r4mSgweNpdgXQ==" +
                                                               "&LinkSource=75U7bZRpVVxLNbQuoMQEGQ==" +
                                                               "&TransType=T3EMY1WWZ9IscHIj3dbcNw==");
@@ -798,7 +798,7 @@ namespace Nooch.DataAccess
                             string AcceptShortLink = "";
 
                             string rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
-                                                              "trans/rejectMoney.aspx?TransactionId=" + trans.TransactionId +
+                                                              "Nooch/RejectMoney?TransactionId=" + trans.TransactionId +
                                                               "&UserType=U6De3haw2r4mSgweNpdgXQ==" +
                                                               "&LinkSource=Um3I3RNHEGWqKM9MLsQ1lg==" +
                                                               "&TransType=T3EMY1WWZ9IscHIj3dbcNw==");
@@ -886,7 +886,7 @@ namespace Nooch.DataAccess
 
                         else if (trans.Member.MemberId != null)
                         {
-                            string rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"), "trans/rejectMoney.aspx?TransactionId=" + TransId + "&UserType=mx5bTcAYyiOf9I5Py9TiLw==&LinkSource=75U7bZRpVVxLNbQuoMQEGQ==&TransType=T3EMY1WWZ9IscHIj3dbcNw==");
+                            string rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"), "Nooch/RejectMoney?TransactionId=" + TransId + "&UserType=mx5bTcAYyiOf9I5Py9TiLw==&LinkSource=75U7bZRpVVxLNbQuoMQEGQ==&TransType=T3EMY1WWZ9IscHIj3dbcNw==");
                             string paylink = "nooch://";
 
                             senderFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member1.FirstName));
@@ -994,13 +994,13 @@ namespace Nooch.DataAccess
                                                                                             : "75U7bZRpVVxLNbQuoMQEGQ=="; // "Email"
 
                         string rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
-                                                          "trans/rejectMoney.aspx?TransactionId=" + trans.TransactionId +
+                                                          "Nooch/RejectMoney?TransactionId=" + trans.TransactionId +
                                                           "&UserType=U6De3haw2r4mSgweNpdgXQ==" +
                                                           "&LinkSource=" + linkSource +
                                                           "&TransType=DrRr1tU1usk7nNibjtcZkA==");
 
                         string acceptLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
-                                                          "trans/depositMoney.aspx?TransactionId=" + trans.TransactionId.ToString());
+                                                          "Nooch/DepositMoney?TransactionId=" + trans.TransactionId.ToString());
 
                         string s22 = trans.Amount.ToString("n2");
                         string[] s32 = s22.Split('.');
@@ -1375,7 +1375,7 @@ namespace Nooch.DataAccess
                         if (!alreadySentEmailToSender)
                         {
                             // This cancel link will currently only cancel the individual request to the 1st recipient (NEED NEW WAY TO CANCEL ALL REQUESTS FOR A GROUP REQUEST)
-                            string cancelLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"), "/MyAccounts/CancelMoneyRequestt.aspx?TransactionId=" + requestId + "&MemberId=" + requestDto.MemberId.ToString());
+                            string cancelLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"), "/Nooch/CancelMoneyRequest?TransactionId=" + requestId + "&MemberId=" + requestDto.MemberId.ToString() + "&userType=mx5bTcAYyiOf9I5Py9TiLw==");
                             var tokens = new Dictionary<string, string>
 								{
 									{Constants.PLACEHOLDER_FIRST_NAME, RequesterFirstName},
@@ -1406,7 +1406,7 @@ namespace Nooch.DataAccess
                         }
 
                         // Send 1 email to EACH Recipient
-                        string otherlink2 = String.Concat(Utility.GetValueFromConfig("ApplicationURL"), "/MyAccounts/rejectRequest.aspx?TransactionId=" + transaction.TransactionId);
+                        string otherlink2 = String.Concat(Utility.GetValueFromConfig("ApplicationURL"), "/Nooch/RejectMoney?TransactionId=" + transaction.TransactionId + "&UserType=mx5bTcAYyiOf9I5Py9TiLw==&LinkSource=75U7bZRpVVxLNbQuoMQEGQ==&TransType=T3EMY1WWZ9IscHIj3dbcNw==");
                         var toAddress2 = CommonHelper.GetDecryptedData(transaction.Member.UserName);
 
                         var tokensRequestMultipleRecipients = new Dictionary<string, string>
@@ -1542,7 +1542,8 @@ namespace Nooch.DataAccess
                     string RequestReceiverFirstName = CommonHelper.UppercaseFirst((CommonHelper.GetDecryptedData(sender.FirstName)).ToString());
                     string RequestReceiverLastName = CommonHelper.UppercaseFirst((CommonHelper.GetDecryptedData(sender.LastName)).ToString());
 
-                    string cancelLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"), "trans/CancelRequest.aspx?TransactionId=" + requestId + "&MemberId=" + requestDto.MemberId + "&UserType=mx5bTcAYyiOf9I5Py9TiLw==");
+                    string cancelLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"), "/Nooch/CancelMoneyRequest?TransactionId=" + requestId + "&MemberId=" + requestDto.MemberId.ToString() + "&userType=mx5bTcAYyiOf9I5Py9TiLw==");
+                    
 
                     string wholeAmount = requestDto.Amount.ToString("n2");
                     string[] s32 = wholeAmount.Split('.');
@@ -1653,13 +1654,13 @@ namespace Nooch.DataAccess
                             string userType = "6KX3VJv3YvoyK+cemdsvMA=="; // "NonRegistered"
 
                             string rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
-                                                              "trans/rejectMoney.aspx?TransactionId=" + requestId +
+                                                              "Nooch/RejectMoney?TransactionId=" + requestId +
                                                               "&UserType=" + userType +
                                                               "&LinkSource=75U7bZRpVVxLNbQuoMQEGQ==" +
                                                               "&TransType=T3EMY1WWZ9IscHIj3dbcNw==");
 
                             string paylink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
-                                                           "trans/payRequest.aspx?TransactionId=" + requestId +
+                                                           "Nooch/PayRequest?TransactionId=" + requestId +
                                                            "&UserType=" + userType);
 
                             if (isForRentScene)
@@ -1695,7 +1696,7 @@ namespace Nooch.DataAccess
                             // and link source would be 'Email'
 
                             string rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
-                                                              "trans/rejectMoney.aspx?TransactionId=" + transaction.TransactionId +
+                                                              "Nooch/RejectMoney?TransactionId=" + transaction.TransactionId +
                                                               "&UserType=mx5bTcAYyiOf9I5Py9TiLw==" +
                                                               "&LinkSource=75U7bZRpVVxLNbQuoMQEGQ==" +
                                                               "&TransType=T3EMY1WWZ9IscHIj3dbcNw==");
@@ -4167,7 +4168,7 @@ namespace Nooch.DataAccess
                                                                              : CommonHelper.GetDecryptedData(requester.UserName);
 
                     string cancelLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
-                                                      "trans/CancelRequest.aspx?TransactionId=" + requestId +
+                                                      "Nooch/CancelRequest?TransactionId=" + requestId +
                                                       "&MemberId=" + requestDto.MemberId +
                                                       "&UserType=U6De3haw2r4mSgweNpdgXQ==");
 
@@ -4245,13 +4246,13 @@ namespace Nooch.DataAccess
                     // TransType would = 'Request'
                     // and link source would = 'Email'
                     cancelLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
-                                               "trans/rejectMoney.aspx?TransactionId=" + requestId +
+                                               "Nooch/RejectMoney?TransactionId=" + requestId +
                                                "&UserType=U6De3haw2r4mSgweNpdgXQ==" +
                                                "&LinkSource=75U7bZRpVVxLNbQuoMQEGQ==&" +
                                                "TransType=T3EMY1WWZ9IscHIj3dbcNw==");
 
                     string paylink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
-                                                   "trans/payRequest.aspx?TransactionId=" + requestId);
+                                                   "Nooch/PayRequest?TransactionId=" + requestId);
 
                     if (isForRentScene)
                     {
@@ -4521,7 +4522,7 @@ namespace Nooch.DataAccess
                     requesterPic = requester.Photo.ToString();
                 }
 
-                string cancelLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"), "trans/CancelRequest.aspx?TransactionId=" + requestId +
+                string cancelLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"), "Nooch/CancelRequest?TransactionId=" + requestId +
                                                                                                 "&MemberId=" + requestDto.MemberId +
                                                                                                 "&UserType=6KX3VJv3YvoyK+cemdsvMA==");
 
@@ -4617,13 +4618,13 @@ namespace Nooch.DataAccess
                 }
 
                 string rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
-                                                  "trans/rejectMoney.aspx?TransactionId=" + requestId +
+                                                  "Nooch/RejectMoney?TransactionId=" + requestId +
                                                   "&UserType=" + userType +
                                                   "&LinkSource=75U7bZRpVVxLNbQuoMQEGQ==" +
                                                   "&TransType=T3EMY1WWZ9IscHIj3dbcNw==");
 
                 string paylink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
-                                               "trans/payRequest.aspx?TransactionId=" + requestId +
+                                               "Nooch/PayRequest?TransactionId=" + requestId +
                                                "&UserType=" + userType);
 
                 var tokens2 = new Dictionary<string, string>
