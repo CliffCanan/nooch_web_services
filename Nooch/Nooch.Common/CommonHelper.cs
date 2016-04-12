@@ -1045,7 +1045,7 @@ namespace Nooch.Common
 
             var memberIP = _dbContext.MembersIPAddresses.OrderByDescending(m => m.ModifiedOn).FirstOrDefault(m => m.MemberId == MemberIdPassed);
 
-            RecentIpOfUser = memberIP.Ip != null ? memberIP.Ip.ToString() : "54.201.43.89";
+            RecentIpOfUser = memberIP != null ? memberIP.Ip.ToString() : "54.201.43.89";
 
             return RecentIpOfUser;
         }

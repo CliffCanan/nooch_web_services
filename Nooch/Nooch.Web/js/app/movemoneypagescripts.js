@@ -63,7 +63,7 @@ $(document).ready(function () {
         {
             //console.log(checkIfStillPending());
             
-            console.log("UserType is: [" + USERTYPE + "]");
+            console.log("UserType is: [" + USERTYPE + "]") ;
 
             if (USERTYPE != "NonRegistered" &&
                 USERTYPE != "Existing") // Only other option is "New"
@@ -650,10 +650,10 @@ function createRecord() {
         urlToUse = "RegisterUserWithSynpForDepositMoney";
     }
     else // must be a Request or Rent payment (which also uses the payRequest page)
-    {
-        urlToUse = "RegisterUserWithSynp";
+    { 
+        urlToUse = "RegisterUserWithSynpForPayRequest";
     }
-    //console.log("URL to use: " + urlToUse);
+    console.log("URL to use: " + urlToUse);
 
     var dataToSend = "";
 

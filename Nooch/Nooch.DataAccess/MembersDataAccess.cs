@@ -1936,6 +1936,8 @@ namespace Nooch.DataAccess
                             scur.IsDeleted = true;
                             scur.ModifiedOn = DateTime.Now;
                             _dbContext.SaveChanges();
+                        
+                        
                         }
 
 
@@ -2480,7 +2482,7 @@ namespace Nooch.DataAccess
                         if (createSynapseUserResult.success == true &&
                             !String.IsNullOrEmpty(createSynapseUserResult.oauth.oauth_key))
                         {
-                            Logger.Info("MDA -> RegisterExistingUserWithSynapseV2 - Synapse User created SUCCESSFULLY (LN: 6796) - " +
+                            Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 - Synapse User created SUCCESSFULLY (LN: 6796) - " +
                                                    "[oauth_consumer_key: " + createSynapseUserResult.oauth_consumer_key + "]. Now attempting to save in Nooch DB.");
 
                             //   Entry in SynapseCreateUser Has been already done from RegisterUserWithSynapseV3 method  //

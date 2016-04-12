@@ -964,7 +964,7 @@ namespace Nooch.Web.Controllers
 
                 rdm.senderImage = transaction.SenderPhoto;
                 rdm.senderName1 = transaction.Name;
-
+                rdm.bnkName = transaction.BankName;
                 string s = transaction.Amount.ToString("n2");
                 string[] s1 = s.Split('.');
                 if (s1.Length == 2)
@@ -994,6 +994,9 @@ namespace Nooch.Web.Controllers
         }
         public ActionResult PayRequest()
         {
+           //string s= String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
+           //                                    "trans/payRequest.aspx?TransactionId=" + "2342342" +
+           //                                    "&UserType=" + "2342342");
             ResultPayRequest rpr = new ResultPayRequest();
             Logger.Info("payRequest CodeBehind -> Page_load Initiated - [TransactionId Parameter: " + Request.QueryString["TransactionId"] + "]");
 
@@ -1329,7 +1332,7 @@ namespace Nooch.Web.Controllers
             return rpr;
         }
 
-        public  ActionResult RegisterUserWithSynp(string transId, string memberId, string userEm, string userPh, string userName, string userPw, string ssn, string dob, string address, string zip, string fngprnt, string ip)
+        public  ActionResult RegisterUserWithSynpForPayRequest(string transId, string memberId, string userEm, string userPh, string userName, string userPw, string ssn, string dob, string address, string zip, string fngprnt, string ip)
         {
             Logger.Info("payRequest Code Behind -> RegisterNonNoochUserWithSynapse Initiated");
 

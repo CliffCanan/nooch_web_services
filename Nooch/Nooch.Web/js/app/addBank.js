@@ -1199,9 +1199,8 @@ function SetDefaultAct() {
 
 
 function sendToRedUrl() {
-  
-    console.log("RED_URL is: [" + RED_URL + "]");
-     
+    console.log("RED_URL is is: [" + RED_URL + "]");
+
    
     // First, check if this is a Landlord
     if (fromLandlordApp == "yes")
@@ -1315,7 +1314,42 @@ function sendToRedUrl() {
 
             //window.location = RED_URL;
         }
+        else if (RED_URL.indexOf('PayRequestComplete') > 1) {
+           
+            swal({
+                title: "Bank Linked Successfully",
+                text: "<p>Thanks for completing this <strong>one-time</strong> process. &nbsp;Now you can make secure payments with anyone and never share your bank details!</p>",
+                type: "success",
+                confirmButtonColor: "#3fabe1",
+                confirmButtonText: "Awesome",
+                customClass: "largeText",
+                html: true
+            }, function (isConfirm) {
+                $('.addBankContainer-body').block({
+                    message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Finishing...</span>',
+                    css: {
+                        border: 'none',
+                        padding: '20px 8px 14px',
+                        backgroundColor: '#000',
+                        '-webkit-border-radius': '12px',
+                        '-moz-border-radius': '12px',
+                        'border-radius': '12px',
+                        opacity: '.75',
+                        width: '80%',
+                        left: '10%',
+                        top: '25px',
+                        color: '#fff'
+                    }
+                });
 
+                setTimeout(function () {
+                    window.top.location.href = RED_URL;
+                    // window.top.location.href = "http://localhost:2061/Nooch/PayRequestComplete?mem_id=" + MEMBER_ID;
+                }, 400);
+            });
+
+            //window.location = RED_URL;
+        }
          
 
 
