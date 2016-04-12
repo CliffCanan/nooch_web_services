@@ -1100,6 +1100,7 @@ namespace Nooch.Common
             var memberIP = _dbContext.MembersIPAddresses.OrderByDescending(m => m.ModifiedOn).FirstOrDefault(m => m.MemberId == MemberIdPassed);
             if(memberIP != null)
             {
+                
                 _dbContext.Entry(memberIP).Reload();
             }
             RecentIpOfUser = memberIP.Ip != null ? memberIP.Ip.ToString() : "54.201.43.89";         
@@ -2756,7 +2757,7 @@ namespace Nooch.Common
             var selectedBank =
                 _dbContext.SynapseBanksOfMembers.Where(memberTemp =>
                         memberTemp.MemberId.Value.Equals(memId) && memberTemp.IsDefault != false).ToList();
-            if (selectedBank != null)
+            if (selectedBank.Count>0)
             {
                 _dbContext.Entry(selectedBank).Reload();
             }
@@ -2828,9 +2829,10 @@ namespace Nooch.Common
                         lastIpFound.Ip = IP;
 
                         int a = _dbContext.SaveChanges();
-                        _dbContext.Entry(lastIpFound).Reload();
+                        
                         if (a > 0)
                         {
+                            _dbContext.Entry(lastIpFound).Reload();
                             Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId SUCCESS For Saving IP Address (1) - [MemberId: " + MemberId + "]");
                             ipSavedSuccessfully = true;
                         }
@@ -2848,9 +2850,10 @@ namespace Nooch.Common
                         mip.Ip = IP;
 
                         int b = _dbContext.SaveChanges();
-                        _dbContext.Entry(mip).Reload();
+                        
                         if (b > 0)
                         {
+                            _dbContext.Entry(mip).Reload();
                             Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId SUCCESS For Saving IP Address (2) - [MemberId: " + MemberId + "]");
                             ipSavedSuccessfully = true;
                         }
@@ -2882,16 +2885,17 @@ namespace Nooch.Common
                     // CLIFF (8/12/15): This "Device ID" will be stored in Nooch's DB as "UDID1" and is specifically for Synapse's "Fingerprint" requirement...
                     //                  NOT for push notifications, which should use the "DeviceToken" in Nooch's DB.  (Confusing, but they are different values)
 
-                    var member = _dbContext.Members.Where(memberTemp => memberTemp.MemberId == memId).FirstOrDefault();
+                    var member = _dbContext.Members.FirstOrDefault(memberTemp => memberTemp.MemberId == memId);
                     if (member != null)
                     {
                         member.UDID1 = DeviceId;
                         member.DateModified = DateTime.Now;
                     }
                     int c = _dbContext.SaveChanges();
-                    _dbContext.Entry(member).Reload();
+                    
                     if (c > 0)
                     {
+                        _dbContext.Entry(member).Reload();
                         Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId SUCCESS For Saving Device ID - [MemberId: " + MemberId + "]");
                         udidIdSavedSuccessfully = true;
                     }
