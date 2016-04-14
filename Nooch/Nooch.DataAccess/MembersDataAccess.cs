@@ -2273,13 +2273,13 @@ namespace Nooch.DataAccess
                 // Convert string Date of Birth to DateTime
                 if (String.IsNullOrEmpty(dob)) // ...it shouldn't ever be empty for this method
                 {
-                    Logger.Info("MDA -> RegisterExistingUserWithSynapseV2 - DOB was NULL, reassigning it to 'Jan 20, 1981' - [Name: " + userName + "], [TransId: " + transId + "]");
+                    Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 - DOB was NULL, reassigning it to 'Jan 20, 1981' - [Name: " + userName + "], [TransId: " + transId + "]");
                     dob = "01/20/1981";
                 }
                 DateTime dateofbirth;
                 if (!DateTime.TryParse(dob, out dateofbirth))
                 {
-                    Logger.Info("MDA -> RegisterExistingUserWithSynapseV2 - DOB was NULL - [Name: " + userName + "], [TransId: " + transId + "]");
+                    Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 - DOB was NULL - [Name: " + userName + "], [TransId: " + transId + "]");
                 }
 
                 string pinNumber = Utility.GetRandomPinNumber();
@@ -2313,7 +2313,7 @@ namespace Nooch.DataAccess
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("MDA -> RegisterExistingUserWithSynapseV2 EXCEPTION on trying to save new Member's IP Address - " +
+                    Logger.Error("MDA -> RegisterExistingUserWithSynapseV3 EXCEPTION on trying to save new Member's IP Address - " +
                                            "[MemberID: " + memberId + "], [Exception: " + ex + "]");
                 }
 
@@ -2330,7 +2330,7 @@ namespace Nooch.DataAccess
                         if (tenantObj != null)
                         {
                             _dbContext.Entry(tenantObj).Reload();
-                            Logger.Info("MDA -> RegisterExistingUserWithSynapseV2 - This is a TENANT - About to update Tenants Table " +
+                            Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 - This is a TENANT - About to update Tenants Table " +
                                                   "MemberID: [" + memberId + "]");
 
                             tenantObj.FirstName = FirstName;
@@ -2491,12 +2491,12 @@ namespace Nooch.DataAccess
                     try
                     {
                         // Now call Synapse create user service
-                        Logger.Info("** MDA -> RegisterExistingUserWithSynapseV2 ABOUT TO CALL CREATE SYNAPSE USER METHOD  **");
+                        Logger.Info("** MDA -> RegisterExistingUserWithSynapseV3 ABOUT TO CALL CREATE SYNAPSE USER METHOD  **");
                         createSynapseUserResult = RegisterUserWithSynapseV3(memberObj.MemberId.ToString());
                     }
                     catch (Exception ex)
                     {
-                        Logger.Error("MDA -> RegisterExistingUserWithSynapseV2 - createSynapseUser FAILED - [Username: " + userEmail +
+                        Logger.Error("MDA -> RegisterExistingUserWithSynapseV3 - createSynapseUser FAILED - [Username: " + userEmail +
                                                "], [Exception: " + ex.Message + "]");
                     }
 

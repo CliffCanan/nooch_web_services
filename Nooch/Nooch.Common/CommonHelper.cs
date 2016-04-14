@@ -1151,7 +1151,7 @@ namespace Nooch.Common
                     // Member found, now check that they have added a full Address (including city, zip), SSN, & DoB
 
                     // Check for Fingerprint (UDID1 in the database)
-                    if (string.IsNullOrEmpty(memberEntity.UDID1.ToString()))
+                    if (string.IsNullOrEmpty(memberEntity.UDID1))
                     {
                         isMissingSomething = true;
                         res.message = "MDA - Missing UDID";
@@ -1162,7 +1162,7 @@ namespace Nooch.Common
                     }
 
                     // Check for Address
-                    if (string.IsNullOrEmpty(memberEntity.Address.ToString()))
+                    if (string.IsNullOrEmpty(memberEntity.Address))
                     {
                         isMissingSomething = true;
                         res.message += " MDA - Missing Address";
@@ -1173,7 +1173,7 @@ namespace Nooch.Common
                     }
 
                     // Check for City
-                    if (string.IsNullOrEmpty(memberEntity.City.ToString()))
+                    if (string.IsNullOrEmpty(memberEntity.City))
                     {
                         isMissingSomething = true;
                         res.message += " MDA - Missing City";
@@ -1184,7 +1184,7 @@ namespace Nooch.Common
                     }
 
                     // Check for ZIP
-                    if (string.IsNullOrEmpty(memberEntity.Zipcode.ToString()))
+                    if (string.IsNullOrEmpty(memberEntity.Zipcode))
                     {
                         isMissingSomething = true;
                         res.message += " MDA - Missing ZIP";
@@ -1195,7 +1195,7 @@ namespace Nooch.Common
                     }
 
                     // Check for SSN
-                    if (string.IsNullOrEmpty(memberEntity.SSN.ToString()))
+                    if (string.IsNullOrEmpty(memberEntity.SSN))
                     {
                         isMissingSomething = true;
                         res.message += " MDA - Missing SSN";
@@ -1206,7 +1206,7 @@ namespace Nooch.Common
                     }
 
                     // Check for Date Of Birth (Not encrypted)
-                    if (string.IsNullOrEmpty(memberEntity.DateOfBirth.ToString()))
+                    if (memberEntity.DateOfBirth==null)
                     {
                         isMissingSomething = true;
                         res.message += " MDA - Missing Date of Birth";
@@ -2759,10 +2759,10 @@ namespace Nooch.Common
             var selectedBank =
                 _dbContext.SynapseBanksOfMembers.Where(memberTemp =>
                         memberTemp.MemberId.Value.Equals(memId) && memberTemp.IsDefault != false).ToList();
-            if (selectedBank.Count>0)
-            {
-                _dbContext.Entry(selectedBank).Reload();
-            }
+            //if (selectedBank.Count>0)
+            //{
+            //    _dbContext.Entry(selectedBank).Reload();
+            //}
             foreach (SynapseBanksOfMember sbank in selectedBank)
             {
                 sbank.IsDefault = false;

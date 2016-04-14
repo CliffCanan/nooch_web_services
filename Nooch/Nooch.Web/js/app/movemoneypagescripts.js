@@ -115,7 +115,7 @@ $(document).ready(function () {
                     //console.log(ipusr);
                 });
             }
-            else if (USERTYPE == "NonRegistered" && 
+            else if ((USERTYPE == "NonRegistered" || USERTYPE == "Existing") && 
                      $('#bnkName').val() == "no bank found")
             {
                 
