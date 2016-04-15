@@ -1483,7 +1483,7 @@ namespace Nooch.Web.Controllers
             }
         }
 
-            [HttpPost]
+        [HttpPost]
         [ActionName("SetDefaultBank")]
         public ActionResult SetDefaultBank(setDefaultBankInput input)
         {

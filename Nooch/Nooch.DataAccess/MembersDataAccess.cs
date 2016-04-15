@@ -1766,7 +1766,7 @@ namespace Nooch.DataAccess
                 logins.email = CommonHelper.GetDecryptedData(noochMember.UserName);
                 logins.password = CommonHelper.GetDecryptedData(noochMember.Password);
                 //logins.password = "";
-                logins.read_only = true; // CLIFF (10/10/12) - I think we might want to keep this false (which is default) - will ask Synapse to clarify
+                logins.read_only = false; // CLIFF (10/10/12) - I think we might want to keep this false (which is default) - will ask Synapse to clarify
 
                 payload.logins = new createUser_login[1];
                 payload.logins[0] = logins;
