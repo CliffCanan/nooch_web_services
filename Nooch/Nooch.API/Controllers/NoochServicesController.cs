@@ -38,8 +38,6 @@ namespace Nooch.API.Controllers
 
         //public IEnumerable<string> Get()
         //{
-
-
         //    Logger.Info("came in log");
 
         //    var config = new MapperConfiguration(cfg => cfg.CreateMap<Member, MemberEnity>());
@@ -63,16 +61,12 @@ namespace Nooch.API.Controllers
             {
                 Logger.Info("Service Layer - ForgotPassword - [userName: " + userName + "]");
 
-
                 return new StringResult { Result = CommonHelper.ForgotPassword(userName.Input) };
             }
             catch (Exception ex)
             {
                 return new StringResult() { Result = "" };
-
             }
-
-
         }
 
 
@@ -98,8 +92,6 @@ namespace Nooch.API.Controllers
             else
             {
                 throw new Exception("Invalid OAuth 2 Access");
-
-
             }
         }
 
@@ -155,22 +147,18 @@ namespace Nooch.API.Controllers
             }
         }
 
-
-
         [HttpGet]
         [ActionName("GetMemberIdByUserName")]
         public StringResult GetMemberIdByUserName(string userName)
         {
             try
             {
-
                 return new StringResult { Result = CommonHelper.GetMemberIdByUserName(userName) };
             }
             catch (Exception ex)
             {
                 Logger.Error("Service Layer - GetMemberByUserName FAILED - [userName: " + userName +
                                        "], Exception: [" + ex + "]");
-
             }
             return new StringResult();
         }
@@ -181,14 +169,12 @@ namespace Nooch.API.Controllers
         {
             try
             {
-
                 return new StringResult { Result = CommonHelper.GetMemberUsernameByMemberId(memberId) };
             }
             catch (Exception ex)
             {
                 Logger.Error("Service Layer - GetMemberUsernameByMemberId FAILED - [memberId: " + memberId +
                                        "], Exception: [" + ex + "]");
-
             }
             return new StringResult();
         }
@@ -219,21 +205,16 @@ namespace Nooch.API.Controllers
         {
             try
             {
-
                 Logger.Info("Service layer - GetMemberByPhone - phoneNo: [" + phoneNo + "]");
 
                 return new StringResult { Result = CommonHelper.GetMemberIdByPhone(phoneNo) };
-
             }
             catch (Exception ex)
             {
                 Logger.Error("Service layer - GetMemberByPhone - FAILED - [Exception: " + ex + "]");
-
             }
             return new StringResult();
         }
-
-
 
         [HttpPost]
         [ActionName("GetMemberIds")]
@@ -249,9 +230,7 @@ namespace Nooch.API.Controllers
             {
                 return new PhoneEmailListDto();
             }
-
         }
-
 
         [HttpGet]
         [ActionName("GetMemberNameByUserName")]
@@ -259,17 +238,16 @@ namespace Nooch.API.Controllers
         {
             try
             {
-
                 return new StringResult { Result = CommonHelper.GetMemberNameByUserName(userName) };
             }
             catch (Exception ex)
             {
                 Logger.Error("Service Layer - GetMemberUsernameByMemberId FAILED - [GetMemberNameByUserName : " + userName +
                                        "], Exception: [" + ex + "]");
-
             }
             return new StringResult();
         }
+
         [HttpGet]
         [ActionName("MemberActivation")]
         public BoolResult MemberActivation(string tokenId)
@@ -285,8 +263,8 @@ namespace Nooch.API.Controllers
                 Logger.Error("Service Layer -> MemberActivation Failed - [tokenId: " + tokenId + "]. Exception -> " + ex);
                 return new BoolResult();
             }
-
         }
+
         [HttpGet]
         [ActionName("IsMemberActivated")]
         public BoolResult IsMemberActivated(string tokenId)
@@ -301,7 +279,6 @@ namespace Nooch.API.Controllers
                 return new BoolResult();
             }
         }
-
 
         [HttpGet]
         [ActionName("IsNonNoochMemberActivated")]
@@ -318,9 +295,7 @@ namespace Nooch.API.Controllers
                 Logger.Error("Service Layer -> IsNonNoochMemberActivated Failed - [tokenId: " + emailId + "]. Exception -> " + ex);
                 return new BoolResult();
             }
-
         }
-
 
         [HttpGet]
         [ActionName("IsDuplicateMember")]
@@ -336,7 +311,6 @@ namespace Nooch.API.Controllers
             catch (Exception ex)
             {
                 result.Result = ex.ToString();
-
             }
             return result;
         }
@@ -346,7 +320,6 @@ namespace Nooch.API.Controllers
             var plainTextBytes = System.Text.Encoding.UTF8.GetBytes(plainText);
             return Convert.ToBase64String(plainTextBytes);
         }
-
 
         public static string Base64Decode(string base64EncodedData)
         {
@@ -370,10 +343,7 @@ namespace Nooch.API.Controllers
                 Logger.Error("Service Layer - GetEncryptedData FAILED - sourceData: [" + data + "]. Exception: [" + ex + "]");
                 return new MemberDto();
             }
-
         }
-
-
 
         public MemberDto GetDecryptedData(string sourceData)
         {
@@ -393,7 +363,6 @@ namespace Nooch.API.Controllers
                 Logger.Error("Service Layer - GetDecryptedData FAILED - sourceData: [" + sourceData + "]. Exception: [" + ex + "]");
                 return new MemberDto();
             }
-
         }
 
         public StringResult GetServerCurrentTime()
@@ -404,7 +373,6 @@ namespace Nooch.API.Controllers
             }
             catch (Exception ex)
             {
-
                 return new StringResult { Result = "" };
             }
         }
@@ -416,7 +384,6 @@ namespace Nooch.API.Controllers
 
             return new StringResult { Result = CommonHelper.IsWeeklyTransferLimitExceeded(memGuid, 5).ToString() };
         }
-
 
         [HttpGet]
         [ActionName("GetMemberDetails")]
@@ -482,7 +449,6 @@ namespace Nooch.API.Controllers
                     Logger.Error("Service Layer -> GetMemberDetails FAILED - [MemberId: " + memberId + "], [Exception: " + ex.InnerException + "]");
                     throw new Exception("Server Error");
                 }
-                return new MemberDto();
             }
             else
             {
@@ -498,7 +464,6 @@ namespace Nooch.API.Controllers
             {
                 try
                 {
-
                     MembersDataAccess obj = new MembersDataAccess();
                     return obj.GetMostFrequentFriends(MemberId);
                 }
@@ -533,7 +498,6 @@ namespace Nooch.API.Controllers
 
                     throw new Exception("Invalid OAuth 2 Access");
                 }
-
             }
             else
             {
@@ -556,7 +520,6 @@ namespace Nooch.API.Controllers
                 throw new Exception("Invalid OAuth 2 Access");
             }
         }
-
 
         [HttpGet]
         [ActionName("SaveMemberDeviceToken")]
@@ -648,8 +611,6 @@ namespace Nooch.API.Controllers
                 }
                 else if (cookie == "Success")
                 {
-
-
                     string state = GenerateAccessToken();
                     CommonHelper.UpdateAccessToken(userName, state);
                     return new StringResult { Result = state };
@@ -664,7 +625,6 @@ namespace Nooch.API.Controllers
                 Logger.Error("Service Layer -> LoginRequest FAILED - [userName: " + userName + "], [Exception: " + ex + "]");
                 throw new Exception("Server Error");
             }
-
         }
 
         [HttpGet]
@@ -695,8 +655,8 @@ namespace Nooch.API.Controllers
         public Boolean validateInvitationCode(string invitationCode)
         {
             //No access token is added as the new user requires to authenticate invitecode.
-            var memberDataAccess = new MembersDataAccess();
-            return memberDataAccess.validateInvitationCode(invitationCode);
+            var mda = new MembersDataAccess();
+            return mda.validateInvitationCode(invitationCode);
         }
 
         [HttpPost]
@@ -710,24 +670,21 @@ namespace Nooch.API.Controllers
         [ActionName("getTotalReferralCode")]
         public StringResult getTotalReferralCode(string referalCode)
         {
-            var memberDataAccess = new MembersDataAccess();
-            var isValid = memberDataAccess.getTotalReferralCode(referalCode);
+            var mda = new MembersDataAccess();
+            var isValid = mda.getTotalReferralCode(referalCode);
             return new StringResult { Result = isValid.ToString() };
         }
-
 
         [HttpPost]
         [ActionName("ApiSMS")]
         public StringResult ApiSMS(string phoneto, string msg, string accessToken, string memberId)
         {
-            if ((msg == "Hi\n You were automatically logged out because you signed in from another device.\n - Team Nooch") || CommonHelper.IsValidRequest(accessToken, memberId))
+            if ((msg == "Hi\n You were automatically logged out from Nooch because you signed in from another device.\n - Team Nooch") || CommonHelper.IsValidRequest(accessToken, memberId))
             {
-
                 return new StringResult { Result = Utility.SendSMS(phoneto, msg) };
             }
             throw new Exception("Invalid OAuth 2 Access");
         }
-
 
 
         #region Money and Transactions Game goes here
@@ -2292,8 +2249,6 @@ namespace Nooch.API.Controllers
                 var mda = new MembersDataAccess();
                 member = mda.GetMemberByGuid(id);
 
-
-
                 if (member != null)
                 {
                     try
@@ -2374,8 +2329,6 @@ namespace Nooch.API.Controllers
 
                         //Logger.LogDebugMessage("Service Layer -> UpdateMemberProfile - contactNumber (sent from app): [" + contactNumber + "]");
                         //Logger.LogDebugMessage("Service Layer -> UpdateMemberProfile - member.ContactNumber (from DB): [" + member.ContactNumber + "]");
-
-
 
                         phone = CommonHelper.RemovePhoneNumberFormatting(phone);
 
@@ -2630,7 +2583,6 @@ namespace Nooch.API.Controllers
                 //UtilityService.ThrowFaultException(ex);
                 throw ex;
             }
-
         }
 
 
@@ -2855,7 +2807,6 @@ namespace Nooch.API.Controllers
                 //for live 
                 //synapseCreateUserV3Result_int res = mda.RegisterUserWithSynapseV3(memberId, false);
 
-
                 return res;
             }
             catch (Exception ex)
@@ -2956,7 +2907,6 @@ namespace Nooch.API.Controllers
 
                 var mda = new MembersDataAccess();
 
-
                 // making url from byte array...coz submitDocumentToSynapseV3 expects url of image.
 
                 string ImageUrlMade = "";
@@ -2978,7 +2928,6 @@ namespace Nooch.API.Controllers
                     ImageUrlMade = Utility.GetValueFromConfig("PhotoUrl") + "gv_no_photo.png";
                 }
 
-
                 var mdaResult = mda.submitDocumentToSynapseV3(DocumentDetails.MemberId, ImageUrlMade);
 
                 res.isSuccess = mdaResult.success;
@@ -2992,8 +2941,6 @@ namespace Nooch.API.Controllers
 
                 throw new Exception("Server Error.");
             }
-
-
         }
 
 
@@ -4631,8 +4578,6 @@ namespace Nooch.API.Controllers
                 {
                     throw new Exception("Server Error.");
                 }
-
-
             }
             else
             {
@@ -4675,9 +4620,7 @@ namespace Nooch.API.Controllers
                 {
                     Logger.Error("Service Layer -> MySettings FAILED - [MemberId: " + mySettings.MemberId + "], [Exception: " + ex + "]");
                     return new StringResult();
-
                 }
-
             }
             else
             {
@@ -4727,7 +4670,6 @@ namespace Nooch.API.Controllers
                     Logger.Info("Service Layer - ResetPin - MemberId: [" + memberId + "]");
                     return new StringResult() { Result = "Server Error." };
                 }
-
             }
             else
             {
@@ -4735,7 +4677,12 @@ namespace Nooch.API.Controllers
             }
         }
 
-        // to get member notification settings
+        /// <summary>
+        /// To get member notification settings
+        /// </summary>
+        /// <param name="memberId"></param>
+        /// <param name="accessToken"></param>
+        /// <returns></returns>
         [HttpGet]
         [ActionName("GetMemberNotificationSettings")]
         public MemberNotificationSettingsInput GetMemberNotificationSettings(string memberId, string accessToken)
@@ -4746,9 +4693,9 @@ namespace Nooch.API.Controllers
                 {
                     Logger.Info("Service Layer - GetMemberNotificationSettings - memberId: [" + memberId + "]");
                     var notification = new MembersDataAccess().GetMemberNotificationSettings(memberId);
+
                     if (notification != null)
                     {
-
                         return new MemberNotificationSettingsInput
                         {
                             NotificationId = notification.NotificationId.ToString(),
@@ -4787,8 +4734,6 @@ namespace Nooch.API.Controllers
                     Logger.Error("Service Layer Error- GetMemberNotificationSettings - memberId: [" + memberId + "] Error : [" + ex + " ].");
                     throw new Exception("Server Error.");
                 }
-
-
             }
             else
             {
@@ -4796,12 +4741,15 @@ namespace Nooch.API.Controllers
             }
         }
 
-        // to save email notification settings of users
-
+        /// <summary>
+        /// To save email notification settings of users
+        /// </summary>
+        /// <param name="memberNotificationSettings"></param>
+        /// <param name="accessToken"></param>
+        /// <returns></returns>
         [HttpPost]
         [ActionName("MemberEmailNotificationSettings")]
-        public StringResult MemberEmailNotificationSettings(
-            MemberNotificationsNewStringTypeSettings memberNotificationSettings, string accessToken)
+        public StringResult MemberEmailNotificationSettings(MemberNotificationsNewStringTypeSettings memberNotificationSettings, string accessToken)
         {
             if (CommonHelper.IsValidRequest(accessToken, memberNotificationSettings.MemberId))
             {
@@ -4877,10 +4825,7 @@ namespace Nooch.API.Controllers
                 Logger.Error("Service Layer Error- SetShowInSearch - memberId: [" + memberId + "] Error : [" + ex + " ].");
                 throw new Exception("Server Error.");
             }
-
-
         }
-
 
 
     }
