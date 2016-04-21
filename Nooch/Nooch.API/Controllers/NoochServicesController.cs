@@ -1150,16 +1150,13 @@ namespace Nooch.API.Controllers
         [ActionName("CheckSDNListing")]
         public StringResult CheckSDNListing(string MemberId)
         {
-
-
             var noochMemberN = CommonHelper.GetMemberDetails(MemberId);
             if (noochMemberN != null)
             {
                 var b = CommonHelper.IsListedInSDN(CommonHelper.GetDecryptedData(noochMemberN.LastName),
                     noochMemberN.MemberId);
+                return new StringResult() { Result = b.ToString() };
             }
-
-
             return new StringResult();
         }
 

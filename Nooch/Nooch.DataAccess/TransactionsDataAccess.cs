@@ -425,7 +425,7 @@ namespace Nooch.DataAccess
                     // found and update
                     res.TransactionStatus = "Cancelled";
                     int i = _dbContext.SaveChanges();
-                    if (i > 1)
+                    if (i > 0)
                     {
                         _dbContext.Entry(res).Reload();
                         // updated

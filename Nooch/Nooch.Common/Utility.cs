@@ -375,7 +375,7 @@ namespace Nooch.Common
 
                 mailMessage.Body = content;
 
-
+               // string fromAddress = "reports@nooch.com";
 
                 mailMessage.IsBodyHtml = true;
                 mailMessage.Subject = subjectString;
