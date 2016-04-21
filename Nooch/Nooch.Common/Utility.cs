@@ -373,28 +373,24 @@ namespace Nooch.Common
                 template = GetEmailTemplate(String.Concat(Utility.GetValueFromConfig("EmailTemplatesPath"), "TransactionHistoryTemplate", ".txt"));
                 content = replacements.Aggregate(template, (current, token) => current.Replace(token.Key, token.Value));
 
-                mailMessage.Body = content;
-
-               // string fromAddress = "reports@nooch.com";
+                mailMessage.Body = content;          
 
                 mailMessage.IsBodyHtml = true;
                 mailMessage.Subject = subjectString;
-                mailMessage.To.Add(new MailAddress(toAddress, "reports@nooch.com"));
+               //mailMessage.To.Add(new MailAddress(toAddress, "reports@nooch.com"));
+                 
+                mailMessage.To.Add(new MailAddress(toAddress));             
+                mailMessage.From = (new MailAddress("reports@nooch.com"));
+                
 
                 using (MemoryStream stream = new MemoryStream(Encoding.ASCII.GetBytes(attachmentCSVString)))
                 {
                     Attachment attachment = new Attachment(stream, new ContentType("text/csv"));
                     attachment.Name = "MyNoochTransactions.csv";
-
                     mailMessage.Attachments.Add(attachment);
-
-
-
                     SmtpClient smtpClient = new SmtpClient();
-
                     smtpClient.Host = GetValueFromConfig("SMTPAddressForCSVAttachment");
                     smtpClient.UseDefaultCredentials = false;
-
                     smtpClient.Credentials = new NetworkCredential(GetValueFromConfig("SMTPLogOnForCSVAttachment"), GetValueFromConfig("SMTPPasswordForCSVAttachment"));
                     smtpClient.Send(mailMessage);
                     return true;

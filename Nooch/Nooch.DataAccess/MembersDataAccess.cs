@@ -1764,8 +1764,8 @@ namespace Nooch.DataAccess
                 createUser_login logins = new createUser_login();
                 logins.email = CommonHelper.GetDecryptedData(noochMember.UserName);
                 // CLIFF (4/20/16): NOT SURE WHY WE WOULD WANT TO SEND THE USER'S NOOCH PASSWORD.  IT'S NOT REQUIRED BY SYNAPSE AND IS AN UNNECESSARY SECURITY RISK.
-                logins.password = CommonHelper.GetDecryptedData(noochMember.Password);
-                //Surya (4/21/16) : it is Required, without this we can not register any user, with SYNAPSE. 
+               // logins.password = CommonHelper.GetDecryptedData(noochMember.Password);
+                
                 logins.read_only = false; // CLIFF (10/10/12) - I think we might want to keep this false (which is default) - will ask Synapse to clarify
 
                 payload.logins = new createUser_login[1];
@@ -1926,8 +1926,6 @@ namespace Nooch.DataAccess
                 }
 
                 #endregion Call Synapse V3 API: /v3/user/create
-
-
 
                 #region Synapse Create User Response was SUCCESSFUL
 

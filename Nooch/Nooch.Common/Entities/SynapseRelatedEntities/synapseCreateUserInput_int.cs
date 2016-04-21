@@ -25,7 +25,7 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
     public class createUser_login
     {
         public string email { get; set; }
-        public string password { get; set; }
+        //public string password { get; set; }
         public bool read_only { get; set; }
     }
 
