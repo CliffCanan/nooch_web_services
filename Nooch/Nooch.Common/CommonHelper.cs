@@ -31,9 +31,7 @@ namespace Nooch.Common
         static CommonHelper()
         {
             _dbContext = new NOOCHEntities();
-        }
-
-        
+        }      
 
         public static string GetEncryptedData(string sourceData)
         {
@@ -85,10 +83,9 @@ namespace Nooch.Common
             return sourcePhone;
         }
 
-
         public static string ForgotPassword(string userName)
         {
-            Logger.Info("MDA -> GetPassword - [userName: " + userName + "]");
+            Logger.Info("Common Helper -> ForgotPassword - [userName: " + userName + "]");
 
             var getMember = GetMemberDetailsByUserName(userName);
 
@@ -98,8 +95,6 @@ namespace Nooch.Common
                 {
                     bool status = false;
 
-
-                    //----------------
                     var fromAddress = Utility.GetValueFromConfig("adminMail");
 
                     var tokens = new Dictionary<string, string>
@@ -130,10 +125,6 @@ namespace Nooch.Common
                     , null, tokens, null, null, null);
                     }
 
-
-                    //--------------
-
-
                     return status
                         ? "Your reset password link has been sent to your mail successfully."
                         : "Problem occured while sending mail.";
@@ -145,6 +136,7 @@ namespace Nooch.Common
                 return "Problem occured while sending mail.";
             }
         }
+
         public static string RemovePhoneNumberFormatting(string sourceNum)
         {
             sourceNum.Trim();
@@ -167,12 +159,11 @@ namespace Nooch.Common
 
         public static string UppercaseFirst(string s)
         {
-            // Check for empty string.
             if (string.IsNullOrEmpty(s))
             {
                 return string.Empty;
             }
-            // Return char and concat substring.
+
             return char.ToUpper(s[0]) + s.Substring(1);
         }
 
@@ -182,7 +173,6 @@ namespace Nooch.Common
             {
                 Guid memGuid = new Guid(memberId);
                 accessToken = accessToken.Replace(' ', '+');
-
 
                 try
                 {
@@ -226,10 +216,9 @@ namespace Nooch.Common
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("MDA -> IsValidRequest FAILED - [Exception: " + ex + "]");
+                    Logger.Error("Common Helper -> IsValidRequest FAILED - [Exception: " + ex + "]");
                     return false;
                 }
-
             }
             else
             {
@@ -258,12 +247,8 @@ namespace Nooch.Common
             };
         }
 
-      
-
-
         public static string GetMemberIdByUserName(string userName)
         {
-
             var userNameLowerCase = GetEncryptedData(userName.ToLower());
             userName = GetEncryptedData(userName);
 
@@ -275,13 +260,13 @@ namespace Nooch.Common
             {
                 _dbContext.Entry(noochMember).Reload();
                 return noochMember.MemberId.ToString();
-
             }
+
             return null;
         }
+
         public static string GetMemberUsernameByMemberId(string MemberId)
         {
-
             Guid memGuid = Utility.ConvertToGuid(MemberId);
 
             var noochMember =
@@ -295,9 +280,9 @@ namespace Nooch.Common
 
             return noochMember != null ? GetDecryptedData(noochMember.UserName) : null;
         }
+
         public static string GetPhoneNumberByMemberId(string MemberId)
         {
-
             Guid memGuid = Utility.ConvertToGuid(MemberId);
 
             var noochMember =
@@ -310,6 +295,7 @@ namespace Nooch.Common
 
             return noochMember != null ? noochMember.ContactNumber : null;
         }
+
         public static string GetMemberIdByPhone(string memberPhone)
         {
             var noochMember =
@@ -323,6 +309,7 @@ namespace Nooch.Common
 
             return noochMember != null ? noochMember.MemberId.ToString() : null;
         }
+
         public static string GetMemberReferralCodeByMemberId(string MemberId)
         {
             Guid memGuid = Utility.ConvertToGuid(MemberId);
@@ -343,6 +330,7 @@ namespace Nooch.Common
             }
             return inviteCodeREsult != null ? inviteCodeREsult.code : "";
         }
+
         public static string GetMemberNameByUserName(string userName)
         {
             var userNameLowerCase = GetEncryptedData(userName.ToLower());
@@ -360,6 +348,7 @@ namespace Nooch.Common
             }
             return null;
         }
+
         public static bool IsMemberActivated(string tokenId)
         {
             var id = Utility.ConvertToGuid(tokenId);
@@ -372,6 +361,7 @@ namespace Nooch.Common
             }
             return noochMember != null;
         }
+
         public static bool IsNonNoochMemberActivated(string emailId)
         {
 
@@ -382,6 +372,7 @@ namespace Nooch.Common
             }
             return noochMember != null;
         }
+
         public static string IsDuplicateMember(string userName)
         {
             Logger.Info("Common Helper -> IsDuplicateMember Initiated - [UserName to check: " + userName + "]");
@@ -397,6 +388,7 @@ namespace Nooch.Common
 
             return noochMember != null ? "Username already exists for the primary email you entered. Please try with some other email." : "Not a nooch member.";
         }
+
         public static bool IsWeeklyTransferLimitExceeded(Guid MemberId, decimal amount)
         {
             // Get max weekly value allowed 
@@ -404,10 +396,7 @@ namespace Nooch.Common
 
             DateTime CurrentWeekStartDate = DateTime.Today.AddDays(-1 * (int)(DateTime.Today.DayOfWeek));
 
-
-
             // We only want to find transactions where this user has SENT money successfully. Exclude any pending/disputed/cancelled/rejected transactions.
-
 
             var totalAmountSent =
                 _dbContext.Transactions.Where(m => m.Member.MemberId == MemberId || m.Member1.MemberId == MemberId &&
@@ -462,12 +451,11 @@ namespace Nooch.Common
                 }
             }
 
-
             return false;
         }
+
         public static Member GetMemberDetails(string memberId)
         {
-
             try
             {
                 var id = Utility.ConvertToGuid(memberId);
@@ -479,22 +467,20 @@ namespace Nooch.Common
                     _dbContext.Entry(noochMember).Reload();
                     return noochMember;
                 }
-
             }
             catch (Exception ex)
             {
-                Logger.Error("MDA -> GetMemberDetails FAILED - Member ID: [" + memberId + "], [Exception: " + ex + "]");
+                Logger.Error("Common Helper -> GetMemberDetails FAILED - Member ID: [" + memberId + "], [Exception: " + ex + "]");
             }
             return new Member();
         }
+
         public static Member GetMemberDetailsByUserName(string userName)
         {
-
             try
             {
                 var id = GetEncryptedData(userName);
 
-                // var noochMember = _dbContext.Members.FirstOrDefault(m => m.UserName == userName && m.IsDeleted == false);
                 var noochMember = _dbContext.Members.FirstOrDefault(m => m.UserName == id && m.IsDeleted == false);
 
                 if (noochMember != null)
@@ -502,30 +488,29 @@ namespace Nooch.Common
                     _dbContext.Entry(noochMember).Reload();
                     return noochMember;
                 }
-
             }
             catch (Exception ex)
             {
-                Logger.Error("MDA -> GetMemberDetails FAILED - UserName [ENC:]: [" + userName + "], [Exception: " + ex + "]");
+                Logger.Error("Common Helper -> GetMemberDetails FAILED - UserName [ENC:]: [" + userName + "], [Exception: " + ex + "]");
             }
-            // return new Member(); 
+
             return null;
         }
+
         public static List<SynapseBankLoginResult> GetSynapseBankLoginResulList(string memberId)
         {
-            Logger.Info("MDA -> GetSynapseBankAccountDetails - MemberId: [" + memberId + "]");
+            Logger.Info("Common Helper -> GetSynapseBankAccountDetails - MemberId: [" + memberId + "]");
 
             var id = Utility.ConvertToGuid(memberId);
 
             var memberAccountDetails = _dbContext.SynapseBankLoginResults.Where(m => m.MemberId == id && m.IsDeleted == false).ToList();
 
             return memberAccountDetails;
-
         }
 
         public static bool RemoveSynapseBankLoginResultsForGivenMemberId(string memberId)
         {
-            Logger.Info("MDA -> GetSynapseBankAccountDetails - MemberId: [" + memberId + "]");
+            Logger.Info("Common Helper -> GetSynapseBankAccountDetails - MemberId: [" + memberId + "]");
 
             var id = Utility.ConvertToGuid(memberId);
 
@@ -535,7 +520,6 @@ namespace Nooch.Common
             {
                 foreach (SynapseBankLoginResult v in memberAccountDetails)
                 {
-
                     v.IsDeleted = true;
                     _dbContext.SaveChanges();
                     _dbContext.Entry(memberAccountDetails).Reload();
@@ -547,11 +531,11 @@ namespace Nooch.Common
             {
                 return false;
             }
-
         }
+
         public static SynapseBanksOfMember GetSynapseBankAccountDetails(string memberId)
         {
-            Logger.Info("MDA -> GetSynapseBankAccountDetails - MemberId: [" + memberId + "]");
+            Logger.Info("Common Helper -> GetSynapseBankAccountDetails - MemberId: [" + memberId + "]");
 
             var id = Utility.ConvertToGuid(memberId);
 
@@ -560,13 +544,13 @@ namespace Nooch.Common
             {
                 _dbContext.Entry(memberAccountDetails).Reload();
             }
-            return memberAccountDetails;
 
+            return memberAccountDetails;
         }
 
         public static SynapseCreateUserResult GetSynapseCreateaUserDetails(string memberId)
         {
-            Logger.Info("MDA -> GetSynapseBankAccountDetails - MemberId: [" + memberId + "]");
+            Logger.Info("Common Helper -> GetSynapseBankAccountDetails - MemberId: [" + memberId + "]");
 
             var id = Utility.ConvertToGuid(memberId);
 
@@ -575,15 +559,13 @@ namespace Nooch.Common
             {
                 _dbContext.Entry(memberAccountDetails).Reload();
             }
+
             return memberAccountDetails;
-
         }
-
-
 
         public static MemberNotification GetMemberNotificationSettingsByUserName(string userName)
         {
-            //Logger.Info("MDA -> GetMemberNotificationSettingsByUserName - UserName: [" + userName + "]");
+            Logger.Info("Common Helper -> GetMemberNotificationSettingsByUserName - UserName: [" + userName + "]");
 
             userName = GetEncryptedData(userName);
 
@@ -594,13 +576,11 @@ namespace Nooch.Common
             }
 
             return memberNotifications;
-
         }
 
-        public static string IncreaseInvalidLoginAttemptCount(
-            string memGuid, int loginRetryCountInDb)
+        public static string IncreaseInvalidLoginAttemptCount(string memGuid, int loginRetryCountInDb)
         {
-            Logger.Info("MDA -> IncreaseInvalidLoginAttemptCount Initiated (User's PW was incorrect during login attempt) - " +
+            Logger.Info("Common Helper -> IncreaseInvalidLoginAttemptCount Initiated (User's PW was incorrect during login attempt) - " +
                                    "This is invalid attempt #: [" + (loginRetryCountInDb + 1).ToString() + "], " +
                                    "MemberId: [" + memGuid + "]");
 
@@ -610,19 +590,17 @@ namespace Nooch.Common
             m.InvalidLoginAttemptCount = loginRetryCountInDb + 1;
             _dbContext.SaveChanges();
             _dbContext.Entry(m).Reload();
-            return "The password you have entered is incorrect."; // incorrect password
-        }
 
+            return "The password you have entered is incorrect.";
+        }
 
         public static bool UpdateAccessToken(string userName, string AccessToken)
         {
-            Logger.Info("MDA -> UpdateAccessToken - userName: [" + userName + "]");
-
+            Logger.Info("Common Helper -> UpdateAccessToken - userName: [" + userName + "]");
 
             try
             {
                 userName = GetEncryptedData(userName);
-                //Get the member details
 
                 var noochMember = _dbContext.Members.FirstOrDefault(m => m.UserName == userName && m.IsDeleted == false);
 
@@ -636,19 +614,15 @@ namespace Nooch.Common
             }
             catch (Exception ex)
             {
-                Logger.Error("MDA -> UpdateAccessToken FAILED - [Exception: " + ex + "]");
+                Logger.Error("Common Helper -> UpdateAccessToken FAILED - [Exception: " + ex + "]");
                 return false;
             }
-
         }
 
         public static bool CheckTokenExistance(string AccessToken)
         {
-
             try
             {
-                //Get the member details
-
                 var noochMember = _dbContext.Members.FirstOrDefault(m => m.AccessToken == AccessToken && m.IsDeleted == false);
                 if (noochMember != null)
                 {
@@ -658,19 +632,15 @@ namespace Nooch.Common
             }
             catch (Exception ex)
             {
-                Logger.Error("MDA -> CheckTokenExistance FAILED - [Exception: " + ex + "]");
+                Logger.Error("Common Helper -> CheckTokenExistance FAILED - [Exception: " + ex + "]");
                 return false;
             }
-
         }
-
-
 
         public static bool IsListedInSDN(string lastName, Guid userId)
         {
             bool result = false;
-            Logger.Info("MDA -> IsListedInSDNList - userName: [" + lastName + "]");
-
+            Logger.Info("Common Helper -> IsListedInSDNList - userName: [" + lastName + "]");
 
             var noochMemberN =
                 _dbContext.Members.FirstOrDefault(
@@ -930,7 +900,7 @@ namespace Nooch.Common
             }
             catch (Exception ex)
             {
-                Logger.Error("TDA -> GetGivenMemberTransferLimit FAILED - [MemberID: " + memberId + "], [Exception: " + ex + "]");
+                Logger.Error("Common Helper -> GetGivenMemberTransferLimit FAILED - [MemberID: " + memberId + "], [Exception: " + ex + "]");
                 return "0";
             }
         }
@@ -974,10 +944,9 @@ namespace Nooch.Common
             return false;
         }
 
-
         public static MemberNotification GetMemberNotificationSettings(string memberId)
         {
-            //Logger.Info("MDA -> GetMemberNotificationSettings Initiated - [MemberId: " + memberId + "]");
+            Logger.Info("Common Helper -> GetMemberNotificationSettings Initiated - [MemberId: " + memberId + "]");
 
             Guid memId = Utility.ConvertToGuid(memberId);
 
@@ -986,8 +955,8 @@ namespace Nooch.Common
             { 
                  _dbContext.Entry(memberNotifications).Reload();
             }
-            return memberNotifications;
 
+            return memberNotifications;
         }
 
         /// <summary>
@@ -1019,7 +988,7 @@ namespace Nooch.Common
 
         public static Landlord GetLandlordDetails(string memberId)
         {
-            //Logger.Info("MDA -> GetLandlordDetails - MemberId: [" + memberId + "]");
+            //Logger.Info("Common Helper -> GetLandlordDetails - MemberId: [" + memberId + "]");
             try
             {
                 var id = Utility.ConvertToGuid(memberId);
@@ -1031,11 +1000,10 @@ namespace Nooch.Common
                     _dbContext.Entry(landlordObj).Reload();
                     return landlordObj;
                 }
-
             }
             catch (Exception ex)
             {
-                Logger.Error("MDA -> GetLandlordDetails FAILED - Member ID: [" + memberId + "], [Exception: " + ex + "]");
+                Logger.Error("Common Helper -> GetLandlordDetails FAILED - Member ID: [" + memberId + "], [Exception: " + ex + "]");
             }
 
             return new Landlord();
@@ -1046,7 +1014,7 @@ namespace Nooch.Common
         {
             if (!String.IsNullOrEmpty(url))
             {
-                Logger.Info("MDA -> ConvertImageURLToBase64 Initiated - Photo URL is: [" + url + "]");
+                Logger.Info("Common Helper -> ConvertImageURLToBase64 Initiated - Photo URL is: [" + url + "]");
 
                 StringBuilder _sb = new StringBuilder();
 
@@ -1085,7 +1053,7 @@ namespace Nooch.Common
             }
             catch (Exception ex)
             {
-                Logger.Error("MDA -> GetImage FAILED - Photo URL was: [" + url + "]. Exception: [" + ex + "]");
+                Logger.Error("Common Helper -> GetImage FAILED - Photo URL was: [" + url + "]. Exception: [" + ex + "]");
                 buf = null;
             }
 
@@ -1113,7 +1081,7 @@ namespace Nooch.Common
 
         public static submitIdVerificationInt sendUserSsnInfoToSynapseV3(string MemberId)
         {
-            Logger.Info("MDA -> sendUserSsnInfoToSynapseV3 Initialized - [MemberId: " + MemberId + "]");
+            Logger.Info("CommonHelper -> sendUserSsnInfoToSynapseV3 Initialized - [MemberId: " + MemberId + "]");
 
             submitIdVerificationInt res = new submitIdVerificationInt();
             res.success = false;
@@ -1154,7 +1122,7 @@ namespace Nooch.Common
                     if (string.IsNullOrEmpty(memberEntity.UDID1))
                     {
                         isMissingSomething = true;
-                        res.message = "MDA - Missing UDID";
+                        res.message = "Common Helper - Missing UDID";
                     }
                     else
                     {
@@ -1223,7 +1191,7 @@ namespace Nooch.Common
                     // Return if any data was missing in previous block
                     if (isMissingSomething)
                     {
-                        Logger.Error("MDA -> sendUserSsnInfoToSynapseV3 ABORTED: Member has no DoB. [MemberId: " + MemberId + "], [Message: " + res.message + "]");
+                        Logger.Error("Common Helper -> sendUserSsnInfoToSynapseV3 ABORTED: Member has no DoB. [MemberId: " + MemberId + "], [Message: " + res.message + "]");
                         return res;
                     }
 
@@ -1234,7 +1202,7 @@ namespace Nooch.Common
 
                     if (usersSynapseDetails == null)
                     {
-                        Logger.Info("MDA -> sendUserSsnInfoToSynapseV3 ABORTED: Member's Synapse User Details not found. [MemberId: " + MemberId + "]");
+                        Logger.Info("Common Helper -> sendUserSsnInfoToSynapseV3 ABORTED: Member's Synapse User Details not found. [MemberId: " + MemberId + "]");
                         return res;
                     }
                     else
@@ -1247,12 +1215,12 @@ namespace Nooch.Common
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("MDA -> sendUserSsnInfoToSynapseV3 FAILED on checking for all required data - [MemberID: " +
+                    Logger.Error("Common Helper -> sendUserSsnInfoToSynapseV3 FAILED on checking for all required data - [MemberID: " +
                                            MemberId + "], [Exception: " + ex + "]");
                 }
 
                 // Update Member's DB record from NULL to false (update to true later on if Verification from Synapse is completely successful)
-                Logger.Info("MDA -> sendUserSsnInfoToSynapseV3 - About to set IsVerifiedWithSynapse to False before calling Synapse: [MemberID: " + MemberId + "]");
+                Logger.Info("Common Helper -> sendUserSsnInfoToSynapseV3 - About to set IsVerifiedWithSynapse to False before calling Synapse: [MemberID: " + MemberId + "]");
                 memberEntity.IsVerifiedWithSynapse = false;
 
                 #region Send SSN Info To Synapse
@@ -1261,7 +1229,7 @@ namespace Nooch.Common
                 {
                     #region Call Synapse V3 /user/doc/add API
 
-                    Logger.Info("MDA -> sendUserSsnInfoToSynapseV3 - Checkpoint 10693 - About To Query Synapse");
+                    Logger.Info("Common Helper -> sendUserSsnInfoToSynapseV3 - Checkpoint 10693 - About To Query Synapse");
 
                     synapseAddKycInfoInputV3Class synapseInput = new synapseAddKycInfoInputV3Class();
 
@@ -1279,8 +1247,8 @@ namespace Nooch.Common
                     doc.address_postal_code = usersZip;
                     doc.address_country_code = "US";
 
-                    doc.document_value = usersSsnLast4;
-                    doc.document_type = "SSN";
+                    doc.document_type = "SSN"; // This can also be "PASSPORT" or "DRIVERS_LICENSE"... we need to eventually support all 3 options (Rent Scene has international clients that don't have SSN but do have a Passport)
+                    doc.document_value = usersSsnLast4; // Can also be the user's Passport # or DL #
 
                     addKycInfoInput_user user = new addKycInfoInput_user();
                     user.fingerprint = usersFingerprint;
@@ -1317,7 +1285,7 @@ namespace Nooch.Common
                     }
                     catch (Exception ex)
                     {
-                        Logger.Error("MDA -> sendUserSSNInfoToSynapseV3 - Couldn't log Synapse SSN Payload. [Exception: " + ex + "]");
+                        Logger.Error("Common Helper -> sendUserSSNInfoToSynapseV3 - Couldn't log Synapse SSN Payload. [Exception: " + ex + "]");
                     }
                     #endregion For Testing
 
@@ -1350,17 +1318,19 @@ namespace Nooch.Common
                     // 2.) SSN Validation was PARTLY successful.  Synapse returns: "success":true... 
                     //     plus an object "question_set", containing a series of questions and array of multiple choice answers for each question.
                     //     We will display the questions to the user via the IDVerification.aspx page (already built-in to the Add-Bank process)
-                    // 3.) SSN Validation Failed  (not sure what Synapse returns for this... their docs are not clear).
+                    // 3.) SSN Validation Failed:  Synapse will return HTTP Error 400 Bad Request
+                    //     with an "error" object, and then a message in "error.en" that should be: "Invalid SSN information supplied. Request user to submit a copy of passport/divers license and SSN via user/doc/attachments/add"
 
                     if (synapseResponse != null)
                     {
                         if (synapseResponse.success == true)
                         {
-                            Logger.Info("MDA -> sendUserSsnInfoToSynapseV3 - Synapse returned SUCCESS = TRUE");
+                            Logger.Info("Common Helper -> sendUserSsnInfoToSynapseV3 - Synapse returned SUCCESS = TRUE");
+
+                            // Great, we have at least partial success. Now check if further verification is needed by checking if Synapse returned a 'question_set' object.
 
                             res.success = true;
 
-                            // Great, we have at least partial success.  Now check if further verification is needed by checking if Synapse returned a 'question_set' object.
                             if (synapseResponse.question_set != null)
                             {
                                 // Further Verification is needed...
@@ -1369,7 +1339,7 @@ namespace Nooch.Common
                                 // Now make sure an Array[] set of 'questions' was returned (could be up to 5 questions, each with 5 possible answer choices)
                                 if (synapseResponse.question_set.questions != null)
                                 {
-                                    Logger.Info("MDA -> sendUserSsnInfoToSynapseV3 - Question_Set was returned, further validation will be needed. Saving ID Verification Questions...");
+                                    Logger.Info("Common Helper -> sendUserSsnInfoToSynapseV3 - Question_Set was returned, further validation will be needed. Saving ID Verification Questions...");
 
                                     // Saving these questions in DB.  
 
@@ -1397,10 +1367,10 @@ namespace Nooch.Common
 
                                         questionForDb.person_id = synapseResponse.question_set.person_id;
                                         questionForDb.time_limit = synapseResponse.question_set.time_limit;
-                                        questionForDb.score = synapseResponse.question_set.score;
+                                        questionForDb.score = synapseResponse.question_set.score; // THIS COULD BE NULL...
                                         questionForDb.updated_at = synapseResponse.question_set.updated_at.ToString();
-                                        questionForDb.livemode = synapseResponse.question_set.livemode;
-                                        questionForDb.expired = synapseResponse.question_set.expired;
+                                        questionForDb.livemode = synapseResponse.question_set.livemode; // NO IDEA WHAT THIS IS FOR...
+                                        questionForDb.expired = synapseResponse.question_set.expired; // SHOULD ALWAYS BE false
                                         questionForDb.created_at = synapseResponse.question_set.created_at.ToString();
 
                                         questionForDb.Question = question.question;
@@ -1428,10 +1398,11 @@ namespace Nooch.Common
                             }
                             else if (synapseResponse.user != null)
                             {
-                                // User is verified completely -- in this case response in same of register use with Synapse...
+                                // User is verified completely. In this case response is same as Register User With Synapse...
                                 // Just update permission in CreateSynapseUserResults table
 
                                 #region Update Permission in CreateSynapseUserResults Table
+
                                 try
                                 {
                                     // Get existing record from Create Synapse User Results table for this Member
@@ -1448,9 +1419,10 @@ namespace Nooch.Common
                                 }
                                 catch (Exception ex)
                                 {
-                                    Logger.Error("MDA -> sendUserSsnInfoToSynapseV3 - EXCEPTION on trying to update User's record in CreateSynapseUserResults Table - " +
+                                    Logger.Error("Common Helper -> sendUserSsnInfoToSynapseV3 - EXCEPTION on trying to update User's record in CreateSynapseUserResults Table - " +
                                                            "[MemberID: " + MemberId + "], [Exception: " + ex + "]");
                                 }
+
                                 #endregion Update Permission in CreateSynapseUserResults Table
 
                                 // Update Member's DB record
@@ -1463,14 +1435,15 @@ namespace Nooch.Common
                         else
                         {
                             // Response from Synapse had 'success' != true
-                            Logger.Info("MDA -> sendUserSsnInfoToSynapseV3 FAILED: Synapse Result \"success != true\" - [MemberId: " + MemberId + "]");
+                            // SHOULDN'T EVER GET HERE B/C IF SYNAPSE CAN'T VERIFY THE USER, IT RETURNS A 400 BAD REQUEST HTTP ERROR WITH A MESSAGE...SEE WEB EX BELOW
+                            Logger.Info("Common Helper -> sendUserSsnInfoToSynapseV3 FAILED: Synapse Result \"success != true\" - [MemberId: " + MemberId + "]");
                             res.message = "SSN response from synapse was false";
                         }
                     }
                     else
                     {
                         // Response from Synapse was null
-                        Logger.Info("MDA -> sendUserSsnInfoToSynapseV3 FAILED: Synapse Result was NULL - [MemberId: " + MemberId + "]");
+                        Logger.Error("Common Helper -> sendUserSsnInfoToSynapseV3 FAILED: Synapse Result was NULL - [MemberId: " + MemberId + "]");
                         res.message = "SSN response from synapse was null";
                     }
 
@@ -1479,7 +1452,7 @@ namespace Nooch.Common
                 {
                     var httpStatusCode = ((HttpWebResponse)we.Response).StatusCode;
 
-                    Logger.Error("MDA -> sendUserSsnInfoToSynapseV3 FAILED (Outer) - [errorCode: " + httpStatusCode.ToString() + "], [Message" + we.Message + "]");
+                    Logger.Error("Common Helper -> sendUserSsnInfoToSynapseV3 FAILED (Outer) - [errorCode: " + httpStatusCode.ToString() + "], [Message" + we.Message + "]");
 
                     res.message = "MDA exception";
 
@@ -1497,12 +1470,13 @@ namespace Nooch.Common
                          errorMsg.IndexOf("submit a valid copy of passport") > -1))
                     {
                         Logger.Info("****  THIS USER'S SSN INFO WAS NOT VERIFIED AT ALL. MUST INVESTIGATE WHY (COULD BE TYPO WITH PERSONAL INFO). " +
-                                              "DETERMINE IF NECESSARY TO ASK FOR DRIVER'S LICENSE.  ****");
+                                    "DETERMINE IF NECESSARY TO ASK FOR DRIVER'S LICENSE.  ****");
 
                         memberEntity.AdminNotes = "SSN INFO WAS INVALID WHEN SENT TO SYNAPSE. NEED TO COLLECT DRIVER'S LICENSE.";
 
                         // Email Nooch Admin about this user for manual follow-up (Send email to Cliff)
                         #region Notify Nooch Admin About Failed SSN Validation
+
                         try
                         {
                             StringBuilder st = new StringBuilder();
@@ -1513,7 +1487,7 @@ namespace Nooch.Common
                                       "<tr><th>PARAMETER</th><th>VALUE</th></tr>");
                             st.Append("<tr><td><strong>Name</strong></td><td>" + usersFirstName + " " + usersLastName + "</td></tr>");
                             st.Append("<tr><td><strong>MemberId</strong></td><td>" + MemberId + "</td></tr>");
-                            st.Append("<tr><td><strong>Nooch_ID</strong></td><td>" + memberEntity.Nooch_ID + "</td></tr>");
+                            st.Append("<tr><td><strong>Nooch_ID</strong></td><td><a href=\"https://noochme.com/noochnewadmin/Member/Detail?NoochId=cced2532-b860-4135-a140-9bd1a6c2923a" + memberEntity.Nooch_ID + "\" target='_blank'>" + memberEntity.Nooch_ID + "</a></td></tr>");
                             st.Append("<tr><td><strong>DOB</strong></td><td>" + Convert.ToDateTime(memberEntity.DateOfBirth).ToString("MMMM dd, yyyy") + "</td></tr>");
                             st.Append("<tr><td><strong>SSN</strong></td><td>" + usersSsnLast4 + "</td></tr>");
                             st.Append("<tr><td><strong>Address</strong></td><td>" + usersAddress + "</td></tr>");
@@ -1526,18 +1500,19 @@ namespace Nooch.Common
                             st.Append("</table>");
 
                             StringBuilder completeEmailTxt = new StringBuilder();
-                            string s = "<html><body><h2>Nooch SSN Verification Failure</h2><p style='margin:0 auto 20px;'>The following Nooch user just triggered an SSN Verification attempt, but failed:</p>"
+                            string s = "<html><body><h3>Nooch SSN Verification Failure</h3><p style='margin:0 auto 20px;'>The following Nooch user just triggered an SSN Verification attempt, but failed:</p>"
                                        + st.ToString() +
                                        "<br/><br/><small>This email was generated automatically during <strong>[MDA -> sendUserSsnInfoToSynapse]</strong>.</small></body></html>";
 
                             completeEmailTxt.Append(s);
                             Utility.SendEmail(null, "SSNFAILURE@nooch.com", "cliff@nooch.com",
-                                                        null, "NOOCH USER'S SSN (V3) VALIDATION FAILED", null, null, null, null, completeEmailTxt.ToString());
+                                              null, "NOOCH USER'S SSN (V3) VALIDATION FAILED", null, null, null, null, completeEmailTxt.ToString());
                         }
                         catch (Exception ex)
                         {
-                            Logger.Error("MDA -> sendUserSsnInfoToSynapseV3 FAILED - Attempted to notify Nooch Admin via email but got Exception: [" + ex + "]");
+                            Logger.Error("Common Helper -> sendUserSsnInfoToSynapseV3 FAILED - Attempted to notify Nooch Admin via email but got Exception: [" + ex + "]");
                         }
+
                         #endregion Notify Nooch Admin About Failed SSN Validation
 
 
@@ -1550,37 +1525,37 @@ namespace Nooch.Common
                 // Save changes to Members DB
                 memberEntity.DateModified = DateTime.Now;
                 _dbContext.SaveChanges();
+
                 #endregion Parse Synapse Response
             }
             else
             {
                 // Member not found in Nooch DB
-                Logger.Info("MDA -> sendUserSsnInfoToSynapseV3 FAILED: Member not found - [MemberId: " + MemberId + "]");
+                Logger.Info("Common Helper -> sendUserSsnInfoToSynapseV3 FAILED: Member not found - [MemberId: " + MemberId + "]");
                 res.message = "Member not found";
             }
+
             return res;
         }
 
 
         public static GenericInternalResponseForSynapseMethods submitDocumentToSynapseV3(string MemberId, string ImageUrl)
         {
-            Logger.Info("MDA -> submitDocumentToSynapseV3 Initialized - [MemberId: " + MemberId + "]");
+            Logger.Info("Common Helper -> submitDocumentToSynapseV3 Initialized - [MemberId: " + MemberId + "]");
 
             var id = Utility.ConvertToGuid(MemberId);
 
             GenericInternalResponseForSynapseMethods res = new GenericInternalResponseForSynapseMethods();
 
-
             #region Get User's Synapse OAuth Consumer Key
 
             string usersSynapseOauthKey = "";
-
 
             var usersSynapseDetails = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
             
             if (usersSynapseDetails == null)
             {
-                Logger.Info("MDA -> submitDocumentToSynapseV3 ABORTED: Member's Synapse User Details not found. [MemberId: " + MemberId + "]");
+                Logger.Error("Common Helper -> submitDocumentToSynapseV3 ABORTED: Member's Synapse User Details not found. [MemberId: " + MemberId + "]");
 
                 res.message = "Could not find this member's account info";
 
@@ -1590,7 +1565,6 @@ namespace Nooch.Common
             {
                 _dbContext.Entry(usersSynapseOauthKey).Reload();
                 usersSynapseOauthKey = GetDecryptedData(usersSynapseDetails.access_token);
-               
             }
 
             #endregion Get User's Synapse OAuth Consumer Key
@@ -1599,12 +1573,11 @@ namespace Nooch.Common
 
             string usersFingerprint = "";
 
-
             var member = GetMemberDetails(id.ToString());
 
             if (member == null)
             {
-                Logger.Info("MDA -> submitDocumentToSynapseV3 ABORTED: Member not found. [MemberId: " + MemberId + "]");
+                Logger.Info("Common Helper -> submitDocumentToSynapseV3 ABORTED: Member not found. [MemberId: " + MemberId + "]");
                 res.message = "Member not found";
 
                 return res;
@@ -1613,7 +1586,7 @@ namespace Nooch.Common
             {
                 if (String.IsNullOrEmpty(member.UDID1))
                 {
-                    Logger.Info("MDA -> submitDocumentToSynapseV3 ABORTED: Member's Fingerprint not found. [MemberId: " + MemberId + "]");
+                    Logger.Info("Common Helper -> submitDocumentToSynapseV3 ABORTED: Member's Fingerprint not found. [MemberId: " + MemberId + "]");
                     res.message = "Could not find this member's fingerprint";
 
                     return res;
@@ -1634,24 +1607,18 @@ namespace Nooch.Common
             SynapseV3Input_login s_log = new SynapseV3Input_login();
             s_log.oauth_key = usersSynapseOauthKey;
             answers.login = s_log;
-            //answers.login.oauth_key = usersSynapseOauthKey;
-
 
             submitDocToSynapse_user sdtu = new submitDocToSynapse_user();
             submitDocToSynapse_user_doc doc = new submitDocToSynapse_user_doc();
             doc.attachment = "data:text/csv;base64," + ConvertImageURLToBase64(ImageUrl).Replace("\\", "");
 
             sdtu.fingerprint = usersFingerprint;
-
             sdtu.doc = doc;
 
             answers.user = sdtu;
 
-            //answers.user.doc.attachment = "data:text/csv;base64," + ConvertImageURLToBase64(ImageUrl).Replace("\\", ""); // NEED TO GET THE ACTUAL DOC... EITHER PASS THE BYTES TO THIS METHOD, OR GET FROM DB
-            //answers.user.fingerprint = usersFingerprint;
             string baseAddress = "";
             baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/doc/attachments/add" : "https://synapsepay.com/api/v3/user/doc/attachments/add";
-
 
             try
             {
@@ -1681,7 +1648,7 @@ namespace Nooch.Common
                 {
                     if (resFromSynapse.success.ToString().ToLower() == "true")
                     {
-                        Logger.Info("MDA -> submitDocumentToSynapseV3 SUCCESSFUL - [MemberID: " + MemberId + "]");
+                        Logger.Info("Common Helper -> submitDocumentToSynapseV3 SUCCESSFUL - [MemberID: " + MemberId + "]");
 
                         res.success = true;
 
@@ -1690,28 +1657,25 @@ namespace Nooch.Common
                     else
                     {
                         res.message = "Got a response, but success was not true";
-                        Logger.Info("MDA -> submitDocumentToSynapseV3 FAILED - Got Synapse response, but success was NOT 'true' - [MemberID: " + MemberId + "]");
+                        Logger.Info("Common Helper -> submitDocumentToSynapseV3 FAILED - Got Synapse response, but success was NOT 'true' - [MemberID: " + MemberId + "]");
                     }
                 }
                 else
                 {
                     res.message = "Verification response was null";
-                    Logger.Info("MDA -> submitDocumentToSynapseV3 FAILED - Synapse response was NULL - [MemberID: " + MemberId + "]");
+                    Logger.Info("Common Helper -> submitDocumentToSynapseV3 FAILED - Synapse response was NULL - [MemberID: " + MemberId + "]");
                 }
             }
             catch (WebException ex)
             {
-                res.message = "MDA Exception #9575";
-                Logger.Info("MDA -> submitDocumentToSynapseV3 FAILED - Catch [Exception: " + ex + "]");
+                res.message = "MDA Exception #1671";
+                Logger.Info("Common Helper -> submitDocumentToSynapseV3 FAILED - Catch [Exception: " + ex + "]");
             }
 
             #endregion Call Synapse /user/doc/attachments/add API
 
-
             return res;
         }
-
-
 
         public static synapseSearchUserResponse getUserPermissionsForSynapseV3(string userEmail)
         {
@@ -1787,13 +1751,13 @@ namespace Nooch.Common
 
                     if (!String.IsNullOrEmpty(res.error_code))
                     {
-                        Logger.Error("TDA -> getUserPermissionsForSynapseV3 FAILED - [Synapse Error Code: " + res.error_code +
-                                               "], [Error Msg: " + res.errorMsg + "], [User Email: " + userEmail + "]");
+                        Logger.Error("Common Helper -> getUserPermissionsForSynapseV3 FAILED - [Synapse Error Code: " + res.error_code +
+                                     "], [Error Msg: " + res.errorMsg + "], [User Email: " + userEmail + "]");
                     }
                     else
                     {
-                        Logger.Error("TDA -> getUserPermissionsForSynapseV3 FAILED: Synapse Error, but *error_code* was null for [User Email: " +
-                                               userEmail + "], [Exception: " + we.InnerException + "]");
+                        Logger.Error("Common Helper -> getUserPermissionsForSynapseV3 FAILED: Synapse Error, but *error_code* was null for [User Email: " +
+                                     userEmail + "], [Exception: " + we.InnerException + "]");
                     }
 
                     #endregion Synapse V3 Get User Permissions Exception
@@ -1801,8 +1765,8 @@ namespace Nooch.Common
             }
             catch (Exception ex)
             {
-                Logger.Error("TDA -> getUserPermissionsForSynapseV3 FAILED: Outer Catch Error - [User Email: " + userEmail +
-                                       "], [Exception: " + ex.InnerException + "]");
+                Logger.Error("Common Helper -> getUserPermissionsForSynapseV3 FAILED: Outer Catch Error - [User Email: " + userEmail +
+                             "], [Exception: " + ex.InnerException + "]");
 
                 res.error_code = "Nooch Server Error: Outer Exception.";
             }
@@ -1970,7 +1934,7 @@ namespace Nooch.Common
         // oAuth token needs to be in encrypted format
         public static synapseV3checkUsersOauthKey refreshSynapseV3OautKey(string oauthKey)
         {
-            Logger.Info("MDA -> synapseV3checkUsersOauthKey Initiated - User's Original OAuth Key (enc): [" + oauthKey + "]");
+            Logger.Info("Common Helper -> synapseV3checkUsersOauthKey Initiated - User's Original OAuth Key (enc): [" + oauthKey + "]");
 
             synapseV3checkUsersOauthKey res = new synapseV3checkUsersOauthKey();
             res.success = false;
@@ -1994,9 +1958,7 @@ namespace Nooch.Common
 
                     //refreshToken = GetDecryptedData(refreshToken);
                     #region Found Refresh Token
-                    Logger.Info("MDA -> synapseV3checkUsersOauthKey - Found Member By Original OAuth Key (enc): [" +
-                                                oauthKey +
-                                                "]");
+                    Logger.Info("Common Helper -> synapseV3checkUsersOauthKey - Found Member By Original OAuth Key (enc): [" + oauthKey + "]");
 
                     SynapseV3RefreshOauthKeyAndSign_Input input = new SynapseV3RefreshOauthKeyAndSign_Input();
 
@@ -2034,7 +1996,7 @@ namespace Nooch.Common
                     if (Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")))
                     {
                         Logger.Info(
-                            "MDA -> synapseV3checkUsersOauthKey - TEST USER DETECTED - useSynapseSandbox is: [" +
+                            "Common Helper -> synapseV3checkUsersOauthKey - TEST USER DETECTED - useSynapseSandbox is: [" +
                             Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) + "] - About to ping Synapse Sandbox /user/refresh...");
                         //UrlToHit = "";
                     }
@@ -2059,7 +2021,7 @@ namespace Nooch.Common
                         var sr = new StreamReader(stream);
                         var content = sr.ReadToEnd();
 
-                        //Logger.LogDebugMessage("MDA -> refreshSynapseV2OautKey Checkpoint #1 - About to parse Synapse Response");
+                        //Logger.LogDebugMessage("Common Helper -> refreshSynapseV2OautKey Checkpoint #1 - About to parse Synapse Response");
 
                         synapseCreateUserV3Result_int refreshResultFromSyn = new synapseCreateUserV3Result_int();
 
@@ -2067,7 +2029,7 @@ namespace Nooch.Common
 
                         JObject refreshResponse = JObject.Parse(content);
 
-                        Logger.Info("MDA -> synapseV3checkUsersOauthKey - Just Parsed Synapse Response: [" +
+                        Logger.Info("Common Helper -> synapseV3checkUsersOauthKey - Just Parsed Synapse Response: [" +
                                     refreshResponse + "]");
 
                         if (refreshResultFromSyn.success.ToString() == "true" ||
@@ -2098,15 +2060,13 @@ namespace Nooch.Common
                                 synCreateUserObject.expires_at = refreshResultFromSyn.oauth.expires_at;
                             }
 
-
                             int a = _dbContext.SaveChanges();
                             _dbContext.Entry(synCreateUserObject).Reload();
+
                             if (a > 0)
                             {
                                 Logger.Info(
-
-                                    "MDA -> refreshSynapseV3OautKey - SUCCESS From Synapse and Successfully added to Nooch DB - " +
-
+                                    "Common Helper -> refreshSynapseV3OautKey - SUCCESS From Synapse and Successfully added to Nooch DB - " +
                                     "Original Oauth Key (encr): [" + oauthKey + "], " +
                                     "Value for new, refreshed OAuth Key (encr): [" +
                                     synCreateUserObject.access_token + "]");
@@ -2121,7 +2081,7 @@ namespace Nooch.Common
                             {
                                 Logger.Error(
 
-                                    "MDA -> refreshSynapseV3OautKey FAILED - Error saving new key in Nooch DB - " +
+                                    "Common Helper -> refreshSynapseV3OautKey FAILED - Error saving new key in Nooch DB - " +
 
                                     "Original Oauth Key: [" + oauthKey + "], " +
                                     "Value for new, refreshed OAuth Key: [" + synCreateUserObject.access_token + "]");
@@ -2133,7 +2093,7 @@ namespace Nooch.Common
                         {
                             Logger.Error(
 
-                                "MDA -> refreshSynapseV3OautKey FAILED - Error from Synapse service, no 'success' key found - " +
+                                "Common Helper -> refreshSynapseV3OautKey FAILED - Error from Synapse service, no 'success' key found - " +
 
                                 "Original Oauth Key: [" + oauthKey + "]");
                             res.msg = "Service error.";
@@ -2151,7 +2111,7 @@ namespace Nooch.Common
 
                         string reason = errorJsonFromSynapse["reason"].ToString();
 
-                        Logger.Error("MDA -> synapseV3checkUsersOauthKey WEBEXCEPTION - HTTP Code: [" + http_code +
+                        Logger.Error("Common Helper -> synapseV3checkUsersOauthKey WEBEXCEPTION - HTTP Code: [" + http_code +
                                      "], Error Msg: [" + reason + "], Original Oauth Key (enc): [" + oauthKey + "]");
 
                         if (!String.IsNullOrEmpty(reason))
@@ -2161,30 +2121,27 @@ namespace Nooch.Common
                         else
                         {
                             Logger.Error(
-                                "MDA -> synapseV3checkUsersOauthKey FAILED: Synapse Error, but *reason* was null for [Original Oauth Key (enc): " +
+                                "Common Helper -> synapseV3checkUsersOauthKey FAILED: Synapse Error, but *reason* was null for [Original Oauth Key (enc): " +
                                 oauthKey + "], [Exception: " + we.InnerException + "]");
                         }
 
                         #endregion Synapse V3 Sig in/ refresh  Exception
                     }
-                    #endregion
 
+                    #endregion
                 }
                 else
                 {
                     // no record found for given oAuth token in synapse createuser results table
-                    Logger.Error(
-
-                                   "MDA -> refreshSynapseV3OautKey FAILED -  no record found for given oAuth key found - " +
-
-                                   "Original Oauth Key: (enc) [" + oauthKey + "]");
+                    Logger.Error("Common Helper -> refreshSynapseV3OautKey FAILED -  no record found for given oAuth key found - " +
+                                 "Original Oauth Key: (enc) [" + oauthKey + "]");
                     res.msg = "Service error.";
                 }
 
             }
             catch (Exception ex)
             {
-                Logger.Error("MDA -> synapseV3checkUsersOauthKey FAILED: Outer Catch Error - Original OAuth Key (enc): [" + oauthKey +
+                Logger.Error("Common Helper -> synapseV3checkUsersOauthKey FAILED: Outer Catch Error - Original OAuth Key (enc): [" + oauthKey +
                                        "], [Exception: " + ex + "]");
 
                 res.msg = "Nooch Server Error: Outer Exception.";
@@ -2196,7 +2153,7 @@ namespace Nooch.Common
 
         public static SynapseBankSetDefaultResult SetSynapseDefaultBank(string MemberId, string BankName, string BankOId)
         {
-            Logger.Info("MDA -> SetSynapseDefaultBank Initiated. [MemberId: " + MemberId + "], [Bank Name: " +
+            Logger.Info("Common Helper -> SetSynapseDefaultBank Initiated. [MemberId: " + MemberId + "], [Bank Name: " +
                                     BankName + "], [BankOId: " + BankOId + "]");
 
             SynapseBankSetDefaultResult res = new SynapseBankSetDefaultResult();
@@ -2219,7 +2176,7 @@ namespace Nooch.Common
                     res.Message = "Invalid data - need Bank Id";
                 }
 
-                Logger.Info("MDA -> SetSynapseDefaultBank ERROR: [" + res.Message + "] for MemberId: [" + MemberId + "]");
+                Logger.Info("Common Helper -> SetSynapseDefaultBank ERROR: [" + res.Message + "] for MemberId: [" + MemberId + "]");
                 res.Is_success = false;
                 return res;
             }
@@ -2509,8 +2466,8 @@ namespace Nooch.Common
                             selectedBank.Status = "Verified";
                             selectedBank.VerifiedOn = DateTime.Now;
 
-                            Logger.Info("MDA -> SetSynapseDefaultBank -> Bank VERIFIED (Case 1) - Names Matched EXACTLY - MemberId: [" + MemberId +
-                                                   "]; BankName: [" + BankName + "]; bankIncludedEmail: [" + bankIncludedEmail + "]; bankIncludedPhone: [" + bankIncludedPhone + "]");
+                            Logger.Info("Common Helper -> SetSynapseDefaultBank -> Bank VERIFIED (Case 1) - Names Matched EXACTLY - MemberId: [" + MemberId +
+                                        "]; BankName: [" + BankName + "]; bankIncludedEmail: [" + bankIncludedEmail + "]; bankIncludedPhone: [" + bankIncludedPhone + "]");
                         }
 
                         else if (bankIncludedName && lastNameMatched &&
@@ -2522,9 +2479,9 @@ namespace Nooch.Common
                             selectedBank.Status = "Verified";
                             selectedBank.VerifiedOn = DateTime.Now;
 
-                            Logger.Info("MDA -> SetSynapseDefaultBank -> Bank VERIFIED (Case 2) - Last Name Matched - [MemberId: " + MemberId +
-                                                   "];  [BankName: " + BankName + "];  [bankIncludedEmail: " + bankIncludedEmail + "];  [EmailFromBank: " + emailFromBank +
-                                                   ";  [bankIncludedPhone: " + bankIncludedPhone + "];  [PhoneFromBank: " + phoneFromBank + "]");
+                            Logger.Info("Common Helper -> SetSynapseDefaultBank -> Bank VERIFIED (Case 2) - Last Name Matched - [MemberId: " + MemberId +
+                                        "];  [BankName: " + BankName + "];  [bankIncludedEmail: " + bankIncludedEmail + "];  [EmailFromBank: " + emailFromBank +
+                                        ";  [bankIncludedPhone: " + bankIncludedPhone + "];  [PhoneFromBank: " + phoneFromBank + "]");
                         }
 
                         else if (bankIncludedName &&
@@ -2536,9 +2493,9 @@ namespace Nooch.Common
                             selectedBank.Status = "Verified";
                             selectedBank.VerifiedOn = DateTime.Now;
 
-                            Logger.Info("MDA -> SetSynapseDefaultBank -> Bank VERIFIED (Case 3) - Phone Matched - MemberId: [" + MemberId +
-                                                   "];  [BankName: " + BankName + "];  [bankIncludedEmail: " + bankIncludedEmail + "];  [EmailFromBank: " + emailFromBank +
-                                                   ";  [bankIncludedPhone: " + bankIncludedPhone + "];  [PhoneFromBank: " + phoneFromBank + "]");
+                            Logger.Info("Common Helper -> SetSynapseDefaultBank -> Bank VERIFIED (Case 3) - Phone Matched - MemberId: [" + MemberId +
+                                        "];  [BankName: " + BankName + "];  [bankIncludedEmail: " + bankIncludedEmail + "];  [EmailFromBank: " + emailFromBank +
+                                        ";  [bankIncludedPhone: " + bankIncludedPhone + "];  [PhoneFromBank: " + phoneFromBank + "]");
                         }
 
                         #endregion Scenarios for immediately VERIFYING this bank account
@@ -2547,6 +2504,7 @@ namespace Nooch.Common
                         #region Scenarios for cases where further verification needed
 
                         #region Non-Verified Scenario 1 - Email included from bank
+
                         // Non-Verifed Scenario #1: Some email was included from bank, so send Bank Verification Email Template #1 (With Link)
                         else if (bankIncludedEmail && emailFromBank.Length > 4)
                         {
@@ -2555,6 +2513,7 @@ namespace Nooch.Common
                             selectedBank.Status = "Not Verified";
 
                             #region Logging
+
                             string caseNum = "";
 
                             if (bankIncludedName &&
@@ -2569,7 +2528,7 @@ namespace Nooch.Common
                             }
 
                             // Bank included some name with at least partial match
-                            Logger.Info("MDA -> SetSynapseDefaultBank -> Bank NOT Verified (Case " + caseNum + ") -  MemberId: [" + MemberId +
+                            Logger.Info("Common Helper -> SetSynapseDefaultBank -> Bank NOT Verified (Case " + caseNum + ") -  MemberId: [" + MemberId +
                                                    "]; BankName: [" + BankName + "]; bankIncludedName: [" + bankIncludedName + "]; nameMatchedExactly: [" +
                                                    "]; nameMatchedExactly: [" + nameMatchedExactly + "]; lastNameMatched: [" + lastNameMatched + "];  nameFromBank: [" + fullNameFromBank +
                                                    "]; bankIncludedEmail: [" + bankIncludedEmail + "]; EmailFromBank: [" + emailFromBank + "]; bankIncludedPhone: [" + bankIncludedPhone +
@@ -2582,7 +2541,7 @@ namespace Nooch.Common
 
                             if (emailFromBank == "test@synapsepay.com")
                             {
-                                Logger.Info("MDA -> SetSynapseDefaultBank TEST USER - EMAIL FROM BANK WAS [test@synapsepay.com] - NOT SENDING BANK VERIFICATION EMAIL");
+                                Logger.Info("Common Helper -> SetSynapseDefaultBank TEST USER - EMAIL FROM BANK WAS [test@synapsepay.com] - NOT SENDING BANK VERIFICATION EMAIL");
                             }
                             else
                             {
@@ -2614,22 +2573,23 @@ namespace Nooch.Common
                                         "Your bank account was added to Nooch - Please Verify",
                                         null, tokens, null, "bankAdded@nooch.com", null);
 
-                                    Logger.Info(
-                                        "MDA -> SetSynapseDefaultBank --> Bank Verification w/ Link Email sent to: [" +
-                                        toAddress + "] for Nooch Username: [" + noochUserName + "]");
+                                    Logger.Info("Common Helper -> SetSynapseDefaultBank --> Bank Verification w/ Link Email sent to: [" +
+                                                toAddress + "] for Nooch Username: [" + noochUserName + "]");
                                 }
-                                catch (Exception)
+                                catch (Exception ex)
                                 {
-                                    Logger.Error(
-                                        "MDA -> SetSynapseDefaultBank --> Bank Verification w/ Link Email NOT sent to [" +
-                                        toAddress + "] for Nooch Username: [" + noochUserName + "]");
+                                    Logger.Error("Common Helper -> SetSynapseDefaultBank --> Bank Verification w/ Link Email NOT sent to [" +
+                                                 toAddress + "] for Nooch Username: [" + noochUserName + "]; Exception: [" + ex.Message +"]");
                                 }
                             }
+
                             #endregion Send Verify Bank Email TO EMAIL FROM THE BANK
                         }
+
                         #endregion Non-Verified Scenario 1 - Email included from bank
 
                         #region NonVerified Scanario 2 - Email NOT included from bank
+
                         // Non-Verifed Scenario #2: Email was NOT included from bank, so send Bank Verification Email Template #2 (No Link)
                         else
                         {
@@ -2644,12 +2604,13 @@ namespace Nooch.Common
                             // If the User's ID was verified successfully, then don't send the Verfication email.  But keep the bank as "not verified" until a Nooch admin reviews
                             if (MemberInfoInNoochDb.IsVerifiedWithSynapse == true)
                             {
-                                Logger.Info("MDA -> SetSynapseDefaultBank -> Bank was not verified, but user's SSN verification was successful, so " +
-                                                       "NOT sending the Verification Email - [MemberID: " + MemberId + "], [Username: " + noochEmailAddress + "]");
+                                Logger.Info("Common Helper -> SetSynapseDefaultBank -> Bank was not verified, but user's SSN verification was successful, so " +
+                                            "NOT sending the Verification Email - [MemberID: " + MemberId + "], [Username: " + noochEmailAddress + "]");
 
                                 StringBuilder st = new StringBuilder("<br/><p><strong>This user's Nooch Account information is:</strong></p>" +
                                           "<table border='1' style='border-collapse:collapse;'>" +
                                           "<tr><td><strong>MemberID:</strong></td><td>" + MemberId + "</td></tr>" +
+                                          "<tr><td><strongNooch_ID:</strong></td><td>" + MemberInfoInNoochDb.Nooch_ID + "</td></tr>" +
                                           "<tr><td><strong>Nooch Name:</strong></td><td>" + noochFullName + "</td></tr>" +
                                           "<tr><td><strong>Bank Included Name?:</strong></td><td>" + bankIncludedName + "</td></tr>" +
                                           "<tr><td><strong>Name From Bank:</strong></td><td>" + fullNameFromBank + "</td></tr>" +
@@ -2672,7 +2633,7 @@ namespace Nooch.Common
                                            "to be verified because the bank did not return an email address, BUT this user's SSN info was verified successfully with Synapse.</p>" +
                                            "<p>The bank account has beem marked \"Not Verified\" and is now awaiting Admin verification:</p>"
                                            + st.ToString() +
-                                           "<br/><br/><small>This email was generated automatically in [MDA -> SetSynapseBankDefault -> Bank Not Verified (Case 6).</small></body></html>";
+                                           "<br/><br/><small>This email was generated automatically in [Common Helper -> SetSynapseBankDefault -> Bank Not Verified (Case 6).</small></body></html>";
 
                                 completeEmailTxt.Append(s);
 
@@ -2703,16 +2664,15 @@ namespace Nooch.Common
                                         "Your bank account was added to Nooch - Additional Verification Needed",
                                         null, tokens, null, "bankAdded@nooch.com", null);
 
-                                    Logger.Info(
-                                        "MDA -> SetSynapseDefaultBank --> Bank Verification No Link Email sent to: [" +
-                                        toAddress + "] for Nooch Username: [" + noochUserName + "]");
+                                    Logger.Info("Common Helper -> SetSynapseDefaultBank --> Bank Verification No Link Email sent to: [" +
+                                                toAddress + "] for Nooch Username: [" + noochUserName + "]");
                                 }
-                                catch (Exception)
+                                catch (Exception ex)
                                 {
-                                    Logger.Info(
-                                        "MDA -> SetSynapseDefaultBank --> Bank Verification No Link Email NOT sent to [" +
-                                        toAddress + "] for Nooch Username: [" + noochUserName + "]");
+                                    Logger.Error("Common Helper -> SetSynapseDefaultBank --> Bank Verification No Link Email NOT sent to [" +
+                                                 toAddress + "] for Nooch Username: [" + noochUserName + "]; Exception: [" + ex.Message + "]");
                                 }
+
                                 #endregion Send Verify Bank Email to Nooch username
                             }
                         }
@@ -2726,17 +2686,17 @@ namespace Nooch.Common
                         res.Message = "Success";
                         res.Is_success = true;
                         _dbContext.Entry(MemberInfoInNoochDb).Reload();
+
                         return res;
                     }
                     else
                     {
-                        Logger.Info("MDA -> SetSynapseDefaultBank ERROR: Selected Bank not found in Nooch DB - MemberId: [" + MemberId + "]; BankId: [" + BankOId + "]");
+                        Logger.Info("Common Helper -> SetSynapseDefaultBank ERROR: Selected Bank not found in Nooch DB - MemberId: [" + MemberId + "]; BankId: [" + BankOId + "]");
 
                         res.Message = "Bank not found for given Member";
                         res.Is_success = false;
                         return res;
                     }
-
                 }
 
                 #endregion Member Found
@@ -2744,7 +2704,7 @@ namespace Nooch.Common
                 #region Member NOT Found
                 else
                 {
-                    Logger.Info("MDA -> SetSynapseDefaultBank ERROR: Member not found in Nooch DB - MemberId: [" + MemberId + "]; BankId: [" + BankOId + "]");
+                    Logger.Info("Common Helper -> SetSynapseDefaultBank ERROR: Member not found in Nooch DB - MemberId: [" + MemberId + "]; BankId: [" + BankOId + "]");
                     res.Message = "Member not found";
                     res.Is_success = false;
                     return res;
@@ -2806,7 +2766,6 @@ namespace Nooch.Common
 
             Guid memId = Utility.ConvertToGuid(MemberId);
 
-
             bool ipSavedSuccessfully = false;
             bool udidIdSavedSuccessfully = false;
 
@@ -2816,7 +2775,6 @@ namespace Nooch.Common
             {
                 try
                 {
-
                     var ipAddressesFound = _dbContext.MembersIPAddresses.Where(memberTemp => memberTemp.MemberId.Value.Equals(memId)).ToList();
 
                     if (ipAddressesFound.Count > 5)
@@ -2835,12 +2793,12 @@ namespace Nooch.Common
                         if (a > 0)
                         {
                             _dbContext.Entry(lastIpFound).Reload();
-                            Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId SUCCESS For Saving IP Address (1) - [MemberId: " + MemberId + "]");
+                            Logger.Info("Common Helper -> UpdateMemberIPAddressAndDeviceId SUCCESS For Saving IP Address (1) - [MemberId: " + MemberId + "]");
                             ipSavedSuccessfully = true;
                         }
                         else
                         {
-                            Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId FAILED Trying To Saving IP Address (1) in DB - [MemberId: " + MemberId + "]");
+                            Logger.Info("Common Helper -> UpdateMemberIPAddressAndDeviceId FAILED Trying To Saving IP Address (1) in DB - [MemberId: " + MemberId + "]");
                         }
                     }
                     else
@@ -2856,23 +2814,23 @@ namespace Nooch.Common
                         if (b > 0)
                         {
                             _dbContext.Entry(mip).Reload();
-                            Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId SUCCESS For Saving IP Address (2) - [MemberId: " + MemberId + "]");
+                            Logger.Info("Common Helper -> UpdateMemberIPAddressAndDeviceId SUCCESS For Saving IP Address (2) - [MemberId: " + MemberId + "]");
                             ipSavedSuccessfully = true;
                         }
                         else
                         {
-                            Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId FAILED Trying To Saving IP Address (2) in DB - [MemberId: " + MemberId + "]");
+                            Logger.Info("Common Helper -> UpdateMemberIPAddressAndDeviceId FAILED Trying To Saving IP Address (2) in DB - [MemberId: " + MemberId + "]");
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId FAILED For Saving IP Address - [Exception: " + ex + "]");
+                    Logger.Info("Common Helper -> UpdateMemberIPAddressAndDeviceId FAILED For Saving IP Address - [Exception: " + ex + "]");
                 }
             }
             else
             {
-                Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId - No IP Address Passed - [MemberId: " + MemberId + "]");
+                Logger.Info("Common Helper -> UpdateMemberIPAddressAndDeviceId - No IP Address Passed - [MemberId: " + MemberId + "]");
             }
 
             #endregion Save IP Address
@@ -2898,22 +2856,22 @@ namespace Nooch.Common
                     if (c > 0)
                     {
                         _dbContext.Entry(member).Reload();
-                        Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId SUCCESS For Saving Device ID - [MemberId: " + MemberId + "]");
+                        Logger.Info("Common Helper -> UpdateMemberIPAddressAndDeviceId SUCCESS For Saving Device ID - [MemberId: " + MemberId + "]");
                         udidIdSavedSuccessfully = true;
                     }
                     else
                     {
-                        Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId FAILED Trying To Saving Device ID in DB - [MemberId: " + MemberId + "]");
+                        Logger.Info("Common Helper -> UpdateMemberIPAddressAndDeviceId FAILED Trying To Saving Device ID in DB - [MemberId: " + MemberId + "]");
                     }
                 }
                 catch (Exception ex)
                 {
-                    Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId FAILED For Saving Device ID - [Exception: " + ex + "]");
+                    Logger.Info("Common Helper -> UpdateMemberIPAddressAndDeviceId FAILED For Saving Device ID - [Exception: " + ex + "]");
                 }
             }
             else
             {
-                Logger.Info("MDA -> UpdateMemberIPAddressAndDeviceId - No Device ID Passed - [MemberId: " + MemberId + "]");
+                Logger.Info("Common Helper -> UpdateMemberIPAddressAndDeviceId - No Device ID Passed - [MemberId: " + MemberId + "]");
             }
 
             #endregion Save Device ID
@@ -2937,12 +2895,9 @@ namespace Nooch.Common
 
         public static string GetMemberIdByContactNumber(string userContactNumber)
         {
-            Logger.Info("MDA -> GetMemberIdByContactNumber Initiated - [userContactNumber: " + userContactNumber + "]");
+            Logger.Info("Common Helper -> GetMemberIdByContactNumber Initiated - [userContactNumber: " + userContactNumber + "]");
 
             string trimmedContactNum = CommonHelper.RemovePhoneNumberFormatting(userContactNumber);
-
-
-
 
             var noochMember = _dbContext.Members.Where(memberTemp =>
                                 memberTemp.ContactNumber.Equals(trimmedContactNum) &&
@@ -2954,7 +2909,6 @@ namespace Nooch.Common
                 return noochMember.MemberId.ToString();
             }
 
-
             return null;
         }
 
@@ -2962,7 +2916,7 @@ namespace Nooch.Common
         public static string SaveMemberFBId(string MemberId, string MemberFBId, string IsConnect)
         {
 
-            Logger.Info("MDA -> SaveMembersFBId - MemberId: [" + MemberId + "]");
+            Logger.Info("Common Helper -> SaveMembersFBId - MemberId: [" + MemberId + "]");
 
             try
             {

@@ -1715,10 +1715,9 @@ namespace Nooch.DataAccess
             synapseCreateUserV3Result_int res = new synapseCreateUserV3Result_int();
             res.success = false;
 
+            Guid guid = Utility.ConvertToGuid(memberId);
 
-            Guid id = Utility.ConvertToGuid(memberId);
-
-            //Get the member details
+            // Get the member details
 
             var noochMember = CommonHelper.GetMemberDetails(memberId);
 
@@ -1764,15 +1763,15 @@ namespace Nooch.DataAccess
 
                 createUser_login logins = new createUser_login();
                 logins.email = CommonHelper.GetDecryptedData(noochMember.UserName);
-                logins.password = CommonHelper.GetDecryptedData(noochMember.Password);
-                //logins.password = "";
+                // CLIFF (4/20/16): NOT SURE WHY WE WOULD WANT TO SEND THE USER'S NOOCH PASSWORD.  IT'S NOT REQUIRED BY SYNAPSE AND IS AN UNNECESSARY SECURITY RISK.
+                //logins.password = CommonHelper.GetDecryptedData(noochMember.Password);
                 logins.read_only = false; // CLIFF (10/10/12) - I think we might want to keep this false (which is default) - will ask Synapse to clarify
 
                 payload.logins = new createUser_login[1];
-                payload.logins[0] = logins;
+                payload.logins[0] = logins; // REQUIRED BY SYNAPSE
 
-                payload.phone_numbers = new string[] { noochMember.ContactNumber };
-                payload.legal_names = new string[] { fullname };
+                payload.phone_numbers = new string[] { noochMember.ContactNumber }; // REQUIRED BY SYNAPSE
+                payload.legal_names = new string[] { fullname }; // REQUIRED BY SYNAPSE
 
                 createUser_fingerprints fingerprints = new createUser_fingerprints();
                 if (!String.IsNullOrEmpty(noochMember.UDID1))
@@ -1786,17 +1785,16 @@ namespace Nooch.DataAccess
                 else
                 {
                     // If for some reason we don't have a value for either UDID1 or DeviceToken, then let's just send a random string of text...
-                    // Found this trick online for generating "random" (not technically) string... make a GUID and remove the "-" (with "n")
+                    // Found this trick online for generating "random" (not technically, but close enough for this purpose) string... make a GUID and remove the "-" (with "n")
                     string randomTxt = Guid.NewGuid().ToString("n").Substring(0, 24);
                     fingerprints.fingerprint = randomTxt;
 
-                    // Now we need to also save this new value for the user in the DB
+                    // Now save this new value for the user in the DB for UDID1
                     try
                     {
                         noochMember.UDID1 = randomTxt;
                         _dbContext.SaveChanges();
-                       // _dbContext.Entry(noochMember).Reload();
-                        // membersRepository.UpdateEntity(noochMember);
+
                     }
                     catch (Exception ex)
                     {
@@ -1807,7 +1805,7 @@ namespace Nooch.DataAccess
                 payload.fingerprints = new createUser_fingerprints[1];
                 payload.fingerprints[0] = fingerprints;
 
-                payload.ips = new string[] { CommonHelper.GetRecentOrDefaultIPOfMember(id) };
+                payload.ips = new string[] { CommonHelper.GetRecentOrDefaultIPOfMember(guid) };
 
                 createUser_extra extra = new createUser_extra();
                 extra.note = "";
@@ -1873,7 +1871,7 @@ namespace Nooch.DataAccess
 
                             var synapseRes =
                                 _dbContext.SynapseCreateUserResults.FirstOrDefault(
-                                    m => m.MemberId == id && m.IsDeleted == false);
+                                    m => m.MemberId == guid && m.IsDeleted == false);
 
                             if (synapseRes != null)
                             {
@@ -1938,16 +1936,11 @@ namespace Nooch.DataAccess
                     res.user_id = !String.IsNullOrEmpty(res.user._id.id) ? res.user._id.id : "";
                     res.ssn_verify_status = "did not check yet";
 
-                    // Mark any existing Synapse 'Create User' results for this user as Deleted
-                    #region Delete Any Old DB Records & Create New Record
+                    // Mark any existing Synapse 'Create User' results for this user as 'Deleted'
+                    #region Delete Any Old Synapse Create User Records Already in DB
 
-
-                    var synapseCreateUserObj =
-                        _dbContext.SynapseCreateUserResults.Where(m => m.MemberId == id && m.IsDeleted == false)
+                    var synapseCreateUserObj = _dbContext.SynapseCreateUserResults.Where(m => m.MemberId == guid && m.IsDeleted == false)
                             .ToList();
-                    // CLIFF (10/10/15): Shouldn't the above line create a LIST instead of just selecting the First? In case there are more than one...
-                    //                   That should never happen, but still...
-                    // modified this to handle more than one record..... 23-Feb-2016
 
                     try
                     {
@@ -1956,13 +1949,7 @@ namespace Nooch.DataAccess
                             scur.IsDeleted = true;
                             scur.ModifiedOn = DateTime.Now;
                             _dbContext.SaveChanges();
- 
-                        
-                        
                         }
-
-
- 
                     }
                     catch (Exception ex)
                     {
@@ -1970,6 +1957,7 @@ namespace Nooch.DataAccess
                                                "[MemberID: " + memberId + "], [Exception: " + ex.InnerException + "]");
                     }
 
+                    #endregion Delete Any Old DB Records & Create New Record
 
                     #region Add New Entry To SynapseCreateUserResults DB Table
 
@@ -1978,20 +1966,20 @@ namespace Nooch.DataAccess
                     try
                     {
                         SynapseCreateUserResult newSynapseUser = new SynapseCreateUserResult();
-                        newSynapseUser.MemberId = id;
+                        newSynapseUser.MemberId = guid;
                         newSynapseUser.DateCreated = DateTime.Now;
                         newSynapseUser.IsDeleted = false;
                         newSynapseUser.access_token = CommonHelper.GetEncryptedData(res.oauth.oauth_key);
-                        newSynapseUser.success = Convert.ToBoolean(res.success);
+                        newSynapseUser.success = true;
                         newSynapseUser.expires_in = res.oauth.expires_at;
                         newSynapseUser.refresh_token = CommonHelper.GetEncryptedData(res.oauth.refresh_token);
                         newSynapseUser.username = CommonHelper.GetEncryptedData(res.user.logins[0].email);
                         newSynapseUser.user_id = res.user._id.id; // this is no more int... this will be string from now onwards
 
                         // LETS USE THE EXISTING V2 DB TABLE FOR V3: 'SynapseCreateUserResults'... all the same, PLUS a few additional parameters (none are that important, but we should store them):
-                        // NEED TO ADD THE FOLLOWING PARAMETERS TO DATABASE: is_business (bool); legal_name (string); permission (string); phone number (string); photos (string)
 
                         // Adding data for new fields in Synapse V3
+                        // CLIFF(4/20/16): NEED TO ADD:  "user.doc_status.physical_doc", "user.doc_status.virtual_doc", "user.extra.extra_security"
                         newSynapseUser.is_business = res.user.extra.is_business;
                         newSynapseUser.legal_name = res.user.legal_names.Length > 0 ? res.user.legal_names[0] : null;
                         newSynapseUser.permission = res.user.permission ?? null;
@@ -2006,13 +1994,10 @@ namespace Nooch.DataAccess
                     catch (Exception ex)
                     {
                         Logger.Error("MDA -> RegisterUserWithSynapseV3 - FAILED To Save New Record in 'Synapse Create User Results' Table - " +
-                                               "[MemberID: " + memberId + "], [Exception: " + ex.InnerException + "]");
+                                     "[MemberID: " + memberId + "], [Exception: " + ex.InnerException + "]");
                     }
 
                     #endregion Add New Entry To SynapseCreateUserResults DB Table
-
-
-                    #endregion Delete Any Old DB Records & Create New Record
 
 
                     if (addRecordToSynapseCreateUserTable > 0)
@@ -2074,8 +2059,13 @@ namespace Nooch.DataAccess
                                 Logger.Error("MDA -> RegisterUserWithSynapseV3 - Attempted sendUserSsnInfoToSynapseV3 but got Exception: [" + ex.Message + "]");
                             }
                         }
-                        return res;
                     }
+                    else
+                    {
+                        // FAILED TO ADD SYNAPSE RECORD TO DB
+                    }
+
+                    return res;
                 }
 
                 #endregion Synapse Create User Response was SUCCESSFUL
@@ -2089,7 +2079,7 @@ namespace Nooch.DataAccess
                 {
                     // Check if we have user id in SynapseCreateUserResults table in Nooch DB
 
-                    var synapseRes = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
+                    var synapseRes = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == guid && m.IsDeleted == false);
 
                     if (synapseRes != null)
                     {
@@ -2133,7 +2123,6 @@ namespace Nooch.DataAccess
 
                 return res;
             }
-
         }
 
 

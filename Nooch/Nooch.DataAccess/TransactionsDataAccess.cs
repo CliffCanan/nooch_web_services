@@ -2246,15 +2246,7 @@ namespace Nooch.DataAccess
                     _dbContext.Entry(member).Reload();
                 }
 
-                //if (member.ClearTransactionHistory.HasValue && member.ClearTransactionHistory.Value)
-                //{
-                //    return new List<Transactions>();
-                //}
-
-                //membersAccountRepository = new Repository<Members, NoochDataEntities>(noochConnection);
-                // get admin member id.
                 string adminUserName = Utility.GetValueFromConfig("adminMail");
-
 
                 var transactions = new List<Transaction>();
 
@@ -2268,7 +2260,6 @@ namespace Nooch.DataAccess
 
                 if (sublist != "")
                 {
-
                     #region If Something Sent for SubList
 
                     if (listType.ToUpper().Equals("SENT"))
@@ -2467,13 +2458,11 @@ namespace Nooch.DataAccess
 
                 if (pageSize == 0 && pageIndex == 0)
                 {
-
                     transactions = transactions.Take(1000).ToList();
                 }
                 else
                 {
                     transactions = transactions.Skip(pageSize * pageIndex).Take(pageSize).ToList();
-
                 }
 
                 return transactions;
@@ -2499,23 +2488,18 @@ namespace Nooch.DataAccess
             var id = Utility.ConvertToGuid(memberId);
             var txnId = Utility.ConvertToGuid(transactionId);
 
-
             var transactions = new Transaction();
-
 
             if (listType.ToUpper().Equals("SENT"))
             {
-
                 transactions = _dbContext.Transactions.FirstOrDefault(entity => entity.Member.MemberId == id && entity.TransactionId == txnId);
             }
             else if (listType.ToUpper().Equals("RECEIVED"))
             {
-
                 transactions = _dbContext.Transactions.FirstOrDefault(entity => entity.Member1.MemberId == id && entity.TransactionId == txnId);
             }
             else if (listType.ToUpper().Equals("DISPUTED"))
             {
-
                 transactions = _dbContext.Transactions.FirstOrDefault(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id)
                                                                        && entity.DisputeStatus != null && entity.TransactionId == txnId);
             }
@@ -2525,12 +2509,7 @@ namespace Nooch.DataAccess
                                                                                 entity.TransactionId == txnId);
             }
 
-            if (transactions != null)
-            {
-                return transactions;
-            }
-            return new Transaction();
-
+            return transactions != null ? transactions : new Transaction();
         }
 
         #region Dispute Related Methods
@@ -2757,6 +2736,7 @@ namespace Nooch.DataAccess
 
             notifications.Add(notification);
         }
+
         public string CancelRejectTransaction(string transactionId, string userResponse)
         {
             Logger.Info("TDA -> CancelRejectTransaction Initiated - [transactionId: " + transactionId + "], [userResponse: " + userResponse + "]");
@@ -2774,15 +2754,12 @@ namespace Nooch.DataAccess
                     _dbContext.SaveChanges();
                     _dbContext.Entry(transactionDetail).Reload();
 
-
                     // 'Members' IS THE REQUEST REJECTOR
                     // 'Members1' IS THE REQUEST SENDER
                     if (userResponse == "Rejected")
                     {
                         // sending push notification to request maker
                         Guid RequestSenderId = Utility.ConvertToGuid(transactionDetail.Member1.MemberId.ToString());
-
-
 
                         var noochMemberfornotification = _dbContext.Members.Where(memberTemp =>
                                 memberTemp.MemberId.Equals(RequestSenderId) && memberTemp.IsDeleted == false && memberTemp.ContactNumber != null && memberTemp.IsVerifiedPhone == true).FirstOrDefault();
@@ -2855,7 +2832,6 @@ namespace Nooch.DataAccess
                         var fromAddress = Utility.GetValueFromConfig("transfersMail");
                         var toAddress = CommonHelper.GetDecryptedData(transactionDetail.Member1.UserName);
 
-                        // email notification
                         try
                         {
                             Utility.SendEmail("requestDeniedToSender",
@@ -2869,8 +2845,7 @@ namespace Nooch.DataAccess
                         }
                         catch (Exception)
                         {
-                            Logger.Info(
-                                "TDA -> requestDeniedToSender FAILED - Email NOT sent to [" + toAddress + "]");
+                            Logger.Info("TDA -> requestDeniedToSender FAILED - Email NOT sent to [" + toAddress + "]");
                         }
 
                         // sending email to user who REJECTED this request (ie.: RECIPIENT)
@@ -2894,7 +2869,6 @@ namespace Nooch.DataAccess
 
                         try
                         {
-                            // email notification
                             Utility.SendEmail("requestDeniedToRecipient",
                                 fromAddress, toAddress, null,
                                 "You rejected a Nooch request from " + reqSenderFullName, null,
@@ -2909,7 +2883,6 @@ namespace Nooch.DataAccess
                     }
 
                     return "success";
-
                 }
                 catch (Exception ex)
                 {
@@ -2924,11 +2897,7 @@ namespace Nooch.DataAccess
         }
 
 
-
         #region Reject Transaction (All Types) Methods
-
-
-
 
         // For Non-Nooch users who Reject a Transfer/Invite sent to them.  NOTE: Not for Requests, that's the next method: RejectMoneyRequestForNonNoochUser()
         // CLIFF (JULY 10, 2015) IS THIS METHOD STILL USED NOW THAT WE HAVE THE 'COMMON' METHOD FOR REJECTING??  IF NOT, LET'S DELETE...
@@ -4805,7 +4774,5 @@ namespace Nooch.DataAccess
                 return "Request failed.";
             }
         }
-
-
     }
 }
