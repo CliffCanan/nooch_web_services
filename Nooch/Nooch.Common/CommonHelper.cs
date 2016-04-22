@@ -228,7 +228,7 @@ namespace Nooch.Common
 
         public static MemberBusinessDto GetMemberByUdId(string udId)
         {
-            Logger.Info("MemberDataAccess - GetMemberByUdId[ udId:" + udId + "].");
+            Logger.Info("Common Helper -> GetMemberByUdId[ udId:" + udId + "].");
 
             var member = _dbContext.Members.FirstOrDefault(m => m.UDID1 == udId && m.IsDeleted == false);
             if (member != null)
@@ -416,32 +416,32 @@ namespace Nooch.Common
 
                     if (MemberId.ToString().ToLower() == "00bd3972-d900-429d-8a0d-28a5ac4a75d7")
                     {
-                        Logger.Info("****  TDA -> IsWeeklyTransferLimitExceeded LIMIT EXCEEDED - But transaction for TEAM NOOCH, so allowing transaction - [Amount: $" + amount.ToString() + "]  ****");
+                        Logger.Info("**** Common Helper -> IsWeeklyTransferLimitExceeded LIMIT EXCEEDED - But transaction for TEAM NOOCH, so allowing transaction - [Amount: $" + amount.ToString() + "]  ****");
                         return false;
                     }
                     if (MemberId.ToString().ToLower() == "b3a6cf7b-561f-4105-99e4-406a215ccf60")
                     {
-                        Logger.Info("****  TDA -> IsWeeklyTransferLimitExceeded LIMIT EXCEEDED - But transaction for CLIFF CANAN, so allowing transaction - [Amount: $" + amount.ToString() + "]  ****");
+                        Logger.Info("**** Common Helper -> IsWeeklyTransferLimitExceeded LIMIT EXCEEDED - But transaction for CLIFF CANAN, so allowing transaction - [Amount: $" + amount.ToString() + "]  ****");
                         return false;
                     }
                     if (MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49") // Marvis Burns (RentScene)
                     {
-                        Logger.Info("****  TDA -> IsWeeklyTransferLimitExceeded LIMIT EXCEEDED - But transaction for RENT SCENE, so allowing transaction - [Amount: $" + amount.ToString() + "]  ****");
+                        Logger.Info("**** Common Helper -> IsWeeklyTransferLimitExceeded LIMIT EXCEEDED - But transaction for RENT SCENE, so allowing transaction - [Amount: $" + amount.ToString() + "]  ****");
                         return false;
                     }
                     if (MemberId.ToString().ToLower() == "e44c13da-7705-4953-8431-8ab0b2511a77") // REALTY MARK's Account (Member name is 'Diane Torres')
                     {
-                        Logger.Info("****  TDA -> IsWeeklyTransferLimitExceeded LIMIT EXCEEDED - But transaction for RENT SCENE, so allowing transaction - [Amount: $" + amount.ToString() + "]  ****");
+                        Logger.Info("**** Common Helper -> IsWeeklyTransferLimitExceeded LIMIT EXCEEDED - But transaction for RENT SCENE, so allowing transaction - [Amount: $" + amount.ToString() + "]  ****");
                         return false;
                     }
                     if (MemberId.ToString().ToLower() == "8b4b4983-f022-4289-ba6e-48d5affb5484") // Josh Detweiler (AppJaxx)
                     {
-                        Logger.Info("****  TDA -> IsWeeklyTransferLimitExceeded LIMIT EXCEEDED - But transaction is for APPJAXX, so allowing transaction - [Amount: $" + amount.ToString() + "]  ****");
+                        Logger.Info("**** Common Helper -> IsWeeklyTransferLimitExceeded LIMIT EXCEEDED - But transaction is for APPJAXX, so allowing transaction - [Amount: $" + amount.ToString() + "]  ****");
                         return false;
                     }
                     if (MemberId.ToString().ToLower() == "2d0427d2-7f21-40d9-a5a2-ac3e973809ec") // Dana Kozubal (Dave Phillip's)
                     {
-                        Logger.Info("****  TDA -> IsWeeklyTransferLimitExceeded LIMIT EXCEEDED - But transaction is for DANA KOZUBAL, so allowing transaction - [Amount: $" + amount.ToString() + "]  ****");
+                        Logger.Info("**** Common Helper -> IsWeeklyTransferLimitExceeded LIMIT EXCEEDED - But transaction is for DANA KOZUBAL, so allowing transaction - [Amount: $" + amount.ToString() + "]  ****");
                         return false;
                     }
 
@@ -915,26 +915,26 @@ namespace Nooch.Common
                 if (senderMemId.ToLower() == "00bd3972-d900-429d-8a0d-28a5ac4a75d7" || // TEAM NOOCH
                     recipMemId.ToLower() == "00bd3972-d900-429d-8a0d-28a5ac4a75d7")
                 {
-                    Logger.Info("*****  TDA -> isOverTransactionLimit - Transaction for TEAM NOOCH, so allowing transaction - [Amount: $" + amount.ToString() + "]  ****");
+                    Logger.Info("*****  Common Helper -> isOverTransactionLimit - Transaction for TEAM NOOCH, so allowing transaction - [Amount: $" + amount.ToString() + "]  ****");
                     return false;
                 }
                 if (senderMemId.ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49" || // Marvis Burns (RentScene)
                     recipMemId.ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49")
                 {
-                    Logger.Info("*****  TDA -> isOverTransactionLimit - Transaction for RENT SCENE, so allowing transaction - [Amount: $" + amount.ToString() + "]  ****");
+                    Logger.Info("*****  Common Helper -> isOverTransactionLimit - Transaction for RENT SCENE, so allowing transaction - [Amount: $" + amount.ToString() + "]  ****");
                     return false;
                 }
 
                 if (senderMemId.ToLower() == "c9839463-d2fa-41b6-9b9d-45c7f79420b1" || // Sherri Tan (RentScene - via Marvis Burns)
                     recipMemId.ToLower() == "c9839463-d2fa-41b6-9b9d-45c7f79420b1")
                 {
-                    Logger.Info("*****  TDA -> isOverTransactionLimit - Transaction for RENT SCENE, so allowing transaction - [Amount: $" + amount.ToString() + "]  ****");
+                    Logger.Info("*****  Common Helper -> isOverTransactionLimit - Transaction for RENT SCENE, so allowing transaction - [Amount: $" + amount.ToString() + "]  ****");
                     return false;
                 }
                 if (senderMemId.ToLower() == "8b4b4983-f022-4289-ba6e-48d5affb5484" || // Josh Detweiler (AppJaxx)
                     recipMemId.ToLower() == "8b4b4983-f022-4289-ba6e-48d5affb5484")
                 {
-                    Logger.Info("*****  TDA -> isOverTransactionLimit - Transaction is for APPJAXX, so allowing transaction - [Amount: $" + amount.ToString() + "]  ****");
+                    Logger.Info("*****  Common Helper -> isOverTransactionLimit - Transaction is for APPJAXX, so allowing transaction - [Amount: $" + amount.ToString() + "]  ****");
                     return false;
                 }
 
@@ -1821,7 +1821,7 @@ namespace Nooch.Common
                     // This MemberId was found in the SynapseCreateUserResults DB
                     res.wereUserDetailsFound = true;
 
-                    Logger.Info("ADA -> GetSynapseBankAndUserDetailsforGivenMemberId - Checkpoint #1 - " +
+                    Logger.Info("Common Helper -> GetSynapseBankAndUserDetailsforGivenMemberId - Checkpoint #1 - " +
                                            "SynapseCreateUserResults Record Found! - Now about to check if Synapse OAuth Key is expired or still valid.");
 
                     // CLIFF (10/3/15): ADDING CALL TO NEW METHOD TO CHECK USER'S STATUS WITH SYNAPSE, AND REFRESHING OAUTH KEY IF NECESSARY
@@ -1838,7 +1838,7 @@ namespace Nooch.Common
                     if (shouldUseSynapseSandbox)
                     {
                         shouldUseSynapseSandbox = true;
-                        Logger.Info("**  ADA -> GetSynapseBankAndUserDetailsforGivenMemberId -> TESTING USER DETECTED - [" +
+                        Logger.Info("**  Common Helper -> GetSynapseBankAndUserDetailsforGivenMemberId -> TESTING USER DETECTED - [" +
                                               memberUsername + "], WILL USE SYNAPSE SANDBOX URL FOR CHECKING OAUTH TOKEN STATUS  **");
                     }
 
@@ -1865,7 +1865,7 @@ namespace Nooch.Common
                         }
                         else
                         {
-                            Logger.Error("ADA -> GetSynapseBankAndUserDetailsforGivenMemberId FAILED on Checking User's Synapse OAuth Token - " +
+                            Logger.Error("Common Helper -> GetSynapseBankAndUserDetailsforGivenMemberId FAILED on Checking User's Synapse OAuth Token - " +
                                                    "CheckTokenResult.msg: [" + checkTokenResult.msg + "], MemberID: [" + memberId + "]");
 
                             res.UserDetailsErrMessage = checkTokenResult.msg;
@@ -1874,7 +1874,7 @@ namespace Nooch.Common
                     }
                     else
                     {
-                        Logger.Error("ADA -> GetSynapseBankAndUserDetailsforGivenMemberId FAILED on Checking User's Synapse OAuth Token - " +
+                        Logger.Error("Common Helper -> GetSynapseBankAndUserDetailsforGivenMemberId FAILED on Checking User's Synapse OAuth Token - " +
                                                    "CheckTokenResult was NULL, MemberID: [" + memberId + "]");
 
                         res.UserDetailsErrMessage = "Unable to check user's Oauth Token";
@@ -1885,7 +1885,7 @@ namespace Nooch.Common
                 }
                 else
                 {
-                    Logger.Error("ADA -> GetSynapseBankAndUserDetailsforGivenMemberId FAILED - Unable to find Synapse Create User Details - " +
+                    Logger.Error("Common Helper -> GetSynapseBankAndUserDetailsforGivenMemberId FAILED - Unable to find Synapse Create User Details - " +
                                            "MemberID: [" + memberId + "]");
 
                     res.UserDetails = null;
@@ -1923,7 +1923,7 @@ namespace Nooch.Common
             }
             catch (Exception ex)
             {
-                Logger.Error("ADA -> GetSynapseBankAndUserDetailsforGivenMemberId FAILED - MemberID: [" + memberId + "], Outer Exception: [" + ex + "]");
+                Logger.Error("Common Helper -> GetSynapseBankAndUserDetailsforGivenMemberId FAILED - MemberID: [" + memberId + "], Outer Exception: [" + ex + "]");
             }
 
             return res;
