@@ -31,7 +31,7 @@ namespace Nooch.Common
         static CommonHelper()
         {
             _dbContext = new NOOCHEntities();
-        }      
+        }
 
         public static string GetEncryptedData(string sourceData)
         {
@@ -407,7 +407,7 @@ namespace Nooch.Common
                                                     m.TransactionType == "T3EMY1WWZ9IscHIj3dbcNw=="))
                     .ToList()
                     .Sum(t => t.Amount);
-            
+
             if (totalAmountSent > 10)
             {
                 if (!(Convert.ToDecimal(WeeklyLimitAllowed) > (Convert.ToDecimal(totalAmountSent) + amount)))
@@ -446,7 +446,7 @@ namespace Nooch.Common
                     }
 
                     #endregion Check For Exempt Users
-                  
+
                     return true;
                 }
             }
@@ -523,7 +523,7 @@ namespace Nooch.Common
                     v.IsDeleted = true;
                     _dbContext.SaveChanges();
                     _dbContext.Entry(memberAccountDetails).Reload();
-                  }
+                }
 
                 return true;
             }
@@ -753,7 +753,7 @@ namespace Nooch.Common
         {
 
             var id = Utility.ConvertToGuid(memberId);
-            
+
 
             var memberEntity = _dbContext.Members.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
             _dbContext.Entry(memberEntity).Reload();
@@ -951,9 +951,9 @@ namespace Nooch.Common
             Guid memId = Utility.ConvertToGuid(memberId);
 
             var memberNotifications = _dbContext.MemberNotifications.FirstOrDefault(m => m.Member.MemberId == memId);
-            if (memberNotifications !=null)
-            { 
-                 _dbContext.Entry(memberNotifications).Reload();
+            if (memberNotifications != null)
+            {
+                _dbContext.Entry(memberNotifications).Reload();
             }
 
             return memberNotifications;
@@ -1066,15 +1066,15 @@ namespace Nooch.Common
 
 
             var memberIP = _dbContext.MembersIPAddresses.OrderByDescending(m => m.ModifiedOn).FirstOrDefault(m => m.MemberId == MemberIdPassed);
- 
-            if(memberIP != null)
+
+            if (memberIP != null)
             {
-                
+
                 _dbContext.Entry(memberIP).Reload();
             }
-            RecentIpOfUser = memberIP != null ? memberIP.Ip.ToString() : "54.201.43.89";         
-            
- 
+            RecentIpOfUser = memberIP != null ? memberIP.Ip.ToString() : "54.201.43.89";
+
+
             return RecentIpOfUser;
         }
 
@@ -1174,7 +1174,7 @@ namespace Nooch.Common
                     }
 
                     // Check for Date Of Birth (Not encrypted)
-                    if (memberEntity.DateOfBirth==null)
+                    if (memberEntity.DateOfBirth == null)
                     {
                         isMissingSomething = true;
                         res.message += " MDA - Missing Date of Birth";
@@ -1552,7 +1552,7 @@ namespace Nooch.Common
             string usersSynapseOauthKey = "";
 
             var usersSynapseDetails = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
-            
+
             if (usersSynapseDetails == null)
             {
                 Logger.Error("Common Helper -> submitDocumentToSynapseV3 ABORTED: Member's Synapse User Details not found. [MemberId: " + MemberId + "]");
@@ -2213,7 +2213,7 @@ namespace Nooch.Common
                                         memberTemp.MemberId.Value.Equals(memId) &&
                                         memberTemp.bank_name == bnaknameEncrypted &&
                                         memberTemp.oid == bankOId).ToList();    /// or this would bankid ?? need to check... -Malkit
-                   
+
                     var selectedBank = (from c in banksFound select c)
                                       .OrderByDescending(bank => bank.AddedOn)
                                       .Take(1)
@@ -2579,7 +2579,7 @@ namespace Nooch.Common
                                 catch (Exception ex)
                                 {
                                     Logger.Error("Common Helper -> SetSynapseDefaultBank --> Bank Verification w/ Link Email NOT sent to [" +
-                                                 toAddress + "] for Nooch Username: [" + noochUserName + "]; Exception: [" + ex.Message +"]");
+                                                 toAddress + "] for Nooch Username: [" + noochUserName + "]; Exception: [" + ex.Message + "]");
                                 }
                             }
 
@@ -2789,7 +2789,7 @@ namespace Nooch.Common
                         lastIpFound.Ip = IP;
 
                         int a = _dbContext.SaveChanges();
-                        
+
                         if (a > 0)
                         {
                             _dbContext.Entry(lastIpFound).Reload();
@@ -2810,7 +2810,7 @@ namespace Nooch.Common
                         mip.Ip = IP;
 
                         int b = _dbContext.SaveChanges();
-                        
+
                         if (b > 0)
                         {
                             _dbContext.Entry(mip).Reload();
@@ -2852,7 +2852,7 @@ namespace Nooch.Common
                         member.DateModified = DateTime.Now;
                     }
                     int c = _dbContext.SaveChanges();
-                    
+
                     if (c > 0)
                     {
                         _dbContext.Entry(member).Reload();
@@ -2952,6 +2952,81 @@ namespace Nooch.Common
             {
                 return "Failure";
             }
+        }
+
+
+
+        public static RemoveNodeGenricResult RemoveBankNodeFromSynapse(string userOAuth, string userFingerPrint, string nodeIdToRemove, string MemberId)
+        {
+            RemoveNodeGenricResult res = new RemoveNodeGenricResult();
+            res.IsSuccess = false;
+            Logger.Info("Common Helper -> RemoveBankNodeFromSynapse - MemberId: [" + MemberId + "] - NodeId: [" + nodeIdToRemove + "]");
+            try
+            {
+
+                string baseAddress = "";
+                baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/node/remove" : "https://synapsepay.com/api/v3/node/remove";
+
+
+                RemoveBankNodeRootClass rootObject = new RemoveBankNodeRootClass
+                {
+                    login = new Login { oauth_key = userOAuth },
+                    node = new Node { _id = new _Id { oid = nodeIdToRemove } },
+                    user = new Entities.SynapseRelatedEntities.User { fingerprint = userFingerPrint }
+                };
+
+                var http = (HttpWebRequest)WebRequest.Create(new Uri(baseAddress));
+                http.Accept = "application/json";
+                http.ContentType = "application/json";
+                http.Method = "POST";
+
+                string parsedContent = JsonConvert.SerializeObject(rootObject);
+                ASCIIEncoding encoding = new ASCIIEncoding();
+                Byte[] bytes = encoding.GetBytes(parsedContent);
+
+                Stream newStream = http.GetRequestStream();
+                newStream.Write(bytes, 0, bytes.Length);
+                newStream.Close();
+
+                try
+                {
+                    var response = http.GetResponse();
+                    var stream = response.GetResponseStream();
+                    var sr = new StreamReader(stream);
+                    var content = sr.ReadToEnd();
+
+                    JObject checkPermissionResponse = JObject.Parse(content);
+
+                    if (checkPermissionResponse["success"] != null &&
+                        Convert.ToBoolean(checkPermissionResponse["success"]) == true)
+                    {
+                        res.IsSuccess = true;
+                        res.Message = "Node removed from synapse successfully.";
+                    }
+                    else
+                    {
+                        res.IsSuccess = false;
+                        res.Message = "Error removing node from synapse.";
+                    }
+                }
+                catch (WebException we)
+                {
+                    Logger.Error("Common Helper -> RemoveBankNodeFromSynapse - MemberId: [" + MemberId + "] - NodeId: [" + nodeIdToRemove + "] - Error: [" + we + "]");
+                    res.IsSuccess = false;
+                    res.Message = "Error removing node from synapse.";
+                }
+
+
+
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Common Helper -> RemoveBankNodeFromSynapse - MemberId: [" + MemberId + "] - NodeId: [" + nodeIdToRemove + "] - Error: [" + ex+ "]");
+                res.IsSuccess = false;
+                res.Message = "Error removing node from synapse.";
+
+            }
+            return res;
         }
 
     }

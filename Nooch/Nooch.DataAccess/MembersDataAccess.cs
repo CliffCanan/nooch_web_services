@@ -6701,8 +6701,46 @@ namespace Nooch.DataAccess
                     return "";
                 }
             return "You are already a nooch member.";
-            }           
-         
+            }
+
+
+
+
+        public string RemoveSynapseBankAccount(string memberId, int bankId)
+        {
+            Logger.Info("MDA -> RemoveSynapseBankAccount - [MemberId: " + memberId + "]");
+
+            var id = Utility.ConvertToGuid(memberId);
+            using (var noochConnection = new NOOCHEntities())
+            {
+
+                var bankAccountsFound =
+                    noochConnection.SynapseBanksOfMembers.FirstOrDefault(
+                        m => m.MemberId == id && m.bankid == bankId );
+
+                if (bankAccountsFound !=null)
+                {
+
+                    bankAccountsFound.IsDefault = false;
+                    noochConnection.SaveChanges();
+                     SynapseDetailsClass sdc= CommonHelper.GetSynapseBankAndUserDetailsforGivenMemberId(memberId);
+                    if (!sdc.wereUserDetailsFound) return "Bank account deleted successfully";
+                    if (!String.IsNullOrEmpty(sdc.UserDetails.access_token) &&
+                        !String.IsNullOrEmpty(sdc.UserDetails.user_fingerprints))
+                    {
+                        CommonHelper.RemoveBankNodeFromSynapse(sdc.UserDetails.access_token,
+                            sdc.UserDetails.user_fingerprints, CommonHelper.GetDecryptedData( bankAccountsFound.oid), memberId);
+                    }
+
+
+                    return "Bank account deleted successfully";
+                }
+                else
+                {
+                    return "No active bank account found for this user";
+                }
+            }
+        }
         
 
     }

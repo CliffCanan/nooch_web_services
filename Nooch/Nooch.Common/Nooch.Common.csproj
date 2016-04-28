@@ -79,6 +79,7 @@
     <Compile Include="Entities\MobileAppInputEntities\MemberNotificationsNewStringTypeSettings.cs" />
     <Compile Include="Entities\MobileAppInputEntities\MemberRegistrationInputDto.cs" />
     <Compile Include="Entities\MobileAppInputEntities\MySettingsInput.cs" />
+    <Compile Include="Entities\MobileAppInputEntities\RemoveBankAccountInputEntity.cs" />
     <Compile Include="Entities\MobileAppInputEntities\SaveMemberDOB_Input.cs" />
     <Compile Include="Entities\MobileAppInputEntities\StringInput.cs" />
     <Compile Include="Entities\MobileAppInputEntities\SynapseAccoutDetailsInput.cs" />
@@ -114,6 +115,7 @@
     <Compile Include="Entities\SynapseRelatedEntities\NodePermissionCheckResult.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\RegisterUserSynapseResultClassExt.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\RegisterUserSynapseResultClassint.cs" />
+    <Compile Include="Entities\SynapseRelatedEntities\RemoveNodeResult.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\SynapseBankSetDefaultResult.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\synapseIdVerificationQuestionsForDisplay.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\SynapseRemoveBankV3_Input.cs" />

@@ -4857,5 +4857,39 @@ namespace Nooch.API.Controllers
             return new StringResult();
         }
 
+
+
+        [HttpPost]
+        [ActionName("RemoveSynapseBankAccount")]
+        public StringResult RemoveSynapseBankAccount(RemoveBankAccountInputEntity user)
+        {
+
+
+
+            if (CommonHelper.IsValidRequest(user.AccessToken, user.MemberID))
+            {
+                try
+                {
+                    Logger.Info("Service Controller - RemoveSynapseBankAccount - [MemberId: " + user.MemberID + "]");
+                    var memdataAccess = new MembersDataAccess();
+                    return new StringResult { Result = memdataAccess.RemoveSynapseBankAccount(user.MemberID, user.BankAccountId) };
+
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Controller Error- RemoveSynapseBankAccount - memberId: [" + user.MemberID + "] Error : [" + ex + " ].");
+                    throw new Exception("Server Error.");
+                }
+
+
+            }
+            else
+            {
+                return new StringResult() { Result = "Invalid Access Token." };
+            }
+
+
+        }
+
     }
 }
