@@ -6716,7 +6716,7 @@ namespace Nooch.DataAccess
 
                 var bankAccountsFound =
                     noochConnection.SynapseBanksOfMembers.FirstOrDefault(
-                        m => m.MemberId == id && m.bankid == bankId );
+                        m => m.MemberId == id && m.Id == bankId );
 
                 if (bankAccountsFound !=null)
                 {
