@@ -4825,5 +4825,37 @@ namespace Nooch.API.Controllers
         }
 
 
+        [HttpPost]
+        [ActionName("MemberRegistration")]
+        public StringResult MemberRegistration(MemberRegistrationInputDto MemberDetails)
+        {
+            try
+            {
+                Logger.Info("Service Controller - MemberRegistration Initiated - NEW USER'S INFO: Name: [" + MemberDetails.UserName +
+                                       "], Email: [" + MemberDetails.UserName + "],  Type: [" + MemberDetails.type +
+                                       "],  Invite Code: [" + MemberDetails.inviteCode + "], SendEmail: [" + MemberDetails.sendEmail + "], ");
+
+                var mda = new MembersDataAccess();
+
+                string type = String.IsNullOrEmpty(MemberDetails.type) ? "Personal" : MemberDetails.type;
+
+                return new StringResult
+                {
+                    Result =
+                        mda.MemberRegistration(MemberDetails.Picture, MemberDetails.UserName, MemberDetails.FirstName.ToLower(),
+                                               MemberDetails.LastName.ToLower(), MemberDetails.PinNumber, MemberDetails.Password,
+                                               MemberDetails.SecondaryMail, MemberDetails.RecoveryMail, MemberDetails.UdId,
+                                               MemberDetails.friendRequestId, MemberDetails.invitedFriendFacebookId,
+                                               MemberDetails.facebookAccountLogin, MemberDetails.inviteCode, MemberDetails.sendEmail, type)
+                };
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Controller -> MemberRegistration FAILED: [Name: " + MemberDetails.UserName + "], Exception: [" + ex + "]");
+                Utility.ThrowFaultException(ex);
+            }
+            return new StringResult();
+        }
+
     }
 }

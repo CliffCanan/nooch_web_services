@@ -77,6 +77,7 @@
     <Compile Include="Entities\LandingPagesRelatedEntities\SynapseBankLoginRequestResult.cs" />
     <Compile Include="Entities\MobileAppInputEntities\MemberNotificationSettingsInput.cs" />
     <Compile Include="Entities\MobileAppInputEntities\MemberNotificationsNewStringTypeSettings.cs" />
+    <Compile Include="Entities\MobileAppInputEntities\MemberRegistrationInputDto.cs" />
     <Compile Include="Entities\MobileAppInputEntities\MySettingsInput.cs" />
     <Compile Include="Entities\MobileAppInputEntities\SaveMemberDOB_Input.cs" />
     <Compile Include="Entities\MobileAppInputEntities\StringInput.cs" />
@@ -89,6 +90,7 @@
     <Compile Include="Entities\MobileAppInputEntities\DisputeResult.cs" />
     <Compile Include="Entities\MobileAppInputEntities\RequestDto.cs" />
     <Compile Include="Entities\MobileAppInputEntities\UpdateMemberIpInput.cs" />
+    <Compile Include="Entities\MobileAppOutputEnities\FBResponseClass.cs" />
     <Compile Include="Entities\MobileAppOutputEnities\LocationSearch.cs" />
     <Compile Include="Entities\MobileAppOutputEnities\MemberBusinessDto.cs" />
     <Compile Include="Entities\MobileAppOutputEnities\MemberDto.cs" />
