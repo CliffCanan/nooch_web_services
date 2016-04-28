@@ -1694,7 +1694,7 @@ namespace Nooch.DataAccess
                         .ToArray());
 
 
-                var memberEntity = _dbContext.Members.Where(memberTemp => memberTemp.Nooch_ID.Equals(randomId)).FirstOrDefault();
+                var memberEntity = _dbContext.Members.FirstOrDefault(memberTemp => memberTemp.Nooch_ID.Equals(randomId));
                 if (memberEntity == null)
                 {
                     return randomId;
@@ -6295,7 +6295,7 @@ namespace Nooch.DataAccess
 
                 string noochRandomId = GetRandomNoochId();
 
-                if (!noochRandomId.Equals(null))
+                if (!String.IsNullOrEmpty(noochRandomId))
                 {                                  
 
                         #region Check Invitation/Referral Code
@@ -6370,7 +6370,7 @@ namespace Nooch.DataAccess
                         {
                             // Make  image from bytes
                             string filename = HttpContext.Current.Server.MapPath("UploadedPhotos") + "/Photos/" +
-                                              member.MemberId.ToString() + ".png";
+                                              member.MemberId + ".png";
                             using (FileStream fs = new FileStream(filename, FileMode.Create, FileAccess.ReadWrite))
                             {
                                 fs.Write(Picture, 0, (int)Picture.Length);
