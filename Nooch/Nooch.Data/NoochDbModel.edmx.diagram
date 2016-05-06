@@ -39,6 +39,7 @@
         <EntityTypeShape EntityType="NOOCHModel.SDNSearchResult" Width="1.5" PointX="16.375" PointY="7.75" />
         <EntityTypeShape EntityType="NOOCHModel.PasswordResetRequest" Width="1.5" PointX="9" PointY="30.25" />
         <AssociationConnector Association="NOOCHModel.FK_PasswordResetRequests_Members" />
+        <EntityTypeShape EntityType="NOOCHModel.SynapseAddTransactionResult" Width="1.5" PointX="16.375" PointY="12" />
       </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>
