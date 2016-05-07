@@ -6716,14 +6716,10 @@ namespace Nooch.DataAccess
 
             var id = Utility.ConvertToGuid(memberId);
             using (var noochConnection = new NOOCHEntities())
-            {
-
-                //var bankAccountsFound =
-                //    noochConnection.SynapseBanksOfMembers.FirstOrDefault(
-                //        m => m.MemberId == id && m.bankid == bankId );
+            {               
                 var bankAccountsFound =
-                  noochConnection.SynapseBanksOfMembers.FirstOrDefault(
-                      m => m.MemberId == id && m.Id == bankId);
+                    noochConnection.SynapseBanksOfMembers.FirstOrDefault(
+                        m => m.MemberId == id && m.Id == bankId );
 
                 if (bankAccountsFound !=null)
                 {
