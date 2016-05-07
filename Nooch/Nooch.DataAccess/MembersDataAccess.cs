@@ -6307,12 +6307,12 @@ namespace Nooch.DataAccess
                              inviteCodeObj = _dbContext.InviteCodes.FirstOrDefault(m => m.code == inviteCode);
 
 
-                            if (inviteCodeObj == null || inviteCodeObj.count >= inviteCodeObj.totalAllowed)
+                             if (inviteCodeObj != null && inviteCodeObj.count >= inviteCodeObj.totalAllowed) //Removed (inviteCodeObj == null || inviteCodeObj.count >= inviteCodeObj.totalAllowed) this condition, becz user can reg without Invite code -Surya 6-May-16
                             {
                                 Logger.Info("MDA -> MemberRegistration Attempted but Code Not Found - Code: [" + inviteCode + "]");
                                 return "Invite code used or does not exist.";
                             }
-                            else
+                             else if (inviteCodeObj != null)
                             {
                                 try
                                 {
@@ -6324,7 +6324,7 @@ namespace Nooch.DataAccess
                                 {
                                     Logger.Error("MDA -> MemberRegistration - Attempted to update Invite Code Repository but got EXCEPTION: [" + ex + "]");
                                 }
-                            }
+                            }                          
                         }
                         catch (Exception ex)
                         {
@@ -6337,7 +6337,7 @@ namespace Nooch.DataAccess
                         #region Create New Member Record In DB
 
                         string emailEncrypted = CommonHelper.GetEncryptedData(UserName);
-
+                       
                         var member = new Member
                         {
                             Nooch_ID = noochRandomId,
@@ -6356,8 +6356,8 @@ namespace Nooch.DataAccess
                             DateModified = DateTime.Now,
                             UserNameLowerCase = CommonHelper.GetEncryptedData(userNameLowerCase),
                             FacebookAccountLogin = CommonHelper.GetEncryptedData(facebookAccountLogin.ToLower()),
-                            InviteCodeIdUsed = inviteCodeObj.InviteCodeId,
-                            Type = !String.IsNullOrEmpty(type) ? type : "Personal",
+                         //   InviteCodeIdUsed = inviteCodeObj.InviteCodeId,                      
+                             Type = !String.IsNullOrEmpty(type) ? type : "Personal",
                             IsOnline = true,
                             // CLIFF (8/12/15): The UDID1 will now be specifically for Synapse's Device Fingerprint requirement.
                             //                  It will NOT be for sending push notifications - we will use the 'DeviceToken' value for that, which cannot
@@ -6365,6 +6365,10 @@ namespace Nooch.DataAccess
                             UDID1 = UUID,
                             IsVerifiedWithSynapse = false,
                         };
+                        if (inviteCodeObj != null )
+                        {
+                           member.InviteCodeIdUsed = inviteCodeObj.InviteCodeId;
+                        }
 
                         if (Picture != null)
                         {
@@ -6714,9 +6718,12 @@ namespace Nooch.DataAccess
             using (var noochConnection = new NOOCHEntities())
             {
 
+                //var bankAccountsFound =
+                //    noochConnection.SynapseBanksOfMembers.FirstOrDefault(
+                //        m => m.MemberId == id && m.bankid == bankId );
                 var bankAccountsFound =
-                    noochConnection.SynapseBanksOfMembers.FirstOrDefault(
-                        m => m.MemberId == id && m.bankid == bankId );
+                  noochConnection.SynapseBanksOfMembers.FirstOrDefault(
+                      m => m.MemberId == id && m.Id == bankId);
 
                 if (bankAccountsFound !=null)
                 {
