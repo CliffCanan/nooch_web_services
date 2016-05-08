@@ -525,24 +525,22 @@ namespace Nooch.Web.Controllers
             {
                 // 1. Attempt to register the user with Synapse
                 BankLoginResult accountCreateResult = RegisterUserWithSynapse(inp.memberid);
+
                 res.ssn_verify_status = accountCreateResult.ssn_verify_status; // Will be overwritten if Bank Login is successful below
 
                 if (accountCreateResult.IsSuccess == true)
                 {
-                    Logger.Info("**Add_Bank** CodeBehind -> BankLogin -> Synapse account created successfully! [MemberID: " + inp.memberid +
+                    Logger.Info("NoochController -> BankLogin -> Synapse account created successfully! [MemberID: " + inp.memberid +
                                            "], [SSN Status: " + accountCreateResult.ssn_verify_status + "]");
 
                     // 2. Now call the bank login service.
                     //    Response could be: 1.) array[] of banks,  2.) Question-based MFA,  3.) Code-based MFA, or  4.) Failure/Error
 
                     string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-                    //string serviceMethod = "/SynapseBankLoginRequest?BankName=" + inp.bankname + "&MemberId=" + inp.memberid + "&IsPinRequired=" + inp.IsPinRequired
-                    //    + "&UserName=" + inp.username + "&Password=" + inp.password + "&PinNumber=" + inp.PinNumber;
                     string serviceMethod = "/SynapseV3AddNode?MemberId=" + inp.memberid + "&BnkName=" + inp.bankname + "&BnkUserName=" + inp.username
                                            + "&BnkPw=" + inp.password;
 
-                    SynapseV3BankLoginResult_ServiceRes bankLoginResult =
-                        ResponseConverter<SynapseV3BankLoginResult_ServiceRes>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+                    SynapseV3BankLoginResult_ServiceRes bankLoginResult =ResponseConverter<SynapseV3BankLoginResult_ServiceRes>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
 
                     if (bankLoginResult.Is_success == true)
                     {
@@ -554,7 +552,9 @@ namespace Nooch.Web.Controllers
                             res.Bank_Access_Token = bankLoginResult.bankMFA;
                             res.MFA_Type = "questions";    // no more code based as per synapse V3 docs
                         }
+
                         List<SynapseBankClass> synbanksList = new List<SynapseBankClass>();
+
                         if (bankLoginResult.SynapseNodesList.nodes[0] != null)
                         {
                             foreach (SynapseIndividualNodeClass bankNode in bankLoginResult.SynapseNodesList.nodes)
@@ -586,13 +586,13 @@ namespace Nooch.Web.Controllers
                     }
                     else
                     {
-                        Logger.Error("**Add_Bank** CodeBehind -> BankLogin FAILED -> [MemberID: " + inp.memberid + "], [Error Msg: " + bankLoginResult.errorMsg + "]");
+                        Logger.Error("NoochController -> BankLogin FAILED -> [MemberID: " + inp.memberid + "], [Error Msg: " + bankLoginResult.errorMsg + "]");
                         res.ERROR_MSG = bankLoginResult.errorMsg;
                     }
                 }
                 else
                 {
-                    Logger.Error("**Add_Bank** CodeBehind -> BankLogin -> Register Synapse User FAILED -> [MemberID: " + inp.memberid + "], [Error Msg: " + accountCreateResult.Message + "]");
+                    Logger.Error("NoochController -> BankLogin -> Register Synapse User FAILED -> [MemberID: " + inp.memberid + "], [Error Msg: " + accountCreateResult.Message + "]");
                     res.ERROR_MSG = accountCreateResult.Message;
                 }
 
@@ -600,14 +600,14 @@ namespace Nooch.Web.Controllers
                 // ... not sure which one to prioritize yet in the case of a discrepency, but going with BankLogin one for now.
                 if (res.ssn_verify_status != accountCreateResult.ssn_verify_status)
                 {
-                    Logger.Info("**Add_Bank** CodeBehind -> BankLogin -> ssn_verify_status from Registering User was [" +
+                    Logger.Info("NoochController -> BankLogin -> ssn_verify_status from Registering User was [" +
                                             accountCreateResult.ssn_verify_status + "], but ssn_verify_status from BankLogin was: [" +
                                             res.ssn_verify_status + "]");
                 }
             }
             catch (Exception we)
             {
-                Logger.Error("**Add_Bank** CodeBehind -> BankLogin FAILED - [MemberID: " + inp.memberid +
+                Logger.Error("NoochController -> BankLogin FAILED - [MemberID: " + inp.memberid +
                                    "], [Exception: " + we.InnerException + "]");
 
                 res.ERROR_MSG = "error occured at server.";
