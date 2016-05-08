@@ -453,7 +453,7 @@ div.dividerLine {
     padding: 4px 9px;
     border: 1px solid #DADADA;
     border-radius: 8px;
-    background-color: rgba(228,230,232,.7);
+    background-color: rgba(251,252,254,.92);
 	font-size: 15.5px;
 	font-weight: 400;
 	text-align: center;
@@ -1151,12 +1151,16 @@ html.landlord {overflow-y: visible;}
     .addBank-instructions {
         font-size: 18px;
         letter-spacing: .2px;
-        box-shadow: 0 7px 12px -7px rgba(0,0,0,.25);
+        box-shadow: 2px 6px 12px -4px rgba(0,0,0,.35);
         position: fixed;
-        right: 1.75%;
+        right: 2.5%;
         max-width: 365px;
         top: 26%;
         padding: 10px;
+    }
+
+    #bankLogin .addBank-instructions {
+        position: static;
     }
 
     input#bankSearch {

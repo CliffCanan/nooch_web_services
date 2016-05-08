@@ -9,7 +9,7 @@ var sendToIdVerQuestions = false;
 var isManual = false;
 
 var step1height = '554px';
-var step2height = '500px';
+var step2height = '520px';
 
 var wasEnterPressed = false;
 
@@ -85,18 +85,18 @@ $(".manualLogin").click(function () {
 	});
 
 	$('body.body').css("overflow","visible");
-	var step2height_manual = '566px';
+	var step2height_manual = '586px';
 
 	if (fromLandlordApp == "yes")
 	{
-        step2height_manual = '662px'
+        step2height_manual = '672px'
 	}
 	if ($(window).width() > 767)
 	{
 	    step2height_manual = '650px'
-	    if ($(window).width() > 1000) {
-	        step2height_manual = '680px'
-	    }
+	    //if ($(window).width() > 1000) {
+	    //    step2height_manual = '680px'
+	    //}
 	}
 	//console.log("step2height_manual: " + step2height_manual);
 	$('#addBankManual').removeClass("hide",function() {
@@ -251,11 +251,11 @@ function CheckBankDetails(bankName) {
 
                     if ($(window).width() < 1000)
                     {
-                        step2height = '500px';
+                        step2height = '580px';
                     }
                     else
                     {
-                        step2height = '560px';
+                        step2height = '590px';
                     }
                 }
                 $('#bankLogin #bankUsername').parsley().reset();
@@ -1353,7 +1353,7 @@ function sendToRedUrl() {
          
 
 
-        else    // All Others - most likely no RED_URL was passed in URL, so defaulting to a Sweet Alert
+        else // All Others - most likely no RED_URL was passed in URL, so defaulting to a Sweet Alert
             {
                 swal({
                     title: "Bank Linked Successfully",
@@ -1387,19 +1387,12 @@ function sendToRedUrl() {
                         // window.top.location.href = "http://localhost:2061/Nooch/DepositMoneyComplete?mem_id=" + MEMBER_ID;
                     }, 400);
                 });
-
-                //window.location = RED_URL;
             }
         }
-    
+
 }
 
 /*function checkOrUncheckSelectedAccount() {}*/
-
-
-
-
-
 
 
 
@@ -1464,7 +1457,7 @@ $(document).ready(function () {
 		$('.encryption-notice').addClass('hide');
 		
 		step1height = '514px';
-		step2height = '466px';
+		step2height = '496px';
 	}
 	else if ((fromLandlordApp.indexOf("yes") > -1) || ($(window).width() > 500))
 	{
@@ -1478,7 +1471,7 @@ $(document).ready(function () {
 	if ($(window).width() > 1100)
 	{
 	    step1height = '650px';
-	    step2height = '510px';
+	    step2height = '540px';
 	}
 
 	$('.addBank-container').css("height", step1height);
@@ -1500,7 +1493,7 @@ $(document).ready(function () {
 
 	    swal({
 	        title: "Secure, Private Payments",
-	        text: "<p>RentScene offers a quick, secure way to pay rent without giving your routing or account number. &nbsp;Just select your bank and login to your online banking<span class='desk-only'> as you normally do</span>.</p>" +
+	        text: "<p>Rent Scene offers a quick, secure way to pay rent without giving your routing or account number. &nbsp;Just select your bank and login to your online banking<span class='desk-only'> as you normally do</span>.</p>" +
 				  "<ul class='fa-ul'><li><i class='fa-li fa fa-check'></i><strong>We don't see or store</strong> your bank credentials</li>" +
 				  "<li><i class='fa-li fa fa-check'></i>The person you pay never sees any of your personal or bank info (except your name)</li>" +
 				  "<li><i class='fa-li fa fa-check'></i>All data is secured with <strong>bank-grade encryption</strong></li></ul>",

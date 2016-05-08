@@ -333,7 +333,7 @@ function runIdWizard() {idVer
                             {
                                 updateValidationUi("ssn", true);
 
-                                // Great, we can finally go to the next step of the wizard :-]
+                                // Great, we can finally go to the next step of the wizard :-D
                                 $('#idVerWiz > .content').animate({ height: "19em" }, 600)
                                 return true;
                             }
@@ -501,7 +501,7 @@ function updateValidationUi(field, success) {
 
         var helpBlockTxt = "";
         if (field == "name") {
-            helpBlockTxt = "Please enter your full <strong>legal name</strong>.";
+            helpBlockTxt = "Please enter <strong style='text-decoration:underline;'>your</strong> full <strong>legal name</strong>.";
         }
         else if (field == "dob") {
             helpBlockTxt = "Please enter your date of birth. &nbsp;Only needed to verify your ID!"
@@ -516,7 +516,7 @@ function updateValidationUi(field, success) {
             }
         }
         else if (field == "address") {
-            helpBlockTxt = "Please enter the physical street address of where you <strong>currently</strong> live."
+            helpBlockTxt = "Please enter <strong>just the <span style='text-decoration:underline;'>street address</span></strong> of where you <strong>currently</strong> live."
         }
         else if (field == "zip") {
             helpBlockTxt = "Please enter the zip code for the street address above."

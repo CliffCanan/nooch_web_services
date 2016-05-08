@@ -2139,8 +2139,6 @@ namespace Nooch.API.Controllers
 
                 bool b = (synapseBank != null);
 
-
-
                 //var config =
                 //        new MapperConfiguration(cfg => cfg.CreateMap<Member,MemberDto>()
                 //            .BeforeMap((src, dest) => src.FirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(src.FirstName)))
@@ -2164,8 +2162,6 @@ namespace Nooch.API.Controllers
                 //var mapper = config.CreateMapper();
 
                 //MemberDto member = mapper.Map<MemberDto>(memberEntity);
-
-
 
 
                 // Create MemberDTO Object to return to the app
@@ -2423,6 +2419,7 @@ namespace Nooch.API.Controllers
             return res;
         }
 
+
         [HttpGet]
         [ActionName("GetTransactionDetailByIdForRequestPayPage")]
         public TransactionDto GetTransactionDetailByIdForRequestPayPage(string TransactionId)
@@ -2532,10 +2529,11 @@ namespace Nooch.API.Controllers
             catch (Exception ex)
             {
                 Logger.Error("Service Controller -> GetTransactionDetailByIdForRequestPayPage EXCEPTION - [Trans ID: " + TransactionId + "], [Exception: " + ex + "]");
-                //UtilityService.ThrowFaultException(ex);
+
                 return null;
             }
         }
+
 
         [HttpGet]
         [ActionName("CancelRejectTransaction")]
@@ -2562,6 +2560,7 @@ namespace Nooch.API.Controllers
             }
         }
 
+
         [HttpGet]
         [ActionName("CreateNonNoochUserPasswordForPhoneInvitations")]
         public StringResult CreateNonNoochUserPasswordForPhoneInvitations(string TransId, string password, string EmailId)
@@ -2583,7 +2582,7 @@ namespace Nooch.API.Controllers
         }
 
 
-        //surya's code --
+        // Surya's code (Jan-Mar 2016)
         [HttpPost]
         [ActionName("CreateNonNoochUserAccountAfterRejectMoney")]
         public StringResult CreateNonNoochUserAccountAfterRejectMoney(string TransId, string password, string EmailId, string UserName)
@@ -2602,6 +2601,7 @@ namespace Nooch.API.Controllers
             }
             return new StringResult { Result = "" };
         }
+
 
         [HttpGet]
         [ActionName("RejectMoneyforNonNoochUser")]
@@ -2622,6 +2622,7 @@ namespace Nooch.API.Controllers
             return new StringResult { Result = "" };
         }
 
+
         [HttpGet]
         [ActionName("RejectMoneyRequestForNonNoochUser")]
         public StringResult RejectMoneyRequestForNonNoochUser(string transactionId)
@@ -2641,6 +2642,7 @@ namespace Nooch.API.Controllers
             }
             return new StringResult { Result = "" };
         }
+
 
         [HttpGet]
         [ActionName("RejectMoneyCommon")]
@@ -2665,6 +2667,7 @@ namespace Nooch.API.Controllers
             }
             return new StringResult { Result = "" };
         }
+
 
         // made it post type beacuse access token might generate white spaces which can be encoded to plus by web request...which will create problem for validating access token.
         [HttpPost]
@@ -4863,32 +4866,24 @@ namespace Nooch.API.Controllers
         [ActionName("RemoveSynapseBankAccount")]
         public StringResult RemoveSynapseBankAccount(RemoveBankAccountInputEntity user)
         {
-
-
-
             if (CommonHelper.IsValidRequest(user.AccessToken, user.MemberID))
             {
                 try
                 {
-                    Logger.Info("Service Controller - RemoveSynapseBankAccount - [MemberId: " + user.MemberID + "]");
-                    var memdataAccess = new MembersDataAccess();
-                    return new StringResult { Result = memdataAccess.RemoveSynapseBankAccount(user.MemberID, user.BankAccountId) };
-
+                    Logger.Info("Service Controller - RemoveSynapseBankAccount - [MemberId: " + user.MemberID + "], [Bank ID: " + user.BankAccountId + "]");
+                    var mda = new MembersDataAccess();
+                    return new StringResult { Result = mda.RemoveSynapseBankAccount(user.MemberID, user.BankAccountId) };
                 }
                 catch (Exception ex)
                 {
                     Logger.Error("Service Controller Error- RemoveSynapseBankAccount - memberId: [" + user.MemberID + "] Error : [" + ex + " ].");
                     throw new Exception("Server Error.");
                 }
-
-
             }
             else
             {
                 return new StringResult() { Result = "Invalid Access Token." };
             }
-
-
         }
 
     }
