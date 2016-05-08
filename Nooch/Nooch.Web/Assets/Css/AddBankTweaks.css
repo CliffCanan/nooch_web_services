@@ -1133,7 +1133,7 @@ html.landlord {overflow-y: visible;}
 #bankNotListed { margin-top: -24px; }
 
 #addBank-selectAccount .input-group-addon,
-#addBank-selectAccount .form-control { height: 50px; font-size: 17px; padding: 5px 16px; }
+#addBank-selectAccount .form-control { height: 50px; cursor: pointer; font-size: 17px;}
 
 }
 

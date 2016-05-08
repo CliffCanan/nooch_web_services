@@ -438,9 +438,9 @@ $('#bankLogin').submit(function(e) {
 
 
 function submitBnkLgn() {
-    //console.log("{bankname: '" + BANK_NAME + "', IsPinRequired: '" + Is_PIN_REQUIRED + "'}");
     isManual = false;
     
+    //console.log("submitBnkLgn Fired.");
 
     $.ajax({
         type: "POST",
@@ -568,10 +568,11 @@ function submitBnkLgn() {
 					$('#addBank-sec-question').parsley().reset();
 
 					// Displaying First MFA Question
-					$('#securityQuestionOneFromServer').html(bnkLoginResult.SynapseQuestionBasedResponse.response.mfa[0].question);
+					$('#securityQuestionOneFromServer').html(bnkLoginResult.mfaMessage);
 				}
 
-				else if (bnkLoginResult.MFA_Type == "device") 
+                // CC (5/7/16): No more Code-Based MFA anymore
+				/*else if (bnkLoginResult.MFA_Type == "device") 
 				{
 				    MFA_TYPE = "code";
 
@@ -586,7 +587,7 @@ function submitBnkLgn() {
 					$('#codeMsg').html(bnkLoginResult.SynapseCodeBasedResponse.response.mfa.message);
 					$('#codeMsg').velocity("transition.bounceLeftIn",900);
 					$('#securityCodeInput').attr('data-parsley-required-message', 'Alas, this is a required security code sent by ' + BANK_NAME + '.');
-				}
+				}*/
 			}
 
 			// NO MFA... ARRAY OF BANKS RETURNED
@@ -603,6 +604,7 @@ function submitBnkLgn() {
 
 				var accountnum = 0;
 				var bankht = "";
+
 				$.each(bnkLoginResult.SynapseBanksList.banks, function (i, val) {
                     var currentBankAccnt = val;
                     accountnum += 1;
@@ -619,6 +621,17 @@ function submitBnkLgn() {
 					$('#bankSelction').removeClass('btn-gray').addClass('btn-success');
 					$('#label1').addClass('selected');
 				}
+
+				$("#addBank-selectAccount #allAccounts input").change(function ()
+				{
+					$('#bankSelction').removeClass('btn-gray').addClass('btn-success');
+
+					var x = $(this).attr('id');
+					x = x.substring(x.length - 1);
+
+					$("#addBank-selectAccount .form-control.selected").removeClass('selected');
+					$('#label' + x).addClass('selected');
+				});
 			}
         },
         Error: function (x, e) {
@@ -850,9 +863,10 @@ $('#addBank-code').submit(function(e) {
 $('#addBank-sec-question').submit(function(e) {
 	e.preventDefault();
 
+	//console.log("#addBank-sec-question -> Submit Fired.");
     //console.log("SEC_QUES_NO value is: " + SEC_QUES_NO);
 
-    // Question based MFA and 1st question response needed
+    // Question-based MFA and 1st question response needed
 	if (SEC_QUES_NO == 1)
 	{
 		if ($('#securityQuest1').parsley().validate() === true)
@@ -897,6 +911,8 @@ function MFALogin() {
     var mfaResp = '';
     var accessCode = '';
 	var loadingText = '';
+
+	console.log("MFALogin() Fired.");
 
 	//console.log("SEC_QUES_NO value is: " + SEC_QUES_NO);
     if (MFA_TYPE == "question")
@@ -1200,7 +1216,6 @@ function SetDefaultAct() {
 
 function sendToRedUrl() {
     console.log("RED_URL is is: [" + RED_URL + "]");
-
    
     // First, check if this is a Landlord
     if (fromLandlordApp == "yes")
@@ -1347,11 +1362,8 @@ function sendToRedUrl() {
                     // window.top.location.href = "http://localhost:2061/Nooch/PayRequestComplete?mem_id=" + MEMBER_ID;
                 }, 400);
             });
-
-            //window.location = RED_URL;
         }
          
-
 
         else // All Others - most likely no RED_URL was passed in URL, so defaulting to a Sweet Alert
             {
@@ -1594,8 +1606,7 @@ $(document).ready(function () {
          if (val.length == 9) { //for checking 3 characters
                lookupRoutingNum(val);
          }
-
-    });
+	});
 });
 
 function lookupRoutingNum(rn)
@@ -1697,10 +1708,3 @@ function resetBankLogoSize() {
 		height: "auto"
 	})
 }
-
-//CallBack method when the page call success
-//function onSucceed(results, currentContext, methodName) {
-//}
-//CallBack method when the page call fails due to internal, server error 
-//function onError(results, currentContext, methodName) {
-//}

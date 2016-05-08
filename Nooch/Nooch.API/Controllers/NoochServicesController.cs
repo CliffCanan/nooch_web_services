@@ -3675,18 +3675,19 @@ namespace Nooch.API.Controllers
                                 sbr.mfaQuestion = bankLoginRespFromSynapse["nodes"][0]["extra"]["mfa"]["message"].ToString().Trim();
                                 sbr.AuthType = "questions";
                                 sbr.BankAccessToken = CommonHelper.GetEncryptedData(bankLoginRespFromSynapse["nodes"][0]["_id"]["$oid"].ToString());
+
                                 res.bankOid = bankLoginRespFromSynapse["nodes"][0]["_id"]["$oid"].ToString();
                                 res.bankMFA = res.bankOid;
-                                // Set final values for returning this function
                                 res.Is_MFA = true;
                                 res.errorMsg = "OK";
-                                res.mfaMessage = bankLoginRespFromSynapse["nodes"][0]["extra"]["mfa"]["message"].ToString().Trim();
+                                res.mfaMessage = sbr.mfaQuestion;
 
                                 nodes[] nodesarray = new nodes[1];
 
                                 _id idd = new _id();
                                 idd.oid = bankLoginRespFromSynapse["nodes"][0]["_id"]["$oid"].ToString();
-                                // Cliff: Not sure this syntax is right.   --Malkit: me neither... will check this when I get any such response from web sevice.
+                                // Cliff: Not sure this syntax is right.
+                                // Malkit: me neither... will check this when I get any such response from web sevice.
 
                                 nodes nodenew = new nodes();
                                 nodenew._id = idd;
@@ -3699,36 +3700,8 @@ namespace Nooch.API.Controllers
 
                                 rootBankObj.nodes = nodesarray;
 
-                                // not required when mfa is returned
-                                //SynapseNodesListClass nodesList = new SynapseNodesListClass();
-                                //List<SynapseIndividualNodeClass> bankslistextint = new List<SynapseIndividualNodeClass>();
-
-                                //foreach (nodes bank in nodesarray)
-                                //{
-                                //    SynapseIndividualNodeClass b = new SynapseIndividualNodeClass();
-                                //    b.account_class = bank.info._class;
-                                //    b.bank_name = bank.info.bank_name;
-                                //    //b.date = bank.date;
-                                //    b.oid = bank._id.oid;
-                                //    b.is_active = bank.is_active;
-                                //    //b.is_verified = bank.is_verified;
-                                //    //b.mfa_verifed = bank.mfa_verifed;
-                                //    b.name_on_account = bank.info.name_on_account;
-                                //    b.nickname = bank.info.nickname;
-                                //    b.account_num = (bank.info.account_num);
-
-
-                                //    bankslistextint.Add(b);
-                                //}
-                                //nodesList.nodes = bankslistextint;
-                                //nodesList.success = true;
-
-                                //  res.SynapseNodesList = nodesList;
-
-
                                 res.SynapseNodesList = new SynapseNodesListClass();
                                 res.SynapseNodesList.nodes = new List<SynapseIndividualNodeClass>();
-
 
                                 #endregion MFA was returned
                             }

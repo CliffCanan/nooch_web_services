@@ -531,7 +531,7 @@ namespace Nooch.Web.Controllers
                 if (accountCreateResult.IsSuccess == true)
                 {
                     Logger.Info("NoochController -> BankLogin -> Synapse account created successfully! [MemberID: " + inp.memberid +
-                                           "], [SSN Status: " + accountCreateResult.ssn_verify_status + "]");
+                                "], [SSN Status: " + accountCreateResult.ssn_verify_status + "]");
 
                     // 2. Now call the bank login service.
                     //    Response could be: 1.) array[] of banks,  2.) Question-based MFA,  3.) Code-based MFA, or  4.) Failure/Error
@@ -540,7 +540,7 @@ namespace Nooch.Web.Controllers
                     string serviceMethod = "/SynapseV3AddNode?MemberId=" + inp.memberid + "&BnkName=" + inp.bankname + "&BnkUserName=" + inp.username
                                            + "&BnkPw=" + inp.password;
 
-                    SynapseV3BankLoginResult_ServiceRes bankLoginResult =ResponseConverter<SynapseV3BankLoginResult_ServiceRes>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+                    SynapseV3BankLoginResult_ServiceRes bankLoginResult = ResponseConverter<SynapseV3BankLoginResult_ServiceRes>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
 
                     if (bankLoginResult.Is_success == true)
                     {
@@ -549,8 +549,9 @@ namespace Nooch.Web.Controllers
 
                         if (bankLoginResult.Is_MFA)
                         {
-                            res.Bank_Access_Token = bankLoginResult.bankMFA;
-                            res.MFA_Type = "questions";    // no more code based as per synapse V3 docs
+                            res.Bank_Access_Token = bankLoginResult.bankOid;
+                            res.MFA_Type = "questions"; // no more code-based MFA anymore with Synapse V3
+                            res.mfaMessage = bankLoginResult.mfaMessage; // CLIFF (5/7/16): Adding this to try to fix issue after updating to V3 - the MFA question isn't being displayed to the user
                         }
 
                         List<SynapseBankClass> synbanksList = new List<SynapseBankClass>();
@@ -664,9 +665,7 @@ namespace Nooch.Web.Controllers
                         sbc.is_active = bankNode.is_active;
 
                         synbanksList.Add(sbc);
-
                     }
-
 
                     res.SynapseBanksList = new SynapseBanksListClass()
                     {
@@ -836,7 +835,6 @@ namespace Nooch.Web.Controllers
                         res.Is_MFA = bnkloginresult.Is_MFA;
                         res.MFA_Type = bnkloginresult.MFA_Type;
                         res.SynapseBanksList = bnkloginresult.SynapseBanksList;
-                        res.SynapseCodeBasedResponse = bnkloginresult.SynapseCodeBasedResponse;
                         res.SynapseQuestionBasedResponse = bnkloginresult.SynapseQuestionBasedResponse;
                         res.ERROR_MSG = "OK";
                     }
