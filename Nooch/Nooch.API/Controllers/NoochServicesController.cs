@@ -5151,5 +5151,39 @@ namespace Nooch.API.Controllers
             return new StringResult();
         }
 
+        [HttpGet]
+        [ActionName("LogOutRequest")]
+        StringResult LogOutRequest(string accessToken, string memberId)
+        {
+            if (CommonHelper.IsValidRequest(accessToken, memberId))
+            {
+                try
+                {
+                    Logger.Info("Service Layer -> LogOutRequest - [MemberId: " + memberId + "]");
+                    var memberDataAccess = new MembersDataAccess();
+                    string cookie = memberDataAccess.LogOut(memberId);
+                    if (string.IsNullOrEmpty(cookie))
+                    {
+                        cookie = "LogOut failed.";
+                        return new StringResult { Result = "LogOut failed." };
+                    }
+                    else
+                    {
+                        return new StringResult { Result = "Success." };
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Layer -> LogOutRequest FAILED - [MemberId: " + memberId + "], [Exception: " + ex + "]");
+                    
+                }
+                return new StringResult();
+            }
+            else
+            {
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
+
     }
 }

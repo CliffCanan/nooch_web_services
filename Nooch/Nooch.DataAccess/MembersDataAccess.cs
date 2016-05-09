@@ -6489,6 +6489,46 @@ namespace Nooch.DataAccess
             }
         }
 
+        public string LogOut(string memberId)
+        {
+            if (LogoutRequest(memberId) == "Success")
+            {
+                return "Success";
+            }
+            else
+            {
+                return string.Empty;
+            }
+        }
+
+        public string LogoutRequest(string memberId)
+        {
+            Logger.Info("MDA -> LogoutRequest Initiated - [MemberId: " + memberId + "]");
+
+            var id = Utility.ConvertToGuid(memberId);
+
+            using (var noochConnection = new NOOCHEntities())
+            {
+                
+                var memberEntity = noochConnection.Members.FirstOrDefault(m=>m.MemberId==id && m.IsDeleted==false);
+
+                if (memberEntity != null)
+                {
+                    memberEntity.InvalidLoginTime = null;
+                    memberEntity.InvalidLoginAttemptCount = null;
+                    memberEntity.AccessToken = null;
+                    memberEntity.IsOnline = false;
+
+                    noochConnection.SaveChanges();
+                    return "Success";
+                }
+                else
+                {
+                    return "Invalid username.";
+                }
+            }
+        }
+
 
     }
 }
