@@ -36,7 +36,25 @@ namespace Nooch.DataAccess
             return _dbContext.Members.FirstOrDefault(m => m.MemberId == memberGuid);
         }
 
+        /// <summary>
+        /// Get Member's Privacy settings
+        /// </summary>
+        /// <param name="memberId"></param>
+        /// <returns></returns>
+        public MemberPrivacySetting GetMemberPrivacySettings(string memberId)
+        {
+            Logger.Info("MDA - GetMemberPrivacySettings - memberId: [" + memberId + "]");
 
+            using (var noochConnection = new NOOCHEntities())
+            {
+                var id = Utility.ConvertToGuid(memberId);
+
+                var memberPrivacySettings = noochConnection.MemberPrivacySettings.FirstOrDefault(m => m.MemberId == id);
+                    
+
+                return memberPrivacySettings;
+            }
+        }
         public string getReferralCode(String memberId)
         {
             Logger.Info("MDA -> getReferralCode Initiated - [MemberId: " + memberId + "]");
@@ -5960,6 +5978,47 @@ namespace Nooch.DataAccess
             }
         }
 
+
+        /// <summary>
+        /// To update Member's Privacy settings
+        /// </summary>
+        /// <param name="memberId"></param>
+        /// <param name="showInSearch"></param>
+        /// <param name="allowSharing"></param>
+        /// <param name="requireImmediately"></param>
+        public string MemberPrivacySettings(string memberId, bool showInSearch, bool allowSharing, bool requireImmediately)
+        {
+            Logger.Info("MDA -> MemberPrivacySettings - [MemberId: " + memberId + "]");
+
+            using (var noochConnection = new NOOCHEntities())
+            {
+                
+
+                var id = Utility.ConvertToGuid(memberId);
+                
+                var memberPrivacySettings = noochConnection.MemberPrivacySettings.FirstOrDefault(m => m.MemberId == id);
+                
+
+                if (memberPrivacySettings != null)
+                {
+                    memberPrivacySettings.ShowInSearch = showInSearch;
+                    memberPrivacySettings.AllowSharing = allowSharing;
+                    memberPrivacySettings.RequireImmediately = requireImmediately;
+
+                    if (memberPrivacySettings.DateCreated == null)
+                    {
+                        memberPrivacySettings.DateCreated = DateTime.Now;
+                    }
+                    else
+                    {
+                        memberPrivacySettings.DateModified = DateTime.Now;
+                    }
+                }
+
+                int value = noochConnection.SaveChanges();
+                return value > 0 ? "Flag is updated successfully." : "Failure";
+            }
+        }
 
         public string SetShowInSearch(string memberId, bool showInSearch)
         {

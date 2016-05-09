@@ -4778,10 +4778,31 @@ namespace Nooch.API.Controllers
             }
         }
 
+        [HttpGet]
+        [ActionName("ValidatePinNumberForPasswordForgotPage")]
+        public StringResult ValidatePinNumberForPasswordForgotPage(string memberId, string pinNo)
+        {
+            try
+            {
+                Logger.Info("Service layer - ValidatePinNumberForPasswordForgotPage - memberId: [" + memberId + "]");
+                var memberDataAccess = new MembersDataAccess();
+                return new StringResult { Result = CommonHelper.ValidatePinNumber(memberId, pinNo.Replace(" ", "+")) };
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Controller - ValidatePinNumberForPasswordForgotPage FAILED [memberId: " + memberId + "]. Exception: [" + ex + "]");
+                
+            }
+            return new StringResult();
+        }
+
+
+
+
 
         [HttpGet]
         [ActionName("ValidatePinNumberToEnterForEnterForeground")]
-      public  StringResult ValidatePinNumberToEnterForEnterForeground(string memberId, string pinNo, string accessToken)
+        public StringResult ValidatePinNumberToEnterForEnterForeground(string memberId, string pinNo, string accessToken)
         {
             if (CommonHelper.IsValidRequest(accessToken, memberId))
             {
@@ -5004,7 +5025,7 @@ namespace Nooch.API.Controllers
                                                MemberDetails.LastName.ToLower(), MemberDetails.PinNumber, MemberDetails.Password,
                                                MemberDetails.SecondaryMail, MemberDetails.RecoveryMail, MemberDetails.UdId,
                                                MemberDetails.friendRequestId, MemberDetails.invitedFriendFacebookId,
-                                               MemberDetails.facebookAccountLogin, MemberDetails.inviteCode, MemberDetails.sendEmail, type,null,null,null,null,null)
+                                               MemberDetails.facebookAccountLogin, MemberDetails.inviteCode, MemberDetails.sendEmail, type, null, null, null, null, null)
                 };
             }
             catch (Exception ex)
@@ -5075,7 +5096,7 @@ namespace Nooch.API.Controllers
                             {"$PropAddress$", propAddress}
                         };
 
-                    Utility.SendEmail(template,  "landlords@rentscene.com", email,
+                    Utility.SendEmail(template, "landlords@rentscene.com", email,
                                                 null, subject, null, tokens, null, null, null);
 
                     res.Result = "Email Template [" + template + "] sent successfully to [" + email + "]";
@@ -5134,11 +5155,11 @@ namespace Nooch.API.Controllers
                 }
                 else if (cookie == "Registered")
                 {
-                    
+
                     string state = GenerateAccessToken();
                     CommonHelper.UpdateAccessToken(userEmail, state);
                     return new StringResult { Result = state };
-                    
+
                 }
                 else if (cookie == "Invalid user id or password.")
                 {
@@ -5172,7 +5193,7 @@ namespace Nooch.API.Controllers
             catch (Exception ex)
             {
                 Logger.Error("Service Layer -> LoginWithFacebook FAILED - [userEmail: " + userEmail + "], [Exception: " + ex + "]");
-                
+
             }
             return new StringResult();
         }
@@ -5201,7 +5222,7 @@ namespace Nooch.API.Controllers
                 catch (Exception ex)
                 {
                     Logger.Error("Service Layer -> LogOutRequest FAILED - [MemberId: " + memberId + "], [Exception: " + ex + "]");
-                    
+
                 }
                 return new StringResult();
             }
@@ -5213,8 +5234,8 @@ namespace Nooch.API.Controllers
 
         [HttpGet]
         [ActionName("MemberRegistrationGet")]
-       public genericResponse MemberRegistrationGet(string name, string dob, string ssn, string address, string zip,
-            string email, string phone, string fngprnt, string ip, string type, string pw)
+        public genericResponse MemberRegistrationGet(string name, string dob, string ssn, string address, string zip,
+             string email, string phone, string fngprnt, string ip, string type, string pw)
         {
             genericResponse res = new genericResponse();
             res.success = false;
@@ -5311,6 +5332,74 @@ namespace Nooch.API.Controllers
             }
 
             return res;
+        }
+
+
+
+        [HttpPost]
+        [ActionName("MemberPrivacySettings")]
+        public StringResult MemberPrivacySettings(PrivacySettings privacySettings, string accessToken)
+        {
+            if (CommonHelper.IsValidRequest(accessToken, privacySettings.MemberId))
+            {
+                try
+                {
+                    Logger.Info("Service Layer - MemberPrivacySettings Initiated - MemberId: [" + privacySettings.MemberId + "]");
+                    var mda = new MembersDataAccess();
+                    return new StringResult
+                    {
+                        Result = mda.MemberPrivacySettings(privacySettings.MemberId,
+                            (bool)privacySettings.ShowInSearch, (bool)privacySettings.AllowSharing, (bool)privacySettings.RequireImmediately)
+                    };
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Layer -> MemberPrivacySettings FAILED - MemberId: [" + privacySettings.MemberId + "], Exception: [" + ex + "]");
+                }
+                return new StringResult();
+            }
+            else
+            {
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
+
+        [HttpGet]
+        [ActionName("GetMemberPrivacySettings")]
+        public PrivacySettings GetMemberPrivacySettings(string memberId, string accessToken)
+        {
+            if (CommonHelper.IsValidRequest(accessToken, memberId))
+            {
+                try
+                {
+                    Logger.Info("Service Layer - GetMemberPrivacySettings Initiated - MemberId: [" + memberId + "]");
+
+                    var mda = new MembersDataAccess();
+                    var memberPrivacySettings = mda.GetMemberPrivacySettings(memberId);
+                    var privacySettings = new PrivacySettings();
+
+                    if (memberPrivacySettings != null)
+                    {
+                       var r =  _dbContext.MemberPrivacySettings.FirstOrDefault(m=>m.MemberId== memberPrivacySettings.MemberId);  // Malkit : I doubt here for here
+                       privacySettings.MemberId = r.Member.MemberId.ToString();
+                       privacySettings.ShowInSearch = r.ShowInSearch ?? false;
+                       privacySettings.AllowSharing = r.AllowSharing ?? false;
+                       privacySettings.RequireImmediately = r.RequireImmediately ?? false;
+                    }
+                    return privacySettings;
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Layer -> GetMemberPrivacySettings FAILED - MemberId: [" + memberId + "], Exception: [" + ex + "]");
+                    
+                }
+                return null;
+            }
+            else
+            {
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+            
         }
 
     }
