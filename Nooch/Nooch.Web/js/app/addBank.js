@@ -453,7 +453,7 @@ function submitBnkLgn() {
         success: function (msg) {
             
             console.log(msg);
-             
+
 			// Hide UIBlock (loading box))
             $('.addBankContainer-body').unblock();
 
@@ -562,7 +562,6 @@ function submitBnkLgn() {
 						easing:'easeInOutQuad'
 					});
 
-				    //$('#bankAccessTokenForQuestion').val(bnkLoginResult.SynapseQuestionBasedResponse.response.access_token);
 					$('#bankAccessTokenForQuestion').val(bnkLoginResult.Bank_Access_Token);
 
 					$('#addBank-sec-question').parsley().reset();
@@ -571,7 +570,7 @@ function submitBnkLgn() {
 					$('#securityQuestionOneFromServer').html(bnkLoginResult.mfaMessage);
 				}
 
-                // CC (5/7/16): No more Code-Based MFA anymore
+			    // CC (5/7/16): No more Code-Based MFA anymore
 				/*else if (bnkLoginResult.MFA_Type == "device") 
 				{
 				    MFA_TYPE = "code";
