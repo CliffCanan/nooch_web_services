@@ -4,19 +4,18 @@
     ResultDepositMoney rdm = (ResultDepositMoney)ViewData["OnLoaddata"];
 }
 
-
 <!DOCTYPE html>
-
 <html>
-<head  >
+<head>
+    <title>Accept Payment</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link href="@Url.Content("~/Assets/Css/bootstrap.css")" rel="stylesheet" />
-  
-    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.6.0/css/font-awesome.min.css" />
+
     <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,400italic,500,500italic,700,900" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.4/themes/cupertino/jquery-ui.css" />
     <link href="@Url.Content("~/Assets/Css/sweetalert-override.min.css")" rel="stylesheet" />
-     
 
     <link rel="stylesheet" href="https://cdn.materialdesignicons.com/1.2.65/css/materialdesignicons.min.css" />
     <link href="@Url.Content("~/Assets/Css/bootstrap-select.min.css")" rel="stylesheet" />
@@ -25,23 +24,22 @@
     <link href="@Url.Content("~/Assets/Css/jquery.steps.css")" rel="stylesheet" />
     <link href="@Url.Content("~/Assets/Css/tweaks.css")" rel="stylesheet" />
     <link href="@Url.Content("~/Assets/Css/favicon.ico")" rel="stylesheet" />
- 
 </head>
 
 <body id="body-depositNew" class="no-border deposit-money-pg" style="background-color: rgba(230, 231, 232, 0.8);">
 
-    <form id="form1"  >
-       
+    <form id="form1">
+
         <input type="hidden" id="addBank_Url" value="@Url.Action("AddBank","Nooch")" />
-        <input type="hidden" ID="usrTyp" Value="@rdm.usrTyp"   />
+        <input type="hidden" id="usrTyp" value="@rdm.usrTyp" />
         <input type="hidden" id="memidexst" value="@rdm.memidexst" />
         <input type="hidden" id="bnkName" value="@rdm.bnkName" />
-        <input type="hidden" ID="pymnt_status" Value="@rdm.pymnt_status"   />
-        <input type="hidden" ID="transId"  Value="@rdm.transId" />
-        <input type="hidden" value="@rdm.invitationSentto" ID="invitationSentto"  />
-        <input type="hidden" ID="invitationType" value="@rdm.invitationType" />
-        <input type="hidden" ID="transType"    Value="send" />
-        <input type="hidden" ID="rs"  Value="@rdm.rs" />
+        <input type="hidden" id="pymnt_status" value="@rdm.pymnt_status" />
+        <input type="hidden" id="transId" value="@rdm.transId" />
+        <input type="hidden" value="@rdm.invitationSentto" id="invitationSentto" />
+        <input type="hidden" id="invitationType" value="@rdm.invitationType" />
+        <input type="hidden" id="transType" value="send" />
+        <input type="hidden" id="rs" value="@rdm.rs" />
     </form>
 
     <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -52,45 +50,46 @@
         </div>
     </nav>
 
-    @if (rdm.payreqInfo == true) { 
-    <div  id="payreqInfo" >
+    @if (rdm.payreqInfo == true)
+    {
+        <div id="payreqInfo">
 
-        <div id="depositHeader">
-            <div>Deposit This Payment</div>
-            <div id="fromText">From</div>
-            <input type="image" class="media-object"   ID="senderImage" src="@rdm.senderImage" alt="Sender" />
-            <span id="senderName">
-             <label   ID="senderName1" Text="Nooch User">@rdm.senderName1</label>
-            </span>
-        </div>
-
-        <div id="amountShell">
-            <div>
-                <span id="dollarSign">$</span>
-                <Label ID="transAmountd" >@rdm.transAmountd</Label>
-                <span id="cents">
-                    <Label  ID="transAmountc"  >@rdm.transAmountc</Label>
+            <div id="depositHeader">
+                <div>Deposit This Payment</div>
+                <div id="fromText">From</div>
+                <input type="image" class="media-object" id="senderImage" src="@rdm.senderImage" alt="Sender" />
+                <span id="senderName">
+                    <label id="senderName1" text="Nooch User">@rdm.senderName1</label>
                 </span>
             </div>
-        </div>
 
-        <div id="memo_shell">
-            <div>
-                <Label  ID="transMemo" >@rdm.transMemo</Label>
+            <div id="amountShell">
+                <div>
+                    <span id="dollarSign">$</span>
+                    <label id="transAmountd">@rdm.transAmountd</label>
+                    <span id="cents">
+                        <label id="transAmountc">@rdm.transAmountc</label>
+                    </span>
+                </div>
             </div>
-        </div>
 
-        <div id="relaunchIdwiz" class="hidden m-t-25 text-center animated bounceIn">
-            <button type="button" class="btn btn-lg btn-default"><i class="mdi mdi-checkbox-marked-outline m-r-15"></i>Complete This Payment</button>
-        </div>
+            <div id="memo_shell">
+                <div>
+                    <label id="transMemo">@rdm.transMemo</label>
+                </div>
+            </div>
 
-    </div>
+            <div id="relaunchIdwiz" class="hidden m-t-25 text-center animated bounceIn">
+                <button type="button" class="btn btn-lg btn-default"><i class="mdi mdi-checkbox-marked-outline m-r-15"></i>Complete This Payment</button>
+            </div>
+
+        </div>
     }
     <div class="errorMessage hidden"></div>
 
     <br />
 
-    <div id="PayorInitialInfo" class="hidden animated bounceInUp"  >
+    <div id="PayorInitialInfo" class="hidden animated bounceInUp">
 
         <div class="row">
 
@@ -348,20 +347,14 @@
         </div>
     </div>
 
-    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+
     <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
     <script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
 
-    <!-- Bootstrap Plugins -->
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
 
-    <!-- Other Plugins -->
     <script src="../js/jasny-bootstrap.min.js"></script>
-    <!-- Input Mask-->
     <script src="../js/jquery.blockUI.min.js"></script>
-    <!--<script src="//cdn.jsdelivr.net/velocity/1.2.2/velocity.min.js"></script>
-    <script src="//cdn.jsdelivr.net/velocity/1.2.2/velocity.ui.min.js"></script>-->
-
     <script src="../js/input-mask.min.js"></script>
     <script src="../js/bootstrap-select.min.js"></script>
     <script src="../js/chosen.jquery.min.js"></script>

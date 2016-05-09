@@ -1,41 +1,30 @@
 ﻿@using Nooch.Common.Entities;
-
 @{
     Layout = null;
     ResultpayAnyone resultpayAnyone = (ResultpayAnyone)ViewData["OnLoadData"];
-
 }
 
 <!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <html xmlns="http://www.w3.org/1999/xhtml">
-<head >
-    <link href="@Url.Content("~/Assets/css/bootstrap.css")" rel="stylesheet" />
-    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">
+<head>
+    <title>Nooch | Pay Anyone</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.6.0/css/font-awesome.min.css" />
+
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.4/themes/cupertino/jquery-ui.css">
     <link href="@Url.Content("~/Assets/Css/tweaks.css")" rel="stylesheet" />
 
     <link rel="icon" href="../Assets/favicon.ico" />
-
-    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-    <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
-    <script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
-    <script type="text/javascript" src="../js/parsley.min.js"></script>
-
-    <!-- Bootstrap Plugins -->
-    <script type="text/javascript" src="../js/parsley.min.js"></script>
-    <script src="//cdn.jsdelivr.net/velocity/1.2.2/velocity.min.js"></script>
-    <script src="//cdn.jsdelivr.net/velocity/1.2.2/velocity.ui.min.js"></script>
-
-    <script src="../js/app/payrequest-newuser.js"></script>
 </head>
 
 <body style="background-color: rgba(230, 231, 232, 0.8);" id="body-depositNew">
 
-    <form id="form1" >
+    <form id="form1">
         <asp:ScriptManager ID="ScriptManager1" runat="server" EnablePageMethods="true"></asp:ScriptManager>
-        <input type="hidden" ID="hidfield" Value="@resultpayAnyone.hidfield" />
+        <input type="hidden" id="hidfield" value="@resultpayAnyone.hidfield" />
     </form>
 
     <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -52,7 +41,7 @@
         </div>
     </nav>
 
-    <div  id="payreqInfo" >
+    <div id="payreqInfo">
 
         <p class="text-center">
             Send a payment quickly and securely - no debit card number or routing number needed!
@@ -213,9 +202,17 @@
         </div>
     </div>
 
-    <!-- Input Mask-->
+    <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../js/parsley.min.js"></script>
+
+    <script type="text/javascript" src="../js/parsley.min.js"></script>
+    <script src="//cdn.jsdelivr.net/velocity/1.2.2/velocity.min.js"></script>
+    <script src="//cdn.jsdelivr.net/velocity/1.2.2/velocity.ui.min.js"></script>
+
     <script src="../js/jasny-bootstrap.min.js"></script>
-    <!-- BlockUI (Loading Box) -->
     <script src="../js/jquery.blockUI.js"></script>
+    <script src="../js/app/payrequest-newuser.js"></script>
 </body>
 </html>

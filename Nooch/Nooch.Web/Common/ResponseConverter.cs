@@ -20,18 +20,15 @@ namespace Nooch.Web.Common
             //request.Timeout = 30000;    
             request.Method = "GET";
             request.Credentials = CredentialCache.DefaultCredentials;
+
             try
             {
-
                 WebResponse response = request.GetResponse();
                 var httpWebResponse = (HttpWebResponse)response;
                 Logger.Info("Client: Receive Response HTTP:" + "Version[" + httpWebResponse.ProtocolVersion + "] ," + "Status code:[" + (int)httpWebResponse.StatusCode + "], Status description:[" + httpWebResponse.StatusDescription + "] ].");
-                //todo: remove the below line before final deployment. Added for development purpose.
-                Logger.Info("Client: Target " + "Uri[" + httpWebResponse.ResponseUri + "].");
 
                 var streamReader = new StreamReader(response.GetResponseStream());
                 var obj = streamReader.ReadToEnd();
-
 
                 response.Close();
                 streamReader.Close();
@@ -46,8 +43,8 @@ namespace Nooch.Web.Common
             {
                 request.Abort();
             }
-
         }
+
         public static string CallServicePostMethod1(string serviceUrl, string json)
         {
             var httpWebRequest = (HttpWebRequest)WebRequest.Create(serviceUrl);
@@ -60,9 +57,9 @@ namespace Nooch.Web.Common
             var response = httpWebRequest.GetResponse();
             return response.ToString();
         }
+
         public static T CallServicePostMethod(string serviceUrl, string json)
         {
-
             ServicePointManager.ServerCertificateValidationCallback = ((sender, certificate, chain, sslPolicyErrors) => true);
             var uri = new Uri(serviceUrl);
 
@@ -78,29 +75,10 @@ namespace Nooch.Web.Common
 
             responseReader.Close();
 
-            
-
-
             var scriptSerializer = new JavaScriptSerializer();
             var result = scriptSerializer.Deserialize<T>(response);
 
             return result;
-          
-
-            //string result = string.Empty;
-            //foreach (KeyValuePair<string, object> responseCollection in (Dictionary<string, object>)serviceResponse)
-            //{
-            //    foreach (KeyValuePair<string, object> responseResult in (Dictionary<string, object>)responseCollection.Value)
-            //    {
-            //        if (responseResult.Key.Equals("Result"))
-            //        {
-            //            result = responseResult.Value.ToString();
-            //            return result;
-            //        }
-            //    }
-            //}
-
-            //return result;
         }
     }
 }
