@@ -4989,5 +4989,82 @@ namespace Nooch.API.Controllers
             return new StringResult();
         }
 
+        [HttpGet]
+        [ActionName("sendLandlordLeadEmailTemplate")]
+        public StringResult sendLandlordLeadEmailTemplate(string template, string email, string firstName,
+            string tenantFName, string tenantLName, string propAddress, string subject)
+        {
+            Logger.Info("Service Layer - sendEmailTemplate Initiated - Template: [" + template +
+                                   "], Email: [" + email + "], First Name: [" + firstName + "], Subject: {" + subject + "]");
+
+            StringResult res = new StringResult();
+
+            if (String.IsNullOrEmpty(email))
+            {
+                res.Result = "Missing email address to send to!";
+            }
+            else if (String.IsNullOrEmpty(template))
+            {
+                res.Result = "Have an email, but missing a Template to send!";
+            }
+            else if (String.IsNullOrEmpty(tenantFName))
+            {
+                res.Result = "Missing a Tenant First Name!";
+            }
+            else if (String.IsNullOrEmpty(tenantLName))
+            {
+                res.Result = "Missing a Tenant Last Name!";
+            }
+            else if (String.IsNullOrEmpty(propAddress))
+            {
+                res.Result = "Missing a Property Address";
+            }
+            else
+            {
+                if (String.IsNullOrEmpty(subject) || subject.Length < 1)
+                {
+                    subject = " ";
+                }
+                else
+                {
+                    subject = CommonHelper.UppercaseFirst(subject);
+                }
+
+                if (String.IsNullOrEmpty(firstName) || firstName.Length < 1)
+                {
+                    firstName = " ";
+                }
+                else
+                {
+                    firstName = CommonHelper.UppercaseFirst(firstName);
+                }
+
+                try
+                {
+                    var tokens = new Dictionary<string, string>
+                        {
+                            {Constants.PLACEHOLDER_FIRST_NAME, firstName}, // Landlord's First Name
+                            {"$TenantFName$", tenantFName},
+                            {"$TenantLName$", tenantLName},
+                            {"$PropAddress$", propAddress}
+                        };
+
+                    Utility.SendEmail(template,  "landlords@rentscene.com", email,
+                                                null, subject, null, tokens, null, null, null);
+
+                    res.Result = "Email Template [" + template + "] sent successfully to [" + email + "]";
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Layer - sendEmailTemplate FAILED - Exception: [" + ex.Message + "]");
+
+                    res.Result = "Server exception!";
+
+                }
+            }
+
+            return res;
+        }
+
     }
 }
