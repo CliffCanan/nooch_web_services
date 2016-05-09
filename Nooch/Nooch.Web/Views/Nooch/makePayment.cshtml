@@ -2,16 +2,16 @@
 @using Nooch.Common.Entities;
 @{
     Layout = null;
-        HiddenField onLoadD = (HiddenField)ViewData["OnLoadData"];
-   
+    HiddenField onLoadD = (HiddenField)ViewData["OnLoadData"];
 }
 
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head runat="server">
+    <title>Make A Payment</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link href="@Url.Content("~/Assets/Css/bootstrap.css")" rel="stylesheet" /> 
-    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.6.0/css/font-awesome.min.css" />
     <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,400italic,500,500italic,700,900" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.4/themes/cupertino/jquery-ui.css" />
     <link rel="stylesheet" href="~/Assets/Css/sweetalert-override.min.css" />
@@ -19,11 +19,11 @@
     <link rel="stylesheet" href="https://cdn.materialdesignicons.com/1.2.65/css/materialdesignicons.min.css" />
     <link rel="stylesheet" href="@Url.Content("~/Assets/Css/bootstrap-select.min.css") " />
     <link rel="stylesheet" href="@Url.Content("~/Assets/Css/chosen.min.css")" />
-    <link rel="stylesheet" href="@Url.Content("~/Assets/Css/bootstrap-datetimepicker.min.css")" /> 
-    <link rel="stylesheet" href="@Url.Content("~/Assets/Css/jquery.steps.css")" /> 
-    <link rel="stylesheet" href="@Url.Content("~/Assets/Css/tweaks.css")" /> 
-    <link rel="icon" href="../Assets/favicon2.ico" /> 
-     <style>
+    <link rel="stylesheet" href="@Url.Content("~/Assets/Css/bootstrap-datetimepicker.min.css")" />
+    <link rel="stylesheet" href="@Url.Content("~/Assets/Css/jquery.steps.css")" />
+    <link rel="stylesheet" href="@Url.Content("~/Assets/Css/tweaks.css")" />
+    <link rel="icon" href="../Assets/favicon2.ico" />
+    <style>
         .navbar img {
             width: 170px;
         }
@@ -74,10 +74,10 @@
 
 <body id="body-depositNew" class="createAccountPg">
 
-    <form id="form1" >
-        <input type="hidden"  ID="errorId" value="@onLoadD.errorId"/>
-        <input type="hidden"  ID="type" value="@onLoadD.type" />
-        <input type="hidden"  ID="rs" value="@onLoadD.rs" />
+    <form id="form1">
+        <input type="hidden" id="errorId" value="@onLoadD.errorId" />
+        <input type="hidden" id="type" value="@onLoadD.type" />
+        <input type="hidden" id="rs" value="@onLoadD.rs" />
     </form>
 
     <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -211,11 +211,8 @@
     <script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
 
     <!-- Bootstrap Plugins -->
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
-    <!--<script src="../js/bootstrap-select.min.js"></script>
-    <script src="../js/jasny-bootstrap.min.js"></script>
-    <script src="../js/chosen.jquery.min.js"></script>-->
-    <!-- Input Mask-->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
     <script src="../js/jquery.blockUI.min.js"></script>
     <script src="../js/input-mask.min.js"></script>
     <script type="text/javascript">
@@ -224,17 +221,14 @@
     <script type="text/javascript" src="https://www.l2.io/ip.js?var=ipusr"></script>
     <script src="../js/sweetalert.min.js"></script>
 
-    <!-- Custom Scripts -->
     <script src="../js/app/makePayment.js"></script>
 
-
     <script type="text/javascript">
-
         var URLs = {
             submitPayment: '@Url.Action("submitPayment", "Nooch")',
-            submitRequestToExistingUser : '@Url.Action("submitRequestToExistingUser", "Nooch")',
+            submitRequestToExistingUser: '@Url.Action("submitRequestToExistingUser", "Nooch")',
         };
-
     </script>
+
 </body>
 </html>

@@ -4,13 +4,15 @@
     ResultcreateAccount rca = (ResultcreateAccount)ViewData["OnLoaddata"];
 }
 
-
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head runat="server">
+    <title>Nooch | Create Account</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link href="../Assets/Css/bootstrap.css" rel="stylesheet" />
-    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet" />
+
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.6.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
+
     <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,400italic,500,500italic,700,900" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.4/themes/cupertino/jquery-ui.css" />
     <link rel="stylesheet" href="@Url.Content("~/Assets/Css/sweetalert-override.min.css")" />
@@ -26,12 +28,12 @@
 </head>
 
 <body id="body-depositNew" class="createAccountPg">
-    @*<input type="hidden" value="@Session["TransId"].ToString()" />*@
+
     <form id="form1">
         <input type="hidden" id="transId" value="@rca.transId" />
         <input type="hidden" id="memId" value="@rca.memId" />
         <input type="hidden" id="errorId" value="@rca.errorId" />
-         
+
         <input type="hidden" id="transType" value="@rca.transType" />
         <input type="hidden" id="sentTo" value="@rca.sentTo" />
         <input type="hidden" id="type" value="@rca.type" />
@@ -39,8 +41,8 @@
         <input type="hidden" id="address" value="@rca.address" />
         <input type="hidden" id="city" value="@rca.city" />
         <input type="hidden" id="zip" value="@rca.zip" />
-        <input type="hidden" id=" dob" value="@rca.dob" />
-        <input type="hidden" id=" email" value="@rca.email" />
+        <input type="hidden" id="dob" value="@rca.dob" />
+        <input type="hidden" id="email" value="@rca.email" />
         <input type="hidden" id="phone" value="@rca.phone" />
         <input type="hidden" id="rs" value="@rca.rs" />
     </form>
@@ -238,7 +240,7 @@
     <script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
 
     <!-- Bootstrap Plugins -->
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
 
     <!-- Other Plugins -->
     <script src="../js/jasny-bootstrap.min.js"></script>
@@ -259,8 +261,5 @@
 
     <!-- Custom Scripts -->
     <script src="../js/app/create-Account.js"></script>
-
-
-
 </body>
 </html>

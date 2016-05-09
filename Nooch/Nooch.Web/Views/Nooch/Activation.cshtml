@@ -9,16 +9,14 @@
 <head runat="server">
     <title>Member Activation</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- Bootstrap -->
-    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet" />
 
-    <link href="../Assets/Css/animate.css" rel="stylesheet" />
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.6.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="@Url.Content("~/Assets/Css/animate.css")" />
     <link rel="stylesheet" href="../Assets/Css/tweaks.css" />
-    <link href="../Assets/Css/bootstrap.css" rel="stylesheet" />
 
     <link rel="icon" href="../Assets/favicon.ico" />
     <meta name="apple-itunes-app" content="app-id=917955306" />
-
 </head>
 
 <body style="background-color: rgba(230, 231, 232, 0.8);" id="body-depositNew">
@@ -54,7 +52,7 @@
             }
             @if (resultActivation.error == true)
             {
-                <div id="error" >
+                <div id="error">
                     <div class="emailConfHeader">
                         <div id="Div3">Looks like your email address has already been confirmed.</div>
                     </div>
@@ -62,7 +60,7 @@
             }
             @if (resultActivation.toLandlordApp == true)
             {
-                <div id="toLandlordApp" class="row m-t-15" >
+                <div id="toLandlordApp" class="row m-t-15">
                     <div class="col-xs-8 col-xs-offset-2 col-sm-4 col-sm-offset-4 col-md-2 col-md-offset-5">
                         <a class="btn btn-lg btn-default p-10 center-block btn-shadow" onclick="toLandlordLogin()">Sign In<i class="fa fa-sign-in m-l-15"></i></a>
                     </div>
@@ -93,7 +91,7 @@
     <script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
 
     <!-- Bootstrap Plugins -->
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
 
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -102,12 +100,9 @@
           <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
         <![endif]-->
 
-
-
-    <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
-    <script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
     <script type="text/javascript">
-        function getParameterByName(name) {
+        function getParameterByName(name)
+        {
             name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
             var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
                 results = regex.exec(location.search);
@@ -116,9 +111,9 @@
 
         var llemail = getParameterByName('llem') ? "?from=activation&em=" + getParameterByName('llem') : "";
 
-        function toLandlordLogin() {
+        function toLandlordLogin()
+        {
             var url = encodeURI("http://www.noochme.com/landlords2/login.html" + llemail);
-            //alert(url);
             window.location = url;
         }
     </script>

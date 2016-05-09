@@ -15,7 +15,6 @@ $(document).ready(function () {
     hideform();
     ResetPage();
 
-
 	// Submit User Profile Info Form
 	$('form#PayorInitialInfoForm').submit(function(e) {
 	    e.preventDefault();
@@ -182,7 +181,6 @@ function createRecord() {
 					showErrorModal('404');
 				}
             }
-            
         },
         Error: function (x, e) { // On Error
             // Hide UIBlock (loading box)) 

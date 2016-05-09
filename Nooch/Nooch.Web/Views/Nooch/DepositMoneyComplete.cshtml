@@ -3,23 +3,22 @@
     Layout = null;
     ResultDepositMoneyComplete rdmc = (ResultDepositMoneyComplete)ViewData["OnLoaddata"];
 }
- 
 
 <!DOCTYPE html>
-
 <html>
 <head>
+    <title>Nooch | Payment Accepted</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Nooch | Claim Your Money</title>
-    <link href="@Url.Content("~/Assets/Css/bootstrap.css")" rel="stylesheet" />
-   
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.6.0/css/font-awesome.min.css" />
+
     <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,400italic,500,500italic,700,900" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.4/themes/cupertino/jquery-ui.css" />
     <link href="@Url.Content("~/Assets/Css/sweetalert-override.min.css")" rel="stylesheet" />
     <link href="@Url.Content("~/Assets/Css/tweaks.css")" rel="stylesheet" />
     <link href="@Url.Content("~/Assets/favicon.ico")" rel="stylesheet" />
- 
 </head>
 
 <body id="body-depositNew" class="no-border" style="background-color: rgba(230, 231, 232, 0.8);">
@@ -31,55 +30,58 @@
             </a>
         </div>
     </nav>
-    @if(rdmc.payinfobar == true) { 
-    <div id="payinfobar" class="depositComplete-TransDetails col-xs-12 col-sm-offset-4 col-sm-4" style="float: none; margin-bottom: 30px;" runat="server">
-        <div class="media">
-            <div class="transDetails-userpic pull-left">
-                <input type="image" class="media-object"   ID="senderImage" src="@rdmc.senderImage" alt="Other User" />
-            </div>
-            <div class="media-body">
-                <span class="intro-header label label-success">Transfer From</span>
-                <div id="senderName">
-                    <Label   ID="senderName1" Text="">@rdmc.senderName1</Label>
+
+    @if (rdmc.payinfobar == true)
+    {
+        <div id="payinfobar" class="depositComplete-TransDetails col-xs-12 col-sm-offset-4 col-sm-4" style="float: none; margin-bottom: 30px;" runat="server">
+            <div class="media">
+                <div class="transDetails-userpic pull-left">
+                    <input type="image" class="media-object" id="senderImage" src="@rdmc.senderImage" alt="Other User" />
                 </div>
-                <span class="transfer-amount">
-                    $
-                    <Label   ID="transAmountd"  >@rdmc.transAmountd</Label>
-                </span>
+                <div class="media-body">
+                    <span class="intro-header label label-success">Transfer From</span>
+                    <div id="senderName">
+                        <label id="senderName1" text="">@rdmc.senderName1</label>
+                    </div>
+                    <span class="transfer-amount">
+                        $
+                        <label id="transAmountd">@rdmc.transAmountd</label>
+                    </span>
+                </div>
+            </div>
+            <div id="memo_shell">
+                <div>
+                    <label id="transMemo" text="">@rdmc.transMemo</label>
+                </div>
             </div>
         </div>
-        <div id="memo_shell">
-            <div>
-                <Label  ID="transMemo" Text="">@rdmc.transMemo</Label>
-            </div>
-        </div>
-    </div>
     }
-@if(rdmc.paymentSuccess==true)
-{ 
-    <div id="paymentSuccess"  >
 
-        <div id="iconCirclexx" style="width: 100%; text-align: center;" class="floating">
-            <div style="width: 80%; max-width: 122px; margin: 15px auto 10px;">
-                <img src="https://www.nooch.com/email/autoemails/check-green.png" style="display: block; width: 120px; height: auto; margin: 4px auto 0px;" alt="&#10004;" />
+    @if (rdmc.paymentSuccess == true)
+    {
+        <div id="paymentSuccess">
+
+            <div id="iconCirclexx" style="width: 100%; text-align: center;" class="floating">
+                <div style="width: 80%; max-width: 122px; margin: 15px auto 10px;">
+                    <img src="https://www.nooch.com/email/autoemails/check-green.png" style="display: block; width: 120px; height: auto; margin: 4px auto 0px;" alt="&#10004;" />
+                </div>
             </div>
-        </div>
 
-        <div id="depositHeaderShell">
-            <div id="depositHeader">
-                <p>Success!</p>
-                <div id="fromText">This payment has been submitted successfully and is now being processed. &nbsp;You should see this money appear on your bank statement within 2-4 business days.</div>
+            <div id="depositHeaderShell">
+                <div id="depositHeader">
+                    <p>Success!</p>
+                    <div id="fromText">This payment has been submitted successfully and is now being processed. &nbsp;You should see this money appear on your bank statement within 2-4 business days.</div>
+                </div>
             </div>
-        </div>
 
-    </div>
-}
+        </div>
+    }
     <form id="form1" class="hidden">
         <input type="hidden" id="transType" value="invite" />
     </form>
 
-    <form id="form2"  >
-        <input type="hidden" ID="rs"   Value="@rdmc.rs"  />
+    <form id="form2">
+        <input type="hidden" id="rs" value="@rdmc.rs" />
     </form>
 
     <div class="footer">
@@ -94,11 +96,9 @@
         </div>
     </div>
 
-    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
     <script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
 
-    <!-- Bootstrap Plugins -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
 
     <script src="../js/sweetalert.min.js"></script>
