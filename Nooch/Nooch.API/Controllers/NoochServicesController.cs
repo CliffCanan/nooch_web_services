@@ -5066,5 +5066,90 @@ namespace Nooch.API.Controllers
             return res;
         }
 
+
+        /// <summary>
+        /// Login via Facebook service for regular Nooch users.
+        /// </summary>
+        /// <param name="userEmail"></param>
+        /// <param name="FBId"></param>
+        /// <param name="rememberMeEnabled"></param>
+        /// <param name="lat"></param>
+        /// <param name="lng"></param>
+        /// <param name="udid"></param>
+        /// <param name="accesstoken"></param>
+        [HttpGet]
+        [ActionName("LoginWithFacebook")]
+        public StringResult LoginWithFacebook(string userEmail, string FBId, Boolean rememberMeEnabled, decimal lat,
+            decimal lng, string udid, string devicetoken)
+        {
+            try
+            {
+                Logger.Info("Service Layer -> LoginWithFacebook [userEmail: " + userEmail + "],  [FB ID: " + FBId + "]");
+
+                var mda = new MembersDataAccess();
+                string cookie = mda.LoginwithFB(userEmail, FBId, rememberMeEnabled, lat, lng, udid, devicetoken);
+
+                if (string.IsNullOrEmpty(cookie))
+                {
+                    cookie = "Authentication failed.";
+                    return new StringResult { Result = "Invalid Login or Password" };
+                }
+                else if (cookie == "Temporarily_Blocked")
+                {
+                    return new StringResult { Result = "Temporarily_Blocked" };
+                }
+                else if (cookie == "FBID or EmailId not registered with Nooch")
+                {
+                    return new StringResult { Result = "FBID or EmailId not registered with Nooch" };
+                }
+                else if (cookie == "Suspended")
+                {
+                    return new StringResult { Result = "Suspended" };
+                }
+                else if (cookie == "Registered")
+                {
+                    
+                    string state = GenerateAccessToken();
+                    CommonHelper.UpdateAccessToken(userEmail, state);
+                    return new StringResult { Result = state };
+                    
+                }
+                else if (cookie == "Invalid user id or password.")
+                {
+                    return new StringResult { Result = "Invalid user id or password." };
+                }
+                else if (cookie == "The password you have entered is incorrect.")
+                {
+                    return new StringResult { Result = "The password you have entered is incorrect." };
+                }
+                else if (cookie == "Success")
+                {
+                    HttpCookie cUname = new HttpCookie("nooch_username", FBId.ToLowerInvariant());
+                    HttpCookie cAuth = new HttpCookie("nooch_auth", cookie);
+                    cUname.Secure = true;
+                    cUname.HttpOnly = true;
+                    cAuth.Secure = true;
+                    cAuth.HttpOnly = true;
+                    HttpContext.Current.Response.SetCookie(cUname);
+                    HttpContext.Current.Response.SetCookie(cAuth);
+
+                    string state = GenerateAccessToken();
+                    CommonHelper.UpdateAccessToken(userEmail, state);
+                    return new StringResult { Result = state };
+                }
+                else
+                {
+                    return new StringResult { Result = cookie };
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Layer -> LoginWithFacebook FAILED - [userEmail: " + userEmail + "], [Exception: " + ex + "]");
+                
+            }
+            return new StringResult();
+        }
+
     }
 }
