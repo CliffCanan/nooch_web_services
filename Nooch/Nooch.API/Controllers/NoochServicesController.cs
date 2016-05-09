@@ -798,6 +798,42 @@ namespace Nooch.API.Controllers
             }
         }
 
+
+
+        /// <summary>
+        /// For an existing user to make a request to non existing user using phone number.
+        /// </summary>
+        /// <param name="requestInput"></param>
+        /// <param name="requestId"></param>
+        /// <param name="accessToken"></param>
+        /// <returns></returns>
+        [HttpPost]
+        [ActionName("RequestMoneyToNonNoochUserThroughPhoneUsingSynapse")]
+        public StringResult RequestMoneyToNonNoochUserThroughPhoneUsingSynapse(RequestDto requestInput, out string requestId, string accessToken, string PayorPhoneNumber)
+        {
+            if (CommonHelper.IsValidRequest(accessToken, requestInput.MemberId))
+            {
+                requestId = string.Empty;
+
+                try
+                {
+                    Logger.Info("Service Controller - RequestMoneyToNonNoochUserThroughPhoneUsingSynapse Initiated - MemberId: [" + requestInput.MemberId + "]");
+                    var tda = new TransactionsDataAccess();
+                    return new StringResult { Result = tda.RequestMoneyToNonNoochUserThroughPhoneUsingSynapse(requestInput, out requestId, PayorPhoneNumber) };
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Controller - RequestMoneyToNonNoochUserThroughPhoneUsingSynapse FAILED - MemberId: [" + requestInput.MemberId + "], Exception: [" + ex + "]");
+                    throw new Exception("Server Error");
+                }
+            }
+            else
+            {
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
+
+
         /// <summary>
         /// For an existing user to make a request to another existing user.
         /// </summary>
