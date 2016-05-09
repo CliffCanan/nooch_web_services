@@ -729,6 +729,111 @@ namespace Nooch.API.Controllers
 
         #region Request Methods
 
+
+
+        /// <summary>
+        /// For an existing user to make a request to existing user who never registered for Noooch but used to either receive or pay some money.
+        /// </summary>
+        /// <param name="requestInput"></param>
+        /// <param name="requestId"></param>
+        /// <param name="accessToken"></param>
+        /// <returns></returns>
+        [HttpPost]
+        [ActionName("RequestMoneyToExistingButNonRegisteredUser")]
+        public StringResult RequestMoneyToExistingButNonRegisteredUser(RequestDto requestInput, out string requestId, string accessToken)
+        {
+            if (CommonHelper.IsValidRequest(accessToken, requestInput.MemberId))
+            {
+                requestId = string.Empty;
+
+                try
+                {
+                    Logger.Info("Service Controller - RequestMoneyToExistingButNonRegisteredUser Initiated - MemberId: [" + requestInput.MemberId + "]");
+                    var tda = new TransactionsDataAccess();
+                    return new StringResult { Result = tda.RequestMoneyToExistingButNonregisteredUser(requestInput, out requestId) };
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Controller - RequestMoneyToExistingButNonRegisteredUser FAILED - MemberId: [" + requestInput.MemberId + "], Exception: [" + ex + "]");
+                    throw new Exception("Server Error");
+                }
+            }
+            else
+            {
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
+
+
+        /// <summary>
+        /// For an existing user to make a request to non existing user.
+        /// </summary>
+        /// <param name="requestInput"></param>
+        /// <param name="requestId"></param>
+        /// <param name="accessToken"></param>
+        /// <returns></returns>
+        [HttpPost]
+        [ActionName("RequestMoneyToNonNoochUserUsingSynapse")]
+        public StringResult RequestMoneyToNonNoochUserUsingSynapse(RequestDto requestInput, out string requestId, string accessToken)
+        {
+            if (CommonHelper.IsValidRequest(accessToken, requestInput.MemberId))
+            {
+                requestId = string.Empty;
+
+                try
+                {
+                    Logger.Info("Service Controller - RequestMoneyToNonNoochUserUsingSynapse Initiated - MemberId: [" + requestInput.MemberId + "]");
+                    var tda = new TransactionsDataAccess();
+                    return new StringResult { Result = tda.RequestMoneyToNonNoochUserUsingSynapse(requestInput, out requestId) };
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Controller - RequestMoneyToNonNoochUserUsingSynapse FAILED - MemberId: [" + requestInput.MemberId + "], Exception: [" + ex + "]");
+                    throw new Exception("Server Error");
+                }
+            }
+            else
+            {
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
+
+
+
+        /// <summary>
+        /// For an existing user to make a request to non existing user using phone number.
+        /// </summary>
+        /// <param name="requestInput"></param>
+        /// <param name="requestId"></param>
+        /// <param name="accessToken"></param>
+        /// <returns></returns>
+        [HttpPost]
+        [ActionName("RequestMoneyToNonNoochUserThroughPhoneUsingSynapse")]
+        public StringResult RequestMoneyToNonNoochUserThroughPhoneUsingSynapse(RequestDto requestInput, out string requestId, string accessToken, string PayorPhoneNumber)
+        {
+            if (CommonHelper.IsValidRequest(accessToken, requestInput.MemberId))
+            {
+                requestId = string.Empty;
+
+                try
+                {
+                    Logger.Info("Service Controller - RequestMoneyToNonNoochUserThroughPhoneUsingSynapse Initiated - MemberId: [" + requestInput.MemberId + "]");
+                    var tda = new TransactionsDataAccess();
+                    return new StringResult { Result = tda.RequestMoneyToNonNoochUserThroughPhoneUsingSynapse(requestInput, out requestId, PayorPhoneNumber) };
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Controller - RequestMoneyToNonNoochUserThroughPhoneUsingSynapse FAILED - MemberId: [" + requestInput.MemberId + "], Exception: [" + ex + "]");
+                    throw new Exception("Server Error");
+                }
+            }
+            else
+            {
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
+
+
         /// <summary>
         /// For an existing user to make a request to another existing user.
         /// </summary>
@@ -738,7 +843,7 @@ namespace Nooch.API.Controllers
         /// <returns></returns>
         [HttpPost]
         [ActionName("RequestMoney")]
-        StringResult RequestMoney(RequestDto requestInput, out string requestId, string accessToken)
+        public StringResult RequestMoney(RequestDto requestInput, out string requestId, string accessToken)
         {
             if (CommonHelper.IsValidRequest(accessToken, requestInput.MemberId))
             {
