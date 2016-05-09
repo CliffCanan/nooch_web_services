@@ -809,7 +809,7 @@ form#addBank-selectAccount .input-group-lg > .input-group-btn > .btn {height:42p
 #addBank-selectAccount .form-control {
   border-radius: 0 6px 6px 0;
   font-weight: 400;
-  padding: 4px 10px;
+  padding: 3px 10px;
   height: 42px;
   text-align:center;
   -webkit-transition:all .2s ease;
@@ -1133,8 +1133,12 @@ html.landlord {overflow-y: visible;}
 #bankNotListed { margin-top: -24px; }
 
 #addBank-selectAccount .input-group-addon,
-#addBank-selectAccount .form-control { height: 50px; cursor: pointer; font-size: 17px;}
+#addBank-selectAccount .form-control { height: 48px; font-size: 17px;}
 
+#addBank-selectAccount .input-group-addon,
+#addBank-selectAccount .input-group-addon * { cursor: pointer; }
+
+#addBank-selectAccount .form-control { padding: 3px 14px; }
 }
 
 @media only screen and (min-width: 1050px) {
