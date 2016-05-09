@@ -5419,5 +5419,38 @@ namespace Nooch.API.Controllers
             return new StringResult();
         }
 
+        [HttpGet]
+        [ActionName("SaveImmediateRequire")]
+        StringResult SaveImmediateRequire(string memberId, Boolean IsRequiredImmediatley, string accesstoken)
+        {
+            if (CommonHelper.IsValidRequest(accesstoken, memberId))
+            {
+                try
+                {
+                    Logger.Info("Service Layer - SaveImmediateRequire Initiated- MemberId: [" + memberId + "]");
+
+                    var mda = new MembersDataAccess();
+                    string s = mda.SaveImmediateRequire(memberId, IsRequiredImmediatley);
+                    if (s == "success")
+                    {
+                        return new StringResult { Result = "success" };
+                    }
+                    else
+                    {
+                        return new StringResult { Result = "Member not found" };
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Layer -> SaveImmediateRequire FAILED - [Exception: " + ex + "]");
+                    throw new Exception("Error");
+                }
+            }
+            else
+            {
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
+
     }
 }

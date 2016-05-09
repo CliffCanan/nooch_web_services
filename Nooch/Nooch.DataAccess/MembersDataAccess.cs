@@ -36,7 +36,26 @@ namespace Nooch.DataAccess
             return _dbContext.Members.FirstOrDefault(m => m.MemberId == memberGuid);
         }
 
-
+        public string SaveImmediateRequire(string memberId, Boolean IsImmediate)
+        {
+            var id = Utility.ConvertToGuid(memberId);
+            using (var noochConnection = new NOOCHEntities())
+            {
+                
+                var memberEntity = noochConnection.Members.FirstOrDefault(m=>m.MemberId==id);
+                if (memberEntity != null)
+                {
+                    memberEntity.IsRequiredImmediatley = IsImmediate;
+                    noochConnection.SaveChanges();
+                    
+                    return "success";
+                }
+                else
+                {
+                    return "Member not found";
+                }
+            }
+        }
 
         public string SetAllowSharing(string memberId, bool allowSharing)
         {
