@@ -551,7 +551,7 @@ namespace Nooch.Web.Controllers
                         {
                             res.Bank_Access_Token = bankLoginResult.bankOid;
                             res.MFA_Type = "questions"; // no more code-based MFA anymore with Synapse V3
-                            res.mfaMessage = bankLoginResult.mfaMessage; // CLIFF (5/7/16): Adding this to try to fix issue after updating to V3 - the MFA question isn't being displayed to the user
+                            res.mfaMessage = bankLoginResult.mfaQuestion; // CLIFF (5/7/16): Adding this to try to fix issue after updating to V3 - the MFA question isn't being displayed to the user
                         }
 
                         List<SynapseBankClass> synbanksList = new List<SynapseBankClass>();
@@ -766,7 +766,7 @@ namespace Nooch.Web.Controllers
                                 mfa = new SynapseQuestionClass[1]
                             };
 
-                            qbr.response.mfa[0].question = bnkloginresult.mfaMessage;
+                            qbr.response.mfa[0].question = bnkloginresult.mfaQuestion;
                             res.SynapseQuestionBasedResponse = qbr;
                         }
 

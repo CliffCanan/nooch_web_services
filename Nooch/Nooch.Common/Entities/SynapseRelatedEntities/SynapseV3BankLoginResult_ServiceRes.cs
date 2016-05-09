@@ -12,7 +12,7 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
         public bool Is_success { get; set; }
         public string bankOid { get; set; }
         public string errorMsg { get; set; }
-        public string mfaMessage { get; set; }
+        public string mfaQuestion { get; set; }
         public string bankMFA { get; set; }
         public SynapseNodesListClass SynapseNodesList { get; set; }
     }

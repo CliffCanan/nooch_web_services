@@ -216,11 +216,11 @@ function goBackReset() {
 
 /**** (Step 3) User still just selected a bank, getting general bank details from server ****/
 function CheckBankDetails(bankName) {
-	console.log("CheckBankDetails - Bank: [" + bankName + "]");
+	//console.log("CheckBankDetails - Bank: [" + bankName + "]");
+
     BANK_NAME = bankName;
     $.ajax({
         type: "POST",
-        //url: "Add-Bank.aspx/CheckBankDetails",
         url: "CheckBankDetails",
         data: "{ bankname: '" + bankName + "'}",
         contentType: "application/json; charset=utf-8",
@@ -760,7 +760,7 @@ function submitManualBank() {
 
 	$.ajax({
         type: "POST",
-        url: "addBank", // CLIFF (9/21/15): ADDED NEW METHOD ('addBank') TO CODE-BEHIND PAGE
+        url: "addBank",
         data: "{memberid: '" + MEMBER_ID + "', fullname: '" + $('#userFullName').val() + "',routing: '" + $('#bankRout').val() + "',account: '" + $('#bankAcntNum').val() + "',nickname: '',cl: '" + classString + "',type: '" + typeString + "'}",
         contentType: "application/json; charset=utf-8",
         dataType: "json",
@@ -933,7 +933,7 @@ function MFALogin() {
 		loadingText="Checking that response";
     }
 
-    else if (MFA_TYPE == "code")
+    /*else if (MFA_TYPE == "code")
 	{
 		if ($("#addBank-code").parsley().validate() === true)
 		{
@@ -945,7 +945,7 @@ function MFALogin() {
 		else {
 			return;
 		}
-    }
+    }*/
 
 	// ADD THE LOADING BOX
     $('.addBankContainer-body').block({
@@ -987,7 +987,7 @@ function MFALogin() {
 				//console.log(res);
 
 				// Checking if response contains another MFA
-				if (res.Is_MFA == true && res.SynapseQuestionBasedResponse != null)
+				if (res.Is_MFA == true && res.mfaMessage != null)
 				{
 					// expecting question based in response to Question-Based MFA, and it would have to be Question No. 2 here (1st question would come after Bank Login)
 
@@ -1004,7 +1004,7 @@ function MFALogin() {
 							});
 						});
 					    $('#ques3Div').addClass('hide');
-						$('#securityQuestionTwoFromServer').html(res.SynapseQuestionBasedResponse.response.mfa[0].question);
+						$('#securityQuestionTwoFromServer').html(res.mfaMessage);
 						$('#securityQuest1').attr('data-parsley-required', 'false');
 						$('#securityQuest2').attr('data-parsley-required', 'true');
 					}
@@ -1018,7 +1018,7 @@ function MFALogin() {
 							});
 						});
 
-						$('#securityQuestionThreeFromServer').html(res.SynapseQuestionBasedResponse.response.mfa[0].question);
+						$('#securityQuestionThreeFromServer').html(res.mfaMessage);
 						$('#securityQuest2').attr('data-parsley-required', 'false');
 						$('#securityQuest3').attr('data-parsley-required', 'true');
 					}
@@ -1033,7 +1033,7 @@ function MFALogin() {
 						$('#ques3Div').velocity("transition.slideLeftBigOut",400);
 
 						$('#securityQuest1').html('Security Question'); 
-						$('#securityQuestionOneFromServer').html(res.SynapseQuestionBasedResponse.response.mfa[0].question);
+						$('#securityQuestionOneFromServer').html(res.mfaMessage);
 
 						$('#securityQuest1').attr('data-parsley-required', 'true');
 						$('#securityQuest2').attr('data-parsley-required', 'false');
@@ -1041,17 +1041,18 @@ function MFALogin() {
 					}
 
 					SEC_QUES_NO++;   // incremented it to write question mfa for 2nd round.
-					$('#bankAccessTokenForQuestion').val(res.SynapseQuestionBasedResponse.response.access_token);
+					$('#bankAccessTokenForQuestion').val(res.mfaMessage);
 				}
 
                 else if (res.Is_MFA == false && res.SynapseBanksList != null)
 				{
 					// iterating through each bank
                     var accountnum = 0;
-                    var bankht = ""; console.log(res);
+                    var bankht = "";
+					console.log(res);
+
                     $.each(res.SynapseBanksList.banks, function (i, val)
                     {
-                        
                         var currentBankAccnt = val;
                         accountnum += 1;
                         //console.log('Account nickname is: ' + currentBankAccnt.nickname);
@@ -1069,6 +1070,17 @@ function MFALogin() {
 						$('#label1').addClass('selected');
 					}
 
+					$("#addBank-selectAccount #allAccounts input").change(function ()
+					{
+						$('#bankSelction').removeClass('btn-gray').addClass('btn-success');
+
+						var x = $(this).attr('id');
+						x = x.substring(x.length - 1);
+
+						$("#addBank-selectAccount .form-control.selected").removeClass('selected');
+						$('#label' + x).addClass('selected');
+					});
+
 					// Go to final step: 'Select Account'
 					$('#addBank_mfa_question').addClass("hide");
 					$('#addBank_mfa_code').addClass("hide");
@@ -1082,10 +1094,10 @@ function MFALogin() {
 			{
 				// ERROR CAME BACK FROM Synapse FOR MFA ATTEMPT
 				console.log("SUBMIT BANK LOGIN ERROR IS: " + res.ERROR_MSG);
-				if (MFA_TYPE == "code") {
+				/*if (MFA_TYPE == "code") {
 					$('#mfa_code_errorMsg').html("<div><p class='parsley-errors-list filled'>" + res.ERROR_MSG + "</p></div>");
 				}
-				else if (MFA_TYPE == "question") {
+				else */if (MFA_TYPE == "question") {
 					$('#mfa_question_errorMsg').html("<div><p class='parsley-errors-list filled'>" + res.ERROR_MSG + "</p></div>");
 				}
 				else
@@ -1102,11 +1114,11 @@ function MFALogin() {
             // Hide UIBlock (loading box) & display error message
 			$('.addBankContainer-body').unblock();
 
-			if (MFA_TYPE == "code")
+			/*if (MFA_TYPE == "code")
 			{
 			    $('#mfa_code_errorMsg').html("<div><p class='parsley-errors-list filled'>Oh no! We encountered an error when we tried to verify your code :-(</p></div>");
 			}
-			else if (MFA_TYPE == "question")
+			else */if (MFA_TYPE == "question")
 			{
 			    $('#mfa_question_errorMsg').html("<div><p class='parsley-errors-list filled'>Oh no! We encountered an error when we tried to verify your answer :-(</p></div>");
 			}
@@ -1216,7 +1228,7 @@ function SetDefaultAct() {
 
 function sendToRedUrl() {
     console.log("RED_URL is is: [" + RED_URL + "]");
-   
+
     // First, check if this is a Landlord
     if (fromLandlordApp == "yes")
     {
@@ -1242,7 +1254,7 @@ function sendToRedUrl() {
 
         if (sendToIdVerQuestions == true)
         {
-            window.top.location.href = "https://www.noochme.com/noochweb/trans/idverification.aspx?memid=" + MEMBER_ID + "&from=addbnk&redUrl=" + RED_URL;
+            window.top.location.href = "https://www.noochme.com/noochweb/Nooch/idVerification?memid=" + MEMBER_ID + "&from=addbnk&redUrl=" + RED_URL;
         }
         else if (RED_URL.indexOf("rentscene") > -1) // For RentScene
         {
@@ -1362,8 +1374,9 @@ function sendToRedUrl() {
                     // window.top.location.href = "http://localhost:2061/Nooch/PayRequestComplete?mem_id=" + MEMBER_ID;
                 }, 400);
             });
+
+            //window.location = RED_URL;
         }
-         
 
         else // All Others - most likely no RED_URL was passed in URL, so defaulting to a Sweet Alert
             {
@@ -1401,10 +1414,7 @@ function sendToRedUrl() {
                 });
             }
         }
-
 }
-
-/*function checkOrUncheckSelectedAccount() {}*/
 
 
 

@@ -11,9 +11,7 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
     {
         public bool Is_MFA { get; set; }
         public bool Is_success { get; set; }
-
         public string errorMsg { get; set; }
-
         public string bankMFA { get; set; }
 
         public RootBankObject SynapseNodesList { get; set; }
@@ -36,15 +34,11 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
         public info info { get; set; }
         public bool is_active { get; set; }
         public string type { get; set; }
-         
-         
-         
     }
 
     public class _id
     {
         [JsonProperty(PropertyName = "$oid")]
-        
         public string oid { get; set; }
     }
 
