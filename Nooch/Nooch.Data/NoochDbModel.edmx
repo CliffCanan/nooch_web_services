@@ -4,7 +4,7 @@
   <edmx:Runtime>
     <!-- SSDL content -->
     <edmx:StorageModels>
-    <Schema Namespace="NOOCHModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+    <Schema Namespace="NOOCHModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
         <EntityType Name="AdminUsers">
           <Key>
             <PropertyRef Name="UserId" />
@@ -334,6 +334,18 @@
           <Property Name="PostedOn" Type="datetime" />
           <Property Name="PostContent" Type="varchar" MaxLength="500" />
           <Property Name="PostedBy" Type="uniqueidentifier" />
+        </EntityType>
+        <EntityType Name="SynapseAddTransactionResults">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="TransactionId" Type="uniqueidentifier" />
+          <Property Name="OidFromSynapse" Type="varchar(max)" />
+          <Property Name="Status_DateTimeStamp" Type="varchar(max)" />
+          <Property Name="Status_Id" Type="varchar(max)" />
+          <Property Name="Status_Text" Type="varchar(max)" />
+          <Property Name="Status_Note" Type="varchar(max)" />
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
         </EntityType>
         <EntityType Name="SynapseBankLoginResults">
           <Key>
@@ -712,6 +724,7 @@
           <EntitySet Name="PropertyUnits" EntityType="Self.PropertyUnits" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="SDNSearchResults" EntityType="Self.SDNSearchResults" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="SocialMediaPosts" EntityType="Self.SocialMediaPosts" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="SynapseAddTransactionResults" EntityType="Self.SynapseAddTransactionResults" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="SynapseBankLoginResults" EntityType="Self.SynapseBankLoginResults" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="SynapseBanksOfMembers" EntityType="Self.SynapseBanksOfMembers" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="SynapseCreateOrderResults" EntityType="Self.SynapseCreateOrderResults" Schema="dbo" store:Type="Tables" />
@@ -1002,6 +1015,7 @@
             <End Role="Member" EntitySet="Members" />
             <End Role="PasswordResetRequest" EntitySet="PasswordResetRequests" />
           </AssociationSet>
+          <EntitySet Name="SynapseAddTransactionResults" EntityType="NOOCHModel.SynapseAddTransactionResult" />
         </EntityContainer>
         <EntityType Name="MemberPrivacySetting">
           <Key>
@@ -1532,6 +1546,18 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <EntityType Name="SynapseAddTransactionResult">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="TransactionId" Type="Guid" />
+          <Property Name="OidFromSynapse" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
+          <Property Name="Status_DateTimeStamp" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
+          <Property Name="Status_Id" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
+          <Property Name="Status_Text" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
+          <Property Name="Status_Note" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+        </EntityType>
       </Schema>
     </edmx:ConceptualModels>
     <!-- C-S mapping content -->
@@ -2179,6 +2205,19 @@
                 <ScalarProperty Name="RequestedOn" ColumnName="RequestedOn" />
                 <ScalarProperty Name="MemberId" ColumnName="MemberId" />
                 <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="SynapseAddTransactionResults">
+            <EntityTypeMapping TypeName="NOOCHModel.SynapseAddTransactionResult">
+              <MappingFragment StoreEntitySet="SynapseAddTransactionResults">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="Status_Note" ColumnName="Status_Note" />
+                <ScalarProperty Name="Status_Text" ColumnName="Status_Text" />
+                <ScalarProperty Name="Status_Id" ColumnName="Status_Id" />
+                <ScalarProperty Name="Status_DateTimeStamp" ColumnName="Status_DateTimeStamp" />
+                <ScalarProperty Name="OidFromSynapse" ColumnName="OidFromSynapse" />
+                <ScalarProperty Name="TransactionId" ColumnName="TransactionId" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>

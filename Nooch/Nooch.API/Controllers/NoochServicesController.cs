@@ -4778,6 +4778,53 @@ namespace Nooch.API.Controllers
             }
         }
 
+        [HttpGet]
+        [ActionName("ValidatePinNumberForPasswordForgotPage")]
+        public StringResult ValidatePinNumberForPasswordForgotPage(string memberId, string pinNo)
+        {
+            try
+            {
+                Logger.Info("Service layer - ValidatePinNumberForPasswordForgotPage - memberId: [" + memberId + "]");
+                var memberDataAccess = new MembersDataAccess();
+                return new StringResult { Result = CommonHelper.ValidatePinNumber(memberId, pinNo.Replace(" ", "+")) };
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Controller - ValidatePinNumberForPasswordForgotPage FAILED [memberId: " + memberId + "]. Exception: [" + ex + "]");
+                
+            }
+            return new StringResult();
+        }
+
+
+
+
+
+        [HttpGet]
+        [ActionName("ValidatePinNumberToEnterForEnterForeground")]
+        public StringResult ValidatePinNumberToEnterForEnterForeground(string memberId, string pinNo, string accessToken)
+        {
+            if (CommonHelper.IsValidRequest(accessToken, memberId))
+            {
+                try
+                {
+                    Logger.Info("Service Controller - ValidatePinNumberToEnterForEnterForeground [memberId: " + memberId + "]");
+
+                    return new StringResult { Result = CommonHelper.ValidatePinNumberToEnterForEnterForeground(memberId, pinNo.Replace(" ", "+")) };
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Controller - ValidatePinNumberToEnterForEnterForeground FAILED [memberId: " + memberId + "]. Exception: [" + ex + "]");
+
+                }
+                return new StringResult();
+            }
+            else
+            {
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
+
 
         [HttpGet]
         [ActionName("ResetPin")]
@@ -4978,13 +5025,482 @@ namespace Nooch.API.Controllers
                                                MemberDetails.LastName.ToLower(), MemberDetails.PinNumber, MemberDetails.Password,
                                                MemberDetails.SecondaryMail, MemberDetails.RecoveryMail, MemberDetails.UdId,
                                                MemberDetails.friendRequestId, MemberDetails.invitedFriendFacebookId,
-                                               MemberDetails.facebookAccountLogin, MemberDetails.inviteCode, MemberDetails.sendEmail, type)
+                                               MemberDetails.facebookAccountLogin, MemberDetails.inviteCode, MemberDetails.sendEmail, type, null, null, null, null, null)
                 };
             }
             catch (Exception ex)
             {
                 Logger.Error("Service Controller -> MemberRegistration FAILED: [Name: " + MemberDetails.UserName + "], Exception: [" + ex + "]");
                 Utility.ThrowFaultException(ex);
+            }
+            return new StringResult();
+        }
+
+        [HttpGet]
+        [ActionName("sendLandlordLeadEmailTemplate")]
+        public StringResult sendLandlordLeadEmailTemplate(string template, string email, string firstName,
+            string tenantFName, string tenantLName, string propAddress, string subject)
+        {
+            Logger.Info("Service Layer - sendEmailTemplate Initiated - Template: [" + template +
+                                   "], Email: [" + email + "], First Name: [" + firstName + "], Subject: {" + subject + "]");
+
+            StringResult res = new StringResult();
+
+            if (String.IsNullOrEmpty(email))
+            {
+                res.Result = "Missing email address to send to!";
+            }
+            else if (String.IsNullOrEmpty(template))
+            {
+                res.Result = "Have an email, but missing a Template to send!";
+            }
+            else if (String.IsNullOrEmpty(tenantFName))
+            {
+                res.Result = "Missing a Tenant First Name!";
+            }
+            else if (String.IsNullOrEmpty(tenantLName))
+            {
+                res.Result = "Missing a Tenant Last Name!";
+            }
+            else if (String.IsNullOrEmpty(propAddress))
+            {
+                res.Result = "Missing a Property Address";
+            }
+            else
+            {
+                if (String.IsNullOrEmpty(subject) || subject.Length < 1)
+                {
+                    subject = " ";
+                }
+                else
+                {
+                    subject = CommonHelper.UppercaseFirst(subject);
+                }
+
+                if (String.IsNullOrEmpty(firstName) || firstName.Length < 1)
+                {
+                    firstName = " ";
+                }
+                else
+                {
+                    firstName = CommonHelper.UppercaseFirst(firstName);
+                }
+
+                try
+                {
+                    var tokens = new Dictionary<string, string>
+                        {
+                            {Constants.PLACEHOLDER_FIRST_NAME, firstName}, // Landlord's First Name
+                            {"$TenantFName$", tenantFName},
+                            {"$TenantLName$", tenantLName},
+                            {"$PropAddress$", propAddress}
+                        };
+
+                    Utility.SendEmail(template, "landlords@rentscene.com", email,
+                                                null, subject, null, tokens, null, null, null);
+
+                    res.Result = "Email Template [" + template + "] sent successfully to [" + email + "]";
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Layer - sendEmailTemplate FAILED - Exception: [" + ex.Message + "]");
+
+                    res.Result = "Server exception!";
+
+                }
+            }
+
+            return res;
+        }
+
+
+        /// <summary>
+        /// Login via Facebook service for regular Nooch users.
+        /// </summary>
+        /// <param name="userEmail"></param>
+        /// <param name="FBId"></param>
+        /// <param name="rememberMeEnabled"></param>
+        /// <param name="lat"></param>
+        /// <param name="lng"></param>
+        /// <param name="udid"></param>
+        /// <param name="accesstoken"></param>
+        [HttpGet]
+        [ActionName("LoginWithFacebook")]
+        public StringResult LoginWithFacebook(string userEmail, string FBId, Boolean rememberMeEnabled, decimal lat,
+            decimal lng, string udid, string devicetoken)
+        {
+            try
+            {
+                Logger.Info("Service Layer -> LoginWithFacebook [userEmail: " + userEmail + "],  [FB ID: " + FBId + "]");
+
+                var mda = new MembersDataAccess();
+                string cookie = mda.LoginwithFB(userEmail, FBId, rememberMeEnabled, lat, lng, udid, devicetoken);
+
+                if (string.IsNullOrEmpty(cookie))
+                {
+                    cookie = "Authentication failed.";
+                    return new StringResult { Result = "Invalid Login or Password" };
+                }
+                else if (cookie == "Temporarily_Blocked")
+                {
+                    return new StringResult { Result = "Temporarily_Blocked" };
+                }
+                else if (cookie == "FBID or EmailId not registered with Nooch")
+                {
+                    return new StringResult { Result = "FBID or EmailId not registered with Nooch" };
+                }
+                else if (cookie == "Suspended")
+                {
+                    return new StringResult { Result = "Suspended" };
+                }
+                else if (cookie == "Registered")
+                {
+
+                    string state = GenerateAccessToken();
+                    CommonHelper.UpdateAccessToken(userEmail, state);
+                    return new StringResult { Result = state };
+
+                }
+                else if (cookie == "Invalid user id or password.")
+                {
+                    return new StringResult { Result = "Invalid user id or password." };
+                }
+                else if (cookie == "The password you have entered is incorrect.")
+                {
+                    return new StringResult { Result = "The password you have entered is incorrect." };
+                }
+                else if (cookie == "Success")
+                {
+                    HttpCookie cUname = new HttpCookie("nooch_username", FBId.ToLowerInvariant());
+                    HttpCookie cAuth = new HttpCookie("nooch_auth", cookie);
+                    cUname.Secure = true;
+                    cUname.HttpOnly = true;
+                    cAuth.Secure = true;
+                    cAuth.HttpOnly = true;
+                    HttpContext.Current.Response.SetCookie(cUname);
+                    HttpContext.Current.Response.SetCookie(cAuth);
+
+                    string state = GenerateAccessToken();
+                    CommonHelper.UpdateAccessToken(userEmail, state);
+                    return new StringResult { Result = state };
+                }
+                else
+                {
+                    return new StringResult { Result = cookie };
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Layer -> LoginWithFacebook FAILED - [userEmail: " + userEmail + "], [Exception: " + ex + "]");
+
+            }
+            return new StringResult();
+        }
+
+        [HttpGet]
+        [ActionName("LogOutRequest")]
+        public StringResult LogOutRequest(string accessToken, string memberId)
+        {
+            if (CommonHelper.IsValidRequest(accessToken, memberId))
+            {
+                try
+                {
+                    Logger.Info("Service Layer -> LogOutRequest - [MemberId: " + memberId + "]");
+                    var memberDataAccess = new MembersDataAccess();
+                    string cookie = memberDataAccess.LogOut(memberId);
+                    if (string.IsNullOrEmpty(cookie))
+                    {
+                        cookie = "LogOut failed.";
+                        return new StringResult { Result = "LogOut failed." };
+                    }
+                    else
+                    {
+                        return new StringResult { Result = "Success." };
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Layer -> LogOutRequest FAILED - [MemberId: " + memberId + "], [Exception: " + ex + "]");
+
+                }
+                return new StringResult();
+            }
+            else
+            {
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
+
+        [HttpGet]
+        [ActionName("MemberRegistrationGet")]
+        public genericResponse MemberRegistrationGet(string name, string dob, string ssn, string address, string zip,
+             string email, string phone, string fngprnt, string ip, string type, string pw)
+        {
+            genericResponse res = new genericResponse();
+            res.success = false;
+            res.msg = "Initial - Nooch Service";
+
+            try
+            {
+                Logger.Info("Service Layer - MemberRegistrationGET Initiated - NEW USER'S INFO: Name: [" + name +
+                                       "], Email: [" + email + "],  Type: [" + type +
+                                       "], Phone: [" + phone + "], Address: [" + address +
+                                       "], ZIP: [" + zip + "], DOB: [" + dob +
+                                       "], SSN: [" + ssn + "], IP: [" + ip +
+                                       "], Fngrprnt: [" + fngprnt + "], PW: [" + pw + "], ");
+
+                #region Parse Name
+
+                var FirstName = string.Empty;
+                var LastName = string.Empty;
+
+                if (!String.IsNullOrEmpty(name))
+                {
+                    string[] namearray = name.Split(' ');
+                    FirstName = namearray[0];
+
+                    // Example Name Formats: Most Common: 1.) Charles Smith
+                    //                       Possible Variations: 2.) Charles   3.) Charles H. Smith
+                    //                       4.) CJ Smith   5.) C.J. Smith   6.)  Charles Andrew Thomas Smith
+
+                    if (namearray.Length > 1)
+                    {
+                        if (namearray.Length == 2)
+                        {
+                            // For regular First & Last name: Charles Smith
+                            LastName = namearray[1];
+                        }
+                        else if (namearray.Length == 3)
+                        {
+                            // For 3 names, could be a middle name or middle initial: Charles H. Smith or Charles Andrew Smith
+                            LastName = namearray[2];
+                        }
+                        else
+                        {
+                            // For more than 3 names (some people have 2 or more middle names)
+                            LastName = namearray[namearray.Length - 1];
+                        }
+                    }
+                }
+
+                #endregion Parse Name
+
+                type = String.IsNullOrEmpty(type) ? "Personal - Browser" : CommonHelper.UppercaseFirst(type.ToLower());
+
+                var password = !String.IsNullOrEmpty(pw) ? CommonHelper.GetEncryptedData(pw)
+                                                         : CommonHelper.GetEncryptedData("jibb3r;jawn-alt");
+
+
+                var mda = new MembersDataAccess();
+
+                var mdaRes = mda.MemberRegistration(null, email, FirstName, LastName, "", password, email, email,
+                                                    fngprnt, "", "", "", "BROWSER", "true", type,
+                                                    phone, address, zip, ssn, dob);
+
+                res.msg = mdaRes;
+
+                if (mdaRes.IndexOf("Thanks for registering") > -1)
+                {
+                    var memId = CommonHelper.GetMemberIdByUserName(email);
+
+                    #region Set IP Address
+
+                    try
+                    {
+                        if (!String.IsNullOrEmpty(ip) && ip.Length > 4)
+                        {
+                            var Result = CommonHelper.UpdateMemberIPAddressAndDeviceId(memId, ip, fngprnt);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error("Service Layer -> MemberRegistrationGET FAILED - MemberID: [" + memId +
+                                               "], Exception: [" + ex + "]");
+                    }
+
+                    #endregion Set IP Address
+
+                    res.note = memId;
+                    res.success = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Layer -> MemberRegistrationGET FAILED - Name: [" + name + "], Email: [" + email + "], Exception: [" + ex + "]");
+                res.msg = "MemberRegistrationGet Exception";
+            }
+
+            return res;
+        }
+
+
+
+        [HttpPost]
+        [ActionName("MemberPrivacySettings")]
+        public StringResult MemberPrivacySettings(PrivacySettings privacySettings, string accessToken)
+        {
+            if (CommonHelper.IsValidRequest(accessToken, privacySettings.MemberId))
+            {
+                try
+                {
+                    Logger.Info("Service Layer - MemberPrivacySettings Initiated - MemberId: [" + privacySettings.MemberId + "]");
+                    var mda = new MembersDataAccess();
+                    return new StringResult
+                    {
+                        Result = mda.MemberPrivacySettings(privacySettings.MemberId,
+                            (bool)privacySettings.ShowInSearch, (bool)privacySettings.AllowSharing, (bool)privacySettings.RequireImmediately)
+                    };
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Layer -> MemberPrivacySettings FAILED - MemberId: [" + privacySettings.MemberId + "], Exception: [" + ex + "]");
+                }
+                return new StringResult();
+            }
+            else
+            {
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
+
+        [HttpGet]
+        [ActionName("GetMemberPrivacySettings")]
+        public PrivacySettings GetMemberPrivacySettings(string memberId, string accessToken)
+        {
+            if (CommonHelper.IsValidRequest(accessToken, memberId))
+            {
+                try
+                {
+                    Logger.Info("Service Layer - GetMemberPrivacySettings Initiated - MemberId: [" + memberId + "]");
+
+                    var mda = new MembersDataAccess();
+                    var memberPrivacySettings = mda.GetMemberPrivacySettings(memberId);
+                    var privacySettings = new PrivacySettings();
+
+                    if (memberPrivacySettings != null)
+                    {
+                       var r =  _dbContext.MemberPrivacySettings.FirstOrDefault(m=>m.MemberId== memberPrivacySettings.MemberId);  // Malkit : I doubt here for here
+                       privacySettings.MemberId = r.Member.MemberId.ToString();
+                       privacySettings.ShowInSearch = r.ShowInSearch ?? false;
+                       privacySettings.AllowSharing = r.AllowSharing ?? false;
+                       privacySettings.RequireImmediately = r.RequireImmediately ?? false;
+                    }
+                    return privacySettings;
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Layer -> GetMemberPrivacySettings FAILED - MemberId: [" + memberId + "], Exception: [" + ex + "]");
+                    
+                }
+                return null;
+            }
+            else
+            {
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+            
+        }
+
+        [HttpGet]
+        [ActionName("SetAllowSharing")]
+        public StringResult SetAllowSharing(string memberId, bool allow, string accessToken)
+        {
+            try
+            {
+                Logger.Info("Service Layer - SetAllowSharing Initiated - MemberId: [" + memberId + "]");
+                var mda = new MembersDataAccess();
+                return new StringResult { Result = mda.SetAllowSharing(memberId, allow) };
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Layer -> SetAllowSharing FAILED - MemberId: [" + memberId + "], Exception: [" + ex + "]");
+            }
+            return new StringResult();
+        }
+
+        [HttpGet]
+        [ActionName("SaveImmediateRequire")]
+        public StringResult SaveImmediateRequire(string memberId, Boolean IsRequiredImmediatley, string accesstoken)
+        {
+            if (CommonHelper.IsValidRequest(accesstoken, memberId))
+            {
+                try
+                {
+                    Logger.Info("Service Layer - SaveImmediateRequire Initiated- MemberId: [" + memberId + "]");
+
+                    var mda = new MembersDataAccess();
+                    string s = mda.SaveImmediateRequire(memberId, IsRequiredImmediatley);
+                    if (s == "success")
+                    {
+                        return new StringResult { Result = "success" };
+                    }
+                    else
+                    {
+                        return new StringResult { Result = "Member not found" };
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Layer -> SaveImmediateRequire FAILED - [Exception: " + ex + "]");
+                    throw new Exception("Error");
+                }
+            }
+            else
+            {
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
+
+        [HttpGet]
+        [ActionName("UpDateLatLongOfUser")]
+        public StringResult UpDateLatLongOfUser(string memberId, string accesstoken, string Lat, string Long)
+        {
+            if (CommonHelper.IsValidRequest(accesstoken, memberId))
+            {
+                try
+                {
+                    Logger.Info("Service Layer - UpDateLatLongOfUser - [MemberId: " + memberId + "]");
+
+                    var mda = new MembersDataAccess();
+                    string s = mda.UpdateUserLocation(memberId, Lat, Long);
+
+                    if (s == "success")
+                    {
+                        return new StringResult { Result = "success" };
+                    }
+                    else
+                    {
+                        return new StringResult { Result = "Member not found" };
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Layer - FAILED: UpDateLatLongOfUser - MemberId: [" + memberId + "], Exception: [" + ex + "]");
+                    throw new Exception("Error");
+                }
+            }
+            else
+            {
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
+
+        [HttpGet]
+        [ActionName("ResendVerificationLink")]
+        public StringResult ResendVerificationLink(string UserName)
+        {
+            try
+            {
+                Logger.Info("Service Layer - ResendVerificationLink - [UserName: " + UserName + "]");
+
+                var mda = new MembersDataAccess();
+                return new StringResult { Result = mda.ResendVerificationLink(UserName) };
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Layer - ResendVerificationLink FAILED - UserName: [" + UserName + "], [Exception: " + ex.Message + "]");
+                
             }
             return new StringResult();
         }
