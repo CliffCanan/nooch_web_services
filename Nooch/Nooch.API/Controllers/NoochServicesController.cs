@@ -4780,6 +4780,32 @@ namespace Nooch.API.Controllers
 
 
         [HttpGet]
+        [ActionName("ValidatePinNumberToEnterForEnterForeground")]
+      public  StringResult ValidatePinNumberToEnterForEnterForeground(string memberId, string pinNo, string accessToken)
+        {
+            if (CommonHelper.IsValidRequest(accessToken, memberId))
+            {
+                try
+                {
+                    Logger.Info("Service Controller - ValidatePinNumberToEnterForEnterForeground [memberId: " + memberId + "]");
+
+                    return new StringResult { Result = CommonHelper.ValidatePinNumberToEnterForEnterForeground(memberId, pinNo.Replace(" ", "+")) };
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Controller - ValidatePinNumberToEnterForEnterForeground FAILED [memberId: " + memberId + "]. Exception: [" + ex + "]");
+
+                }
+                return new StringResult();
+            }
+            else
+            {
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
+
+
+        [HttpGet]
         [ActionName("ResetPin")]
         public StringResult ResetPin(string memberId, string oldPin, string newPin, string accessToken)
         {

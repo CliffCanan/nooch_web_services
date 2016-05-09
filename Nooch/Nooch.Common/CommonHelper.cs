@@ -749,6 +749,32 @@ namespace Nooch.Common
                 : "PIN number you entered again is incorrect. Your account will be suspended for 24 hours if you enter wrong PIN number again.";
         }
 
+
+        public static string ValidatePinNumberToEnterForEnterForeground(string memberId, string pinNumber)
+        {
+            using (var noochConnection = new NOOCHEntities())
+            {
+                var id = Utility.ConvertToGuid(memberId);
+
+                
+                var memberEntity = noochConnection.Members.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
+                    
+
+                if (memberEntity != null)
+                {
+                    if (memberEntity.PinNumber.Equals(pinNumber.Replace(" ", "+")))
+                    {
+                        return "Success";
+                    }
+                    else
+                    {
+                        return "Invalid Pin";
+                    }
+                }
+                return "Member not found.";
+            }
+        }
+
         public static string ValidatePinNumber(string memberId, string pinNumber)
         {
 
