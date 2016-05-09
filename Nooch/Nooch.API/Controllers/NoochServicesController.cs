@@ -5421,7 +5421,7 @@ namespace Nooch.API.Controllers
 
         [HttpGet]
         [ActionName("SaveImmediateRequire")]
-        StringResult SaveImmediateRequire(string memberId, Boolean IsRequiredImmediatley, string accesstoken)
+        public StringResult SaveImmediateRequire(string memberId, Boolean IsRequiredImmediatley, string accesstoken)
         {
             if (CommonHelper.IsValidRequest(accesstoken, memberId))
             {
@@ -5450,6 +5450,59 @@ namespace Nooch.API.Controllers
             {
                 throw new Exception("Invalid OAuth 2 Access");
             }
+        }
+
+        [HttpGet]
+        [ActionName("UpDateLatLongOfUser")]
+        public StringResult UpDateLatLongOfUser(string memberId, string accesstoken, string Lat, string Long)
+        {
+            if (CommonHelper.IsValidRequest(accesstoken, memberId))
+            {
+                try
+                {
+                    Logger.Info("Service Layer - UpDateLatLongOfUser - [MemberId: " + memberId + "]");
+
+                    var mda = new MembersDataAccess();
+                    string s = mda.UpdateUserLocation(memberId, Lat, Long);
+
+                    if (s == "success")
+                    {
+                        return new StringResult { Result = "success" };
+                    }
+                    else
+                    {
+                        return new StringResult { Result = "Member not found" };
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Layer - FAILED: UpDateLatLongOfUser - MemberId: [" + memberId + "], Exception: [" + ex + "]");
+                    throw new Exception("Error");
+                }
+            }
+            else
+            {
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
+
+        [HttpGet]
+        [ActionName("ResendVerificationLink")]
+        public StringResult ResendVerificationLink(string UserName)
+        {
+            try
+            {
+                Logger.Info("Service Layer - ResendVerificationLink - [UserName: " + UserName + "]");
+
+                var mda = new MembersDataAccess();
+                return new StringResult { Result = mda.ResendVerificationLink(UserName) };
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Layer - ResendVerificationLink FAILED - UserName: [" + UserName + "], [Exception: " + ex.Message + "]");
+                
+            }
+            return new StringResult();
         }
 
     }
