@@ -36,6 +36,46 @@ namespace Nooch.DataAccess
             return _dbContext.Members.FirstOrDefault(m => m.MemberId == memberGuid);
         }
 
+
+
+        public string SetAllowSharing(string memberId, bool allowSharing)
+        {
+            Logger.Info("MDA -> SetAllowSharing - memberId: [" + memberId + "]");
+
+            using (var noochConnection = new NOOCHEntities())
+            {
+                
+                string fileName = memberId;
+
+                var id = Utility.ConvertToGuid(memberId);
+                
+                var memberPrivacySettings = noochConnection.MemberPrivacySettings.FirstOrDefault(m => m.MemberId == id);
+                    
+
+                if (memberPrivacySettings == null)
+                {
+                    var privacySettings = new MemberPrivacySetting
+                    {
+                        
+                        MemberId = id,
+                        AllowSharing = allowSharing,
+                        DateCreated = DateTime.Now
+                    };
+
+                    noochConnection.MemberPrivacySettings.Add(memberPrivacySettings);
+                    return noochConnection.SaveChanges() > 0
+                        ? "AllowSharing flag is added successfully."
+                        : "Failure";
+                }
+                memberPrivacySettings.AllowSharing = allowSharing;
+                memberPrivacySettings.DateModified = DateTime.Now;
+                return noochConnection.SaveChanges() > 0
+                    ? "AllowSharing flag is updated successfully."
+                    : "Failure";
+            }
+        }
+
+
         /// <summary>
         /// Get Member's Privacy settings
         /// </summary>

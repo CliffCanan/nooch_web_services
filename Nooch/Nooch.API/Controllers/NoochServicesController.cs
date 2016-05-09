@@ -5402,5 +5402,22 @@ namespace Nooch.API.Controllers
             
         }
 
+        [HttpGet]
+        [ActionName("SetAllowSharing")]
+        public StringResult SetAllowSharing(string memberId, bool allow, string accessToken)
+        {
+            try
+            {
+                Logger.Info("Service Layer - SetAllowSharing Initiated - MemberId: [" + memberId + "]");
+                var mda = new MembersDataAccess();
+                return new StringResult { Result = mda.SetAllowSharing(memberId, allow) };
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Layer -> SetAllowSharing FAILED - MemberId: [" + memberId + "], Exception: [" + ex + "]");
+            }
+            return new StringResult();
+        }
+
     }
 }
