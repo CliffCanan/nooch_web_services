@@ -729,6 +729,40 @@ namespace Nooch.API.Controllers
 
         #region Request Methods
 
+
+        /// <summary>
+        /// For an existing user to make a request to another existing user.
+        /// </summary>
+        /// <param name="requestInput"></param>
+        /// <param name="requestId"></param>
+        /// <param name="accessToken"></param>
+        /// <returns></returns>
+        [HttpPost]
+        [ActionName("RequestMoneyToNonNoochUserUsingSynapse")]
+        public StringResult RequestMoneyToNonNoochUserUsingSynapse(RequestDto requestInput, out string requestId, string accessToken)
+        {
+            if (CommonHelper.IsValidRequest(accessToken, requestInput.MemberId))
+            {
+                requestId = string.Empty;
+
+                try
+                {
+                    Logger.Info("Service Controller - RequestMoneyToNonNoochUserUsingSynapse Initiated - MemberId: [" + requestInput.MemberId + "]");
+                    var tda = new TransactionsDataAccess();
+                    return new StringResult { Result = tda.RequestMoneyToNonNoochUserUsingSynapse(requestInput, out requestId) };
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Controller - RequestMoneyToNonNoochUserUsingSynapse FAILED - MemberId: [" + requestInput.MemberId + "], Exception: [" + ex + "]");
+                    throw new Exception("Server Error");
+                }
+            }
+            else
+            {
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
+
         /// <summary>
         /// For an existing user to make a request to another existing user.
         /// </summary>
@@ -738,7 +772,7 @@ namespace Nooch.API.Controllers
         /// <returns></returns>
         [HttpPost]
         [ActionName("RequestMoney")]
-        StringResult RequestMoney(RequestDto requestInput, out string requestId, string accessToken)
+        public StringResult RequestMoney(RequestDto requestInput, out string requestId, string accessToken)
         {
             if (CommonHelper.IsValidRequest(accessToken, requestInput.MemberId))
             {
