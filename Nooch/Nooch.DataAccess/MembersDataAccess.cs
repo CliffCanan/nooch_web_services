@@ -6023,7 +6023,7 @@ namespace Nooch.DataAccess
 
         public string MemberRegistration(byte[] Picture, string UserName, string FirstName, string LastName,
            string PinNumber, string Password, string SecondaryMail, string RecoveryMail, string UUID, string friendRequestId,
-           string invitedFriendFacebookId, string facebookAccountLogin, string inviteCode, string sendEmail, string type)
+           string invitedFriendFacebookId, string facebookAccountLogin, string inviteCode, string sendEmail, string type, string phone, string address, string zip, string ssn, string dob)
         {
             // Check to make sure Username is not already taken
             if (CommonHelper.GetMemberNameByUserName(UserName) == null)

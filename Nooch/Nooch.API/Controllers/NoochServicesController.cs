@@ -4978,7 +4978,7 @@ namespace Nooch.API.Controllers
                                                MemberDetails.LastName.ToLower(), MemberDetails.PinNumber, MemberDetails.Password,
                                                MemberDetails.SecondaryMail, MemberDetails.RecoveryMail, MemberDetails.UdId,
                                                MemberDetails.friendRequestId, MemberDetails.invitedFriendFacebookId,
-                                               MemberDetails.facebookAccountLogin, MemberDetails.inviteCode, MemberDetails.sendEmail, type)
+                                               MemberDetails.facebookAccountLogin, MemberDetails.inviteCode, MemberDetails.sendEmail, type,null,null,null,null,null)
                 };
             }
             catch (Exception ex)
@@ -5153,7 +5153,7 @@ namespace Nooch.API.Controllers
 
         [HttpGet]
         [ActionName("LogOutRequest")]
-        StringResult LogOutRequest(string accessToken, string memberId)
+        public StringResult LogOutRequest(string accessToken, string memberId)
         {
             if (CommonHelper.IsValidRequest(accessToken, memberId))
             {
@@ -5183,6 +5183,108 @@ namespace Nooch.API.Controllers
             {
                 throw new Exception("Invalid OAuth 2 Access");
             }
+        }
+
+        [HttpGet]
+        [ActionName("MemberRegistrationGet")]
+       public genericResponse MemberRegistrationGet(string name, string dob, string ssn, string address, string zip,
+            string email, string phone, string fngprnt, string ip, string type, string pw)
+        {
+            genericResponse res = new genericResponse();
+            res.success = false;
+            res.msg = "Initial - Nooch Service";
+
+            try
+            {
+                Logger.Info("Service Layer - MemberRegistrationGET Initiated - NEW USER'S INFO: Name: [" + name +
+                                       "], Email: [" + email + "],  Type: [" + type +
+                                       "], Phone: [" + phone + "], Address: [" + address +
+                                       "], ZIP: [" + zip + "], DOB: [" + dob +
+                                       "], SSN: [" + ssn + "], IP: [" + ip +
+                                       "], Fngrprnt: [" + fngprnt + "], PW: [" + pw + "], ");
+
+                #region Parse Name
+
+                var FirstName = string.Empty;
+                var LastName = string.Empty;
+
+                if (!String.IsNullOrEmpty(name))
+                {
+                    string[] namearray = name.Split(' ');
+                    FirstName = namearray[0];
+
+                    // Example Name Formats: Most Common: 1.) Charles Smith
+                    //                       Possible Variations: 2.) Charles   3.) Charles H. Smith
+                    //                       4.) CJ Smith   5.) C.J. Smith   6.)  Charles Andrew Thomas Smith
+
+                    if (namearray.Length > 1)
+                    {
+                        if (namearray.Length == 2)
+                        {
+                            // For regular First & Last name: Charles Smith
+                            LastName = namearray[1];
+                        }
+                        else if (namearray.Length == 3)
+                        {
+                            // For 3 names, could be a middle name or middle initial: Charles H. Smith or Charles Andrew Smith
+                            LastName = namearray[2];
+                        }
+                        else
+                        {
+                            // For more than 3 names (some people have 2 or more middle names)
+                            LastName = namearray[namearray.Length - 1];
+                        }
+                    }
+                }
+
+                #endregion Parse Name
+
+                type = String.IsNullOrEmpty(type) ? "Personal - Browser" : CommonHelper.UppercaseFirst(type.ToLower());
+
+                var password = !String.IsNullOrEmpty(pw) ? CommonHelper.GetEncryptedData(pw)
+                                                         : CommonHelper.GetEncryptedData("jibb3r;jawn-alt");
+
+
+                var mda = new MembersDataAccess();
+
+                var mdaRes = mda.MemberRegistration(null, email, FirstName, LastName, "", password, email, email,
+                                                    fngprnt, "", "", "", "BROWSER", "true", type,
+                                                    phone, address, zip, ssn, dob);
+
+                res.msg = mdaRes;
+
+                if (mdaRes.IndexOf("Thanks for registering") > -1)
+                {
+                    var memId = CommonHelper.GetMemberIdByUserName(email);
+
+                    #region Set IP Address
+
+                    try
+                    {
+                        if (!String.IsNullOrEmpty(ip) && ip.Length > 4)
+                        {
+                            var Result = CommonHelper.UpdateMemberIPAddressAndDeviceId(memId, ip, fngprnt);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error("Service Layer -> MemberRegistrationGET FAILED - MemberID: [" + memId +
+                                               "], Exception: [" + ex + "]");
+                    }
+
+                    #endregion Set IP Address
+
+                    res.note = memId;
+                    res.success = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Layer -> MemberRegistrationGET FAILED - Name: [" + name + "], Email: [" + email + "], Exception: [" + ex + "]");
+                res.msg = "MemberRegistrationGet Exception";
+            }
+
+            return res;
         }
 
     }
