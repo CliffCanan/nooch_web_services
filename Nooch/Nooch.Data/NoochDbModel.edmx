@@ -400,44 +400,6 @@
           <Property Name="type_synapse" Type="varchar(max)" />
           <Property Name="is_active" Type="bit" />
         </EntityType>
-        <EntityType Name="SynapseCreateOrderResults">
-          <Key>
-            <PropertyRef Name="Id" />
-          </Key>
-          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
-          <Property Name="TransAmount" Type="varchar" MaxLength="50" />
-          <Property Name="TransSellerId" Type="varchar(max)" />
-          <Property Name="TransOAuthConsumberKey" Type="varchar(max)" />
-          <Property Name="TransBankId" Type="int" />
-          <Property Name="Result_blanace" Type="varchar(max)" />
-          <Property Name="Result_balance_verified" Type="bit" />
-          <Property Name="Result_success" Type="bit" />
-          <Property Name="Result_order_account_type" Type="int" />
-          <Property Name="Result_order_amount" Type="varchar(max)" />
-          <Property Name="Result_order_bank_id" Type="int" />
-          <Property Name="Result_order_bank_nickname" Type="varchar(max)" />
-          <Property Name="Result_date" Type="varchar(max)" />
-          <Property Name="Result_date_settled" Type="varchar(max)" />
-          <Property Name="Result_discount" Type="varchar" MaxLength="50" />
-          <Property Name="Result_facilitator_fee" Type="varchar" MaxLength="50" />
-          <Property Name="Result_fee" Type="varchar" MaxLength="50" />
-          <Property Name="Result_id" Type="varchar" MaxLength="50" />
-          <Property Name="Result_is_buyer" Type="bit" />
-          <Property Name="Result_note" Type="varchar(max)" />
-          <Property Name="Result_resource_uri" Type="varchar(max)" />
-          <Property Name="Result_seller_accept_gratuity" Type="bit" />
-          <Property Name="Result_seller_has_avatar" Type="bit" />
-          <Property Name="Result_seller_seller_avatar" Type="varchar(max)" />
-          <Property Name="Result_seller_seller_fullname" Type="varchar(max)" />
-          <Property Name="Result_seller_seller_id" Type="int" />
-          <Property Name="Result_status" Type="varchar" MaxLength="50" />
-          <Property Name="Result_status_url" Type="varchar(max)" />
-          <Property Name="Result_supp_id" Type="varchar(max)" />
-          <Property Name="Result_ticket_number" Type="varchar" MaxLength="50" />
-          <Property Name="Result_tip" Type="varchar" MaxLength="50" />
-          <Property Name="Result_total" Type="varchar" MaxLength="50" />
-          <Property Name="TransactionDateTime" Type="datetime" />
-        </EntityType>
         <EntityType Name="SynapseCreateUserResults">
           <Key>
             <PropertyRef Name="Id" />
@@ -727,7 +689,6 @@
           <EntitySet Name="SynapseAddTransactionResults" EntityType="Self.SynapseAddTransactionResults" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="SynapseBankLoginResults" EntityType="Self.SynapseBankLoginResults" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="SynapseBanksOfMembers" EntityType="Self.SynapseBanksOfMembers" Schema="dbo" store:Type="Tables" />
-          <EntitySet Name="SynapseCreateOrderResults" EntityType="Self.SynapseCreateOrderResults" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="SynapseCreateUserResults" EntityType="Self.SynapseCreateUserResults" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="SynapseIdVerificationQuestions" EntityType="Self.SynapseIdVerificationQuestions" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="SynapseSupportedBanks" EntityType="Self.SynapseSupportedBanks" Schema="dbo" store:Type="Tables" />
@@ -985,7 +946,6 @@
           <EntitySet Name="InviteCodes" EntityType="NOOCHModel.InviteCode" />
           <EntitySet Name="SynapseBankLoginResults" EntityType="NOOCHModel.SynapseBankLoginResult" />
           <EntitySet Name="SynapseBanksOfMembers" EntityType="NOOCHModel.SynapseBanksOfMember" />
-          <EntitySet Name="SynapseCreateOrderResults" EntityType="NOOCHModel.SynapseCreateOrderResult" />
           <EntitySet Name="SynapseCreateUserResults" EntityType="NOOCHModel.SynapseCreateUserResult" />
           <EntitySet Name="SynapseIdVerificationQuestions" EntityType="NOOCHModel.SynapseIdVerificationQuestion" />
           <EntitySet Name="SynapseSupportedBanks" EntityType="NOOCHModel.SynapseSupportedBank" />
@@ -1344,44 +1304,6 @@
           <Property Name="type_bank" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
           <Property Name="type_synapse" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
           <Property Name="is_active" Type="Boolean" />
-        </EntityType>
-        <EntityType Name="SynapseCreateOrderResult">
-          <Key>
-            <PropertyRef Name="Id" />
-          </Key>
-          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Name="TransAmount" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Name="TransSellerId" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
-          <Property Name="TransOAuthConsumberKey" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
-          <Property Name="TransBankId" Type="Int32" />
-          <Property Name="Result_blanace" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
-          <Property Name="Result_balance_verified" Type="Boolean" />
-          <Property Name="Result_success" Type="Boolean" />
-          <Property Name="Result_order_account_type" Type="Int32" />
-          <Property Name="Result_order_amount" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
-          <Property Name="Result_order_bank_id" Type="Int32" />
-          <Property Name="Result_order_bank_nickname" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
-          <Property Name="Result_date" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
-          <Property Name="Result_date_settled" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
-          <Property Name="Result_discount" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Name="Result_facilitator_fee" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Name="Result_fee" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Name="Result_id" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Name="Result_is_buyer" Type="Boolean" />
-          <Property Name="Result_note" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
-          <Property Name="Result_resource_uri" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
-          <Property Name="Result_seller_accept_gratuity" Type="Boolean" />
-          <Property Name="Result_seller_has_avatar" Type="Boolean" />
-          <Property Name="Result_seller_seller_avatar" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
-          <Property Name="Result_seller_seller_fullname" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
-          <Property Name="Result_seller_seller_id" Type="Int32" />
-          <Property Name="Result_status" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Name="Result_status_url" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
-          <Property Name="Result_supp_id" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
-          <Property Name="Result_ticket_number" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Name="Result_tip" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Name="Result_total" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
-          <Property Name="TransactionDateTime" Type="DateTime" Precision="3" />
         </EntityType>
         <EntityType Name="SynapseCreateUserResult">
           <Key>
@@ -2010,45 +1932,6 @@
                 <ScalarProperty Name="account_type" ColumnName="account_type" />
                 <ScalarProperty Name="account_number_string" ColumnName="account_number_string" />
                 <ScalarProperty Name="account_class" ColumnName="account_class" />
-                <ScalarProperty Name="Id" ColumnName="Id" />
-              </MappingFragment>
-            </EntityTypeMapping>
-          </EntitySetMapping>
-          <EntitySetMapping Name="SynapseCreateOrderResults">
-            <EntityTypeMapping TypeName="NOOCHModel.SynapseCreateOrderResult">
-              <MappingFragment StoreEntitySet="SynapseCreateOrderResults">
-                <ScalarProperty Name="TransactionDateTime" ColumnName="TransactionDateTime" />
-                <ScalarProperty Name="Result_total" ColumnName="Result_total" />
-                <ScalarProperty Name="Result_tip" ColumnName="Result_tip" />
-                <ScalarProperty Name="Result_ticket_number" ColumnName="Result_ticket_number" />
-                <ScalarProperty Name="Result_supp_id" ColumnName="Result_supp_id" />
-                <ScalarProperty Name="Result_status_url" ColumnName="Result_status_url" />
-                <ScalarProperty Name="Result_status" ColumnName="Result_status" />
-                <ScalarProperty Name="Result_seller_seller_id" ColumnName="Result_seller_seller_id" />
-                <ScalarProperty Name="Result_seller_seller_fullname" ColumnName="Result_seller_seller_fullname" />
-                <ScalarProperty Name="Result_seller_seller_avatar" ColumnName="Result_seller_seller_avatar" />
-                <ScalarProperty Name="Result_seller_has_avatar" ColumnName="Result_seller_has_avatar" />
-                <ScalarProperty Name="Result_seller_accept_gratuity" ColumnName="Result_seller_accept_gratuity" />
-                <ScalarProperty Name="Result_resource_uri" ColumnName="Result_resource_uri" />
-                <ScalarProperty Name="Result_note" ColumnName="Result_note" />
-                <ScalarProperty Name="Result_is_buyer" ColumnName="Result_is_buyer" />
-                <ScalarProperty Name="Result_id" ColumnName="Result_id" />
-                <ScalarProperty Name="Result_fee" ColumnName="Result_fee" />
-                <ScalarProperty Name="Result_facilitator_fee" ColumnName="Result_facilitator_fee" />
-                <ScalarProperty Name="Result_discount" ColumnName="Result_discount" />
-                <ScalarProperty Name="Result_date_settled" ColumnName="Result_date_settled" />
-                <ScalarProperty Name="Result_date" ColumnName="Result_date" />
-                <ScalarProperty Name="Result_order_bank_nickname" ColumnName="Result_order_bank_nickname" />
-                <ScalarProperty Name="Result_order_bank_id" ColumnName="Result_order_bank_id" />
-                <ScalarProperty Name="Result_order_amount" ColumnName="Result_order_amount" />
-                <ScalarProperty Name="Result_order_account_type" ColumnName="Result_order_account_type" />
-                <ScalarProperty Name="Result_success" ColumnName="Result_success" />
-                <ScalarProperty Name="Result_balance_verified" ColumnName="Result_balance_verified" />
-                <ScalarProperty Name="Result_blanace" ColumnName="Result_blanace" />
-                <ScalarProperty Name="TransBankId" ColumnName="TransBankId" />
-                <ScalarProperty Name="TransOAuthConsumberKey" ColumnName="TransOAuthConsumberKey" />
-                <ScalarProperty Name="TransSellerId" ColumnName="TransSellerId" />
-                <ScalarProperty Name="TransAmount" ColumnName="TransAmount" />
                 <ScalarProperty Name="Id" ColumnName="Id" />
               </MappingFragment>
             </EntityTypeMapping>

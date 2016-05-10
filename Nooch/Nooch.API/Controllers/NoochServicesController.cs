@@ -5723,6 +5723,49 @@ namespace Nooch.API.Controllers
             }
         }
 
+        [HttpGet]
+        [ActionName("CreateNonNoochUserPassword")]
+        public StringResult CreateNonNoochUserPassword(string TransId, string password)
+        {
+            try
+            {
+                Logger.Info("Service Layer - CreateNonNoochUserPassword - [TransId: " + TransId + "]");
+
+                var mda = new MembersDataAccess();
+                string result = mda.CreateNonNoochUserPassword(TransId, password);
+
+                return new StringResult { Result = result };
+            }
+            catch (Exception ex)
+            {
+                Logger.Info("Service Layer - CreateNonNoochUserPassword - Failure [TransId: " + TransId + "], [ Exception : "+ex+" ]");
+            }
+            return new StringResult { Result = "" };
+        }
+
+        [HttpGet]
+        [ActionName("SetAutoPayStatusForTenant")]
+        public StringResult SetAutoPayStatusForTenant(bool statustoSet, string tenantId)
+        {
+            try
+            {
+                Logger.Info("Service Layer -> SetAutoPayStatusForTenant Initiated - [ tenantId:" + tenantId + "]");
+
+                var mda = new MembersDataAccess();
+                return new StringResult
+                {
+                    Result = mda.SetAutoPayStatusForTenant(statustoSet, tenantId)
+                };
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Layer -> SetAutoPayStatusForTenant EXCEPTION - [tenantId:" + tenantId + "]");
+
+            }
+
+            return new StringResult();
+        }
+
 
     }
 }

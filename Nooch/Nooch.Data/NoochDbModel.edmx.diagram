@@ -29,7 +29,6 @@
         <EntityTypeShape EntityType="NOOCHModel.InviteCode" Width="1.5" PointX="3.375" PointY="14.75" />
         <EntityTypeShape EntityType="NOOCHModel.SynapseBankLoginResult" Width="1.5" PointX="9" PointY="25.25" />
         <EntityTypeShape EntityType="NOOCHModel.SynapseBanksOfMember" Width="1.5" PointX="14.375" PointY="7.75" />
-        <EntityTypeShape EntityType="NOOCHModel.SynapseCreateOrderResult" Width="1.5" PointX="11.375" PointY="15.75" />
         <EntityTypeShape EntityType="NOOCHModel.SynapseCreateUserResult" Width="1.5" PointX="13.375" PointY="15.75" />
         <EntityTypeShape EntityType="NOOCHModel.SynapseIdVerificationQuestion" Width="1.5" PointX="15.375" PointY="15.75" />
         <EntityTypeShape EntityType="NOOCHModel.SynapseSupportedBank" Width="1.5" PointX="16.375" PointY="0.75" />
