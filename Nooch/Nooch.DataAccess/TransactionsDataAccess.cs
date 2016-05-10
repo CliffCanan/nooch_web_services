@@ -3963,7 +3963,17 @@ namespace Nooch.DataAccess
                         {
                             res.success = true;
                             res.ErrorMessage = "OK";
-
+                            // save changes into synapseTransactionResult table in db
+                            SynapseAddTransactionResult satr = new SynapseAddTransactionResult();
+                            satr.TransactionId = Utility.ConvertToGuid(suppID_or_transID);
+                            satr.OidFromSynapse = synapseResponse.trans._id.oid.ToString();
+                            satr.Status_DateTimeStamp = synapseResponse.trans.recent_status.date.date.ToString();
+                            satr.Status_Id = synapseResponse.trans.recent_status.status_id;
+                            satr.Status_Note = synapseResponse.trans.recent_status.note;
+                             
+                            _dbContext.SynapseAddTransactionResults.Add(satr);
+                            _dbContext.SaveChanges();
+                          
                            
                            
                         }
