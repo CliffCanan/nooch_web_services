@@ -1,8 +1,10 @@
-﻿@using Nooch.Common.Entities.LandingPagesRelatedEntities.RejectMoney
+﻿@using Nooch.Common.Entities.LandingPagesRelatedEntities
 
 @{
     Layout = null;
-    PageLoadDataRejectMoney mod = (PageLoadDataRejectMoney)Model;
+    List<TransactionClass> allTransactions = Model;
+
+    //ResultcreateAccount rca = (ResultcreateAccount)ViewData["OnLoaddata"];
 }
 
 <!DOCTYPE html>
@@ -44,7 +46,7 @@
                 <div class="ibox float-e-margins">
                     <div class="ibox-title">
 
-                        <h5>All Payments</h5>
+                        <h5>Payment History</h5>
 
                         <div class="ibox-tools">
                         </div>
@@ -152,6 +154,27 @@
         </div>
     </div>
 
+    <div class="modal fade" id="modal-transferLocation" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title"><span class="fa fa-map-marker pull-left"></span>Transfer Location</h4>
+                </div>
+                <div class="modal-body">
+                    <p style="font-size:16px;text-align:center;" class="m-b-sm">This transfer was sent from: <strong><span id="citystate"></span></strong>.</p>
+                    <iframe width="100%" id="googleFrame"
+                            height="420"
+                            frameborder="0"
+                            style="border:0;margin:10px auto 0;"
+                            src=''></iframe>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
     <script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
@@ -159,13 +182,6 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
 
     <script src="@Url.Content("~/js/sweetalert.min.js")"></script>
-
-    <script type="text/javascript">
-        var errorFromCodeBehind = '@mod.errorFromCodeBehind';
-        var transStatus = '@mod.transStatus';
-    </script>
-
-    <script src="@Url.Content("~/js/app/reject-money.js")"></script>
     <script src="../js/jquery.blockUI.min.js"></script>
 
     <script type="text/javascript">
@@ -207,5 +223,90 @@
         });
     });
     </script>
+
+    <script type="text/javascript">
+        $(document).ready(function ()
+        {
+            $("#TransactionMaster").trigger("click");
+
+            $('#transMenuItem').addClass('active');
+
+            $('#AllMembers')//.on( 'init.dt', function () {
+                //console.log('Table initialisation complete. #1');
+                //$('[data-toggle="tooltip"]').tooltip()
+            //})
+            .dataTable({
+                responsive: true,
+                "order": [3, "desc"],
+                "initComplete": function (settings, json)
+                {
+                    //console.log('Table initialisation complete. #2');
+                    $('[data-toggle="tooltip"]').tooltip()
+                },
+                "columnDefs": [
+                    { className: "actions", "targets": [-1] },
+                    { "orderable": false, "targets": [0, -1] },
+                    { "width": "70px", "targets": -1 },
+                    //{"type": "date", "targets": 3},
+                ],
+                "language": {
+                    "info": "Showing _START_ to _END_ of _TOTAL_ Total Transactions"
+                }
+                //    "tableTools": {
+                //        "sSwfPath": "../js/plugins/dataTables/swf/copy_csv_xls_pdf.swf"
+                //    }
+            });
+        });
+
+        function showLocationModal(lati, longi, stte)
+        {
+            var v = 'https://www.google.com/maps/embed/v1/place?q=' + lati + ',' + longi + '&center=' + lati + ',' + longi + '&key=AIzaSyDrUnX1gGpPL9fWmsWfhOxIDIy3t7YjcEY&zoom=13';
+            $('#googleFrame').attr('src', v);
+
+            $("#citystate").text(stte);
+
+            $('#modal-transferLocation').modal();
+            return false;
+        }
+    </script>
+
+    <script>
+        window.paceOptions = {
+            ajax: {
+                trackMethods: ['GET', 'POST', 'PUT', 'DELETE', 'REMOVE']
+            }
+        };
+    </script>
+
+    <style>
+        body.DTTT_Print {
+            background: #fff;
+        }
+
+        .DTTT_Print #page-wrapper {
+            margin: 0;
+            background: #fff;
+        }
+
+        button.DTTT_button, div.DTTT_button, a.DTTT_button {
+            border: 1px solid #e7eaec;
+            background: #fff;
+            color: #676a6c;
+            box-shadow: none;
+            padding: 6px 8px;
+        }
+
+            button.DTTT_button:hover, div.DTTT_button:hover, a.DTTT_button:hover {
+                border: 1px solid #d2d2d2;
+                background: #fff;
+                color: #676a6c;
+                box-shadow: none;
+                padding: 6px 8px;
+            }
+
+        .dataTables_filter label {
+            margin-right: 5px;
+        }
+    </style>
 </body>
 </html>

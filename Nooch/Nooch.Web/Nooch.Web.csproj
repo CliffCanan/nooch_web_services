@@ -317,6 +317,7 @@
     <Content Include="Views\Nooch\idVerification.cshtml" />
     <Content Include="Views\Nooch\payAnyone.cshtml" />
     <Content Include="Views\Nooch\Activation.cshtml" />
+    <Content Include="Views\Nooch\history.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
