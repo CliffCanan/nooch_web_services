@@ -5637,17 +5637,7 @@ namespace Nooch.DataAccess
                                     // If testing, keep this transaction as 'Pending' so we can more easily re-test with the same transaction.
                                     Transaction.TransactionStatus = "Success";
 
-                                    // save changes into synapseTransactionResult table in db
-                                    SynapseAddTransactionResult satr = new SynapseAddTransactionResult();
-                                    satr.TransactionId = Utility.ConvertToGuid(TransactionId);
-                                    satr.OidFromSynapse = Call_Synapse_Order_API_Result.responseFromSynapse.trans._id.oid.ToString();
-                                    satr.Status_DateTimeStamp = Call_Synapse_Order_API_Result.responseFromSynapse.trans.recent_status.date.date.ToString();
-                                    satr.Status_Id = Call_Synapse_Order_API_Result.responseFromSynapse.trans.recent_status.status_id;
-                                    satr.Status_Note = Call_Synapse_Order_API_Result.responseFromSynapse.trans.recent_status.note;
-                                  
-
-                                    _dbContext.SaveChanges();
-                                    _dbContext.Entry(Transaction).Reload();
+                                    
 
                                     //}
 
