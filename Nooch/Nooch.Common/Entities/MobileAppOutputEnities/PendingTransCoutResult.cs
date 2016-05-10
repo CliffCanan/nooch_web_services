@@ -9,11 +9,8 @@ namespace Nooch.Common.Entities.MobileAppOutputEnities
     public class PendingTransCoutResult
     {
         public string pendingRequestsSent { get; set; }
-
         public string pendingRequestsReceived { get; set; }
-
         public string pendingInvitationsSent { get; set; }
-
         public string pendingDisputesNotSolved { get; set; }
     }
 }

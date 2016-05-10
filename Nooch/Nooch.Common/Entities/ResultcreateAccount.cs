@@ -28,13 +28,13 @@ namespace Nooch.Common.Entities
         public string ip { get; set; }
         public string fngprnt { get; set; }
         public string pw { get; set; }
- }
+    }
 
     public class CreateAccountInDB
     {
         public string name { get; set; }
         public string email { get; set; }
-        public string pw { get; set; }       
+        public string pw { get; set; }
         public string result { get; set; }
         public string TransId { get; set; }
     }

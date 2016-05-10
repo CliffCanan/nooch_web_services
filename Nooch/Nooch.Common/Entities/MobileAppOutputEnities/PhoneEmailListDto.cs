@@ -12,13 +12,8 @@ namespace Nooch.Common.Entities.MobileAppOutputEnities
     }
     public class PhoneEmailMemberPair
     {
-
         public string phoneNo { get; set; }
-
         public string emailAddy { get; set; }
-
         public string memberId { get; set; }
-
     }
-
 }

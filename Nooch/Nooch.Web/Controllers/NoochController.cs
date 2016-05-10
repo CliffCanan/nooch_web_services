@@ -44,7 +44,6 @@ namespace Nooch.Web.Controllers
             {
                 if (Request.Browser.IsMobileDevice || strUserAgent.Contains("iphone") || strUserAgent.Contains("mobile") || strUserAgent.Contains("iOS"))
                 {
-
                     bankVerification.openAppText = true;
                 }
             }
@@ -486,7 +485,6 @@ namespace Nooch.Web.Controllers
 
             try
             {
-
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
                 string serviceMethod = "/RegisterUserWithSynapseV3?memberId=" + memberid;
 
@@ -1042,7 +1040,6 @@ namespace Nooch.Web.Controllers
 
 
         public ActionResult PayRequestComplete()
-        
         {
             ResultPayRequestComplete rpc = new ResultPayRequestComplete();
             Logger.Info("PayRequestComplete CodeBehind -> page_load Initiated - 'mem_id' Parameter In URL: [" + Request.QueryString["mem_id"] + "]");
@@ -1525,13 +1522,11 @@ namespace Nooch.Web.Controllers
                 {
                     Logger.Info("createAccount CodeBehind -> Page_load Initiated - Is a RentScene Payment: [" + Request.QueryString["rs"] + "]");
 
-
                     rca.rs = Request.QueryString["rs"].ToLower();
                 }
                 if (!String.IsNullOrEmpty(Request.QueryString["TransId"]))
                 {
                     Logger.Info("createAccount CodeBehind -> Page_load Initiated - [TransactionId Parameter: " + Request.QueryString["TransactionId"] + "]");
-
 
                     Session["TransId"] = Request.QueryString["TransId"];
 
@@ -1539,7 +1534,6 @@ namespace Nooch.Web.Controllers
                 }
                 else if (!String.IsNullOrEmpty(Request.QueryString["type"]))
                 {
-
                     rca.type = Request.QueryString["type"];
 
                     if (!String.IsNullOrEmpty(Request.QueryString["memId"]))
@@ -1557,7 +1551,6 @@ namespace Nooch.Web.Controllers
             }
             catch (Exception ex)
             {
-
                 rca.errorId = "1";
 
                 Logger.Error("payRequest CodeBehind -> page_load OUTER EXCEPTION - [TransactionId Parameter: " + Request.QueryString["TransactionId"] +
@@ -2323,11 +2316,13 @@ namespace Nooch.Web.Controllers
                 payAnyone.payreqInfo = false;
                 payAnyone.PayorInitialInfo = false;
                 payAnyone.ErrorID = "2";
-
             }
+
             ViewData["OnLoaddata"] = payAnyone;
             return View();
         }
+
+
         public ResultpayAnyone GetPayeesNoochDetails(string memberTag, ResultpayAnyone resultpayAnyone)
         {
             ResultpayAnyone payAnyone = resultpayAnyone;
@@ -2358,6 +2353,8 @@ namespace Nooch.Web.Controllers
             }
             return resultpayAnyone;
         }
+
+
         // Register user with Synapse      
         public RegisterUserSynapseResultClassExt RegisterUserWithSynp(string transId, string userEmail, string userPhone, string userName, string userPassword)
         {
@@ -2394,11 +2391,11 @@ namespace Nooch.Web.Controllers
 
 
         #region Activation
+
         public ActionResult Activation()
         {
             ResultActivation resultActivation = new ResultActivation();
             Logger.Info("Email Activation Page -> Initiated");
-
 
             string strUserAgent = Request.UserAgent.ToLower();
 
@@ -2442,9 +2439,76 @@ namespace Nooch.Web.Controllers
             ViewData["OnLoaddata"] = resultActivation;
             return View();
         }
+
         #endregion
 
+
+        /// <summary>
+        /// For getting a user's transaction history (Added by Cliff on 5/10/16).
+        /// </summary>
+        /// <param name="memId"></param>
+        /// <param name="rs"></param>
+        /// <returns></returns>
+        public ActionResult history(string memId, string rs)
+        {
+            TransactionsPageData res = new TransactionsPageData();
+            res.isSuccess = false;
+
+            try
+            {
+                List<TransactionClass> transList = new List<TransactionClass>();
+                /* using (NOOCHEntities obj = new NOOCHEntities())
+                 {
+                     transList = (from t in obj.Transactions
+                                  join g in obj.GeoLocations
+                                  on t.LocationId equals g.LocationId
+                                  select new TransactionClass
+                                  {
+                                      TransactionId = t.TransactionId,
+                                      TransactionType = t.TransactionType,
+                                      TransactionStatus = t.TransactionStatus,
+                                      Amount = t.Amount,
+                                      TransactionDate = t.TransactionDate,
+                                      SenderId = t.SenderId,
+                                      RecipientId = t.RecipientId,
+                                      TransLongi = g.Longitude,
+                                      TransAlti = g.Altitude,
+                                      TransLati = g.Latitude,
+                                      state = g.State,
+                                      city = g.City,
+                                      Memo = t.Memo
+                                  }).ToList();
+                 }*/
+
+                if (!String.IsNullOrEmpty(Request.QueryString["rs"]))
+                {
+                    Logger.Info("createAccount CodeBehind -> Page_load Initiated - Is a RentScene Payment: [" + Request.QueryString["rs"] + "]");
+                }
+                if (!String.IsNullOrEmpty(Request.QueryString["TransId"]))
+                {
+                    Logger.Info("createAccount CodeBehind -> Page_load Initiated - [TransactionId Parameter: " + Request.QueryString["TransactionId"] + "]");
+
+                    Session["TransId"] = Request.QueryString["TransId"];
+                }
+                else
+                {
+                    //res.errorId = "2";
+                }
+            }
+            catch (Exception ex)
+            {
+                //res.errorId = "1";
+
+                Logger.Error("payRequest CodeBehind -> page_load OUTER EXCEPTION - [TransactionId Parameter: " + Request.QueryString["TransactionId"] +
+                             "], [Exception: " + ex.Message + "]");
+            }
+
+            //ViewData["OnLoaddata"] = res;
+
+            return View(res);
+        }
     }
+
 
     public class bankLoginInputFormClass
     {
@@ -2455,7 +2519,6 @@ namespace Nooch.Web.Controllers
         public bool IsPinRequired { get; set; }
         public string PinNumber { get; set; }
     }
-
 
     public class bankaddInputFormClass
     {
@@ -2475,7 +2538,6 @@ namespace Nooch.Web.Controllers
         public string MFA { get; set; }
         public string ba { get; set; }
     }
-
 
     public class setDefaultBankInput
     {
