@@ -5505,5 +5505,24 @@ namespace Nooch.API.Controllers
             return new StringResult();
         }
 
+        [HttpGet]
+        [ActionName("ResendVerificationSMS")]
+        public StringResult ResendVerificationSMS(string UserName)
+        {
+            try
+            {
+                Logger.Info("Service Layer - ResendVerificationSMS - [UserName: " + UserName + "]");
+
+                var mda = new MembersDataAccess();
+                return new StringResult { Result = mda.ResendVerificationSMS(UserName) };
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Layer - ResendVerificationSMS FAILED - UserName: [" + UserName + "], [Exception: " + ex.Message + "]");
+                
+            }
+            return new StringResult();
+        }
+
     }
 }

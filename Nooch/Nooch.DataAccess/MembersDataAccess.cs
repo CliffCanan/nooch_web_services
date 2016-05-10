@@ -37,6 +37,74 @@ namespace Nooch.DataAccess
         }
 
 
+
+        public string ResendVerificationSMS(string Username)
+        {
+            //1. Check if user exists
+            //2. Check if phone is already verified
+
+            string s = CommonHelper.IsDuplicateMember(Username);
+            if (s != "Not a nooch member.")
+            {
+                // member exists, now check if Phone is already verified
+
+                // checking if phone is already activated
+                // getting MemberId
+                Username = CommonHelper.GetEncryptedData(Username);
+                using (var noochConnection = new NOOCHEntities())
+                {
+                    
+                    var memberEntity = noochConnection.Members.FirstOrDefault(m => m.UserName == Username);
+                    
+                    if (memberEntity != null)
+                    {
+                        if (memberEntity.Status == "Temporarily_Blocked")
+                        {
+                            return "Temporarily_Blocked";
+                        }
+                        else if (memberEntity.Status == "Suspended")
+                        {
+                            return "Suspended";
+                        }
+
+                        else// if (memberEntity.Status == "Active" || memberEntity.Status == "Registered")
+                        {
+                            string fname = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberEntity.FirstName));
+                            string MessageBody = "Hi " + fname + ", This is Nooch - just need to verify this is your phone number. Please reply 'Go' to confirm your phone number.";
+
+                            if (memberEntity.ContactNumber != null &&
+                                (memberEntity.IsVerifiedPhone == false || memberEntity.IsVerifiedPhone == null))
+                            {
+                                string result = Utility.SendSMS(memberEntity.ContactNumber, MessageBody);
+                                return "Success";
+                            }
+                            else if (memberEntity.ContactNumber != null && (memberEntity.IsVerifiedPhone == true))
+                            {
+                                return "Already Verified.";
+                            }
+                            else
+                            {
+                                return "Failure";
+                            }
+                        }
+                        //else
+                        //{
+                        //    return "Failure";
+                        //}
+                    }
+                    else
+                    {
+                        return "Not a Nooch member.";
+                    }
+                }
+            }
+            else
+            {
+                // Member doesn't exists
+                return "Not a Nooch member.";
+            }
+        }
+
         public string ResendVerificationLink(string Username)
         {
             //1. Check if user exists or not
