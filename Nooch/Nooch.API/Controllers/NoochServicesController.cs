@@ -5766,6 +5766,87 @@ namespace Nooch.API.Controllers
             return new StringResult();
         }
 
+        [HttpPost]
+        [ActionName("TransferMoneyUsingSynapse")]
+        public StringResult TransferMoneyUsingSynapse(TransactionDto transactionInput, out string trnsactionId,
+            string accessToken)
+        {
+            Logger.Info("Service Layer -> TransferMoneyUsingSynapse Initiated - Trans.MemberID: [" + transactionInput.MemberId +
+                                  "], RecipientID: [" + transactionInput.RecepientId +
+                                  "], Amount: [" + transactionInput.Amount.ToString("n2") +
+                                  "], doNotSendEmails: [" + transactionInput.doNotSendEmails + "]");
+
+            if (CommonHelper.IsValidRequest(accessToken, transactionInput.MemberId))
+            {
+                trnsactionId = string.Empty;
+
+                try
+                {
+                    TransactionEntity transactionEntity = GetTransactionEntity(transactionInput);
+
+                    var tda = new TransactionsDataAccess();
+
+                    return new StringResult { Result = tda.TransferMoneyUsingSynapse(transactionEntity, out trnsactionId) };
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Layer -> TransferMoneyUsingSynapse FAILED - [MemberID: " + transactionInput.MemberId + "], [Exception: " + ex + "]");
+                    //UtilityService.ThrowFaultException(ex);
+                }
+
+                return new StringResult();
+            }
+            else
+            {
+                Logger.Error("Service Layer -> TransferMoneyUsingSynapse FAILED. AccessToken invalid or not found - " +
+                                       "MemberID: [" + transactionInput.MemberId + "]");
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
+
+
+        /// <summary>
+        /// Private method for setting up a Transaction Entity before executing a transfer.
+        /// </summary>
+        /// <param name="transactionInput"></param>
+        /// <returns></returns>
+        private static TransactionEntity GetTransactionEntity(TransactionDto transactionInput)
+        {
+            var transactionEntity = new TransactionEntity
+            {
+                Picture = transactionInput.Picture,
+                PinNumber = transactionInput.PinNumber,
+                MemberId = transactionInput.MemberId,
+                RecipientId = transactionInput.RecepientId,
+                Amount = transactionInput.Amount,
+                Memo = transactionInput.Memo,
+                IsPrePaidTransaction = transactionInput.IsPrePaidTransaction,
+                DeviceId = transactionInput.DeviceId,
+                BankId = transactionInput.BankId,
+                BankAccountId = transactionInput.BankAccountId,
+                TransactionType = transactionInput.TransactionType,
+                TransactionDateTime = DateTime.Now.ToString(),
+                doNotSendEmails = transactionInput.doNotSendEmails,
+                isRentAutoPayment = transactionInput.isRentAutoPayment == true
+                                    ? true
+                                    : false,
+
+                Location = new LocationEntity
+                {
+                    Latitude = transactionInput.Latitude,
+                    Longitude = transactionInput.Longitude,
+                    AddressLine1 = transactionInput.AddressLine1,
+                    AddressLine2 = transactionInput.AddressLine2,
+                    City = transactionInput.City,
+                    State = transactionInput.State,
+                    Country = transactionInput.Country,
+                    ZipCode = transactionInput.ZipCode
+                }
+            };
+            return transactionEntity;
+        }
+
+
 
     }
 }
