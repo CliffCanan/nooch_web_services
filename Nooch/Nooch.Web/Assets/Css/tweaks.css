@@ -1405,6 +1405,7 @@ div#pwFormShell #depositCreateAccount,
 .modal dl { margin-bottom: 12px; }
 #idVerWiz input#idVer-name { text-transform: capitalize; }
 #idVerWiz input#idVer-ssn {
+    font-weight: bold;
     padding-left: 93px;
     letter-spacing: 2.5px;
 }
@@ -1731,7 +1732,6 @@ div#carousel ~ a:hover {
 .idVerSuccessAlert h2, .createAccountPg .sweet-alert h2 { margin-top: 18px; }
 .idVerSuccessAlert p { font-size: 16.5px; }
 .idVerSuccessAlert p i, .createAccountPg .sweet-alert p i:not(.fa-li) { font-size: 52px; margin: -15px 0 10px; }
-.idVerSuccessAlert p span, .createAccountPg .sweet-alert p span { display: block; margin: 15px auto 10px; }
 .idVerSuccessAlert p span.spanlist { font-weight: 600; line-height: 1.5; margin-top: 0;}
 .idVerSuccessAlert .spanlist > span { margin: 5px auto; }
 .idVerSuccessAlert button.confirm,

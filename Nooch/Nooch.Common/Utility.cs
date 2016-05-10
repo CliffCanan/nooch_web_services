@@ -219,11 +219,14 @@ namespace Nooch.Common
             return randomId;
         }
 
+
         public static string GetEmailTemplate(string physicalPath)
         {
             using (var sr = new StreamReader(physicalPath))
                 return sr.ReadToEnd();
         }
+
+
         public static bool SendEmail(string templateName, string fromAddress, string toAddress, string attachmentPath, string subject, string referenceLink, IEnumerable<KeyValuePair<string, string>> replacements, string ccMailId, string bccMailId, string bodyText)
         {
             try
@@ -242,7 +245,7 @@ namespace Nooch.Common
                     // Replace tokens in the message body and subject line
                     if (replacements != null)
                     {
-                         foreach (var token in replacements)
+                        foreach (var token in replacements)
                         {
                             content = content.Replace(token.Key, token.Value);
                             subjectString = subject.Replace(token.Key, token.Value);
@@ -261,7 +264,6 @@ namespace Nooch.Common
                         mailMessage.From = new MailAddress(fromAddress, "Nooch Payments");
                         break;
                     case "support@nooch.com":
-
                         mailMessage.From = new MailAddress(fromAddress, "Nooch Support");
                         break;
                     case "hello@nooch.com":
@@ -283,8 +285,6 @@ namespace Nooch.Common
                 mailMessage.IsBodyHtml = true;
                 mailMessage.Subject = subjectString;
 
-
-
                 if (Convert.ToBoolean(GetValueFromConfig("IsRunningOnSandBox")))
                     toAddress = GetValueFromConfig("SandboxEmailsRecepientEmail");
 
@@ -294,9 +294,6 @@ namespace Nooch.Common
                 {
                     mailMessage.Bcc.Add(bccMailId);
                 }
-
-
-
 
                 SmtpClient smtpClient = new SmtpClient();
 
@@ -357,11 +354,8 @@ namespace Nooch.Common
         }
 
 
-
         public static bool SendEmailCSV(string toAddress, string attachmentCSVString, string subject, string bodyText, IEnumerable<KeyValuePair<string, string>> replacements)
         {
-
-
             try
             {
                 MailMessage mailMessage = new MailMessage();
@@ -375,26 +369,22 @@ namespace Nooch.Common
 
                 mailMessage.Body = content;
 
-
-
                 mailMessage.IsBodyHtml = true;
                 mailMessage.Subject = subjectString;
-                mailMessage.To.Add(new MailAddress(toAddress, "reports@nooch.com"));
+                //mailMessage.To.Add(new MailAddress(toAddress, "reports@nooch.com"));
+
+                mailMessage.To.Add(new MailAddress(toAddress));
+                mailMessage.From = (new MailAddress("reports@nooch.com"));
+
 
                 using (MemoryStream stream = new MemoryStream(Encoding.ASCII.GetBytes(attachmentCSVString)))
                 {
                     Attachment attachment = new Attachment(stream, new ContentType("text/csv"));
                     attachment.Name = "MyNoochTransactions.csv";
-
                     mailMessage.Attachments.Add(attachment);
-
-
-
                     SmtpClient smtpClient = new SmtpClient();
-
                     smtpClient.Host = GetValueFromConfig("SMTPAddressForCSVAttachment");
                     smtpClient.UseDefaultCredentials = false;
-
                     smtpClient.Credentials = new NetworkCredential(GetValueFromConfig("SMTPLogOnForCSVAttachment"), GetValueFromConfig("SMTPPasswordForCSVAttachment"));
                     smtpClient.Send(mailMessage);
                     return true;
@@ -421,7 +411,6 @@ namespace Nooch.Common
         /// Used to log and throw exception
         /// </summary>
         /// <param name="exception">Exception raised at runtime</param>
-
         public static void ThrowFaultException(Exception exception)
         {
             Logger.Error(String.Format(Utility.GetFormatProvider, "Exception: [{0}], Message: [{1}], StackTrace: {2}", exception.GetType().FullName, exception.Message, exception.StackTrace.Replace(Environment.NewLine, string.Empty)));

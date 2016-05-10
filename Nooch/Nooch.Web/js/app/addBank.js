@@ -9,7 +9,7 @@ var sendToIdVerQuestions = false;
 var isManual = false;
 
 var step1height = '554px';
-var step2height = '500px';
+var step2height = '520px';
 
 var wasEnterPressed = false;
 
@@ -85,18 +85,18 @@ $(".manualLogin").click(function () {
 	});
 
 	$('body.body').css("overflow","visible");
-	var step2height_manual = '566px';
+	var step2height_manual = '586px';
 
 	if (fromLandlordApp == "yes")
 	{
-        step2height_manual = '662px'
+        step2height_manual = '672px'
 	}
 	if ($(window).width() > 767)
 	{
 	    step2height_manual = '650px'
-	    if ($(window).width() > 1000) {
-	        step2height_manual = '680px'
-	    }
+	    //if ($(window).width() > 1000) {
+	    //    step2height_manual = '680px'
+	    //}
 	}
 	//console.log("step2height_manual: " + step2height_manual);
 	$('#addBankManual').removeClass("hide",function() {
@@ -216,11 +216,11 @@ function goBackReset() {
 
 /**** (Step 3) User still just selected a bank, getting general bank details from server ****/
 function CheckBankDetails(bankName) {
-	console.log("CheckBankDetails - Bank: [" + bankName + "]");
+	//console.log("CheckBankDetails - Bank: [" + bankName + "]");
+
     BANK_NAME = bankName;
     $.ajax({
         type: "POST",
-        //url: "Add-Bank.aspx/CheckBankDetails",
         url: "CheckBankDetails",
         data: "{ bankname: '" + bankName + "'}",
         contentType: "application/json; charset=utf-8",
@@ -251,11 +251,11 @@ function CheckBankDetails(bankName) {
 
                     if ($(window).width() < 1000)
                     {
-                        step2height = '500px';
+                        step2height = '580px';
                     }
                     else
                     {
-                        step2height = '560px';
+                        step2height = '590px';
                     }
                 }
                 $('#bankLogin #bankUsername').parsley().reset();
@@ -438,9 +438,9 @@ $('#bankLogin').submit(function(e) {
 
 
 function submitBnkLgn() {
-    //console.log("{bankname: '" + BANK_NAME + "', IsPinRequired: '" + Is_PIN_REQUIRED + "'}");
     isManual = false;
     
+    //console.log("submitBnkLgn Fired.");
 
     $.ajax({
         type: "POST",
@@ -568,10 +568,11 @@ function submitBnkLgn() {
 					$('#addBank-sec-question').parsley().reset();
 
 					// Displaying First MFA Question
-					$('#securityQuestionOneFromServer').html(bnkLoginResult.SynapseQuestionBasedResponse.response.mfa[0].question);
+					$('#securityQuestionOneFromServer').html(bnkLoginResult.mfaMessage);
 				}
 
-				else if (bnkLoginResult.MFA_Type == "device") 
+                // CC (5/7/16): No more Code-Based MFA anymore
+				/*else if (bnkLoginResult.MFA_Type == "device") 
 				{
 				    MFA_TYPE = "code";
 
@@ -586,7 +587,7 @@ function submitBnkLgn() {
 					$('#codeMsg').html(bnkLoginResult.SynapseCodeBasedResponse.response.mfa.message);
 					$('#codeMsg').velocity("transition.bounceLeftIn",900);
 					$('#securityCodeInput').attr('data-parsley-required-message', 'Alas, this is a required security code sent by ' + BANK_NAME + '.');
-				}
+				}*/
 			}
 
 			// NO MFA... ARRAY OF BANKS RETURNED
@@ -603,6 +604,7 @@ function submitBnkLgn() {
 
 				var accountnum = 0;
 				var bankht = "";
+
 				$.each(bnkLoginResult.SynapseBanksList.banks, function (i, val) {
                     var currentBankAccnt = val;
                     accountnum += 1;
@@ -619,6 +621,17 @@ function submitBnkLgn() {
 					$('#bankSelction').removeClass('btn-gray').addClass('btn-success');
 					$('#label1').addClass('selected');
 				}
+
+				$("#addBank-selectAccount #allAccounts input").change(function ()
+				{
+					$('#bankSelction').removeClass('btn-gray').addClass('btn-success');
+
+					var x = $(this).attr('id');
+					x = x.substring(x.length - 1);
+
+					$("#addBank-selectAccount .form-control.selected").removeClass('selected');
+					$('#label' + x).addClass('selected');
+				});
 			}
         },
         Error: function (x, e) {
@@ -747,7 +760,7 @@ function submitManualBank() {
 
 	$.ajax({
         type: "POST",
-        url: "addBank", // CLIFF (9/21/15): ADDED NEW METHOD ('addBank') TO CODE-BEHIND PAGE
+        url: "addBank",
         data: "{memberid: '" + MEMBER_ID + "', fullname: '" + $('#userFullName').val() + "',routing: '" + $('#bankRout').val() + "',account: '" + $('#bankAcntNum').val() + "',nickname: '',cl: '" + classString + "',type: '" + typeString + "'}",
         contentType: "application/json; charset=utf-8",
         dataType: "json",
@@ -850,9 +863,10 @@ $('#addBank-code').submit(function(e) {
 $('#addBank-sec-question').submit(function(e) {
 	e.preventDefault();
 
+	//console.log("#addBank-sec-question -> Submit Fired.");
     //console.log("SEC_QUES_NO value is: " + SEC_QUES_NO);
 
-    // Question based MFA and 1st question response needed
+    // Question-based MFA and 1st question response needed
 	if (SEC_QUES_NO == 1)
 	{
 		if ($('#securityQuest1').parsley().validate() === true)
@@ -898,6 +912,8 @@ function MFALogin() {
     var accessCode = '';
 	var loadingText = '';
 
+	console.log("MFALogin() Fired.");
+
 	//console.log("SEC_QUES_NO value is: " + SEC_QUES_NO);
     if (MFA_TYPE == "question")
 	{
@@ -917,7 +933,7 @@ function MFALogin() {
 		loadingText="Checking that response";
     }
 
-    else if (MFA_TYPE == "code")
+    /*else if (MFA_TYPE == "code")
 	{
 		if ($("#addBank-code").parsley().validate() === true)
 		{
@@ -929,7 +945,7 @@ function MFALogin() {
 		else {
 			return;
 		}
-    }
+    }*/
 
 	// ADD THE LOADING BOX
     $('.addBankContainer-body').block({
@@ -971,7 +987,7 @@ function MFALogin() {
 				//console.log(res);
 
 				// Checking if response contains another MFA
-				if (res.Is_MFA == true && res.SynapseQuestionBasedResponse != null)
+				if (res.Is_MFA == true && res.mfaMessage != null)
 				{
 					// expecting question based in response to Question-Based MFA, and it would have to be Question No. 2 here (1st question would come after Bank Login)
 
@@ -988,7 +1004,7 @@ function MFALogin() {
 							});
 						});
 					    $('#ques3Div').addClass('hide');
-						$('#securityQuestionTwoFromServer').html(res.SynapseQuestionBasedResponse.response.mfa[0].question);
+						$('#securityQuestionTwoFromServer').html(res.mfaMessage);
 						$('#securityQuest1').attr('data-parsley-required', 'false');
 						$('#securityQuest2').attr('data-parsley-required', 'true');
 					}
@@ -1002,7 +1018,7 @@ function MFALogin() {
 							});
 						});
 
-						$('#securityQuestionThreeFromServer').html(res.SynapseQuestionBasedResponse.response.mfa[0].question);
+						$('#securityQuestionThreeFromServer').html(res.mfaMessage);
 						$('#securityQuest2').attr('data-parsley-required', 'false');
 						$('#securityQuest3').attr('data-parsley-required', 'true');
 					}
@@ -1017,7 +1033,7 @@ function MFALogin() {
 						$('#ques3Div').velocity("transition.slideLeftBigOut",400);
 
 						$('#securityQuest1').html('Security Question'); 
-						$('#securityQuestionOneFromServer').html(res.SynapseQuestionBasedResponse.response.mfa[0].question);
+						$('#securityQuestionOneFromServer').html(res.mfaMessage);
 
 						$('#securityQuest1').attr('data-parsley-required', 'true');
 						$('#securityQuest2').attr('data-parsley-required', 'false');
@@ -1025,17 +1041,18 @@ function MFALogin() {
 					}
 
 					SEC_QUES_NO++;   // incremented it to write question mfa for 2nd round.
-					$('#bankAccessTokenForQuestion').val(res.SynapseQuestionBasedResponse.response.access_token);
+					$('#bankAccessTokenForQuestion').val(res.mfaMessage);
 				}
 
                 else if (res.Is_MFA == false && res.SynapseBanksList != null)
 				{
 					// iterating through each bank
                     var accountnum = 0;
-                    var bankht = ""; console.log(res);
+                    var bankht = "";
+					console.log(res);
+
                     $.each(res.SynapseBanksList.banks, function (i, val)
                     {
-                        
                         var currentBankAccnt = val;
                         accountnum += 1;
                         //console.log('Account nickname is: ' + currentBankAccnt.nickname);
@@ -1053,6 +1070,17 @@ function MFALogin() {
 						$('#label1').addClass('selected');
 					}
 
+					$("#addBank-selectAccount #allAccounts input").change(function ()
+					{
+						$('#bankSelction').removeClass('btn-gray').addClass('btn-success');
+
+						var x = $(this).attr('id');
+						x = x.substring(x.length - 1);
+
+						$("#addBank-selectAccount .form-control.selected").removeClass('selected');
+						$('#label' + x).addClass('selected');
+					});
+
 					// Go to final step: 'Select Account'
 					$('#addBank_mfa_question').addClass("hide");
 					$('#addBank_mfa_code').addClass("hide");
@@ -1066,10 +1094,10 @@ function MFALogin() {
 			{
 				// ERROR CAME BACK FROM Synapse FOR MFA ATTEMPT
 				console.log("SUBMIT BANK LOGIN ERROR IS: " + res.ERROR_MSG);
-				if (MFA_TYPE == "code") {
+				/*if (MFA_TYPE == "code") {
 					$('#mfa_code_errorMsg').html("<div><p class='parsley-errors-list filled'>" + res.ERROR_MSG + "</p></div>");
 				}
-				else if (MFA_TYPE == "question") {
+				else */if (MFA_TYPE == "question") {
 					$('#mfa_question_errorMsg').html("<div><p class='parsley-errors-list filled'>" + res.ERROR_MSG + "</p></div>");
 				}
 				else
@@ -1086,11 +1114,11 @@ function MFALogin() {
             // Hide UIBlock (loading box) & display error message
 			$('.addBankContainer-body').unblock();
 
-			if (MFA_TYPE == "code")
+			/*if (MFA_TYPE == "code")
 			{
 			    $('#mfa_code_errorMsg').html("<div><p class='parsley-errors-list filled'>Oh no! We encountered an error when we tried to verify your code :-(</p></div>");
 			}
-			else if (MFA_TYPE == "question")
+			else */if (MFA_TYPE == "question")
 			{
 			    $('#mfa_question_errorMsg').html("<div><p class='parsley-errors-list filled'>Oh no! We encountered an error when we tried to verify your answer :-(</p></div>");
 			}
@@ -1201,7 +1229,6 @@ function SetDefaultAct() {
 function sendToRedUrl() {
     console.log("RED_URL is is: [" + RED_URL + "]");
 
-   
     // First, check if this is a Landlord
     if (fromLandlordApp == "yes")
     {
@@ -1227,7 +1254,7 @@ function sendToRedUrl() {
 
         if (sendToIdVerQuestions == true)
         {
-            window.top.location.href = "https://www.noochme.com/noochweb/trans/idverification.aspx?memid=" + MEMBER_ID + "&from=addbnk&redUrl=" + RED_URL;
+            window.top.location.href = "https://www.noochme.com/noochweb/Nooch/idVerification?memid=" + MEMBER_ID + "&from=addbnk&redUrl=" + RED_URL;
         }
         else if (RED_URL.indexOf("rentscene") > -1) // For RentScene
         {
@@ -1350,10 +1377,8 @@ function sendToRedUrl() {
 
             //window.location = RED_URL;
         }
-         
 
-
-        else    // All Others - most likely no RED_URL was passed in URL, so defaulting to a Sweet Alert
+        else // All Others - most likely no RED_URL was passed in URL, so defaulting to a Sweet Alert
             {
                 swal({
                     title: "Bank Linked Successfully",
@@ -1387,19 +1412,9 @@ function sendToRedUrl() {
                         // window.top.location.href = "http://localhost:2061/Nooch/DepositMoneyComplete?mem_id=" + MEMBER_ID;
                     }, 400);
                 });
-
-                //window.location = RED_URL;
             }
         }
-    
 }
-
-/*function checkOrUncheckSelectedAccount() {}*/
-
-
-
-
-
 
 
 
@@ -1464,7 +1479,7 @@ $(document).ready(function () {
 		$('.encryption-notice').addClass('hide');
 		
 		step1height = '514px';
-		step2height = '466px';
+		step2height = '496px';
 	}
 	else if ((fromLandlordApp.indexOf("yes") > -1) || ($(window).width() > 500))
 	{
@@ -1478,7 +1493,7 @@ $(document).ready(function () {
 	if ($(window).width() > 1100)
 	{
 	    step1height = '650px';
-	    step2height = '510px';
+	    step2height = '540px';
 	}
 
 	$('.addBank-container').css("height", step1height);
@@ -1500,7 +1515,7 @@ $(document).ready(function () {
 
 	    swal({
 	        title: "Secure, Private Payments",
-	        text: "<p>RentScene offers a quick, secure way to pay rent without giving your routing or account number. &nbsp;Just select your bank and login to your online banking<span class='desk-only'> as you normally do</span>.</p>" +
+	        text: "<p>Rent Scene offers a quick, secure way to pay rent without giving your routing or account number. &nbsp;Just select your bank and login to your online banking<span class='desk-only'> as you normally do</span>.</p>" +
 				  "<ul class='fa-ul'><li><i class='fa-li fa fa-check'></i><strong>We don't see or store</strong> your bank credentials</li>" +
 				  "<li><i class='fa-li fa fa-check'></i>The person you pay never sees any of your personal or bank info (except your name)</li>" +
 				  "<li><i class='fa-li fa fa-check'></i>All data is secured with <strong>bank-grade encryption</strong></li></ul>",
@@ -1601,8 +1616,7 @@ $(document).ready(function () {
          if (val.length == 9) { //for checking 3 characters
                lookupRoutingNum(val);
          }
-
-    });
+	});
 });
 
 function lookupRoutingNum(rn)
@@ -1704,10 +1718,3 @@ function resetBankLogoSize() {
 		height: "auto"
 	})
 }
-
-//CallBack method when the page call success
-//function onSucceed(results, currentContext, methodName) {
-//}
-//CallBack method when the page call fails due to internal, server error 
-//function onError(results, currentContext, methodName) {
-//}

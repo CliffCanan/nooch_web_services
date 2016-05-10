@@ -5,17 +5,17 @@
 }
 
 <!DOCTYPE html>
-
 <html>
-<head  >
+<head>
     <title>Pay Request</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link href="@Url.Content("~/Assets/Css/bootstrap.css")" rel="stylesheet" />
-    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.6.0/css/font-awesome.min.css" />
+
     <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,400italic,500,500italic,700,900" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.4/themes/cupertino/jquery-ui.css" />
     <link href="@Url.Content("~/Assets/Css/sweetalert-override.min.css")" rel="stylesheet" />
-  
 
     <link rel="stylesheet" href="https://cdn.materialdesignicons.com/1.2.65/css/materialdesignicons.min.css" />
     <link href="@Url.Content("~/Assets/Css/bootstrap-select.min.css")" rel="stylesheet" />
@@ -24,7 +24,6 @@
     <link href="@Url.Content("~/Assets/Css/jquery.steps.css")" rel="stylesheet" />
     <link href="@Url.Content("~/Assets/Css/tweaks.css")" rel="stylesheet" />
     <link href="@Url.Content("~/Assets/Css/favicon.ico")" rel="stylesheet" />
- 
 </head>
 
 <body id="body-depositNew" class="no-border pay-request-pg" style="background-color: rgba(230, 231, 232, 0.8);">
@@ -41,7 +40,6 @@
         <input type="hidden" ID="bnkName"   Value="@rpr.bnkName" />
         <input type="hidden" ID="bnkNickname"   Value="@rpr.bnkNickname" />
         <input type="hidden" ID="rs"   Value="@rpr.rs" />
-        
     </form>
 
     <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -241,8 +239,7 @@
 
 
                                     <dl class="dl-horizontal" id="nameGrp">
-                                        <dt class="p-t-10 withIcon">
-                                            Legal Name<br />
+                                        <dt class="p-t-10 withIcon">Your Name<br />
                                             <i class="mdi mdi-information-outline help-icon f-15 m-l-5" data-trigger="hover" data-toggle="popover" data-placement="auto" data-content="Please enter your full legal name."></i>
                                         </dt>
                                         <dd>
@@ -255,8 +252,7 @@
                                     </dl>
 
                                     <dl class="dl-horizontal" id="dobGrp">
-                                        <dt class="p-t-10 withIcon">
-                                            Date of Birth<br />
+                                        <dt class="p-t-10 withIcon">Date of Birth<br />
                                             <i class="mdi mdi-information-outline help-icon f-15 m-l-5" data-trigger="hover" data-toggle="popover" data-placement="auto" data-content="A date of birth is needed to verify a user's identity. Don't worry - nobody sees this!"></i>
                                         </dt>
                                         <dd>
@@ -368,15 +364,10 @@
     <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
     <script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
 
-    <!-- Bootstrap Plugins -->
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
 
-    <!-- Other Plugins -->
     <script src="../js/jasny-bootstrap.min.js"></script>
-    <!-- Input Mask-->
     <script src="../js/jquery.blockUI.min.js"></script>
-    <!--<script src="//cdn.jsdelivr.net/velocity/1.2.2/velocity.min.js"></script>
-    <script src="//cdn.jsdelivr.net/velocity/1.2.2/velocity.ui.min.js"></script>-->
 
     <script src="../js/input-mask.min.js"></script>
     <script src="../js/bootstrap-select.min.js"></script>

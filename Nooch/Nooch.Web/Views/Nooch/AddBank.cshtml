@@ -1,41 +1,32 @@
-﻿
-@{
+﻿@{
     Layout = null;
 }
 
-
-
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
-<head  >
+<head>
     <title>Nooch | Add a Bank</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" />
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/Assets/Css/animate.css" />
-    <link href="@Url.Content("~/Assets/Css/animate.css")" rel="stylesheet" />
-    <link href="@Url.Content("~/Assets/Css/sweetalert-override.min.css")" rel="stylesheet" />
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.6.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="@Url.Content("~/Assets/Css/animate.css")" />
+    <link rel="stylesheet" href="@Url.Content("~/Assets/Css/sweetalert-override.min.css")" />
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.4/themes/cupertino/jquery-ui.css" />
-    <link href="@Url.Content("~/Assets/Css/jquery.auto-complete.css")" rel="stylesheet" />
-    <link href="@Url.Content("~/Assets/Css/AddBankTweaks.css")" rel="stylesheet" />
-    <link href="@Url.Content("~/Assets/Css/AddBankTweaks.css")" rel="stylesheet" />
-
-    @*<link rel="icon" href="../Assets/favicon.ico" />*@
+    <link rel="stylesheet" href="@Url.Content("~/Assets/Css/jquery.auto-complete.css")" />
+    <link rel="stylesheet" href="@Url.Content("~/Assets/Css/AddBankTweaks.css")" />
+    <link rel="icon" href="../Assets/favicon.ico" />
 </head>
-
-
 
 <body class="body body-addBank" data-role="page">
     <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
     <script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
     <script src="//cdn.jsdelivr.net/velocity/1.2.2/velocity.min.js"></script>
     <script src="//cdn.jsdelivr.net/velocity/1.2.2/velocity.ui.min.js"></script>
 
-
-<script src="@Url.Content("~/js/parsley.min.js")"></script>
-<script src="@Url.Content("~/js/jquery.blockUI.min.js")"></script>
-<script src="@Url.Content("~/js/sweetalert.min.js")"></script>
+    <script src="@Url.Content("~/js/parsley.min.js")"></script>
+    <script src="@Url.Content("~/js/jquery.blockUI.min.js")"></script>
+    <script src="@Url.Content("~/js/sweetalert.min.js")"></script>
     <script src="@Url.Content("~/js/jquery.auto-complete.min.js")"></script>
 
 
@@ -111,7 +102,7 @@
                             </div>
                             <div class="form-group popBank-shell group1" data-bname="PNC">
                                 <input type="image" name="pnc1" value="pnc1" src="@Url.Content("~/Assets/Images/bankPictures/pnc.png")" />
-                                ><label class="popBank-label">PNC</label>
+                                <label class="popBank-label">PNC</label>
                             </div>
                             <div class="form-group popBank-shell group1" data-bname="SunTrust">
                                 <input type="image" name="suntrust" value="suntrust" src="@Url.Content("~/Assets/Images/bankPictures/suntrust.png")" />
@@ -180,8 +171,8 @@
 
                                 <button type="submit" id="bankLoginBtn" class="btn btn-success"><span class="fa fa-lock"></span>Login</button>
 
-                                <div class="hide" style="font-size: 85%; text-align: center; color: #6d6e71; margin-top: 8px;">
-                                    By clicking "Login" you are agreeing to the Nooch <a href="https://www.nooch.com/tos">Terms of Service</a>.
+                                <div style="font-size: 85%; text-align: center; color: #888; margin-top: 15px;">
+                                    By clicking "Login" you are agreeing to the Nooch <a href="https://www.nooch.com/tos" target="_blank">Terms of Service</a>.
                                 </div>
                             </div>
 
@@ -445,16 +436,17 @@
                 </div>
             </div>
         </div>
-        <input type="hidden" id="MFALoginUrl" value="@Url.Action("MFALogin", "Nooch")"/>
-        <input type="hidden" id="setDefaultBankUrl" value="@Url.Action("SetDefaultBank", "Nooch")" />
-    </form>
-    
 
-    
+        <input type="hidden" id="MFALoginUrl" value="@Url.Action("MFALogin", "Nooch")" />
+        <input type="hidden" id="setDefaultBankUrl" value="@Url.Action("SetDefaultBank", "Nooch")" />
+
+    </form>
+
     <script type="text/javascript">
 
         // Add a script element as a child of the body
-        function downloadJSAtOnload() {
+        function downloadJSAtOnload()
+        {
             var element = document.createElement("script");
             element.src = "@Url.Content("~/js/app/addBank.js")";
             document.body.appendChild(element);

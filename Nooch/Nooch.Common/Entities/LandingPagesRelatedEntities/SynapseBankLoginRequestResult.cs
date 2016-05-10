@@ -8,34 +8,16 @@ namespace Nooch.Common.Entities.LandingPagesRelatedEntities
 {
     public class SynapseBankLoginRequestResult
     {
-        
         public bool Is_MFA { get; set; }
-
-        
         public bool Is_success { get; set; }
-
-        
         public string ssn_verify_status { get; set; }
-
-        
         public string MFA_Type { get; set; }
-
-        
+        public string mfaMessage { get; set; }
         public string Bank_Access_Token { get; set; }
-
-        
         public string ERROR_MSG { get; set; }
-
-        
         public SynapseBanksListClass SynapseBanksList { get; set; }
-
-        
-        public SynapseQuestionBasedMFAClass SynapseQuestionBasedResponse { get; set; }
-
-        
-        public SynapseCodeBasedMFAClass SynapseCodeBasedResponse { get; set; }
+        public SynapseQuestionBasedMFAClass SynapseQuestionBasedResponse { get; set; } // Not sure this is still needed with Synapse V3
     }
-
 
     public class BankLoginResult
     {
@@ -43,131 +25,65 @@ namespace Nooch.Common.Entities.LandingPagesRelatedEntities
         public string Message { get; set; }
         public string ssn_verify_status { get; set; }
     }
+
     public class SynapseMessageClass
     {
-        
         public string message { get; set; }
     }
+
     public class SynapseCodeBasedMFAResponseIntClass
     {
-        
         public string access_token { get; set; }
-
-        
         public string type { get; set; }
-
-        
         public SynapseMessageClass mfa { get; set; }
     }
-    public class SynapseCodeBasedMFAClass
-    {
-        
-        public bool is_mfa { get; set; }
-
-        
-        public bool success { get; set; }
-
-        
-        public SynapseCodeBasedMFAResponseIntClass response { get; set; }
-    }
-
 
     public class SynapseQuestionBasedMFAClass
     {
-        
         public bool is_mfa { get; set; }
-
-        
         public bool success { get; set; }
-
-        
         public SynapseQuestionBasedMFAResponseIntClass response { get; set; }
     }
 
     public class SynapseQuestionClass
     {
-        
         public string question { get; set; }
     }
 
     public class SynapseQuestionBasedMFAResponseIntClass
     {
-        
         public string access_token { get; set; }
-
-        
         public string type { get; set; }
-
-        
         public SynapseQuestionClass[] mfa { get; set; }
     }
 
     public class SynapseBanksListClass
     {
-        
         public List<SynapseBankClass> banks { get; set; }
-
-        
         public bool success { get; set; }
     }
+
     public class SynapseBankClass
     {
-        
         public string account_class { get; set; }
-
-        
         public string account_number_string { get; set; }
-
-        
         public string account_type { get; set; }
-
-        
         public string address { get; set; }
-
-        
         public string balance { get; set; }
-
-        
         public string bank_name { get; set; }
-
-        
         public string date { get; set; }
-
-        
         public string email { get; set; }
-
-        
         public int id { get; set; }
         public string bankoid { get; set; }
-
-        
         public bool is_active { get; set; }
-
-        
         public bool is_buyer_default { get; set; }
-
-        
         public bool is_seller_default { get; set; }
-
-        
         public bool is_verified { get; set; }
-
-        
         public bool mfa_verifed { get; set; }
-
-        
         public string name_on_account { get; set; }
-
-        
         public string nickname { get; set; }
-
-        
         public string phone_number { get; set; }
-
-        
         public string resource_uri { get; set; }
-
-        
         public string routing_number_string { get; set; }
     }
 }

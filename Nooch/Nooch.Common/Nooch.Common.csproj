@@ -11,6 +11,8 @@
     <AssemblyName>Nooch.Common</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
+    <RestorePackages>true</RestorePackages>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -77,7 +79,10 @@
     <Compile Include="Entities\LandingPagesRelatedEntities\SynapseBankLoginRequestResult.cs" />
     <Compile Include="Entities\MobileAppInputEntities\MemberNotificationSettingsInput.cs" />
     <Compile Include="Entities\MobileAppInputEntities\MemberNotificationsNewStringTypeSettings.cs" />
+    <Compile Include="Entities\MobileAppInputEntities\MemberRegistrationInputDto.cs" />
     <Compile Include="Entities\MobileAppInputEntities\MySettingsInput.cs" />
+    <Compile Include="Entities\MobileAppInputEntities\PrivacySettings.cs" />
+    <Compile Include="Entities\MobileAppInputEntities\RemoveBankAccountInputEntity.cs" />
     <Compile Include="Entities\MobileAppInputEntities\SaveMemberDOB_Input.cs" />
     <Compile Include="Entities\MobileAppInputEntities\StringInput.cs" />
     <Compile Include="Entities\MobileAppInputEntities\SynapseAccoutDetailsInput.cs" />
@@ -89,6 +94,7 @@
     <Compile Include="Entities\MobileAppInputEntities\DisputeResult.cs" />
     <Compile Include="Entities\MobileAppInputEntities\RequestDto.cs" />
     <Compile Include="Entities\MobileAppInputEntities\UpdateMemberIpInput.cs" />
+    <Compile Include="Entities\MobileAppOutputEnities\FBResponseClass.cs" />
     <Compile Include="Entities\MobileAppOutputEnities\LocationSearch.cs" />
     <Compile Include="Entities\MobileAppOutputEnities\MemberBusinessDto.cs" />
     <Compile Include="Entities\MobileAppOutputEnities\MemberDto.cs" />
@@ -112,6 +118,7 @@
     <Compile Include="Entities\SynapseRelatedEntities\NodePermissionCheckResult.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\RegisterUserSynapseResultClassExt.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\RegisterUserSynapseResultClassint.cs" />
+    <Compile Include="Entities\SynapseRelatedEntities\RemoveNodeResult.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\SynapseBankSetDefaultResult.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\synapseIdVerificationQuestionsForDisplay.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\SynapseRemoveBankV3_Input.cs" />
@@ -148,7 +155,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\Constants.resx" />
+    <EmbeddedResource Include="Resources\Constants.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Nooch.Data\Nooch.Data.csproj">
@@ -158,6 +167,13 @@
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('$(SolutionDir)\.nuget\NuGet.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\.nuget\NuGet.targets'))" />
+  </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
