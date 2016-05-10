@@ -4791,7 +4791,7 @@ namespace Nooch.API.Controllers
             catch (Exception ex)
             {
                 Logger.Error("Service Controller - ValidatePinNumberForPasswordForgotPage FAILED [memberId: " + memberId + "]. Exception: [" + ex + "]");
-                
+
             }
             return new StringResult();
         }
@@ -5380,18 +5380,18 @@ namespace Nooch.API.Controllers
 
                     if (memberPrivacySettings != null)
                     {
-                       var r =  _dbContext.MemberPrivacySettings.FirstOrDefault(m=>m.MemberId== memberPrivacySettings.MemberId);  // Malkit : I doubt here for here
-                       privacySettings.MemberId = r.Member.MemberId.ToString();
-                       privacySettings.ShowInSearch = r.ShowInSearch ?? false;
-                       privacySettings.AllowSharing = r.AllowSharing ?? false;
-                       privacySettings.RequireImmediately = r.RequireImmediately ?? false;
+                        var r = _dbContext.MemberPrivacySettings.FirstOrDefault(m => m.MemberId == memberPrivacySettings.MemberId);  // Malkit : I doubt here for here
+                        privacySettings.MemberId = r.Member.MemberId.ToString();
+                        privacySettings.ShowInSearch = r.ShowInSearch ?? false;
+                        privacySettings.AllowSharing = r.AllowSharing ?? false;
+                        privacySettings.RequireImmediately = r.RequireImmediately ?? false;
                     }
                     return privacySettings;
                 }
                 catch (Exception ex)
                 {
                     Logger.Error("Service Layer -> GetMemberPrivacySettings FAILED - MemberId: [" + memberId + "], Exception: [" + ex + "]");
-                    
+
                 }
                 return null;
             }
@@ -5399,7 +5399,7 @@ namespace Nooch.API.Controllers
             {
                 throw new Exception("Invalid OAuth 2 Access");
             }
-            
+
         }
 
         [HttpGet]
@@ -5500,7 +5500,7 @@ namespace Nooch.API.Controllers
             catch (Exception ex)
             {
                 Logger.Error("Service Layer - ResendVerificationLink FAILED - UserName: [" + UserName + "], [Exception: " + ex.Message + "]");
-                
+
             }
             return new StringResult();
         }
@@ -5519,7 +5519,7 @@ namespace Nooch.API.Controllers
             catch (Exception ex)
             {
                 Logger.Error("Service Layer - ResendVerificationSMS FAILED - UserName: [" + UserName + "], [Exception: " + ex.Message + "]");
-                
+
             }
             return new StringResult();
         }
@@ -5537,7 +5537,7 @@ namespace Nooch.API.Controllers
             catch (Exception ex)
             {
                 Logger.Error("Service Layer - ResetPassword FAILED - MemberId: [" + memberId + "], [Exception: " + ex.Message + "]");
-                
+
             }
             return new BoolResult();
         }
@@ -5555,7 +5555,7 @@ namespace Nooch.API.Controllers
             catch (Exception ex)
             {
                 Logger.Error("Service Layer - resetlinkvalidationcheck FAILED - MemberId: [" + memberId + "], [Exception: " + ex.Message + "]");
-                
+
             }
             return new BoolResult();
         }
@@ -5597,7 +5597,7 @@ namespace Nooch.API.Controllers
                                 {
                                     UserName = CommonHelper.GetDecryptedData(member.Member1.UserName),
                                     FirstName = !String.IsNullOrEmpty(member.Member1.FirstName)
-                                                ?CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(member.Member1.FirstName))
+                                                ? CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(member.Member1.FirstName))
                                                 : "",
                                     LastName = !String.IsNullOrEmpty(member.Member1.LastName)
                                                ? CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(member.Member1.LastName))
@@ -5627,7 +5627,7 @@ namespace Nooch.API.Controllers
                                 {
                                     UserName = CommonHelper.GetDecryptedData(member.Member.UserName),
                                     FirstName = !String.IsNullOrEmpty(member.Member.FirstName)
-                                                ?CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(member.Member.FirstName))
+                                                ? CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(member.Member.FirstName))
                                                 : "",
                                     LastName = !String.IsNullOrEmpty(member.Member.LastName)
                                                ? CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(member.Member.LastName))
@@ -5661,7 +5661,7 @@ namespace Nooch.API.Controllers
                 catch (Exception ex)
                 {
                     Logger.Error("Service Layer - GetRecentMembers FAILED - [MemberID: " + memberId + "], Exception: [" + ex + "]");
-                    
+
                 }
                 return new Collection<MemberClass>();
             }
@@ -5673,7 +5673,7 @@ namespace Nooch.API.Controllers
 
         [HttpPost]
         [ActionName("HandleRequestMoney")]
-        StringResult HandleRequestMoney(RequestDto handleRequestInput, string accessToken)
+        public StringResult HandleRequestMoney(RequestDto handleRequestInput, string accessToken)
         {
             if (CommonHelper.IsValidRequest(accessToken, handleRequestInput.MemberId))
             {
@@ -5686,7 +5686,7 @@ namespace Nooch.API.Controllers
                 catch (Exception ex)
                 {
                     Logger.Error("Service layer - HandleRequestMoney FAILED - MemberId: [" + handleRequestInput.MemberId + "]. Exception: [" + ex + "]");
-                    
+
                 }
                 return new StringResult();
             }
@@ -5695,5 +5695,34 @@ namespace Nooch.API.Controllers
                 throw new Exception("Invalid OAuth 2 Access");
             }
         }
+
+
+        [HttpPost]
+        [ActionName("PayBackTransaction")]
+        public string PayBackTransaction(string memberId, string accessToken, string transactionId, string userResponse,
+            GeoLocation location)
+        {
+            if (CommonHelper.IsValidRequest(accessToken, memberId))
+            {
+                try
+                {
+                    Logger.Info("Service Layer - PayBackTransaction - [MemberId: " + memberId + "],  [TransactionId: " + transactionId + "]");
+                    var transactionDataAccess = new TransactionsDataAccess();
+                    string result = transactionDataAccess.PayBackTransaction(transactionId, userResponse, location);
+                    return result;
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Layer - PayBackTransaction  failed - [MemberId: " + memberId + "],  [TransactionId: " + transactionId + "], [Exception : " + ex + " ]");
+                }
+                return "";
+            }
+            else
+            {
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
+
+
     }
 }

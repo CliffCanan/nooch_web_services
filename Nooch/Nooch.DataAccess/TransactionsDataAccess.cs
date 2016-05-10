@@ -5678,5 +5678,93 @@ namespace Nooch.DataAccess
 
 
 
+        // CLIFF (10/11/15): Pretty sure this method is not used at all. The app sends the user to How Much scrn when user wants to "Pay Back" another
+        //                   user that has previously sent them money from the History screens.  So we can *probably* remove this...
+
+        // Malkit : 10 May 2016 : Added this method because Cliff pointed this method as missing.
+        public string PayBackTransaction(string transactionId, string userResponse, GeoLocation location)
+        {
+            Logger.Info("TDA -> PayBackTransaction [TransactionId: " + transactionId + "], userResponse: [" + userResponse + "]");
+
+            if (userResponse == "Paid")
+            {
+                try
+                {
+                    var transId = Utility.ConvertToGuid(transactionId);
+
+                    using (var noochConnection = new NOOCHEntities())
+                    {
+                        
+                        var transactionDetail =
+                            noochConnection.Transactions.FirstOrDefault(m => m.TransactionId == transId);
+                        
+                        
+                        Transaction newTrans = transactionDetail;
+
+                        //Check if the member is having the required balance
+                        
+                        Member sender = CommonHelper.GetMemberDetails(transactionDetail.Member1.MemberId.ToString());
+                        Member receiver = CommonHelper.GetMemberDetails(transactionDetail.Member.MemberId.ToString());
+
+                        if (sender != null)
+                        {
+                            decimal senderBalance = Convert.ToDecimal(CommonHelper.GetDecryptedData(sender.Deposit));
+                            decimal receiverBalance = Convert.ToDecimal(CommonHelper.GetDecryptedData(receiver.Deposit));
+                            decimal transAmount = decimal.Parse(transactionDetail.Amount.ToString());
+
+                            if (senderBalance >= transactionDetail.Amount)
+                            {
+                                newTrans.Member.MemberId = transactionDetail.Member1.MemberId;
+                                newTrans.Member1.MemberId = transactionDetail.Member.MemberId;
+                                newTrans.DisputeTrackingId = null;
+                                newTrans.TransactionStatus = "Success";
+                                newTrans.TransactionType = CommonHelper.GetEncryptedData(Constants.TRANSACTION_TYPE_TRANSFER);
+                                newTrans.TransactionDate = DateTime.Now;
+                                newTrans.Memo = null;
+
+                                if (location != null)
+                                {
+                                    newTrans.GeoLocation = location;
+                                }
+
+                                // Legacy code to add a fee - just setting to 0
+                                newTrans.IsPrepaidTransaction = true;
+                                newTrans.TransactionFee = 0;
+
+                                sender.TotalNoochTransfersCount = sender.TotalNoochTransfersCount + 1;
+                                receiver.TotalNoochTransfersCount = receiver.TotalNoochTransfersCount + 1;
+
+                                sender.DateModified = DateTime.Now;
+                                receiver.DateModified = DateTime.Now;
+
+                                noochConnection.Transactions.Add(newTrans);
+                                
+                                noochConnection.SaveChanges();
+
+                                
+                            }
+                            return "success";
+                        }
+                        else
+                        {
+                            Logger.Error("TDA -> PayBackTransaction FAILED - Could not find SENDER in DB [TransactionID: " + transactionId + "]");
+                            return "";
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("TDA -> PayBackTransaction FAILED - [TransactionID: " + transactionId + "], [Exception: " + ex + "]");
+                    return "Server failure - caught outer exception :-(";
+                }
+            }
+            else
+            {
+                return "";
+            }
+        }
+
+
+
     }
 }
