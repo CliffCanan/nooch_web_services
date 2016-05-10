@@ -11,9 +11,8 @@ namespace Nooch.Common.Entities.LandingPagesRelatedEntities
         public bool Is_MFA { get; set; }
         public bool Is_success { get; set; }
         public string ssn_verify_status { get; set; }
-        public string MFA_Type { get; set; }
         public string mfaMessage { get; set; }
-        public string Bank_Access_Token { get; set; }
+        public string bankoid { get; set; }
         public string ERROR_MSG { get; set; }
         public SynapseBanksListClass SynapseBanksList { get; set; }
         public SynapseQuestionBasedMFAClass SynapseQuestionBasedResponse { get; set; } // Not sure this is still needed with Synapse V3
@@ -68,21 +67,16 @@ namespace Nooch.Common.Entities.LandingPagesRelatedEntities
         public string account_class { get; set; }
         public string account_number_string { get; set; }
         public string account_type { get; set; }
-        public string address { get; set; }
         public string balance { get; set; }
         public string bank_name { get; set; }
         public string date { get; set; }
-        public string email { get; set; }
         public int id { get; set; }
         public string bankoid { get; set; }
         public bool is_active { get; set; }
-        public bool is_buyer_default { get; set; }
-        public bool is_seller_default { get; set; }
         public bool is_verified { get; set; }
         public bool mfa_verifed { get; set; }
         public string name_on_account { get; set; }
         public string nickname { get; set; }
-        public string phone_number { get; set; }
         public string resource_uri { get; set; }
         public string routing_number_string { get; set; }
     }

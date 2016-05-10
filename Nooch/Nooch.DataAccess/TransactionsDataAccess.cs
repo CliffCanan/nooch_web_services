@@ -31,6 +31,30 @@ namespace Nooch.DataAccess
         }
 
 
+
+        public List<Transaction> GetRecentMembers(string memberId)
+        {
+            Logger.Info("TDA -> GetRecentMembers [MemberId: " + memberId + "]");
+
+            int totalRecordsCount = 0;
+
+            List<Transaction> transactionsList = GetTransactionsList(memberId, "ALL", 0, 0, "", out totalRecordsCount);
+
+            transactionsList = transactionsList.Where(q =>
+                                q.TransactionType != "Q4/89kfM4OTNoiR0sbFJzA==" &&
+                                q.Member1.UserName != "2ZRTd3kKj+XXubomAsLDugMyJgcHiM7Z2YYR5qfRY30=" &&
+                                q.Member.UserName != "2ZRTd3kKj+XXubomAsLDugMyJgcHiM7Z2YYR5qfRY30=").ToList();
+
+            if (transactionsList != null && transactionsList.Count > 0)
+            {
+                return transactionsList;
+            }
+
+            return new List<Transaction>();
+        }
+
+
+
         public PendingTransCoutResult GetMemberPendingTransCount(string MemberId)
         {
             Logger.Info("TDA -> GetMemberPendingTransCount - [MemberId: " + MemberId + "]");
@@ -701,9 +725,9 @@ namespace Nooch.DataAccess
                         //string payLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
                         //                               "trans/payRequest.aspx?TransactionId=" + trans.TransactionId);
                         string payLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
- 
+
                                                        "Nooch/payRequest?TransactionId=" + trans.TransactionId);
- 
+
                         string s22 = trans.Amount.ToString("n2");
                         string[] s32 = s22.Split('.');
 
@@ -758,9 +782,9 @@ namespace Nooch.DataAccess
                             //                                  "&LinkSource=75U7bZRpVVxLNbQuoMQEGQ==" +
                             //                                  "&TransType=T3EMY1WWZ9IscHIj3dbcNw==");
                             string rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
- 
+
                                                               "Nooch/rejectMoney?TransactionId=" + trans.TransactionId +
- 
+
                                                               "&UserType=U6De3haw2r4mSgweNpdgXQ==" +
                                                               "&LinkSource=75U7bZRpVVxLNbQuoMQEGQ==" +
                                                               "&TransType=T3EMY1WWZ9IscHIj3dbcNw==");
@@ -813,9 +837,9 @@ namespace Nooch.DataAccess
                             //                                  "&LinkSource=Um3I3RNHEGWqKM9MLsQ1lg==" +
                             //                                  "&TransType=T3EMY1WWZ9IscHIj3dbcNw==");
                             string rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
- 
+
                                                               "Nooch/rejectMoney?TransactionId=" + trans.TransactionId +
- 
+
                                                               "&UserType=U6De3haw2r4mSgweNpdgXQ==" +
                                                               "&LinkSource=Um3I3RNHEGWqKM9MLsQ1lg==" +
                                                               "&TransType=T3EMY1WWZ9IscHIj3dbcNw==");
@@ -1560,7 +1584,7 @@ namespace Nooch.DataAccess
                     string RequestReceiverLastName = CommonHelper.UppercaseFirst((CommonHelper.GetDecryptedData(sender.LastName)).ToString());
 
                     string cancelLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"), "/Nooch/CancelMoneyRequest?TransactionId=" + requestId + "&MemberId=" + requestDto.MemberId.ToString() + "&userType=mx5bTcAYyiOf9I5Py9TiLw==");
-                    
+
 
                     string wholeAmount = requestDto.Amount.ToString("n2");
                     string[] s32 = wholeAmount.Split('.');
@@ -2916,7 +2940,7 @@ namespace Nooch.DataAccess
 
 
                 if (transactionDetail != null)
-                {                    
+                {
                     #region IfSomethingFound
 
                     transactionDetail.TransactionStatus = "Rejected";
@@ -3736,7 +3760,7 @@ namespace Nooch.DataAccess
             string receiver_bank_node_id, string suppID_or_transID, string senderUserName, string receiverUserName, string iPForTransaction, string senderLastName, string recepientLastName)
         {
             Logger.Info("TDA -> SynapseV3AddTrans_ReusableClass Initiated - [Sender Username: " + senderUserName + "], " +
-                                   "[Recipient Username: " + receiverUserName + "], [Amount: " + amount + "]");
+                        "[Recipient Username: " + receiverUserName + "], [Amount: " + amount + "]");
 
             SynapseV3AddTrans_ReusableClass res = new SynapseV3AddTrans_ReusableClass();
             res.success = false;
@@ -3755,7 +3779,7 @@ namespace Nooch.DataAccess
                 {
                     Logger.Error("TDA -> SynapseV3AddTrans_ReusableClass - SENDER's Synapse Permissions were NULL or not successful :-(");
 
-                    res.ErrorMessage = "Problem with senders synapse user permission.";
+                    res.ErrorMessage = "Problem with sender's permission level.";
                     return res;
                 }
 
@@ -3776,45 +3800,50 @@ namespace Nooch.DataAccess
                                 {
                                     SenderSynapsePermissionOK = true;
                                 }
-                                // iterate through all users
-                                //else
-                                //{
-                                //    res.success = false;
-                                //    res.ErrorMessage = "Sender doesn't have permission to send money from account.";
-                                //    return res;
-                                //}
+                                else
+                                {
+                                    Logger.Error("TDA -> AddTransSynapseV3Reusable - Sender's Synapse Permission returned by Synapse was: [" + nodePermCheckRes.PermissionType + "]");
+                                    res.ErrorMessage = "Sender has insufficient permissions to complete this payment (TDA - 3782)";
+                                    return res;
+                                }
                             }
-                            // iterate through all users
-                            //else
-                            //{
-                            //    res.success = false;
-                            //    res.ErrorMessage = "Sender doesn't have permission to send money from account.";
-                            //    return res;
-                            //}
+                            else
+                            {
+                                Logger.Error("TDA -> AddTransSynapseV3Reusable - No Permission Found for Sender - Username: [" + senderUserName + "]");
+                                res.ErrorMessage = "Sender has insufficient permissions to complete this payment (TDA - 3789)";
+                                return res;
+                            }
+                        }
+                        else
+                        {
+                            res.ErrorMessage = "No banks found for Sender (TDA - 3795)";
+                            return res;
                         }
                     }
                 }
+
                 #endregion Check Sender Synapse Permissions
 
                 #region Check Recipient Synapse Permissions
 
                 // 3. Check USER permissions for RECIPIENT
-                synapseSearchUserResponse recepientPermissions = CommonHelper.getUserPermissionsForSynapseV3(receiverUserName);
+                synapseSearchUserResponse recipPermissions = CommonHelper.getUserPermissionsForSynapseV3(receiverUserName);
 
-                if (recepientPermissions == null || !recepientPermissions.success)
+                if (recipPermissions == null || !recipPermissions.success)
                 {
                     Logger.Error("TDA -> SynapseV3AddTrans_ReusableClass - RECIPIENT's Synapse Permissions were NULL or not successful :-(");
 
-                    res.ErrorMessage = "Problem with recepient bank account permission.";
+                    res.ErrorMessage = "Problem with recipient's permission level (TDA - 3812)";
                     return res;
                 }
 
                 // 4. Check BANK/NODE permission for RECIPIENT
-                if (recepientPermissions.users != null && recepientPermissions.users.Length > 0)
+                if (recipPermissions.users != null && recipPermissions.users.Length > 0)
                 {
-                    foreach (synapseSearchUserResponse_User recUser in recepientPermissions.users)
+                    // Should only be 1 'user' result, contained in an array from Synapse
+                    foreach (synapseSearchUserResponse_User recUser in recipPermissions.users)
                     {
-                        // iterating each node inside
+                        // Check if there are any nodes in this user
                         if (recUser.nodes != null && recUser.nodes.Length > 0)
                         {
                             NodePermissionCheckResult nodePermCheckRes = CommonHelper.IsNodeActiveInGivenSetOfNodes(recUser.nodes, receiver_bank_node_id);
@@ -3825,38 +3854,42 @@ namespace Nooch.DataAccess
                                 {
                                     RecipientSynapsePermissionOK = true;
                                 }
-                                // iterate through all users
-                                //else
-                                //{
-                                //    res.success = false;
-                                //    res.ErrorMessage = "Sender doesn't have permission to send money from account.";
-                                //    return res;
-                                //}
+                                else
+                                {
+                                    Logger.Error("TDA -> AddTransSynapseV3Reusable - Recipient's Synapse Permission returned by Synapse was: [" + nodePermCheckRes.PermissionType + "]");
+                                    res.ErrorMessage = "Recipient has insufficient permissions to complete this payment (TDA - 3836)";
+                                    return res;
+                                }
                             }
-                            // iterate through all users
-                            //else
-                            //{
-                            //    res.success = false;
-                            //    res.ErrorMessage = "Sender doesn't have permission to send money from account.";
-                            //    return res;
-                            //}
+                            else
+                            {
+                                Logger.Error("TDA -> AddTransSynapseV3Reusable - No Permission Found for Recipient - Username: [" + senderUserName + "]");
+                                res.ErrorMessage = "Recipient has insufficient permissions to complete this payment (TDA - 3843)";
+                                return res;
+                            }
+                        }
+                        else
+                        {
+                            res.ErrorMessage = "No banks found for Recipient (TDA - 3849)";
+                            return res;
                         }
                     }
                 }
+
                 #endregion Check Recipient Synapse Permissions
 
                 if (!SenderSynapsePermissionOK)
                 {
-                    res.ErrorMessage = "Sender bank permission problem.";
+                    res.ErrorMessage = "Sender bank permission problem  (TDA - 3859)";
                     return res;
                 }
                 if (!RecipientSynapsePermissionOK)
                 {
-                    res.ErrorMessage = "Recipient bank permission problem.";
+                    res.ErrorMessage = "Recipient bank permission problem (TDA - 3864)";
                     return res;
                 }
 
-                // all set...time to move money between accounts
+                // All set... time to move money between accounts
                 try
                 {
                     #region Setup Synapse V3 Order Details
@@ -3869,6 +3902,15 @@ namespace Nooch.DataAccess
                     transParamsForSynapse.user = user;
 
                     SynapseV3AddTransInput_trans transMain = new SynapseV3AddTransInput_trans();
+
+                    // CLIFF (5/9/16): Just a note for future reference... (esp for Rent Scene)
+                    //                 We may want to consider doing this differently and create 2 orders w/ Synapse,
+                    //                 a DEBIT from the sender's ACH Bank to Nooch's Synapse Account (or RS's) and then
+                    //                 a CREDIT from Nooch's Synapse Account to the recipient's ACH Bank.
+                    //                 By 'fronting' the money for the Sender before the debit actually clears,
+                    //                 we would speed up the total processing time. Could only do it with 100% trustworthy users...
+                    //                 So maybe we can make it an option here (e.g. via a param "fastProcessing") and then do whichever method.
+                    //                 ** NOT A PRIORITY YET **
 
                     SynapseV3AddTransInput_trans_from from = new SynapseV3AddTransInput_trans_from()
                     {
@@ -3885,42 +3927,39 @@ namespace Nooch.DataAccess
 
                     SynapseV3AddTransInput_trans_amount amountMain = new SynapseV3AddTransInput_trans_amount()
                     {
-                        amount = Convert.ToDouble(amount),
+                        amount = amount.Trim(), // CLIFF (5/9/16): Changed this from a double to a string type b/c the Synapse docs say this should be a string... need to test!
                         currency = "USD"
                     };
                     transMain.amount = amountMain;
 
+                    if (!String.IsNullOrEmpty(iPForTransaction) || iPForTransaction.Length < 6)
+                    {
+                        iPForTransaction = "54.148.37.21"; // Nooch's Server IP as default
+                    }
+
                     SynapseV3AddTransInput_trans_extra extraMain = new SynapseV3AddTransInput_trans_extra()
                     {
-                        supp_id = suppID_or_transID,
                         // This is where we put the ACH memo (customized for Landlords, but just the same template for regular P2P transfers: "Nooch Payment {LNAME SENDER} / {LNAME RECIPIENT})
                         // maybe we should set this in whichever function calls this function because we don't have the names here...
                         // yes modifying this method to add 3 new parameters....sender IP, sender last name, recepient last name... this would be helpfull in keeping this method clean.
-                        note = "NOOCH PAYMENT // " + senderLastName + " / " + recepientLastName, // + moneySenderLastName + " / " + requestMakerLastName, 
+                        note = "NOOCH PAYMENT // " + senderLastName + " / " + recepientLastName,
+                        supp_id = suppID_or_transID,
+                        process_on = 0, // this should be > than 0 I guess... CLIFF: I don't think so, it's an optional parameter, but we always want it to process immediately, so I guess it should always be 0
+                        ip = iPForTransaction // CLIFF:  This is actually required. It should be the most recent IP address of the SENDER, or if none found, then '54.148.37.21'
                         //webhook = "",
-                        process_on = 0, // this should be greater then 0 I guess... CLIFF: I don't think so, it's an optional parameter, but we always want it to process immediately, so I guess it should always be 0
-                        ip = iPForTransaction // CLIFF:  This is actually required.  It should be the most recent IP address of the SENDER, or if none found, then '54.148.37.21'
                     };
                     transMain.extra = extraMain;
 
                     SynapseV3AddTransInput_trans_fees feeMain = new SynapseV3AddTransInput_trans_fees();
-
-                    if (Convert.ToDouble(amount) > 10)
-                    {
-                        feeMain.fee = "0.20"; // to offset the Synapse fee so the user doesn't pay it
-                    }
-                    else if (Convert.ToDouble(amount) <= 10)
-                    {
-                        feeMain.fee = "0.10"; // to offset the Synapse fee so the user doesn't pay it
-                    }
                     feeMain.note = "Negative Nooch Fee";
+                    feeMain.fee = Convert.ToDouble(amount) > 10 ? "0.20" : "0.10"; // to offset the Synapse fee so the user doesn't pay it
 
                     SynapseV3AddTransInput_trans_fees_to tomain = new SynapseV3AddTransInput_trans_fees_to()
                     {
-                        id = "5618028c86c27347a1b3aa0f" // Temporary: ID of Nooch's SYNAPSE account (not bank account)... using temp Sandbox account until we get Production credentials
+                        id = "5618028c86c27347a1b3aa0f" // Temporary: ID of Nooch's SYNAPSE account (NOT an ACH (bank) account)!!... using temp Sandbox account until we get Production credentials
                     };
-
                     feeMain.to = tomain;
+
                     transMain.fees = new SynapseV3AddTransInput_trans_fees[1];
                     transMain.fees[0] = feeMain;
 
@@ -3932,7 +3971,6 @@ namespace Nooch.DataAccess
 
                     string UrlToHitV3 = "";
                     UrlToHitV3 = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/trans/add" : "https://synapsepay.com/api/v3/trans/add";
-
 
                     try
                     {
@@ -3963,6 +4001,7 @@ namespace Nooch.DataAccess
                         {
                             res.success = true;
                             res.ErrorMessage = "OK";
+ 
                             // save changes into synapseTransactionResult table in db
                             SynapseAddTransactionResult satr = new SynapseAddTransactionResult();
                             satr.TransactionId = Utility.ConvertToGuid(suppID_or_transID);
@@ -3976,21 +4015,22 @@ namespace Nooch.DataAccess
                           
                            
                            
+ 
                         }
                         else
                         {
                             res.success = false;
                             res.ErrorMessage = "Check synapse error.";
                         }
-                        res.responseFromSynapse = synapseResponse;
 
+                        res.responseFromSynapse = synapseResponse;
                     }
                     catch (WebException ex)
                     {
                         var resp = new StreamReader(ex.Response.GetResponseStream()).ReadToEnd();
                         JObject jsonFromSynapse = JObject.Parse(resp);
 
-                        Logger.Info("TDA -> TransferMoneyUsingSynapse FAILED. [Exception: " + jsonFromSynapse.ToString() + "]");
+                        Logger.Error("TDA -> TransferMoneyUsingSynapse FAILED. [Exception: " + jsonFromSynapse.ToString() + "]");
 
                         JToken token = jsonFromSynapse["error"]["en"];
 
@@ -4000,7 +4040,7 @@ namespace Nooch.DataAccess
                         }
                         else
                         {
-                            res.ErrorMessage = "Error occured in call money transfer service.";
+                            res.ErrorMessage = "Server Error (TDA 4004) in AddTransSynapseV3Reusable.";
                         }
                     }
 
@@ -4031,7 +4071,7 @@ namespace Nooch.DataAccess
         /// <param name="requestId"></param>
         public string RequestMoneyToNonNoochUserUsingSynapse(RequestDto requestDto, out string requestId)
         {
-
+            // Make sure the recipient's email address (which is 'MoneySenderEmailId') doesn't already belong to a Nooch user.
             var checkuser = CommonHelper.GetMemberDetailsByUserName(requestDto.MoneySenderEmailId);
 
             if (checkuser == null)
@@ -4112,7 +4152,7 @@ namespace Nooch.DataAccess
                     Amount = requestDto.Amount,
                     TransactionDate = DateTime.Now,
                     Picture = (requestDto.Picture != null) ? requestDto.Picture : null,
-                    Memo = (requestDto.Memo == "") ? "" : requestDto.Memo,
+                    Memo = !String.IsNullOrEmpty(requestDto.Memo) ? requestDto.Memo : "",
                     DisputeStatus = null,
 
                     TransactionStatus = "Pending",
@@ -4137,7 +4177,6 @@ namespace Nooch.DataAccess
                     }
                 };
 
-
                 int dbResult = 0;
 
                 if (requestDto.isTesting == "true")
@@ -4149,7 +4188,6 @@ namespace Nooch.DataAccess
                     _dbContext.Transactions.Add(transaction);
                     dbResult = _dbContext.SaveChanges();
                     _dbContext.Entry(transaction).Reload();
-
                 }
 
                 if (dbResult > 0)
@@ -4296,7 +4334,7 @@ namespace Nooch.DataAccess
                 else
                 {
                     Logger.Error("TDA -> RequestMoneyToNonNoochUserUsingSynapse FAILED -> Unable to save transaction in DB - " +
-                                           "Requester MemberID: [" + requestDto.MemberId + "], Recipient: [" + requestDto.MoneySenderEmailId + "]");
+                                 "Requester MemberID: [" + requestDto.MemberId + "], Recipient: [" + requestDto.MoneySenderEmailId + "]");
                     return "Request failed.";
                 }
             }
@@ -4304,7 +4342,7 @@ namespace Nooch.DataAccess
             {
 
                 Logger.Error("TDA -> RequestMoneyToNonNoochUserUsingSynapse FAILED -> Member Already Exists for email address: [" +
-                                       requestDto.MoneySenderEmailId + "], Requester MemberID: [" + requestDto.MemberId + "]");
+                             requestDto.MoneySenderEmailId + "], Requester MemberID: [" + requestDto.MemberId + "]");
 
                 // CLIFF (12/24/15): NEED TO ADD A CALL TO THE REGULAR REQUEST METHOD FOR EXISTING USERS.
                 requestId = null;
@@ -4448,7 +4486,7 @@ namespace Nooch.DataAccess
             var transaction = new Transaction
             {
                 TransactionId = Guid.NewGuid(),
-                SenderId =  requestRecipient.MemberId,
+                SenderId = requestRecipient.MemberId,
 
                 RecipientId = requester.MemberId,
                 Amount = requestDto.Amount,
@@ -4623,9 +4661,9 @@ namespace Nooch.DataAccess
                 //                                  "&TransType=T3EMY1WWZ9IscHIj3dbcNw==");
 
                 string rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
- 
+
                                                   "Nooch/rejectMoney?TransactionId=" + requestId +
- 
+
                                                   "&UserType=" + userType +
                                                   "&LinkSource=75U7bZRpVVxLNbQuoMQEGQ==" +
                                                   "&TransType=T3EMY1WWZ9IscHIj3dbcNw==");
@@ -4635,9 +4673,9 @@ namespace Nooch.DataAccess
                 //                               "&UserType=" + userType);
 
                 string paylink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
- 
+
                                                "Nooch/payRequest?TransactionId=" + requestId +
- 
+
                                                "&UserType=" + userType);
 
                 var tokens2 = new Dictionary<string, string>
@@ -4799,7 +4837,7 @@ namespace Nooch.DataAccess
             using (NOOCHEntities obj = new NOOCHEntities())
             {
                 var checkuser = CommonHelper.GetMemberIdByContactNumber(PayorPhoneNumber);
-                
+
 
                 if (checkuser == null)
                 {
@@ -4932,7 +4970,7 @@ namespace Nooch.DataAccess
                     {
                         obj.Transactions.Add(transaction);
                         dbResult = obj.SaveChanges();
-                        
+
 
                     }
 
@@ -4982,7 +5020,7 @@ namespace Nooch.DataAccess
                         {
                             isForRentScene = true;
                             RequesterFirstName = "Rent Scene";
-                            
+
                             logoToDisplay = "rentscenelogo";
                             RequesterLastName = "";
                             fromAddress = "payments@rentscene.com";
@@ -5132,7 +5170,7 @@ namespace Nooch.DataAccess
                         #endregion Send SMS To New User
 
                         requestId = transaction.TransactionId.ToString();
-                       
+
 
                         #endregion Send Notifications
 
@@ -5145,7 +5183,7 @@ namespace Nooch.DataAccess
                             "Requester MemberID: [" + requestDto.MemberId + "], Recipient: [" +
                             requestDto.MoneySenderEmailId + "]");
                         return "Request failed.";
-                    } 
+                    }
                     #endregion
                 }
                 else
@@ -5155,11 +5193,593 @@ namespace Nooch.DataAccess
                         "TDA -> RequestMoneyToNonNoochUserThroughPhoneUsingSynapse FAILED -> Member Already Exists for phone number: [" +
                         PayorPhoneNumber + "], Requester MemberID: [" + requestDto.MemberId + "]");
 
-                    
+
                     requestId = null;
                     return "User Already Exists";
                 }
             }
         }
+
+
+        /// <summary>
+        /// For processing an existing user's response to a Nooch Request.
+        /// * Only for handling 'accept' response - cancel/reject have different methods. *
+        /// </summary>
+        /// <param name="handleRequestDto"></param>
+        /// <returns></returns>
+        public string HandleRequestMoney(RequestDto handleRequestDto)
+        {
+            try
+            {
+                Logger.Info("TDA -> HandleRequestMoney Initiated - MemberID: [" + handleRequestDto.MemberId + "]");
+
+                DateTime NoochTransactionDateTime = DateTime.Now;
+
+                #region Transaction Limit Checks
+
+                // Check to make sure transfer amount is less than per-transaction limit
+                decimal transactionAmount = Convert.ToDecimal(handleRequestDto.Amount);
+
+                if (CommonHelper.isOverTransactionLimit(transactionAmount, handleRequestDto.SenderId, handleRequestDto.MemberId))
+                {
+                    Logger.Info("TDA -> HandleRequestMoney -> Transaction amount is greater than Nooch's transfer limit. TransactionId: [" +
+                        handleRequestDto.TransactionId + "]");
+                    return "Whoa now big spender! To keep Nooch safe, the maximum amount you can send at a time is $" +
+                           Convert.ToDecimal(Utility.GetValueFromConfig("MaximumTransferLimitPerTransaction")).ToString("F2");
+                }
+
+                // Weekly limit check
+                if (CommonHelper.IsWeeklyTransferLimitExceeded(Utility.ConvertToGuid(handleRequestDto.MemberId), transactionAmount))
+                {
+                    Logger.Info("HandleRequestMoney -> Weekly transfer limit exceeded. MemberId: [" +
+                                           handleRequestDto.MemberId + "]");
+                    return "Weekly transfer limit exceeded.";
+                }
+
+                #endregion Transaction Limit Checks
+
+                #region Get Request Details
+
+                string receiverId = "";
+                var noochConnection = new NOOCHEntities();
+
+
+                var gTransactionId = Utility.ConvertToGuid(handleRequestDto.TransactionId);
+                var gMemberId = Utility.ConvertToGuid(handleRequestDto.MemberId);
+
+                string encryptedRequest = CommonHelper.GetEncryptedData("Request");
+
+
+
+                var request = noochConnection.Transactions.FirstOrDefault(t => t.Member.MemberId == gMemberId
+                                                                               && t.TransactionId == gTransactionId &&
+                                                                               t.TransactionStatus == "Pending" &&
+                                                                               t.TransactionType == encryptedRequest
+                    );
+
+
+                if (request == null)
+                {
+                    Logger.Error("TDA -> HandleRequestMoney -> ERROR: Request not found.");
+                    return "No such request exists to act upon.";
+                }
+
+                // NOTE: Sender of the Request will be the 'Receiver' IF the Request is PAID
+                receiverId = request.Member1.MemberId.ToString();
+
+
+
+                // Get Sender and Requester from DB
+
+
+
+                var sender = noochConnection.Members.FirstOrDefault(m => m.MemberId == request.Member.MemberId);
+
+
+
+                var requester = noochConnection.Members.FirstOrDefault(m => m.MemberId == request.Member1.MemberId);
+
+
+                #endregion Get Request Details
+
+                // Validate Sender's PIN
+                string validPinNumberResult = CommonHelper.ValidatePinNumber(handleRequestDto.MemberId, handleRequestDto.PinNumber);
+                if (validPinNumberResult != "Success")
+                {
+                    return validPinNumberResult;
+                }
+
+
+                // Code to move money between two users...
+                // 1. Get sender synapse account details
+                // 2. Get receiver synapse account details
+                // 3. Call to Synapse order API...
+
+                #region Setup Synapse Order API Details
+
+                string RequestMakerUserId = request.Member.MemberId.ToString();
+                string RequestPayorUserId = request.Member1.MemberId.ToString();
+
+                // Get both users' Synapse Bank Account details
+
+                var recipientBankDetails = CommonHelper.GetSynapseBankAndUserDetailsforGivenMemberId(RequestMakerUserId);
+                var senderBankDetails = CommonHelper.GetSynapseBankAndUserDetailsforGivenMemberId(RequestPayorUserId);
+
+                if (senderBankDetails.BankDetails == null)
+                {
+                    request.TransactionStatus = "Pending";
+
+                    noochConnection.SaveChanges();
+                    Logger.Error("HandleRequestMoney -> Transfer ABORTED: Sender has no Synapse Account Details. " +
+                                           "Request TransId is: [" + request.TransactionId + "]");
+                    return "Sender have not linked to any bank account yet.";
+                }
+
+                if (recipientBankDetails.BankDetails == null)
+                {
+                    request.TransactionStatus = "Pending";
+                    noochConnection.SaveChanges();
+                    Logger.Error("HandleRequestMoney -> Transfer ABORTED: Recipient has no Synapse Account details. " +
+                                           "Request TransId is: [" + request.TransactionId + "]");
+                    return "Recepient have not linked to any bank account yet.";
+                }
+
+                // Now check to make sure both bank accounts are 'Verified'
+                if (senderBankDetails.BankDetails != null &&
+                    senderBankDetails.BankDetails.Status != "Verified")
+                {
+                    Logger.Error("HandleRequestMoney -> Transfer ABORTED: No verified bank account of Sender." +
+                                           "Request TransId is: [" + handleRequestDto.TransactionId + "]");
+                    return "Sender does not have any verified bank account.";
+                }
+
+                if (recipientBankDetails.BankDetails != null &&
+                    recipientBankDetails.BankDetails.Status != "Verified")
+                {
+                    Logger.Error("HandleRequestMoney -> Transfer ABORTED: No verified bank account of Recepient. " +
+                                           "Request TransId is: [" + handleRequestDto.TransactionId + "]");
+                    return "Recepient does not have any verified bank account.";
+                }
+
+                string moneySenderFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(request.Member.FirstName));
+                string moneySenderLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(request.Member.LastName));
+                string requesterPic = "https://www.noochme.com/noochservice/UploadedPhotos/Photos/" + requester.MemberId.ToString() + ".png";
+                string requestMakerFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(request.Member1.FirstName));
+                string requestMakerLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(request.Member1.LastName));
+
+                #endregion Setup Synapse Order API Details
+
+
+
+                #region Setup Synapse V3 Order Details
+
+                Logger.Info("TDA -> HandleRequestMoney - SynapseV3 Block Reached!");
+
+                // let AddTransSynapseV3Reusable handle this job from now.
+                //preparing all the arguments for the transaction
+                //(string sender_oauth, string sender_fingerPrint,string sender_bank_node_id, string amount, string fee, string receiver_oauth
+                //, string receiver_fingerprint,string receiver_bank_node_id, string suppID_or_transID, string senderUserName, string receiverUserName, 
+                //string iPForTransaction, string senderLastName, string recepientLastName
+
+                string sender_oauth = senderBankDetails.UserDetails.access_token;
+                string sender_fingerPrint = sender.UDID1;
+                string sender_bank_node_id = senderBankDetails.BankDetails.bankid.ToString();
+                string amount = request.Amount.ToString();
+                string fee = "0";
+                if (transactionAmount > 10)
+                {
+                    fee = "0.20"; //to offset the Synapse fee so the user doesn't pay it
+                }
+                else if (transactionAmount < 10)
+                {
+                    fee = "0.10"; //to offset the Synapse fee so the user doesn't pay it
+                }
+                string receiver_oauth = recipientBankDetails.UserDetails.access_token;
+                string receiver_fingerprint = requester.UDID1;
+                string receiver_bank_node_id = recipientBankDetails.BankDetails.bankid.ToString();
+                string suppID_or_transID = request.TransactionId.ToString();
+                string senderUserName = CommonHelper.GetDecryptedData(sender.UserName).ToLower();
+                string receiverUserName = CommonHelper.GetDecryptedData(requester.UserName).ToLower();
+                string iPForTransaction = CommonHelper.GetRecentOrDefaultIPOfMember(sender.MemberId);
+                string senderLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(sender.LastName));
+                string recepientLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(requester.LastName));
+
+                SynapseV3AddTrans_ReusableClass transactionResultFromSynapseAPI = AddTransSynapseV3Reusable(sender_oauth, sender_fingerPrint, sender_bank_node_id,
+                    amount, fee, receiver_oauth, receiver_fingerprint, receiver_bank_node_id, suppID_or_transID,
+                    senderUserName, receiverUserName, iPForTransaction, senderLastName, recepientLastName);
+
+                if (transactionResultFromSynapseAPI.success == true)
+                {
+                    // transaction was success full... proceed with saving stuff in db and email/sms/push notifications
+                    #region all this is now happening in add transaction common method
+
+                    /*
+                        #region Saving data in synapseV3CraeteTransResults table
+
+                        SynapseV3CreateTransResults svctr = new SynapseV3CreateTransResults();
+
+                        try
+                        {
+                            //trans related stuff
+                            svctr.trans_id_oid = transactionResultFromSynapseAPI.responseFromSynapse.trans._id.oid;
+                            svctr.trans_amount = transactionResultFromSynapseAPI.responseFromSynapse.trans.amount.amount;
+                            svctr.trans_currency = transactionResultFromSynapseAPI.responseFromSynapse.trans.amount.currency;
+
+                            //client related stuff
+                            svctr.client_id = transactionResultFromSynapseAPI.responseFromSynapse.trans.client.id;
+                            svctr.client_name = transactionResultFromSynapseAPI.responseFromSynapse.trans.client.name;
+
+                            //extra related stuff
+                            svctr.extra_created_on_date = transactionResultFromSynapseAPI.responseFromSynapse.trans.extra.created_on.ToString();
+                            svctr.extra_process_on_date = transactionResultFromSynapseAPI.responseFromSynapse.trans.extra.process_on.ToString();
+                            svctr.extra_supp_id = transactionResultFromSynapseAPI.responseFromSynapse.trans.extra.supp_id;
+
+                            //fee related stuff -- synapse fee
+                            svctr.synapse_fee_fee = transactionResultFromSynapseAPI.responseFromSynapse.trans.fees[0].fee;
+                            svctr.synapse_fee_note = transactionResultFromSynapseAPI.responseFromSynapse.trans.fees[0].note;
+                            svctr.synapse_fee_id = transactionResultFromSynapseAPI.responseFromSynapse.trans.fees[0].to.id.oid;
+
+                            //fee related stuff -- nooch fee
+                            svctr.nooch_fee_fee = transactionResultFromSynapseAPI.responseFromSynapse.trans.fees[1].fee;
+                            svctr.nooch_fee_note = transactionResultFromSynapseAPI.responseFromSynapse.trans.fees[1].note;
+                            svctr.nooch_fee_id = transactionResultFromSynapseAPI.responseFromSynapse.trans.fees[1].to.id.oid;
+
+                            // from account details
+                            svctr.from_node_id = transactionResultFromSynapseAPI.responseFromSynapse.trans.from.id.oid;
+                            svctr.from_node_type = transactionResultFromSynapseAPI.responseFromSynapse.trans.from.type;
+                            svctr.from_user_id = transactionResultFromSynapseAPI.responseFromSynapse.trans.from.user._id.id;
+
+                            //recent status
+                            svctr.recent_status_date = transactionResultFromSynapseAPI.responseFromSynapse.trans.recent_status.date.ToString();
+                            svctr.recent_note = transactionResultFromSynapseAPI.responseFromSynapse.trans.recent_status.note;
+                            svctr.recent_status = transactionResultFromSynapseAPI.responseFromSynapse.trans.recent_status.status;
+                            svctr.recent_status_id = transactionResultFromSynapseAPI.responseFromSynapse.trans.recent_status.status_id;
+
+                            // to account details
+                            svctr.to_node_id = transactionResultFromSynapseAPI.responseFromSynapse.trans.to.id.oid;
+                            svctr.to_node_type = transactionResultFromSynapseAPI.responseFromSynapse.trans.to.type;
+                            svctr.to_user_id = transactionResultFromSynapseAPI.responseFromSynapse.trans.to.user._id.id;
+
+                            svctr.NoochTransactionDate = NoochTransactionDateTime;
+                            svctr.NoochTransactionId = request.TransactionId.ToString();  /// keeping it in this table to track later........
+
+                            var createOrderRepository = new Repository<SynapseV3CreateTransResults, NoochDataEntities>(noochConnection);
+
+                            createOrderRepository.AddEntity(svctr);
+
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.LogErrorMessage("TDA -> HanleRequestMoney - Payment Successfully sent to Synapse, but EXCEPTION on trying to save result " +
+                                                   "to SynapseV3CreateTransResults Table - Result NOT saved. TransID: [" + request.TransactionId +
+                                                   "], [Amount: " + request.Amount + "], [Exception: " + ex + "]");
+                        }
+
+
+                        #endregion */
+                    #endregion
+
+
+                    #region Update This Request In Transactions Table
+
+                    try
+                    {
+                        // Update Request in DB
+                        request.GeoLocation = new GeoLocation
+                        {
+                            LocationId = Guid.NewGuid(),
+                            Latitude = handleRequestDto.Latitude,
+                            Longitude = handleRequestDto.Longitude,
+                            Altitude = handleRequestDto.Altitude,
+                            AddressLine1 = handleRequestDto.AddressLine1,
+                            AddressLine2 = handleRequestDto.AddressLine2,
+                            City = handleRequestDto.City,
+                            State = handleRequestDto.State,
+                            Country = handleRequestDto.Country,
+                            ZipCode = handleRequestDto.ZipCode,
+                            DateCreated = DateTime.Now
+                        };
+                        request.DeviceId = handleRequestDto.DeviceId;
+                        request.TransactionStatus = "Success";
+                        request.TransactionDate = NoochTransactionDateTime;     // setting same datettime for synapseV3CraeteTransResults table and Transactiond table. This will help in finding transction in case of breakdown
+                        request.TransactionType = CommonHelper.GetEncryptedData(Constants.TRANSACTION_TYPE_TRANSFER);
+
+
+
+                        int i = noochConnection.SaveChanges();
+
+
+                        if (i <= 0)
+                        {
+                            Logger.Error("HandleRequestMoney -> Success from Synapse but FAILED to update this request in DB - " +
+                                                   "[Request TransId is: " + request.TransactionId + "]");
+
+                            return "Internal error. Funds were transferred, but transaction not updated in DB.";
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error("TDA -> HandleRequestMoney -> Success from Synapse but FAILED to update this request in DB - [Request TransID: " +
+                                               request.TransactionId + "], [Exception: " + ex + "]");
+                    }
+
+                    #endregion Update This Request In Transactions DB
+
+                    #region Success Notifications to Sender and Receiver
+
+                    try
+                    {
+                        #region Setup Notification Variables
+
+                        string s2 = request.Amount.ToString("n2");
+
+                        #region Add Memo
+                        string memo = "";
+                        if (!string.IsNullOrEmpty(request.Memo))
+                        {
+                            if (request.Memo.Length > 3)
+                            {
+                                string firstThreeChars = request.Memo.Substring(0, 3).ToLower();
+                                bool startWithFor = firstThreeChars.Equals("for");
+
+                                if (startWithFor)
+                                {
+                                    memo = request.Memo.ToString();
+                                }
+                                else
+                                {
+                                    memo = "For " + request.Memo.ToString();
+                                }
+                            }
+                            else
+                            {
+                                memo = "For " + request.Memo.ToString();
+                            }
+                        }
+                        #endregion Add Memo
+
+                        #endregion Setup Notification Variables
+
+                        #region Push Notification to Request Maker
+
+                        if (!String.IsNullOrEmpty(requester.DeviceToken))
+                        {
+                            // Send Push Notification To Sender of Request
+                            try
+                            {
+                                string pushMsgTxt = moneySenderFirstName + " " + moneySenderLastName + " just paid your $" + s2 + " Nooch request";
+                                if (memo.Length > 1 &&
+                                    (pushMsgTxt.Length + memo.Length < 230)) // Make sure the total string isn't too long
+                                {
+                                    pushMsgTxt = pushMsgTxt + " f" + memo.Substring(1) + "!"; // Append the memo (but replace 1st letter with lowercase "f"
+                                }
+                                else
+                                {
+                                    pushMsgTxt = pushMsgTxt + "!";
+                                }
+                                Utility.SendNotificationMessage(pushMsgTxt, 1, null, requester.DeviceToken,
+                                                                              Utility.GetValueFromConfig("AppKey"),
+                                                                              Utility.GetValueFromConfig("MasterSecret"));
+
+                                Logger.Info("TDA -> HandleRequestMoney - Request Paid Push notification sent to SENDER of request: [" +
+                                                       requestMakerFirstName + " " + requestMakerLastName + "]");
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.Error("TDA -> HandleRequestMoney - Request Paid Push notification FAILED - Push NOT sent to sender of request: [" +
+                                                       requestMakerFirstName + " " + requestMakerLastName + "], [Exception: " + ex + "]");
+                            }
+                        }
+
+                        #endregion Push Notification to Request Maker
+
+                        #region Send Email Notifications
+
+                        try
+                        {
+                            #region Notify Payment Sender (Recipient Of Request)
+
+                            var tokens = new Dictionary<string, string>
+		                            {
+		                                {Constants.PLACEHOLDER_FIRST_NAME, moneySenderFirstName},
+                                        {"$UserPicture$", requesterPic},
+		                                {Constants.PLACEHOLDER_FRIEND_FIRST_NAME, requestMakerFirstName},
+		                                {Constants.PLACEHOLDER_FRIEND_LAST_NAME, requestMakerLastName},
+		                                {Constants.PLACEHOLDER_TRANSFER_AMOUNT, s2},
+		                                {
+		                                    Constants.PLACEHOLDER_TRANSACTION_DATE,
+		                                    Convert.ToDateTime(request.TransactionDate).ToString("MMM dd yyyy")
+		                                },
+		                                {Constants.MEMO, memo}
+		                            };
+
+                            var fromAddress = Utility.GetValueFromConfig("transfersMail");
+                            var toAddress = CommonHelper.GetDecryptedData(request.Member.UserName);
+
+                            try
+                            {
+                                Utility.SendEmail("requestPaidToRecipient", fromAddress,
+                                    toAddress, null, "You paid a Nooch request from " + requestMakerFirstName + " " + requestMakerLastName,
+                                    null, tokens, null, null, null);
+
+                                Logger.Info("TDA -> HandleRequestMoney - requestPaidToRecipient Email sent to [" + toAddress + "]");
+                            }
+                            catch (Exception)
+                            {
+                                Logger.Error("TDA -> HandleRequestMoney - requestPaidToRecipient Email NOT sent to [" + toAddress + "]");
+                            }
+
+                            #endregion Notify Payment Sender (Recipient Of Request)
+
+                            #region Notify Payment Recipient (Sender Of Request)
+
+                            var tokens2 = new Dictionary<string, string>
+		                            {
+		                                {Constants.PLACEHOLDER_FIRST_NAME, requestMakerFirstName},
+		                                {Constants.PLACEHOLDER_FRIEND_FIRST_NAME, moneySenderFirstName},
+		                                {Constants.PLACEHOLDER_FRIEND_LAST_NAME, moneySenderLastName},
+		                                {Constants.PLACEHOLDER_TRANSFER_AMOUNT, s2},
+		                                {
+		                                    Constants.PLACEHOLDER_TRANSACTION_DATE,
+		                                    Convert.ToDateTime(request.TransactionDate).ToString("MMM dd yyyy")
+		                                },
+		                                {Constants.MEMO, memo}
+		                            };
+
+                            var toAddress2 = CommonHelper.GetDecryptedData(request.Member1.UserName);
+
+                            try
+                            {
+                                Utility.SendEmail("requestPaidToSender", fromAddress,
+                                    toAddress2, null, moneySenderFirstName + " paid your request on Nooch", null, tokens2,
+                                    null, null, null);
+
+                                Logger.Info("TDA -> HandleRequestMoney - requestPaidToSender Email  sent to [" + toAddress2 + "]");
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.Error("TDA - > HandleRequestMoney - requestPaidToSender Email NOT sent to [" + toAddress2 + "], " +
+                                                       "[Exception: " + ex + "]");
+                            }
+
+                            #endregion Notify Payment Recipient (Sender Of Request)
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Error("TDA -> Handle Request Money - Success Emails NOT sent to [" +
+                                                   CommonHelper.GetDecryptedData(request.Member.UserName) + "] OR [" +
+                                                   CommonHelper.GetDecryptedData(request.Member1.UserName) + "], " +
+                                                   "[Exception: " + ex + "]");
+                        }
+
+                        #endregion Send Email Notifications
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error("TDA -> Handle Request Money - Attempted to Notify Users after success, but caught Exception #1959: [" + ex + "]");
+                    }
+
+                    return "Request processed successfully.";
+
+                    #endregion Success Notifications to Sender and Receiver
+
+
+                }
+                else
+                {
+                    // transaction failed return appropriate error.
+                    Logger.Info("TDA -> HandleRequestMoney -> Synapse Order API FAILED. Transaction aborted. Request TransId is: [" +
+                                           request.TransactionId + "]");
+
+                    request.TransactionStatus = "Pending";
+                    noochConnection.SaveChanges();
+
+                    return "Funds transfer failed, please retry after checking bank account details.";
+                }
+
+
+                #endregion SYNAPSE V3
+
+
+            }
+
+            catch (Exception ex)
+            {
+                Logger.Error("HandleRequestMoney -> Synapse Order API FAILED (1812). Outermost Exception: [" + ex + "]");
+
+                return "Sorry There Was A Problem";
+            }
+        }
+
+
+
+        // CLIFF (10/11/15): Pretty sure this method is not used at all. The app sends the user to How Much scrn when user wants to "Pay Back" another
+        //                   user that has previously sent them money from the History screens.  So we can *probably* remove this...
+
+        // Malkit : 10 May 2016 : Added this method because Cliff pointed this method as missing.
+        public string PayBackTransaction(string transactionId, string userResponse, GeoLocation location)
+        {
+            Logger.Info("TDA -> PayBackTransaction [TransactionId: " + transactionId + "], userResponse: [" + userResponse + "]");
+
+            if (userResponse == "Paid")
+            {
+                try
+                {
+                    var transId = Utility.ConvertToGuid(transactionId);
+
+                    using (var noochConnection = new NOOCHEntities())
+                    {
+                        
+                        var transactionDetail =
+                            noochConnection.Transactions.FirstOrDefault(m => m.TransactionId == transId);
+                        
+                        
+                        Transaction newTrans = transactionDetail;
+
+                        //Check if the member is having the required balance
+                        
+                        Member sender = CommonHelper.GetMemberDetails(transactionDetail.Member1.MemberId.ToString());
+                        Member receiver = CommonHelper.GetMemberDetails(transactionDetail.Member.MemberId.ToString());
+
+                        if (sender != null)
+                        {
+                            decimal senderBalance = Convert.ToDecimal(CommonHelper.GetDecryptedData(sender.Deposit));
+                            decimal receiverBalance = Convert.ToDecimal(CommonHelper.GetDecryptedData(receiver.Deposit));
+                            decimal transAmount = decimal.Parse(transactionDetail.Amount.ToString());
+
+                            if (senderBalance >= transactionDetail.Amount)
+                            {
+                                newTrans.Member.MemberId = transactionDetail.Member1.MemberId;
+                                newTrans.Member1.MemberId = transactionDetail.Member.MemberId;
+                                newTrans.DisputeTrackingId = null;
+                                newTrans.TransactionStatus = "Success";
+                                newTrans.TransactionType = CommonHelper.GetEncryptedData(Constants.TRANSACTION_TYPE_TRANSFER);
+                                newTrans.TransactionDate = DateTime.Now;
+                                newTrans.Memo = null;
+
+                                if (location != null)
+                                {
+                                    newTrans.GeoLocation = location;
+                                }
+
+                                // Legacy code to add a fee - just setting to 0
+                                newTrans.IsPrepaidTransaction = true;
+                                newTrans.TransactionFee = 0;
+
+                                sender.TotalNoochTransfersCount = sender.TotalNoochTransfersCount + 1;
+                                receiver.TotalNoochTransfersCount = receiver.TotalNoochTransfersCount + 1;
+
+                                sender.DateModified = DateTime.Now;
+                                receiver.DateModified = DateTime.Now;
+
+                                noochConnection.Transactions.Add(newTrans);
+                                
+                                noochConnection.SaveChanges();
+
+                                
+                            }
+                            return "success";
+                        }
+                        else
+                        {
+                            Logger.Error("TDA -> PayBackTransaction FAILED - Could not find SENDER in DB [TransactionID: " + transactionId + "]");
+                            return "";
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("TDA -> PayBackTransaction FAILED - [TransactionID: " + transactionId + "], [Exception: " + ex + "]");
+                    return "Server failure - caught outer exception :-(";
+                }
+            }
+            else
+            {
+                return "";
+            }
+        }
+
+
+
     }
 }

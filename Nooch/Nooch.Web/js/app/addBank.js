@@ -453,7 +453,7 @@ function submitBnkLgn() {
         success: function (msg) {
             
             console.log(msg);
-             
+
 			// Hide UIBlock (loading box))
             $('.addBankContainer-body').unblock();
 
@@ -544,50 +544,28 @@ function submitBnkLgn() {
 
 
 			// CHECK IF MFA IS REQUIRED
-			if (bnkLoginResult.Is_MFA == true && bnkLoginResult.MFA_Type != null)
+			if (bnkLoginResult.Is_MFA == true)
 			{
-				if (bnkLoginResult.MFA_Type == "questions")
-				{
-				    MFA_TYPE = "question";
+			    MFA_TYPE = "question";
 
-				    SEC_QUES_NO++;
+			    SEC_QUES_NO++;
 
-					// Show QUESTION based auth form
-					$('#addBank2').addClass("hide");
-					$('#addBank_mfa_question').removeClass("hide");
-					$('div.dividerLine').velocity({
-						width:'61.8%'
-					}, {
-						duration: 1000,
-						easing:'easeInOutQuad'
-					});
+			    // Show QUESTION based auth form
+			    $('#addBank2').addClass("hide");
+			    $('#addBank_mfa_question').removeClass("hide");
+			    $('div.dividerLine').velocity({
+			        width: '61.8%'
+			    }, {
+			        duration: 1000,
+			        easing: 'easeInOutQuad'
+			    });
 
-				    //$('#bankAccessTokenForQuestion').val(bnkLoginResult.SynapseQuestionBasedResponse.response.access_token);
-					$('#bankAccessTokenForQuestion').val(bnkLoginResult.Bank_Access_Token);
+			    $('#bankAccessTokenForQuestion').val(bnkLoginResult.bankoid);
 
-					$('#addBank-sec-question').parsley().reset();
+			    $('#addBank-sec-question').parsley().reset();
 
-					// Displaying First MFA Question
-					$('#securityQuestionOneFromServer').html(bnkLoginResult.mfaMessage);
-				}
-
-                // CC (5/7/16): No more Code-Based MFA anymore
-				/*else if (bnkLoginResult.MFA_Type == "device") 
-				{
-				    MFA_TYPE = "code";
-
-					// Show CODE based auth form
-					$('#addBank2').addClass("hide");
-					$('#addBank_mfa_code').removeClass("hide");
-					$('#addBank-code').parsley().reset();
-
-					$('#bankAccessTokenForCode').val(bnkLoginResult.SynapseCodeBasedResponse.response.access_token);
-
-                    // Displaying Code Instruction Text
-					$('#codeMsg').html(bnkLoginResult.SynapseCodeBasedResponse.response.mfa.message);
-					$('#codeMsg').velocity("transition.bounceLeftIn",900);
-					$('#securityCodeInput').attr('data-parsley-required-message', 'Alas, this is a required security code sent by ' + BANK_NAME + '.');
-				}*/
+			    // Displaying First MFA Question
+			    $('#securityQuestionOneFromServer').html(bnkLoginResult.mfaMessage);
 			}
 
 			// NO MFA... ARRAY OF BANKS RETURNED
@@ -866,7 +844,7 @@ $('#addBank-sec-question').submit(function(e) {
 	//console.log("#addBank-sec-question -> Submit Fired.");
     //console.log("SEC_QUES_NO value is: " + SEC_QUES_NO);
 
-    // Question-based MFA and 1st question response needed
+    // Check the right input based on which # question is being answered
 	if (SEC_QUES_NO == 1)
 	{
 		if ($('#securityQuest1').parsley().validate() === true)
@@ -909,56 +887,33 @@ $('#addBank-sec-question').submit(function(e) {
 
 function MFALogin() {
     var mfaResp = '';
-    var accessCode = '';
-	var loadingText = '';
-
-	console.log("MFALogin() Fired.");
+    var accessCode = $('#bankAccessTokenForQuestion').val();;
 
 	//console.log("SEC_QUES_NO value is: " + SEC_QUES_NO);
-    if (MFA_TYPE == "question")
-	{
-        // question based mfa and first question response needed
-		if (SEC_QUES_NO == 1) {
-			mfaResp = $('#securityQuest1').val();
-		}
-		else if (SEC_QUES_NO == 2) {
-			mfaResp = $('#securityQuest2').val();
-		}
-		else if (SEC_QUES_NO == 3) {
-			mfaResp = $('#securityQuest3').val();
-		}
 
-		accessCode = $('#bankAccessTokenForQuestion').val();
-
-		loadingText="Checking that response";
-    }
-
-    /*else if (MFA_TYPE == "code")
-	{
-		if ($("#addBank-code").parsley().validate() === true)
-		{
-			mfaResp = $('#securityCodeInput').val();
-			accessCode = $('#bankAccessTokenForCode').val();
-
-			loadingText="Checking that code";
-		}
-		else {
-			return;
-		}
-    }*/
+    // Check the right input based on which # question is being answered
+	if (SEC_QUES_NO == 1) {
+	    mfaResp = $('#securityQuest1').val();
+	}
+	else if (SEC_QUES_NO == 2) {
+	    mfaResp = $('#securityQuest2').val();
+	}
+	else if (SEC_QUES_NO == 3) {
+	    mfaResp = $('#securityQuest3').val();
+	}
 
 	// ADD THE LOADING BOX
     $('.addBankContainer-body').block({
-		message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">'+ loadingText +'</span>', 
+        message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Checking that response</span>',
 		css: { 
 			border: 'none', 
 			padding: '20px 8px 14px',
 			backgroundColor: '#000', 
-			'-webkit-border-radius': '10px', 
-			'-moz-border-radius': '10px', 
-			opacity: '.75',
-			width: '80%',
-			left: '10%',
+			'-webkit-border-radius': '12px',
+			'-moz-border-radius': '12px',
+			opacity: '.8',
+			width: '70%',
+			left: '15%',
 			top: '15px',
 			color: '#fff' 
 		}
@@ -974,7 +929,6 @@ function MFALogin() {
         async: "true",
         cache: "false",
         success: function (msg) {
-            // On success                 
             var res = msg;
             //console.log(res);
 
@@ -983,16 +937,15 @@ function MFALogin() {
 
 			if (res.Is_success == true)
 			{
-				console.log('MFALogin response was SUCCESSFUL'+res);
+				console.log('MFALogin response was SUCCESSFUL');
 				//console.log(res);
 
 				// Checking if response contains another MFA
 				if (res.Is_MFA == true && res.mfaMessage != null)
 				{
-					// expecting question based in response to Question-Based MFA, and it would have to be Question No. 2 here (1st question would come after Bank Login)
+					// Expecting Question No. 2 here (1st question would come after Bank Login)
 
 					$('#addBank-sec-question .sec-question-input').val('');
-					//$('#addBank-sec-question .sec-question-input').parsley().reset();
 
 					if (SEC_QUES_NO == 1) {
 						console.log("We got to SEC_QUES_NO == 1");
@@ -1040,24 +993,23 @@ function MFALogin() {
 						$('#securityQuest3').attr('data-parsley-required', 'false');
 					}
 
-					SEC_QUES_NO++;   // incremented it to write question mfa for 2nd round.
-					$('#bankAccessTokenForQuestion').val(res.mfaMessage);
+					SEC_QUES_NO++; // incremented it to write question mfa for 2nd round.
+					$('#bankAccessTokenForQuestion').val(res.bankoid);
 				}
 
                 else if (res.Is_MFA == false && res.SynapseBanksList != null)
 				{
-					// iterating through each bank
                     var accountnum = 0;
                     var bankht = "";
-					console.log(res);
+                    console.log(res);
 
+                    // Iterate through each bank
                     $.each(res.SynapseBanksList.banks, function (i, val)
                     {
                         var currentBankAccnt = val;
                         accountnum += 1;
-                        //console.log('Account nickname is: ' + currentBankAccnt.nickname);
 
-                        // making html to add in div of banks selection list
+                        // Making html to add in <div> of banks selection list
                         bankht = bankht + "<div id='account" + accountnum + "Grp' class='input-group'><span class='input-group-addon'><input type='radio' name='account' id='account" + accountnum + "' value='" + currentBankAccnt.bankoid + "' data-bname='" + currentBankAccnt.bank_name + "' required data-parsley-required-message='Please select which account you would like to link to Nooch.' data-parsley-errors-container='#errorMsgDiv'></span><label class='form-control' id='label" + accountnum + "'><p class='form-control-static acntNm'>";
                         bankht = bankht + currentBankAccnt.nickname + "<span class='pull-right'>" + currentBankAccnt.account_number_string+"</span></p></label></div>";
                     });
@@ -1094,16 +1046,8 @@ function MFALogin() {
 			{
 				// ERROR CAME BACK FROM Synapse FOR MFA ATTEMPT
 				console.log("SUBMIT BANK LOGIN ERROR IS: " + res.ERROR_MSG);
-				/*if (MFA_TYPE == "code") {
-					$('#mfa_code_errorMsg').html("<div><p class='parsley-errors-list filled'>" + res.ERROR_MSG + "</p></div>");
-				}
-				else */if (MFA_TYPE == "question") {
-					$('#mfa_question_errorMsg').html("<div><p class='parsley-errors-list filled'>" + res.ERROR_MSG + "</p></div>");
-				}
-				else
-				{
-				    mfaErrorAlert();
-				}
+				$('#mfa_question_errorMsg').html("<div><p class='parsley-errors-list filled'>" + res.ERROR_MSG + "</p></div>");
+
 				return;
 			}
         },
@@ -1114,14 +1058,7 @@ function MFALogin() {
             // Hide UIBlock (loading box) & display error message
 			$('.addBankContainer-body').unblock();
 
-			/*if (MFA_TYPE == "code")
-			{
-			    $('#mfa_code_errorMsg').html("<div><p class='parsley-errors-list filled'>Oh no! We encountered an error when we tried to verify your code :-(</p></div>");
-			}
-			else */if (MFA_TYPE == "question")
-			{
-			    $('#mfa_question_errorMsg').html("<div><p class='parsley-errors-list filled'>Oh no! We encountered an error when we tried to verify your answer :-(</p></div>");
-			}
+			$('#mfa_question_errorMsg').html("<div><p class='parsley-errors-list filled'>Oh no! We encountered an error when we tried to verify your answer :-(</p></div>");
 
 			mfaErrorAlert();
 		}
@@ -1156,13 +1093,12 @@ function mfaErrorAlert() {
 }
 
 function SetDefaultAct() {
-     
+
     if ($("#addBank-selectAccount").parsley().validate() === true)
 	{
 		var bankId = $("input:radio[name='account']:checked").val();
 		var bankName = $("input:radio[name='account']:checked").data("bname");
-		 
-        
+
 		// ADD THE LOADING BOX
 		$('.addBankContainer-body').block({
 		    message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Linking Account...</span>',
@@ -1170,12 +1106,12 @@ function SetDefaultAct() {
 				border: 'none', 
 				padding: '20px 8px 14px',
 				backgroundColor: '#000', 
-				'-webkit-border-radius': '10px', 
-				'-moz-border-radius': '10px',
-				'border-radius': '10px',
-				opacity: '.75',
-				width: '80%',
-				left: '10%',
+				'-webkit-border-radius': '12px',
+				'-moz-border-radius': '12px',
+				'border-radius': '12px',
+				opacity: '.8',
+				width: '70%',
+				left: '15%',
 				top: '15px',
 				color: '#fff' 
 			}
@@ -1190,8 +1126,6 @@ function SetDefaultAct() {
 			async: "true",
 			cache: "false",
 			success: function (msg) {
-				// On success                 
-				console.log("SUCCESS");
 				$('.addBankContainer-body').unblock();
 
 				var res = msg;
@@ -1205,13 +1139,14 @@ function SetDefaultAct() {
 				{
 				    swal({
 						title: "Oh No!",
-						text: "Something went wrong - very sorry about this. We hate it when something breaks! Please try again or contact support@nooch if the problem happens again.",
+						text: "Something went wrong - very sorry about this. We hate it when things break! Please try again or contact <a href='mailto:support@nooch.com' target='_blank'>support@nooch</a> and we'll be glad to help." +
+						      "<small class='show' style='margin-top:12px'>Error Reference: <strong>#SD-1</strong></small>",
 						type: "error",
 						confirmButtonColor: "#3fabe1",
 						confirmButtonText: "Ok",
+						html: true
 					});
 				}
-
 			},
 			Error: function (x, e) {
 			    $('.addBankContainer-body').unblock();
@@ -1227,7 +1162,7 @@ function SetDefaultAct() {
 
 
 function sendToRedUrl() {
-    console.log("RED_URL is is: [" + RED_URL + "]");
+    console.log("RED_URL is: [" + RED_URL + "], sendToIdVerQuestions: [" + sendToIdVerQuestions + "]");
 
     // First, check if this is a Landlord
     if (fromLandlordApp == "yes")
@@ -1254,6 +1189,7 @@ function sendToRedUrl() {
 
         if (sendToIdVerQuestions == true)
         {
+            console.log("sending to ID Verification page...");
             window.top.location.href = "https://www.noochme.com/noochweb/Nooch/idVerification?memid=" + MEMBER_ID + "&from=addbnk&redUrl=" + RED_URL;
         }
         else if (RED_URL.indexOf("rentscene") > -1) // For RentScene
@@ -1272,7 +1208,7 @@ function sendToRedUrl() {
                       "<p>We will notify your landlord that you're ready to pay and we'll be in touch soon about completing your rent payments.</p>",
                 type: "success",
                 confirmButtonColor: "#3fabe1",
-                confirmButtonText: "Awesome",
+                confirmButtonText: "Done",
                 customClass: "largeText",
                 html: true
             }, function (isConfirm) {
@@ -1295,7 +1231,7 @@ function sendToRedUrl() {
 
                 setTimeout(function () {
                     window.top.location.href = "https://www.nooch.com/nooch-for-landlords";
-                }, 500);
+                }, 300);
             });
         }
         else if (RED_URL == "createaccnt")// For users coming from the CreateAccount.aspx page
@@ -1305,17 +1241,19 @@ function sendToRedUrl() {
             window.parent.$('body').trigger('addBankComplete');
         }
          
-        else if (RED_URL.indexOf('DepositMoneyComplete') > 1) 
+        else if (RED_URL.indexOf('DepositMoneyComplete') > 1 ||
+                 RED_URL.indexOf('PayRequestComplete') > 1)
         {
             swal({
                 title: "Bank Linked Successfully",
                 text: "<p>Thanks for completing this <strong>one-time</strong> process. &nbsp;Now you can make secure payments with anyone and never share your bank details!</p>",
                 type: "success",
                 confirmButtonColor: "#3fabe1",
-                confirmButtonText: "Awesome",
+                confirmButtonText: "Done",
                 customClass: "largeText",
                 html: true
-            }, function (isConfirm) {
+            }, function (isConfirm)
+            {
                 $('.addBankContainer-body').block({
                     message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Finishing...</span>',
                     css: {
@@ -1325,9 +1263,9 @@ function sendToRedUrl() {
                         '-webkit-border-radius': '12px',
                         '-moz-border-radius': '12px',
                         'border-radius': '12px',
-                        opacity: '.75',
-                        width: '80%',
-                        left: '10%',
+                        opacity: '.8',
+                        width: '70%',
+                        left: '15%',
                         top: '25px',
                         color: '#fff'
                     }
@@ -1335,49 +1273,9 @@ function sendToRedUrl() {
 
                 setTimeout(function () {
                     window.top.location.href = RED_URL;
-                    // window.top.location.href = "http://localhost:2061/Nooch/DepositMoneyComplete?mem_id=" + MEMBER_ID;
-                }, 400);
+                }, 300);
             });
-
-            //window.location = RED_URL;
         }
-        else if (RED_URL.indexOf('PayRequestComplete') > 1) {
-           
-            swal({
-                title: "Bank Linked Successfully",
-                text: "<p>Thanks for completing this <strong>one-time</strong> process. &nbsp;Now you can make secure payments with anyone and never share your bank details!</p>",
-                type: "success",
-                confirmButtonColor: "#3fabe1",
-                confirmButtonText: "Awesome",
-                customClass: "largeText",
-                html: true
-            }, function (isConfirm) {
-                $('.addBankContainer-body').block({
-                    message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Finishing...</span>',
-                    css: {
-                        border: 'none',
-                        padding: '20px 8px 14px',
-                        backgroundColor: '#000',
-                        '-webkit-border-radius': '12px',
-                        '-moz-border-radius': '12px',
-                        'border-radius': '12px',
-                        opacity: '.75',
-                        width: '80%',
-                        left: '10%',
-                        top: '25px',
-                        color: '#fff'
-                    }
-                });
-
-                setTimeout(function () {
-                    window.top.location.href = RED_URL;
-                    // window.top.location.href = "http://localhost:2061/Nooch/PayRequestComplete?mem_id=" + MEMBER_ID;
-                }, 400);
-            });
-
-            //window.location = RED_URL;
-        }
-
         else // All Others - most likely no RED_URL was passed in URL, so defaulting to a Sweet Alert
             {
                 swal({
@@ -1385,7 +1283,7 @@ function sendToRedUrl() {
                     text: "<p>Thanks for completing this <strong>one-time</strong> process. &nbsp;Now you can make secure payments with anyone and never share your bank details!</p>",
                     type: "success",
                     confirmButtonColor: "#3fabe1",
-                    confirmButtonText: "Awesome",
+                    confirmButtonText: "Done",
                     customClass: "largeText",
                     html: true
                 }, function (isConfirm) {
@@ -1398,9 +1296,9 @@ function sendToRedUrl() {
                             '-webkit-border-radius': '12px',
                             '-moz-border-radius': '12px',
                             'border-radius': '12px',
-                            opacity: '.75',
-                            width: '80%',
-                            left: '10%',
+                            opacity: '.8',
+                            width: '70%',
+                            left: '15%',
                             top: '25px',
                             color: '#fff'
                         }
@@ -1409,8 +1307,7 @@ function sendToRedUrl() {
                     setTimeout(function ()
                     {
                         window.top.location.href = "https://www.nooch.com/";
-                        // window.top.location.href = "http://localhost:2061/Nooch/DepositMoneyComplete?mem_id=" + MEMBER_ID;
-                    }, 400);
+                    }, 300);
                 });
             }
         }

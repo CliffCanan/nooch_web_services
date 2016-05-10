@@ -37,6 +37,230 @@ namespace Nooch.DataAccess
         }
 
 
+
+        public bool resetlinkvalidationcheck(string memberId)
+        {
+            Logger.Info("MDA -> resetLinkValidationCheck Initiated - MemberID: [" + memberId + "]");
+
+            using (var noochConnection = new NOOCHEntities())
+            {
+                try
+                {
+                    var id = Utility.ConvertToGuid(memberId);
+                    
+                    var noochMember =
+                        noochConnection.Members.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
+                        
+
+                    if (noochMember != null)
+                    {
+                        // checking password reset request time
+                        
+                        var resereq =
+                            noochConnection.PasswordResetRequests.OrderByDescending(m => m.Id)
+                                .Take(1)
+                                .FirstOrDefault(m => m.MemberId == id);
+                        
+
+                        if (resereq == null)
+                        {
+                            return false;
+                        }
+                        else
+                        {
+                            DateTime req = Convert.ToDateTime(resereq.RequestedOn == null ? DateTime.Now : resereq.RequestedOn);
+
+                            if (DateTime.Now < req.AddHours(3))
+                            {
+                                return true;
+                            }
+                            else
+                            {
+                                return false;
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("MDA -> resetlinkvalidationcheck FAILED - [Exception: " + ex + "]");
+                }
+
+                return false;
+            }
+        }
+
+
+        /// <summary>
+        /// To change member's password
+        /// </summary>
+        /// <param name="memberId"></param>
+        /// <param name="newPassword"></param>
+        public bool ResetPassword(string memberId, string newPassword, string newUser)
+        {
+            Logger.Info("MDA -> ResetPassword Initiated - [MemberId: " + memberId + "]");
+
+            try
+            {
+                using (var noochConnection = new NOOCHEntities())
+                {
+                    var id = Utility.ConvertToGuid(memberId);
+
+                    var noochMember =
+                        noochConnection.Members.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
+                        
+
+                    if (noochMember != null)
+                    {
+                        bool shouldReset = false;
+
+                        if (String.IsNullOrEmpty(newUser))
+                        {
+                            // checking password reset request time
+                            
+                            var resetRequestTime =
+                                noochConnection.PasswordResetRequests.OrderByDescending(m => m.Id).Take(1)
+                                    .FirstOrDefault(m => m.MemberId == id);
+                                
+
+                            if (resetRequestTime == null)
+                            {
+                                return false;
+                            }
+
+                            DateTime req = Convert.ToDateTime(resetRequestTime.RequestedOn == null
+                                                              ? DateTime.Now
+                                                              : resetRequestTime.RequestedOn);
+
+                            if (DateTime.Now < req.AddHours(3))
+                            {
+                                shouldReset = true;
+                            }
+                        }
+                        else if (newUser.ToLower().Trim() == "true")
+                        {
+                            shouldReset = true;
+                        }
+
+                        if (shouldReset)
+                        {
+                            // Now update the user's password
+                            noochMember.Password = newPassword.Replace(" ", "+");
+                            noochMember.DateModified = DateTime.Now;
+
+                            var emailAddress = CommonHelper.GetDecryptedData(noochMember.UserName);
+
+                            // Cliff (1/21/16): Only send the confirmation email if it's truly a Reset... as opposed to a new user setting their PW
+                            // from one of the browser pages, which also uses this service to set the pw after linking a bank.
+                            if (newUser.ToLower().Trim() != "true")
+                            {
+                                SendPasswordUpdatedMail(noochMember, emailAddress);
+                            }
+
+                            if (noochConnection.SaveChanges() > 0)
+                            {
+                                Logger.Info("MDA -> ResetPassword - PW Reset Successfully for: Username: [" + emailAddress +
+                                                       "], MemberId: [" + memberId + "]");
+                                return true;
+                            }
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("MDA -> ResetPassword FAILED - MemberID: [" + memberId + "], Exception: [" + ex + "]");
+            }
+            return false;
+        }
+
+        private static bool SendPasswordUpdatedMail(Member member, string primaryMail)
+        {
+            var fromAddress = Utility.GetValueFromConfig("adminMail");
+            var tokens = new Dictionary<string, string>
+            {
+                {
+                    Constants.PLACEHOLDER_FIRST_NAME,
+                    CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(member.FirstName))
+                }
+            };
+
+            return Utility.SendEmail("passwordChanged",  fromAddress, primaryMail, null,
+                "Your Nooch password was changed"
+                , null, tokens, null, null, null);
+        }
+
+        public string ResendVerificationSMS(string Username)
+        {
+            //1. Check if user exists
+            //2. Check if phone is already verified
+
+            string s = CommonHelper.IsDuplicateMember(Username);
+            if (s != "Not a nooch member.")
+            {
+                // member exists, now check if Phone is already verified
+
+                // checking if phone is already activated
+                // getting MemberId
+                Username = CommonHelper.GetEncryptedData(Username);
+                using (var noochConnection = new NOOCHEntities())
+                {
+                    
+                    var memberEntity = noochConnection.Members.FirstOrDefault(m => m.UserName == Username);
+                    
+                    if (memberEntity != null)
+                    {
+                        if (memberEntity.Status == "Temporarily_Blocked")
+                        {
+                            return "Temporarily_Blocked";
+                        }
+                        else if (memberEntity.Status == "Suspended")
+                        {
+                            return "Suspended";
+                        }
+
+                        else// if (memberEntity.Status == "Active" || memberEntity.Status == "Registered")
+                        {
+                            string fname = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberEntity.FirstName));
+                            string MessageBody = "Hi " + fname + ", This is Nooch - just need to verify this is your phone number. Please reply 'Go' to confirm your phone number.";
+
+                            if (memberEntity.ContactNumber != null &&
+                                (memberEntity.IsVerifiedPhone == false || memberEntity.IsVerifiedPhone == null))
+                            {
+                                string result = Utility.SendSMS(memberEntity.ContactNumber, MessageBody);
+                                return "Success";
+                            }
+                            else if (memberEntity.ContactNumber != null && (memberEntity.IsVerifiedPhone == true))
+                            {
+                                return "Already Verified.";
+                            }
+                            else
+                            {
+                                return "Failure";
+                            }
+                        }
+                        //else
+                        //{
+                        //    return "Failure";
+                        //}
+                    }
+                    else
+                    {
+                        return "Not a Nooch member.";
+                    }
+                }
+            }
+            else
+            {
+                // Member doesn't exists
+                return "Not a Nooch member.";
+            }
+        }
+
         public string ResendVerificationLink(string Username)
         {
             //1. Check if user exists or not

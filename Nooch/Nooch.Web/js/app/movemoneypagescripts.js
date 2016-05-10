@@ -25,7 +25,6 @@ $(document).ready(function () {
 
         if (USERTYPE != "NonRegistered" && USERTYPE != "Existing")
         {
-             
             var targetWdth = '30%';
             var ms = 1250;
             if ($(window).width() > 1100) {
@@ -58,19 +57,16 @@ $(document).ready(function () {
 
     if (areThereErrors() == false)
     {
-        
         if (checkIfStillPending() == true)
         {
             //console.log(checkIfStillPending());
-            
-            console.log("UserType is: [" + USERTYPE + "]") ;
 
+            console.log("UserType is: [" + USERTYPE + "]");
 
-
+            // 1. New Users - Will Run ID Wizard
             if (USERTYPE != "NonRegistered" &&
-                USERTYPE != "Existing") // Only other option is "New"
+                USERTYPE != "Existing") // Meaning this block is for the only other option is "New"  // 5/9/16: Could also be "Accepted" if it's a tenant...need to handle that too.
             {
-                
                 setTimeout(bindEmail, 700);
 
                 // Hide old form
@@ -115,10 +111,10 @@ $(document).ready(function () {
                     //console.log(ipusr);
                 });
             }
+            // 2. Existing Users w/o A Bank - Open AddBank iFrame
             else if ((USERTYPE == "NonRegistered" || USERTYPE == "Existing") && 
                      $('#bnkName').val() == "no bank found")
             {
-                
                 swal({
                     title: "Secure, Private Payments",
                     text: "To complete this payment, you can securely link any US checking account using your online banking account:" +
@@ -147,8 +143,6 @@ $(document).ready(function () {
 
 
                     console.log("redUrlForAddBank IS: [" + redUrlForAddBank + "]");
-                     
-                     
 
                      //$("#frame").attr("src", "https://www.noochme.com/noochweb/trans/Add-Bank.aspx?MemberId=" + MemID_EXISTING +
                      //                      "&redUrl=" + redUrlForAddBank);
@@ -158,8 +152,13 @@ $(document).ready(function () {
                     $('#AddBankDiv').removeClass('hidden').addClass('bounceIn');
                 });
             }
-            else if ((USERTYPE == "Registered" || USERTYPE == "Existing") &&
-                $('#bnkName').val() != "no bank found") {
+
+            // 3. Existing Users WITH A Bank - Send to ___Complete Page
+            // CC (5/9/16): I noticed this was added but really don't think it is necessary b/c there is payBtnClicked()
+            //              to handle existing users with a bank already linked. B/c this would automatically forward people to the Complete page...
+            /*else if ((USERTYPE == "Registered" || USERTYPE == "Existing") &&
+                $('#bnkName').val() != "no bank found")
+            {
                 // user is already a nooch member and has bank added
                 if ($('#memidexst').val().length > 0) {
                     MemID_EXISTING = $('#memidexst').val();
@@ -173,12 +172,13 @@ $(document).ready(function () {
                     redUrlForAddBank = (FOR_RENTSCENE == "true") ? redUrlForAddBank + ",true"
                                                                  : redUrlForAddBank + ",false";
 
-
                     console.log("redUrlForAddBank IS: [" + redUrlForAddBank + "]");
-                    
 
                     window.location=redUrlForAddBank;
                 }
+            }*/
+            else {
+                console.log("181. There was an error! :-(");
             }
 
             $('#idVer .modalclose').click(function () {
@@ -208,7 +208,7 @@ $(document).ready(function () {
         }
     }
     else {
-        console.log("114. There was an error! :-(");
+        console.log("211. There was an error! :-(");
     }
 
     // Format the Memo if present
@@ -1193,7 +1193,6 @@ function payBtnClicked()
                                                        : redUrlToSendTo + ",false";
 
             console.log("redUrlForAddBank IS: [" + redUrlToSendTo + "]");
-         
 
             window.location = redUrlToSendTo;
         }
@@ -1225,79 +1224,10 @@ function rejectBtnClicked() {
     }
 }
 
-
 // -----------------
 // UNUSED FUNCTIONS
 // -----------------
 /*
-// CLIFF (9/25/15): CAN DELETE.
-// Submit User Profile Info Form
-$('form#PayorInitialInfoForm').submit(function (e) {
-    e.preventDefault();
-    checkFields123();
-});
-
-// CLIFF (9/25/15): CAN DELETE.
-// Submit User PW Form
-$('form#crtPwFrm').submit(function (e) {
-    e.preventDefault();
-    checkPwForm();
-});
-
-function checkFields123() {
-    var id = "";
-
-    // First validate the 'User Name' input
-    var fullName = $('#userName').val().trim();
-    $('#userName').val(fullName);
-    var nameLngth = $('#userName').val().length;
-    var spaceIndx = $('#userName').val().indexOf(" ");
-
-    if ($('#userName').parsley().validate() === true &&
-	    (nameLngth > 4 && spaceIndx > 1 && spaceIndx < (nameLngth - 1))) // Make sure there are at least 2 names
-    {
-        $('#usrNameGrp .errorMsg').removeClass('filled');
-
-        // If User Name is ok, then validate 'Email'
-        var emailTrimmed = $('#userEmail').val().trim();
-        $('#userEmail').val(emailTrimmed);
-
-        if ($('#userEmail').parsley().validate() === true) {
-            // If Email is ok, then validate 'Phone'
-            var $strippedNum = $('#userPhone').val().trim();
-            $strippedNum = $strippedNum.replace(/\D/g, "");
-
-            $('#userPhoneHddn').val($strippedNum);
-
-            if ($('#userPhoneHddn').parsley().validate() === true) {
-                $('form#PayorInitialInfoForm').velocity("transition.slideLeftBigOut", function () {
-                    $('form#crtPwFrm').velocity("transition.slideRightBigIn", function () {
-                        $('#userPassword').focus();
-                    });
-                });
-            }
-            else {
-                id = "#usrPhoneGrp";
-            }
-        }
-        else {
-            id = "#usrEmailGrp";
-        }
-    }
-    else {
-        if ($('#userName').parsley().validate() === true) {
-            $('#userName').removeClass('parsley-success').addClass('parsley-error');
-            $('#usrNameGrp .errorMsg').text('Please enter a first AND last name').addClass('parsley-errors-list').addClass('filled');
-        }
-
-        id = "#usrNameGrp";
-    }
-
-    if (id.length > 0) {
-        shakeInputField(id);
-    }
-}
-
 function checkPwForm() {
     //console.log("* userPassword value is: " + $('#userPassword').val() + " *");
     if ($('#userPassword').val().length == 0 ||
@@ -1332,20 +1262,4 @@ function checkPwForm() {
         shakeInputField("#usrPwGrp");
     }
 }
-
-// When Input validation fails, this function custom formats the field
-// CLIFF (9/25/15): This isn't used anymore after updating ID Ver Wizard to the new style
-function shakeInputField(inputGrpId) {
-    $(inputGrpId + ' input').velocity("callout.shake");
-    $(inputGrpId + ' .fa').css('color', '#cf1a17')
-                                .velocity('callout.shake')
-                                .velocity({ 'color': '#3fabe1' }, { delay: 800 });
-    $(inputGrpId + ' input').focus();
-}
-
-// CLIFF (9/25/15): This also isn't used anymore after updating ID Ver Wizard to the new style
-function backAstep() {
-    $('form#crtPwFrm').velocity("transition.slideRightBigOut", function () {
-        $('form#PayorInitialInfoForm').velocity("transition.slideLeftBigIn");
-    });
 }*/

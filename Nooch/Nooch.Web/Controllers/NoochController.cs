@@ -547,16 +547,14 @@ namespace Nooch.Web.Controllers
                         res.Is_success = true;
                         res.Is_MFA = bankLoginResult.Is_MFA;
 
-                        if (bankLoginResult.Is_MFA)
-                        {
-                            res.Bank_Access_Token = bankLoginResult.bankOid;
-                            res.MFA_Type = "questions"; // no more code-based MFA anymore with Synapse V3
-                            res.mfaMessage = bankLoginResult.mfaQuestion; // CLIFF (5/7/16): Adding this to try to fix issue after updating to V3 - the MFA question isn't being displayed to the user
-                        }
-
                         List<SynapseBankClass> synbanksList = new List<SynapseBankClass>();
 
-                        if (bankLoginResult.SynapseNodesList.nodes[0] != null)
+                        if (bankLoginResult.Is_MFA)
+                        {
+                            res.bankoid = bankLoginResult.bankOid;
+                            res.mfaMessage = bankLoginResult.mfaQuestion;
+                        }
+                        else if (bankLoginResult.SynapseNodesList.nodes[0] != null)
                         {
                             foreach (SynapseIndividualNodeClass bankNode in bankLoginResult.SynapseNodesList.nodes)
                             {
@@ -564,7 +562,6 @@ namespace Nooch.Web.Controllers
                                 sbc.account_class = bankNode.account_class;
                                 sbc.account_number_string = bankNode.account_num;
                                 sbc.account_type = bankNode.account_type.ToString();
-                                sbc.address = "";
                                 //sbc.balance = bankNode.info.balance.amount;
                                 sbc.bank_name = bankNode.bank_name;
                                 sbc.bankoid = bankNode.oid;
@@ -602,16 +599,16 @@ namespace Nooch.Web.Controllers
                 if (res.ssn_verify_status != accountCreateResult.ssn_verify_status)
                 {
                     Logger.Info("NoochController -> BankLogin -> ssn_verify_status from Registering User was [" +
-                                            accountCreateResult.ssn_verify_status + "], but ssn_verify_status from BankLogin was: [" +
-                                            res.ssn_verify_status + "]");
+                                accountCreateResult.ssn_verify_status + "], but ssn_verify_status from BankLogin was: [" +
+                                res.ssn_verify_status + "]");
                 }
             }
             catch (Exception we)
             {
                 Logger.Error("NoochController -> BankLogin FAILED - [MemberID: " + inp.memberid +
-                                   "], [Exception: " + we.InnerException + "]");
+                             "], [Exception: " + we.InnerException + "]");
 
-                res.ERROR_MSG = "error occured at server.";
+                res.ERROR_MSG = "Server error: [" + we.Message + "]";
             }
 
             return Json(res);
@@ -620,7 +617,7 @@ namespace Nooch.Web.Controllers
 
         public static SynapseBankLoginRequestResult addBank(bankaddInputFormClass inp)
         {
-            Logger.Info("**Add_Bank** CodeBehind -> addBank (for manual routing/account #) Initiated - [MemberID: " + inp.memberid + "]");
+            Logger.Info("NoochController -> addBank (for manual routing/account #) Initiated - [MemberID: " + inp.memberid + "]");
 
             SynapseBankLoginRequestResult res = new SynapseBankLoginRequestResult();
             res.Is_success = false;
@@ -642,10 +639,7 @@ namespace Nooch.Web.Controllers
                 {
                     res.Is_success = true;
                     res.Is_MFA = bankAddRes.Is_MFA;
-                    if (bankAddRes.Is_MFA)
-                    {
-                        res.MFA_Type = "question";    // no more code based as per synapse V3 docs
-                    }
+
                     List<SynapseBankClass> synbanksList = new List<SynapseBankClass>();
 
                     foreach (nodes bankNode in bankAddRes.SynapseNodesList.nodes)
@@ -654,7 +648,6 @@ namespace Nooch.Web.Controllers
                         sbc.account_class = bankNode.info._class;
                         sbc.account_number_string = bankNode.info.account_num;
                         sbc.account_type = bankNode.type;
-                        sbc.address = "";
                         sbc.balance = bankNode.info.balance.amount;
                         sbc.bank_name = bankNode.info.bank_name;
                         sbc.bankoid = bankNode._id.ToString();
@@ -686,7 +679,7 @@ namespace Nooch.Web.Controllers
             }
             catch (Exception we)
             {
-                Logger.Error("**Add_Bank** CodeBehind -> addBank FAILED - [MemberID: " + inp.memberid +
+                Logger.Error("NoochController CodeBehind -> addBank FAILED - [MemberID: " + inp.memberid +
                                    "], [Exception: " + we.InnerException + "]");
 
                 res.ERROR_MSG = "Error did occur at server. Ohh nooo!!";
@@ -695,7 +688,11 @@ namespace Nooch.Web.Controllers
         }
 
 
-        // method to call verify bank mfa - to be used with bank login type MFA's
+        /// <summary>
+        /// For checking a user's bank sercurity question response with Synapse V3 during the bank login process.
+        /// </summary>
+        /// <param name="inp"></param>
+        /// <returns></returns>
         [HttpPost]
         [ActionName("MFALogin")]
         public ActionResult MFALogin(MFALoginInputClassForm inp)
@@ -704,7 +701,7 @@ namespace Nooch.Web.Controllers
 
             try
             {
-                Logger.Info("**Add_Bank** CodeBehind -> MFALogin Initiated -> [MemberID: " + inp.memberid + "], [Bank: " + inp.bank + "], [MFA: " + inp.MFA + "]");
+                Logger.Info("NoochController -> MFALogin Initiated -> [MemberID: " + inp.memberid + "], [Bank: " + inp.bank + "], [MFA: " + inp.MFA + "]");
 
                 // preparing data for POST type request
 
@@ -715,22 +712,21 @@ namespace Nooch.Web.Controllers
                 inpu.BankName = inp.bank; // not required..keeping it for just in case we need something to do with it.
                 inpu.MemberId = inp.memberid;
                 inpu.mfaResponse = inp.MFA;
-                inpu.bankId = inp.ba;   // this is bank_node_id..... must...need to pass this thing in earlier step
+                inpu.bankId = inp.ba;   // this is bank_node_id...grabbed during earlier step
+
                 try
                 {
-                    //json = "{\"input\":" + scriptSerializer.Serialize(inpu) + "}";
                     json = scriptSerializer.Serialize(inpu);
 
                     string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
                     string serviceMethod = "/SynapseV3MFABankVerify";
                     SynapseV3BankLoginResult_ServiceRes bnkloginresult = ResponseConverter<SynapseV3BankLoginResult_ServiceRes>.CallServicePostMethod(String.Concat(serviceUrl, serviceMethod), json);
 
-
                     if (bnkloginresult.Is_success == true)
                     {
                         res.Is_success = true;
                         res.Is_MFA = bnkloginresult.Is_MFA;
-                        //res.MFA_Type = bnkloginresult.;
+
                         List<SynapseBankClass> synbanksList = new List<SynapseBankClass>();
                         foreach (SynapseIndividualNodeClass bankNode in bnkloginresult.SynapseNodesList.nodes)
                         {
@@ -738,7 +734,6 @@ namespace Nooch.Web.Controllers
                             sbc.account_class = bankNode.account_class;
                             sbc.account_number_string = bankNode.account_num;
                             sbc.account_type = bankNode.account_type.ToString();
-                            sbc.address = "";
 
                             //sbc.balance = bankNode.;
                             sbc.bank_name = bankNode.bank_name;
@@ -774,7 +769,7 @@ namespace Nooch.Web.Controllers
                     }
                     else
                     {
-                        Logger.Error("**Add_Bank** CodeBehind -> MFALogin FAILED -> [Error Msg: " + bnkloginresult.errorMsg +
+                        Logger.Error("NoochController -> MFALogin FAILED -> [Error Msg: " + bnkloginresult.errorMsg +
                                                "], [MemberID: " + inp.memberid + "], [Bank: " + inp.bank + "], [MFA: " + inp.MFA + "]");
                         res.Is_success = false;
                         res.ERROR_MSG = bnkloginresult.errorMsg;
@@ -784,13 +779,13 @@ namespace Nooch.Web.Controllers
                 {
                     res.Is_success = false;
                     res.ERROR_MSG = "";
-                    Logger.Error("**Add_Bank** CodeBehind -> MFALogin FAILED - [MemberID: " + inp.memberid +
+                    Logger.Error("NoochController -> MFALogin FAILED - [MemberID: " + inp.memberid +
                                   "], [Exception: " + ec + "]");
                 }
             }
             catch (Exception we)
             {
-                Logger.Error("**Add_Bank** CodeBehind -> MFALogin FAILED - [MemberID: " + inp.memberid +
+                Logger.Error("NoochController -> MFALogin FAILED - [MemberID: " + inp.memberid +
                                    "], [Exception: " + we + "]");
             }
 
@@ -807,7 +802,7 @@ namespace Nooch.Web.Controllers
 
             try
             {
-                Logger.Info("**Add_Bank** CodeBehind -> MFALoginWithRoutingAndAccountNumber Initiated -> [MemberID: " + memberid + "], [Bank: " + bank + "]");
+                Logger.Info("NoochController -> MFALoginWithRoutingAndAccountNumber Initiated -> [MemberID: " + memberid + "], [Bank: " + bank + "]");
 
                 // preparing data for POST type request
 
@@ -833,14 +828,13 @@ namespace Nooch.Web.Controllers
                     {
                         res.Is_success = true;
                         res.Is_MFA = bnkloginresult.Is_MFA;
-                        res.MFA_Type = bnkloginresult.MFA_Type;
                         res.SynapseBanksList = bnkloginresult.SynapseBanksList;
                         res.SynapseQuestionBasedResponse = bnkloginresult.SynapseQuestionBasedResponse;
                         res.ERROR_MSG = "OK";
                     }
                     else
                     {
-                        Logger.Error("**Add_Bank** CodeBehind -> MFALoginWithRoutingAndAccountNumber FAILED -> [Error Msg: " + bnkloginresult.ERROR_MSG +
+                        Logger.Error("NoochController -> MFALoginWithRoutingAndAccountNumber FAILED -> [Error Msg: " + bnkloginresult.ERROR_MSG +
                                                "], [MemberID: " + memberid + "], [Bank: " + bank + "]");
                         res.Is_success = false;
                         res.ERROR_MSG = bnkloginresult.ERROR_MSG;
@@ -850,13 +844,13 @@ namespace Nooch.Web.Controllers
                 {
                     res.Is_success = false;
                     res.ERROR_MSG = "";
-                    Logger.Error("**Add_Bank** CodeBehind -> MFALoginWithRoutingAndAccountNumber FAILED - [MemberID: " + memberid +
+                    Logger.Error("NoochController -> MFALoginWithRoutingAndAccountNumber FAILED - [MemberID: " + memberid +
                                   "], [Exception: " + ec + "]");
                 }
             }
             catch (Exception we)
             {
-                Logger.Error("**Add_Bank** CodeBehind -> MFALoginWithRoutingAndAccountNumber FAILED - [MemberID: " + memberid +
+                Logger.Error("NoochController -> MFALoginWithRoutingAndAccountNumber FAILED - [MemberID: " + memberid +
                                    "], [Exception: " + we + "]");
             }
 

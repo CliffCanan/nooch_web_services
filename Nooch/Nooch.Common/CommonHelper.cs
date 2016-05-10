@@ -1826,7 +1826,8 @@ namespace Nooch.Common
 
             foreach (synapseSearchUserResponse_Node node in allNodes)
             {
-                if (node._id != null && (node._id.oid == nodeToMatch) || (node._id.oid == CommonHelper.GetDecryptedData(nodeToMatch)))
+                if ( node._id != null &&
+                    (node._id.oid == nodeToMatch) || (node._id.oid == CommonHelper.GetDecryptedData(nodeToMatch)))
                 {
                     if (!String.IsNullOrEmpty(node.allowed))
                     {
