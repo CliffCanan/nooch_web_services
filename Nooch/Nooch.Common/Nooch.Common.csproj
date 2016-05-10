@@ -96,6 +96,7 @@
     <Compile Include="Entities\MobileAppOutputEnities\FBResponseClass.cs" />
     <Compile Include="Entities\MobileAppOutputEnities\LocationSearch.cs" />
     <Compile Include="Entities\MobileAppOutputEnities\MemberBusinessDto.cs" />
+    <Compile Include="Entities\MobileAppOutputEnities\MemberClass.cs" />
     <Compile Include="Entities\MobileAppOutputEnities\MemberDto.cs" />
     <Compile Include="Entities\MobileAppOutputEnities\MemberForInvitedMembersList.cs" />
     <Compile Include="Entities\MobileAppOutputEnities\MemberOutputEntity.cs" />

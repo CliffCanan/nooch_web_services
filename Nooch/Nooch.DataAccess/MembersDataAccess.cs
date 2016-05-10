@@ -38,6 +38,59 @@ namespace Nooch.DataAccess
 
 
 
+        public bool resetlinkvalidationcheck(string memberId)
+        {
+            Logger.Info("MDA -> resetLinkValidationCheck Initiated - MemberID: [" + memberId + "]");
+
+            using (var noochConnection = new NOOCHEntities())
+            {
+                try
+                {
+                    var id = Utility.ConvertToGuid(memberId);
+                    
+                    var noochMember =
+                        noochConnection.Members.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
+                        
+
+                    if (noochMember != null)
+                    {
+                        // checking password reset request time
+                        
+                        var resereq =
+                            noochConnection.PasswordResetRequests.OrderByDescending(m => m.Id)
+                                .Take(1)
+                                .FirstOrDefault(m => m.MemberId == id);
+                        
+
+                        if (resereq == null)
+                        {
+                            return false;
+                        }
+                        else
+                        {
+                            DateTime req = Convert.ToDateTime(resereq.RequestedOn == null ? DateTime.Now : resereq.RequestedOn);
+
+                            if (DateTime.Now < req.AddHours(3))
+                            {
+                                return true;
+                            }
+                            else
+                            {
+                                return false;
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("MDA -> resetlinkvalidationcheck FAILED - [Exception: " + ex + "]");
+                }
+
+                return false;
+            }
+        }
+
+
         /// <summary>
         /// To change member's password
         /// </summary>

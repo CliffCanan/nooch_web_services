@@ -31,6 +31,30 @@ namespace Nooch.DataAccess
         }
 
 
+
+        public List<Transaction> GetRecentMembers(string memberId)
+        {
+            Logger.Info("TDA -> GetRecentMembers [MemberId: " + memberId + "]");
+
+            int totalRecordsCount = 0;
+
+            List<Transaction> transactionsList = GetTransactionsList(memberId, "ALL", 0, 0, "", out totalRecordsCount);
+
+            transactionsList = transactionsList.Where(q =>
+                                q.TransactionType != "Q4/89kfM4OTNoiR0sbFJzA==" &&
+                                q.Member1.UserName != "2ZRTd3kKj+XXubomAsLDugMyJgcHiM7Z2YYR5qfRY30=" &&
+                                q.Member.UserName != "2ZRTd3kKj+XXubomAsLDugMyJgcHiM7Z2YYR5qfRY30=").ToList();
+
+            if (transactionsList != null && transactionsList.Count > 0)
+            {
+                return transactionsList;
+            }
+
+            return new List<Transaction>();
+        }
+
+
+
         public PendingTransCoutResult GetMemberPendingTransCount(string MemberId)
         {
             Logger.Info("TDA -> GetMemberPendingTransCount - [MemberId: " + MemberId + "]");

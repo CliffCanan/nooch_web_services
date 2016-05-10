@@ -5542,5 +5542,158 @@ namespace Nooch.API.Controllers
             return new BoolResult();
         }
 
+        [HttpGet]
+        [ActionName("resetlinkvalidationcheck")]
+        public BoolResult resetlinkvalidationcheck(string memberId)
+        {
+            try
+            {
+                Logger.Info("Service Layer - resetlinkvalidationcheck Initiated - MemberId: [" + memberId + "]");
+                var mda = new MembersDataAccess();
+                return new BoolResult { Result = mda.resetlinkvalidationcheck(memberId) };
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Layer - resetlinkvalidationcheck FAILED - MemberId: [" + memberId + "], [Exception: " + ex.Message + "]");
+                
+            }
+            return new BoolResult();
+        }
+
+        [HttpGet]
+        [ActionName("GetRecentMembers")]
+        public Collection<MemberClass> GetRecentMembers(string memberId, string accessToken)
+        {
+            if (CommonHelper.IsValidRequest(accessToken, memberId))
+            {
+                try
+                {
+                    Logger.Info("Service Layer - GetRecentMembers - [MemberId: " + memberId + "]");
+
+                    var tda = new TransactionsDataAccess();
+                    var noochFriendEntities = tda.GetRecentMembers(memberId);
+                    var recentMembersCollection = new Collection<MemberClass>();
+
+                    if (noochFriendEntities != null && noochFriendEntities.Count > 0)
+                    {
+                        string adminUserName = Utility.GetValueFromConfig("adminMail");
+
+                        int i = 0;
+
+                        foreach (var member in noochFriendEntities)
+                        {
+                            string photo = member.Member1.Photo != null
+                                           ? member.Member1.Photo.Contains("Facebook_Photos")
+                                           ? string.Concat(Utility.GetValueFromConfig("FaceBookPhotoUrl"), "/", member.Member1.Photo.Substring(member.Member1.Photo.IndexOf("_Photos") + 8))
+                                           : string.Concat(Utility.GetValueFromConfig("PhotoUrl"), "/", member.Member1.Photo.Substring(member.Member1.Photo.IndexOf("Photos") + 14)) : null;
+                            string photoRec = member.Member.Photo != null
+                                              ? member.Member.Photo.Contains("Facebook_Photos")
+                                              ? string.Concat(Utility.GetValueFromConfig("FaceBookPhotoUrl"), "/", member.Member.Photo.Substring(member.Member.Photo.IndexOf("_Photos") + 8))
+                                              : string.Concat(Utility.GetValueFromConfig("PhotoUrl"), "/", member.Member.Photo.Substring(member.Member.Photo.IndexOf("Photos") + 14)) : null;
+
+                            if (member.Member.MemberId.ToString().Equals(memberId.ToLower())) // Sent Collection
+                            {
+                                var memberItem = new MemberClass
+                                {
+                                    UserName = CommonHelper.GetDecryptedData(member.Member1.UserName),
+                                    FirstName = !String.IsNullOrEmpty(member.Member1.FirstName)
+                                                ?CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(member.Member1.FirstName))
+                                                : "",
+                                    LastName = !String.IsNullOrEmpty(member.Member1.LastName)
+                                               ? CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(member.Member1.LastName))
+                                               : "",
+                                    MemberId = member.Member1.MemberId.ToString(),
+                                    NoochId = member.Member1.Nooch_ID,
+                                    Status = member.Member1.Status,
+                                    Photo = !String.IsNullOrEmpty(photo) ? photo : "",
+                                    TransferStatus = "Sent"
+                                };
+                                var userName = adminUserName != member.Member1.UserName
+                                               ? CommonHelper.GetDecryptedData(member.Member1.UserName)
+                                               : member.Member1.UserName;
+
+                                if (recentMembersCollection.All(x => x.MemberId != member.Member1.MemberId.ToString()) &&
+                                    member.Member1.MemberId.ToString() != memberId && !userName.Equals(adminUserName))
+                                {
+                                    if (i == 20)
+                                        break;
+                                    i++;
+                                    recentMembersCollection.Add(memberItem);
+                                }
+                            }
+                            else if (member.Member1.MemberId.ToString().Equals(memberId.ToLower())) // Received Collection
+                            {
+                                var memberItem = new MemberClass()
+                                {
+                                    UserName = CommonHelper.GetDecryptedData(member.Member.UserName),
+                                    FirstName = !String.IsNullOrEmpty(member.Member.FirstName)
+                                                ?CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(member.Member.FirstName))
+                                                : "",
+                                    LastName = !String.IsNullOrEmpty(member.Member.LastName)
+                                               ? CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(member.Member.LastName))
+                                               : "",
+                                    MemberId = member.Member.MemberId.ToString(),
+                                    NoochId = member.Member.Nooch_ID,
+                                    Status = member.Member.Status,
+                                    Photo = !String.IsNullOrEmpty(photoRec) ? photoRec : "",
+                                    TransferStatus = "Received"
+                                };
+                                var userName = (adminUserName != member.Member.UserName)
+                                               ? CommonHelper.GetDecryptedData(member.Member.UserName)
+                                               : member.Member.UserName;
+
+                                if (!recentMembersCollection.Any(x => x.MemberId == member.Member.MemberId.ToString()) &&
+                                    member.Member.MemberId.ToString() != memberId && !userName.Equals(adminUserName))
+                                {
+                                    if (i == 20)
+                                        break;
+                                    i++;
+                                    recentMembersCollection.Add(memberItem);
+                                }
+                            }
+                        }
+
+                        Logger.Info("Service Layer - GetRecentMembers RecentMembersCollection COUNT: [" + recentMembersCollection.Count + "], [MemberID: " + memberId + "]");
+
+                        return recentMembersCollection;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Layer - GetRecentMembers FAILED - [MemberID: " + memberId + "], Exception: [" + ex + "]");
+                    
+                }
+                return new Collection<MemberClass>();
+            }
+            else
+            {
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
+
+        [HttpPost]
+        [ActionName("HandleRequestMoney")]
+        StringResult HandleRequestMoney(RequestDto handleRequestInput, string accessToken)
+        {
+            if (CommonHelper.IsValidRequest(accessToken, handleRequestInput.MemberId))
+            {
+                try
+                {
+                    Logger.Info("Service Layer - HandleRequestMoney - MemberId: [" + handleRequestInput.MemberId + "]");
+                    var tda = new TransactionsDataAccess();
+                    return new StringResult { Result = tda.HandleRequestMoney(handleRequestInput) };
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service layer - HandleRequestMoney FAILED - MemberId: [" + handleRequestInput.MemberId + "]. Exception: [" + ex + "]");
+                    
+                }
+                return new StringResult();
+            }
+            else
+            {
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
     }
 }
