@@ -729,8 +729,6 @@ namespace Nooch.API.Controllers
 
         #region Request Methods
 
-
-
         /// <summary>
         /// For an existing user to make a request to existing user who never registered for Noooch but used to either receive or pay some money.
         /// </summary>
@@ -766,7 +764,7 @@ namespace Nooch.API.Controllers
 
 
         /// <summary>
-        /// For an existing user to make a request to non existing user.
+        /// For an existing user to make a request to a non-existing user.
         /// </summary>
         /// <param name="requestInput"></param>
         /// <param name="requestId"></param>
@@ -776,13 +774,14 @@ namespace Nooch.API.Controllers
         [ActionName("RequestMoneyToNonNoochUserUsingSynapse")]
         public StringResult RequestMoneyToNonNoochUserUsingSynapse(RequestDto requestInput, out string requestId, string accessToken)
         {
+            Logger.Info("Service Controller - RequestMoneyToNonNoochUserUsingSynapse Initiated - MemberId: [" + requestInput.MemberId + "]");
+
             if (CommonHelper.IsValidRequest(accessToken, requestInput.MemberId))
             {
                 requestId = string.Empty;
 
                 try
                 {
-                    Logger.Info("Service Controller - RequestMoneyToNonNoochUserUsingSynapse Initiated - MemberId: [" + requestInput.MemberId + "]");
                     var tda = new TransactionsDataAccess();
                     return new StringResult { Result = tda.RequestMoneyToNonNoochUserUsingSynapse(requestInput, out requestId) };
                 }
