@@ -5489,8 +5489,8 @@ namespace Nooch.DataAccess
 
                                     // save changes into synapseTransactionResult table in db
                                     SynapseAddTransactionResult satr = new SynapseAddTransactionResult();
-                                    satr.TransactionId = Utility.ConvertToGuid(TransactionId);  
-                                    satr.OidFromSynapse = Call_Synapse_Order_API_Result.responseFromSynapse.trans._id.ToString();
+                                    satr.TransactionId = Utility.ConvertToGuid(TransactionId);
+                                    satr.OidFromSynapse = Call_Synapse_Order_API_Result.responseFromSynapse.trans._id.oid.ToString();
                                     satr.Status_DateTimeStamp = Call_Synapse_Order_API_Result.responseFromSynapse.trans.recent_status.date.date.ToString();
                                     satr.Status_Id = Call_Synapse_Order_API_Result.responseFromSynapse.trans.recent_status.status_id;
                                     satr.Status_Note = Call_Synapse_Order_API_Result.responseFromSynapse.trans.recent_status.note;

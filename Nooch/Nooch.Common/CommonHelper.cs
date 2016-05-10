@@ -2759,10 +2759,10 @@ namespace Nooch.Common
             var selectedBank =
                 _dbContext.SynapseBanksOfMembers.Where(memberTemp =>
                         memberTemp.MemberId.Value.Equals(memId) && memberTemp.IsDefault != false).ToList();
-            if (selectedBank.Count>0)
-            {
-                _dbContext.Entry(selectedBank).Reload();
-            }
+            //if (selectedBank.Count>0)
+            //{
+            //    _dbContext.Entry(selectedBank).Reload();
+            //}
             foreach (SynapseBanksOfMember sbank in selectedBank)
             {
                 sbank.IsDefault = false;
