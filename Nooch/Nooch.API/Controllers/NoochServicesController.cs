@@ -5524,5 +5524,23 @@ namespace Nooch.API.Controllers
             return new StringResult();
         }
 
+        [HttpGet]
+        [ActionName("ResetPassword")]
+        public BoolResult ResetPassword(string memberId, string newPassword, string newUser)
+        {
+            try
+            {
+                Logger.Info("Service Layer - ResetPassword Initiated - [MemberId: " + memberId + "]");
+                var mda = new MembersDataAccess();
+                return new BoolResult { Result = mda.ResetPassword(memberId, newPassword, newUser) };
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Layer - ResetPassword FAILED - MemberId: [" + memberId + "], [Exception: " + ex.Message + "]");
+                
+            }
+            return new BoolResult();
+        }
+
     }
 }

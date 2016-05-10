@@ -38,6 +38,109 @@ namespace Nooch.DataAccess
 
 
 
+        /// <summary>
+        /// To change member's password
+        /// </summary>
+        /// <param name="memberId"></param>
+        /// <param name="newPassword"></param>
+        public bool ResetPassword(string memberId, string newPassword, string newUser)
+        {
+            Logger.Info("MDA -> ResetPassword Initiated - [MemberId: " + memberId + "]");
+
+            try
+            {
+                using (var noochConnection = new NOOCHEntities())
+                {
+                    var id = Utility.ConvertToGuid(memberId);
+
+                    var noochMember =
+                        noochConnection.Members.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
+                        
+
+                    if (noochMember != null)
+                    {
+                        bool shouldReset = false;
+
+                        if (String.IsNullOrEmpty(newUser))
+                        {
+                            // checking password reset request time
+                            
+                            var resetRequestTime =
+                                noochConnection.PasswordResetRequests.OrderByDescending(m => m.Id).Take(1)
+                                    .FirstOrDefault(m => m.MemberId == id);
+                                
+
+                            if (resetRequestTime == null)
+                            {
+                                return false;
+                            }
+
+                            DateTime req = Convert.ToDateTime(resetRequestTime.RequestedOn == null
+                                                              ? DateTime.Now
+                                                              : resetRequestTime.RequestedOn);
+
+                            if (DateTime.Now < req.AddHours(3))
+                            {
+                                shouldReset = true;
+                            }
+                        }
+                        else if (newUser.ToLower().Trim() == "true")
+                        {
+                            shouldReset = true;
+                        }
+
+                        if (shouldReset)
+                        {
+                            // Now update the user's password
+                            noochMember.Password = newPassword.Replace(" ", "+");
+                            noochMember.DateModified = DateTime.Now;
+
+                            var emailAddress = CommonHelper.GetDecryptedData(noochMember.UserName);
+
+                            // Cliff (1/21/16): Only send the confirmation email if it's truly a Reset... as opposed to a new user setting their PW
+                            // from one of the browser pages, which also uses this service to set the pw after linking a bank.
+                            if (newUser.ToLower().Trim() != "true")
+                            {
+                                SendPasswordUpdatedMail(noochMember, emailAddress);
+                            }
+
+                            if (noochConnection.SaveChanges() > 0)
+                            {
+                                Logger.Info("MDA -> ResetPassword - PW Reset Successfully for: Username: [" + emailAddress +
+                                                       "], MemberId: [" + memberId + "]");
+                                return true;
+                            }
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("MDA -> ResetPassword FAILED - MemberID: [" + memberId + "], Exception: [" + ex + "]");
+            }
+            return false;
+        }
+
+        private static bool SendPasswordUpdatedMail(Member member, string primaryMail)
+        {
+            var fromAddress = Utility.GetValueFromConfig("adminMail");
+            var tokens = new Dictionary<string, string>
+            {
+                {
+                    Constants.PLACEHOLDER_FIRST_NAME,
+                    CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(member.FirstName))
+                }
+            };
+
+            return Utility.SendEmail("passwordChanged",  fromAddress, primaryMail, null,
+                "Your Nooch password was changed"
+                , null, tokens, null, null, null);
+        }
+
         public string ResendVerificationSMS(string Username)
         {
             //1. Check if user exists
