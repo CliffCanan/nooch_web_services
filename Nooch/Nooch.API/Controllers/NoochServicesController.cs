@@ -772,18 +772,18 @@ namespace Nooch.API.Controllers
         /// <returns></returns>
         [HttpPost]
         [ActionName("RequestMoneyToNonNoochUserUsingSynapse")]
-        public StringResult RequestMoneyToNonNoochUserUsingSynapse(RequestDto requestInput, out string requestId, string accessToken)
+        public StringResult RequestMoneyToNonNoochUserUsingSynapse(RequestDto requestInput,  string accessToken)
         {
             Logger.Info("Service Controller - RequestMoneyToNonNoochUserUsingSynapse Initiated - MemberId: [" + requestInput.MemberId + "]");
 
             if (CommonHelper.IsValidRequest(accessToken, requestInput.MemberId))
             {
-                requestId = string.Empty;
+                string requestId = string.Empty;
 
                 try
                 {
                     var tda = new TransactionsDataAccess();
-                    return new StringResult { Result = tda.RequestMoneyToNonNoochUserUsingSynapse(requestInput, out requestId) };
+                    return new StringResult { Result = tda.RequestMoneyToNonNoochUserUsingSynapse(requestInput) };
                 }
                 catch (Exception ex)
                 {
@@ -808,17 +808,17 @@ namespace Nooch.API.Controllers
         /// <returns></returns>
         [HttpPost]
         [ActionName("RequestMoneyToNonNoochUserThroughPhoneUsingSynapse")]
-        public StringResult RequestMoneyToNonNoochUserThroughPhoneUsingSynapse(RequestDto requestInput, out string requestId, string accessToken, string PayorPhoneNumber)
+        public StringResult RequestMoneyToNonNoochUserThroughPhoneUsingSynapse(RequestDto requestInput,  string accessToken, string PayorPhoneNumber)
         {
             if (CommonHelper.IsValidRequest(accessToken, requestInput.MemberId))
             {
-                requestId = string.Empty;
+                string requestId = string.Empty;
 
                 try
                 {
                     Logger.Info("Service Controller - RequestMoneyToNonNoochUserThroughPhoneUsingSynapse Initiated - MemberId: [" + requestInput.MemberId + "]");
                     var tda = new TransactionsDataAccess();
-                    return new StringResult { Result = tda.RequestMoneyToNonNoochUserThroughPhoneUsingSynapse(requestInput, out requestId, PayorPhoneNumber) };
+                    return new StringResult { Result = tda.RequestMoneyToNonNoochUserThroughPhoneUsingSynapse(requestInput,  PayorPhoneNumber) };
                 }
                 catch (Exception ex)
                 {
@@ -842,17 +842,17 @@ namespace Nooch.API.Controllers
         /// <returns></returns>
         [HttpPost]
         [ActionName("RequestMoney")]
-        public StringResult RequestMoney(RequestDto requestInput, out string requestId, string accessToken)
+        public StringResult RequestMoney(RequestDto requestInput,  string accessToken)
         {
             if (CommonHelper.IsValidRequest(accessToken, requestInput.MemberId))
             {
-                requestId = string.Empty;
+                string requestId = string.Empty;
 
                 try
                 {
                     Logger.Info("Service Controller - RequestMoney Initiated - MemberId: [" + requestInput.MemberId + "]");
                     var tda = new TransactionsDataAccess();
-                    return new StringResult { Result = tda.RequestMoney(requestInput, out requestId) };
+                    return new StringResult { Result = tda.RequestMoney(requestInput) };
                 }
                 catch (Exception ex)
                 {
@@ -989,7 +989,7 @@ namespace Nooch.API.Controllers
                     //isTesting = "true" // REMOVE FOR PRODUCTION!!
                 };
 
-                StringResult tdaRes = new StringResult { Result = tda.RequestMoneyToNonNoochUserUsingSynapse(requestInput, out requestId) };
+                StringResult tdaRes = new StringResult { Result = tda.RequestMoneyToNonNoochUserUsingSynapse(requestInput) };
 
                 res.msg = tdaRes.Result;
                 res.note = requestId;

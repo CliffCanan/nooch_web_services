@@ -1222,11 +1222,11 @@ namespace Nooch.DataAccess
         /// <param name="requestDto"></param>
         /// <param name="requestId"></param>
         /// <returns></returns>
-        public string RequestMoney(RequestDto requestDto, out string requestId)
+        public string RequestMoney(RequestDto requestDto)
         {
             Logger.Info("TDA -> RequestMoney - [MemberId: " + requestDto.MemberId + "]");
 
-            requestId = string.Empty;
+            string requestId = string.Empty;
 
             #region Initial Checks
 
@@ -4070,16 +4070,17 @@ namespace Nooch.DataAccess
         /// </summary>
         /// <param name="requestDto"></param>
         /// <param name="requestId"></param>
-        public string RequestMoneyToNonNoochUserUsingSynapse(RequestDto requestDto, out string requestId)
+        public string RequestMoneyToNonNoochUserUsingSynapse(RequestDto requestDto)
         {
             // Make sure the recipient's email address (which is 'MoneySenderEmailId') doesn't already belong to a Nooch user.
+            string requestId=string.Empty;
             var checkuser = CommonHelper.GetMemberDetailsByUserName(requestDto.MoneySenderEmailId);
 
             if (checkuser == null)
             {
                 Logger.Info("TDA -> RequestMoneyToNonNoochUserUsingSynapse Initiated - Requestor MemberId: [" + requestDto.MemberId + "].");
 
-                requestId = string.Empty;
+                
 
                 var requester = CommonHelper.GetMemberDetails(requestDto.MemberId);
 
@@ -4833,8 +4834,9 @@ namespace Nooch.DataAccess
         /// </summary>
         /// <param name="requestDto"></param>
         /// <param name="requestId"></param>
-        public string RequestMoneyToNonNoochUserThroughPhoneUsingSynapse(RequestDto requestDto, out string requestId, string PayorPhoneNumber)
+        public string RequestMoneyToNonNoochUserThroughPhoneUsingSynapse(RequestDto requestDto,  string PayorPhoneNumber)
         {
+            string requestId = string.Empty;
             using (NOOCHEntities obj = new NOOCHEntities())
             {
                 var checkuser = CommonHelper.GetMemberIdByContactNumber(PayorPhoneNumber);
@@ -4847,7 +4849,7 @@ namespace Nooch.DataAccess
                     Logger.Info("TDA -> RequestMoneyToNonNoochUserThroughPhoneUsingSynapse Initiated - Requestor MemberId: [" +
                                 requestDto.MemberId + "].");
 
-                    requestId = string.Empty;
+                   
 
 
 
