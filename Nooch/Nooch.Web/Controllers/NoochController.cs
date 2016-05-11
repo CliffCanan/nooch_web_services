@@ -14,6 +14,8 @@ using Nooch.Common.Entities.MobileAppOutputEnities;
 using Nooch.DataAccess;
 using Nooch.Common.Entities.LandingPagesRelatedEntities.RejectMoney;
 using System.Net;
+using System.Web.UI;
+using Nooch.Common.Cryptography.Algorithms;
 
 
 namespace Nooch.Web.Controllers
@@ -1038,6 +1040,131 @@ namespace Nooch.Web.Controllers
             return View();
         }
 
+
+        public ActionResult ResetPassword()
+        {
+            ResultResetPassword resultResetPassword = new ResultResetPassword();
+            string strUserAgent = Request.UserAgent.ToLower();
+            resultResetPassword.requestExpiredorNotFound = false;
+            if (strUserAgent != null)
+            {
+                Page p = new Page();
+                if (Request.Browser.IsMobileDevice || strUserAgent.Contains("iphone") ||
+                      strUserAgent.Contains("mobile"))
+                {
+                    
+                    p.RegisterStartupScript("showButton", "<script>Show('iPhoneButton','ctl00_detailContentPlaceHolder_activationLinkButton')</script>");
+                }
+                else
+                {
+                    p.RegisterStartupScript("showButton", "<script>Show('ctl00_detailContentPlaceHolder_newPasswordLinkButton','iPhoneButton')</script>");
+                }
+            }
+
+            resultResetPassword.ResetPasswordMessageLabel = false;
+            resultResetPassword.messageLabel = false;
+            resultResetPassword = bindusermail(resultResetPassword);
+            ViewData["OnLoaddata"] = resultResetPassword;
+            return View();
+        }
+
+
+        public string ResetPasswordButton_Click(string PWDText, string memberId)
+        {
+             
+               
+                var objAesAlgorithm = new AES();
+                string encryptedPassword = objAesAlgorithm.Encrypt(PWDText.Trim(), string.Empty);
+                string serviceMethod = string.Empty;
+                string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+                serviceMethod = "/ResetPassword?memberId=" + memberId + "&newPassword=" + encryptedPassword + "&newUser=true";
+
+                var isMemberPwdResetted = ResponseConverter<Nooch.Common.Entities.BoolResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+                if (isMemberPwdResetted.Result)
+                {
+                    return "true";
+                //    resetPasswordDiv.Style.Add("display", "none");
+                //    chk.Style.Add("display", "block");
+                //    r.InnerHtml =
+                //        "<div id=\"iconCircleFA\" class=\"floating light-green-text\"><span class=\"fa-stack fa-lg\"><i class=\"fa fa-circle fa-stack-1x\" style=\"display: none;\"></i><i class=\"fa fa-stack-1x fa-inverse fa-thumbs-o-up\"></i></span></div>";
+                //    messageDiv.Style.Add("display", "block");
+                //    m.Style.Add("display", "none");
+                //    pin.Style.Add("display", "none");
+                }
+                else
+                {
+                    return "false";
+                    //resetPasswordDiv.Style.Add("display", "block");
+                    //messageDiv.Style.Add("display", "none");
+                }
+             
+        }
+
+        public ActionResult pinNumberVerificationButton_Click(string PINTextBox, string memberId)
+        {
+
+            synapseV3GenericResponse res = new synapseV3GenericResponse();
+                var objAesAlgorithm = new AES();
+                string encryptedPin = objAesAlgorithm.Encrypt(PINTextBox.Trim(), string.Empty);
+                string serviceMethod = string.Empty;
+                string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+                serviceMethod = "/ValidatePinNumberForPasswordForgotPage?memberId=" + memberId + "&pinNo=" + encryptedPin;
+
+                var isMemberValid = ResponseConverter<Nooch.Common.Entities.StringResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+                if (isMemberValid.Result.Equals("Success"))
+                {
+                    Page p = new Page();
+                    p.RegisterStartupScript("showButton", "<script>Show('resetPasswordDiv','pinNumberVerificationDiv')</script>");
+                    res.isSuccess = true;
+                    return Json(res);
+
+                }
+                else
+                {
+                    res.isSuccess = false;
+                    res.msg = isMemberValid.Result.ToString();
+                    return Json(res);
+                }
+             
+        }
+        ResultResetPassword bindusermail(ResultResetPassword rrp)
+        {
+            ResultResetPassword resultResetPass = rrp;
+            string memberId = Request.QueryString["memberId"];
+            if (!String.IsNullOrEmpty(memberId))
+            {
+                string serviceMethod = string.Empty;
+                string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+                serviceMethod = "/GetMemberUsernameByMemberId?memberId=" + memberId;
+                 
+                var isMemberPwdReset = ResponseConverter<Nooch.Common.Entities.StringResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+                if (isMemberPwdReset.Result != "Member not found")
+                {
+                    resultResetPass.usermail = isMemberPwdReset.Result;
+                    resultResetPass = resetlinkvalidationcheck(resultResetPass);
+
+                }
+            }
+            return resultResetPass;
+        }
+
+        ResultResetPassword resetlinkvalidationcheck(ResultResetPassword rrp)
+        {
+            ResultResetPassword resultResetPass = rrp;
+            string memberId = Request.QueryString["memberId"];
+            string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+            string serviceMethod = string.Empty;
+            serviceMethod = "/resetlinkvalidationcheck?memberId=" + memberId;
+            var isMemberPwdResetted = ResponseConverter<Nooch.Common.Entities.BoolResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+            if (isMemberPwdResetted.Result == false)
+            {
+                resultResetPass.requestExpiredorNotFound = true;
+                resultResetPass.pin = false;
+            }
+
+            return resultResetPass;
+
+        }
 
         public ActionResult PayRequestComplete()
         {
@@ -2449,64 +2576,7 @@ namespace Nooch.Web.Controllers
         /// <param name="memId"></param>
         /// <param name="rs"></param>
         /// <returns></returns>
-        public ActionResult history(string memId, string rs)
-        {
-            TransactionsPageData res = new TransactionsPageData();
-            res.isSuccess = false;
-
-            try
-            {
-                List<TransactionClass> transList = new List<TransactionClass>();
-                /* using (NOOCHEntities obj = new NOOCHEntities())
-                 {
-                     transList = (from t in obj.Transactions
-                                  join g in obj.GeoLocations
-                                  on t.LocationId equals g.LocationId
-                                  select new TransactionClass
-                                  {
-                                      TransactionId = t.TransactionId,
-                                      TransactionType = t.TransactionType,
-                                      TransactionStatus = t.TransactionStatus,
-                                      Amount = t.Amount,
-                                      TransactionDate = t.TransactionDate,
-                                      SenderId = t.SenderId,
-                                      RecipientId = t.RecipientId,
-                                      TransLongi = g.Longitude,
-                                      TransAlti = g.Altitude,
-                                      TransLati = g.Latitude,
-                                      state = g.State,
-                                      city = g.City,
-                                      Memo = t.Memo
-                                  }).ToList();
-                 }*/
-
-                if (!String.IsNullOrEmpty(Request.QueryString["rs"]))
-                {
-                    Logger.Info("createAccount CodeBehind -> Page_load Initiated - Is a RentScene Payment: [" + Request.QueryString["rs"] + "]");
-                }
-                if (!String.IsNullOrEmpty(Request.QueryString["TransId"]))
-                {
-                    Logger.Info("createAccount CodeBehind -> Page_load Initiated - [TransactionId Parameter: " + Request.QueryString["TransactionId"] + "]");
-
-                    Session["TransId"] = Request.QueryString["TransId"];
-                }
-                else
-                {
-                    //res.errorId = "2";
-                }
-            }
-            catch (Exception ex)
-            {
-                //res.errorId = "1";
-
-                Logger.Error("payRequest CodeBehind -> page_load OUTER EXCEPTION - [TransactionId Parameter: " + Request.QueryString["TransactionId"] +
-                             "], [Exception: " + ex.Message + "]");
-            }
-
-            //ViewData["OnLoaddata"] = res;
-
-            return View(res);
-        }
+        
     }
 
 

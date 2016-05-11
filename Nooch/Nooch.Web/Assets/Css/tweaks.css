@@ -2993,3 +2993,5 @@ form .table-header {
 .fadeInDown {
   animation-name: fadeInDown;
 }
+
+.errorValidText{color:red; font-size:15px; width:100%;}
