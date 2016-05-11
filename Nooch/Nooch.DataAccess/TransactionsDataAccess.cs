@@ -23,7 +23,7 @@ namespace Nooch.DataAccess
     public class TransactionsDataAccess
     {
         private const string Chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        private readonly NOOCHEntities _dbContext = null;
+        private  NOOCHEntities _dbContext =  new NOOCHEntities();
 
         public TransactionsDataAccess()
         {
@@ -2022,7 +2022,7 @@ namespace Nooch.DataAccess
         {
             totalRecordsCount = 0;
             Logger.Info("TDA -> GetTransactionsList - [MemberId: " + memberId + "]. ListType: [" + listType + "]");
-
+            _dbContext = new NOOCHEntities();
             try
             {
 
@@ -2030,11 +2030,11 @@ namespace Nooch.DataAccess
 
 
                 //ClearTransactionHistory functionality 
-                var member = _dbContext.Members.Where(u => u.MemberId == id).FirstOrDefault();
+                var member = _dbContext.Members.FirstOrDefault(u => u.MemberId == id);
 
                 if (member != null)
                 {
-                    _dbContext.Entry(member).Reload();
+                     _dbContext.Entry(member).Reload();
                     //if (member.ClearTransactionHistory.HasValue && member.ClearTransactionHistory.Value)
                     //{
                     //    return new List<Transactions>();
@@ -2181,13 +2181,14 @@ namespace Nooch.DataAccess
 
                     totalRecordsCount = transactions.Count();
 
+                    // This is making some problem.
                     if (pageSize == 0 && pageIndex == 0)
                     {
                         transactions = transactions.Take(1000).ToList();
                     }
                     else
                     {
-                        transactions = transactions.Skip(pageSize * pageIndex).Take(pageSize).ToList();
+                        transactions = transactions.Skip(pageSize *( pageIndex-1)).Take(pageSize).ToList();
 
                     }
 
