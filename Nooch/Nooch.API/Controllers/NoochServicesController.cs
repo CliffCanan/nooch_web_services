@@ -5846,7 +5846,35 @@ namespace Nooch.API.Controllers
             return transactionEntity;
         }
 
+        [HttpPost]
+        [ActionName("TransferMoneyToNonNoochUserUsingSynapse")]
+        StringResult TransferMoneyToNonNoochUserUsingSynapse(TransactionDto transactionInput, out string trnsactionId,
+            string accessToken, string inviteType, string receiverEmailId)
+        {
+            if (CommonHelper.IsValidRequest(accessToken, transactionInput.MemberId))
+            {
+                trnsactionId = string.Empty;
+                try
+                {
+                    var transactionDataAccess = new TransactionsDataAccess();
+                    TransactionEntity transactionEntity = GetTransactionEntity(transactionInput);
 
+                    return new StringResult { Result = transactionDataAccess.TransferMoneyToNonNoochUserUsingSynapse(inviteType, receiverEmailId, transactionEntity, out trnsactionId) };
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service layer -> TransferMoneyToNonNoochUserUsingSynapse FAILED. [Exception: " + ex + "]");
+                    
+                }
+                return new StringResult();
+            }
+            else
+            {
+                Logger.Error("Service Layer -> TransferMoneyToNonNoochUserUsingSynapse FAILED. AccessToken not found or invalid - " +
+                                       "[MemberID: " + transactionInput.MemberId + "], [Receiver Email: " + receiverEmailId + "]");
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
 
     }
 }
