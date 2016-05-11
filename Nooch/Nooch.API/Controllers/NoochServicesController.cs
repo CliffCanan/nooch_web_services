@@ -5907,5 +5907,118 @@ namespace Nooch.API.Controllers
             }
         }
 
+        [HttpPost]
+        [ActionName("addRowToSynapseCreateUsersTable")]
+        public genericResponse addRowToSynapseCreateUsersTable(addSynapseCreateUserRecord input)
+        {
+            genericResponse res = new genericResponse();
+            res.success = false;
+            res.msg = "Initial";
+
+            try
+            {
+                Logger.Info("Service Layer -> addRowToSynapseCreateUsersTable Initiated - MemberId: [" + input.memberId + "], New OAuth_Key: [" + input.access_token + "]");
+
+                using (var noochConnection = new NOOCHEntities())
+                {
+                    var id = Utility.ConvertToGuid(input.memberId);
+
+                    
+                    var member = noochConnection.Members.FirstOrDefault(m => m.MemberId == id);
+                        
+
+                    if (member != null)
+                    {
+                        try
+                        {
+                            #region Delete Any Old DB Records & Create New Record
+
+                            // Marking any existing Synapse 'Create User' results for this user as Deleted
+
+                            
+                            var synapseRes =
+                                noochConnection.SynapseCreateUserResults.FirstOrDefault(
+                                    m => m.MemberId == id && m.IsDeleted == false);
+                                
+                            
+
+                            if (synapseRes != null)
+                            {
+                                Logger.Info("Service Layer -> addRowToSynapseCreateUsersTable - Old record found, about to delete - MemberId: [" +
+                                                        input.memberId + "], Old Oauth_Key: [" + synapseRes.access_token + "]");
+
+                                synapseRes.IsDeleted = true;
+                                synapseRes.ModifiedOn = DateTime.Now;
+                                noochConnection.SaveChanges();
+                                
+                            }
+
+                            try
+                            {
+                                // Now make a new entry in SynapseCreateUserResults.dbo
+                                SynapseCreateUserResult newSynapseUser = new SynapseCreateUserResult();
+                                newSynapseUser.MemberId = id;
+                                newSynapseUser.DateCreated = DateTime.Now;
+                                newSynapseUser.IsDeleted = false;
+                                newSynapseUser.access_token = CommonHelper.GetEncryptedData(input.access_token);
+                                newSynapseUser.success = true;
+                                newSynapseUser.expires_in = input.expires_in;
+                                newSynapseUser.reason = "Manually added by Nooch admin";
+                                newSynapseUser.refresh_token = CommonHelper.GetEncryptedData(input.refresh_token);
+                                newSynapseUser.username = synapseRes.username != null ? synapseRes.username : null;
+                                newSynapseUser.user_id = synapseRes.user_id != null ? synapseRes.user_id : null;
+                                newSynapseUser.IsForNonNoochUser = false;
+                                noochConnection.SynapseCreateUserResults.Add(newSynapseUser);
+                                int addRecordToSynapseCreateUserTable = noochConnection.SaveChanges();
+
+                                if (addRecordToSynapseCreateUserTable > 0)
+                                {
+                                    Logger.Info("Service Layer -> addRowToSynapseCreateUsersTable - New Record Added Successfully - MemberId: [" + input.memberId + "], New Oauth_Key: [" + input.access_token + "]");
+
+                                    res.success = true;
+                                    res.msg = "New record added to SynapseCreateUserResults successfully.";
+                                }
+                                else
+                                {
+                                    Logger.Error("Service Layer -> addRowToSynapseCreateUsersTable FAILED - Error Adding New Record To Database - MemberId: [" + input.memberId + "], New Oauth_Key: [" + input.access_token + "]");
+
+                                    res.msg = "Failed to save new record in DB.";
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.Error("Service Layer -> addRowToSynapseCreateUsersTable FAILED - Exception on Adding New Record To Database - MemberId: [" +
+                                                        input.memberId + "], Exception: [" + ex + "]");
+
+                                res.msg = "Service layer exception - inner 1.";
+                            }
+
+                            #endregion Delete Any Old DB Records & Create New Record
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Error("Service Layer -> addRowToSynapseCreateUsersTable FAILED (Exception #5118)- [MemberID: " +
+                                                    input.memberId + "], [Exception: " + ex.Message + "]");
+
+                            res.msg = ex.InnerException.Message;
+                        }
+                    }
+                    else
+                    {
+                        res.msg = "Member not found.";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                res.msg = "Service Layer exception -> " + ex.Message.ToString();
+                Logger.Error("Service Layer -> addRowToSynapseCreateUsersTable FAILED (Outer Exception) - MemberId: [" + input.memberId + "], Exception: [" + ex + "]");
+
+                res.msg = "Service layer outer exception - Msg: [" + ex.Message.ToString() + "]";
+            }
+
+            return res;
+        }
+
     }
 }
