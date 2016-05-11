@@ -5814,7 +5814,7 @@ namespace Nooch.DataAccess
         /// </summary>
         /// <param name="transactionEntity"></param>
         /// <param name="trnsactionId"></param>
-        public string TransferMoneyUsingSynapse(TransactionEntity transactionEntity, out string trnsactionId)
+        public string TransferMoneyUsingSynapse(TransactionEntity transactionEntity)
         {
             Logger.Info("TDA -> TransferMoneyUsingSynapse Initiated - " +
                                    "SenderID: [" + transactionEntity.MemberId + "], " +
@@ -5826,7 +5826,7 @@ namespace Nooch.DataAccess
 
             DateTime TransDateTime = DateTime.Now;
 
-            trnsactionId = string.Empty;
+            string trnsactionId= string.Empty;
 
             #region Initial checks
 
@@ -6519,12 +6519,15 @@ namespace Nooch.DataAccess
         /// <param name="receiverEmailId"></param>
         /// <param name="transactionEntity"></param>
         /// <param name="trnsactionId"></param>
-        public string TransferMoneyToNonNoochUserUsingSynapse(string inviteType, string receiverEmailId, TransactionEntity transactionEntity, out string trnsactionId)
+        public string TransferMoneyToNonNoochUserUsingSynapse(string inviteType, string receiverEmailId, TransactionEntity transactionEntity)
         {
             Logger.Info("TDA -> TransferMoneyToNonNoochUserUsingSynapse Initiated - " +
                                    "MemberId: [" + transactionEntity.MemberId + "], " +
                                    "Recipient: [" + receiverEmailId + "], " +
+                  
                                    "Amount: [" + transactionEntity.Amount + "]");
+
+            string trnsactionId = string.Empty;
 
             // Check if the recipient's email already exists
             
@@ -6534,7 +6537,7 @@ namespace Nooch.DataAccess
             {
                 // Receiver's email NOT already associated with a Nooch account
 
-                trnsactionId = string.Empty;
+               
 
                 #region Initial Checks
 
@@ -6935,12 +6938,12 @@ namespace Nooch.DataAccess
         /// <param name="receiverPhoneNumber"></param>
         /// <param name="transactionEntity"></param>
         /// <param name="trnsactionId"></param>
-        public string TransferMoneyToNonNoochUserThroughPhoneUsingsynapse(string inviteType, string receiverPhoneNumber, TransactionEntity transactionEntity, out string trnsactionId)
+        public string TransferMoneyToNonNoochUserThroughPhoneUsingsynapse(string inviteType, string receiverPhoneNumber, TransactionEntity transactionEntity)
         {
             Logger.Info("TDA -> TransferMoneyToNonNoochUserThroughPhoneUsingsynapse Initiated - [MemberID:" + transactionEntity.MemberId + "], [inviteType: " +
                                     inviteType + "], [receiverPhoneNumber: " + receiverPhoneNumber + "]");
 
-            trnsactionId = string.Empty;
+           string trnsactionId= string.Empty;
 
             try
             {

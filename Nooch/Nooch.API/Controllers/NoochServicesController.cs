@@ -5768,7 +5768,7 @@ namespace Nooch.API.Controllers
 
         [HttpPost]
         [ActionName("TransferMoneyUsingSynapse")]
-        public StringResult TransferMoneyUsingSynapse(TransactionDto transactionInput, out string trnsactionId,
+        public StringResult TransferMoneyUsingSynapse(TransactionDto transactionInput, 
             string accessToken)
         {
             Logger.Info("Service Layer -> TransferMoneyUsingSynapse Initiated - Trans.MemberID: [" + transactionInput.MemberId +
@@ -5778,7 +5778,7 @@ namespace Nooch.API.Controllers
 
             if (CommonHelper.IsValidRequest(accessToken, transactionInput.MemberId))
             {
-                trnsactionId = string.Empty;
+                string trnsactionId = string.Empty;
 
                 try
                 {
@@ -5786,7 +5786,7 @@ namespace Nooch.API.Controllers
 
                     var tda = new TransactionsDataAccess();
 
-                    return new StringResult { Result = tda.TransferMoneyUsingSynapse(transactionEntity, out trnsactionId) };
+                    return new StringResult { Result = tda.TransferMoneyUsingSynapse(transactionEntity) };
                 }
                 catch (Exception ex)
                 {
@@ -5848,18 +5848,18 @@ namespace Nooch.API.Controllers
 
         [HttpPost]
         [ActionName("TransferMoneyToNonNoochUserUsingSynapse")]
-        public StringResult TransferMoneyToNonNoochUserUsingSynapse(TransactionDto transactionInput, out string trnsactionId,
+        public StringResult TransferMoneyToNonNoochUserUsingSynapse(TransactionDto transactionInput, 
             string accessToken, string inviteType, string receiverEmailId)
         {
             if (CommonHelper.IsValidRequest(accessToken, transactionInput.MemberId))
             {
-                trnsactionId = string.Empty;
+                string trnsactionId = string.Empty;
                 try
                 {
                     var transactionDataAccess = new TransactionsDataAccess();
                     TransactionEntity transactionEntity = GetTransactionEntity(transactionInput);
 
-                    return new StringResult { Result = transactionDataAccess.TransferMoneyToNonNoochUserUsingSynapse(inviteType, receiverEmailId, transactionEntity, out trnsactionId) };
+                    return new StringResult { Result = transactionDataAccess.TransferMoneyToNonNoochUserUsingSynapse(inviteType, receiverEmailId, transactionEntity) };
                 }
                 catch (Exception ex)
                 {
@@ -5879,11 +5879,11 @@ namespace Nooch.API.Controllers
         [HttpPost]
         [ActionName("TransferMoneyToNonNoochUserThroughPhoneUsingsynapse")]
         public StringResult TransferMoneyToNonNoochUserThroughPhoneUsingsynapse(TransactionDto transactionInput,
-            out string trnsactionId, string accessToken, string inviteType, string receiverPhoneNumer)
+             string accessToken, string inviteType, string receiverPhoneNumer)
         {
             if (CommonHelper.IsValidRequest(accessToken, transactionInput.MemberId))
             {
-                trnsactionId = string.Empty;
+                string trnsactionId = string.Empty;
                 try
                 {
                     Logger.Info("Service Layer - TransferMoneyToNonNoochUserThroughPhoneUsingsynapse - [Sender: " + transactionInput.MemberId + "], [TransID: " + trnsactionId + "], [InviteType: " + inviteType + "]");
@@ -5891,7 +5891,7 @@ namespace Nooch.API.Controllers
                     var tda = new TransactionsDataAccess();
                     TransactionEntity transactionEntity = GetTransactionEntity(transactionInput);
 
-                    return new StringResult { Result = tda.TransferMoneyToNonNoochUserThroughPhoneUsingsynapse(inviteType, receiverPhoneNumer, transactionEntity, out trnsactionId) };
+                    return new StringResult { Result = tda.TransferMoneyToNonNoochUserThroughPhoneUsingsynapse(inviteType, receiverPhoneNumer, transactionEntity) };
                 }
                 catch (Exception ex)
                 {
