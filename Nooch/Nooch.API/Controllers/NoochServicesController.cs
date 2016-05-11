@@ -5848,7 +5848,7 @@ namespace Nooch.API.Controllers
 
         [HttpPost]
         [ActionName("TransferMoneyToNonNoochUserUsingSynapse")]
-        StringResult TransferMoneyToNonNoochUserUsingSynapse(TransactionDto transactionInput, out string trnsactionId,
+        public StringResult TransferMoneyToNonNoochUserUsingSynapse(TransactionDto transactionInput, out string trnsactionId,
             string accessToken, string inviteType, string receiverEmailId)
         {
             if (CommonHelper.IsValidRequest(accessToken, transactionInput.MemberId))
@@ -5872,6 +5872,37 @@ namespace Nooch.API.Controllers
             {
                 Logger.Error("Service Layer -> TransferMoneyToNonNoochUserUsingSynapse FAILED. AccessToken not found or invalid - " +
                                        "[MemberID: " + transactionInput.MemberId + "], [Receiver Email: " + receiverEmailId + "]");
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
+
+        [HttpPost]
+        [ActionName("TransferMoneyToNonNoochUserThroughPhoneUsingsynapse")]
+        public StringResult TransferMoneyToNonNoochUserThroughPhoneUsingsynapse(TransactionDto transactionInput,
+            out string trnsactionId, string accessToken, string inviteType, string receiverPhoneNumer)
+        {
+            if (CommonHelper.IsValidRequest(accessToken, transactionInput.MemberId))
+            {
+                trnsactionId = string.Empty;
+                try
+                {
+                    Logger.Info("Service Layer - TransferMoneyToNonNoochUserThroughPhoneUsingsynapse - [Sender: " + transactionInput.MemberId + "], [TransID: " + trnsactionId + "], [InviteType: " + inviteType + "]");
+
+                    var tda = new TransactionsDataAccess();
+                    TransactionEntity transactionEntity = GetTransactionEntity(transactionInput);
+
+                    return new StringResult { Result = tda.TransferMoneyToNonNoochUserThroughPhoneUsingsynapse(inviteType, receiverPhoneNumer, transactionEntity, out trnsactionId) };
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Layer -> TransferMoneyToNonNoochUserThroughPhoneUsingsynapse FAILED. [Exception: " + ex + "]");
+                    
+                }
+                return new StringResult();
+            }
+            else
+            {
+                Logger.Error("Service Layer -> TransferMoneyToNonNoochUserThroughPhoneUsingsynapse FAILED. AccessToken not found or not valid.");
                 throw new Exception("Invalid OAuth 2 Access");
             }
         }

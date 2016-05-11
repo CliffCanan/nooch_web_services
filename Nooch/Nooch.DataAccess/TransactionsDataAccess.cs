@@ -6928,6 +6928,449 @@ namespace Nooch.DataAccess
             }
         }
 
+        /// <summary>
+        /// To TRANSFER (SEND/INVITE) money to NON-NOOCH USER using SYNAPSE through SMS
+        /// </summary>
+        /// <param name="inviteType"></param>
+        /// <param name="receiverPhoneNumber"></param>
+        /// <param name="transactionEntity"></param>
+        /// <param name="trnsactionId"></param>
+        public string TransferMoneyToNonNoochUserThroughPhoneUsingsynapse(string inviteType, string receiverPhoneNumber, TransactionEntity transactionEntity, out string trnsactionId)
+        {
+            Logger.Info("TDA -> TransferMoneyToNonNoochUserThroughPhoneUsingsynapse Initiated - [MemberID:" + transactionEntity.MemberId + "], [inviteType: " +
+                                    inviteType + "], [receiverPhoneNumber: " + receiverPhoneNumber + "]");
 
+            trnsactionId = string.Empty;
+
+            try
+            {
+                if (!String.IsNullOrEmpty(receiverPhoneNumber.Trim()))
+                {
+                    receiverPhoneNumber = CommonHelper.RemovePhoneNumberFormatting(receiverPhoneNumber);
+
+                    
+
+                    // Check if the user email already exists
+                    var checkuser = CommonHelper.GetMemberIdByContactNumber(receiverPhoneNumber);
+
+                    if (checkuser == null)
+                    {
+                        #region Initial Checks
+
+                        if (transactionEntity.MemberId == transactionEntity.RecipientId)
+                        {
+                            return "Not allowed for send money to the same user.";
+                        }
+
+                        // Check PIN
+                        string validPinNumberResult = CommonHelper.ValidatePinNumber(transactionEntity.MemberId, transactionEntity.PinNumber);
+                        if (validPinNumberResult != "Success")
+                        {
+                            return validPinNumberResult;
+                        }
+
+                        // Check per-transaction limit
+                        decimal transactionAmount = Convert.ToDecimal(transactionEntity.Amount);
+
+                        // Individual user transfer limit check
+                        decimal thisUserTransLimit = 0;
+                        string indiTransLimit = CommonHelper.GetGivenMemberTransferLimit(transactionEntity.MemberId);
+                        if (!String.IsNullOrEmpty(indiTransLimit))
+                        {
+                            if (indiTransLimit != "0")
+                            {
+                                thisUserTransLimit = Convert.ToDecimal(indiTransLimit);
+
+                                if (transactionAmount > thisUserTransLimit)
+                                {
+                                    Logger.Error("TDA -> TransferMoneyToNonNoochUserThroughPhoneUsingsynapse FAILED - OVER PERSONAL TRANS LIMIT - Amount Requested: [" + transactionAmount.ToString() +
+                                                   "], Indiv. Limit: [" + thisUserTransLimit + "], MemberId: [" + transactionEntity.MemberId + "]");
+
+                                    return "Whoa now big spender! To keep Nooch safe, the maximum amount you can send at a time is $" + thisUserTransLimit.ToString("F2");
+                                }
+                            }
+                        }
+
+                        if (CommonHelper.isOverTransactionLimit(transactionAmount, "", transactionEntity.MemberId))
+                        {
+                            return "Whoa now big spender! To keep Nooch safe, the maximum amount you can send at a time is $" + Convert.ToDecimal(Utility.GetValueFromConfig("MaximumTransferLimitPerTransaction")).ToString("F2");
+                        }
+
+                        // Check weekly transaction limit
+                        if (CommonHelper.IsWeeklyTransferLimitExceeded(Utility.ConvertToGuid(transactionEntity.MemberId), transactionAmount))
+                        {
+                            Logger.Error("TDA -> TransferMoneyToNonNoochUserThroughPhoneUsingsynapse -> Weekly transfer limit exceeded. MemberId: [" +
+                                                   transactionEntity.MemberId + "]");
+                            return "Weekly transfer limit exceeded.";
+                        }
+
+                        // Check sender's Synapse bank account details
+
+
+                        var senderSynapseInfo = CommonHelper.GetSynapseBankAndUserDetailsforGivenMemberId(transactionEntity.MemberId.ToString());
+
+                        if (senderSynapseInfo.wereBankDetailsFound == false) // Does the sender have a Synapse Bank account?
+                        {
+                            Logger.Error(
+                                "TDA -> TransferMoneyToNonNoochUserThroughPhoneUsingsynapse - Transfer ABORTED: No Synapse bank account found for Sender. TransactionId: [" +
+                                transactionEntity.TransactionId + "]");
+
+                            return "Requester does not have any bank added";
+                        }
+
+                        if (senderSynapseInfo.BankDetails != null &&
+                            senderSynapseInfo.BankDetails.Status != "Verified") // Is the sender's Synapse Bank account VERIFIED?
+                        {
+                            Logger.Error(
+                                "TDA -> TransferMoneyToNonNoochUserThroughPhoneUsingsynapse - Transfer ABORTED: No verified bank account found for Sender. TransactionId: [" +
+                                transactionEntity.TransactionId + "]");
+
+                            return "Sender does not have any verified bank account.";
+                        }
+
+                        #endregion Initial Checks
+
+
+                        using (var noochConnection = new NOOCHEntities())
+                        {
+                            #region Save Transaction Details In DB
+
+                            
+                            var sender = CommonHelper.GetMemberDetails(transactionEntity.MemberId);
+
+                            transactionEntity.RecipientId = transactionEntity.MemberId;
+
+                            Transaction transactionDetail = SetTransactionDetails(transactionEntity, Constants.TRANSACTION_TYPE_INVITE, 0);
+                            transactionDetail.Memo = transactionEntity.Memo;
+                            transactionDetail.TransactionStatus = "Pending";
+                            transactionDetail.Picture = transactionEntity.Picture;
+                            transactionDetail.PhoneNumberInvited = CommonHelper.GetEncryptedData(receiverPhoneNumber);
+                            transactionDetail.IsPhoneInvitation = true;
+
+                            // Now add location details
+                            transactionDetail.GeoLocation = new GeoLocation
+                            {
+                                LocationId = Guid.NewGuid(),
+                                Latitude = transactionEntity.Location.Latitude,
+                                Longitude = transactionEntity.Location.Longitude,
+                                Altitude = transactionEntity.Location.Altitude,
+                                AddressLine1 = transactionEntity.Location.AddressLine1,
+                                AddressLine2 = transactionEntity.Location.AddressLine2,
+                                City = transactionEntity.Location.City,
+                                State = transactionEntity.Location.State,
+                                Country = transactionEntity.Location.Country,
+                                ZipCode = transactionEntity.Location.ZipCode,
+                                DateCreated = DateTime.Now,
+                            };
+
+                            noochConnection.Transactions.Add(transactionDetail);
+
+
+                            int addTransToDB = noochConnection.SaveChanges();
+
+                            #endregion Save Transaction Details In DB
+
+                            // Setting up all notification variables - used for both success and failure emails below
+                            #region Setup Notification Variables
+
+                            var fromAddress = Utility.GetValueFromConfig("transfersMail");
+
+                            string senderFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(sender.FirstName));
+                            string senderLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(sender.LastName));
+                            string receiverPhoneNumFormatted = CommonHelper.FormatPhoneNumber(receiverPhoneNumber);
+
+                            string wholeAmount = transactionEntity.Amount.ToString("n2");
+                            string[] s3 = wholeAmount.Split('.');
+
+                            string memo = "";
+                            if (!string.IsNullOrEmpty(transactionEntity.Memo))
+                            {
+                                if (transactionEntity.Memo.Length > 3)
+                                {
+                                    string firstThreeChars = transactionEntity.Memo.Substring(0, 3).ToLower();
+                                    bool startWithFor = firstThreeChars.Equals("for");
+
+                                    if (startWithFor)
+                                    {
+                                        memo = transactionEntity.Memo.ToString();
+                                    }
+                                    else
+                                    {
+                                        memo = "For " + transactionEntity.Memo.ToString();
+                                    }
+                                }
+                                else
+                                {
+                                    memo = "For " + transactionEntity.Memo.ToString();
+                                }
+                            }
+
+                            #endregion Setup Notification Variables
+
+                            if (addTransToDB > 0)
+                            {
+                                trnsactionId = transactionDetail.TransactionId.ToString();
+
+                                #region Email To Sender
+
+                                var friendDetails = CommonHelper.GetMemberNotificationSettingsByUserName(CommonHelper.GetDecryptedData(sender.UserName));
+
+                                if (friendDetails != null && (friendDetails.EmailTransferSent ?? false))
+                                {
+                                    string otherlink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"), "trans/CancelRequest.aspx?TransactionId=" + transactionDetail.TransactionId +
+                                                                                                                   "&MemberId=" + transactionEntity.MemberId +
+                                                                                                                   "&UserType=mx5bTcAYyiOf9I5Py9TiLw==");
+
+                                    var tokens = new Dictionary<string, string>
+												 {
+													{Constants.PLACEHOLDER_FIRST_NAME, senderFirstName},
+													{Constants.PLACEHOLDER_FRIEND_FIRST_NAME, receiverPhoneNumFormatted},
+													{Constants.PLACEHLODER_CENTS, s3[1].ToString()},
+													{Constants.PLACEHOLDER_TRANSFER_AMOUNT, s3[0].ToString()},
+													{Constants.PLACEHOLDER_OTHER_LINK,otherlink},
+													{Constants.MEMO, memo}
+												 };
+
+                                    var toAddress = CommonHelper.GetDecryptedData(sender.UserName);
+                                    try
+                                    {
+                                        Utility.SendEmail("transferSentToNonMember",  fromAddress, toAddress, null,
+                                            "Your Nooch payment is pending",
+                                            null, tokens, null, null, null);
+
+                                        Logger.Info("TransferMoneyToNonNoochUserThroughPhoneUsingsynapse -> email sent to [" + toAddress + "] succesfully.");
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Logger.Error("TransferMoneyToNonNoochUserThroughPhoneUsingsynapse -> email NOT sent to [" + toAddress + "], Exception: [" + ex.Message + "]");
+                                    }
+                                }
+
+                                #endregion Email To Sender
+
+                                try
+                                {
+                                    sender.DateModified = DateTime.Now;
+                                    // Increment TotalNoochTransfersCount
+                                    sender.TotalNoochTransfersCount += 1;
+                                    noochConnection.SaveChanges();
+                                    
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.Error("TDA -> TransferMoneyToNonNoochUserThroughPhoneUsingsynapse - EXCEPTION on trying to update Sender in DB, but continuing on to send notifications. " +
+                                                           "[Exception: " + ex + "]");
+                                }
+
+                                #region Send SMS To Non-Nooch Transfer Recipient
+
+                                // In this case UserType would be 'New'
+                                // TransType would be 'Invite'
+                                // Link Source would be 'Phone'
+
+                                string rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
+                                                                  "trans/RejectMoney?TransactionId=" + transactionDetail.TransactionId +
+                                                                  "&UserType=U6De3haw2r4mSgweNpdgXQ==" +
+                                                                  "&LinkSource=Um3I3RNHEGWqKM9MLsQ1lg==" +
+                                                                  "&TransType=DrRr1tU1usk7nNibjtcZkA==");
+
+                                string acceptLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
+                                                                  "trans/DepositMoney?TransactionId=" + transactionDetail.TransactionId);
+
+                                string googleUrlAPIKey = Utility.GetValueFromConfig("GoogleURLAPI");
+
+                                // shortening URLs from Google
+                                string RejectShortLink = "";
+                                string AcceptShortLink = "";
+
+                                #region Call Google URL Shortener API
+
+                                try
+                                {
+                                    var cli = new WebClient();
+                                    cli.Headers[HttpRequestHeader.ContentType] = "application/json";
+                                    string response = cli.UploadString("https://www.googleapis.com/urlshortener/v1/url?key=" + googleUrlAPIKey, "{longUrl:\"" + rejectLink + "\"}");
+                                    googleURLShortnerResponseClass googlerejectshortlinkresult = JsonConvert.DeserializeObject<googleURLShortnerResponseClass>(response);
+
+                                    if (googlerejectshortlinkresult != null)
+                                    {
+                                        RejectShortLink = googlerejectshortlinkresult.id;
+                                    }
+                                    else
+                                    {
+                                        // Google short URL API broke...
+                                        Logger.Error("TDA -> TransferMoneyToNonNoochUserThroughPhoneUsingsynapse - GoogleAPI FAILED for Reject Short Link.");
+                                    }
+                                    cli.Dispose();
+
+                                    // Now shorten Accept link
+
+                                    var cli2 = new WebClient();
+                                    cli2.Headers[HttpRequestHeader.ContentType] = "application/json";
+                                    string response2 = cli2.UploadString("https://www.googleapis.com/urlshortener/v1/url?key=" + googleUrlAPIKey, "{longUrl:\"" + acceptLink + "\"}");
+                                    googleURLShortnerResponseClass googlerejectshortlinkresult2 = JsonConvert.DeserializeObject<googleURLShortnerResponseClass>(response2);
+
+                                    if (googlerejectshortlinkresult2 != null)
+                                    {
+                                        AcceptShortLink = googlerejectshortlinkresult2.id;
+                                    }
+                                    else
+                                    {
+                                        // Google short URL API broke...
+                                        Logger.Error("TDA -> TransferMoneyToNonNoochUserThroughPhoneUsingsynapse - GoogleAPI FAILED for Accept Short Link.");
+                                    }
+                                    cli2.Dispose();
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.Error("TDA -> TransferMoneyToNonNoochUserThroughPhoneUsingsynapse - GoogleAPI FAILED. [Exception: " + ex + "]");
+                                    return "Google API URL Failure";
+                                }
+
+                                #endregion Call Google URL Shortener API
+
+                                try
+                                {
+                                    // Example SMS string: "Cliff Canan wants to send you $10 using Nooch, a free app. Click here to pay: {LINK}. Or here to reject: {LINK}"
+
+                                    string SMSContent = senderFirstName + " " + senderLastName + " wants to send you $" +
+                                                          s3[0].ToString() + "." + s3[1].ToString() +
+                                                          " using Nooch, a free app. Tap here to accept: " + AcceptShortLink +
+                                                          ". Or here to reject: " + RejectShortLink;
+
+                                    Utility.SendSMS(receiverPhoneNumber, SMSContent);
+
+                                    Logger.Info("TDA -> TransferMoneyToNonNoochUserThroughPhoneUsingsynapse. SMS sent to recipient [" + receiverPhoneNumber + "] successfully.");
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.Error("TDA -> TransferMoneyToNonNoochUserThroughPhoneUsingsynapse. SMS NOT sent to recipient [" + receiverPhoneNumber +
+                                                           "], [Exception:" + ex + "]");
+                                }
+
+                                #endregion Send SMS To Non-Nooch Transfer Recipient
+
+
+                                #region Increment Invite Code Count
+                                try
+                                {
+                                    
+                                    var inviteCodeObj =
+                                        noochConnection.InviteCodes.FirstOrDefault(
+                                            m => m.InviteCodeId == sender.InviteCodeId);
+                                        
+                                    
+
+                                    if (inviteCodeObj != null)
+                                    {
+                                        if (inviteCodeObj.count < 10)
+                                        {
+                                            inviteCodeObj.count++;
+                                        }
+                                        noochConnection.SaveChanges();
+                                        
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.Error("TDA -> TransferMoneyToNonNoochUserThroughPhoneUsingsynapse - EXCEPTION on trying to update Invite Code Count in DB - " +
+                                                           "[Exception: " + ex + "]");
+                                }
+                                #endregion Increment Invite Code Count
+
+                                return "Your cash was sent successfully";
+                            }
+                            else // Saving Transaction in DB Failed
+                            {
+                                #region Saving Transaction In DB Failed
+
+                                Logger.Error("TDA -> TransferMoneyToNonNoochUserThroughPhoneUsingsynapse FAILED - Could not save Transaction to DB - [Receiver Phone #: " + receiverPhoneNumber + "]");
+
+                                // for push notification in case of failure
+
+                                var friendDetails = CommonHelper.GetMemberNotificationSettingsByUserName(CommonHelper.GetDecryptedData(sender.UserName));
+
+                                if (friendDetails != null)
+                                {
+                                    string deviceId = friendDetails != null ? sender.DeviceToken : null;
+                                    string smsText = "Your attempt to send $" + wholeAmount + " to " + receiverPhoneNumFormatted + " failed :-(";
+
+                                    if ((friendDetails.TransferAttemptFailure == null)
+                                        ? false : friendDetails.TransferAttemptFailure.Value)
+                                    {
+                                        try
+                                        {
+                                            if (!String.IsNullOrEmpty(deviceId) && (friendDetails.TransferAttemptFailure ?? false))
+                                            {
+                                                Utility.SendNotificationMessage(smsText, 0, null, deviceId,
+                                                    Utility.GetValueFromConfig("AppKey"),
+                                                    Utility.GetValueFromConfig("MasterSecret"));
+
+                                                Logger.Info("TDA -> TransferMoneyToNonNoochUserThroughPhoneUsingsynapse FAILED - Push notification sent to [" + deviceId + "] successfully.");
+                                            }
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            Logger.Error("TDA -> TransferMoneyToNonNoochUserThroughPhoneUsingsynapse FAILED - And Push notification NOT sent to [" +
+                                                                   deviceId + "], [Exception: " + ex + "]");
+                                        }
+                                    }
+                                    if (friendDetails.EmailTransferAttemptFailure ?? false)
+                                    {
+                                        // for TransferSent email notification
+                                        var tokensF = new Dictionary<string, string>
+												 {
+													{Constants.PLACEHOLDER_FIRST_NAME, CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(sender.FirstName)) +" "+CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(sender.LastName))},
+													{Constants.PLACEHOLDER_FRIEND_FIRST_NAME, receiverPhoneNumFormatted},
+													{Constants.PLACEHLODER_CENTS, s3[1].ToString()},
+													{Constants.PLACEHOLDER_TRANSFER_AMOUNT, s3[0].ToString()}
+												 };
+
+                                        // For TransferAttemptFailure email notification                            
+                                        var toAddress = CommonHelper.GetDecryptedData(sender.UserName);
+
+                                        try
+                                        {
+                                            Utility.SendEmail("transferFailure",
+                                                 fromAddress, toAddress, null,
+                                                "Nooch transfer failure :-(", null, tokensF, null, null, null);
+
+                                            Logger.Info("TDA -> TransferMoneyToNonNoochUserThroughPhoneUsingsynapse - TransferAttemptFailure email sent to [" + toAddress + "] successfully.");
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            Logger.Error("TDA -> TransferMoneyToNonNoochUserThroughPhoneUsingsynapse - TransferAttemptFailure email NOT sent to [" +
+                                                                    toAddress + "], [Exception: " + ex + "]");
+                                        }
+                                    }
+                                }
+
+                                #endregion Saving Transaction In DB Failed
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // CLIFF (12/24/15): NEED TO UPDATE THIS TO STILL SEND THE PAYMENT TO THE EXISTING USER, NO REASON TO JUST FAIL... WE HAVE THE
+                        //                   RECIPIENT'S INFO IF THEY'RE ALREADY A NOOCH USER...
+                        Logger.Error("TDA -> TransferMoneyToNonNoochUserThroughPhoneUsingsynapse FAILED. Phone Number Used already exists - [Phone #:" + receiverPhoneNumber + "]");
+
+                        trnsactionId = null;
+                        return "User Already Exists";
+                    }
+                }
+                else
+                {
+                    Logger.Error("TDA -> TransferMoneyToNonNoochUserThroughPhoneUsingsynapse FAILED - receiverPhoneNumber Parameter was NULL or empty");
+                    return "Missing receiver phone number";
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("TDA -> TransferMoneyToNonNoochUserThroughPhoneUsingsynapse FAILED - Outer Exception: [" + ex + "]");
+            }
+
+            return "Failure";
+        }
     }
 }
