@@ -24,6 +24,7 @@ namespace Nooch.Web.Controllers
     {
         public ActionResult Index()
         {
+            Logger.Info("test message");
             return View();
         }
 
