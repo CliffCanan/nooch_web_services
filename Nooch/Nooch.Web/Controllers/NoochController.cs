@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
@@ -2454,56 +2456,139 @@ namespace Nooch.Web.Controllers
             TransactionsPageData res = new TransactionsPageData();
             res.isSuccess = false;
 
-            try
+            if (Request.QueryString["memId"] == null)
             {
-                List<TransactionClass> transList = new List<TransactionClass>();
-                /* using (NOOCHEntities obj = new NOOCHEntities())
-                 {
-                     transList = (from t in obj.Transactions
-                                  join g in obj.GeoLocations
-                                  on t.LocationId equals g.LocationId
-                                  select new TransactionClass
-                                  {
-                                      TransactionId = t.TransactionId,
-                                      TransactionType = t.TransactionType,
-                                      TransactionStatus = t.TransactionStatus,
-                                      Amount = t.Amount,
-                                      TransactionDate = t.TransactionDate,
-                                      SenderId = t.SenderId,
-                                      RecipientId = t.RecipientId,
-                                      TransLongi = g.Longitude,
-                                      TransAlti = g.Altitude,
-                                      TransLati = g.Latitude,
-                                      state = g.State,
-                                      city = g.City,
-                                      Memo = t.Memo
-                                  }).ToList();
-                 }*/
+                res.msg = "Invalid or No MemberId found.";
+            }
+            else
+            {
 
-                if (!String.IsNullOrEmpty(Request.QueryString["rs"]))
-                {
-                    Logger.Info("createAccount CodeBehind -> Page_load Initiated - Is a RentScene Payment: [" + Request.QueryString["rs"] + "]");
-                }
-                if (!String.IsNullOrEmpty(Request.QueryString["TransId"]))
-                {
-                    Logger.Info("createAccount CodeBehind -> Page_load Initiated - [TransactionId Parameter: " + Request.QueryString["TransactionId"] + "]");
+                List<TransactionClass> Transactions = new List<TransactionClass>();
 
-                    Session["TransId"] = Request.QueryString["TransId"];
-                }
-                else
+                try
                 {
-                    //res.errorId = "2";
+                    string memberId = Request.QueryString["memId"];
+                    string listType = "ALL";
+                    
+                  
+                    TransactionsDataAccess tda = new TransactionsDataAccess();
+                    int totalRecordsCount = 0;
+                    var transactionListEntities = tda.GetTransactionsList(memberId, listType, 50, 1, "", out totalRecordsCount);
+                    if (transactionListEntities != null && transactionListEntities.Count > 0)
+                    {
+                       
+
+                        foreach (var trans in transactionListEntities)
+                        {
+                            try
+                            {
+                                #region Foreach inside
+
+                                TransactionClass obj = new TransactionClass();
+
+                                obj.TransactionId = trans.TransactionId;
+                                obj.TransactionType =CommonHelper.GetDecryptedData( trans.TransactionType);
+                                obj.TransactionStatus = trans.TransactionStatus;
+
+                                obj.TransactionDate1 = Convert.ToDateTime( trans.TransactionDate).ToShortDateString();
+                                obj.Amount = trans.Amount;
+
+                                obj.Memo = trans.Memo;
+                                
+
+                                obj.city= (trans.GeoLocation != null && trans.GeoLocation.City != null) ? trans.GeoLocation.City : string.Empty;
+                                obj.state= (trans.GeoLocation != null && trans.GeoLocation.State != null) ? trans.GeoLocation.State : string.Empty;
+                                
+                                obj.TransLati= (trans.GeoLocation != null && trans.GeoLocation.Latitude != null) ? (float)trans.GeoLocation.Latitude : default(float);
+                                obj.TransLongi = (trans.GeoLocation != null && trans.GeoLocation.Longitude != null) ? (float)trans.GeoLocation.Longitude : default(float);
+
+                                #region Transaction Type Transfer 
+                                if (obj.TransactionType == "Transfer" || obj.TransactionType == "Disputed" || obj.TransactionType == "Reward" || obj.TransactionType == "Invite" || obj.TransactionType == "Rent" || obj.TransactionType == "Request")
+                                {
+                                    if (String.IsNullOrEmpty(trans.InvitationSentTo) &&
+                                        (trans.IsPhoneInvitation == null || trans.IsPhoneInvitation == false))
+                                    {
+                                        // Transfer type request to existing Nooch user..straight forward
+                                        obj.SenderId = trans.SenderId;
+                                        obj.SenderName = CommonHelper.GetDecryptedData(trans.Member.FirstName) + " " + CommonHelper.GetDecryptedData(trans.Member.LastName);
+                                        obj.SenderNoochId = trans.Member.Nooch_ID;
+
+                                        obj.RecipientId = trans.RecipientId;
+                                        obj.RecipienName = CommonHelper.GetDecryptedData(trans.Member1.FirstName) + " " + CommonHelper.GetDecryptedData(trans.Member1.LastName);
+                                        obj.RecepientNoochId = trans.Member1.Nooch_ID;
+                                        obj.IsInvitation = false;
+
+                                    }
+                                    else
+                                    {
+                                        obj.IsInvitation = true;
+                                        obj.SenderId = trans.SenderId;
+                                        obj.SenderName = CommonHelper.GetDecryptedData(trans.Member.FirstName) + " " + CommonHelper.GetDecryptedData(trans.Member.LastName);
+                                        obj.SenderNoochId = trans.Member.Nooch_ID;
+
+
+                                        if (!String.IsNullOrEmpty(trans.InvitationSentTo))
+                                        {
+                                            // invite through email case
+
+                                            obj.RecipienName = CommonHelper.GetDecryptedData(trans.InvitationSentTo);
+
+
+                                        }
+                                        if (trans.IsPhoneInvitation == true &&
+                                            !String.IsNullOrEmpty(trans.PhoneNumberInvited))
+                                        {
+                                            // invite through sms case
+                                            obj.RecipienName = CommonHelper.FormatPhoneNumber(CommonHelper.GetDecryptedData(trans.PhoneNumberInvited));
+                                        }
+
+                                    }
+                                }
+                                
+                                #endregion
+
+
+
+                                Transactions.Add(obj);
+
+                                #endregion Foreach inside
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.Error("Service Controller - GetTransactionsList ERROR - Inner Exception during loop through all transactions - " +
+                                                       "MemberID: [" + memberId + "], TransID: [" + trans.TransactionId +
+                                                       "], Amount: [" + trans.Amount.ToString("n2") + "], Exception: [" + ex + "]");
+                                continue;
+                            }
+                        }
+                       
+                        
+                    }
+                    res.allTransactionsData = Transactions;
+                    
+                 
+                    if (!String.IsNullOrEmpty(Request.QueryString["rs"]))
+                    {
+                        Logger.Info("createAccount CodeBehind -> Page_load Initiated - Is a RentScene Payment: [" +
+                                    Request.QueryString["rs"] + "]");
+                    }
+                  
+                    else
+                    {
+                        //res.errorId = "2";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    
+                    Logger.Error("payRequest CodeBehind -> page_load OUTER EXCEPTION - [TransactionId Parameter: " +
+                                 Request.QueryString["TransactionId"] +
+                                 "], [Exception: " + ex.Message + "]");
+                    res.msg = "Server Error.";
                 }
             }
-            catch (Exception ex)
-            {
-                //res.errorId = "1";
 
-                Logger.Error("payRequest CodeBehind -> page_load OUTER EXCEPTION - [TransactionId Parameter: " + Request.QueryString["TransactionId"] +
-                             "], [Exception: " + ex.Message + "]");
-            }
-
-            //ViewData["OnLoaddata"] = res;
+            
 
             return View(res);
         }
