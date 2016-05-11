@@ -4361,11 +4361,11 @@ namespace Nooch.DataAccess
         /// <param name="requestDto"></param>
         /// <param name="requestId"></param>
         /// <returns></returns>
-        public string RequestMoneyToExistingButNonregisteredUser(RequestDto requestDto, out string requestId)
+        public string RequestMoneyToExistingButNonregisteredUser(RequestDto requestDto)
         {
             Logger.Info("TDA -> RequestMoneyToExistingButNonregisteredUser Initiated - Requestor MemberId: [" + requestDto.MemberId + "].");
 
-            requestId = string.Empty;
+            string requestId = string.Empty;
 
             // Check uniqueness of requesting and sending user
             if (requestDto.MemberId == requestDto.SenderId)
