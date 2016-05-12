@@ -6658,8 +6658,14 @@ namespace Nooch.DataAccess
                     try
                     {
                         // Update TotalNoochTransfersCount by +1
-                        sender.TotalNoochTransfersCount = sender.TotalNoochTransfersCount + 1;
-
+                        if ( sender.TotalNoochTransfersCount == null)
+                        {
+                            sender.TotalNoochTransfersCount = 0;
+                        }
+                        else
+                        {
+                            sender.TotalNoochTransfersCount = sender.TotalNoochTransfersCount + 1;
+                        }
                         // Update Sender in DB
                         sender.DateModified = DateTime.Now;
                         updateSenderInDB = noochConnection.SaveChanges();
