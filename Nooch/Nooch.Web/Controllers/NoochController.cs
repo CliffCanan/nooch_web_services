@@ -85,7 +85,7 @@ namespace Nooch.Web.Controllers
         {
             ResultDepositMoneyComplete rdmc = new ResultDepositMoneyComplete();
             rdmc.paymentSuccess = false;
-
+            rdmc.payinfobar = true;
             Logger.Info("DepositMoneyComplete CodeBehind -> page_load Initiated - 'mem_id' Parameter In URL: [" + Request.QueryString["mem_id"] + "]");
 
             try
@@ -865,7 +865,7 @@ namespace Nooch.Web.Controllers
         {
             ResultDepositMoney rdm = new ResultDepositMoney();
             Logger.Info("DepositMoney CodeBehind -> Page_load Initiated - [TransactionId Parameter: " + Request.QueryString["TransactionId"] + "]");
-
+            rdm.payreqInfo = true;
             try
             {
                 if (!String.IsNullOrEmpty(Request.QueryString["TransactionId"]))
@@ -979,6 +979,8 @@ namespace Nooch.Web.Controllers
             //                                    "trans/payRequest.aspx?TransactionId=" + "2342342" +
             //                                    "&UserType=" + "2342342");
             ResultPayRequest rpr = new ResultPayRequest();
+            rpr.payreqInfo = true;
+            rpr.PayorInitialInfo = true;
             Logger.Info("payRequest CodeBehind -> Page_load Initiated - [TransactionId Parameter: " + Request.QueryString["TransactionId"] + "]");
 
             try
@@ -1051,7 +1053,7 @@ namespace Nooch.Web.Controllers
             resultResetPassword.requestExpiredorNotFound = false;
             if (strUserAgent != null)
             {
-                Page p = HttpContext.Handler as Page;
+              
                 if (Request.Browser.IsMobileDevice || strUserAgent.Contains("iphone") ||
                       strUserAgent.Contains("mobile"))
                 {
@@ -1166,6 +1168,7 @@ namespace Nooch.Web.Controllers
         public ActionResult PayRequestComplete()
         {
             ResultPayRequestComplete rpc = new ResultPayRequestComplete();
+             
             Logger.Info("PayRequestComplete CodeBehind -> page_load Initiated - 'mem_id' Parameter In URL: [" + Request.QueryString["mem_id"] + "]");
 
             rpc.paymentSuccess = false;
@@ -1241,6 +1244,10 @@ namespace Nooch.Web.Controllers
                      rpc.payeeMemId.Length > 5)
                 {
                     serviceMethod = serviceMethod + "&recipMemId=" + rpc.payeeMemId;
+                }
+                else
+                {
+                    serviceMethod = serviceMethod + "&recipMemId= ";
                 }
 
                 Logger.Info("payRequestComplete CodeBehind -> completeTrans - About to Query Nooch Service to move money - URL: ["
@@ -1374,7 +1381,7 @@ namespace Nooch.Web.Controllers
                 rpr.senderName1 = (!String.IsNullOrEmpty(transaction.RecepientName) && transaction.RecepientName.Length > 2) ?
                                      transaction.RecepientName :
                                      transaction.Name;
-
+                 
                 string s = transaction.Amount.ToString("n2");
                 string[] s1 = s.Split('.');
                 if (s1.Length == 2)
