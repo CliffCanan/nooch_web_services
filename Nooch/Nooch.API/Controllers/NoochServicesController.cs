@@ -738,17 +738,17 @@ namespace Nooch.API.Controllers
         /// <returns></returns>
         [HttpPost]
         [ActionName("RequestMoneyToExistingButNonRegisteredUser")]
-        public StringResult RequestMoneyToExistingButNonRegisteredUser(RequestDto requestInput, out string requestId, string accessToken)
+        public StringResult RequestMoneyToExistingButNonRegisteredUser(RequestDto requestInput,  string accessToken)
         {
             if (CommonHelper.IsValidRequest(accessToken, requestInput.MemberId))
             {
-                requestId = string.Empty;
+                string requestId = string.Empty;
 
                 try
                 {
                     Logger.Info("Service Controller - RequestMoneyToExistingButNonRegisteredUser Initiated - MemberId: [" + requestInput.MemberId + "]");
                     var tda = new TransactionsDataAccess();
-                    return new StringResult { Result = tda.RequestMoneyToExistingButNonregisteredUser(requestInput, out requestId) };
+                    return new StringResult { Result = tda.RequestMoneyToExistingButNonregisteredUser(requestInput) };
                 }
                 catch (Exception ex)
                 {
@@ -1100,7 +1100,7 @@ namespace Nooch.API.Controllers
 
 
                 var tda = new TransactionsDataAccess();
-                StringResult tdaRes = new StringResult { Result = tda.RequestMoneyToExistingButNonregisteredUser(requestInput, out requestId) };
+                StringResult tdaRes = new StringResult { Result = tda.RequestMoneyToExistingButNonregisteredUser(requestInput) };
 
                 res.msg = tdaRes.Result;
                 res.note = requestId;

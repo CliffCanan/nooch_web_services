@@ -12,7 +12,7 @@ namespace Nooch.Common.Entities
       public bool ResetPasswordMessageLabel { get; set; }
       public bool messageLabel { get; set; }
       public string usermail { get; set; }
-      
+      public string clientScript { get; set; }
       public bool pin { get; set; }
       
       

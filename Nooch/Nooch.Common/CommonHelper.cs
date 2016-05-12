@@ -782,7 +782,7 @@ namespace Nooch.Common
 
 
             var memberEntity = _dbContext.Members.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
-            _dbContext.Entry(memberEntity).Reload();
+           // _dbContext.Entry(memberEntity).Reload();
 
             if (memberEntity != null)
             {

@@ -1,8 +1,11 @@
-﻿@using Nooch.Common.Entities.LandingPagesRelatedEntities
+﻿@using System.Collections.ObjectModel
+@using Nooch.Common.Entities.LandingPagesRelatedEntities
+@using Nooch.Common.Entities.MobileAppOutputEnities
 
 @{
     Layout = null;
-    List<TransactionClass> allTransactions = Model;
+    TransactionsPageData pData = Model;
+    List<TransactionClass> allTransactions = pData.allTransactionsData;
 
     //ResultcreateAccount rca = (ResultcreateAccount)ViewData["OnLoaddata"];
 }
@@ -75,7 +78,7 @@
 
                             <tbody id="TBOdy">
 
-                                @foreach (TransactionClass ad in Model)
+                                @foreach (TransactionClass ad in allTransactions)
                                 {
                                     <tr class="gradeX">
 
@@ -100,9 +103,13 @@
 
                                         <td>@ad.TransactionDate1</td>
 
-                                        <td><a href='@Url.Action("Detail", "Member", new { NoochId=@ad.SenderNoochId} )'>@ad.SenderName</a></td>
+                                        @*<td><a href='@Url.Action("Detail", "Member", new { NoochId=@ad.SenderNoochId} )'>@ad.SenderName</a></td>*@
+                                        <td><a href='#'>
+                                            @ad.SenderName
+                                        </a></td>
 
-                                        <td><a href='@Url.Action("Detail", "Member", new { NoochId=@ad.RecepientNoochId} )'>@ad.RecipienName</a></td>
+                                        @*<td><a href='@Url.Action("Detail", "Member", new { NoochId=@ad.RecepientNoochId} )'>@ad.RecipienName</a></td>*@
+                                        <td><a href='#'>@ad.RecipienName</a></td>
 
                                         <td><b>$@ad.Amount</b></td>
 
