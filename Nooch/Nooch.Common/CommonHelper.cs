@@ -2013,7 +2013,9 @@ namespace Nooch.Common
                     {
                         //email = GetDecryptedData(synCreateUserObject.NonNoochUserEmail), //why cant we get login feilds from members table ?
                         email = GetDecryptedData(noochMemberObject.UserName),
-                        password = GetDecryptedData(noochMemberObject.Password)
+                        //password = GetDecryptedData(noochMemberObject.Password)
+                        refresh_token = GetDecryptedData(synCreateUserObject.refresh_token)
+                        
                     };
 
                     input.client = new createUser_client()
