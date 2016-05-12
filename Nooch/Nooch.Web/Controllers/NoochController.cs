@@ -1137,11 +1137,15 @@ namespace Nooch.Web.Controllers
                 serviceMethod = "/GetMemberUsernameByMemberId?memberId=" + memberId;
                  
                 var isMemberPwdReset = ResponseConverter<Nooch.Common.Entities.StringResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
-                if (isMemberPwdReset.Result != "Member not found")
+                if (isMemberPwdReset.Result != null)
                 {
                     resultResetPass.usermail = isMemberPwdReset.Result;
                     resultResetPass = resetlinkvalidationcheck(resultResetPass);
 
+                }
+                else
+                {
+                    resultResetPass.invalidUser = "true";
                 }
             }
             return resultResetPass;

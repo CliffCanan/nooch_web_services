@@ -14,7 +14,8 @@ namespace Nooch.Common.Entities
       public string usermail { get; set; }
       public string clientScript { get; set; }
       public bool pin { get; set; }
-      
+
+      public string invalidUser { get; set; }
       
     }
 }

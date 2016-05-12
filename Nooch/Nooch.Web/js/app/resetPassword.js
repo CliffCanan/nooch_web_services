@@ -1,6 +1,18 @@
 ﻿
 
 $(document).ready(function () {
+    if($('#invalidUser').val()=="true")
+    {
+        swal({
+            title: "Invalid User!",
+            text: "Something went wrong - No user exists for this MemberId." +
+                  "<small class='show' style='margin-top:12px'>Error Reference: <strong>#Invalid user</strong></small>",
+            type: "error",
+            confirmButtonColor: "#3fabe1",
+            confirmButtonText: "Ok",
+            html: true
+        });
+    }
     $("#ResetPasswordButton").click(function () {
         var PWDTextBox = $('#PWDTextBox').val();
         var memberId = getParameterByName('memberId');
