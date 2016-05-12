@@ -16,6 +16,8 @@ using Nooch.Common.Entities.MobileAppOutputEnities;
 using Nooch.DataAccess;
 using Nooch.Common.Entities.LandingPagesRelatedEntities.RejectMoney;
 using System.Net;
+using System.Web.UI;
+using Nooch.Common.Cryptography.Algorithms;
 
 
 namespace Nooch.Web.Controllers
@@ -83,7 +85,7 @@ namespace Nooch.Web.Controllers
         {
             ResultDepositMoneyComplete rdmc = new ResultDepositMoneyComplete();
             rdmc.paymentSuccess = false;
-
+            rdmc.payinfobar = true;
             Logger.Info("DepositMoneyComplete CodeBehind -> page_load Initiated - 'mem_id' Parameter In URL: [" + Request.QueryString["mem_id"] + "]");
 
             try
@@ -863,7 +865,7 @@ namespace Nooch.Web.Controllers
         {
             ResultDepositMoney rdm = new ResultDepositMoney();
             Logger.Info("DepositMoney CodeBehind -> Page_load Initiated - [TransactionId Parameter: " + Request.QueryString["TransactionId"] + "]");
-
+            rdm.payreqInfo = true;
             try
             {
                 if (!String.IsNullOrEmpty(Request.QueryString["TransactionId"]))
@@ -977,6 +979,8 @@ namespace Nooch.Web.Controllers
             //                                    "trans/payRequest.aspx?TransactionId=" + "2342342" +
             //                                    "&UserType=" + "2342342");
             ResultPayRequest rpr = new ResultPayRequest();
+            rpr.payreqInfo = true;
+            rpr.PayorInitialInfo = true;
             Logger.Info("payRequest CodeBehind -> Page_load Initiated - [TransactionId Parameter: " + Request.QueryString["TransactionId"] + "]");
 
             try
@@ -1042,9 +1046,129 @@ namespace Nooch.Web.Controllers
         }
 
 
+        public ActionResult ResetPassword()
+        {
+            ResultResetPassword resultResetPassword = new ResultResetPassword();
+            string strUserAgent = Request.UserAgent.ToLower();
+            resultResetPassword.requestExpiredorNotFound = false;
+            if (strUserAgent != null)
+            {
+              
+                if (Request.Browser.IsMobileDevice || strUserAgent.Contains("iphone") ||
+                      strUserAgent.Contains("mobile"))
+                {
+                    resultResetPassword.clientScript = "<script>Show('iPhoneButton','ctl00_detailContentPlaceHolder_activationLinkButton')</script>";
+                    
+                }
+                else
+                {
+                    resultResetPassword.clientScript = "<script>Show('ctl00_detailContentPlaceHolder_newPasswordLinkButton','iPhoneButton')</script>";
+            
+                }
+            }
+
+            resultResetPassword.ResetPasswordMessageLabel = false;
+            resultResetPassword.messageLabel = false;
+            resultResetPassword = bindusermail(resultResetPassword);
+            ViewData["OnLoaddata"] = resultResetPassword;
+            return View();
+        }
+
+
+        public string ResetPasswordButton_Click(string PWDText, string memberId)
+        {
+             
+               
+                var objAesAlgorithm = new AES();
+                string encryptedPassword = objAesAlgorithm.Encrypt(PWDText.Trim(), string.Empty);
+                string serviceMethod = string.Empty;
+                string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+                serviceMethod = "/ResetPassword?memberId=" + memberId + "&newPassword=" + encryptedPassword + "&newUser=true";
+
+                var isMemberPwdResetted = ResponseConverter<Nooch.Common.Entities.BoolResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+                if (isMemberPwdResetted.Result)
+                {
+                    return "true";
+                
+                }
+                else
+                {
+                    return "false";
+                 
+                }
+             
+        }
+
+        public ActionResult pinNumberVerificationButton_Click(string PINTextBox, string memberId)
+        {
+
+            synapseV3GenericResponse res = new synapseV3GenericResponse();
+                var objAesAlgorithm = new AES();
+                string encryptedPin = objAesAlgorithm.Encrypt(PINTextBox.Trim(), string.Empty);
+                string serviceMethod = string.Empty;
+                string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+                serviceMethod = "/ValidatePinNumberForPasswordForgotPage?memberId=" + memberId + "&pinNo=" + encryptedPin;
+
+                var isMemberValid = ResponseConverter<Nooch.Common.Entities.StringResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+                if (isMemberValid.Result.Equals("Success"))
+                {
+                    Page p = HttpContext.Handler as Page;
+                    p.RegisterStartupScript("showButton", "<script>Show('resetPasswordDiv','pinNumberVerificationDiv')</script>");
+                    res.isSuccess = true;
+                    return Json(res);
+
+                }
+                else
+                {
+                    res.isSuccess = false;
+                    res.msg = isMemberValid.Result.ToString();
+                    return Json(res);
+                }
+             
+        }
+        ResultResetPassword bindusermail(ResultResetPassword rrp)
+        {
+            ResultResetPassword resultResetPass = rrp;
+            string memberId = Request.QueryString["memberId"];
+            if (!String.IsNullOrEmpty(memberId))
+            {
+                string serviceMethod = string.Empty;
+                string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+                serviceMethod = "/GetMemberUsernameByMemberId?memberId=" + memberId;
+                 
+                var isMemberPwdReset = ResponseConverter<Nooch.Common.Entities.StringResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+                if (isMemberPwdReset.Result != "Member not found")
+                {
+                    resultResetPass.usermail = isMemberPwdReset.Result;
+                    resultResetPass = resetlinkvalidationcheck(resultResetPass);
+
+                }
+            }
+            return resultResetPass;
+        }
+
+        ResultResetPassword resetlinkvalidationcheck(ResultResetPassword rrp)
+        {
+            ResultResetPassword resultResetPass = rrp;
+            string memberId = Request.QueryString["memberId"];
+            string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+            string serviceMethod = string.Empty;
+            serviceMethod = "/resetlinkvalidationcheck?memberId=" + memberId;
+            var isMemberPwdResetted = ResponseConverter<Nooch.Common.Entities.BoolResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+            if (isMemberPwdResetted.Result == false)
+            {
+                resultResetPass.requestExpiredorNotFound = true;
+                resultResetPass.pin = false;
+            }
+
+            return resultResetPass;
+
+        }
+
         public ActionResult PayRequestComplete()
         {
             ResultPayRequestComplete rpc = new ResultPayRequestComplete();
+             
             Logger.Info("PayRequestComplete CodeBehind -> page_load Initiated - 'mem_id' Parameter In URL: [" + Request.QueryString["mem_id"] + "]");
 
             rpc.paymentSuccess = false;
@@ -1120,6 +1244,10 @@ namespace Nooch.Web.Controllers
                      rpc.payeeMemId.Length > 5)
                 {
                     serviceMethod = serviceMethod + "&recipMemId=" + rpc.payeeMemId;
+                }
+                else
+                {
+                    serviceMethod = serviceMethod + "&recipMemId= ";
                 }
 
                 Logger.Info("payRequestComplete CodeBehind -> completeTrans - About to Query Nooch Service to move money - URL: ["
@@ -1253,7 +1381,7 @@ namespace Nooch.Web.Controllers
                 rpr.senderName1 = (!String.IsNullOrEmpty(transaction.RecepientName) && transaction.RecepientName.Length > 2) ?
                                      transaction.RecepientName :
                                      transaction.Name;
-
+                 
                 string s = transaction.Amount.ToString("n2");
                 string[] s1 = s.Split('.');
                 if (s1.Length == 2)
@@ -2452,6 +2580,7 @@ namespace Nooch.Web.Controllers
         /// <param name="memId"></param>
         /// <param name="rs"></param>
         /// <returns></returns>
+
         public ActionResult history(string memId, string rs)
         {
             TransactionsPageData res = new TransactionsPageData();
@@ -2470,14 +2599,14 @@ namespace Nooch.Web.Controllers
                 {
                     string memberId = Request.QueryString["memId"];
                     string listType = "ALL";
-                    
-                  
+
+
                     TransactionsDataAccess tda = new TransactionsDataAccess();
                     int totalRecordsCount = 0;
                     var transactionListEntities = tda.GetTransactionsList(memberId, listType, 50, 1, "", out totalRecordsCount);
                     if (transactionListEntities != null && transactionListEntities.Count > 0)
                     {
-                       
+
 
                         foreach (var trans in transactionListEntities)
                         {
@@ -2488,22 +2617,22 @@ namespace Nooch.Web.Controllers
                                 TransactionClass obj = new TransactionClass();
 
                                 obj.TransactionId = trans.TransactionId;
-                                obj.TransactionType =CommonHelper.GetDecryptedData( trans.TransactionType);
+                                obj.TransactionType = CommonHelper.GetDecryptedData(trans.TransactionType);
                                 obj.TransactionStatus = trans.TransactionStatus;
 
-                                obj.TransactionDate1 = Convert.ToDateTime( trans.TransactionDate).ToShortDateString();
+                                obj.TransactionDate1 = Convert.ToDateTime(trans.TransactionDate).ToShortDateString();
                                 obj.Amount = trans.Amount;
 
                                 obj.Memo = trans.Memo;
-                                
 
-                                obj.city= (trans.GeoLocation != null && trans.GeoLocation.City != null) ? trans.GeoLocation.City : string.Empty;
-                                obj.state= (trans.GeoLocation != null && trans.GeoLocation.State != null) ? trans.GeoLocation.State : string.Empty;
-                                
-                                obj.TransLati= (trans.GeoLocation != null && trans.GeoLocation.Latitude != null) ? (float)trans.GeoLocation.Latitude : default(float);
+
+                                obj.city = (trans.GeoLocation != null && trans.GeoLocation.City != null) ? trans.GeoLocation.City : string.Empty;
+                                obj.state = (trans.GeoLocation != null && trans.GeoLocation.State != null) ? trans.GeoLocation.State : string.Empty;
+
+                                obj.TransLati = (trans.GeoLocation != null && trans.GeoLocation.Latitude != null) ? (float)trans.GeoLocation.Latitude : default(float);
                                 obj.TransLongi = (trans.GeoLocation != null && trans.GeoLocation.Longitude != null) ? (float)trans.GeoLocation.Longitude : default(float);
 
-                                #region Transaction Type Transfer 
+                                #region Transaction Type Transfer
                                 if (obj.TransactionType == "Transfer" || obj.TransactionType == "Disputed" || obj.TransactionType == "Reward" || obj.TransactionType == "Invite" || obj.TransactionType == "Rent" || obj.TransactionType == "Request")
                                 {
                                     if (String.IsNullOrEmpty(trans.InvitationSentTo) &&
@@ -2545,7 +2674,7 @@ namespace Nooch.Web.Controllers
 
                                     }
                                 }
-                                
+
                                 #endregion
 
 
@@ -2562,18 +2691,18 @@ namespace Nooch.Web.Controllers
                                 continue;
                             }
                         }
-                       
-                        
+
+
                     }
                     res.allTransactionsData = Transactions;
-                    
-                 
+
+
                     if (!String.IsNullOrEmpty(Request.QueryString["rs"]))
                     {
                         Logger.Info("createAccount CodeBehind -> Page_load Initiated - Is a RentScene Payment: [" +
                                     Request.QueryString["rs"] + "]");
                     }
-                  
+
                     else
                     {
                         //res.errorId = "2";
@@ -2581,7 +2710,7 @@ namespace Nooch.Web.Controllers
                 }
                 catch (Exception ex)
                 {
-                    
+
                     Logger.Error("payRequest CodeBehind -> page_load OUTER EXCEPTION - [TransactionId Parameter: " +
                                  Request.QueryString["TransactionId"] +
                                  "], [Exception: " + ex.Message + "]");
@@ -2589,10 +2718,11 @@ namespace Nooch.Web.Controllers
                 }
             }
 
-            
+
 
             return View(res);
         }
+
     }
 
 

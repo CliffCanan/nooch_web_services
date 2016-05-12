@@ -73,10 +73,11 @@
     <Compile Include="Cryptography\CryptographyBase.cs" />
     <Compile Include="Entities\BoolResult.cs" />
     <Compile Include="Entities\idVerification.cs" />
-    <Compile Include="Entities\LandingPagesRelatedEntities\TransactionHistory.cs" />
     <Compile Include="Entities\LandingPagesRelatedEntities\BankNameCheckStatus.cs" />
     <Compile Include="Entities\LandingPagesRelatedEntities\RejectMoney\PageLoadDataRejectMoney.cs" />
     <Compile Include="Entities\LandingPagesRelatedEntities\SynapseBankLoginRequestResult.cs" />
+    <Compile Include="Entities\LandingPagesRelatedEntities\SynapseDetailsClass_internal.cs" />
+    <Compile Include="Entities\LandingPagesRelatedEntities\TransactionHistory.cs" />
     <Compile Include="Entities\MobileAppInputEntities\addSynapseCreateUserRecord.cs" />
     <Compile Include="Entities\MobileAppInputEntities\MemberNotificationSettingsInput.cs" />
     <Compile Include="Entities\MobileAppInputEntities\MemberNotificationsNewStringTypeSettings.cs" />
@@ -115,6 +116,7 @@
     <Compile Include="Entities\ResultpayAnyone.cs" />
     <Compile Include="Entities\ResultPayRequest.cs" />
     <Compile Include="Entities\ResultPayRequestComplete.cs" />
+    <Compile Include="Entities\ResultResetPassword.cs" />
     <Compile Include="Entities\StringResult.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\CheckSynapseBankDetails.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\kycInfoResponseFromSynapse.cs" />
