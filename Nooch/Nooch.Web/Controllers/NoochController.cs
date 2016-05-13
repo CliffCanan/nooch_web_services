@@ -1047,6 +1047,7 @@ namespace Nooch.Web.Controllers
 
 
         public ActionResult ResetPassword()
+        
         {
             ResultResetPassword resultResetPassword = new ResultResetPassword();
             string strUserAgent = Request.UserAgent.ToLower();

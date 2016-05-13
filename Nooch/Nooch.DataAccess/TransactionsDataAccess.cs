@@ -3787,19 +3787,24 @@ namespace Nooch.DataAccess
                 // 2. Check BANK/NODE permission for SENDER
                 if (senderPermissions.users != null && senderPermissions.users.Length > 0)
                 {
+                    int senderPermissionUsersCount = senderPermissions.users.Count();
+                    int iterator = 0;
                     foreach (synapseSearchUserResponse_User senderUser in senderPermissions.users)
                     {
                         // iterating each node inside
+
+                        iterator++;
 
                         if (senderUser.nodes != null && senderUser.nodes.Length > 0)
                         {
                             NodePermissionCheckResult nodePermCheckRes = CommonHelper.IsNodeActiveInGivenSetOfNodes(senderUser.nodes, sender_bank_node_id);
 
-                            if (nodePermCheckRes.IsPermissionfound == true)
+                            if (nodePermCheckRes.IsPermissionfound == true )
                             {
                                 if (nodePermCheckRes.PermissionType == "CREDIT-AND-DEBIT" || nodePermCheckRes.PermissionType == "DEBIT")
                                 {
                                     SenderSynapsePermissionOK = true;
+                                    break;
                                 }
                                 else
                                 {
@@ -3808,7 +3813,7 @@ namespace Nooch.DataAccess
                                     return res;
                                 }
                             }
-                            else
+                            else if (nodePermCheckRes.IsPermissionfound != true && iterator == senderPermissionUsersCount)
                             {
                                 Logger.Error("TDA -> AddTransSynapseV3Reusable - No Permission Found for Sender - Username: [" + senderUserName + "]");
                                 res.ErrorMessage = "Sender has insufficient permissions to complete this payment (TDA - 3789)";
@@ -3841,10 +3846,13 @@ namespace Nooch.DataAccess
                 // 4. Check BANK/NODE permission for RECIPIENT
                 if (recipPermissions.users != null && recipPermissions.users.Length > 0)
                 {
+                    int senderPermissionUsersCount = senderPermissions.users.Count();
+                    int iterator = 0;
                     // Should only be 1 'user' result, contained in an array from Synapse
                     foreach (synapseSearchUserResponse_User recUser in recipPermissions.users)
                     {
                         // Check if there are any nodes in this user
+                        iterator++;
                         if (recUser.nodes != null && recUser.nodes.Length > 0)
                         {
                             NodePermissionCheckResult nodePermCheckRes = CommonHelper.IsNodeActiveInGivenSetOfNodes(recUser.nodes, receiver_bank_node_id);
@@ -3854,6 +3862,7 @@ namespace Nooch.DataAccess
                                 if (nodePermCheckRes.PermissionType == "CREDIT-AND-DEBIT" || nodePermCheckRes.PermissionType == "DEBIT")
                                 {
                                     RecipientSynapsePermissionOK = true;
+                                    break;
                                 }
                                 else
                                 {
@@ -3862,7 +3871,8 @@ namespace Nooch.DataAccess
                                     return res;
                                 }
                             }
-                            else
+                            else if (nodePermCheckRes.IsPermissionfound != true && iterator == senderPermissionUsersCount)
+                        
                             {
                                 Logger.Error("TDA -> AddTransSynapseV3Reusable - No Permission Found for Recipient - Username: [" + senderUserName + "]");
                                 res.ErrorMessage = "Recipient has insufficient permissions to complete this payment (TDA - 3843)";
