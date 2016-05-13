@@ -1405,6 +1405,7 @@ div#pwFormShell #depositCreateAccount,
 .modal dl { margin-bottom: 12px; }
 #idVerWiz input#idVer-name { text-transform: capitalize; }
 #idVerWiz input#idVer-ssn {
+    font-weight: bold;
     padding-left: 93px;
     letter-spacing: 2.5px;
 }
@@ -3006,5 +3007,3 @@ body#history .footer li a {color: #3fabe1;}
 .fadeInDown {
   animation-name: fadeInDown;
 }
-
-.errorValidText{color:red; font-size:15px; width:100%;}

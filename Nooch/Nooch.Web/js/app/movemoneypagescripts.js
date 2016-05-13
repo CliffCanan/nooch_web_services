@@ -477,7 +477,7 @@ function runIdWizard() {idVer
 
 
 function updateValidationUi(field, success) {
-    console.log("Field: " + field + "; success: " + success);
+    //console.log("Field: " + field + "; success: " + success);
 
     if (success == true) {
         $('#' + field + 'Grp .form-group').removeClass('has-error').addClass('has-success');
@@ -813,8 +813,8 @@ function idVerifiedSuccess() {
             
             //redUrlForAddBank = (transType == "send") ? "https://www.noochme.com/noochweb/nooch/depositMoneycomplete?mem_id="
             //                                         : "https://www.noochme.com/noochweb/nooch/payRequestComplete?mem_id=";
-            redUrlForAddBank = (transType == "send") ? "http://localhost:2061/Nooch/DepositMoneyComplete?mem_id="
-                                                            : "http://localhost:2061/Nooch/PayRequestComplete?mem_id=";
+            redUrlForAddBank = (transType == "send") ? "http://54.201.43.89/noochweb/Nooch/DepositMoneyComplete?mem_id="
+                                                     : "http://54.201.43.89/noochweb/Nooch/PayRequestComplete?mem_id=";
 
             
             redUrlForAddBank = redUrlForAddBank + memIdGen + "," + TRANSID;
@@ -897,45 +897,52 @@ function showErrorAlert(errorNum) {
 	var shouldFocusOnPhone = false;
 	var shouldShowErrorDiv = true;
 
+	var companyName = "Nooch";
+	var supportEmail = "support@nooch.com";
+	if (FOR_RENTSCENE == "true") {
+	    companyName = "Rent Scene"
+	    supportEmail = "payments@rentscene.com"
+	}
+
 	console.log("ShowError -> errorNum is: [" + errorNum + "], resultReason is: [" + resultReason + "]");
 
 	if (errorNum == '1') // Codebehind errors
 	{
 	    alertTitle = "Errors Are The Worst!";
 	    alertBodyText = "We had trouble finding that transaction.  Please try again and if you continue to see this message, contact <span style='font-weight:600;'>Nooch Support</span>:" +
-                        "<br/><a href='mailto:support@nooch.com' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>support@nooch.com</a>";
+                        "<br/><a href='mailto:" + supportEmail + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + supportEmail + "</a>";
 	}
 	else if (errorNum == '2') // Errors after submitting ID verification AJAX
 	{
 	    alertTitle = "Errors Are The Worst!";
-	    alertBodyText = "Terrible sorry, but it looks like we had trouble processing your info.  Please refresh this page to try again and if you continue to see this message, contact <span style='font-weight:600;'>Nooch Support</span>:" +
-                        "<br/><a href='mailto:support@nooch.com' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>support@nooch.com</a>";
+	    alertBodyText = "Terrible sorry, but it looks like we had trouble processing your info.  Please refresh this page to try again and if you continue to see this message, contact <span style='font-weight:600;'>" +
+                        companyName + " Support</span>:<br/><a href='mailto:" + supportEmail + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + supportEmail + "</a>";
 	}
 	else if (errorNum == '25') // Errors from the iFrame with the multiple choice verification questions
 	{
 	    alertTitle = "Errors Are The Worst!";
-	    alertBodyText = "Terrible sorry, but it looks like we had trouble processing your info.  Please refresh this page to try again and if you continue to see this message, contact <span style='font-weight:600;'>Nooch Support</span>:" +
-                        "<br/><a href='mailto:support@nooch.com' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>support@nooch.com</a>";
+	    alertBodyText = "Terrible sorry, but it looks like we had trouble processing your info.  Please refresh this page to try again and if you continue to see this message, contact <span style='font-weight:600;'>" +
+                        companyName + " Support</span>:<br/><a href='mailto:" + supportEmail + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + supportEmail + "</a>";
 	}
 	else if (errorNum == '20') // Submitted ID Verification info, but EMAIL came back as already registered with Nooch.
 	{
 	    alertTitle = "Email Already Registered";
-	    alertBodyText = "Looks like <strong>" + $('#idVer-email').val() + "</strong> is already registered to a Nooch account.  Please try a different email address.";
+	    alertBodyText = "Looks like <strong>" + $('#idVer-email').val() + "</strong> is already registered to a " + companyName + " account.  Please try a different email address.";
 	    shouldFocusOnEmail = true;
 	    shouldShowErrorDiv = false;
 	}
 	else if (errorNum == '30') // Submitted ID Verification info, but PHONE came back as already registered with Nooch.
 	{
 	    alertTitle = "Phone Number Already Registered";
-	    alertBodyText = "Looks like <strong>" + $('#idVer-phone').val() + "</strong> is already registered to a Nooch account.  Please try a different number.";
+	    alertBodyText = "Looks like <strong>" + $('#idVer-phone').val() + "</strong> is already registered to a " + companyName + " account.  Please try a different number.";
 	    shouldFocusOnPhone = true;
 	    shouldShowErrorDiv = false;
 	}
 	else // Generic Error
 	{
 	    alertTitle = "Errors Are The Worst!";
-	    alertBodyText = "Terrible sorry, but it looks like we had trouble processing your request.  Please refresh this page to try again and if you continue to see this message, contact <span style='font-weight:600;'>Nooch Support</span>:" +
-                        "<br/><a href='mailto:support@nooch.com' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>support@nooch.com</a>";
+	    alertBodyText = "Terrible sorry, but it looks like we had trouble processing your request.  Please refresh this page to try again and if you continue to see this message, contact <span style='font-weight:600;'>" +
+                        companyName + " Support</span>:<br/><a href='mailto:" + supportEmail + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + supportEmail + "</a>";
 	}
 
 	if (shouldShowErrorDiv == true)
@@ -1184,8 +1191,8 @@ function payBtnClicked()
 
             //redUrlToSendTo = (transType == "send") ? "https://www.noochme.com/noochweb/trans/depositMoneycomplete.aspx?mem_id="
             //                                         : "https://www.noochme.com/noochweb/trans/payRequestComplete.aspx?mem_id=";
-            redUrlForAddBank = (transType == "send") ? "http://localhost:2061/Nooch/DepositMoneyComplete?mem_id="
-                                                            : "http://localhost:2061/Nooch/PayRequestComplete?mem_id=";
+            redUrlForAddBank = (transType == "send") ? "http://54.201.43.89/noochweb/Nooch/DepositMoneyComplete?mem_id="
+                                                     : "http://54.201.43.89/noochweb/Nooch/PayRequestComplete?mem_id=";
 
             redUrlToSendTo = redUrlToSendTo + MemID_EXISTING + "," + TRANSID;
 
