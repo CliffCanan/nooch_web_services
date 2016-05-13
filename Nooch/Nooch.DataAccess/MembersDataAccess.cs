@@ -6974,7 +6974,7 @@ namespace Nooch.DataAccess
                 {
                     Guid tid = Utility.ConvertToGuid(TransId);
                     password = CommonHelper.GetEncryptedData(password);
-                    string pinNumber = Utility.GetRandomPinNumber();
+                        string pinNumber = Utility.GetRandomPinNumber();
                     pinNumber = CommonHelper.GetEncryptedData(pinNumber);
 
                     var transDetail =

@@ -5366,7 +5366,8 @@ namespace Nooch.DataAccess
 
                 string sender_oauth = senderBankDetails.UserDetails.access_token;
                 string sender_fingerPrint = sender.UDID1;
-                string sender_bank_node_id = senderBankDetails.BankDetails.bankid.ToString();
+               // string sender_bank_node_id = senderBankDetails.BankDetails.bankid.ToString();               
+                string sender_bank_node_id = senderBankDetails.BankDetails.bank_oid.ToString();  
                 string amount = request.Amount.ToString();
                 string fee = "0";
                 if (transactionAmount > 10)
@@ -5379,7 +5380,8 @@ namespace Nooch.DataAccess
                 }
                 string receiver_oauth = recipientBankDetails.UserDetails.access_token;
                 string receiver_fingerprint = requester.UDID1;
-                string receiver_bank_node_id = recipientBankDetails.BankDetails.bankid.ToString();
+               // string receiver_bank_node_id = recipientBankDetails.BankDetails.bankid.ToString();
+                string receiver_bank_node_id = recipientBankDetails.BankDetails.bank_oid.ToString();
                 string suppID_or_transID = request.TransactionId.ToString();
                 string senderUserName = CommonHelper.GetDecryptedData(sender.UserName).ToLower();
                 string receiverUserName = CommonHelper.GetDecryptedData(requester.UserName).ToLower();
