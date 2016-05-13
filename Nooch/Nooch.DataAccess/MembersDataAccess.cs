@@ -7041,7 +7041,7 @@ namespace Nooch.DataAccess
                                 var link = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
                                     "/Nooch/Activation?tokenId=" + tokenId);
 
-                                var toEmailAddress = transDetail.InvitationSentTo.Trim();
+                                var toEmailAddress = CommonHelper.GetDecryptedData(transDetail.InvitationSentTo.Trim());
                                 var fromAddress = Utility.GetValueFromConfig("welcomeMail");
                                 // Add any tokens you want to find/replace within your template file
                                 var tokens = new Dictionary<string, string>
