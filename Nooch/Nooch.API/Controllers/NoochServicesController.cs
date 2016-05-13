@@ -5768,8 +5768,7 @@ namespace Nooch.API.Controllers
 
         [HttpPost]
         [ActionName("TransferMoneyUsingSynapse")]
-        public StringResult TransferMoneyUsingSynapse(TransactionDto transactionInput, 
-            string accessToken)
+        public StringResult TransferMoneyUsingSynapse(TransactionDto transactionInput,string accessToken)
         {
             Logger.Info("Service Layer -> TransferMoneyUsingSynapse Initiated - Trans.MemberID: [" + transactionInput.MemberId +
                                   "], RecipientID: [" + transactionInput.RecepientId +

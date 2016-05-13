@@ -6088,7 +6088,8 @@ namespace Nooch.DataAccess
                     string receiver_oauth = recipientSynapseDetails.UserDetails.access_token;
                     string receiver_fingerprint = recipientNoochDetails.UDID1;
                     string receiver_bank_node_id = recipientSynapseDetails.BankDetails.bankid.ToString();
-                    string suppID_or_transID = transactionEntity.TransactionId.ToString();
+                    //string suppID_or_transID = transactionEntity.TransactionId.ToString();
+                    string suppID_or_transID = Convert.ToString(Guid.NewGuid());
                     //string senderUserName = CommonHelper.GetDecryptedData(sender.UserName).ToLower();
                     //string receiverUserName = CommonHelper.GetDecryptedData(requester.UserName).ToLower();
                     string iPForTransaction = CommonHelper.GetRecentOrDefaultIPOfMember(SenderGuid);
@@ -6657,8 +6658,14 @@ namespace Nooch.DataAccess
                     try
                     {
                         // Update TotalNoochTransfersCount by +1
-                        sender.TotalNoochTransfersCount = sender.TotalNoochTransfersCount + 1;
-
+                        if ( sender.TotalNoochTransfersCount == null)
+                        {
+                            sender.TotalNoochTransfersCount = 0;
+                        }
+                        else
+                        {
+                            sender.TotalNoochTransfersCount = sender.TotalNoochTransfersCount + 1;
+                        }
                         // Update Sender in DB
                         sender.DateModified = DateTime.Now;
                         updateSenderInDB = noochConnection.SaveChanges();

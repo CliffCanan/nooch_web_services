@@ -3006,3 +3006,5 @@ body#history .footer li a {color: #3fabe1;}
 .fadeInDown {
   animation-name: fadeInDown;
 }
+
+.errorValidText{color:red; font-size:15px; width:100%;}

@@ -32,7 +32,8 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
     public class createUser_login2
     {
         public string email { get; set; }
-        public string password { get; set; }
+        //public string password { get; set; }
+        public string refresh_token { get; set; }
         
     }
 
