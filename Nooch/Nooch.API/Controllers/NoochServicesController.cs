@@ -738,7 +738,7 @@ namespace Nooch.API.Controllers
         /// <returns></returns>
         [HttpPost]
         [ActionName("RequestMoneyToExistingButNonRegisteredUser")]
-        public StringResult RequestMoneyToExistingButNonRegisteredUser(RequestDto requestInput,  string accessToken)
+        public StringResult RequestMoneyToExistingButNonRegisteredUser(RequestDto requestInput, string accessToken)
         {
             if (CommonHelper.IsValidRequest(accessToken, requestInput.MemberId))
             {
@@ -772,7 +772,7 @@ namespace Nooch.API.Controllers
         /// <returns></returns>
         [HttpPost]
         [ActionName("RequestMoneyToNonNoochUserUsingSynapse")]
-        public StringResult RequestMoneyToNonNoochUserUsingSynapse(RequestDto requestInput,  string accessToken)
+        public StringResult RequestMoneyToNonNoochUserUsingSynapse(RequestDto requestInput, string accessToken)
         {
             Logger.Info("Service Controller - RequestMoneyToNonNoochUserUsingSynapse Initiated - MemberId: [" + requestInput.MemberId + "]");
 
@@ -808,7 +808,7 @@ namespace Nooch.API.Controllers
         /// <returns></returns>
         [HttpPost]
         [ActionName("RequestMoneyToNonNoochUserThroughPhoneUsingSynapse")]
-        public StringResult RequestMoneyToNonNoochUserThroughPhoneUsingSynapse(RequestDto requestInput,  string accessToken, string PayorPhoneNumber)
+        public StringResult RequestMoneyToNonNoochUserThroughPhoneUsingSynapse(RequestDto requestInput, string accessToken, string PayorPhoneNumber)
         {
             if (CommonHelper.IsValidRequest(accessToken, requestInput.MemberId))
             {
@@ -818,7 +818,7 @@ namespace Nooch.API.Controllers
                 {
                     Logger.Info("Service Controller - RequestMoneyToNonNoochUserThroughPhoneUsingSynapse Initiated - MemberId: [" + requestInput.MemberId + "]");
                     var tda = new TransactionsDataAccess();
-                    return new StringResult { Result = tda.RequestMoneyToNonNoochUserThroughPhoneUsingSynapse(requestInput,  PayorPhoneNumber) };
+                    return new StringResult { Result = tda.RequestMoneyToNonNoochUserThroughPhoneUsingSynapse(requestInput, PayorPhoneNumber) };
                 }
                 catch (Exception ex)
                 {
@@ -842,7 +842,7 @@ namespace Nooch.API.Controllers
         /// <returns></returns>
         [HttpPost]
         [ActionName("RequestMoney")]
-        public StringResult RequestMoney(RequestDto requestInput,  string accessToken)
+        public StringResult RequestMoney(RequestDto requestInput, string accessToken)
         {
             if (CommonHelper.IsValidRequest(accessToken, requestInput.MemberId))
             {
@@ -924,26 +924,24 @@ namespace Nooch.API.Controllers
 
             #region Check If Recipient Already Has A Nooch Account
 
-            //var mda = new MembersDataAccess();
-
             var memberObj = CommonHelper.GetMemberDetailsByUserName(email);
+
+            Logger.Info(memberObj);
 
             if (memberObj != null)
             {
                 // This email address is already registered!
-                Logger.Error("Service Controller -> RequestMoneyForRentScene FAILED - User already exists with email: [" + email + "]");
+                Logger.Info("Service Controller -> RequestMoneyForRentScene Attempted - Recipient email already exists: [" + email + "]");
 
                 res.isEmailAlreadyReg = true;
                 res.memberId = memberObj.MemberId.ToString();
                 res.name = (!String.IsNullOrEmpty(memberObj.FirstName)) ? CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName))
                                                                         : "";
                 res.name = (!String.IsNullOrEmpty(memberObj.LastName)) ? res.name + " " + CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.LastName))
-                                                                        : res.name;
+                                                                       : res.name;
                 res.memberStatus = memberObj.Status;
                 res.dateCreated = Convert.ToDateTime(memberObj.DateCreated).ToString("MMM d, yyyy");
 
-
-                //var ada = new AccountDataAccess();
                 var userAndBankInfo = CommonHelper.GetSynapseBankAndUserDetailsforGivenMemberId(memberObj.MemberId.ToString());
 
                 if (userAndBankInfo != null &&
@@ -977,7 +975,7 @@ namespace Nooch.API.Controllers
                     Country = "US",
                     Latitude = 39.95332018F,
                     Longitude = -75.1661824F,
-                    MemberId = "852987e8-d5fe-47e7-a00b-58a80dd15b49",
+                    MemberId = "852987e8-d5fe-47e7-a00b-58a80dd15b49", // Rent Scene's Member ID
                     Memo = memo,
                     MoneySenderEmailId = email,
                     Name = name,
@@ -5718,7 +5716,7 @@ namespace Nooch.API.Controllers
             }
             catch (Exception ex)
             {
-                Logger.Info("Service Layer - CreateNonNoochUserPassword - Failure [TransId: " + TransId + "], [ Exception : "+ex+" ]");
+                Logger.Info("Service Layer - CreateNonNoochUserPassword - Failure [TransId: " + TransId + "], [ Exception : " + ex + " ]");
             }
             return new StringResult { Result = "" };
         }
@@ -5748,7 +5746,7 @@ namespace Nooch.API.Controllers
 
         [HttpPost]
         [ActionName("TransferMoneyUsingSynapse")]
-        public StringResult TransferMoneyUsingSynapse(TransactionDto transactionInput,string accessToken)
+        public StringResult TransferMoneyUsingSynapse(TransactionDto transactionInput, string accessToken)
         {
             Logger.Info("Service Layer -> TransferMoneyUsingSynapse Initiated - Trans.MemberID: [" + transactionInput.MemberId +
                                   "], RecipientID: [" + transactionInput.RecepientId +
@@ -5806,7 +5804,7 @@ namespace Nooch.API.Controllers
                 TransactionType = transactionInput.TransactionType,
                 TransactionDateTime = DateTime.Now.ToString(),
                 doNotSendEmails = transactionInput.doNotSendEmails,
-                TransactionId=Guid.NewGuid().ToString(),
+                TransactionId = Guid.NewGuid().ToString(),
                 isRentAutoPayment = transactionInput.isRentAutoPayment == true
                                     ? true
                                     : false,
@@ -5828,7 +5826,7 @@ namespace Nooch.API.Controllers
 
         [HttpPost]
         [ActionName("TransferMoneyToNonNoochUserUsingSynapse")]
-        public StringResult TransferMoneyToNonNoochUserUsingSynapse(TransactionDto transactionInput, 
+        public StringResult TransferMoneyToNonNoochUserUsingSynapse(TransactionDto transactionInput,
             string accessToken, string inviteType, string receiverEmailId)
         {
             if (CommonHelper.IsValidRequest(accessToken, transactionInput.MemberId))
@@ -5844,7 +5842,7 @@ namespace Nooch.API.Controllers
                 catch (Exception ex)
                 {
                     Logger.Error("Service layer -> TransferMoneyToNonNoochUserUsingSynapse FAILED. [Exception: " + ex + "]");
-                    
+
                 }
                 return new StringResult();
             }
@@ -5876,7 +5874,7 @@ namespace Nooch.API.Controllers
                 catch (Exception ex)
                 {
                     Logger.Error("Service Layer -> TransferMoneyToNonNoochUserThroughPhoneUsingsynapse FAILED. [Exception: " + ex + "]");
-                    
+
                 }
                 return new StringResult();
             }
@@ -5903,9 +5901,9 @@ namespace Nooch.API.Controllers
                 {
                     var id = Utility.ConvertToGuid(input.memberId);
 
-                    
+
                     var member = noochConnection.Members.FirstOrDefault(m => m.MemberId == id);
-                        
+
 
                     if (member != null)
                     {
@@ -5915,12 +5913,12 @@ namespace Nooch.API.Controllers
 
                             // Marking any existing Synapse 'Create User' results for this user as Deleted
 
-                            
+
                             var synapseRes =
                                 noochConnection.SynapseCreateUserResults.FirstOrDefault(
                                     m => m.MemberId == id && m.IsDeleted == false);
-                                
-                            
+
+
 
                             if (synapseRes != null)
                             {
@@ -5930,7 +5928,7 @@ namespace Nooch.API.Controllers
                                 synapseRes.IsDeleted = true;
                                 synapseRes.ModifiedOn = DateTime.Now;
                                 noochConnection.SaveChanges();
-                                
+
                             }
 
                             try

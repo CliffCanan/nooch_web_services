@@ -479,9 +479,9 @@ namespace Nooch.Common
         {
             try
             {
-                var id = GetEncryptedData(userName);
+                var id = GetEncryptedData(userName.ToLower());
 
-                var noochMember = _dbContext.Members.FirstOrDefault(m => m.UserName == id && m.IsDeleted == false);
+                var noochMember = _dbContext.Members.FirstOrDefault(m => (m.UserName == id || m.UserNameLowerCase == id || m.SecondaryEmail == id) && m.IsDeleted == false);
 
                 if (noochMember != null)
                 {
@@ -491,7 +491,7 @@ namespace Nooch.Common
             }
             catch (Exception ex)
             {
-                Logger.Error("Common Helper -> GetMemberDetails FAILED - UserName [ENC:]: [" + userName + "], [Exception: " + ex + "]");
+                Logger.Error("Common Helper -> GetMemberDetails FAILED - UserName: [" + userName + "], [Exception: " + ex + "]");
             }
 
             return null;

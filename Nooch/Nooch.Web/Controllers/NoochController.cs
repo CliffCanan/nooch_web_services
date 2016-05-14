@@ -2289,12 +2289,25 @@ namespace Nooch.Web.Controllers
             return View();
         }
 
+
+        /// <summary>
+        /// For Submitting a payment from the MakePayment browser page.
+        /// Currently only used for making Rent Scene requests - eventually want to add ability to send a transfer as well.
+        /// </summary>
+        /// <param name="isRequest"></param>
+        /// <param name="amount"></param>
+        /// <param name="name"></param>
+        /// <param name="email"></param>
+        /// <param name="memo"></param>
+        /// <param name="pin"></param>
+        /// <param name="ip"></param>
+        /// <returns></returns>
         public ActionResult submitPayment(bool isRequest, string amount, string name, string email, string memo, string pin, string ip)
         {
             Logger.Info("Make Payment Code-Behind -> submitPayment Initiated - isRequest: [" + isRequest +
-                                   "], Name: [" + name + "], Email: [" + email +
-                                   "], Amount: [" + amount + "], memo: [" + memo +
-                                   "], PIN: [" + pin + "], IP: [" + ip + "]");
+                        "], Name: [" + name + "], Email: [" + email +
+                        "], Amount: [" + amount + "], memo: [" + memo +
+                        "], PIN: [" + pin + "], IP: [" + ip + "]");
 
             requestFromRentScene res = new requestFromRentScene();
             res.success = false;
@@ -2332,18 +2345,18 @@ namespace Nooch.Web.Controllers
                         if (response.isEmailAlreadyReg == true)
                         {
                             Logger.Info("Make Payment Code-Behind -> submitPayment Success - Email address already registered to an Existing User - " +
-                                                   "Name: [" + response.name + "], Email: [" + email + "], Status: [" + response.memberStatus + "], MemberID: [" + response.memberId + "]");
+                                        "Name: [" + response.name + "], Email: [" + email + "], Status: [" + response.memberStatus + "], MemberID: [" + response.memberId + "]");
                         }
                         else
                         {
                             Logger.Info("Make Payment Code-Behind -> submitPayment Success - Payment Request submitted to NEW user successfully - " +
-                                                   "Recipient: [" + name + "], Email: [" + email + "], Amount: [" + amount + "], Memo: [" + memo + "]");
+                                        "Recipient: [" + name + "], Email: [" + email + "], Amount: [" + amount + "], Memo: [" + memo + "]");
                         }
                     }
                     else
                     {
                         Logger.Error("Make Payment Code-Behind -> submitPayment FAILED - Server response for RequestMoneyForRentScene() was NOT successful - " +
-                                               "Recipient: [" + name + "], Email: [" + email + "], Amount: [" + amount + "], Memo: [" + memo + "]");
+                                     "Recipient: [" + name + "], Email: [" + email + "], Amount: [" + amount + "], Memo: [" + memo + "]");
                     }
 
                     #endregion Logging For Debugging

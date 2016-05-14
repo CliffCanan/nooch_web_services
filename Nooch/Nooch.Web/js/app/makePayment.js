@@ -49,16 +49,32 @@ $(document).ready(function ()
     });
 });
 
+function formatAmount()
+{
+	var formattedAmount = $('#amount').val().trim().replace(",","");
+
+	if (formattedAmount.length > 0) {
+		if (formattedAmount.length <= 2) {
+			$('#amount').val(formattedAmount + '.00');
+		}
+
+		if (Number(formattedAmount) < 5 || Number(formattedAmount) > 5000) {
+			updateValidationUi("amount", false);
+		}
+		else {
+			updateValidationUi("amount", true);
+		}
+	}
+	else {
+		updateValidationUi("amount", false);
+	}
+}
 
 function checkFormData()
 {
     console.log('submitPayment Initiated...');
 
     // CHECK TO MAKE SURE ALL FIELDS WERE COMPLETED
-    console.log(Number($('#amount').val()));
-
-    console.log(Number($('#amount').val().replace(",","")));
-
     var amountVal = Number($('#amount').val().replace(",", ""));
 
     if ($('#amount').val().length > 0 &&
@@ -158,7 +174,6 @@ function submitPayment()
 
     $.ajax({
         type: "POST",
-       // url: "submitPayment",
         url: URLs.submitPayment,
         data: "{'isRequest':'" + isRequest +
               "', 'amount':'" + amount +
@@ -173,13 +188,12 @@ function submitPayment()
         cache: "false",
         success: function (msg)
         {
-            //var sendPaymentResponse = msg.d;
             var sendPaymentResponse = msg;
             console.log("SUCCESS -> 'sendPaymentResponse' is... ");
             console.log(sendPaymentResponse);
 
-           // resultReason = sendPaymentResponse.msg;
-            resultReason = sendPaymentResponse;
+            resultReason = sendPaymentResponse.msg;
+
             // Hide the Loading Block
             $('#makePaymentContainer').unblock();
 
@@ -274,6 +288,14 @@ function submitPayment()
                     {
                         showErrorAlert('20');
                     }
+					else if (resultReason.indexOf("Requester does not have any verified bank account") > -1)
+					{
+						showErrorAlert('4');
+					}
+					else if (resultReason.indexOf("Missing") > -1)
+					{
+						showErrorAlert('5');
+					}
                     else
                     {
                         showErrorAlert('2');
@@ -332,7 +354,6 @@ function sendRequestToExistingUser()
 
     $.ajax({
         type: "POST",
-        //url: "submitRequestToExistingUser",
         url: URLs.submitRequestToExistingUser,
         data: "{'isRequest':'" + isRequest +
               "', 'amount':'" + amount +
@@ -349,20 +370,19 @@ function sendRequestToExistingUser()
         cache: "false",
         success: function (msg)
         {
-            //var sendPaymentResponse = msg.d;
             var sendPaymentResponse = msg;
             console.log("SUCCESS -> 'sendPaymentResponse' is... ");
             console.log(sendPaymentResponse);
 
-            //resultReason = sendPaymentResponse.msg;
             resultReason = sendPaymentResponse;
+
             // Hide the Loading Block
             $('#makePaymentContainer').unblock();
 
             if (sendPaymentResponse.success == true)
             {
                 $('.alert.alert-success #resultAmount').text('$' + amount);
-                $('.alert.alert-success #resultName').text(name);
+                $('.alert.alert-success #resultName').text(existNAME);
                 $('.alert.alert-success').removeClass('hidden').slideDown();
 
                 // THEN DISPLAY SUCCESS ALERT...
@@ -412,7 +432,7 @@ function sendRequestToExistingUser()
 
 function updateValidationUi(field, success)
 {
-    console.log("Field: " + field + "; success: " + success);
+    //console.log("Field: " + field + "; success: " + success);
 
     if (success == true)
     {
@@ -554,13 +574,25 @@ function showErrorAlert(errorNum)
     {
         alertTitle = "Errors Are The Worst!";
         alertBodyText = "We had trouble finding that transaction.  Please try again and if you continue to see this message, contact <span style='font-weight:600;'>Nooch Support</span>:" +
-                        "<br/><a href='mailto:support@nooch.com' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>support@nooch.com</a>";
+                        "<a href='mailto:support@nooch.com' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>support@nooch.com</a>";
     }
     else if (errorNum == '2' || errorNum == '3') // Errors after submitting ID verification AJAX
     {
         alertTitle = "Errors Are The Worst!";
-        alertBodyText = "Terrible sorry, but it looks like we had trouble processing your info.  Please refresh this page to try again and if you continue to see this message, contact <span style='font-weight:600;'>Nooch Support</span>:" +
-                        "<br/><a href='mailto:support@nooch.com' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>support@nooch.com</a>";
+        alertBodyText = "Terrible sorry, but it looks like we had trouble processing your info. &nbsp;Please refresh this page to try again and if you continue to see this message, contact <span style='font-weight:600;'>Nooch Support</span>:" +
+                        "<a href='mailto:support@nooch.com' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>support@nooch.com</a>";
+    }
+    else if (errorNum == '4') // Requester does not have any verified bank account
+    {
+        alertTitle = "Oh No - Error!";
+        alertBodyText = "Looks like the requester's account (yours) does not have a verified bank attached.  Please refresh this page to try again and if you continue to see this message, contact <span style='font-weight:600;'>Nooch Support</span>:" +
+                        "<a href='mailto:support@nooch.com' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>support@nooch.com</a>";
+    }
+    else if (errorNum == '5') // Missing some piece of data (shouldn't ever happen b/c the form shouldn't submit if missing anything)
+    {
+        alertTitle = "Oh No - Error!";
+        alertBodyText = "Looks like we were missing some required information. &nbsp;Please refresh this page to try again and if you continue to see this message, contact <span style='font-weight:600;'>Nooch Support</span>:" +
+                        "<a href='mailto:support@nooch.com' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>support@nooch.com</a>";
     }
     else if (errorNum == '20') // EMAIL came back as already registered with Nooch.
     {
@@ -572,7 +604,7 @@ function showErrorAlert(errorNum)
     else // Generic Error
     {
         alertTitle = "Errors Are The Worst!";
-        alertBodyText = "Terrible sorry, but it looks like we had trouble processing that request. &nbsp;Please refresh this page to try again and if you continue to see this message, contact <span style='font-weight:600;'>Nooch Support</span>:" +
+        alertBodyText = "Terrible sorry, but it looks like we had trouble processing that request. &nbsp;Please refresh this page to try again and if you continue to see this message, contact <span style='font-weight:600;'>Nooch Support:</span>" +
                         "<br/><a href='mailto:support@nooch.com' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>support@nooch.com</a>";
     }
     console.log("Should Show Error Div is...");

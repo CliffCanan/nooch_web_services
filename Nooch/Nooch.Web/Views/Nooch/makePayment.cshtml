@@ -97,7 +97,7 @@
     <div class="alert alert-success alert-fixed-top text-center" style="display: none">
         <span>
             <i class="fa fa-check-circle m-r-5"></i>
-            <strong>Success!</strong> &nbsp;A payment request for <span id="resultAmount" class="f-500"></span> was just sent to <span id="resultName" class="f-500"></span>.
+            <strong>Success!</strong> &nbsp;A payment request for <span id="resultAmount" class="f-500"></span> was just sent to <span id="resultName" class="f-600" style="text-transform: capitalize;"></span>.
         </span>
     </div>
 
@@ -127,7 +127,7 @@
                     <div class="col-sm-9 inputContainer">
                         <i class="fa fa-usd"></i>
                         <div class="fg-line">
-                            <input id="amount" type="text" class="form-control p-l-20" value="" placeholder=" 00.00" />
+                            <input id="amount" type="text" class="form-control p-l-20" value="" placeholder=" 00.00" onblur="formatAmount()" />
                         </div>
                     </div>
                 </div>
