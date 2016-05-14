@@ -1170,7 +1170,7 @@ namespace Nooch.Web.Controllers
 
         public ActionResult PayRequestComplete()
         {
-            ResultPayRequestComplete res = new ResultPayRequestComplete();
+            ResultPayRequestComplete rpc = new ResultPayRequestComplete();
 
             Logger.Info("PayRequestComplete CodeBehind -> page_load Initiated - 'mem_id' Parameter In URL: [" + Request.QueryString["mem_id"] + "]");
 

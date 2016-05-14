@@ -4028,6 +4028,7 @@ namespace Nooch.DataAccess
                             satr.Status_DateTimeStamp = synapseResponse.trans.recent_status.date.date.ToString();
                             satr.Status_Id = synapseResponse.trans.recent_status.status_id;
                             satr.Status_Note = synapseResponse.trans.recent_status.note;
+                            satr.Status_Text= synapseResponse.trans.recent_status.status;
 
                             _dbContext.SynapseAddTransactionResults.Add(satr);
                             _dbContext.SaveChanges();
