@@ -156,10 +156,10 @@ $(document).ready(function () {
             // 3. Existing Users WITH A Bank - Send to ___Complete Page
             // CC (5/9/16): I noticed this was added but really don't think it is necessary b/c there is payBtnClicked()
             //              to handle existing users with a bank already linked. B/c this would automatically forward people to the Complete page...
-            /*else if ((USERTYPE == "Registered" || USERTYPE == "Existing") &&
+            else if ((USERTYPE == "Registered" || USERTYPE == "Existing") &&
                 $('#bnkName').val() != "no bank found")
             {
-                // user is already a nooch member and has bank added
+                /*// user is already a nooch member and has bank added
                 if ($('#memidexst').val().length > 0) {
                     MemID_EXISTING = $('#memidexst').val();
                     //redUrlForAddBank = (transType == "send") ? "https://www.noochme.com/noochweb/nooch/depositMoneycomplete?mem_id="
@@ -175,8 +175,8 @@ $(document).ready(function () {
                     console.log("redUrlForAddBank IS: [" + redUrlForAddBank + "]");
 
                     window.location=redUrlForAddBank;
-                }
-            }*/
+                }*/
+            }
             else {
                 console.log("181. There was an error! :-(");
             }
@@ -868,6 +868,9 @@ function showLoadingBox(n) {
     else if (n == 2){
         msg = "Saving Password...";
     }
+    else if (n == 3) {
+        msg = "Attempting Payment...";
+    }
     else {
         msg = "Submitting responses...";
     }
@@ -1187,19 +1190,34 @@ function payBtnClicked()
     }, function (isConfirm) {
         if (isConfirm)
         {
+			$.blockUI({
+				message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Attempting Payment...</span>',
+				css: {
+					border: 'none',
+					padding: '25px 8px 20px',
+					backgroundColor: '#000',
+					'-webkit-border-radius': '14px',
+					'-moz-border-radius': '14px',
+					'border-radius': '14px',
+					opacity: '.8',
+					margin: '0 auto',
+					color: '#fff'
+				}
+			});
+
             var redUrlToSendTo = "";
 
             //redUrlToSendTo = (transType == "send") ? "https://www.noochme.com/noochweb/trans/depositMoneycomplete.aspx?mem_id="
             //                                         : "https://www.noochme.com/noochweb/trans/payRequestComplete.aspx?mem_id=";
-            redUrlForAddBank = (transType == "send") ? "http://54.201.43.89/noochweb/Nooch/DepositMoneyComplete?mem_id="
-                                                     : "http://54.201.43.89/noochweb/Nooch/PayRequestComplete?mem_id=";
+            redUrlToSendTo = (transType == "send") ? "http://54.201.43.89/noochweb/Nooch/DepositMoneyComplete?mem_id="
+                                                   : "http://54.201.43.89/noochweb/Nooch/PayRequestComplete?mem_id=";
 
             redUrlToSendTo = redUrlToSendTo + MemID_EXISTING + "," + TRANSID;
 
             redUrlToSendTo = (FOR_RENTSCENE == "true") ? redUrlToSendTo + ",true"
                                                        : redUrlToSendTo + ",false";
 
-            console.log("redUrlForAddBank IS: [" + redUrlToSendTo + "]");
+            console.log("redUrlToSendTo IS: [" + redUrlToSendTo + "]");
 
             window.location = redUrlToSendTo;
         }
