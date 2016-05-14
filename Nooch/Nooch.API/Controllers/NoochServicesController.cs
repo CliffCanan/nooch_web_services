@@ -5806,6 +5806,7 @@ namespace Nooch.API.Controllers
                 TransactionType = transactionInput.TransactionType,
                 TransactionDateTime = DateTime.Now.ToString(),
                 doNotSendEmails = transactionInput.doNotSendEmails,
+                TransactionId=Guid.NewGuid().ToString(),
                 isRentAutoPayment = transactionInput.isRentAutoPayment == true
                                     ? true
                                     : false,

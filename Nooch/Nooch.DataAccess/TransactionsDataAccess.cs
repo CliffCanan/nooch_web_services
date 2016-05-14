@@ -4028,7 +4028,7 @@ namespace Nooch.DataAccess
                             satr.Status_DateTimeStamp = synapseResponse.trans.recent_status.date.date.ToString();
                             satr.Status_Id = synapseResponse.trans.recent_status.status_id;
                             satr.Status_Note = synapseResponse.trans.recent_status.note;
-                            satr.Status_Text= synapseResponse.trans.recent_status.status;
+                            satr.Status_Text = synapseResponse.trans.recent_status.status;
 
                             _dbContext.SynapseAddTransactionResults.Add(satr);
                             _dbContext.SaveChanges();
@@ -6095,8 +6095,8 @@ namespace Nooch.DataAccess
                     string receiver_oauth = recipientSynapseDetails.UserDetails.access_token;
                     string receiver_fingerprint = recipientNoochDetails.UDID1;
                     string receiver_bank_node_id = recipientSynapseDetails.BankDetails.bankid.ToString(); // Cliff (5/13/16): pretty sure this should be the Bank's OID, the 'bankid' was from Synapse V2
-                    //string suppID_or_transID = transactionEntity.TransactionId.ToString();
-                    string suppID_or_transID = Convert.ToString(Guid.NewGuid());
+                    string suppID_or_transID = transactionEntity.TransactionId.ToString();
+                    //string suppID_or_transID = Convert.ToString(Guid.NewGuid());
                     string iPForTransaction = CommonHelper.GetRecentOrDefaultIPOfMember(SenderGuid);
 
 
@@ -6159,14 +6159,43 @@ namespace Nooch.DataAccess
 
                         try
                         {
-                            senderNoochDetails.TotalNoochTransfersCount = senderNoochDetails.TotalNoochTransfersCount + 1;
-                            senderNoochDetails.DateModified = DateTime.Now;
+                            //if (!string.IsNullOrEmpty(senderNoochDetails.TotalNoochTransfersCount.ToString()))
+                            if (senderNoochDetails.TotalNoochTransfersCount != null)
+                            {
+                                senderNoochDetails.TotalNoochTransfersCount = senderNoochDetails.TotalNoochTransfersCount + 1;
+                                senderNoochDetails.DateModified = DateTime.Now;
 
-                            recipientNoochDetails.TotalNoochTransfersCount = recipientNoochDetails.TotalNoochTransfersCount + 1;
-                            recipientNoochDetails.DateModified = DateTime.Now;
+                            }
+                            else
+                            {
+                                senderNoochDetails.TotalNoochTransfersCount = 0;
+                                senderNoochDetails.DateModified = DateTime.Now;
+                            }
+                           // if (!string.IsNullOrEmpty(recipientNoochDetails.TotalNoochTransfersCount.ToString()))
+                            if (recipientNoochDetails.TotalNoochTransfersCount != null)
+                            {
+                                recipientNoochDetails.TotalNoochTransfersCount = recipientNoochDetails.TotalNoochTransfersCount + 1;
+                                recipientNoochDetails.DateModified = DateTime.Now;
+                            }
+                            else
+                            {
+
+                                recipientNoochDetails.TotalNoochTransfersCount = 0;
+                                recipientNoochDetails.DateModified = DateTime.Now;
+                            }
+
 
                             // Update Sender in DB
-                            noochConnection.SaveChanges();
+                            try
+                            {
+                                noochConnection.SaveChanges();
+                                saveToTransTable = 1;
+                            }
+                            catch
+                            {
+                                saveToTransTable = 0;
+                            }
+                            
 
                         }
                         catch (Exception ex)
