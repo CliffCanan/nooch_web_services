@@ -34,13 +34,13 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
         public string email { get; set; }
         //public string password { get; set; }
         public string refresh_token { get; set; }
-        
     }
 
     public class createUser_fingerprints
     {
         public string fingerprint { get; set; }
     }
+
     public class createUser_extra
     {
         public string note { get; set; }

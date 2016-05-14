@@ -47,20 +47,20 @@ namespace Nooch.DataAccess
                 try
                 {
                     var id = Utility.ConvertToGuid(memberId);
-                    
+
                     var noochMember =
                         noochConnection.Members.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
-                        
+
 
                     if (noochMember != null)
                     {
                         // checking password reset request time
-                        
+
                         var resereq =
                             noochConnection.PasswordResetRequests.OrderByDescending(m => m.Id)
                                 .Take(1)
                                 .FirstOrDefault(m => m.MemberId == id);
-                        
+
 
                         if (resereq == null)
                         {
@@ -108,7 +108,7 @@ namespace Nooch.DataAccess
 
                     var noochMember =
                         noochConnection.Members.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
-                        
+
 
                     if (noochMember != null)
                     {
@@ -117,11 +117,11 @@ namespace Nooch.DataAccess
                         if (String.IsNullOrEmpty(newUser))
                         {
                             // checking password reset request time
-                            
+
                             var resetRequestTime =
                                 noochConnection.PasswordResetRequests.OrderByDescending(m => m.Id).Take(1)
                                     .FirstOrDefault(m => m.MemberId == id);
-                                
+
 
                             if (resetRequestTime == null)
                             {
@@ -189,7 +189,7 @@ namespace Nooch.DataAccess
                 }
             };
 
-            return Utility.SendEmail("passwordChanged",  fromAddress, primaryMail, null,
+            return Utility.SendEmail("passwordChanged", fromAddress, primaryMail, null,
                 "Your Nooch password was changed"
                 , null, tokens, null, null, null);
         }
@@ -209,9 +209,9 @@ namespace Nooch.DataAccess
                 Username = CommonHelper.GetEncryptedData(Username);
                 using (var noochConnection = new NOOCHEntities())
                 {
-                    
+
                     var memberEntity = noochConnection.Members.FirstOrDefault(m => m.UserName == Username);
-                    
+
                     if (memberEntity != null)
                     {
                         if (memberEntity.Status == "Temporarily_Blocked")
@@ -282,8 +282,8 @@ namespace Nooch.DataAccess
                     var authToken =
                         noochConnection.AuthenticationTokens.FirstOrDefault(
                             m => m.MemberId == MemId && m.IsActivated == false);
-                        
-                        
+
+
 
                     if (authToken != null)
                     {
@@ -302,7 +302,7 @@ namespace Nooch.DataAccess
                         };
                         try
                         {
-                            Utility.SendEmail(Constants.TEMPLATE_REGISTRATION, 
+                            Utility.SendEmail(Constants.TEMPLATE_REGISTRATION,
                                 fromAddress, Username, null,
                                 "Confirm Nooch Registration", link,
                                 tokens, null, null, null);
@@ -336,14 +336,14 @@ namespace Nooch.DataAccess
             var id = Utility.ConvertToGuid(memberId);
             using (var noochConnection = new NOOCHEntities())
             {
-                
-                var memberEntity = noochConnection.Members.FirstOrDefault(m=>m.MemberId==id);
+
+                var memberEntity = noochConnection.Members.FirstOrDefault(m => m.MemberId == id);
                 if (memberEntity != null)
                 {
                     memberEntity.LastLocationLat = Decimal.Parse(Lat);
                     memberEntity.LastLocationLng = Decimal.Parse(Long);
                     noochConnection.SaveChanges();
-                    
+
                     return "success";
                 }
                 else
@@ -357,13 +357,13 @@ namespace Nooch.DataAccess
             var id = Utility.ConvertToGuid(memberId);
             using (var noochConnection = new NOOCHEntities())
             {
-                
-                var memberEntity = noochConnection.Members.FirstOrDefault(m=>m.MemberId==id);
+
+                var memberEntity = noochConnection.Members.FirstOrDefault(m => m.MemberId == id);
                 if (memberEntity != null)
                 {
                     memberEntity.IsRequiredImmediatley = IsImmediate;
                     noochConnection.SaveChanges();
-                    
+
                     return "success";
                 }
                 else
@@ -379,19 +379,19 @@ namespace Nooch.DataAccess
 
             using (var noochConnection = new NOOCHEntities())
             {
-                
+
                 string fileName = memberId;
 
                 var id = Utility.ConvertToGuid(memberId);
-                
+
                 var memberPrivacySettings = noochConnection.MemberPrivacySettings.FirstOrDefault(m => m.MemberId == id);
-                    
+
 
                 if (memberPrivacySettings == null)
                 {
                     var privacySettings = new MemberPrivacySetting
                     {
-                        
+
                         MemberId = id,
                         AllowSharing = allowSharing,
                         DateCreated = DateTime.Now
@@ -425,7 +425,7 @@ namespace Nooch.DataAccess
                 var id = Utility.ConvertToGuid(memberId);
 
                 var memberPrivacySettings = noochConnection.MemberPrivacySettings.FirstOrDefault(m => m.MemberId == id);
-                    
+
 
                 return memberPrivacySettings;
             }
@@ -780,14 +780,14 @@ namespace Nooch.DataAccess
 
             using (var noochConnection = new NOOCHEntities())
             {
-                
 
-                
+
+
                 var memberEntity =
                     noochConnection.Members.FirstOrDefault(
                         m => m.FacebookAccountLogin.Equals(FBId) && m.IsDeleted == false);
-                    
-                    
+
+
 
                 if (memberEntity == null)
                 {
@@ -832,7 +832,7 @@ namespace Nooch.DataAccess
 
                             try
                             {
-                                Utility.SendEmail("",  fromAddress, toAddress, null,
+                                Utility.SendEmail("", fromAddress, toAddress, null,
                                     "Nooch Automatic Logout", null, null, null, null, msg);
 
                                 Logger.Info("MDA -> LoginwithFB - Automatic Log Out Email sent to [" + toAddress + "] successfully.");
@@ -886,7 +886,7 @@ namespace Nooch.DataAccess
                         memberEntity.InvalidPinAttemptCount = null;
                         memberEntity.InvalidPinAttemptTime = null;
                         noochConnection.SaveChanges();
-                        
+
 
                         return "Success";
 
@@ -5492,8 +5492,8 @@ namespace Nooch.DataAccess
         public string GetTokensAndTransferMoneyToNewUser(string TransactionId, string MemberIdAfterSynapseAccountCreation, string TransactionType, string recipMemId)
         {
             Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser Initiated - TransType: [" + TransactionType +
-                                   "], TransID: [" + TransactionId + "], New User Member ID: [" + MemberIdAfterSynapseAccountCreation +
-                                   "], RecipientMemberID: [" + recipMemId + "]");
+                        "], TransID: [" + TransactionId + "], New User Member ID: [" + MemberIdAfterSynapseAccountCreation +
+                        "], RecipientMemberID: [" + recipMemId + "]");
 
             // If a REQUEST, TransactionType will be "RequestToNewUser" & MemberIdAfterSynapseAccountCreation is the Request Recipient, and should be the SENDER below
             //               and the Request sender is the RecipMemID (if b/t 2 existing users)
@@ -5594,10 +5594,6 @@ namespace Nooch.DataAccess
                                 // We have all details of both users.  Now call Synapse's Order API service
                                 #region Call Synapse Order API
 
-                                TransactionsDataAccess tda = new TransactionsDataAccess();
-
-
-
                                 string facilitator_fee = "0";
                                 if (Convert.ToDecimal(Transaction.Amount) > 10)
                                 {
@@ -5616,14 +5612,35 @@ namespace Nooch.DataAccess
                                 string moneyRecipientFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(recipient.FirstName));
                                 string moneyRecipientLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(recipient.LastName));
 
-                                SynapseV3AddTrans_ReusableClass Call_Synapse_Order_API_Result = tda.AddTransSynapseV3Reusable(SenderUserAndBankDetails.UserDetails.access_token,
-                                    SenderUserAndBankDetails.UserDetails.user_fingerprints, SenderUserAndBankDetails.BankDetails.bank_oid,
-                                   Transaction.Amount.ToString(), facilitator_fee, RecipientUserAndBankDetails.UserDetails.user_id, RecipientUserAndBankDetails.UserDetails.user_fingerprints,
-                                   RecipientUserAndBankDetails.BankDetails.bank_oid, Transaction.TransactionId.ToString(), CommonHelper.GetDecryptedData(sender.UserName), CommonHelper.GetDecryptedData(recipient.UserName), CommonHelper.GetRecentOrDefaultIPOfMember(sender.MemberId),
-                                   moneySenderLastName, moneyRecipientLastName
-                                    );
+                                TransactionsDataAccess tda = new TransactionsDataAccess();
 
+                                var transId = Transaction.TransactionId.ToString();
+                                var access_token = SenderUserAndBankDetails.UserDetails.access_token;
+                                var senderFingerprint = SenderUserAndBankDetails.UserDetails.user_fingerprints;
+                                var senderBankOid = SenderUserAndBankDetails.BankDetails.bank_oid;
 
+                                var recipSynapseUserId = RecipientUserAndBankDetails.UserDetails.user_id;
+                                var recipFingerprint = RecipientUserAndBankDetails.UserDetails.user_fingerprints;
+                                var recipBankOid = RecipientUserAndBankDetails.BankDetails.bank_oid;
+                                var amount = Transaction.Amount.ToString();
+
+                                Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser - About to call AddTransSynapseV3Reusable() in TDA - " + 
+                                            "[TransID: " + transId + "], [Amount: " + amount  + "], [Sender Name: " + moneySenderFirstName + " " + moneySenderLastName +"], " +
+                                            "[Sender BankOID: " + senderBankOid + "], [Recip Name: " + moneyRecipientFirstName + " " + moneyRecipientLastName + "], [access_token: " + "]");
+                                SynapseV3AddTrans_ReusableClass Call_Synapse_Order_API_Result = tda.AddTransSynapseV3Reusable(access_token,
+                                    senderFingerprint,
+                                    senderBankOid,
+                                    amount,
+                                    facilitator_fee,
+                                    recipSynapseUserId,
+                                    recipFingerprint,
+                                    recipBankOid,
+                                    transId,
+                                    CommonHelper.GetDecryptedData(sender.UserName),
+                                    CommonHelper.GetDecryptedData(recipient.UserName),
+                                    CommonHelper.GetRecentOrDefaultIPOfMember(sender.MemberId),
+                                    moneySenderLastName,
+                                    moneyRecipientLastName);
 
 
                                 #endregion Call Synapse Order API
@@ -5637,8 +5654,6 @@ namespace Nooch.DataAccess
                                     // If testing, keep this transaction as 'Pending' so we can more easily re-test with the same transaction.
                                     Transaction.TransactionStatus = "Success";
                                     //_dbContext.SaveChanges();
-                                    
-
                                     //}
 
                                     #region Update Tenant Info If A RENT Payment
@@ -5673,6 +5688,7 @@ namespace Nooch.DataAccess
                                     #region Setup Email Placeholders
 
                                     Transaction.TransactionDate = DateTime.Now;
+                                    string fromAddress = Utility.GetValueFromConfig("transfersMail");
 
                                     string newUserPhone = "";
 
@@ -5682,10 +5698,6 @@ namespace Nooch.DataAccess
                                     {
                                         newUserPhone = CommonHelper.GetDecryptedData(Transaction.PhoneNumberInvited);
                                     }
-
-                                    string fromAddress = Utility.GetValueFromConfig("transfersMail");
-
-
 
                                     bool isForRentScene = false;
                                     if (recipient.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49" || // Rent Scene's account
@@ -6366,12 +6378,12 @@ namespace Nooch.DataAccess
 
             using (var noochConnection = new NOOCHEntities())
             {
-                
+
 
                 var id = Utility.ConvertToGuid(memberId);
-                
+
                 var memberPrivacySettings = noochConnection.MemberPrivacySettings.FirstOrDefault(m => m.MemberId == id);
-                
+
 
                 if (memberPrivacySettings != null)
                 {
@@ -6942,8 +6954,8 @@ namespace Nooch.DataAccess
 
             using (var noochConnection = new NOOCHEntities())
             {
-                
-                var memberEntity = noochConnection.Members.FirstOrDefault(m=>m.MemberId==id && m.IsDeleted==false);
+
+                var memberEntity = noochConnection.Members.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
 
                 if (memberEntity != null)
                 {
@@ -6974,7 +6986,7 @@ namespace Nooch.DataAccess
                 {
                     Guid tid = Utility.ConvertToGuid(TransId);
                     password = CommonHelper.GetEncryptedData(password);
-                        string pinNumber = Utility.GetRandomPinNumber();
+                    string pinNumber = Utility.GetRandomPinNumber();
                     pinNumber = CommonHelper.GetEncryptedData(pinNumber);
 
                     var transDetail =
@@ -6984,12 +6996,12 @@ namespace Nooch.DataAccess
 
                     if (transDetail != null)
                     {
-                        
+
                         var memdetails =
                             noochConnection.Members.FirstOrDefault(
                                 m => m.UserName == transDetail.InvitationSentTo && m.IsDeleted == false);
-                            
-                            
+
+
 
                         if (memdetails == null)
                         {
@@ -7022,7 +7034,7 @@ namespace Nooch.DataAccess
                             };
 
                             int result = 0;
-                            
+
 
                             try
                             {
@@ -7058,7 +7070,7 @@ namespace Nooch.DataAccess
                                 };
                                 try
                                 {
-                                    Utility.SendEmail(Constants.TEMPLATE_REGISTRATION, 
+                                    Utility.SendEmail(Constants.TEMPLATE_REGISTRATION,
                                         fromAddress, toEmailAddress, null, "Confirm your email on Nooch", link,
                                         tokens, null, null, null);
                                 }
@@ -7075,7 +7087,7 @@ namespace Nooch.DataAccess
                                 };
                                 try
                                 {
-                                    Utility.SendEmail("pinSetForNewUser",  fromAddress,
+                                    Utility.SendEmail("pinSetForNewUser", fromAddress,
                                         toEmailAddress, null, "Your temporary Nooch Pin Number", null,
                                         tokens2, null, null, null);
                                 }
@@ -7094,19 +7106,19 @@ namespace Nooch.DataAccess
                                     DateGenerated = DateTime.Now,
                                     FriendRequestId = requestId
                                 };
-                                
+
                                 noochConnection.AuthenticationTokens.Add(token);
                                 bool status = noochConnection.SaveChanges() > 0;
 
                                 // for member notification settings
 
-                                
+
 
                                 var memberNotification = new MemberNotification
                                 {
                                     NotificationId = Guid.NewGuid(),
 
-                                    
+
                                     MemberId = member.MemberId,
 
                                     FriendRequest = true,
@@ -7140,7 +7152,7 @@ namespace Nooch.DataAccess
 
                                 var memberPrivacySettings = new MemberPrivacySetting
                                 {
-                                    
+
                                     MemberId = member.MemberId,
                                     AllowSharing = true,
                                     ShowInSearch = true,
@@ -7148,7 +7160,7 @@ namespace Nooch.DataAccess
                                 };
                                 noochConnection.MemberPrivacySettings.Add(memberPrivacySettings);
                                 noochConnection.SaveChanges();
-                                
+
 
                                 if (status)
                                 {
@@ -7193,17 +7205,17 @@ namespace Nooch.DataAccess
                 using (var noochConnection = new NOOCHEntities())
                 {
                     var id = Utility.ConvertToGuid(tenantId);
-                    
+
                     var noochMember =
                         noochConnection.Tenants.FirstOrDefault(t => t.TenantId == id && t.IsDeleted == false);
-                        
-                    
+
+
 
                     if (noochMember != null)
                     {
                         noochMember.IsAutopayOn = statustoSet;
                         noochConnection.SaveChanges();
-                        
+
 
                         if (statustoSet == true)
                             return "Autopay turned ON successfully.";

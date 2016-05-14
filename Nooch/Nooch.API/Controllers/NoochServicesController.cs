@@ -4219,31 +4219,11 @@ namespace Nooch.API.Controllers
             {
                 Logger.Info("Service Controller - GetSynapseBankAndUserDetails Initiated - MemberId: [" + memberid + "]");
 
-
-                var adaResult = CommonHelper.GetSynapseBankAndUserDetailsforGivenMemberId(memberid);
-
-                res.wereBankDetailsFound = adaResult.wereBankDetailsFound;
-                res.wereUserDetailsFound = adaResult.wereUserDetailsFound;
+                var helperResult = CommonHelper.GetSynapseBankAndUserDetailsforGivenMemberId(memberid);
 
                 Logger.Info("Service Controller - GetSynapseBankAndUserDetails Checkpoint #1!");
 
-                res.AccountDetailsErrMessage = adaResult.AccountDetailsErrMessage;
-                res.UserDetailsErrMessage = adaResult.UserDetailsErrMessage;
-
-                res = adaResult;
-
-                Logger.Info("Service Controller - GetSynapseBankAndUserDetails Checkpoint #2!");
-
-                //res.UserDetails.access_token = adaResult.UserDetails.access_token;
-
-                //Logger.LogDebugMessage("Service Layer - GetSynapseBankAndUserDetails Checkpoint #3!");
-
-                //res.UserDetails.MemberId = adaResult.UserDetails.MemberId.ToString();
-                //res.UserDetails.user_id = adaResult.UserDetails.user_id;
-                //res.BankDetails.bankid = adaResult.BankDetails.bankid;
-                //res.BankDetails.email = adaResult.BankDetails.email;
-                //res.BankDetails.Status = adaResult.BankDetails.Status;
-                //res.BankDetails.AddedOn = adaResult.BankDetails.AddedOn;
+                res = helperResult;
             }
             catch (Exception ex)
             {
@@ -4349,8 +4329,8 @@ namespace Nooch.API.Controllers
             try
             {
                 Logger.Info("Service Controller - GetTransactionDetailByIdAndMoveMoneyForNewUserDeposit Initiated - TransType: [" + TransactionType +
-                                       "], TransId: [" + TransactionId + "],  MemberIdAfterSynapseAccountCreation: [" + MemberIdAfterSynapseAccountCreation +
-                                       "], RecipientMemberID: [" + recipMemId + "]");
+                            "], TransId: [" + TransactionId + "],  MemberIdAfterSynapseAccountCreation: [" + MemberIdAfterSynapseAccountCreation +
+                            "], RecipientMemberID: [" + recipMemId + "]");
 
                 var tda = new TransactionsDataAccess();
                 Transaction tr = tda.GetTransactionById(TransactionId);

@@ -1047,24 +1047,23 @@ namespace Nooch.Web.Controllers
 
 
         public ActionResult ResetPassword()
-        
         {
             ResultResetPassword resultResetPassword = new ResultResetPassword();
             string strUserAgent = Request.UserAgent.ToLower();
             resultResetPassword.requestExpiredorNotFound = false;
             if (strUserAgent != null)
             {
-              
+
                 if (Request.Browser.IsMobileDevice || strUserAgent.Contains("iphone") ||
                       strUserAgent.Contains("mobile"))
                 {
                     resultResetPassword.clientScript = "<script>Show('iPhoneButton','ctl00_detailContentPlaceHolder_activationLinkButton')</script>";
-                    
+
                 }
                 else
                 {
                     resultResetPassword.clientScript = "<script>Show('ctl00_detailContentPlaceHolder_newPasswordLinkButton','iPhoneButton')</script>";
-            
+
                 }
             }
 
@@ -1078,54 +1077,54 @@ namespace Nooch.Web.Controllers
 
         public string ResetPasswordButton_Click(string PWDText, string memberId)
         {
-             
-               
-                var objAesAlgorithm = new AES();
-                string encryptedPassword = objAesAlgorithm.Encrypt(PWDText.Trim(), string.Empty);
-                string serviceMethod = string.Empty;
-                string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-                serviceMethod = "/ResetPassword?memberId=" + memberId + "&newPassword=" + encryptedPassword + "&newUser=true";
 
-                var isMemberPwdResetted = ResponseConverter<Nooch.Common.Entities.BoolResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
-                if (isMemberPwdResetted.Result)
-                {
-                    return "true";
-                
-                }
-                else
-                {
-                    return "false";
-                 
-                }
-             
+
+            var objAesAlgorithm = new AES();
+            string encryptedPassword = objAesAlgorithm.Encrypt(PWDText.Trim(), string.Empty);
+            string serviceMethod = string.Empty;
+            string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+            serviceMethod = "/ResetPassword?memberId=" + memberId + "&newPassword=" + encryptedPassword + "&newUser=true";
+
+            var isMemberPwdResetted = ResponseConverter<Nooch.Common.Entities.BoolResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+            if (isMemberPwdResetted.Result)
+            {
+                return "true";
+
+            }
+            else
+            {
+                return "false";
+
+            }
+
         }
 
         public ActionResult pinNumberVerificationButton_Click(string PINTextBox, string memberId)
         {
 
             synapseV3GenericResponse res = new synapseV3GenericResponse();
-                var objAesAlgorithm = new AES();
-                string encryptedPin = objAesAlgorithm.Encrypt(PINTextBox.Trim(), string.Empty);
-                string serviceMethod = string.Empty;
-                string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-                serviceMethod = "/ValidatePinNumberForPasswordForgotPage?memberId=" + memberId + "&pinNo=" + encryptedPin;
+            var objAesAlgorithm = new AES();
+            string encryptedPin = objAesAlgorithm.Encrypt(PINTextBox.Trim(), string.Empty);
+            string serviceMethod = string.Empty;
+            string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+            serviceMethod = "/ValidatePinNumberForPasswordForgotPage?memberId=" + memberId + "&pinNo=" + encryptedPin;
 
-                var isMemberValid = ResponseConverter<Nooch.Common.Entities.StringResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
-                if (isMemberValid.Result.Equals("Success"))
-                {
-                    Page p = HttpContext.Handler as Page;
-                    p.RegisterStartupScript("showButton", "<script>Show('resetPasswordDiv','pinNumberVerificationDiv')</script>");
-                    res.isSuccess = true;
-                    return Json(res);
+            var isMemberValid = ResponseConverter<Nooch.Common.Entities.StringResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+            if (isMemberValid.Result.Equals("Success"))
+            {
+                Page p = HttpContext.Handler as Page;
+                p.RegisterStartupScript("showButton", "<script>Show('resetPasswordDiv','pinNumberVerificationDiv')</script>");
+                res.isSuccess = true;
+                return Json(res);
 
-                }
-                else
-                {
-                    res.isSuccess = false;
-                    res.msg = isMemberValid.Result.ToString();
-                    return Json(res);
-                }
-             
+            }
+            else
+            {
+                res.isSuccess = false;
+                res.msg = isMemberValid.Result.ToString();
+                return Json(res);
+            }
+
         }
         ResultResetPassword bindusermail(ResultResetPassword rrp)
         {
@@ -1136,7 +1135,7 @@ namespace Nooch.Web.Controllers
                 string serviceMethod = string.Empty;
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
                 serviceMethod = "/GetMemberUsernameByMemberId?memberId=" + memberId;
-                 
+
                 var isMemberPwdReset = ResponseConverter<Nooch.Common.Entities.StringResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
                 if (isMemberPwdReset.Result != null)
                 {
@@ -1167,13 +1166,12 @@ namespace Nooch.Web.Controllers
             }
 
             return resultResetPass;
-
         }
 
         public ActionResult PayRequestComplete()
         {
-            ResultPayRequestComplete rpc = new ResultPayRequestComplete();
-             
+            ResultPayRequestComplete res = new ResultPayRequestComplete();
+
             Logger.Info("PayRequestComplete CodeBehind -> page_load Initiated - 'mem_id' Parameter In URL: [" + Request.QueryString["mem_id"] + "]");
 
             rpc.paymentSuccess = false;
@@ -1197,7 +1195,7 @@ namespace Nooch.Web.Controllers
                         // Check if this payment is for Rent Scene
                         if (isForRentScene == "true")
                         {
-                            Logger.Info("PayRequestComplete CodeBehind -> Page_load - RENT SCENE Transaction Detected - TransID: [" + tr_id + "]");
+                            Logger.Info("PayRequestComplete CodeBehind -> RENT SCENE Transaction Detected - TransID: [" + tr_id + "]");
                             rpc.rs = "true";
                         }
 
@@ -1238,6 +1236,7 @@ namespace Nooch.Web.Controllers
         private ResultPayRequestComplete completeTrans(string MemberIdAfterSynapseAccountCreation, string TransactionId, ResultPayRequestComplete resultPayComplete)
         {
             ResultPayRequestComplete rpc = resultPayComplete;
+
             try
             {
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
@@ -1255,8 +1254,8 @@ namespace Nooch.Web.Controllers
                     serviceMethod = serviceMethod + "&recipMemId= ";
                 }
 
-                Logger.Info("payRequestComplete CodeBehind -> completeTrans - About to Query Nooch Service to move money - URL: ["
-                                       + String.Concat(serviceUrl, serviceMethod) + "]");
+                Logger.Info("NoochController -> completeTrans - About to Query Nooch Service to move money - URL: [" +
+                             String.Concat(serviceUrl, serviceMethod) + "]");
 
                 TransactionDto transaction = ResponseConverter<TransactionDto>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
 
@@ -1268,7 +1267,7 @@ namespace Nooch.Web.Controllers
                     }
                     else
                     {
-                        Logger.Error("payRequestComplete CodeBehind -> completeTrans FAILED - TransId: [" + TransactionId + "]");
+                        Logger.Error("NoochController -> completeTrans FAILED - TransId: [" + TransactionId + "]");
 
                         rpc.paymentSuccess = false;
                         Response.Write("<script>errorFromCodeBehind = 'failed';</script>");
@@ -1278,7 +1277,7 @@ namespace Nooch.Web.Controllers
             catch (Exception ex)
             {
                 Logger.Error("payRequestComplete CodeBehind -> completeTrans FAILED - TransId: [" + TransactionId +
-                                       "], Exception: [" + ex + "]");
+                             "], Exception: [" + ex + "]");
             }
 
             return rpc;
@@ -1386,7 +1385,7 @@ namespace Nooch.Web.Controllers
                 rpr.senderName1 = (!String.IsNullOrEmpty(transaction.RecepientName) && transaction.RecepientName.Length > 2) ?
                                      transaction.RecepientName :
                                      transaction.Name;
-                 
+
                 string s = transaction.Amount.ToString("n2");
                 string[] s1 = s.Split('.');
                 if (s1.Length == 2)
