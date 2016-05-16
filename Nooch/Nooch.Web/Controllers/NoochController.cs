@@ -155,17 +155,17 @@ namespace Nooch.Web.Controllers
 
             if (transaction.IsPhoneInvitation && transaction.PhoneNumberInvited.Length > 0)
             {
-                rcr.senderImage = "https://www.noochme.com/noochweb/Assets/Images/" + "userpic-default.png";
+                rcr.senderImage = "https://www.noochme.com/noochweb/Assets/Images/userpic-default.png";
                 rcr.nameLabel = transaction.PhoneNumberInvited;
             }
             else if (!String.IsNullOrEmpty(transaction.InvitationSentTo))
             {
-                rcr.senderImage = "https://www.noochme.com/noochweb/Assets/Images/" + "userpic-default.png";
+                rcr.senderImage = "https://www.noochme.com/noochweb/Assets/Images/userpic-default.png";
                 rcr.nameLabel = transaction.InvitationSentTo;
             }
             else
             {
-                rcr.senderImage = transaction.SenderPhoto;
+                rcr.senderImage = !String.IsNullOrEmpty(transaction.SenderPhoto) ? transaction.SenderPhoto : "https://www.noochme.com/noochweb/Assets/Images/userpic-default.png";
                 rcr.nameLabel = transaction.Name;
             }
 
