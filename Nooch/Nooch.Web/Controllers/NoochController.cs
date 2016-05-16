@@ -2263,24 +2263,38 @@ namespace Nooch.Web.Controllers
             return Json(res);
         }
 
-        #region MakePayment
+        #region MakePayment Page
+
         public ActionResult makePayment()
         {
             HiddenField hkf = new HiddenField();
             try
             {
-
-                if (!String.IsNullOrEmpty(Request.QueryString["rs"]))
+                if (!String.IsNullOrEmpty(Request.QueryString["from"]))
                 {
-                    Logger.Info("Make Payment CodeBehind -> Page_load Initiated - Is a RentScene Payment: [" + Request.QueryString["rs"] + "]");
-
-                    //rs.Value = Request.QueryString["rs"].ToLower();      
-                    hkf.rs = Request.QueryString["rs"].ToLower();
+                    if (Request.QueryString["from"] == "rentscene")
+                    {
+                        Logger.Info("Make Payment CodeBehind -> Page Initiated - Is for RENTSCENE");
+                        hkf.from = "rentscene";
+                    }
+                    else if (Request.QueryString["from"] == "appjaxx")
+                    {
+                        Logger.Info("Make Payment CodeBehind -> Page Initiated - Is for APPJAXX");
+                        hkf.from = "appjaxx";
+                    }
+                    else
+                    {
+                        hkf.from = "nooch";
+                    }
+                }
+                else
+                {
+                    // Set Nooch as the default
+                    hkf.from = "nooch";
                 }
             }
             catch (Exception ex)
             {
-                // errorId.Value = "1";
                 hkf.errorId = "1";
                 Logger.Error("Make Payment CodeBehind -> page_load OUTER EXCEPTION - [Exception: " + ex.Message + "]");
             }
@@ -2302,9 +2316,9 @@ namespace Nooch.Web.Controllers
         /// <param name="pin"></param>
         /// <param name="ip"></param>
         /// <returns></returns>
-        public ActionResult submitPayment(bool isRequest, string amount, string name, string email, string memo, string pin, string ip)
+        public ActionResult submitPayment(string from, bool isRequest, string amount, string name, string email, string memo, string pin, string ip)
         {
-            Logger.Info("Make Payment Code-Behind -> submitPayment Initiated - isRequest: [" + isRequest +
+            Logger.Info("Make Payment Code-Behind -> submitPayment Initiated - From: [" + from + "], isRequest: [" + isRequest +
                         "], Name: [" + name + "], Email: [" + email +
                         "], Amount: [" + amount + "], memo: [" + memo +
                         "], PIN: [" + pin + "], IP: [" + ip + "]");
@@ -2313,13 +2327,73 @@ namespace Nooch.Web.Controllers
             res.success = false;
             res.msg = "Initial - code behind";
 
-            pin = (String.IsNullOrEmpty(pin) || pin.Length != 4) ? "0000" : pin;
-            pin = CommonHelper.GetEncryptedData(pin);
+            #region Check If Recipient's Email Is Already Registered
+
+            var memberObj = CommonHelper.GetMemberDetailsByUserName(email);
+
+            if (memberObj != null) // This email address is already registered!
+            {
+                Logger.Info("Make Payment Conde Behind -> submitPayment Attempted - Recipient email already exists: [" + email + "]");
+
+                res.isEmailAlreadyReg = true;
+                res.memberId = memberObj.MemberId.ToString();
+                res.name = (!String.IsNullOrEmpty(memberObj.FirstName)) ? CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName))
+                                                                        : "";
+                res.name = (!String.IsNullOrEmpty(memberObj.LastName)) ? res.name + " " + CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.LastName))
+                                                                       : res.name;
+                res.memberStatus = memberObj.Status;
+                res.dateCreated = Convert.ToDateTime(memberObj.DateCreated).ToString("MMM d, yyyy");
+
+                var userAndBankInfo = CommonHelper.GetSynapseBankAndUserDetailsforGivenMemberId(memberObj.MemberId.ToString());
+
+                if (userAndBankInfo != null &&
+                    userAndBankInfo.wereBankDetailsFound == true &&
+                    userAndBankInfo.BankDetails != null)
+                {
+                    res.isBankAttached = true;
+                    res.bankStatus = userAndBankInfo.BankDetails.Status;
+                    res.synapseUserPermission = userAndBankInfo.UserDetails.permission;
+                    res.synapseBankAllowed = userAndBankInfo.BankDetails.allowed;
+                }
+
+                res.msg = "Existing user found!";
+                res.note = "";
+                res.success = true;
+                return Json(res);
+            }
+
+            #endregion Check If Recipient's Email Is Already Registered
 
             try
             {
+                #region Lookup PIN
+
+                pin = (String.IsNullOrEmpty(pin) || pin.Length != 4) ? "0000" : pin;
+
+                if (from == "rentscene")
+                {
+                    pin = CommonHelper.GetMemberPinByUserName("payments@rentscene.com");
+                }
+                else if (from == "nooch")
+                {
+                    pin = CommonHelper.GetMemberPinByUserName("team@nooch.com");
+                }
+                else if (from == "appjaxx")
+                {
+                    pin = CommonHelper.GetMemberPinByUserName("josh@appjaxx.com");
+                }
+
+                if (String.IsNullOrEmpty(pin))
+                {
+                    res.msg = "Failed to get a PIN from the server.";
+                    return Json(res);
+                }
+
+                #endregion Lookup PIN
+
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-                string serviceMethod = "/RequestMoneyForRentScene?name=" + name +
+                string serviceMethod = "/RequestMoneyForRentScene?from=" + from +
+                                       "&name=" + name +
                                        "&email=" + email + "&amount=" + amount +
                                        "&memo=" + memo + "&pin=" + pin +
                                        "&ip=" + ip + "&isRequest=" + isRequest;
@@ -2330,13 +2404,11 @@ namespace Nooch.Web.Controllers
 
                 requestFromRentScene response = ResponseConverter<requestFromRentScene>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
 
-                Logger.Info("Make Payment Code-Behind -> submitPayment RESULT.Success: [" + response.success + "], RESULT.Msg: [" + response.msg + "]");
-
                 if (response != null)
                 {
                     res = response;
 
-                    //Logger.LogDebugMessage("Make Payment Code-Behind -> submitPayment");
+                    Logger.Info("Make Payment Code-Behind -> submitPayment RESULT.Success: [" + response.success + "], RESULT.Msg: [" + response.msg + "]");
 
                     #region Logging For Debugging
 
@@ -2344,6 +2416,8 @@ namespace Nooch.Web.Controllers
                     {
                         if (response.isEmailAlreadyReg == true)
                         {
+                            // CLIFF (5/15/16): shouldn't ever get here since I added the block above to check if the email
+                            //                  is already registered (so it shouldn't even call /RequestMoneyForRentScene).
                             Logger.Info("Make Payment Code-Behind -> submitPayment Success - Email address already registered to an Existing User - " +
                                         "Name: [" + response.name + "], Email: [" + email + "], Status: [" + response.memberStatus + "], MemberID: [" + response.memberId + "]");
                         }
@@ -2375,9 +2449,10 @@ namespace Nooch.Web.Controllers
             return Json(res);
         }
 
-        public ActionResult submitRequestToExistingUser(bool isRequest, string amount, string name, string email, string memo, string pin, string ip, string memberId, string nameFromServer)
+
+        public ActionResult submitRequestToExistingUser(string from, bool isRequest, string amount, string name, string email, string memo, string pin, string ip, string memberId, string nameFromServer)
         {
-            Logger.Info("Make Payment Code-Behind -> submitRequestToExistingUser Initiated - isRequest: [" + isRequest +
+            Logger.Info("Make Payment Code-Behind -> submitRequestToExistingUser Initiated - From: [" + from + "], isRequest: [" + isRequest +
                                    "], Name: [" + name + "], Email: [" + email +
                                    "], Amount: [" + amount + "], memo: [" + memo +
                                    "], PIN: [" + pin + "], IP: [" + ip + "]" +
@@ -2406,7 +2481,7 @@ namespace Nooch.Web.Controllers
                 requestFromRentScene response = ResponseConverter<requestFromRentScene>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
 
                 Logger.Info("Make Payment Code-Behind -> submitRequestToExistingUser - Server Response for RequestMoneyToExistingUserForRentScene: " +
-                                       "RESULT.Success: [" + response.success + "], RESULT.Msg: [" + response.msg + "]");
+                            "RESULT.Success: [" + response.success + "], RESULT.Msg: [" + response.msg + "]");
 
                 if (response != null)
                 {
@@ -2442,7 +2517,8 @@ namespace Nooch.Web.Controllers
 
             return Json(res);
         }
-        #endregion
+
+        #endregion MakePayment Page
 
 
         //not compleate code problem with js file and GetPayeeDetails method

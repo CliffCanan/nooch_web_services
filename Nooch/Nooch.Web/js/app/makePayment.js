@@ -1,5 +1,5 @@
 ﻿var errorId = $('#errorId').val();
-var RENTSCENE = $('#rs').val();
+var FROM = $('#from').val();
 var COMPANY = "Nooch";
 
 var isRequest;
@@ -15,15 +15,13 @@ $(document).ready(function ()
         isSmScrn = true;
     }
 
-    if (RENTSCENE == "yes")
+    if (FROM == "rentscene")
     {
         COMPANY = "Rent Scene";
 
-        $('.navbar img').attr('href', 'http://www.rentscene.com');
-
         if (isSmScrn)
         {
-            $('.navbar img').css('width', '130px');
+            $('.navbar img').css('width', '100px');
         }
     }
     else
@@ -47,6 +45,21 @@ $(document).ready(function ()
         checkFormData();
         return false;
     });
+
+	$( "input[name='type']" ).change(function() {
+		if ($('input[name="type"]:checked').val() == 'request')
+		{
+			console.log("test #1 reached");
+			$('#typeGrp .btn').removeClass('btn-success').addClass('btn-primary');
+			$('#submitPayment').removeClass('btn-success').addClass('btn-primary');
+		}
+		else // Send has been clicked
+		{
+			console.log("test #2 reached");
+			$('#typeGrp .btn').removeClass('btn-primary').addClass('btn-success');
+			$('#submitPayment').removeClass('btn-primary').addClass('btn-success');
+		}
+	});
 });
 
 function formatAmount()
@@ -136,7 +149,6 @@ function checkFormData()
     return;
 }
 
-
 function submitPayment()
 {
     // ADD THE LOADING BOX
@@ -144,19 +156,29 @@ function submitPayment()
         message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Submitting Payment...</span>',
         css: {
             border: 'none',
-            padding: '20px 8px 14px',
+            padding: '25px 8px 20px',
             backgroundColor: '#000',
-            '-webkit-border-radius': '12px',
-            '-moz-border-radius': '12px',
-            'border-radius': '12px',
-            opacity: '.75',
-            width: '260px',
+            '-webkit-border-radius': '14px',
+            '-moz-border-radius': '14px',
+            'border-radius': '14px',
+            opacity: '.8',
+            width: '270px',
             margin: '0 auto',
             color: '#fff'
         }
     });
 
-    isRequest = true;
+	// Hide errorMessage <div> if showing
+	if (!$(".errorMessage").hasClass('hidden'))
+    {
+        $(".errorMessage").addClass('hidden');
+        $(".errorMessage").html('');
+        $(".errorMessage a").addClass("bounceOut");
+    }
+
+	var transType = $('input[name="type"]:checked').val();
+
+    isRequest = transType == "send" ? false : true;
     amount = $('#amount').val();
     name = $('#name').val();
     email = $('#email').val().trim();
@@ -164,7 +186,8 @@ function submitPayment()
     pin = "";
     ipVal = ipusr;
 
-    console.log("SUBMIT PAYMENT -> {isRequest: " + isRequest +
+    console.log("SUBMIT PAYMENT -> {from: " + FROM +
+                                 ", isRequest: " + isRequest +
                                  ", amount: " + amount +
                                  ", name: " + name +
                                  ", email: " + email +
@@ -175,7 +198,8 @@ function submitPayment()
     $.ajax({
         type: "POST",
         url: URLs.submitPayment,
-        data: "{'isRequest':'" + isRequest +
+        data: "{'from':'" + FROM +
+		      "', 'isRequest':'" + isRequest +
               "', 'amount':'" + amount +
               "', 'name':'" + name +
               "', 'email':'" + email +
@@ -225,8 +249,8 @@ function submitPayment()
                         statusCssClass = "";
                     }
 
-                    var bodyText = "<table border='0' width='95%' cellpadding='4' style='font-size: 16px; margin:10px auto 12px;'><tbody>" +
-                                   "<tr><td style='vertical-align:top'>Name:</td><td><strong>" + sendPaymentResponse.name + "</strong></br><small>" + email + "</small></strong></td></tr>" +
+                    var bodyText = "<table border='0' width='95%' cellpadding='4' style='font-size: 16px; margin:12px auto 20px;'><tbody>" +
+                                   "<tr><td style='vertical-align:top'>Name:</td><td><strong>" + sendPaymentResponse.name + "</strong><span class='show m-b-5' style='line-height:1;'>" + email + "</span></td></tr>" +
                                    "<tr><td>Status:</td><td><span class='" + statusCssClass + "'>" + status + "</span></td></tr>" +
                                    "<tr><td>Date Created:</td><td>" + sendPaymentResponse.dateCreated + "</td></tr>" +
                                    "<tr><td>Bank Linked:</td><td>" + sendPaymentResponse.isBankAttached + "</td></tr>";
@@ -239,9 +263,8 @@ function submitPayment()
                     // THEN DISPLAY SUCCESS ALERT...
                     swal({
                         title: "Email Already Registered",
-                        text: "The following user already is registered:" +
-                              bodyText + 
-                              "<span class='show f-600'>Do you still want to send a payment request to " + sendPaymentResponse.name + "?</span>",
+                        text: bodyText +
+                              "<span class='show f-600' style='margin: 10px 30px;'>Do you still want to send a payment request to " + sendPaymentResponse.name + "?</span>",
                         type: "warning",
                         showCancelButton: true,
                         confirmButtonColor: "#3fabe1",
@@ -321,7 +344,7 @@ function submitPayment()
     });
 }
 
-
+// This can only be called for SENDING payments IF the recipient has a fully verified user & bank account w/ Nooch & Synapse.
 function sendRequestToExistingUser()
 {
     // ADD THE LOADING BOX
@@ -329,19 +352,24 @@ function sendRequestToExistingUser()
         message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Submitting Payment...</span>',
         css: {
             border: 'none',
-            padding: '20px 8px 14px',
+            padding: '25px 8px 20px',
             backgroundColor: '#000',
-            '-webkit-border-radius': '12px',
-            '-moz-border-radius': '12px',
-            'border-radius': '12px',
-            opacity: '.75',
-            width: '260px',
+            '-webkit-border-radius': '14px',
+            '-moz-border-radius': '14px',
+            'border-radius': '14px',
+            opacity: '.8',
+            width: '270px',
             margin: '0 auto',
             color: '#fff'
         }
     });
 
-    console.log("SUBMIT PAYMENT (2nd time - to existing user) -> {isRequest: " + isRequest +
+    var transType = $('input[name="type"]:checked').val();
+
+    isRequest = transType == "send" ? false : true;
+
+    console.log("SUBMIT PAYMENT (2nd time - to existing user) -> {From: " + FROM +
+                                 ", isRequest: " + isRequest +
                                  ", amount: " + amount +
                                  ", nameEntered: " + name +
                                  ", nameFromServer: " + existNAME+
@@ -351,11 +379,11 @@ function sendRequestToExistingUser()
                                  ", pin: " + pin +
                                  ", ipVal: " + ipVal + "}");
 
-
     $.ajax({
         type: "POST",
         url: URLs.submitRequestToExistingUser,
-        data: "{'isRequest':'" + isRequest +
+        data: "{'from':'" + FROM +
+              "', isRequest':'" + isRequest +
               "', 'amount':'" + amount +
               "', 'name':'" + name +
               "', 'email':'" + email +
@@ -627,7 +655,7 @@ function showErrorAlert(errorNum)
         type: "error",
         showCancelButton: true,
         confirmButtonColor: "#3fabe1",
-        confirmButtonText: "Ok  :-(",
+        confirmButtonText: "Ok",
         cancelButtonText: "Contact Support",
         closeOnConfirm: true,
         closeOnCancel: false,

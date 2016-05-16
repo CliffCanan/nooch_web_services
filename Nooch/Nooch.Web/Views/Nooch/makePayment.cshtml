@@ -24,8 +24,12 @@
     <link rel="stylesheet" href="@Url.Content("~/Assets/Css/tweaks.css")" />
     <link rel="icon" href="../Assets/favicon2.ico" />
     <style>
+        body {
+            font-size: 15px;
+        }
+
         .navbar img {
-            width: 170px;
+            width: 130px;
         }
 
         #makePaymentContainer {
@@ -77,16 +81,16 @@
     <form id="form1">
         <input type="hidden" id="errorId" value="@onLoadD.errorId" />
         <input type="hidden" id="type" value="@onLoadD.type" />
-        <input type="hidden" id="rs" value="@onLoadD.rs" />
+        <input type="hidden" id="from" value="@onLoadD.from" />
     </form>
 
     <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
         <div class="clearfix">
             <div class="m-l-15">
-                <a class="pull-left" href="https://www.nooch.com/" style="margin: 10px auto 9px !important;">
+                <a class="pull-left" href="https://www.rentscene.com/" style="margin: 12px auto 12px !important;">
                     <img src="https://noochme.com/noochweb/Assets/Images/rentscene.png" class="center-block" alt="Rent Scene Logo" />
                 </a>
-                <div class="text-center" style="position: absolute; left: 10%; top: 17px; width: 80%;">
+                <div class="text-center" style="position: absolute; left: 10%; top: 20px; width: 80%;">
                     <label class="center-block f-20">Create A Payment</label>
                 </div>
             </div>
@@ -116,6 +120,21 @@
                     <div class="f-16">
                         Enter the recipient's info below:
                         <small class="show f-300">(All Fields Requried)</small>
+                    </div>
+                </div>
+
+                <div class="form-group" id="typeGrp">
+                    <label for="type" class="col-sm-3 control-label p-t-10"></label>
+                    <div class="col-sm-6 inputContainer">
+                        <div class="btn-group btn-group-justified" data-toggle="buttons">
+                            <label class="btn btn-primary f-16">
+                                <input type="radio" name="type" id="send" value="send" autocomplete="off">Send
+                            </label>
+
+                            <label class="btn btn-primary f-16 active">
+                                <input type="radio" name="type" id="request" value="request" autocomplete="off" checked="checked">Request
+                            </label>
+                        </div>
                     </div>
                 </div>
 
@@ -162,9 +181,9 @@
                     </div>
                 </div>
 
-                <div class="form-group m-t-25">
+                <div class="form-group m-t-30">
                     <div class="col-sm-offset-3 col-sm-6">
-                        <button id="submitPayment" type="submit" class="btn btn-lg btn-success btn-block">
+                        <button id="submitPayment" type="submit" class="btn btn-lg btn-primary btn-block">
                             Submit
                             <i class="fa fa-caret-right m-l-10 f-17"></i>
                         </button>

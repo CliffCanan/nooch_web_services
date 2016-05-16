@@ -4098,8 +4098,6 @@ namespace Nooch.DataAccess
             {
                 Logger.Info("TDA -> RequestMoneyToNonNoochUserUsingSynapse Initiated - Requestor MemberId: [" + requestDto.MemberId + "].");
 
-
-
                 var requester = CommonHelper.GetMemberDetails(requestDto.MemberId);
 
                 // Validate PIN of requesting user
@@ -4360,7 +4358,6 @@ namespace Nooch.DataAccess
             }
             else
             {
-
                 Logger.Error("TDA -> RequestMoneyToNonNoochUserUsingSynapse FAILED -> Member Already Exists for email address: [" +
                              requestDto.MoneySenderEmailId + "], Requester MemberID: [" + requestDto.MemberId + "]");
 
@@ -6171,7 +6168,7 @@ namespace Nooch.DataAccess
                                 senderNoochDetails.TotalNoochTransfersCount = 0;
                                 senderNoochDetails.DateModified = DateTime.Now;
                             }
-                           // if (!string.IsNullOrEmpty(recipientNoochDetails.TotalNoochTransfersCount.ToString()))
+                            // if (!string.IsNullOrEmpty(recipientNoochDetails.TotalNoochTransfersCount.ToString()))
                             if (recipientNoochDetails.TotalNoochTransfersCount != null)
                             {
                                 recipientNoochDetails.TotalNoochTransfersCount = recipientNoochDetails.TotalNoochTransfersCount + 1;
@@ -6195,7 +6192,7 @@ namespace Nooch.DataAccess
                             {
                                 saveToTransTable = 0;
                             }
-                            
+
 
                         }
                         catch (Exception ex)

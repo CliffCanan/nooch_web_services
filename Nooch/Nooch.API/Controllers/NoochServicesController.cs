@@ -877,9 +877,9 @@ namespace Nooch.API.Controllers
         /// <returns></returns>
         [HttpGet]
         [ActionName("RequestMoneyForRentScene")]
-        public requestFromRentScene RequestMoneyForRentScene(string name, string email, string amount, string memo, string pin, string ip, bool isRequest)
+        public requestFromRentScene RequestMoneyForRentScene(string from, string name, string email, string amount, string memo, string pin, string ip, bool isRequest)
         {
-            Logger.Info("Service Controller - RequestMoneyForRentScene Initiated - [Name: " + name +
+            Logger.Info("Service Controller - RequestMoneyForRentScene Initiated - [From: " + from + "], [Name: " + name +
                         "], Email: [" + email + "], amount: [" + amount +
                         "], memo: [" + memo + "], pin: [" + pin +
                         "], ip: [" + ip + "], isRequest: [" + isRequest + "]");
@@ -893,6 +893,11 @@ namespace Nooch.API.Controllers
 
             bool isMissingData = false;
 
+            if (String.IsNullOrEmpty(from))
+            {
+                res.msg = "Missing 'from' field!";
+                isMissingData = true;
+            }
             if (String.IsNullOrEmpty(pin))
             {
                 res.msg = "Missing PIN!";
@@ -924,9 +929,9 @@ namespace Nooch.API.Controllers
 
             #region Check If Recipient Already Has A Nooch Account
 
-            var memberObj = CommonHelper.GetMemberDetailsByUserName(email);
-
-            Logger.Info(memberObj);
+            // CLIFF (5/15/16): Moving this block to submitPayment() in NoochController. Since that can now access CommonHelper,
+            //                  no need to go an extra step to come here... that method can do everything in this block and save the trip to the server.
+            /*var memberObj = CommonHelper.GetMemberDetailsByUserName(email);
 
             if (memberObj != null)
             {
@@ -956,36 +961,71 @@ namespace Nooch.API.Controllers
                 res.note = "";
                 res.success = true;
                 return res;
-            }
+            }*/
 
             #endregion Check If Recipient Already Has A Nooch Account
 
 
+            #region Get MemberID of Sending User
+
+            var memIdToUse = "";
+            var addressToUse = "";
+            var zipToUse = "";
+
+            if (from.ToLower() == "rentscene")
+            {
+                memIdToUse = CommonHelper.GetMemberIdByUserName("payments@rentscene.com");
+                addressToUse = "1500 JFK Blvd";
+                zipToUse = "19102";
+            }
+            else if (from.ToLower() == "nooch")
+            {
+                memIdToUse = CommonHelper.GetMemberIdByUserName("team@nooch.com");
+                addressToUse = "3 Scarlet Oak Dr";
+                zipToUse = "19041";
+            }
+            else if (from.ToLower() == "appjaxx")
+            {
+                memIdToUse = CommonHelper.GetMemberIdByUserName("josh@appjaxx.com");
+                addressToUse = "100 Fairhill Road";
+                zipToUse = "19440";
+            }
+
+            if (String.IsNullOrEmpty(memIdToUse))
+            {
+                Logger.Error("Service Cntlr -> RequestMoneyForRentScene FAILED - unable to get MemberID based on given username - ['from' param: " + from + "]");
+                res.msg = "Unable to get MemberID based on given username";
+
+                return res;
+            }
+
+            #endregion Get MemberID of Sending User
+
+
             try
             {
-                var tda = new TransactionsDataAccess();
-
                 string requestId = string.Empty;
 
                 RequestDto requestInput = new RequestDto()
                 {
-                    AddressLine1 = "1500 JFK Blvd",
+                    AddressLine1 = addressToUse,
                     Amount = Convert.ToDecimal(amount),
                     City = "Philadelphia",
                     Country = "US",
                     Latitude = 39.95332018F,
                     Longitude = -75.1661824F,
-                    MemberId = "852987e8-d5fe-47e7-a00b-58a80dd15b49", // Rent Scene's Member ID
+                    MemberId = memIdToUse,
                     Memo = memo,
                     MoneySenderEmailId = email,
                     Name = name,
-                    PinNumber = pin,
+                    PinNumber = pin, // Correct encrypted PIN has already been grabbed in NoochController based on 'from' field
                     SenderId = "",
                     State = "PA",
-                    TransactionDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm"),
-                    ZipCode = "19102",
+                    ZipCode = zipToUse,
                     //isTesting = "true" // REMOVE FOR PRODUCTION!!
                 };
+
+                var tda = new TransactionsDataAccess();
 
                 StringResult tdaRes = new StringResult { Result = tda.RequestMoneyToNonNoochUserUsingSynapse(requestInput) };
 

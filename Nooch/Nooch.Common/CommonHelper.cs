@@ -252,9 +252,7 @@ namespace Nooch.Common
             var userNameLowerCase = GetEncryptedData(userName.ToLower());
             userName = GetEncryptedData(userName);
 
-            var noochMember =
-                _dbContext.Members.FirstOrDefault(
-                    m => m.UserNameLowerCase == userNameLowerCase && m.UserName == userName && m.IsDeleted == false);
+            var noochMember = _dbContext.Members.FirstOrDefault(m => (m.UserNameLowerCase == userNameLowerCase || m.UserName == userName) && m.IsDeleted == false);
 
             if (noochMember != null)
             {
@@ -346,6 +344,45 @@ namespace Nooch.Common
                 return UppercaseFirst(GetDecryptedData(noochMember.FirstName)) + " " + UppercaseFirst(GetDecryptedData(noochMember.LastName));
 
             }
+            return null;
+        }
+
+        /// <summary>
+        /// Returns ENCRYPTED form of a user's PIN based on a given Username.
+        /// </summary>
+        /// <param name="userName"></param>
+        /// <returns></returns>
+        public static string GetMemberPinByUserName(string userName)
+        {
+            try
+            {
+                if (!String.IsNullOrEmpty(userName) && userName.Length > 3 && userName.IndexOf('@') > 1)
+                {
+                    var userNameLowerCase = GetEncryptedData(userName.ToLower());
+                    var userNameEnc = GetEncryptedData(userName);
+
+                    var noochMember = _dbContext.Members.FirstOrDefault(m => (m.UserNameLowerCase == userNameLowerCase || m.UserName == userNameEnc) && m.IsDeleted == false);
+
+                    if (noochMember != null)
+                    {
+                        _dbContext.Entry(noochMember).Reload();
+                        return noochMember.PinNumber; // Return ENCRYPTED Pin Number
+                    }
+                    else
+                    {
+                        Logger.Error("Common Helper -> GetMemberPinByUserName FAILED - Couldn't find any Nooch user with the username of: [" + userName + "]");
+                    }
+                }
+                else
+                {
+                    Logger.Error("Common Helper -> GetMemberPinByUserName FAILED - Username was either NULL or too short, or missing '@'");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Common Helper -> GetMemberPinByUserName FAILED - [Username: " + userName + "], [Exception: " + ex.Message + "]");
+            }
+
             return null;
         }
 
@@ -475,13 +512,19 @@ namespace Nooch.Common
             return new Member();
         }
 
+        /// <summary>
+        /// Looks up a member by an email address. Will find any member based on Username OR SecondaryEmail fields.
+        /// </summary>
+        /// <param name="userName"></param>
+        /// <returns>Returns a User's Full details.</returns>
         public static Member GetMemberDetailsByUserName(string userName)
         {
             try
             {
-                var id = GetEncryptedData(userName.ToLower());
+                var userNameEnc = GetEncryptedData(userName);
+                var userNameLowerEnc = GetEncryptedData(userName.ToLower());
 
-                var noochMember = _dbContext.Members.FirstOrDefault(m => (m.UserName == id || m.UserNameLowerCase == id || m.SecondaryEmail == id) && m.IsDeleted == false);
+                var noochMember = _dbContext.Members.FirstOrDefault(m => (m.UserName == userNameEnc || m.UserNameLowerCase == userNameLowerEnc || m.SecondaryEmail == userNameEnc) && m.IsDeleted == false);
 
                 if (noochMember != null)
                 {
@@ -550,7 +593,7 @@ namespace Nooch.Common
 
         public static SynapseCreateUserResult GetSynapseCreateaUserDetails(string memberId)
         {
-            Logger.Info("Common Helper -> GetSynapseBankAccountDetails - MemberId: [" + memberId + "]");
+            Logger.Info("Common Helper -> GetSynapseCreateaUserDetails - MemberId: [" + memberId + "]");
 
             var id = Utility.ConvertToGuid(memberId);
 
@@ -1090,16 +1133,21 @@ namespace Nooch.Common
         {
             string RecentIpOfUser = "";
 
-
-            var memberIP = _dbContext.MembersIPAddresses.OrderByDescending(m => m.ModifiedOn).FirstOrDefault(m => m.MemberId == MemberIdPassed);
-
-            if (memberIP != null)
+            try
             {
+                var memberIP = _dbContext.MembersIPAddresses.OrderByDescending(m => m.ModifiedOn).FirstOrDefault(m => m.MemberId == MemberIdPassed);
 
-                _dbContext.Entry(memberIP).Reload();
+                if (memberIP != null)
+                {
+                    _dbContext.Entry(memberIP).Reload();
+                }
+                RecentIpOfUser = memberIP != null ? memberIP.Ip.ToString() : "54.201.43.89";
             }
-            RecentIpOfUser = memberIP != null ? memberIP.Ip.ToString() : "54.201.43.89";
-
+            catch (Exception ex)
+            {
+                Logger.Error("Common Helper -> GetRecentOrDefaultIPOfMember FAILED - [Exception: " + ex.Message + "]");
+                RecentIpOfUser = "Server exception on IP Lookup: [" + ex.Message + "]";
+            }
 
             return RecentIpOfUser;
         }
@@ -1884,9 +1932,6 @@ namespace Nooch.Common
                     Logger.Info("Common Helper -> GetSynapseBankAndUserDetailsforGivenMemberId - Checkpoint #1 - " +
                                 "SynapseCreateUserResults Record Found! - Now about to check if Synapse OAuth Key is expired or still valid.");
 
-                    // CLIFF (10/3/15): ADDING CALL TO NEW METHOD TO CHECK USER'S STATUS WITH SYNAPSE, AND REFRESHING OAUTH KEY IF NECESSARY
-
-
                     #region Check If Testing
 
                     // CLIFF (10/22/15): Added this block for testing - if you use an email that includes "jones00" in it, 
@@ -1901,10 +1946,15 @@ namespace Nooch.Common
                         Logger.Info("Common Helper -> GetSynapseBankAndUserDetailsforGivenMemberId -> TESTING USER DETECTED - [" +
                                      memberUsername + "], WILL USE SYNAPSE SANDBOX URL FOR CHECKING OAUTH TOKEN STATUS");
                     }
+                    else
+                    {
+                        Logger.Info("Common Helper -> GetSynapseBankAndUserDetailsforGivenMemberId - NOT TESTING (Checkpoint #3)");
+                    }
 
                     #endregion Check If Testing
 
                     #region Check If OAuth Key Still Valid
+                    // CLIFF (10/3/15): ADDING CALL TO NEW METHOD TO CHECK USER'S STATUS WITH SYNAPSE, AND REFRESHING OAUTH KEY IF NECESSARY
 
                     synapseV3checkUsersOauthKey checkTokenResult = refreshSynapseV3OautKey(createSynapseUserObj.access_token);
 
@@ -1914,9 +1964,10 @@ namespace Nooch.Common
                         {
                             res.UserDetails = new SynapseDetailsClass_UserDetails();
                             res.UserDetails.MemberId = memberId;
-                            res.UserDetails.access_token = GetDecryptedData(checkTokenResult.oauth_consumer_key);  // Note :: Giving in encrypted format
+                            res.UserDetails.access_token = GetDecryptedData(checkTokenResult.oauth_consumer_key);  // Note: Giving in encrypted format
                             res.UserDetails.user_id = checkTokenResult.user_oid;
                             res.UserDetails.user_fingerprints = memberObject.UDID1;
+                            res.UserDetails.permission = createSynapseUserObj.permission;
                             res.UserDetailsErrMessage = "OK";
                         }
                         else
@@ -1925,15 +1976,15 @@ namespace Nooch.Common
                                          "CheckTokenResult.msg: [" + checkTokenResult.msg + "], MemberID: [" + memberId + "]");
 
                             res.UserDetailsErrMessage = checkTokenResult.msg;
+                            return res;
                         }
                     }
                     else
                     {
                         Logger.Error("Common Helper -> GetSynapseBankAndUserDetailsforGivenMemberId FAILED on Checking User's Synapse OAuth Token - " +
-                                                   "CheckTokenResult was NULL, MemberID: [" + memberId + "]");
+                                     "CheckTokenResult was NULL, MemberID: [" + memberId + "]");
 
                         res.UserDetailsErrMessage = "Unable to check user's Oauth Token";
-
                     }
 
                     #endregion Check If OAuth Key Still Valid
@@ -1999,8 +2050,6 @@ namespace Nooch.Common
 
             try
             {
-                //string oauthKeyEnc = CommonHelper.GetEncryptedData(oauthKey);
-
                 // Checking user details for given MemberID
 
                 SynapseCreateUserResult synCreateUserObject = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.access_token == oauthKey && m.IsDeleted == false);
@@ -2021,11 +2070,16 @@ namespace Nooch.Common
                     string SynapseClientId = Utility.GetValueFromConfig("SynapseClientId");
                     string SynapseClientSecret = Utility.GetValueFromConfig("SynapseClientSecret");
 
+                    Logger.Info("Common Helper -> synapseV3checkUsersOauthKey - got Synapse ClientID: [" + SynapseClientId +
+                                "], and Client Secret: [" + SynapseClientSecret + "]");
+
                     input.login = new createUser_login2()
                     {
                         email = GetDecryptedData(noochMemberObject.UserName),
                         refresh_token = GetDecryptedData(synCreateUserObject.refresh_token)
                     };
+
+                    Logger.Info("Common Helper -> synapseV3checkUsersOauthKey - CHECKPOINT #2,061");
 
                     input.client = new createUser_client()
                     {
@@ -2175,11 +2229,10 @@ namespace Nooch.Common
                 else
                 {
                     // no record found for given oAuth token in synapse createuser results table
-                    Logger.Error("Common Helper -> refreshSynapseV3OautKey FAILED -  no record found for given oAuth key found - " +
+                    Logger.Error("Common Helper -> refreshSynapseV3OautKey FAILED - no record found for given oAuth key found - " +
                                  "Orig. Oauth Key: (enc) [" + oauthKey + "]");
                     res.msg = "Service error.";
                 }
-
             }
             catch (Exception ex)
             {

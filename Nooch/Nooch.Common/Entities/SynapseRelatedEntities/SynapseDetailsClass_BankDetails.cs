@@ -24,7 +24,7 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
         public string access_token { get; set; }
         public string MemberId { get; set; }
         public string user_id { get; set; }
-
+        public string permission { get; set; }
         public string user_fingerprints { get; set; }
     }
 }

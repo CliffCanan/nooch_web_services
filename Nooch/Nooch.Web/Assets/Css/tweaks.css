@@ -292,7 +292,7 @@ h1 a:hover {text-decoration:none;}
     text-align: center;
     position: relative;
 }
-.btn:active {
+:not(.btn-group) > .btn:active {
   margin: 3px auto -3px;
   -webkit-transition: all 150ms;
      -moz-transition: all 150ms;

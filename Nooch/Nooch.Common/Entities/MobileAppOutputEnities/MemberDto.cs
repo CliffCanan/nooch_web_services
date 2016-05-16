@@ -53,5 +53,8 @@ namespace Nooch.Common.Entities.MobileAppOutputEnities
         public string dateCreated { get; set; }
         public string memberStatus { get; set; }
         public string memberId { get; set; }
+
+        public string synapseUserPermission { get; set; }
+        public string synapseBankAllowed { get; set; }
     }
 }
