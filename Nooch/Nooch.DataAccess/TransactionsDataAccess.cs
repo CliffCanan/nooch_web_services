@@ -3758,10 +3758,11 @@ namespace Nooch.DataAccess
 
         public SynapseV3AddTrans_ReusableClass AddTransSynapseV3Reusable(string sender_oauth, string sender_fingerPrint,
             string sender_bank_node_id, string amount, string fee, string receiver_oauth, string receiver_fingerprint,
-            string receiver_bank_node_id, string suppID_or_transID, string senderUserName, string receiverUserName, string iPForTransaction, string senderLastName, string recepientLastName)
+            string receiver_bank_node_id, string suppID_or_transID, string senderUserName, string receiverUserName, string iPForTransaction, string senderLastName, string recipientLastName)
         {
-            Logger.Info("TDA -> AddTransSynapseV3Reusable Initiated - [Sender Username: " + senderUserName + "], " +
-                        "[Recipient Username: " + receiverUserName + "], [Amount: " + amount + "]");
+            Logger.Info("TDA -> AddTransSynapseV3Reusable Initiated - [Sender Last Name: " + senderLastName +
+                        "], [Sender Username: " + senderUserName + "], [Recip Last Name: " + recipientLastName +
+                        "], [Recipient Username: " + receiverUserName + "], [Amount: " + amount + "]");
 
             SynapseV3AddTrans_ReusableClass res = new SynapseV3AddTrans_ReusableClass();
             res.success = false;
@@ -3792,7 +3793,7 @@ namespace Nooch.DataAccess
 
                     foreach (synapseSearchUserResponse_User senderUser in senderPermissions.users)
                     {
-                        Logger.Error("TDA -> AddTransSynapseV3Reusable - Got back a User array from Synapse [Name: " + senderUser.legal_names[0] + "], about to check bank permissions...");
+                        Logger.Info("TDA -> AddTransSynapseV3Reusable - Got back a User array from Synapse [Name: " + senderUser.legal_names[0] + "], about to check bank permissions...");
 
                         // iterating each node inside
 
@@ -3813,19 +3814,20 @@ namespace Nooch.DataAccess
                                 else
                                 {
                                     Logger.Error("TDA -> AddTransSynapseV3Reusable - Sender's Synapse Permission returned by Synapse was: [" + nodePermCheckRes.PermissionType + "]");
-                                    res.ErrorMessage = "Sender has insufficient permissions to complete this payment (TDA - 3782)";
+                                    res.ErrorMessage = "Sender has insufficient permissions to complete this payment (TDA - 3817)";
                                     return res;
                                 }
                             }
                             else if (nodePermCheckRes.IsPermissionfound != true && iterator == senderPermissionUsersCount)
                             {
                                 Logger.Error("TDA -> AddTransSynapseV3Reusable - No Permission Found for Sender - Username: [" + senderUserName + "]");
-                                res.ErrorMessage = "Sender has insufficient permissions to complete this payment (TDA - 3789)";
+                                res.ErrorMessage = "Sender has insufficient permissions to complete this payment (TDA - 3824)";
                                 return res;
                             }
                         }
                         else
                         {
+                            Logger.Error("TDA -> AddTransSynapseV3Reusable - No Bank Found for Sender - Username: [" + senderUserName + "]");
                             res.ErrorMessage = "No banks found for Sender (TDA - 3795)";
                             return res;
                         }
@@ -3843,7 +3845,7 @@ namespace Nooch.DataAccess
                 {
                     Logger.Error("TDA -> SynapseV3AddTrans_ReusableClass - RECIPIENT's Synapse Permissions were NULL or not successful :-(");
 
-                    res.ErrorMessage = "Problem with recipient's permission level (TDA - 3812)";
+                    res.ErrorMessage = "Problem with recipient's permission level (TDA - 3848)";
                     return res;
                 }
 
@@ -3871,20 +3873,21 @@ namespace Nooch.DataAccess
                                 else
                                 {
                                     Logger.Error("TDA -> AddTransSynapseV3Reusable - Recipient's Synapse Permission returned by Synapse was: [" + nodePermCheckRes.PermissionType + "]");
-                                    res.ErrorMessage = "Recipient has insufficient permissions to complete this payment (TDA - 3836)";
+                                    res.ErrorMessage = "Recipient has insufficient permissions to complete this payment (TDA - 3876)";
                                     return res;
                                 }
                             }
                             else if (nodePermCheckRes.IsPermissionfound != true && iterator == senderPermissionUsersCount)
                             {
                                 Logger.Error("TDA -> AddTransSynapseV3Reusable - No Permission Found for Recipient - Username: [" + senderUserName + "]");
-                                res.ErrorMessage = "Recipient has insufficient permissions to complete this payment (TDA - 3843)";
+                                res.ErrorMessage = "Recipient has insufficient permissions to complete this payment (TDA - 3883)";
                                 return res;
                             }
                         }
                         else
                         {
-                            res.ErrorMessage = "No banks found for Recipient (TDA - 3849)";
+                            Logger.Error("TDA -> AddTransSynapseV3Reusable - No Bank Found for Recipient - Username: [" + senderUserName + "]");
+                            res.ErrorMessage = "No banks found for Recipient (TDA - 3890)";
                             return res;
                         }
                     }
@@ -3894,12 +3897,12 @@ namespace Nooch.DataAccess
 
                 if (!SenderSynapsePermissionOK)
                 {
-                    res.ErrorMessage = "Sender bank permission problem  (TDA - 3859)";
+                    res.ErrorMessage = "Sender bank permission problem  (TDA - 3897)";
                     return res;
                 }
                 if (!RecipientSynapsePermissionOK)
                 {
-                    res.ErrorMessage = "Recipient bank permission problem (TDA - 3864)";
+                    res.ErrorMessage = "Recipient bank permission problem (TDA - 3902)";
                     return res;
                 }
 
@@ -3956,7 +3959,7 @@ namespace Nooch.DataAccess
                         // This is where we put the ACH memo (customized for Landlords, but just the same template for regular P2P transfers: "Nooch Payment {LNAME SENDER} / {LNAME RECIPIENT})
                         // maybe we should set this in whichever function calls this function because we don't have the names here...
                         // yes modifying this method to add 3 new parameters....sender IP, sender last name, recepient last name... this would be helpfull in keeping this method clean.
-                        note = "NOOCH PAYMENT // " + senderLastName + " / " + recepientLastName,
+                        note = "NOOCH PAYMENT // " + senderLastName + " / " + recipientLastName,
                         supp_id = suppID_or_transID,
                         process_on = 0, // this should be > than 0 I guess... CLIFF: I don't think so, it's an optional parameter, but we always want it to process immediately, so I guess it should always be 0
                         ip = iPForTransaction // CLIFF:  This is actually required. It should be the most recent IP address of the SENDER, or if none found, then '54.148.37.21'
@@ -4032,10 +4035,6 @@ namespace Nooch.DataAccess
 
                             _dbContext.SynapseAddTransactionResults.Add(satr);
                             _dbContext.SaveChanges();
-
-
-
-
                         }
                         else
                         {
@@ -4050,17 +4049,20 @@ namespace Nooch.DataAccess
                         var resp = new StreamReader(ex.Response.GetResponseStream()).ReadToEnd();
                         JObject jsonFromSynapse = JObject.Parse(resp);
 
-                        Logger.Error("TDA -> TransferMoneyUsingSynapse FAILED. [Exception: " + jsonFromSynapse.ToString() + "]");
+                        Logger.Error("TDA -> AddTransSynapseV3Reusable FAILED - [Exception: " + jsonFromSynapse.ToString() + "]");
 
                         JToken token = jsonFromSynapse["error"]["en"];
 
                         if (token != null)
                         {
+                            // CLIFF (5/16/16): Synapse's error msg could be:
+                            //                  1.) "You do not have sufficient balance for this transfer"
+                            //                  2.) "Sender is not authorizied to send payments. Make the user go through our KYC widget to enable sending function"
                             res.ErrorMessage = token.ToString();
                         }
                         else
                         {
-                            res.ErrorMessage = "Server Error (TDA 4004) in AddTransSynapseV3Reusable.";
+                            res.ErrorMessage = "Server Error (TDA 4065) in AddTransSynapseV3Reusable.";
                         }
                     }
 
@@ -5231,8 +5233,6 @@ namespace Nooch.DataAccess
             {
                 Logger.Info("TDA -> HandleRequestMoney Initiated - MemberID: [" + handleRequestDto.MemberId + "]");
 
-                DateTime NoochTransactionDateTime = DateTime.Now;
-
                 #region Transaction Limit Checks
 
                 // Check to make sure transfer amount is less than per-transaction limit
@@ -5240,8 +5240,8 @@ namespace Nooch.DataAccess
 
                 if (CommonHelper.isOverTransactionLimit(transactionAmount, handleRequestDto.SenderId, handleRequestDto.MemberId))
                 {
-                    Logger.Info("TDA -> HandleRequestMoney -> Transaction amount is greater than Nooch's transfer limit. TransactionId: [" +
-                        handleRequestDto.TransactionId + "]");
+                    Logger.Info("TDA -> HandleRequestMoney - Transaction amount is greater than Nooch's transfer limit. TransactionId: [" +
+                                handleRequestDto.TransactionId + "]");
                     return "Whoa now big spender! To keep Nooch safe, the maximum amount you can send at a time is $" +
                            Convert.ToDecimal(Utility.GetValueFromConfig("MaximumTransferLimitPerTransaction")).ToString("F2");
                 }
@@ -5249,8 +5249,7 @@ namespace Nooch.DataAccess
                 // Weekly limit check
                 if (CommonHelper.IsWeeklyTransferLimitExceeded(Utility.ConvertToGuid(handleRequestDto.MemberId), transactionAmount))
                 {
-                    Logger.Info("HandleRequestMoney -> Weekly transfer limit exceeded. MemberId: [" +
-                                           handleRequestDto.MemberId + "]");
+                    Logger.Info("TDA -> HandleRequestMoney - Weekly transfer limit exceeded. MemberId: [" + handleRequestDto.MemberId + "]");
                     return "Weekly transfer limit exceeded.";
                 }
 
@@ -5258,45 +5257,30 @@ namespace Nooch.DataAccess
 
                 #region Get Request Details
 
-                string receiverId = "";
                 var noochConnection = new NOOCHEntities();
 
-
-                var gTransactionId = Utility.ConvertToGuid(handleRequestDto.TransactionId);
+                var transGuid = Utility.ConvertToGuid(handleRequestDto.TransactionId);
                 var gMemberId = Utility.ConvertToGuid(handleRequestDto.MemberId);
 
                 string encryptedRequest = CommonHelper.GetEncryptedData("Request");
 
-
-
                 var request = noochConnection.Transactions.FirstOrDefault(t => t.Member.MemberId == gMemberId
-                                                                               && t.TransactionId == gTransactionId &&
+                                                                               && t.TransactionId == transGuid &&
                                                                                t.TransactionStatus == "Pending" &&
-                                                                               t.TransactionType == encryptedRequest
-                    );
-
+                                                                               t.TransactionType == encryptedRequest);
 
                 if (request == null)
                 {
-                    Logger.Error("TDA -> HandleRequestMoney -> ERROR: Request not found.");
+                    Logger.Error("TDA -> HandleRequestMoney - ERROR: Request not found - [TransID: " + handleRequestDto.TransactionId +"]");
                     return "No such request exists to act upon.";
                 }
 
                 // NOTE: Sender of the Request will be the 'Receiver' IF the Request is PAID
-                receiverId = request.Member1.MemberId.ToString();
-
-
+                string receiverId = request.Member1.MemberId.ToString();
 
                 // Get Sender and Requester from DB
-
-
-
                 var sender = noochConnection.Members.FirstOrDefault(m => m.MemberId == request.Member.MemberId);
-
-
-
                 var requester = noochConnection.Members.FirstOrDefault(m => m.MemberId == request.Member1.MemberId);
-
 
                 #endregion Get Request Details
 
@@ -5306,7 +5290,6 @@ namespace Nooch.DataAccess
                 {
                     return validPinNumberResult;
                 }
-
 
                 // Code to move money between two users...
                 // 1. Get sender synapse account details
@@ -5328,8 +5311,8 @@ namespace Nooch.DataAccess
                     request.TransactionStatus = "Pending";
 
                     noochConnection.SaveChanges();
-                    Logger.Error("HandleRequestMoney -> Transfer ABORTED: Sender has no Synapse Account Details. " +
-                                           "Request TransId is: [" + request.TransactionId + "]");
+                    Logger.Error("TDA -> HandleRequestMoney - Transfer ABORTED: Sender has no Synapse Account Details. " +
+                                 "Request TransId is: [" + request.TransactionId + "]");
                     return "Sender have not linked to any bank account yet.";
                 }
 
@@ -5337,8 +5320,8 @@ namespace Nooch.DataAccess
                 {
                     request.TransactionStatus = "Pending";
                     noochConnection.SaveChanges();
-                    Logger.Error("HandleRequestMoney -> Transfer ABORTED: Recipient has no Synapse Account details. " +
-                                           "Request TransId is: [" + request.TransactionId + "]");
+                    Logger.Error("TDA -> HandleRequestMoney - Transfer ABORTED: Recipient has no Synapse Account details. " +
+                                 "Request TransId is: [" + request.TransactionId + "]");
                     return "Recepient have not linked to any bank account yet.";
                 }
 
@@ -5346,16 +5329,16 @@ namespace Nooch.DataAccess
                 if (senderBankDetails.BankDetails != null &&
                     senderBankDetails.BankDetails.Status != "Verified")
                 {
-                    Logger.Error("HandleRequestMoney -> Transfer ABORTED: No verified bank account of Sender." +
-                                           "Request TransId is: [" + handleRequestDto.TransactionId + "]");
+                    Logger.Error("TDA -> HandleRequestMoney - Transfer ABORTED: No verified bank account of Sender." +
+                                 "Request TransId is: [" + handleRequestDto.TransactionId + "]");
                     return "Sender does not have any verified bank account.";
                 }
 
                 if (recipientBankDetails.BankDetails != null &&
                     recipientBankDetails.BankDetails.Status != "Verified")
                 {
-                    Logger.Error("HandleRequestMoney -> Transfer ABORTED: No verified bank account of Recepient. " +
-                                           "Request TransId is: [" + handleRequestDto.TransactionId + "]");
+                    Logger.Error("TDA -> HandleRequestMoney - Transfer ABORTED: No verified bank account of Recipient. " +
+                                 "Request TransId is: [" + handleRequestDto.TransactionId + "]");
                     return "Recepient does not have any verified bank account.";
                 }
 
@@ -5370,7 +5353,7 @@ namespace Nooch.DataAccess
 
                 #region Setup Synapse V3 Order API Details
 
-                Logger.Info("TDA -> HandleRequestMoney - About to query Synapse AddTransSynapseV3Reusable() - Checkpoint #5369");
+                Logger.Info("TDA -> HandleRequestMoney - About to query Synapse AddTransSynapseV3Reusable() - Checkpoint #5352");
 
                 // Use AddTransSynapseV3Reusable() to handle this job from now on.
 
@@ -5405,7 +5388,7 @@ namespace Nooch.DataAccess
 
                 if (transactionResultFromSynapseAPI.success == true)
                 {
-                    // transaction was success full... proceed with saving stuff in db and email/sms/push notifications
+                    // transaction was successfull... proceed with saving data in DB and email/sms/push notifications
                     #region all this is now happening in add transaction common method
 
                     /*
@@ -5470,7 +5453,6 @@ namespace Nooch.DataAccess
                                                    "], [Amount: " + request.Amount + "], [Exception: " + ex + "]");
                         }
 
-
                         #endregion */
                     #endregion
 
@@ -5479,7 +5461,6 @@ namespace Nooch.DataAccess
 
                     try
                     {
-                        // Update Request in DB
                         request.GeoLocation = new GeoLocation
                         {
                             LocationId = Guid.NewGuid(),
@@ -5496,13 +5477,10 @@ namespace Nooch.DataAccess
                         };
                         request.DeviceId = handleRequestDto.DeviceId;
                         request.TransactionStatus = "Success";
-                        request.TransactionDate = NoochTransactionDateTime;     // setting same datettime for synapseV3CraeteTransResults table and Transactiond table. This will help in finding transction in case of breakdown
+                        request.TransactionDate = DateTime.Now;
                         request.TransactionType = CommonHelper.GetEncryptedData(Constants.TRANSACTION_TYPE_TRANSFER);
 
-
-
                         int i = noochConnection.SaveChanges();
-
 
                         if (i <= 0)
                         {

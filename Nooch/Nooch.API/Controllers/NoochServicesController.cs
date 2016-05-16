@@ -2304,31 +2304,6 @@ namespace Nooch.API.Controllers
 
                 bool b = (synapseBank != null);
 
-                //var config =
-                //        new MapperConfiguration(cfg => cfg.CreateMap<Member,MemberDto>()
-                //            .BeforeMap((src, dest) => src.FirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(src.FirstName)))
-                //            .BeforeMap((src, dest) => src.LastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(src.LastName)))
-                //            .BeforeMap((src, dest) => src.UserName = CommonHelper.GetDecryptedData(src.UserName))
-                //            .BeforeMap((src, dest) => src.DateOfBirth = dest.DateOfBirth == null ? "" : Convert.ToDateTime(memberEntity.DateOfBirth).ToString("MM/dd/yyyy"))
-                //            .BeforeMap((src, dest) => src.Address = dest.Address == null ? "" : CommonHelper.GetDecryptedData(dest.Address))
-                //            .BeforeMap((src, dest) => src.City = dest.City == null ? "" : CommonHelper.GetDecryptedData(dest.City))
-                //            .BeforeMap((src, dest) => src.Zip = dest.Zipcode == null ? "" : CommonHelper.GetDecryptedData(dest.Zipcode))
-                //            .BeforeMap((src, dest) => src.IsVerifiedPhone = dest.IsVerifiedPhone == null && Convert.ToBoolean(dest.IsVerifiedPhone))
-                //            .BeforeMap((src, dest) => src.IsSSNAdded = dest.SSN == null && Convert.ToBoolean(dest.SSN))
-                //            .BeforeMap((src, dest) => src.PhotoUrl = dest.Photo ?? Path.GetFileName("gv_no_photo.jpg"))
-                //                .BeforeMap((src, dest) => src.FacebookAccountLogin = dest.FacebookAccountLogin != null ?
-                //                           CommonHelper.GetDecryptedData(dest.FacebookAccountLogin) :
-                //                           "")
-                //                           .BeforeMap((src, dest) => src.IsSynapseBankAdded = b).BeforeMap((src, dest) => src.SynapseBankStatus = accountstatus)
-
-                //            .BeforeMap((src, dest) => src.DateCreatedString = dest.DateCreated == null ? "" : Convert.ToDateTime(memberEntity.DateCreated).ToString("MM/dd/yyyy"))
-                //            );
-
-                //var mapper = config.CreateMapper();
-
-                //MemberDto member = mapper.Map<MemberDto>(memberEntity);
-
-
                 // Create MemberDTO Object to return to the app
                 var member = new MemberDto
                 {
@@ -2791,11 +2766,10 @@ namespace Nooch.API.Controllers
             try
             {
                 Logger.Info("Service Controller -> RejectMoneyCommon Initiated - Transaction ID: [" + TransactionId + "], " +
-                                       "TransType: [" + TransType + "], UserType: [" + UserType + "]");
+                            "TransType: [" + TransType + "], UserType: [" + UserType + "]");
 
                 var tda = new TransactionsDataAccess();
                 string result = tda.RejectMoneyCommon(TransactionId, UserType, LinkSource, TransType);
-                //return new StringResult { Result = result };
                 StringResult Re = new StringResult();
                 Re.Result = result;
 
@@ -2971,7 +2945,9 @@ namespace Nooch.API.Controllers
             {
                 MembersDataAccess mda = new MembersDataAccess();
                 RegisterUserSynapseResultClassExt nc = new RegisterUserSynapseResultClassExt();
+
                 synapseCreateUserV3Result_int res = mda.RegisterExistingUserWithSynapseV3(transId, memberId, email, phone, fullname, pw, ssn, dob, address, zip, fngprnt, ip);
+
                 if (res.success == true)
                 {
                     nc.access_token = res.oauth.oauth_key;
@@ -3053,7 +3029,7 @@ namespace Nooch.API.Controllers
 
                 var mda = new MembersDataAccess();
 
-                // Make URL from byte array...b/c submitDocumentToSynapseV3 expects url of image.
+                // Make URL from byte array b/c submitDocumentToSynapseV3 expects url of image.
                 string ImageUrlMade = "";
 
                 if (DocumentDetails.Picture != null)
@@ -4289,7 +4265,6 @@ namespace Nooch.API.Controllers
             var bdetails = _dbContext.SynapseSupportedBanks.Where(memberTemp =>
                                        memberTemp.BankName.Equals(bname) &&
                                        memberTemp.IsDeleted == false).FirstOrDefault();
-
 
             if (bdetails != null)
             {

@@ -2754,10 +2754,12 @@ namespace Nooch.Web.Controllers
 
             if (Request.QueryString["memId"] == null)
             {
-                res.msg = "Invalid or No MemberId found.";
+                res.msg = "No MemberId found in query URL.";
             }
             else
             {
+                Logger.Info("History CodeBehind -> Page_load Initiated - [MemberID: " + memId + "]");
+
                 List<TransactionClass> Transactions = new List<TransactionClass>();
 
                 try
@@ -2785,11 +2787,9 @@ namespace Nooch.Web.Controllers
                                 obj.TransactionStatus = trans.TransactionStatus;
 
                                 obj.TransactionDate1 = Convert.ToDateTime(trans.TransactionDate).ToShortDateString();
-                                obj.Amount = trans.Amount;
+                                obj.Amount = Math.Round(trans.Amount, 2);
 
                                 obj.Memo = trans.Memo;
-
-
                                 obj.city = (trans.GeoLocation != null && trans.GeoLocation.City != null) ? trans.GeoLocation.City : string.Empty;
                                 obj.state = (trans.GeoLocation != null && trans.GeoLocation.State != null) ? trans.GeoLocation.State : string.Empty;
 
@@ -2841,37 +2841,25 @@ namespace Nooch.Web.Controllers
 
                                 #endregion
 
-
-
                                 Transactions.Add(obj);
 
                                 #endregion Foreach inside
                             }
                             catch (Exception ex)
                             {
-                                Logger.Error("Service Controller - GetTransactionsList ERROR - Inner Exception during loop through all transactions - " +
-                                                       "MemberID: [" + memberId + "], TransID: [" + trans.TransactionId +
-                                                       "], Amount: [" + trans.Amount.ToString("n2") + "], Exception: [" + ex + "]");
+                                Logger.Error("History CodeBehind - ERROR - Inner Exception during loop through all transactions - " +
+                                             "MemberID: [" + memberId + "], TransID: [" + trans.TransactionId +
+                                             "], Amount: [" + trans.Amount.ToString("n2") + "], Exception: [" + ex + "]");
                                 continue;
                             }
                         }
                     }
+
                     res.allTransactionsData = Transactions;
-
-
-                    if (!String.IsNullOrEmpty(Request.QueryString["rs"]))
-                    {
-                        Logger.Info("createAccount CodeBehind -> Page_load Initiated - Is a RentScene Payment: [" +
-                                    Request.QueryString["rs"] + "]");
-                    }
-                    else
-                    {
-                        //res.errorId = "2";
-                    }
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("payRequest CodeBehind -> page_load OUTER EXCEPTION - [TransactionId Parameter: " +
+                    Logger.Error("History CodeBehind -> OUTER EXCEPTION - [TransactionId Parameter: " +
                                  Request.QueryString["TransactionId"] +
                                  "], [Exception: " + ex.Message + "]");
                     res.msg = "Server Error.";

@@ -5662,12 +5662,10 @@ namespace Nooch.DataAccess
                                     {
                                         try
                                         {
-
                                             var landlordObj = _dbContext.Landlords.FirstOrDefault(m => m.MemberId == SenderId && m.IsDeleted == false);
 
                                             if (landlordObj != null)
                                             {
-
                                                 landlordObj.DateModified = DateTime.Now;
                                                 _dbContext.SaveChanges();
                                                 _dbContext.Entry(landlordObj).Reload();
@@ -5675,7 +5673,7 @@ namespace Nooch.DataAccess
                                         }
                                         catch (Exception ex)
                                         {
-
+                                            Logger.Error("MDA - GetTokensAndTransferMoneyToNewUser - Failed to update TENANT info in DB - [MemberID: " + SenderId + "]");
                                         }
                                     }
 
@@ -5980,7 +5978,7 @@ namespace Nooch.DataAccess
                             else
                             {
                                 Logger.Error("MDA - GetTokensAndTransferMoneyToNewUser FAILED -> Couldn't find Synapse User or Bank " +
-                                                       "Details for Recipient - [TransID: " + TransactionId + "]");
+                                             "Details for Recipient - [TransID: " + TransactionId + "]");
 
                                 return "Request payor bank account details not found or syn user id not found";
                             }
@@ -5988,7 +5986,7 @@ namespace Nooch.DataAccess
                         else
                         {
                             Logger.Error("MDA - GetTokensAndTransferMoneyToNewUser FAILED -> MemberIdAfterSynapseAccountCreation " +
-                                                       "was Null or empty - [TransID: " + TransactionId + "]");
+                                         "was Null or empty - [TransID: " + TransactionId + "]");
 
                             return "Request payor bank account details not found or syn user id not found";
                         }
@@ -5996,7 +5994,7 @@ namespace Nooch.DataAccess
                     else
                     {
                         Logger.Error("MDA - GetTokensAndTransferMoneyToNewUser FAILED -> Couldn't find Synapse User or Bank " +
-                                                       "Details for EXISTING user (which is bad...) - [TransID: " + TransactionId + "]");
+                                     "Details for EXISTING user (which is bad...) - [TransID: " + TransactionId + "]");
 
                         return "Missing 'MemberIdAfterSynapseAccountCreation' [9080]";
                     }
@@ -6004,12 +6002,10 @@ namespace Nooch.DataAccess
                 else
                 {
                     Logger.Error("MDA - GetTokensAndTransferMoneyToNewUser FAILED -> Couldn't find this Transaction - " +
-                                           "[TransID: " + TransactionId + "]");
+                                 "[TransID: " + TransactionId + "]");
 
                     return "Either transaction already paid or transaction not found";
                 }
-
-
             }
             catch (Exception ex)
             {
