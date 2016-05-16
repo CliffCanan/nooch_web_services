@@ -31,14 +31,6 @@ namespace Nooch.Web.Controllers
         }
 
 
-        public ActionResult AddBank(string MemberId)
-        {
-            if (!String.IsNullOrEmpty(MemberId))
-                return View();
-            return RedirectToAction("Index");
-        }
-
-
         public ActionResult BankVerification(string tokenId)
         {
             BankVerification bankVerification = new BankVerification();
@@ -81,255 +73,47 @@ namespace Nooch.Web.Controllers
         }
 
 
-        public ActionResult DepositMoneyComplete()
-        {
-            ResultDepositMoneyComplete rdmc = new ResultDepositMoneyComplete();
-            rdmc.paymentSuccess = false;
-            rdmc.payinfobar = true;
-            Logger.Info("DepositMoneyComplete CodeBehind -> page_load Initiated - 'mem_id' Parameter In URL: [" + Request.QueryString["mem_id"] + "]");
+        #region Cancel Request Page
 
-            try
-            {
-
-                if (!String.IsNullOrEmpty(Request.QueryString["mem_id"]))
-                {
-                    string[] allQueryStrings = (Request.QueryString["mem_id"]).Split(',');
-
-                    if (allQueryStrings.Length > 1)
-                    {
-                        Response.Write("<script>var errorFromCodeBehind = '0';</script>");
-
-                        string mem_id = allQueryStrings[0];
-                        string tr_id = allQueryStrings[1];
-                        string isForRentScene = allQueryStrings[2];
-
-                        // Check if this payment is for Rent Scene
-                        if (isForRentScene == "true")
-                        {
-                            Logger.Info("DepositMoneyComplete CodeBehind -> Page_load - RENT SCENE Transaction Detected - TransID: [" + tr_id + "]");
-                            rdmc.rs = "true";
-                        }
-
-                        // Getting transaction details to check if transaction is still pending
-                        rdmc = GetTransDetailsForDepositMoneyComplete(tr_id, rdmc);
-
-                        if (rdmc.IsTransactionStillPending)
-                        {
-                            rdmc = finishTransaction(mem_id, tr_id, rdmc);
-                        }
-                    }
-                    else
-                    {
-                        Logger.Error("DepositMoneyComplete CodeBehind -> page_load ERROR - 'mem_id' in query string did not have 2 parts as expected - [mem_id Parameter: " + Request.QueryString["mem_id"] + "]");
-                        Response.Write("<script>var errorFromCodeBehind = '2';</script>");
-                    }
-                }
-                else
-                {
-                    // something wrong with query string
-                    Logger.Error("depositMoneyComplete CodeBehind -> page_load ERROR - 'mem_id' in query string was NULL or empty [mem_id Parameter: " + Request.QueryString["mem_id"] + "]");
-                    Response.Write("<script>var errorFromCodeBehind = '1';</script>");
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.Error("depositMoneyComplete CodeBehind -> page_load OUTER EXCEPTION - [mem_id Parameter: " + Request.QueryString["mem_id"] +
-                                       "], [Exception: " + ex + "]");
-                rdmc.payinfobar = false;
-                Response.Write("<script>var errorFromCodeBehind = '1';</script>");
-            }
-            ViewData["OnLoaddata"] = rdmc;
-
-            return View();
-        }
-
-
-        private ResultDepositMoneyComplete finishTransaction(string MemberIdAfterSynapseAccountCreation, string TransactionId, ResultDepositMoneyComplete resultDepositMoneyComplete)
-        {
-            ResultDepositMoneyComplete rdmc = resultDepositMoneyComplete;
-
-            try
-            {
-                string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-                string serviceMethod = "/GetTransactionDetailByIdAndMoveMoneyForNewUserDeposit?TransactionId=" + TransactionId +
-                                       "&MemberIdAfterSynapseAccountCreation=" + MemberIdAfterSynapseAccountCreation +
-                                       "&TransactionType=SentToNewUser"; ;
-                if ((rdmc.usrTyp == "Existing" || rdmc.usrTyp == "Tenant") &&
-                     rdmc.payeeMemId.Length > 5)
-                {
-                    serviceMethod = serviceMethod + "&recipMemId=" + rdmc.payeeMemId;
-                }
-
-                Logger.Info("DepositMoneyComplete CodeBehind -> finishTransaction - About to Query Nooch Service to move money - URL: ["
-                                      + String.Concat(serviceUrl, serviceMethod) + "]");
-
-                TransactionDto transaction = ResponseConverter<TransactionDto>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
-
-                if (transaction != null)
-                {
-                    if (transaction.synapseTransResult == "Success")
-                    {
-                        rdmc.paymentSuccess = true;
-                    }
-                    else
-                    {
-                        Logger.Error("DepositMoneyComplete CodeBehind -> completeTrans FAILED - TransId: [" + TransactionId + "]");
-
-                        rdmc.paymentSuccess = false;
-                        Response.Write("<script>errorFromCodeBehind = 'failed';</script>");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.Error("depositMoneyComplete CodeBehind -> completeTrans FAILED - TransId: [" + TransactionId +
-                                       "], Exception: [" + ex + "]");
-            }
-
-            return rdmc;
-        }
-
-
-        public ResultDepositMoneyComplete GetTransDetailsForDepositMoneyComplete(string TransactionId, ResultDepositMoneyComplete resultDepositMoneyComplete)
-        {
-            ResultDepositMoneyComplete rdmc = resultDepositMoneyComplete;
-            string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-            string serviceMethod = "/GetTransactionDetailByIdForRequestPayPage?TransactionId=" + TransactionId;
-
-            TransactionDto transaction = ResponseConverter<TransactionDto>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
-
-            if (transaction == null)
-            {
-                Logger.Error("depositMoneyComplete CodeBehind -> getTransDetails FAILED - Transaction was NULL [TransId: " + TransactionId + "]");
-
-                Response.Write("<script>errorFromCodeBehind = '3';</script>");
-                rdmc.IsTransactionStillPending = false;
-                return rdmc;
-            }
-            else
-            {
-                rdmc.senderImage = transaction.SenderPhoto;
-                rdmc.senderName1 = transaction.Name;
-                rdmc.transAmountd = transaction.Amount.ToString("n2");
-                rdmc.transMemo = transaction.Memo;
-
-                // Check if this was a Rent request from a Landlord
-                if (!String.IsNullOrEmpty(transaction.TransactionType) &&
-                    transaction.TransactionType == "Rent")
-                {
-                    rdmc.usrTyp = "Tenant";
-                    rdmc.payeeMemId = !String.IsNullOrEmpty(transaction.MemberId) ? transaction.MemberId : "none";
-                }
-
-                // Check if this was a request to an existing, but 'NonRegistered' User
-                else if (transaction.IsExistingButNonRegUser == true)
-                {
-                    rdmc.usrTyp = "Existing";
-                    rdmc.payeeMemId = !String.IsNullOrEmpty(transaction.MemberId) ? transaction.MemberId : "none";
-                }
-
-                #region Check If Still Pending
-
-                Response.Write("<script>var isStillPending = true;</script>");
-
-                if (transaction.TransactionStatus != "Pending")
-                {
-                    Response.Write("<script>isStillPending = false;</script>");
-                    rdmc.IsTransactionStillPending = false;
-                    return rdmc;
-                }
-
-                #endregion Check If Still Pending
-            }
-
-            rdmc.IsTransactionStillPending = true;
-            return rdmc;
-        }
-
-
+        /// <summary>
+        /// Called on Page Load of /CancelRequest page.
+        /// </summary>
+        /// <returns></returns>
         public ActionResult CancelRequest()
         {
             ResultCancelRequest rcr = new ResultCancelRequest();
 
             if (!String.IsNullOrEmpty(Request.QueryString["TransactionId"]) &&
-                   !String.IsNullOrEmpty(Request.QueryString["MemberId"]) &&
-                   !String.IsNullOrEmpty(Request.QueryString["UserType"]))
+                !String.IsNullOrEmpty(Request.QueryString["MemberId"]) &&
+                !String.IsNullOrEmpty(Request.QueryString["UserType"]))
             {
                 rcr = GetTransDetails(Request.QueryString["TransactionId"]);
             }
             else
             {
-                rcr.reslt1 = "false";
-                rcr.reslt = "This looks like an invalid transaction - sorry about that!  Please try again or contact Nooch support for more information.";
-                rcr.paymentInfo = "false";
-                //reslt1.Visible = false;
-                //reslt.Text = "This looks like an invalid transaction - sorry about that!  Please try again or contact Nooch support for more information.";
-                //paymentInfo.Visible = false;
+                Logger.Error("CancelRequest Code Behind -> CancelRequest() FAILED - Missing parameters in URL string - URL: [" + Request.RawUrl + "]");
+
+                rcr.success = false;
+                rcr.showPaymentInfo = false;
+                rcr.resultMsg = "This looks like an invalid transaction - sorry about that!  Please try again or contact Nooch support for more information.";
             }
 
             ViewData["OnLoaddata"] = rcr;
+
             return View();
         }
 
 
-        public ResultCancelRequest GetTransDetailsGenericMethod(string TransactionId)
-        {
-            ResultCancelRequest rcr = new ResultCancelRequest();
-            string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-            string serviceMethod = "/GetTransactionDetailById?TransactionId=" + TransactionId;
-
-            TransactionDto transaction = ResponseConverter<TransactionDto>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
-
-            rcr.IsTransFound = transaction != null;
-            rcr.TransStatus = transaction.TransactionStatus;
-
-            if (transaction.IsPhoneInvitation && transaction.PhoneNumberInvited.Length > 0)
-            {
-                // senderImage.ImageUrl = "https://www.noochme.com/noochweb/Assets/Images/" + "userpic-default.png";
-                rcr.senderImage = "https://www.noochme.com/noochweb/Assets/Images/" + "userpic-default.png";
-                //nameLabel.Text = transaction.PhoneNumberInvited;
-                rcr.nameLabel = transaction.PhoneNumberInvited;
-            }
-            else if (!String.IsNullOrEmpty(transaction.InvitationSentTo))
-            {
-                //senderImage.ImageUrl = "https://www.noochme.com/noochweb/Assets/Images/" + "userpic-default.png";
-                //nameLabel.Text = transaction.InvitationSentTo;
-                rcr.senderImage = "https://www.noochme.com/noochweb/Assets/Images/" + "userpic-default.png";
-
-                rcr.nameLabel = transaction.InvitationSentTo;
-            }
-            else
-            {
-                //nameLabel.Text = transaction.Name;
-                //senderImage.ImageUrl = transaction.SenderPhoto;
-                rcr.senderImage = transaction.SenderPhoto;
-                rcr.nameLabel = transaction.Name;
-            }
-
-            //AmountLabel.Text = transaction.Amount.ToString("n2");
-            if (transaction.Amount != null)
-                rcr.AmountLabel = transaction.Amount.ToString("n2");
-
-
-            // Reject money page related stuff
-
-            rcr.RecepientName = transaction.RecepientName;
-            rcr.senderImage = transaction.RecepientPhoto;
-
-
-            if (!String.IsNullOrEmpty(transaction.TransactionType))
-                rcr.TransType = transaction.TransactionType;
-
-            if (!String.IsNullOrEmpty(transaction.TransactionId))
-                rcr.TransId = transaction.TransactionId;
-
-            return rcr;
-        }
-
-
+        /// <summary>
+        /// Just for CANELLING a payment - called by the CancelRequest() method when the CancelRequest page first loads.
+        /// </summary>
+        /// <param name="TransactionId"></param>
+        /// <returns></returns>
         public ResultCancelRequest GetTransDetails(string TransactionId)
         {
             ResultCancelRequest rcr = new ResultCancelRequest();
+            rcr.success = false;
+
             string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
             string serviceMethod = "/GetTransactionDetailById?TransactionId=" + TransactionId;
 
@@ -337,47 +121,56 @@ namespace Nooch.Web.Controllers
 
             if (transaction != null)
             {
-                CancelMoneyRequest(Request.QueryString["TransactionId"], Request.QueryString["MemberId"], Request.QueryString["UserType"]);
-                //  CancelMoneyRequest(TransactionId, MemberId, UserType);
-            }
+                rcr.showPaymentInfo = true; // Show payment info (recipient name/pic, amount)
 
-            if (transaction.TransactionStatus != "Pending")
+                if (transaction.TransactionStatus == "Pending")
+                {
+                    ResultCancelRequest cancelResult = CancelMoneyRequest(transaction.TransactionId, Request.QueryString["MemberId"], Request.QueryString["UserType"]);
+                    rcr = cancelResult;
+                    // CLIFF (5/15/16): the transaction's status was actually just updated to 'Cancelled' in CancelMoneyRequest()
+                    // but this flag is just for telling the CancelMoney.js to display a SweetAlert if it is NOT initially 'Pending' on page load.
+                    rcr.initStatus = "pending";
+                }
+                else if (transaction.TransactionStatus == "Rejected")
+                {
+                    Logger.Info("CancelRequest Code Behind -> GetTransDetails - This payment has already been Rejected - [TransID: " + TransactionId + "]");
+                    rcr.resultMsg = "Looks like this payment has already been rejected.";
+                    rcr.initStatus = "rejected";
+                }
+                else if (transaction.TransactionStatus == "Cancelled")
+                {
+                    Logger.Info("CancelRequest Code Behind -> GetTransDetails - This payment has already been Cancelled - [TransID: " + TransactionId + "]");
+                    rcr.resultMsg = "This payment has already been cancelled.";
+                    rcr.initStatus = "cancelled";
+                }
+            }
+            else
             {
-                rcr.reslt1 = "false";
-                rcr.reslt = "Looks like this request is no longer pending. You may have cancelled it already or the recipient has already responded by accepting or rejecting.";
-                rcr.paymentInfo = "true";
+                Logger.Error("CancelRequest Code Behind -> GetTransDetails FAILED - [TransID: " + TransactionId + "]");
 
-                //reslt1.Visible = false;
-                //paymentInfo.Visible = true;
-                //reslt.Text = "Looks like this request is no longer pending. You may have cancelled it already or the recipient has already responded by accepting or rejecting.";
-                //reslt.Visible = true;
+                rcr.resultMsg = "We were not able to find this transaction. Please try again by reloading this page, or contact Nooch support for further assistance.";
             }
 
+            #region Set Name and Photo
 
             if (transaction.IsPhoneInvitation && transaction.PhoneNumberInvited.Length > 0)
             {
-                // senderImage.ImageUrl = "https://www.noochme.com/noochweb/Assets/Images/" + "userpic-default.png";
                 rcr.senderImage = "https://www.noochme.com/noochweb/Assets/Images/" + "userpic-default.png";
-                //nameLabel.Text = transaction.PhoneNumberInvited;
                 rcr.nameLabel = transaction.PhoneNumberInvited;
             }
             else if (!String.IsNullOrEmpty(transaction.InvitationSentTo))
             {
-                //senderImage.ImageUrl = "https://www.noochme.com/noochweb/Assets/Images/" + "userpic-default.png";
-                //nameLabel.Text = transaction.InvitationSentTo;
                 rcr.senderImage = "https://www.noochme.com/noochweb/Assets/Images/" + "userpic-default.png";
-
                 rcr.nameLabel = transaction.InvitationSentTo;
             }
             else
             {
-                //nameLabel.Text = transaction.Name;
-                //senderImage.ImageUrl = transaction.SenderPhoto;
                 rcr.senderImage = transaction.SenderPhoto;
                 rcr.nameLabel = transaction.Name;
             }
 
-            //AmountLabel.Text = transaction.Amount.ToString("n2");
+            #endregion Set Name and Photo
+
             rcr.AmountLabel = transaction.Amount.ToString("n2");
 
             // Reject money page related stuff
@@ -391,50 +184,58 @@ namespace Nooch.Web.Controllers
         }
 
 
-        protected void CancelMoneyRequest(string TransactionId, string MemberId, string userType)
+        protected ResultCancelRequest CancelMoneyRequest(string TransactionId, string MemberId, string userType)
         {
+            ResultCancelRequest res = new ResultCancelRequest();
+            res.success = false;
+
             string serviceMethod = string.Empty;
             string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
 
+            #region Call CancelMoneyRequest Service
+
             if (userType == "mx5bTcAYyiOf9I5Py9TiLw==")
             {
-                // Calling service to cancel a REQUEST to an EXISTING Nooch user
+                // Service to cancel a REQUEST to an EXISTING Nooch user
                 serviceMethod = "/CancelMoneyRequestForExistingNoochUser?TransactionId=" + TransactionId + "&MemberId=" + MemberId;
-
-                var serviceResult = ResponseConverter<Nooch.Common.Entities.StringResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
-
-                if (serviceResult.Result == "Transaction Cancelled Successfully.")
-                {
-                    //reslt1.Visible = true;
-                    //reslt.Text = "No problem, we change our minds sometimes too.  This request is cancelled.  But you can always send another request...";
-                }
-                else
-                {
-                    //reslt1.Visible = false;
-                    //reslt.Text = "Looks like this request is no longer pending. You may have cancelled it already or the recipient has already responded by accepting or rejecting.";
-                }
             }
-
-
-            if (userType == "U6De3haw2r4mSgweNpdgXQ==")
+            else if (userType == "U6De3haw2r4mSgweNpdgXQ==")
             {
-                // Calling service to cancel a REQUEST to NON-NOOCH user
-
+                // Service to cancel a REQUEST to NON-NOOCH user
                 serviceMethod = "/CancelMoneyRequestForNonNoochUser?TransactionId=" + TransactionId + "&MemberId=" + MemberId;
-
-                var serviceResult = ResponseConverter<Nooch.Common.Entities.StringResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
-
-                if (serviceResult.Result == "Transaction Cancelled Successfully")
-                {
-                    //reslt1.Visible = true;
-                    //reslt.Text = "No problem, we change our minds sometimes too.  This request is cancelled, finito, extinct, gone, not coming back... unless you send another request!";
-                }
-                else
-                {
-                    //reslt1.Visible = false;
-                    //reslt.Text = "This transaction is no longer pending. Either you already responded by accepting or rejecting, or it was canceled.";
-                }
             }
+
+            var serviceResult = ResponseConverter<Nooch.Common.Entities.StringResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+
+            if (serviceResult.Result == "Transaction Cancelled Successfully.")
+            {
+                Logger.Info("CancelRequest Code Behind -> Request Successfully Cancelled - [TransID: " + TransactionId + "], [MemberID: " + MemberId + "]");
+
+                res.showPaymentInfo = true;
+                res.success = true;
+                res.resultMsg = "No problem, we change our minds sometimes too.  This request is cancelled.  But you can always send another request...";
+            }
+            else
+            {
+                Logger.Error("CancelRequest Code Behind -> CancelMoneyRequest FAILED - [TransID: " + TransactionId + "], [MemberID: " + MemberId + "], [UserType: " + userType + "]");
+                res.resultMsg = "Looks like this request is no longer pending. You may have cancelled it already or the recipient has already responded by accepting or rejecting.";
+            }
+
+            #endregion Call CancelMoneyRequest Service
+
+            return res;
+        }
+
+        #endregion Cancel Request Page
+
+
+        #region Add Bank Page
+
+        public ActionResult AddBank(string MemberId)
+        {
+            if (!String.IsNullOrEmpty(MemberId))
+                return View();
+            return RedirectToAction("Index");
         }
 
 
@@ -513,6 +314,7 @@ namespace Nooch.Web.Controllers
                 Logger.Error("**Add_Bank** CodeBehind -> RegisterUserWithSynapse FAILED - [MemberID: " + memberid +
                                    "], [Exception: " + we.InnerException + "]");
             }
+
             return res;
         }
 
@@ -565,7 +367,6 @@ namespace Nooch.Web.Controllers
                                 sbc.account_class = bankNode.account_class;
                                 sbc.account_number_string = bankNode.account_num;
                                 sbc.account_type = bankNode.account_type.ToString();
-                                //sbc.balance = bankNode.info.balance.amount;
                                 sbc.bank_name = bankNode.bank_name;
                                 sbc.bankoid = bankNode.oid;
                                 sbc.nickname = bankNode.nickname;
@@ -668,15 +469,13 @@ namespace Nooch.Web.Controllers
                         banks = synbanksList,
                         success = true
                     };
-                    //res.SynapseCodeBasedResponse = bankAddRes.SynapseCodeBasedResponse;
-                    //res.SynapseQuestionBasedResponse = bankAddRes.SynapseQuestionBasedResponse;
+
                     res.ERROR_MSG = "OK";
                 }
                 else
                 {
                     res.ERROR_MSG = bankAddRes.errorMsg;
                 }
-                //res.ssn_verify_status = bankAddRes.;
 
                 return res;
             }
@@ -796,7 +595,15 @@ namespace Nooch.Web.Controllers
         }
 
 
-        // method to call verify bank mfa - to be used with routing and account number login
+        /// <summary>
+        /// Method for verifying bank MFA microdeposits - used only for a bank added with routing and account numbers.
+        /// </summary>
+        /// <param name="bank"></param>
+        /// <param name="memberid"></param>
+        /// <param name="MicroDepositOne"></param>
+        /// <param name="MicroDepositTwo"></param>
+        /// <param name="ba"></param>
+        /// <returns></returns>
         [HttpPost]
         [ActionName("MFALoginWithRoutingAndAccountNumber")]
         public SynapseBankLoginRequestResult MFALoginWithRoutingAndAccountNumber(string bank, string memberid, string MicroDepositOne, string MicroDepositTwo, string ba)
@@ -860,6 +667,60 @@ namespace Nooch.Web.Controllers
             return res;
         }
 
+
+        [HttpPost]
+        [ActionName("SetDefaultBank")]
+        public ActionResult SetDefaultBank(setDefaultBankInput input)
+        {
+            Logger.Info("**Add_Bank** CodeBehind -> SetDefaultBank Initiated - [MemberID: " + input.MemberId +
+                                   "], [Bank Name: " + input.BankName + "], [BankID: " + input.BankOId + "]");
+
+            SynapseBankSetDefaultResult res = new SynapseBankSetDefaultResult();
+
+            try
+            {
+                if (String.IsNullOrEmpty(input.MemberId) ||
+                String.IsNullOrEmpty(input.BankName) ||
+                String.IsNullOrEmpty(input.BankOId))
+                {
+                    if (String.IsNullOrEmpty(input.BankName))
+                    {
+                        res.Message = "Invalid data - need Bank Name";
+                    }
+                    else if (String.IsNullOrEmpty(input.MemberId))
+                    {
+                        res.Message = "Invalid data - need MemberId";
+                    }
+                    else if (String.IsNullOrEmpty(input.BankOId))
+                    {
+                        res.Message = "Invalid data - need Bank Id";
+                    }
+
+                    res.Is_success = false;
+                }
+                else
+                {
+                    string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+
+                    string serviceMethod = "/SetSynapseDefaultBank?MemberId=" + input.MemberId + "&BankName=" + input.BankName + "&BankId=" + input.BankOId;
+                    SynapseBankSetDefaultResult bnkloginresult = ResponseConverter<SynapseBankSetDefaultResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+
+                    res.Is_success = bnkloginresult.Is_success;
+                    res.Message = bnkloginresult.Message;
+                }
+            }
+            catch (Exception we)
+            {
+                Logger.Error("**Add_Bank** CodeBehind -> SetDefaultBank FAILED - [MemberID: " + input.MemberId +
+                                   "], [Exception: " + we.InnerException + "]");
+            }
+            return Json(res);
+        }
+
+        #endregion Add Bank Page
+
+
+        #region DepositMoney Page
 
         public ActionResult DepositMoney()
         {
@@ -973,14 +834,381 @@ namespace Nooch.Web.Controllers
         }
 
 
+        public ActionResult RegisterUserWithSynpForDepositMoney(string transId, string memberId, string userEm, string userPh, string userName, string userPw, string ssn, string dob, string address, string zip, string fngprnt, string ip)
+        {
+            Logger.Info("DepositMoney Code Behind -> RegisterNonNoochUserWithSynapse Initiated");
+
+            RegisterUserSynapseResultClassExt res = new RegisterUserSynapseResultClassExt();
+            res.success = "false";
+            res.memberIdGenerated = "";
+            res.reason = "Unknown";
+
+            try
+            {
+                string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+                userPh = CommonHelper.RemovePhoneNumberFormatting(userPh);
+
+                Logger.Info("DepositMoney Code Behind -> RegisterUserWithSynp -> PARAMETERS: transId: " + transId +
+                                       ", memberId (If existing user): " + memberId + ", userEm: " + userEm +
+                                       ", userPh: " + userPh + ", userPw: " + userPw +
+                                       ", ssn: " + ssn + ", dob: " + dob +
+                                       ", address: " + address + ", zip: " + zip);
+
+
+                string serviceMethod = "/RegisterNonNoochUserWithSynapse?transId=" + transId +
+                                    "&email=" + userEm +
+                                    "&phone=" + userPh +
+                                    "&fullname=" + userName +
+                                    "&pw=" + userPw +
+                                    "&ssn=" + ssn +
+                                    "&dob=" + dob +
+                                    "&address=" + address +
+                                    "&zip=" + zip +
+                                    "&fngprnt=" + fngprnt +
+                                    "&ip=" + ip;
+
+                Logger.Info("DepositMoney Code-Behind -> RegisterUserWithSynp - Full Query String: [ " + String.Concat(serviceUrl, serviceMethod) + " ]");
+
+                RegisterUserSynapseResultClassExt regUserResponse = ResponseConverter<RegisterUserSynapseResultClassExt>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+
+                if (regUserResponse.success == "True")
+                {
+                    res.success = "true";
+                    res.reason = "OK";
+                    res.memberIdGenerated = regUserResponse.memberIdGenerated;
+                }
+                else if (regUserResponse.success == "False")
+                {
+                    Logger.Error("DepositMoney Code-Behind -> RegisterUserWithSynp FAILED - SERVER RETURNED 'success' = 'false' - [TransID: " + transId + "]");
+                    res.reason = regUserResponse.reason;
+                }
+                else
+                {
+                    Logger.Error("DepositMoney Code-Behind -> RegisterUserWithSynp FAILED - UNKNOWN ERROR FROM SERVER - [TransID: " + transId + "]");
+                }
+
+                res.ssn_verify_status = regUserResponse.ssn_verify_status;
+
+                return Json(res);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("DepositMoney Code-Behind -> RegisterUserWithSynp attempt FAILED Failed, Reason: [" + res.reason + "], " +
+                                       "TransId: [" + transId + "], [Exception: " + ex + "]");
+                return Json(res);
+            }
+        }
+
+        #endregion DepositMoney Page
+
+
+        #region DepositMoneyComplete Page
+
+        public ActionResult DepositMoneyComplete()
+        {
+            ResultDepositMoneyComplete rdmc = new ResultDepositMoneyComplete();
+            rdmc.paymentSuccess = false;
+            rdmc.payinfobar = true;
+
+            Logger.Info("DepositMoneyComplete CodeBehind -> page_load Initiated - 'mem_id' Parameter In URL: [" + Request.QueryString["mem_id"] + "]");
+
+            try
+            {
+                if (!String.IsNullOrEmpty(Request.QueryString["mem_id"]))
+                {
+                    string[] allQueryStrings = (Request.QueryString["mem_id"]).Split(',');
+
+                    if (allQueryStrings.Length > 1)
+                    {
+                        Response.Write("<script>var errorFromCodeBehind = '0';</script>");
+
+                        string mem_id = allQueryStrings[0];
+                        string tr_id = allQueryStrings[1];
+                        string isForRentScene = allQueryStrings[2];
+
+                        // Check if this payment is for Rent Scene
+                        if (isForRentScene == "true")
+                        {
+                            Logger.Info("DepositMoneyComplete CodeBehind -> Page_load - RENT SCENE Transaction Detected - TransID: [" + tr_id + "]");
+                            rdmc.rs = "true";
+                        }
+
+                        // Getting transaction details to check if transaction is still pending
+                        rdmc = GetTransDetailsForDepositMoneyComplete(tr_id, rdmc);
+
+                        if (rdmc.IsTransactionStillPending)
+                        {
+                            rdmc = finishTransaction(mem_id, tr_id, rdmc);
+                        }
+                    }
+                    else
+                    {
+                        Logger.Error("DepositMoneyComplete CodeBehind -> page_load ERROR - 'mem_id' in query string did not have 2 parts as expected - [mem_id Parameter: " + Request.QueryString["mem_id"] + "]");
+                        Response.Write("<script>var errorFromCodeBehind = '2';</script>");
+                    }
+                }
+                else
+                {
+                    // something wrong with query string
+                    Logger.Error("depositMoneyComplete CodeBehind -> page_load ERROR - 'mem_id' in query string was NULL or empty [mem_id Parameter: " + Request.QueryString["mem_id"] + "]");
+                    Response.Write("<script>var errorFromCodeBehind = '1';</script>");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("depositMoneyComplete CodeBehind -> page_load OUTER EXCEPTION - [mem_id Parameter: " + Request.QueryString["mem_id"] +
+                                       "], [Exception: " + ex + "]");
+                rdmc.payinfobar = false;
+                Response.Write("<script>var errorFromCodeBehind = '1';</script>");
+            }
+
+            ViewData["OnLoaddata"] = rdmc;
+
+            return View();
+        }
+
+
+        public ResultDepositMoneyComplete GetTransDetailsForDepositMoneyComplete(string TransactionId, ResultDepositMoneyComplete resultDepositMoneyComplete)
+        {
+            ResultDepositMoneyComplete rdmc = resultDepositMoneyComplete;
+            string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+            string serviceMethod = "/GetTransactionDetailByIdForRequestPayPage?TransactionId=" + TransactionId;
+
+            TransactionDto transaction = ResponseConverter<TransactionDto>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+
+            if (transaction == null)
+            {
+                Logger.Error("depositMoneyComplete CodeBehind -> getTransDetails FAILED - Transaction was NULL [TransId: " + TransactionId + "]");
+
+                Response.Write("<script>errorFromCodeBehind = '3';</script>");
+                rdmc.IsTransactionStillPending = false;
+                return rdmc;
+            }
+            else
+            {
+                rdmc.senderImage = transaction.SenderPhoto;
+                rdmc.senderName1 = transaction.Name;
+                rdmc.transAmountd = transaction.Amount.ToString("n2");
+                rdmc.transMemo = transaction.Memo;
+
+                // Check if this was a Rent request from a Landlord
+                if (!String.IsNullOrEmpty(transaction.TransactionType) &&
+                    transaction.TransactionType == "Rent")
+                {
+                    rdmc.usrTyp = "Tenant";
+                    rdmc.payeeMemId = !String.IsNullOrEmpty(transaction.MemberId) ? transaction.MemberId : "none";
+                }
+
+                // Check if this was a request to an existing, but 'NonRegistered' User
+                else if (transaction.IsExistingButNonRegUser == true)
+                {
+                    rdmc.usrTyp = "Existing";
+                    rdmc.payeeMemId = !String.IsNullOrEmpty(transaction.MemberId) ? transaction.MemberId : "none";
+                }
+
+                #region Check If Still Pending
+
+                Response.Write("<script>var isStillPending = true;</script>");
+
+                if (transaction.TransactionStatus != "Pending")
+                {
+                    Response.Write("<script>isStillPending = false;</script>");
+                    rdmc.IsTransactionStillPending = false;
+                    return rdmc;
+                }
+
+                #endregion Check If Still Pending
+            }
+
+            rdmc.IsTransactionStillPending = true;
+            return rdmc;
+        }
+
+
+        private ResultDepositMoneyComplete finishTransaction(string MemberIdAfterSynapseAccountCreation, string TransactionId, ResultDepositMoneyComplete resultDepositMoneyComplete)
+        {
+            ResultDepositMoneyComplete rdmc = resultDepositMoneyComplete;
+
+            try
+            {
+                string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+                string serviceMethod = "/GetTransactionDetailByIdAndMoveMoneyForNewUserDeposit?TransactionId=" + TransactionId +
+                                       "&MemberIdAfterSynapseAccountCreation=" + MemberIdAfterSynapseAccountCreation +
+                                       "&TransactionType=SentToNewUser"; ;
+                if ((rdmc.usrTyp == "Existing" || rdmc.usrTyp == "Tenant") &&
+                     rdmc.payeeMemId.Length > 5)
+                {
+                    serviceMethod = serviceMethod + "&recipMemId=" + rdmc.payeeMemId;
+                }
+
+                Logger.Info("DepositMoneyComplete CodeBehind -> finishTransaction - About to Query Nooch Service to move money - URL: ["
+                                      + String.Concat(serviceUrl, serviceMethod) + "]");
+
+                TransactionDto transaction = ResponseConverter<TransactionDto>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+
+                if (transaction != null)
+                {
+                    if (transaction.synapseTransResult == "Success")
+                    {
+                        rdmc.paymentSuccess = true;
+                    }
+                    else
+                    {
+                        Logger.Error("DepositMoneyComplete CodeBehind -> completeTrans FAILED - TransId: [" + TransactionId + "]");
+
+                        rdmc.paymentSuccess = false;
+                        Response.Write("<script>errorFromCodeBehind = 'failed';</script>");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("depositMoneyComplete CodeBehind -> completeTrans FAILED - TransId: [" + TransactionId +
+                                       "], Exception: [" + ex + "]");
+            }
+
+            return rdmc;
+        }
+
+        #endregion DepositMoneyComplete Page
+
+
+        #region Reset Password Page
+
+        public ActionResult ResetPassword()
+        {
+            ResultResetPassword resultResetPassword = new ResultResetPassword();
+
+            string strUserAgent = Request.UserAgent.ToLower();
+            resultResetPassword.requestExpiredorNotFound = false;
+
+            if (strUserAgent != null)
+            {
+
+                if (Request.Browser.IsMobileDevice || strUserAgent.Contains("iphone") ||
+                      strUserAgent.Contains("mobile"))
+                {
+                    resultResetPassword.clientScript = "<script>Show('iPhoneButton','ctl00_detailContentPlaceHolder_activationLinkButton')</script>";
+                }
+                else
+                {
+                    resultResetPassword.clientScript = "<script>Show('ctl00_detailContentPlaceHolder_newPasswordLinkButton','iPhoneButton')</script>";
+                }
+            }
+
+            resultResetPassword.ResetPasswordMessageLabel = false;
+            resultResetPassword.messageLabel = false;
+            resultResetPassword = bindusermail(resultResetPassword);
+            ViewData["OnLoaddata"] = resultResetPassword;
+            return View();
+        }
+
+
+        public string ResetPasswordButton_Click(string PWDText, string memberId)
+        {
+            var objAesAlgorithm = new AES();
+            string encryptedPassword = objAesAlgorithm.Encrypt(PWDText.Trim(), string.Empty);
+            string serviceMethod = string.Empty;
+            string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+
+            serviceMethod = "/ResetPassword?memberId=" + memberId + "&newPassword=" + encryptedPassword + "&newUser=true";
+
+            var isMemberPwdResetted = ResponseConverter<Nooch.Common.Entities.BoolResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+            if (isMemberPwdResetted.Result)
+            {
+                return "true";
+            }
+            else
+            {
+                return "false";
+            }
+        }
+
+
+        public ActionResult pinNumberVerificationButton_Click(string PINTextBox, string memberId)
+        {
+            synapseV3GenericResponse res = new synapseV3GenericResponse();
+
+            var objAesAlgorithm = new AES();
+            string encryptedPin = objAesAlgorithm.Encrypt(PINTextBox.Trim(), string.Empty);
+            string serviceMethod = string.Empty;
+            string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+
+            serviceMethod = "/ValidatePinNumberForPasswordForgotPage?memberId=" + memberId + "&pinNo=" + encryptedPin;
+
+            var isMemberValid = ResponseConverter<Nooch.Common.Entities.StringResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+            if (isMemberValid.Result.Equals("Success"))
+            {
+                Page p = HttpContext.Handler as Page;
+                p.RegisterStartupScript("showButton", "<script>Show('resetPasswordDiv','pinNumberVerificationDiv')</script>");
+                res.isSuccess = true;
+
+                return Json(res);
+            }
+            else
+            {
+                res.isSuccess = false;
+                res.msg = isMemberValid.Result.ToString();
+                return Json(res);
+            }
+        }
+
+
+        ResultResetPassword bindusermail(ResultResetPassword rrp)
+        {
+            ResultResetPassword resultResetPass = rrp;
+            string memberId = Request.QueryString["memberId"];
+
+            if (!String.IsNullOrEmpty(memberId))
+            {
+                string serviceMethod = string.Empty;
+                string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+                serviceMethod = "/GetMemberUsernameByMemberId?memberId=" + memberId;
+
+                var isMemberPwdReset = ResponseConverter<Nooch.Common.Entities.StringResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+                if (isMemberPwdReset.Result != null)
+                {
+                    resultResetPass.usermail = isMemberPwdReset.Result;
+                    resultResetPass = resetlinkvalidationcheck(resultResetPass);
+                }
+                else
+                {
+                    resultResetPass.invalidUser = "true";
+                }
+            }
+
+            return resultResetPass;
+        }
+
+
+        ResultResetPassword resetlinkvalidationcheck(ResultResetPassword rrp)
+        {
+            ResultResetPassword resultResetPass = rrp;
+            string memberId = Request.QueryString["memberId"];
+            string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+            string serviceMethod = string.Empty;
+            serviceMethod = "/resetlinkvalidationcheck?memberId=" + memberId;
+            var isMemberPwdResetted = ResponseConverter<Nooch.Common.Entities.BoolResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+            if (isMemberPwdResetted.Result == false)
+            {
+                resultResetPass.requestExpiredorNotFound = true;
+                resultResetPass.pin = false;
+            }
+
+            return resultResetPass;
+        }
+
+        #endregion Reset Password Page
+
+
+        #region PayRequest Page
+
         public ActionResult PayRequest()
         {
-            //string s= String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
-            //                                    "trans/payRequest.aspx?TransactionId=" + "2342342" +
-            //                                    "&UserType=" + "2342342");
             ResultPayRequest rpr = new ResultPayRequest();
             rpr.payreqInfo = true;
             rpr.PayorInitialInfo = true;
+
             Logger.Info("payRequest CodeBehind -> Page_load Initiated - [TransactionId Parameter: " + Request.QueryString["TransactionId"] + "]");
 
             try
@@ -1043,309 +1271,6 @@ namespace Nooch.Web.Controllers
             ViewData["OnLoaddata"] = rpr;
 
             return View();
-        }
-
-
-        public ActionResult ResetPassword()
-        {
-            ResultResetPassword resultResetPassword = new ResultResetPassword();
-            string strUserAgent = Request.UserAgent.ToLower();
-            resultResetPassword.requestExpiredorNotFound = false;
-            if (strUserAgent != null)
-            {
-
-                if (Request.Browser.IsMobileDevice || strUserAgent.Contains("iphone") ||
-                      strUserAgent.Contains("mobile"))
-                {
-                    resultResetPassword.clientScript = "<script>Show('iPhoneButton','ctl00_detailContentPlaceHolder_activationLinkButton')</script>";
-
-                }
-                else
-                {
-                    resultResetPassword.clientScript = "<script>Show('ctl00_detailContentPlaceHolder_newPasswordLinkButton','iPhoneButton')</script>";
-
-                }
-            }
-
-            resultResetPassword.ResetPasswordMessageLabel = false;
-            resultResetPassword.messageLabel = false;
-            resultResetPassword = bindusermail(resultResetPassword);
-            ViewData["OnLoaddata"] = resultResetPassword;
-            return View();
-        }
-
-
-        public string ResetPasswordButton_Click(string PWDText, string memberId)
-        {
-
-
-            var objAesAlgorithm = new AES();
-            string encryptedPassword = objAesAlgorithm.Encrypt(PWDText.Trim(), string.Empty);
-            string serviceMethod = string.Empty;
-            string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-            serviceMethod = "/ResetPassword?memberId=" + memberId + "&newPassword=" + encryptedPassword + "&newUser=true";
-
-            var isMemberPwdResetted = ResponseConverter<Nooch.Common.Entities.BoolResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
-            if (isMemberPwdResetted.Result)
-            {
-                return "true";
-
-            }
-            else
-            {
-                return "false";
-
-            }
-
-        }
-
-        public ActionResult pinNumberVerificationButton_Click(string PINTextBox, string memberId)
-        {
-
-            synapseV3GenericResponse res = new synapseV3GenericResponse();
-            var objAesAlgorithm = new AES();
-            string encryptedPin = objAesAlgorithm.Encrypt(PINTextBox.Trim(), string.Empty);
-            string serviceMethod = string.Empty;
-            string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-            serviceMethod = "/ValidatePinNumberForPasswordForgotPage?memberId=" + memberId + "&pinNo=" + encryptedPin;
-
-            var isMemberValid = ResponseConverter<Nooch.Common.Entities.StringResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
-            if (isMemberValid.Result.Equals("Success"))
-            {
-                Page p = HttpContext.Handler as Page;
-                p.RegisterStartupScript("showButton", "<script>Show('resetPasswordDiv','pinNumberVerificationDiv')</script>");
-                res.isSuccess = true;
-                return Json(res);
-
-            }
-            else
-            {
-                res.isSuccess = false;
-                res.msg = isMemberValid.Result.ToString();
-                return Json(res);
-            }
-
-        }
-        ResultResetPassword bindusermail(ResultResetPassword rrp)
-        {
-            ResultResetPassword resultResetPass = rrp;
-            string memberId = Request.QueryString["memberId"];
-            if (!String.IsNullOrEmpty(memberId))
-            {
-                string serviceMethod = string.Empty;
-                string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-                serviceMethod = "/GetMemberUsernameByMemberId?memberId=" + memberId;
-
-                var isMemberPwdReset = ResponseConverter<Nooch.Common.Entities.StringResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
-                if (isMemberPwdReset.Result != null)
-                {
-                    resultResetPass.usermail = isMemberPwdReset.Result;
-                    resultResetPass = resetlinkvalidationcheck(resultResetPass);
-
-                }
-                else
-                {
-                    resultResetPass.invalidUser = "true";
-                }
-            }
-            return resultResetPass;
-        }
-
-        ResultResetPassword resetlinkvalidationcheck(ResultResetPassword rrp)
-        {
-            ResultResetPassword resultResetPass = rrp;
-            string memberId = Request.QueryString["memberId"];
-            string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-            string serviceMethod = string.Empty;
-            serviceMethod = "/resetlinkvalidationcheck?memberId=" + memberId;
-            var isMemberPwdResetted = ResponseConverter<Nooch.Common.Entities.BoolResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
-            if (isMemberPwdResetted.Result == false)
-            {
-                resultResetPass.requestExpiredorNotFound = true;
-                resultResetPass.pin = false;
-            }
-
-            return resultResetPass;
-        }
-
-        public ActionResult PayRequestComplete()
-        {
-            ResultPayRequestComplete rpc = new ResultPayRequestComplete();
-
-            Logger.Info("PayRequestComplete CodeBehind -> page_load Initiated - 'mem_id' Parameter In URL: [" + Request.QueryString["mem_id"] + "]");
-
-            rpc.paymentSuccess = false;
-
-            try
-            {
-                if (!String.IsNullOrEmpty(Request.QueryString["mem_id"]))
-                {
-                    string[] allQueryStrings = (Request.QueryString["mem_id"]).Split(',');
-
-                    if (allQueryStrings.Length > 1)
-                    {
-                        Response.Write("<script>var errorFromCodeBehind = '0';</script>");
-
-                        string mem_id = allQueryStrings[0];
-                        string tr_id = allQueryStrings[1];
-                        string isForRentScene = allQueryStrings[2];
-
-                        rpc.memId = mem_id;
-
-                        // Check if this payment is for Rent Scene
-                        if (isForRentScene == "true")
-                        {
-                            Logger.Info("PayRequestComplete CodeBehind -> RENT SCENE Transaction Detected - TransID: [" + tr_id + "]");
-                            rpc.rs = "true";
-                        }
-
-                        // Getting transaction details to check if transaction is still pending
-                        rpc = GetTransDetailsForPayRequestComplete(tr_id, rpc);
-
-                        if (rpc.IsTransactionStillPending)
-                        {
-                            rpc = completeTrans(mem_id, tr_id, rpc);
-                        }
-                    }
-                    else
-                    {
-                        Logger.Error("PayRequestComplete CodeBehind -> page_load ERROR - 'mem_id' in query string did not have 2 parts as expected - [mem_id Parameter: " + Request.QueryString["mem_id"] + "]");
-                        Response.Write("<script>var errorFromCodeBehind = '2';</script>");
-                    }
-                }
-                else
-                {
-                    // something wrong with query string
-                    Logger.Error("PayRequestComplete CodeBehind -> page_load ERROR - 'mem_id' in query string was NULL or empty [mem_id Parameter: " + rpc.memId + "]");
-                    Response.Write("<script>var errorFromCodeBehind = '1';</script>");
-                }
-
-            }
-            catch (Exception ex)
-            {
-                Logger.Error("payRequestComplete CodeBehind -> page_load OUTER EXCEPTION - mem_id Parameter: [" +
-                                        rpc.memId + "], [Exception: " + ex + "]");
-                rpc.payinfobar = false;
-                Response.Write("<script>var errorFromCodeBehind = '1';</script>");
-            }
-
-            ViewData["OnLoaddata"] = rpc;
-            return View();
-        }
-
-        private ResultPayRequestComplete completeTrans(string MemberIdAfterSynapseAccountCreation, string TransactionId, ResultPayRequestComplete resultPayComplete)
-        {
-            ResultPayRequestComplete rpc = resultPayComplete;
-
-            try
-            {
-                string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-                string serviceMethod = "/GetTransactionDetailByIdAndMoveMoneyForNewUserDeposit?TransactionId=" + TransactionId +
-                                       "&MemberIdAfterSynapseAccountCreation=" + MemberIdAfterSynapseAccountCreation +
-                                       "&TransactionType=RequestToNewUser";
-
-                if ((rpc.usrTyp == "Existing" || rpc.usrTyp == "Tenant") &&
-                     rpc.payeeMemId.Length > 5)
-                {
-                    serviceMethod = serviceMethod + "&recipMemId=" + rpc.payeeMemId;
-                }
-                else
-                {
-                    serviceMethod = serviceMethod + "&recipMemId= ";
-                }
-
-                Logger.Info("NoochController -> completeTrans - About to Query Nooch Service to move money - URL: [" +
-                             String.Concat(serviceUrl, serviceMethod) + "]");
-
-                TransactionDto transaction = ResponseConverter<TransactionDto>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
-
-                if (transaction != null)
-                {
-                    if (transaction.synapseTransResult == "Success")
-                    {
-                        rpc.paymentSuccess = true;
-                    }
-                    else
-                    {
-                        Logger.Error("NoochController -> completeTrans FAILED - TransId: [" + TransactionId + "]");
-
-                        rpc.paymentSuccess = false;
-                        Response.Write("<script>errorFromCodeBehind = 'failed';</script>");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.Error("payRequestComplete CodeBehind -> completeTrans FAILED - TransId: [" + TransactionId +
-                             "], Exception: [" + ex + "]");
-            }
-
-            return rpc;
-        }
-
-
-        public ResultPayRequestComplete GetTransDetailsForPayRequestComplete(string TransactionId, ResultPayRequestComplete resultPayRequestComplt)
-        {
-            ResultPayRequestComplete rpc = resultPayRequestComplt;
-            string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-            string serviceMethod = "/GetTransactionDetailByIdForRequestPayPage?TransactionId=" + TransactionId;
-
-            TransactionDto transaction = ResponseConverter<TransactionDto>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
-
-            if (transaction == null)
-            {
-                Logger.Error("payRequestComplete CodeBehind -> getTransDetails FAILED - Transaction was Null [TransId: " + TransactionId + "]");
-
-                Response.Write("<script>errorFromCodeBehind = '3';</script>");
-                rpc.IsTransactionStillPending = false;
-
-                return rpc;
-            }
-            else
-            {
-                // Logger.LogDebugMessage("** payRequestComplete CodeBehind -> memId.Value: [" + memId.Value + "]");
-                // Logger.LogDebugMessage("** payRequestComplete CodeBehind -> transaction.MemberId: [" + transaction.MemberId + "]");
-                // Logger.LogDebugMessage("** payRequestComplete CodeBehind -> transaction.TransactionType: [" + transaction.TransactionType + "]");
-
-                rpc.senderImage = transaction.RecepientPhoto;
-                rpc.senderName1 = (!String.IsNullOrEmpty(transaction.RecepientName) && transaction.RecepientName.Length > 2) ?
-                                    transaction.RecepientName :
-                                    transaction.Name;
-                rpc.transAmountd = transaction.Amount.ToString("n2");
-                rpc.transMemo = transaction.Memo;
-
-
-                // Check if this was a Rent request from a Landlord
-                if (!String.IsNullOrEmpty(transaction.TransactionType) &&
-                    transaction.TransactionType == "Rent")
-                {
-                    rpc.usrTyp = "Tenant";
-                    rpc.payeeMemId = !String.IsNullOrEmpty(transaction.MemberId) ? transaction.MemberId : "none";
-                }
-
-                // Check if this was a request to an existing, but 'NonRegistered' User
-                else if (transaction.IsExistingButNonRegUser == true)
-                {
-                    rpc.usrTyp = "Existing";
-                    rpc.payeeMemId = !String.IsNullOrEmpty(transaction.MemberId) ? transaction.MemberId : "none";
-                }
-
-                #region Check If Still Pending
-
-                Response.Write("<script>var isStillPending = true;</script>");
-
-                if (transaction.TransactionStatus != "Pending")
-                {
-                    Response.Write("<script>isStillPending = false;</script>");
-                    rpc.IsTransactionStillPending = false;
-                    return rpc;
-                }
-
-                #endregion Check If Still Pending
-            }
-            rpc.IsTransactionStillPending = true;
-
-            return rpc;
         }
 
 
@@ -1530,135 +1455,208 @@ namespace Nooch.Web.Controllers
             }
         }
 
+        #endregion PayRequest Page
 
-        public ActionResult RegisterUserWithSynpForDepositMoney(string transId, string memberId, string userEm, string userPh, string userName, string userPw, string ssn, string dob, string address, string zip, string fngprnt, string ip)
+
+        public ActionResult PayRequestComplete()
         {
-            Logger.Info("DepositMoney Code Behind -> RegisterNonNoochUserWithSynapse Initiated");
+            ResultPayRequestComplete rpc = new ResultPayRequestComplete();
 
-            RegisterUserSynapseResultClassExt res = new RegisterUserSynapseResultClassExt();
-            res.success = "false";
-            res.memberIdGenerated = "";
-            res.reason = "Unknown";
+            Logger.Info("PayRequestComplete CodeBehind -> page_load Initiated - 'mem_id' Parameter In URL: [" + Request.QueryString["mem_id"] + "]");
+
+            rpc.paymentSuccess = false;
+
+            try
+            {
+                if (!String.IsNullOrEmpty(Request.QueryString["mem_id"]))
+                {
+                    string[] allQueryStrings = (Request.QueryString["mem_id"]).Split(',');
+
+                    if (allQueryStrings.Length > 1)
+                    {
+                        Response.Write("<script>var errorFromCodeBehind = '0';</script>");
+
+                        string mem_id = allQueryStrings[0];
+                        string tr_id = allQueryStrings[1];
+                        string isForRentScene = allQueryStrings[2];
+
+                        rpc.memId = mem_id;
+
+                        // Check if this payment is for Rent Scene
+                        if (isForRentScene == "true")
+                        {
+                            Logger.Info("PayRequestComplete CodeBehind -> RENT SCENE Transaction Detected - TransID: [" + tr_id + "]");
+                            rpc.rs = "true";
+                        }
+
+                        // Getting transaction details to check if transaction is still pending
+                        rpc = GetTransDetailsForPayRequestComplete(tr_id, rpc);
+
+                        if (rpc.IsTransactionStillPending)
+                        {
+                            rpc = completeTrans(mem_id, tr_id, rpc);
+                        }
+                    }
+                    else
+                    {
+                        Logger.Error("PayRequestComplete CodeBehind -> page_load ERROR - 'mem_id' in query string did not have 2 parts as expected - [mem_id Parameter: " + Request.QueryString["mem_id"] + "]");
+                        Response.Write("<script>var errorFromCodeBehind = '2';</script>");
+                    }
+                }
+                else
+                {
+                    // something wrong with query string
+                    Logger.Error("PayRequestComplete CodeBehind -> page_load ERROR - 'mem_id' in query string was NULL or empty [mem_id Parameter: " + rpc.memId + "]");
+                    Response.Write("<script>var errorFromCodeBehind = '1';</script>");
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("payRequestComplete CodeBehind -> page_load OUTER EXCEPTION - mem_id Parameter: [" +
+                                        rpc.memId + "], [Exception: " + ex + "]");
+                rpc.payinfobar = false;
+                Response.Write("<script>var errorFromCodeBehind = '1';</script>");
+            }
+
+            ViewData["OnLoaddata"] = rpc;
+            return View();
+        }
+
+
+        private ResultPayRequestComplete completeTrans(string MemberIdAfterSynapseAccountCreation, string TransactionId, ResultPayRequestComplete resultPayComplete)
+        {
+            ResultPayRequestComplete rpc = resultPayComplete;
 
             try
             {
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-                userPh = CommonHelper.RemovePhoneNumberFormatting(userPh);
+                string serviceMethod = "/GetTransactionDetailByIdAndMoveMoneyForNewUserDeposit?TransactionId=" + TransactionId +
+                                       "&MemberIdAfterSynapseAccountCreation=" + MemberIdAfterSynapseAccountCreation +
+                                       "&TransactionType=RequestToNewUser";
 
-                Logger.Info("DepositMoney Code Behind -> RegisterUserWithSynp -> PARAMETERS: transId: " + transId +
-                                       ", memberId (If existing user): " + memberId + ", userEm: " + userEm +
-                                       ", userPh: " + userPh + ", userPw: " + userPw +
-                                       ", ssn: " + ssn + ", dob: " + dob +
-                                       ", address: " + address + ", zip: " + zip);
-
-
-                string serviceMethod = "/RegisterNonNoochUserWithSynapse?transId=" + transId +
-                                    "&email=" + userEm +
-                                    "&phone=" + userPh +
-                                    "&fullname=" + userName +
-                                    "&pw=" + userPw +
-                                    "&ssn=" + ssn +
-                                    "&dob=" + dob +
-                                    "&address=" + address +
-                                    "&zip=" + zip +
-                                    "&fngprnt=" + fngprnt +
-                                    "&ip=" + ip;
-
-                Logger.Info("DepositMoney Code-Behind -> RegisterUserWithSynp - Full Query String: [ " + String.Concat(serviceUrl, serviceMethod) + " ]");
-
-                RegisterUserSynapseResultClassExt regUserResponse = ResponseConverter<RegisterUserSynapseResultClassExt>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
-
-                if (regUserResponse.success == "True")
+                if ((rpc.usrTyp == "Existing" || rpc.usrTyp == "Tenant") &&
+                     rpc.payeeMemId.Length > 5)
                 {
-                    res.success = "true";
-                    res.reason = "OK";
-                    res.memberIdGenerated = regUserResponse.memberIdGenerated;
-                }
-                else if (regUserResponse.success == "False")
-                {
-                    Logger.Error("DepositMoney Code-Behind -> RegisterUserWithSynp FAILED - SERVER RETURNED 'success' = 'false' - [TransID: " + transId + "]");
-                    res.reason = regUserResponse.reason;
+                    serviceMethod = serviceMethod + "&recipMemId=" + rpc.payeeMemId;
                 }
                 else
                 {
-                    Logger.Error("DepositMoney Code-Behind -> RegisterUserWithSynp FAILED - UNKNOWN ERROR FROM SERVER - [TransID: " + transId + "]");
+                    serviceMethod = serviceMethod + "&recipMemId= ";
                 }
 
-                res.ssn_verify_status = regUserResponse.ssn_verify_status;
+                Logger.Info("NoochController -> completeTrans - About to Query Nooch Service to move money - URL: [" +
+                             String.Concat(serviceUrl, serviceMethod) + "]");
 
-                return Json(res);
+                TransactionDto transaction = ResponseConverter<TransactionDto>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+
+                if (transaction != null)
+                {
+                    if (transaction.synapseTransResult == "Success")
+                    {
+                        rpc.paymentSuccess = true;
+                    }
+                    else
+                    {
+                        Logger.Error("NoochController -> completeTrans FAILED - TransId: [" + TransactionId + "]");
+
+                        rpc.paymentSuccess = false;
+                        Response.Write("<script>errorFromCodeBehind = 'failed';</script>");
+                    }
+                }
             }
             catch (Exception ex)
             {
-                Logger.Error("DepositMoney Code-Behind -> RegisterUserWithSynp attempt FAILED Failed, Reason: [" + res.reason + "], " +
-                                       "TransId: [" + transId + "], [Exception: " + ex + "]");
-                return Json(res);
+                Logger.Error("payRequestComplete CodeBehind -> completeTrans FAILED - TransId: [" + TransactionId +
+                             "], Exception: [" + ex + "]");
             }
+
+            return rpc;
         }
 
 
-        [HttpPost]
-        [ActionName("SetDefaultBank")]
-        public ActionResult SetDefaultBank(setDefaultBankInput input)
+        public ResultPayRequestComplete GetTransDetailsForPayRequestComplete(string TransactionId, ResultPayRequestComplete resultPayRequestComplt)
         {
-            Logger.Info("**Add_Bank** CodeBehind -> SetDefaultBank Initiated - [MemberID: " + input.MemberId +
-                                   "], [Bank Name: " + input.BankName + "], [BankID: " + input.BankOId + "]");
+            ResultPayRequestComplete rpc = resultPayRequestComplt;
+            string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+            string serviceMethod = "/GetTransactionDetailByIdForRequestPayPage?TransactionId=" + TransactionId;
 
-            SynapseBankSetDefaultResult res = new SynapseBankSetDefaultResult();
+            TransactionDto transaction = ResponseConverter<TransactionDto>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
 
-            try
+            if (transaction == null)
             {
-                if (String.IsNullOrEmpty(input.MemberId) ||
-                String.IsNullOrEmpty(input.BankName) ||
-                String.IsNullOrEmpty(input.BankOId))
-                {
-                    if (String.IsNullOrEmpty(input.BankName))
-                    {
-                        res.Message = "Invalid data - need Bank Name";
-                    }
-                    else if (String.IsNullOrEmpty(input.MemberId))
-                    {
-                        res.Message = "Invalid data - need MemberId";
-                    }
-                    else if (String.IsNullOrEmpty(input.BankOId))
-                    {
-                        res.Message = "Invalid data - need Bank Id";
-                    }
+                Logger.Error("payRequestComplete CodeBehind -> getTransDetails FAILED - Transaction was Null [TransId: " + TransactionId + "]");
 
-                    res.Is_success = false;
-                }
-                else
-                {
-                    string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+                Response.Write("<script>errorFromCodeBehind = '3';</script>");
+                rpc.IsTransactionStillPending = false;
 
-                    string serviceMethod = "/SetSynapseDefaultBank?MemberId=" + input.MemberId + "&BankName=" + input.BankName + "&BankId=" + input.BankOId;
-                    SynapseBankSetDefaultResult bnkloginresult = ResponseConverter<SynapseBankSetDefaultResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
-
-                    res.Is_success = bnkloginresult.Is_success;
-                    res.Message = bnkloginresult.Message;
-                }
+                return rpc;
             }
-            catch (Exception we)
+            else
             {
-                Logger.Error("**Add_Bank** CodeBehind -> SetDefaultBank FAILED - [MemberID: " + input.MemberId +
-                                   "], [Exception: " + we.InnerException + "]");
+                // Logger.LogDebugMessage("** payRequestComplete CodeBehind -> memId.Value: [" + memId.Value + "]");
+                // Logger.LogDebugMessage("** payRequestComplete CodeBehind -> transaction.MemberId: [" + transaction.MemberId + "]");
+                // Logger.LogDebugMessage("** payRequestComplete CodeBehind -> transaction.TransactionType: [" + transaction.TransactionType + "]");
+
+                rpc.senderImage = transaction.RecepientPhoto;
+                rpc.senderName1 = (!String.IsNullOrEmpty(transaction.RecepientName) && transaction.RecepientName.Length > 2) ?
+                                    transaction.RecepientName :
+                                    transaction.Name;
+                rpc.transAmountd = transaction.Amount.ToString("n2");
+                rpc.transMemo = transaction.Memo;
+
+
+                // Check if this was a Rent request from a Landlord
+                if (!String.IsNullOrEmpty(transaction.TransactionType) &&
+                    transaction.TransactionType == "Rent")
+                {
+                    rpc.usrTyp = "Tenant";
+                    rpc.payeeMemId = !String.IsNullOrEmpty(transaction.MemberId) ? transaction.MemberId : "none";
+                }
+
+                // Check if this was a request to an existing, but 'NonRegistered' User
+                else if (transaction.IsExistingButNonRegUser == true)
+                {
+                    rpc.usrTyp = "Existing";
+                    rpc.payeeMemId = !String.IsNullOrEmpty(transaction.MemberId) ? transaction.MemberId : "none";
+                }
+
+                #region Check If Still Pending
+
+                Response.Write("<script>var isStillPending = true;</script>");
+
+                if (transaction.TransactionStatus != "Pending")
+                {
+                    Response.Write("<script>isStillPending = false;</script>");
+                    rpc.IsTransactionStillPending = false;
+                    return rpc;
+                }
+
+                #endregion Check If Still Pending
             }
-            return Json(res);
+            rpc.IsTransactionStillPending = true;
+
+            return rpc;
         }
 
+
+        #region CreateAccount Page
 
         public ActionResult createAccount(string rs, string TransId, string type, string memId)
         {
             ResultcreateAccount rca = new ResultcreateAccount();
+
             try
             {
                 rca.memId = memId; // memberid is required in all cases and also need at bank login page- Surya
+
                 if (!String.IsNullOrEmpty(Request.QueryString["rs"]))
                 {
                     Logger.Info("createAccount CodeBehind -> Page_load Initiated - Is a RentScene Payment: [" + Request.QueryString["rs"] + "]");
 
                     rca.rs = Request.QueryString["rs"].ToLower();
                 }
+
                 if (!String.IsNullOrEmpty(Request.QueryString["TransId"]))
                 {
                     Logger.Info("createAccount CodeBehind -> Page_load Initiated - [TransactionId Parameter: " + Request.QueryString["TransactionId"] + "]");
@@ -1681,7 +1679,6 @@ namespace Nooch.Web.Controllers
                 else
                 {
                     rca.errorId = "2";
-                    //InvalidTransaction("This looks like an invalid transaction.  Please try again or contact Nooch support for more information.");
                 }
             }
             catch (Exception ex)
@@ -1689,7 +1686,7 @@ namespace Nooch.Web.Controllers
                 rca.errorId = "1";
 
                 Logger.Error("payRequest CodeBehind -> page_load OUTER EXCEPTION - [TransactionId Parameter: " + Request.QueryString["TransactionId"] +
-                                       "], [Exception: " + ex.Message + "]");
+                             "], [Exception: " + ex.Message + "]");
             }
 
             ViewData["OnLoaddata"] = rca;
@@ -1705,6 +1702,7 @@ namespace Nooch.Web.Controllers
 
             string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
             string serviceMethod = "/GetTransactionDetailById?TransactionId=" + TransactionId;
+
             TransactionDto transaction = ResponseConverter<TransactionDto>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
 
             if (transaction == null)
@@ -1727,6 +1725,7 @@ namespace Nooch.Web.Controllers
 
                 rca.errorId = "0";
             }
+
             return rca;
         }
 
@@ -1734,6 +1733,7 @@ namespace Nooch.Web.Controllers
         public ResultcreateAccount GetMemberDetailsForCreateAccount(string memberId, ResultcreateAccount resultcreateAccount)
         {
             ResultcreateAccount rca = resultcreateAccount;
+
             try
             {
                 Logger.Info("createAccount Code Behind -> GetMemberDetails Initiated - MemberID: [" + memberId + "]");
@@ -1791,25 +1791,8 @@ namespace Nooch.Web.Controllers
             {
                 Logger.Error("createAccount Code Behind -> GetMemberDetails FAILED - Outer Exception: [" + ex + "]");
             }
+
             return rca;
-        }
-
-
-        protected void createPassword_Click()
-        {
-            string serviceMethod = string.Empty;
-            string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-            //serviceMethod = "/CreateNonNoochUserAccountAfterRejectMoney?TransId=" + Request.QueryString["TransId"].ToString() + "&password=" + password.Text + "&EmailId=" + userNameText.Text + "&UserName="+nameText.Text;
-
-            var serviceResult = ResponseConverter<Nooch.Common.Entities.StringResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
-            if (serviceResult.Result == "Thanks for registering! Check your email to complete activation.")
-            {
-                //checkEmailMsg.Visible = true;
-            }
-            else
-            {
-                //checkEmailMsg.Visible = true;
-            }
         }
 
 
@@ -1817,8 +1800,8 @@ namespace Nooch.Web.Controllers
         [ActionName("saveMemberInfo")]
         public ActionResult saveMemberInfo(ResultcreateAccount resultcreateAccount)
         {
-
             ResultcreateAccount rca = resultcreateAccount;
+
             Logger.Info("Create Account Code-Behind -> saveMemberInfo Initiated - MemberID: [" + rca.memId +
                                    "], Name: [" + rca.name + "], Email: [" + rca.email +
                                    "], Phone: [" + rca.phone + "], DOB: [" + rca.dob +
@@ -1907,6 +1890,10 @@ namespace Nooch.Web.Controllers
             //}
         }
 
+        #endregion CreateAccount Page
+
+
+        #region RejectMoney Page
 
         public ActionResult RejectMoney(string TransactionId, string UserType, string LinkSource, string TransType)
         {
@@ -1975,16 +1962,16 @@ namespace Nooch.Web.Controllers
                     res.errorFromCodeBehind = "1";
 
                     Logger.Error("rejectMoney CodeBehind -> page_load ERROR - One of the required fields in query string was NULL or empty - " +
-                                           "TransactionId Parameter: [" + Request.QueryString["TransactionId"] + "], " +
-                                           "UserType Parameter: [" + Request.QueryString["UserType"] + "], " +
-                                           "LinkSource Parameter: [" + Request.QueryString["LinkSource"] + "], " +
-                                           "TransType Parameter: [" + Request.QueryString["TransType"] + "]");
+                                 "TransactionId Parameter: [" + Request.QueryString["TransactionId"] + "], " +
+                                 "UserType Parameter: [" + Request.QueryString["UserType"] + "], " +
+                                 "LinkSource Parameter: [" + Request.QueryString["LinkSource"] + "], " +
+                                 "TransType Parameter: [" + Request.QueryString["TransType"] + "]");
                 }
             }
             catch (Exception ex)
             {
                 Logger.Error("rejectMoney CodeBehind -> page_load OUTER EXCEPTION - TransactionId Parameter: [" + Request.QueryString["TransactionId"] +
-                                       "], Exception: [" + ex.Message + "]");
+                             "], Exception: [" + ex.Message + "]");
             }
 
             return View(res);
@@ -2034,10 +2021,86 @@ namespace Nooch.Web.Controllers
         }
 
 
+        /// <summary>
+        /// Only called from the RejectMoney page.
+        /// </summary>
+        /// <param name="TransactionId"></param>
+        /// <returns></returns>
+        public ResultCancelRequest GetTransDetailsGenericMethod(string TransactionId)
+        {
+            ResultCancelRequest rcr = new ResultCancelRequest();
+            string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+            string serviceMethod = "/GetTransactionDetailById?TransactionId=" + TransactionId;
+
+            TransactionDto transaction = ResponseConverter<TransactionDto>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+
+            rcr.IsTransFound = transaction != null;
+            rcr.TransStatus = transaction.TransactionStatus;
+
+            if (transaction.IsPhoneInvitation && transaction.PhoneNumberInvited.Length > 0)
+            {
+                rcr.senderImage = "https://www.noochme.com/noochweb/Assets/Images/" + "userpic-default.png";
+                rcr.nameLabel = transaction.PhoneNumberInvited;
+            }
+            else if (!String.IsNullOrEmpty(transaction.InvitationSentTo))
+            {
+                rcr.senderImage = "https://www.noochme.com/noochweb/Assets/Images/" + "userpic-default.png";
+                rcr.nameLabel = transaction.InvitationSentTo;
+            }
+            else
+            {
+                rcr.senderImage = transaction.SenderPhoto;
+                rcr.nameLabel = transaction.Name;
+            }
+
+            //AmountLabel.Text = transaction.Amount.ToString("n2");
+            if (transaction.Amount != null)
+                rcr.AmountLabel = transaction.Amount.ToString("n2");
+
+
+            // Reject money page related stuff
+            rcr.RecepientName = transaction.RecepientName;
+            rcr.senderImage = transaction.RecepientPhoto;
+
+            if (!String.IsNullOrEmpty(transaction.TransactionType))
+                rcr.TransType = transaction.TransactionType;
+
+            if (!String.IsNullOrEmpty(transaction.TransactionId))
+                rcr.TransId = transaction.TransactionId;
+
+            return rcr;
+        }
+
+        #endregion RejectMoney Page
+
+
+        protected void createPassword_Click()
+        {
+            string serviceMethod = string.Empty;
+            string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+            //serviceMethod = "/CreateNonNoochUserAccountAfterRejectMoney?TransId=" + Request.QueryString["TransId"].ToString() + "&password=" + password.Text + "&EmailId=" + userNameText.Text + "&UserName="+nameText.Text;
+
+            var serviceResult = ResponseConverter<Nooch.Common.Entities.StringResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+
+            if (serviceResult.Result == "Thanks for registering! Check your email to complete activation.")
+            {
+                //checkEmailMsg.Visible = true;
+            }
+            else
+            {
+                //checkEmailMsg.Visible = true;
+            }
+        }
+
+
+        #region IDVerification Page
+
         public ActionResult idVerification()
         {
             idVerification idv = new idVerification();
+
             Logger.Info("idVerification CodeBehind -> Page_load Initiated - ['memid' Parameter: " + Request.QueryString["memid"] + "]");
+
             idv.error_msg = "initial";
             idv.from = "unknown";
             idv.redUrl = "https://www.nooch.com";
@@ -2073,8 +2136,9 @@ namespace Nooch.Web.Controllers
                 idv.error_msg = "Code behind exception";
 
                 Logger.Error("idVerification CodeBehind -> page_load OUTER EXCEPTION - ['memid' Parameter: " +
-                                       Request.QueryString["memid"] + "], [Exception: " + ex.Message + "]");
+                             Request.QueryString["memid"] + "], [Exception: " + ex.Message + "]");
             }
+
             ViewData["OnLoaddata"] = idv;
 
             return View();
@@ -2263,8 +2327,15 @@ namespace Nooch.Web.Controllers
             return Json(res);
         }
 
+        #endregion IDVerification Page
+
+
         #region MakePayment Page
 
+        /// <summary>
+        /// For when the /makePayment page first loads.
+        /// </summary>
+        /// <returns></returns>
         public ActionResult makePayment()
         {
             HiddenField hkf = new HiddenField();
@@ -2614,8 +2685,11 @@ namespace Nooch.Web.Controllers
         #endregion
 
 
-        #region Activation
 
+        /// <summary>
+        /// When the /Activation page first loads (page is for verifying an email address).
+        /// </summary>
+        /// <returns></returns>
         public ActionResult Activation()
         {
             ResultActivation resultActivation = new ResultActivation();
@@ -2632,6 +2706,7 @@ namespace Nooch.Web.Controllers
 
             string tokenId = Request.QueryString["tokenId"].Trim();
             string type = null;
+
             if (Request.QueryString.AllKeys.Any(k => k == "type"))
             {
                 type = Request.QueryString["type"].Trim();
@@ -2641,7 +2716,6 @@ namespace Nooch.Web.Controllers
                     resultActivation.toLandlordApp = true;
                 }
             }
-
 
             string serviceUrl = Utility.GetValueFromConfig("ServiceUrl") + "/IsMemberActivated?tokenID=" + tokenId.Trim();
 
@@ -2660,11 +2734,11 @@ namespace Nooch.Web.Controllers
                 resultActivation.success = false;
                 resultActivation.error = true;
             }
+
             ViewData["OnLoaddata"] = resultActivation;
+
             return View();
         }
-
-        #endregion
 
 
         /// <summary>
@@ -2673,7 +2747,6 @@ namespace Nooch.Web.Controllers
         /// <param name="memId"></param>
         /// <param name="rs"></param>
         /// <returns></returns>
-
         public ActionResult history(string memId, string rs)
         {
             TransactionsPageData res = new TransactionsPageData();
@@ -2685,7 +2758,6 @@ namespace Nooch.Web.Controllers
             }
             else
             {
-
                 List<TransactionClass> Transactions = new List<TransactionClass>();
 
                 try
@@ -2693,14 +2765,13 @@ namespace Nooch.Web.Controllers
                     string memberId = Request.QueryString["memId"];
                     string listType = "ALL";
 
-
                     TransactionsDataAccess tda = new TransactionsDataAccess();
+
                     int totalRecordsCount = 0;
                     var transactionListEntities = tda.GetTransactionsList(memberId, listType, 50, 1, "", out totalRecordsCount);
+                    
                     if (transactionListEntities != null && transactionListEntities.Count > 0)
                     {
-
-
                         foreach (var trans in transactionListEntities)
                         {
                             try
@@ -2784,8 +2855,6 @@ namespace Nooch.Web.Controllers
                                 continue;
                             }
                         }
-
-
                     }
                     res.allTransactionsData = Transactions;
 
@@ -2795,7 +2864,6 @@ namespace Nooch.Web.Controllers
                         Logger.Info("createAccount CodeBehind -> Page_load Initiated - Is a RentScene Payment: [" +
                                     Request.QueryString["rs"] + "]");
                     }
-
                     else
                     {
                         //res.errorId = "2";
@@ -2803,15 +2871,12 @@ namespace Nooch.Web.Controllers
                 }
                 catch (Exception ex)
                 {
-
                     Logger.Error("payRequest CodeBehind -> page_load OUTER EXCEPTION - [TransactionId Parameter: " +
                                  Request.QueryString["TransactionId"] +
                                  "], [Exception: " + ex.Message + "]");
                     res.msg = "Server Error.";
                 }
             }
-
-
 
             return View(res);
         }

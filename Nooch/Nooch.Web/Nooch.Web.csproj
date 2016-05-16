@@ -285,7 +285,7 @@
     <Content Include="js\moment.min.js" />
     <Content Include="js\parsley.min.js" />
     <Content Include="js\sweetalert.min.js" />
-    <Content Include="js\app\CancelRequest.js" />
+    <Content Include="js\app\cancelRequest.js" />
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
     <None Include="Properties\PublishProfiles\Nooch New Web.pubxml" />

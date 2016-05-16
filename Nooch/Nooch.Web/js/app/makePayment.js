@@ -49,13 +49,11 @@ $(document).ready(function ()
 	$( "input[name='type']" ).change(function() {
 		if ($('input[name="type"]:checked').val() == 'request')
 		{
-			console.log("test #1 reached");
 			$('#typeGrp .btn').removeClass('btn-success').addClass('btn-primary');
 			$('#submitPayment').removeClass('btn-success').addClass('btn-primary');
 		}
 		else // Send has been clicked
 		{
-			console.log("test #2 reached");
 			$('#typeGrp .btn').removeClass('btn-primary').addClass('btn-success');
 			$('#submitPayment').removeClass('btn-primary').addClass('btn-success');
 		}
