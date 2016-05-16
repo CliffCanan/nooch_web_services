@@ -793,7 +793,7 @@ namespace Nooch.API.Controllers
             }
             else
             {
-                throw new Exception("Invalid OAuth 2 Access");
+                throw new System.ArgumentException("Invalid OAuth 2 Access");
             }
         }
 
@@ -5576,13 +5576,9 @@ namespace Nooch.API.Controllers
                         foreach (var member in noochFriendEntities)
                         {
                             string photo = member.Member1.Photo != null
-                                           ? member.Member1.Photo.Contains("Facebook_Photos")
-                                           ? string.Concat(Utility.GetValueFromConfig("FaceBookPhotoUrl"), "/", member.Member1.Photo.Substring(member.Member1.Photo.IndexOf("_Photos") + 8))
-                                           : string.Concat(Utility.GetValueFromConfig("PhotoUrl"), "/", member.Member1.Photo.Substring(member.Member1.Photo.IndexOf("Photos") + 14)) : null;
+                                           ? string.Concat(Utility.GetValueFromConfig("PhotoUrl"), "/", member.Member1.Photo.Substring(member.Member1.Photo.IndexOf("Photos") + 14)) : null;
                             string photoRec = member.Member.Photo != null
-                                              ? member.Member.Photo.Contains("Facebook_Photos")
-                                              ? string.Concat(Utility.GetValueFromConfig("FaceBookPhotoUrl"), "/", member.Member.Photo.Substring(member.Member.Photo.IndexOf("_Photos") + 8))
-                                              : string.Concat(Utility.GetValueFromConfig("PhotoUrl"), "/", member.Member.Photo.Substring(member.Member.Photo.IndexOf("Photos") + 14)) : null;
+                                              ? string.Concat(Utility.GetValueFromConfig("PhotoUrl"), "/", member.Member.Photo.Substring(member.Member.Photo.IndexOf("Photos") + 14)) : null;
 
                             if (member.Member.MemberId.ToString().Equals(memberId.ToLower())) // Sent Collection
                             {

@@ -1017,15 +1017,25 @@ namespace Nooch.Common
         {
             Logger.Info("Common Helper -> GetMemberNotificationSettings Initiated - [MemberId: " + memberId + "]");
 
-            Guid memId = Utility.ConvertToGuid(memberId);
-
-            var memberNotifications = _dbContext.MemberNotifications.FirstOrDefault(m => m.Member.MemberId == memId);
-            if (memberNotifications != null)
+            try
             {
-                _dbContext.Entry(memberNotifications).Reload();
+                Guid memId = Utility.ConvertToGuid(memberId);
+
+                var memberNotifications = _dbContext.MemberNotifications.FirstOrDefault(m => m.Member.MemberId == memId);
+
+                if (memberNotifications != null)
+                {
+                    _dbContext.Entry(memberNotifications).Reload();
+                }
+
+                return memberNotifications;
+            }
+            catch (Exception ex)
+            {
+                Logger.Info("Common Helper -> GetMemberNotificationSettings FAILED - Exception: [" + ex.Message + "]");
             }
 
-            return memberNotifications;
+            return null;
         }
 
         /// <summary>

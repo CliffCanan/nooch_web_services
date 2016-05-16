@@ -2771,7 +2771,7 @@ namespace Nooch.Web.Controllers
 
                     int totalRecordsCount = 0;
                     var transactionListEntities = tda.GetTransactionsList(memberId, listType, 50, 1, "", out totalRecordsCount);
-                    
+
                     if (transactionListEntities != null && transactionListEntities.Count > 0)
                     {
                         foreach (var trans in transactionListEntities)

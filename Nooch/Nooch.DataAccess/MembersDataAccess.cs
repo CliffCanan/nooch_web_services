@@ -5624,8 +5624,8 @@ namespace Nooch.DataAccess
                                 var recipBankOid = RecipientUserAndBankDetails.BankDetails.bank_oid;
                                 var amount = Transaction.Amount.ToString();
 
-                                Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser - About to call AddTransSynapseV3Reusable() in TDA - " + 
-                                            "[TransID: " + transId + "], [Amount: " + amount  + "], [Sender Name: " + moneySenderFirstName + " " + moneySenderLastName +"], " +
+                                Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser - About to call AddTransSynapseV3Reusable() in TDA - " +
+                                            "[TransID: " + transId + "], [Amount: " + amount + "], [Sender Name: " + moneySenderFirstName + " " + moneySenderLastName + "], " +
                                             "[Sender BankOID: " + senderBankOid + "], [Recip Name: " + moneyRecipientFirstName + " " + moneyRecipientLastName + "], [access_token: " + "]");
                                 SynapseV3AddTrans_ReusableClass Call_Synapse_Order_API_Result = tda.AddTransSynapseV3Reusable(access_token,
                                     senderFingerprint,
