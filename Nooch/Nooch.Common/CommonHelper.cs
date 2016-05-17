@@ -576,6 +576,11 @@ namespace Nooch.Common
             }
         }
 
+        /// <summary>
+        /// Gets the user's Bank account details from SynapseBanksOfMembers Table in Nooch's DB.
+        /// </summary>
+        /// <param name="memberId"></param>
+        /// <returns></returns>
         public static SynapseBanksOfMember GetSynapseBankAccountDetails(string memberId)
         {
             Logger.Info("Common Helper -> GetSynapseBankAccountDetails - MemberId: [" + memberId + "]");
@@ -591,6 +596,11 @@ namespace Nooch.Common
             return bankDetailsFromDB;
         }
 
+        /// <summary>
+        /// Gets the user's Synapse user details from SynapseCreateUserResults Table in Nooch's DB.
+        /// </summary>
+        /// <param name="memberId"></param>
+        /// <returns></returns>
         public static SynapseCreateUserResult GetSynapseCreateaUserDetails(string memberId)
         {
             Logger.Info("Common Helper -> GetSynapseCreateaUserDetails - MemberId: [" + memberId + "]");
@@ -1807,6 +1817,7 @@ namespace Nooch.Common
             return res;
         }
 
+
         public static void ResetSearchData()
         {
             SEARCHUSER_CURRENT_PAGE = 1;
@@ -1814,11 +1825,11 @@ namespace Nooch.Common
             SEARCHED_USERS.Clear();
         }
 
+        // Malkit (17 May 2016) : Added these flags to keep track of pagination result being sent by synapse after hitting search url.
+        static int SEARCHUSER_CURRENT_PAGE = 1;
+        static int SEARCHUSER_TOTAL_PAGES_COUNT = 0;
+        static List<synapseSearchUserResponse_User> SEARCHED_USERS = new List<synapseSearchUserResponse_User>();
 
-       // Malkit (17 May 2016) : Added these flags to keep track of pagination result being sent by synapse after hitting search url.
-       static int SEARCHUSER_CURRENT_PAGE = 1;
-       static int SEARCHUSER_TOTAL_PAGES_COUNT = 0;
-       static List<synapseSearchUserResponse_User> SEARCHED_USERS = new List<synapseSearchUserResponse_User>();
         public static synapseSearchUserResponse getUserPermissionsForSynapseV3(string userEmail)
         {
             Logger.Info("CommonHelper -> getUserPermissionsForSynapseV3 Initiated - [Email: " + userEmail + "]");
@@ -1873,8 +1884,7 @@ namespace Nooch.Common
                     if (checkPermissionResponse["success"] != null &&
                         Convert.ToBoolean(checkPermissionResponse["success"]) == true)
                     {
-                        JObject refreshResponse = JObject.Parse(content);
-                        //Logger.Info("CommonHelper -> getUserPermissionsForSynapseV3 - JSON Result from Synapse: " + refreshResponse);
+                        //Logger.Info("CommonHelper -> getUserPermissionsForSynapseV3 - JSON Result from Synapse: [" + checkPermissionResponse + "]");
                         res = JsonConvert.DeserializeObject<synapseSearchUserResponse>(content);
 
                         if (res.page != res.page_count || res.page == res.page_count)
@@ -1885,20 +1895,22 @@ namespace Nooch.Common
                             }
                             else
                             {
-
                                 List<synapseSearchUserResponse_User> temp = res.users.ToList<synapseSearchUserResponse_User>();
                                 SEARCHED_USERS.AddRange(temp);
                             }
-                            SEARCHUSER_CURRENT_PAGE = res.page+1;
+
+                            // Cliff (5/17/16): In theory SEACHUSER_CURRENT_PAGE and res.page should always be the same...
+                            SEARCHUSER_CURRENT_PAGE = res.page + 1;
                             SEARCHUSER_TOTAL_PAGES_COUNT = res.page_count;
+
+                            // If there are more pages left, loop back into this same method (I assume this is safe to do?)
                             if (res.page < res.page_count)
                                 getUserPermissionsForSynapseV3(userEmail);
-
                         }
-                        
                     }
                     else
                     {
+                        Logger.Error("Common Helper -> getUserPermissionsForSynapseV3 FAILED - Got response from Synapse /user/search, but 'success' was null or not 'true'");
                         res.error_code = "Service error.";
                     }
                 }
@@ -1939,6 +1951,7 @@ namespace Nooch.Common
 
                 res.error_code = "Nooch Server Error: Outer Exception.";
             }
+
             res.users = SEARCHED_USERS.ToArray();
             //SEARCHUSER_CURRENT_PAGE = 1;
             //SEARCHUSER_TOTAL_PAGES_COUNT = 0;
@@ -1953,7 +1966,7 @@ namespace Nooch.Common
         /// <param name="allNodes"></param>
         /// <param name="nodeOid">MUST BE UN-ENCRYPTED!</param>
         /// <returns></returns>
-        public static NodePermissionCheckResult IsNodeActiveInGivenSetOfNodes(synapseSearchUserResponse_Node[] allNodes, string nodeOid)
+        public static NodePermissionCheckResult IsNodeAllowedInGivenSetOfNodes(synapseSearchUserResponse_Node[] allNodes, string nodeOid)
         {
             NodePermissionCheckResult res = new NodePermissionCheckResult();
             res.IsPermissionfound = false;
@@ -1971,11 +1984,16 @@ namespace Nooch.Common
                             break;
                         }
                     }
+                    else if (node._id != null)
+                    {
+                        Logger.Info("Common Helper -> IsNodeActiveInGivenSetOfNodes (foreach loop) - No Match This Iteration - " +
+                                    "[NodeToMatch: " + nodeOid + "], Node Compared To From List: [" + node._id.oid + "]");
+                    }
                 }
             }
             catch (Exception ex)
             {
-                Logger.Error("Common Helper -> IsNodeActiveInGivenSetOfNodes - [NodeToMatch: " + nodeOid + "]");
+                Logger.Error("Common Helper -> IsNodeActiveInGivenSetOfNodes FAILED - [NodeToMatch: " + nodeOid + "], Exception: [" + ex.Message + "]");
             }
 
             return res;
@@ -1994,7 +2012,7 @@ namespace Nooch.Common
                 // Full Member Table Details
                 Member memberObject = GetMemberDetails(memberId);
 
-                // Check Synapse USER details for given MemberID
+                // Check Synapse USER details from Nooch's DB
                 var createSynapseUserObj = GetSynapseCreateaUserDetails(id.ToString());
 
                 if (createSynapseUserObj != null &&
@@ -2008,8 +2026,7 @@ namespace Nooch.Common
 
                     #region Check If Testing
 
-                    // CLIFF (10/22/15): Added this block for testing - if you use an email that includes "jones00" in it, 
-                    //                   then this method will use the Synapse (v3) SANDBOX.  Leaving this here in case we
+                    // CLIFF (10/22/15): If testing then this method will use the Synapse (v3) SANDBOX.  Leaving this here in case we
                     //                   want to test in the future the same way.
                     bool shouldUseSynapseSandbox = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox"));
                     string memberUsername = GetMemberUsernameByMemberId(memberId);
@@ -2074,7 +2091,7 @@ namespace Nooch.Common
 
                 #region Get The User's Synapse Bank Details
 
-                // Now get the user's Synapse BANK account details
+                // Now get the user's Synapse BANK account details (From Nooch's DB)
                 var defaultBank = GetSynapseBankAccountDetails(id.ToString());
 
                 if (defaultBank != null)
@@ -2102,7 +2119,6 @@ namespace Nooch.Common
                 }
 
                 #endregion Get The User's Synapse Bank Details
-
             }
             catch (Exception ex)
             {
@@ -2111,7 +2127,6 @@ namespace Nooch.Common
 
             return res;
         }
-
 
 
         // oAuth token needs to be in encrypted format
@@ -2124,8 +2139,6 @@ namespace Nooch.Common
 
             try
             {
-                // Checking user details for given MemberID
-
                 SynapseCreateUserResult synCreateUserObject = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.access_token == oauthKey && m.IsDeleted == false);
 
                 // check for this is not needed.
@@ -2144,16 +2157,11 @@ namespace Nooch.Common
                     string SynapseClientId = Utility.GetValueFromConfig("SynapseClientId");
                     string SynapseClientSecret = Utility.GetValueFromConfig("SynapseClientSecret");
 
-                    Logger.Info("Common Helper -> synapseV3checkUsersOauthKey - got Synapse ClientID: [" + SynapseClientId +
-                                "], and Client Secret: [" + SynapseClientSecret + "]");
-
                     input.login = new createUser_login2()
                     {
                         email = GetDecryptedData(noochMemberObject.UserName),
                         refresh_token = GetDecryptedData(synCreateUserObject.refresh_token)
                     };
-
-                    Logger.Info("Common Helper -> synapseV3checkUsersOauthKey - CHECKPOINT #2,061");
 
                     input.client = new createUser_client()
                     {
@@ -2177,7 +2185,7 @@ namespace Nooch.Common
 
                     if (Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")))
                     {
-                        Logger.Info("Common Helper -> synapseV3checkUsersOauthKey - TEST USER DETECTED - About to ping Synapse Sandbox /user/refresh...");
+                        Logger.Info("Common Helper -> synapseV3checkUsersOauthKey - TEST USER DETECTED - About to ping Synapse V3 Sandbox /user/signin...");
                     }
 
                     var http = (HttpWebRequest)WebRequest.Create(new Uri(UrlToHit));
@@ -2213,39 +2221,36 @@ namespace Nooch.Common
                         if ((refreshResponse["success"] != null && Convert.ToBoolean(refreshResponse["success"])) ||
                              refreshResultFromSyn.success.ToString() == "true")
                         {
-                            // checking if token is same as saved in db
-                            if (synCreateUserObject.access_token ==
-                                GetEncryptedData(refreshResultFromSyn.oauth.oauth_key))
+                            Logger.Info("Common Helper -> synapseV3checkUsersOauthKey - Signed User In With Synapse Successfully!");
+
+                            // Check if Token from Synapse /user/signin is same as the one we already have saved in DB for this suer
+                            if (synCreateUserObject.access_token == GetEncryptedData(refreshResultFromSyn.oauth.oauth_key))
                             {
-                                // Access Token is same as whwat we already had... no change
-                                synCreateUserObject.access_token = GetEncryptedData(refreshResultFromSyn.oauth.oauth_key);
-                                synCreateUserObject.refresh_token = GetEncryptedData(refreshResultFromSyn.oauth.refresh_token);
-                                synCreateUserObject.expires_in = refreshResultFromSyn.oauth.expires_in;
-                                synCreateUserObject.expires_at = refreshResultFromSyn.oauth.expires_at;
+                                Logger.Info("Common Helper -> synapseV3checkUsersOauthKey - Access_Token from Synapse MATCHES what we already had in DB.");
                             }
-                            else
+                            else // New Access Token...
                             {
-                                // New Access Token... time to update
-                                synCreateUserObject.access_token = GetEncryptedData(refreshResultFromSyn.oauth.oauth_key);
-                                synCreateUserObject.refresh_token = GetEncryptedData(refreshResultFromSyn.oauth.refresh_token);
-                                synCreateUserObject.expires_in = refreshResultFromSyn.oauth.expires_in;
-                                synCreateUserObject.expires_at = refreshResultFromSyn.oauth.expires_at;
+                                Logger.Info("Common Helper -> synapseV3checkUsersOauthKey - Access_Token from Synapse MATCHES what we already had in DB.");
                             }
+
+                            // Update all values no matter what, even if access_token hasn't changed - possible one of the other values did
+                            synCreateUserObject.access_token = GetEncryptedData(refreshResultFromSyn.oauth.oauth_key);
+                            synCreateUserObject.refresh_token = GetEncryptedData(refreshResultFromSyn.oauth.refresh_token);
+                            synCreateUserObject.expires_in = refreshResultFromSyn.oauth.expires_in;
+                            synCreateUserObject.expires_at = refreshResultFromSyn.oauth.expires_at;
+
 
                             if (!String.IsNullOrEmpty(refreshResultFromSyn.user.permission))
                             {
                                 synCreateUserObject.permission = refreshResultFromSyn.user.permission;
                             }
 
-                            int a = _dbContext.SaveChanges();
+                            int save = _dbContext.SaveChanges();
                             _dbContext.Entry(synCreateUserObject).Reload();
 
-                            if (a > 0)
+                            if (save > 0)
                             {
-                                Logger.Info(
-                                    "Common Helper -> refreshSynapseV3OautKey - SUCCESS From Synapse and Successfully added to Nooch DB - " +
-                                    "Orig. Oauth Key (encr): [" + oauthKey + "], " +
-                                    "Refreshed OAuth Key (encr): [" + synCreateUserObject.access_token + "]");
+                                Logger.Info("Common Helper -> refreshSynapseV3OautKey - SUCCESS From Synapse and Successfully saved updates to Nooch DB.");
 
                                 res.success = true;
                                 res.oauth_consumer_key = synCreateUserObject.access_token;
@@ -2258,44 +2263,47 @@ namespace Nooch.Common
                                 Logger.Error("Common Helper -> refreshSynapseV3OautKey FAILED - Error saving new key in Nooch DB - " +
                                              "Orig. Oauth Key: [" + oauthKey + "], " +
                                              "Refreshed OAuth Key: [" + synCreateUserObject.access_token + "]");
-
                                 res.msg = "Failed to save new OAuth key in Nooch DB.";
                             }
                         }
                         else
                         {
-                            Logger.Error("Common Helper -> refreshSynapseV3OautKey FAILED - Error from Synapse service, no 'success' key found - " +
-                                         "Orig. Oauth Key: [" + oauthKey + "]");
+                            Logger.Error("Common Helper -> refreshSynapseV3OautKey FAILED - Attempted to Sign user into Synapse, but got " +
+                                         "error from Synapse service, no 'success' key found - Orig. Oauth Key: [" + oauthKey + "]");
                             res.msg = "Service error.";
                         }
                     }
                     catch (WebException we)
                     {
-                        #region Synapse V3 Sig in/ refresh  Exception
+                        #region Synapse V3 Signin Exception
 
                         var httpStatusCode = ((HttpWebResponse)we.Response).StatusCode;
                         string http_code = httpStatusCode.ToString();
 
                         var response = new StreamReader(we.Response.GetResponseStream()).ReadToEnd();
-                        JObject errorJsonFromSynapse = JObject.Parse(response);
+                        JObject jsonFromSynapse = JObject.Parse(response);
 
-                        string reason = errorJsonFromSynapse["reason"].ToString();
+                        var error_code = jsonFromSynapse["error_code"].ToString();
+                        res.msg = jsonFromSynapse["error"]["en"].ToString();
 
-                        Logger.Error("Common Helper -> synapseV3checkUsersOauthKey WEBEXCEPTION - HTTP Code: [" + http_code +
-                                     "], Error Msg: [" + reason + "], Original Oauth Key (enc): [" + oauthKey + "]");
-
-                        if (!String.IsNullOrEmpty(reason))
+                        if (!String.IsNullOrEmpty(error_code))
                         {
-                            res.msg = "Webexception on refresh attempt: [" + reason + "]";
+                            Logger.Error("Common Helper -> refreshSynapseV3OautKey FAILED (Exception)- [Synapse Error Code: " + error_code +
+                                         "], [Error Msg: " + res.msg + "]");
+                        }
+
+                        if (!String.IsNullOrEmpty(res.msg))
+                        {
+                            Logger.Error("Common Helper -> synapseV3checkUsersOauthKey FAILED (Exception) - HTTP Code: [" + http_code +
+                                         "], Error Msg: [" + res.msg + "]");
                         }
                         else
                         {
-                            Logger.Error(
-                                "Common Helper -> synapseV3checkUsersOauthKey FAILED: Synapse Error, but *reason* was null for [Original Oauth Key (enc): " +
-                                oauthKey + "], [Exception: " + we.InnerException + "]");
+                            Logger.Error("Common Helper -> synapseV3checkUsersOauthKey FAILED (Exception) - Synapse Error msg was null or not found - [Original Oauth Key (enc): " +
+                                         oauthKey + "], [Exception: " + we.Message + "]");
                         }
 
-                        #endregion Synapse V3 Sig in/ refresh  Exception
+                        #endregion Synapse V3 Signin Exception
                     }
 
                     #endregion
@@ -2305,7 +2313,7 @@ namespace Nooch.Common
                     // no record found for given oAuth token in synapse createuser results table
                     Logger.Error("Common Helper -> refreshSynapseV3OautKey FAILED - no record found for given oAuth key found - " +
                                  "Orig. Oauth Key: (enc) [" + oauthKey + "]");
-                    res.msg = "Service error.";
+                    res.msg = "Service error - no record found for give OAuth Key.";
                 }
             }
             catch (Exception ex)
@@ -2313,7 +2321,7 @@ namespace Nooch.Common
                 Logger.Error("Common Helper -> synapseV3checkUsersOauthKey FAILED: Outer Catch Error - Orig. OAuth Key (enc): [" + oauthKey +
                              "], [Exception: " + ex + "]");
 
-                res.msg = "Nooch Server Error: Outer Exception.";
+                res.msg = "Nooch Server Error: Outer Exception #2326.";
             }
 
             return res;
@@ -2882,22 +2890,19 @@ namespace Nooch.Common
             }
         }
 
+
         private static void SetOtherBanksInactiveForGivenMemberId(Guid memId)
         {
 
             var selectedBank =
                 _dbContext.SynapseBanksOfMembers.Where(memberTemp =>
                         memberTemp.MemberId.Value.Equals(memId) && memberTemp.IsDefault != false).ToList();
-            //if (selectedBank.Count>0)
-            //{
-            //    _dbContext.Entry(selectedBank).Reload();
-            //}
+
             foreach (SynapseBanksOfMember sbank in selectedBank)
             {
                 sbank.IsDefault = false;
                 _dbContext.SaveChanges();
             }
-
         }
 
 
@@ -2910,6 +2915,7 @@ namespace Nooch.Common
 
             return new DbContext(object_context, false);
         }
+
 
         private static ObjectContext GetObjectContextFromEntity(object entity)
         {
@@ -3062,6 +3068,7 @@ namespace Nooch.Common
 
         }
 
+
         public static string GetMemberIdByContactNumber(string userContactNumber)
         {
             Logger.Info("Common Helper -> GetMemberIdByContactNumber Initiated - [userContactNumber: " + userContactNumber + "]");
@@ -3084,7 +3091,6 @@ namespace Nooch.Common
 
         public static string SaveMemberFBId(string MemberId, string MemberFBId, string IsConnect)
         {
-
             Logger.Info("Common Helper -> SaveMembersFBId - MemberId: [" + MemberId + "]");
 
             try
@@ -3097,7 +3103,6 @@ namespace Nooch.Common
                 {
                     if (IsConnect == "YES")
                     {
-                        // update nooch member password
                         noochMember.FacebookAccountLogin = MemberFBId.Replace(" ", "+");
                     }
                     else
@@ -3115,7 +3120,6 @@ namespace Nooch.Common
                 {
                     return "Failure";
                 }
-
             }
             catch (Exception)
             {
@@ -3124,18 +3128,16 @@ namespace Nooch.Common
         }
 
 
-
         public static RemoveNodeGenricResult RemoveBankNodeFromSynapse(string userOAuth, string userFingerPrint, string nodeIdToRemove, string MemberId)
         {
             RemoveNodeGenricResult res = new RemoveNodeGenricResult();
             res.IsSuccess = false;
             Logger.Info("Common Helper -> RemoveBankNodeFromSynapse - MemberId: [" + MemberId + "] - NodeId: [" + nodeIdToRemove + "]");
+
             try
             {
-
                 string baseAddress = "";
                 baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/node/remove" : "https://synapsepay.com/api/v3/node/remove";
-
 
                 RemoveBankNodeRootClass rootObject = new RemoveBankNodeRootClass
                 {
@@ -3184,17 +3186,14 @@ namespace Nooch.Common
                     res.IsSuccess = false;
                     res.Message = "Error removing node from synapse.";
                 }
-
-
-
             }
             catch (Exception ex)
             {
                 Logger.Error("Common Helper -> RemoveBankNodeFromSynapse - MemberId: [" + MemberId + "] - NodeId: [" + nodeIdToRemove + "] - Error: [" + ex + "]");
                 res.IsSuccess = false;
                 res.Message = "Error removing node from synapse.";
-
             }
+
             return res;
         }
 
