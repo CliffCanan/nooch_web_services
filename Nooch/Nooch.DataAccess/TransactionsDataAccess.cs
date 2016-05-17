@@ -3125,7 +3125,9 @@ namespace Nooch.DataAccess
                 #region Check Sender Synapse Permissions
 
                 // 1. Check USER permissions for SENDER
+                CommonHelper.ResetSearchData();
                 synapseSearchUserResponse senderPermissions = CommonHelper.getUserPermissionsForSynapseV3(senderUserName);
+
 
                 if (senderPermissions == null || !senderPermissions.success)
                 {
@@ -3138,6 +3140,7 @@ namespace Nooch.DataAccess
                 // 2. Check BANK/NODE permission for SENDER
                 if (senderPermissions.users != null && senderPermissions.users.Length > 0)
                 {
+
                     int senderPermissionUsersCount = senderPermissions.users.Count();
                     int iterator = 0;
 
@@ -3175,7 +3178,7 @@ namespace Nooch.DataAccess
                                 return res;
                             }
                         }
-                        else
+                        else if (senderUser.nodes != null && senderUser.nodes.Length > 0 && iterator == senderPermissionUsersCount)
                         {
                             Logger.Error("TDA -> AddTransSynapseV3Reusable - No Bank Found for Sender - Username: [" + senderUserName + "]");
                             res.ErrorMessage = "No banks found for Sender (TDA - 3795)";
@@ -3188,6 +3191,7 @@ namespace Nooch.DataAccess
 
                 #region Check Recipient Synapse Permissions
 
+                CommonHelper.ResetSearchData();
                 // 3. Check USER permissions for RECIPIENT
                 synapseSearchUserResponse recipPermissions = CommonHelper.getUserPermissionsForSynapseV3(receiverUserName);
 
@@ -3202,7 +3206,7 @@ namespace Nooch.DataAccess
                 // 4. Check BANK/NODE permission for RECIPIENT
                 if (recipPermissions.users != null && recipPermissions.users.Length > 0)
                 {
-                    int senderPermissionUsersCount = senderPermissions.users.Count();
+                    int senderPermissionUsersCount = recipPermissions.users.Count();
                     int iterator = 0;
                     // Should only be 1 'user' result, contained in an array from Synapse
                     foreach (synapseSearchUserResponse_User recUser in recipPermissions.users)
@@ -3234,7 +3238,7 @@ namespace Nooch.DataAccess
                                 return res;
                             }
                         }
-                        else
+                        else if (recUser.nodes != null && recUser.nodes.Length > 0 &&  iterator == senderPermissionUsersCount)
                         {
                             Logger.Error("TDA -> AddTransSynapseV3Reusable - No Bank Found for Recipient - Username: [" + senderUserName + "]");
                             res.ErrorMessage = "No banks found for Recipient (TDA - 3890)";

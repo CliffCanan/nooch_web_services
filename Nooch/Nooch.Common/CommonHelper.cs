@@ -1807,6 +1807,18 @@ namespace Nooch.Common
             return res;
         }
 
+        public static void ResetSearchData()
+        {
+            SEARCHUSER_CURRENT_PAGE = 1;
+            SEARCHUSER_TOTAL_PAGES_COUNT = 0;
+            SEARCHED_USERS.Clear();
+        }
+
+
+       // Malkit (17 May 2016) : Added these flags to keep track of pagination result being sent by synapse after hitting search url.
+       static int SEARCHUSER_CURRENT_PAGE = 1;
+       static int SEARCHUSER_TOTAL_PAGES_COUNT = 0;
+       static List<synapseSearchUserResponse_User> SEARCHED_USERS = new List<synapseSearchUserResponse_User>();
         public static synapseSearchUserResponse getUserPermissionsForSynapseV3(string userEmail)
         {
             Logger.Info("CommonHelper -> getUserPermissionsForSynapseV3 Initiated - [Email: " + userEmail + "]");
@@ -1823,7 +1835,7 @@ namespace Nooch.Common
                 client.client_secret = Utility.GetValueFromConfig("SynapseClientSecret");
 
                 synapseSearchUser_Filter filter = new synapseSearchUser_Filter();
-                filter.page = 1;
+                filter.page = SEARCHUSER_CURRENT_PAGE;
                 filter.exact_match = true; // we might want to set this to false to prevent error due to capitalization mis-match... (or make sure we only send all lowercase email when creating a Synapse user)
                 filter.query = userEmail;
 
@@ -1864,6 +1876,26 @@ namespace Nooch.Common
                         JObject refreshResponse = JObject.Parse(content);
                         //Logger.Info("CommonHelper -> getUserPermissionsForSynapseV3 - JSON Result from Synapse: " + refreshResponse);
                         res = JsonConvert.DeserializeObject<synapseSearchUserResponse>(content);
+
+                        if (res.page != res.page_count || res.page == res.page_count)
+                        {
+                            if (SEARCHUSER_CURRENT_PAGE == 1)
+                            {
+                                SEARCHED_USERS = res.users.ToList<synapseSearchUserResponse_User>();
+                            }
+                            else
+                            {
+
+                                List<synapseSearchUserResponse_User> temp = res.users.ToList<synapseSearchUserResponse_User>();
+                                SEARCHED_USERS.AddRange(temp);
+                            }
+                            SEARCHUSER_CURRENT_PAGE = res.page+1;
+                            SEARCHUSER_TOTAL_PAGES_COUNT = res.page_count;
+                            if (res.page < res.page_count)
+                                getUserPermissionsForSynapseV3(userEmail);
+
+                        }
+                        
                     }
                     else
                     {
@@ -1907,7 +1939,10 @@ namespace Nooch.Common
 
                 res.error_code = "Nooch Server Error: Outer Exception.";
             }
-
+            res.users = SEARCHED_USERS.ToArray();
+            //SEARCHUSER_CURRENT_PAGE = 1;
+            //SEARCHUSER_TOTAL_PAGES_COUNT = 0;
+            //SEARCHED_USERS.Clear();
             return res;
         }
 
