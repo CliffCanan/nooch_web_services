@@ -23,6 +23,7 @@ namespace Nooch.Common.Entities
         public string LinkSource { get; set; }
         public string TransType { get; set; }
         public string TransStatus { get; set; }
+        public string transMemo { get; set; }
         public bool IsTransFound { get; set; }
         public string RecepientName { get; set; }
         public string RecepientPhoto { get; set; }

@@ -15,8 +15,9 @@ namespace Nooch.Common.Entities.LandingPagesRelatedEntities.RejectMoney
         public string TransId { get; set; }
         public string UserType { get; set; }
         public string LinkSource { get; set; }
-        public string TransType { get; set; }
-        public string TransAmout { get; set; }
+        public string transType { get; set; }
+        public string transAmout { get; set; }
+        public string transMemo { get; set; }
         public bool SenderAndTransInfodiv { get; set; }
         public bool clickToReject { get; set; }
         public bool createAccountPrompt { get; set; }

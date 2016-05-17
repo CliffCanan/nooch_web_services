@@ -111,6 +111,7 @@ namespace Nooch.API.Controllers
                 }
                 catch (Exception ex)
                 {
+                    Logger.Error("Service Cntrlr -> GetMemberByUdId FAILED - Exception: [" + ex.Message + "]");
                     throw new Exception("Server Error");
                 }
             }
@@ -118,7 +119,6 @@ namespace Nooch.API.Controllers
             {
                 throw new Exception("Invalid OAuth 2 Access");
             }
-            return new MemberDto();
         }
 
         [HttpGet]
@@ -2769,9 +2769,8 @@ namespace Nooch.API.Controllers
                             "TransType: [" + TransType + "], UserType: [" + UserType + "]");
 
                 var tda = new TransactionsDataAccess();
-                string result = tda.RejectMoneyCommon(TransactionId, UserType, LinkSource, TransType);
                 StringResult Re = new StringResult();
-                Re.Result = result;
+                Re.Result = tda.RejectMoneyCommon(TransactionId, UserType, LinkSource, TransType);;
 
                 return Re;
             }

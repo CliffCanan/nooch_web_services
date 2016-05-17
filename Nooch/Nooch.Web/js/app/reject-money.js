@@ -1,13 +1,8 @@
 var transType = $('#TransType').val();
 
-
 $(document).ready(function () {
 
     console.log("errorFromCodeBehind is: " + errorFromCodeBehind);
-
-
-    //$('#clickToReject').hide();
-    //$('#createAccountPrompt').hide();
 
     if (areThereErrors() == false)
     {
@@ -15,7 +10,8 @@ $(document).ready(function () {
         {
             console.log("Transaction no longer pending!");
         }
-        $('#createAccountPrompt').hide();
+        //$('#createAccountPrompt').hide();
+
         if (transType == "Invite") 
         {
             $('#SenderAndTransInfodiv .intro-header').text('Payment From').addClass('label-success');
@@ -65,29 +61,26 @@ function areThereErrors() {
 function checkIfStillPending() 
 {
     if (typeof transStatus != 'undefined' &&
-       transStatus != "pending" && transStatus != "Pending")// Set on Code Behind page
+       transStatus != "pending" && transStatus != "Pending")
     {
         var alertTitle = "";
         var alertBodyText = "";
 
-        $('#SenderAndTransInfodiv').hide();
-        $('#clickToReject').hide();
+        $('#clickToReject').fadeOut('fast');
         $('#createAccountPrompt').hide();
+
         if (transStatus == "success")
         {
-          
             alertTitle = "Payment Already Completed";
             alertBodyText = "Looks like this payment was already paid successfully.";
         }
         else if (transStatus == "cancelled")
         {
-            
             alertTitle = "Payment Already Cancelled";
             alertBodyText = "Looks like " + $('#nameLabel').text() + " already cancelled this payment.&nbsp; You're off the hook!";
         }
         else if (transStatus == "rejected")
         {
-          
             alertTitle = "Payment Already Rejected";
             alertBodyText = "Looks like you already rejected this payment.";
         }
@@ -134,17 +127,16 @@ function rejectBtnClicked(){
     console.log("rejectThisRequestReached!");
 
      //ADD THE LOADING BOX
-    $("#body-depositNew").block({
+    $.blockUI({
         message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Rejecting This Request...</span>',
         css: {
             border: 'none',
-            padding: '20px 8px 14px',
+            padding: '26px 8px 20px',
             backgroundColor: '#000',
-            '-webkit-border-radius': '12px',
-            '-moz-border-radius': '12px',
-            'border-radius': '12px',
-            opacity: '.75',
-            width: '260px',
+            '-webkit-border-radius': '15px',
+            '-moz-border-radius': '15px',
+            'border-radius': '15px',
+            opacity: '.8',
             margin: '0 auto',
             color: '#fff'
         }
@@ -154,28 +146,35 @@ function rejectBtnClicked(){
     var userType = getParameterByName('UserType');
     var linkSource = getParameterByName('LinkSource');
     var transType = getParameterByName('TransType');
-
-    //alert(transId);
   
     $.ajax({
         type: "POST",
-       url: $('#rejectMoneyLink').val()+"?TransactionId="+transId+"&UserType="+userType+"&LinkSource="+userType+"&TransType="+transType,
-       
-       success: function (msg) {    
-            console.log("SUCCESS -> 'RegisterUserWithSynpResult' is... ");
+        url: $('#rejectMoneyLink').val()+"?TransactionId="+transId+"&UserType="+userType+"&LinkSource="+userType+"&TransType="+transType,
+
+        success: function (msg) {
+            console.log("SUCCESS -> RejectMoneyResult is... ");
             console.log(msg);
             
+            // Hide the Loading Block
+            $.unblockUI()
 
-        //     Hide the Loading Block
-            $('#body-depositNew').unblock();
-
-            if (msg.errorFromCodeBehind = "0")
+            if (typeof msg.errorFromCodeBehind != 'undefined' &&
+			    (msg.errorFromCodeBehind.indexOf("no longer pending") > -1 || msg.transStatus.indexOf("no longer pending") > -1))
+			{
+                console.log("This payment was no longer pending.");
+                transStatus = "not pending";
+				checkIfStillPending();
+			}
+			else if (msg.errorFromCodeBehind = "0")
             {
-                $("#fromText").html("Request Rejected Successfully");
+                $("#transResult").text("Request Rejected Successfully");
+				$("#clickToReject").fadeOut('fast');
+
+				var firstName = $('#nameLabel').text().trim().split(" ");
 
                 swal({
-                    title: "No Problem",
-                    text: "You just rejected that request successfully.<br/><br/>Hope " + $('#nameLabel').text().trim() + " won't mind!",
+                    title: "Payment Rejected",
+                    text: "You just rejected that payment request successfully.<br/><br/>Hope " + firstName[0] + " won't mind!",
                     type: "success",
                     showCancelButton: false,
                     confirmButtonColor: "#3fabe1",
@@ -192,8 +191,8 @@ function rejectBtnClicked(){
             }
         },
         Error: function (x, e) {
-          //   Hide the Loading Block
-            $('#body-depositNew').unblock();
+            //   Hide the Loading Block
+            $.unblockUI()
 
             console.log("ERROR --> 'x', then 'e' is... ");
             console.log(x);
@@ -203,7 +202,6 @@ function rejectBtnClicked(){
         }
     });
 }
-
 
 function showErrorAlert(errorNum) {
     var alertTitle = "";
@@ -217,12 +215,9 @@ function showErrorAlert(errorNum) {
         alertBodyText = "We had trouble finding that transaction.  Please try again and if you continue to see this message, contact <span style='font-weight:600;'>Nooch Support</span>:" +
                         "<br/><a href='mailto:support@nooch.com' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>support@nooch.com</a>";
 
-
         $('#SenderAndTransInfodiv').hide();
         $('#clickToReject').hide();
         $('#createAccountPrompt').hide();
-        
-
     }
     else if (errorNum == '2')
     {
@@ -232,7 +227,6 @@ function showErrorAlert(errorNum) {
         $('#SenderAndTransInfodiv').hide();
         $('#clickToReject').hide();
         $('#createAccountPrompt').hide();
-
     }
     else if (errorNum == '3')
     {
@@ -252,7 +246,6 @@ function showErrorAlert(errorNum) {
                         "<br/><a href='mailto:support@nooch.com' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>support@nooch.com</a>";
     }
 
-
     $("#fromText").html(alertBodyText).addClass('errorMessage');
     $(".errorMessage a").addClass("btn btn-default m-t-20 animated bounceIn");
 
@@ -262,7 +255,7 @@ function showErrorAlert(errorNum) {
         type: "error",
         showCancelButton: true,
         confirmButtonColor: "#3fabe1",
-        confirmButtonText: "Ok  :-(",
+        confirmButtonText: "OK",
         cancelButtonText: "Contact Support",
         closeOnConfirm: true,
         closeOnCancel: false,
@@ -273,7 +266,6 @@ function showErrorAlert(errorNum) {
             window.open("mailto:support@nooch.com");
         }
     });
-
 }
 
 function getParameterByName(name) {

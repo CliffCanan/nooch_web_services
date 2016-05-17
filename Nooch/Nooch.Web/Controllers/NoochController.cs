@@ -1923,12 +1923,13 @@ namespace Nooch.Web.Controllers
 
                     if (TransDetails.IsTransFound)
                     {
-                        res.TransType = TransDetails.UserType;
+                        res.transType = TransDetails.UserType;
                         res.TransId = TransDetails.TransId;
                         res.LinkSource = Request.QueryString["LinkSource"];
                         res.UserType = Request.QueryString["UserType"];
                         res.transStatus = TransDetails.TransStatus;
-                        res.TransAmout = TransDetails.AmountLabel;
+                        res.transAmout = TransDetails.AmountLabel;
+                        res.transMemo = TransDetails.transMemo;
 
                         if (CommonHelper.GetDecryptedData(res.UserType) == "NonRegistered" || CommonHelper.GetDecryptedData(res.UserType) == "Existing")
                         {
@@ -1982,6 +1983,7 @@ namespace Nooch.Web.Controllers
         public ActionResult RejectMoneyBtnClick(string TransactionId, string UserType, string LinkSource, string TransType)
         {
             PageLoadDataRejectMoney res = new PageLoadDataRejectMoney();
+            res.errorFromCodeBehind = "initial";
 
             string serviceMethod = string.Empty;
             string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
@@ -1994,26 +1996,24 @@ namespace Nooch.Web.Controllers
 
             var serviceResult = ResponseConverter<StringResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
 
-            if (serviceResult.Result == "Success." || serviceResult.Result == "Success")
+            if (!String.IsNullOrEmpty(serviceResult.Result) && serviceResult.Result.IndexOf("Success") > -1)
             {
                 res.errorFromCodeBehind = "0";
 
                 res.transStatus = "Request rejected successfully.";
 
-                //res.UserType  -- this can be handled client side
-
-                // Check if request is performed by new user
-                //if (SessionHelper.GetSessionValue("UserType").ToString() == "New")
-                //{
-                //    createAccountPrompt.Visible = true; // prompt to create account
-                //}
-
-                Logger.Info("rejectMoney CodeBehind -> RejectRequest SUCCESSFUL - [TransactionId Parameter: " + Request.QueryString["TransactionId"] + "]");
+                Logger.Info("rejectMoney CodeBehind -> RejectRequest SUCCESSFUL - [TransactionId Parameter: " +
+                            Request.QueryString["TransactionId"] + "]");
+            }
+            else if (!String.IsNullOrEmpty(serviceResult.Result) && serviceResult.Result.IndexOf("no longer pending") > -1)
+            {
+                res.errorFromCodeBehind = "Transaction no longer pending";
+                res.transStatus = "Already Rejected or Cancelled";
             }
             else
             {
                 Logger.Error("rejectMoney CodeBehind -> RejectRequest FAILED - [Server Result: " + serviceResult.Result + "], " +
-                                       "[TransactionId Parameter: " + Request.QueryString["TransactionId"] + "]");
+                             "[TransactionId Parameter: " + Request.QueryString["TransactionId"] + "]");
                 res.errorFromCodeBehind = "1";
             }
 
@@ -2053,10 +2053,8 @@ namespace Nooch.Web.Controllers
                 rcr.nameLabel = transaction.Name;
             }
 
-            //AmountLabel.Text = transaction.Amount.ToString("n2");
-            if (transaction.Amount != null)
-                rcr.AmountLabel = transaction.Amount.ToString("n2");
-
+            rcr.AmountLabel = transaction.Amount.ToString("n2");
+            rcr.transMemo = transaction.Memo.Trim();
 
             // Reject money page related stuff
             rcr.RecepientName = transaction.RecepientName;

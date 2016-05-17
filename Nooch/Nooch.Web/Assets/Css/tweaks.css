@@ -1065,21 +1065,20 @@ a { cursor: pointer; }
 #body-depositNew #depositHeader > img, 
 #body-depositNew .depositComplete-TransDetails .transDetails-userpic {
     display: inline;
-    border-radius: 45px;
-    height: 90px;
-    width: 90px;
-    margin-right: 4%;
+    border-radius: 50%;
+    height: 78px;
+    width: 78px;
+    margin-right: 6%;
     -webkit-box-shadow:0 3px 6px -2px rgba(31, 32, 33, .55);
     box-shadow: 0 3px 6px -2px rgba(31, 32, 33, .55);
 }
-#body-depositNew .depositComplete-TransDetails .media {max-width:430px;}
+#body-depositNew .depositComplete-TransDetails .media {max-width:450px;}
 #body-depositNew .depositComplete-TransDetails .media-object {
-    border-radius: 45px;
+    border-radius: 50%;
     -webkit-box-shadow:0 3px 6px -2px rgba(31, 32, 33, .55);
     box-shadow: 0 3px 6px -2px rgba(31, 32, 33, .55);
-    height: 90px;
-    margin-right: 3%;
-    width: 90px;
+    height: 78px;
+    width: 78px;
 }
 #body-depositNew #addBank-search .glyphicon {
     font-size: 19px;
@@ -1087,10 +1086,11 @@ a { cursor: pointer; }
     top: 12px;
 }
 #senderName {
-    font-size: 26px;
+    font-size: 22px;
     font-weight: 400;
     text-transform: none;
     margin: 4px 0px 0px;
+	max-width: 250px;
 }
 #body-depositNew #amountShell {
     background-color:rgba(88, 90, 92, 0.3);
@@ -1126,12 +1126,12 @@ a { cursor: pointer; }
 #memo_shell #transMemo {
   color:white;
   display:block;
-  font-size:21px;
+  font-size:20px;
   font-weight:500;
   font-style:italic;
   text-align:center;
-  margin:20px auto -5px;
-  width:94%;
+  margin:5px auto 10px;
+  width:92%;
   max-width:500px;
   text-shadow:0 1px rgba(31,32,33,.3);
 }
@@ -1203,15 +1203,14 @@ a { cursor: pointer; }
 }
 
 .paymentInfo {
-  max-width:450px;
-  margin:10px auto;
+  max-width:390px;
+  margin:10px auto 5px;
   width:96%;
 }
 .depositComplete-TransDetails {
     margin-top: 20px;
     overflow: visible;
-    padding: 10px 2px;
-    text-align: center;
+    padding: 10px 0;
     white-space: nowrap;
 }
 .depositComplete-TransDetails * {
@@ -1221,7 +1220,7 @@ a { cursor: pointer; }
     white-space: nowrap;
 }
 .depositComplete-TransDetails .transfer-amount {
-    font-size: 28px;
+    font-size: 22px;
     font-weight: 500;
 }
 #iconCircle {
@@ -1276,6 +1275,10 @@ div#pwFormShell #depositCreateAccount,
     font-size: 20px;
     display: block;
     margin: 0 auto;
+}
+#clickToReject {
+	max-width: 390px;
+	margin: 0 auto;
 }
 .marginTopIncrease { margin-top: 60px !important; }
 #createPwForm > .form-group {

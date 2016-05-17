@@ -2701,151 +2701,153 @@ namespace Nooch.DataAccess
             {
                 var transId = Utility.ConvertToGuid(TransactionId);
                 var transactionDetail = new Transaction();
-                transactionDetail = _dbContext.Transactions.FirstOrDefault(entity => entity.TransactionId == transId && entity.TransactionStatus == "Pending" //&& (memberTemp.TransactionType == "DrRr1tU1usk7nNibjtcZkA==" || memberTemp.TransactionType == "T3EMY1WWZ9IscHIj3dbcNw==")   -- need to discuss with Cliff
+                transactionDetail = _dbContext.Transactions.FirstOrDefault(entity => entity.TransactionId == transId // && entity.TransactionStatus == "Pending" //&& (memberTemp.TransactionType == "DrRr1tU1usk7nNibjtcZkA==" || memberTemp.TransactionType == "T3EMY1WWZ9IscHIj3dbcNw==")   -- need to discuss with Cliff
                     );
 
                 if (transactionDetail != null)
                 {
-                    #region If Transaction Found
-
-                    transactionDetail.TransactionStatus = "Rejected";
-                    int saveChanges = _dbContext.SaveChanges();
-                    _dbContext.Entry(transactionDetail).Reload();
-
-                    string wholeAmount = transactionDetail.Amount.ToString("n2");
-                    string[] s3 = wholeAmount.Split('.');
-
-                    #region Memo
-                    string memo = "";
-                    if (transactionDetail.Memo != null && transactionDetail.Memo != "")
+                    if (transactionDetail.TransactionStatus == "Pending")
                     {
-                        if (transactionDetail.Memo.Length > 3)
-                        {
-                            string firstThreeChars = transactionDetail.Memo.Substring(0, 3).ToLower();
-                            bool startWithFor = firstThreeChars.Equals("for");
+                        #region If Transaction Found
 
-                            if (startWithFor)
+                        transactionDetail.TransactionStatus = "Rejected";
+                        int saveChanges = _dbContext.SaveChanges();
+                        _dbContext.Entry(transactionDetail).Reload();
+
+                        string wholeAmount = transactionDetail.Amount.ToString("n2");
+                        string[] s3 = wholeAmount.Split('.');
+
+                        #region Memo
+                        string memo = "";
+                        if (transactionDetail.Memo != null && transactionDetail.Memo != "")
+                        {
+                            if (transactionDetail.Memo.Length > 3)
                             {
-                                memo = transactionDetail.Memo.ToString();
+                                string firstThreeChars = transactionDetail.Memo.Substring(0, 3).ToLower();
+                                bool startWithFor = firstThreeChars.Equals("for");
+
+                                if (startWithFor)
+                                {
+                                    memo = transactionDetail.Memo.ToString();
+                                }
+                                else
+                                {
+                                    memo = "For " + transactionDetail.Memo.ToString();
+                                }
                             }
                             else
                             {
                                 memo = "For " + transactionDetail.Memo.ToString();
                             }
                         }
-                        else
+                        #endregion Memo
+
+                        #region Setting all variables depending upon trans type
+
+                        string fromAddress = Utility.GetValueFromConfig("transfersMail");
+                        string toAddress = "";
+
+                        string SenderFirstName = "";
+                        string SenderLastName = "";
+                        string SenderFullName = "";
+
+                        string RejectorFirstName = "";
+                        string RejectorLastName = "";
+                        string RejectorFullName = "";
+
+                        string RejectorEmail = "";
+                        string RejectorPhone = "";
+
+                        // Depends on what transaction type 
+                        //   5dt4HUwCue532sNmw3LKDQ==   -- Transfer
+                        //   DrRr1tU1usk7nNibjtcZkA==   -- Invite
+                        //   T3EMY1WWZ9IscHIj3dbcNw==   -- Request
+
+                        var transTypeDecr = CommonHelper.GetDecryptedData(TransType);
+                        var userTypeDecr = CommonHelper.GetDecryptedData(UserType);
+
+                        // TransType = request,  UserType = Existing or NonRegistered
+                        if (transTypeDecr == "Request" &&
+                            (userTypeDecr == "Existing" || userTypeDecr == "NonRegistered"))
                         {
-                            memo = "For " + transactionDetail.Memo.ToString();
-                        }
-                    }
-                    #endregion Memo
-
-                    #region Setting all variables depending upon trans type
-
-                    string fromAddress = Utility.GetValueFromConfig("transfersMail");
-                    string toAddress = "";
-
-                    string SenderFirstName = "";
-                    string SenderLastName = "";
-                    string SenderFullName = "";
-
-                    string RejectorFirstName = "";
-                    string RejectorLastName = "";
-                    string RejectorFullName = "";
-
-                    string RejectorEmail = "";
-                    string RejectorPhone = "";
-
-                    // Depends on what transaction type 
-                    //   5dt4HUwCue532sNmw3LKDQ==   -- Transfer
-                    //   DrRr1tU1usk7nNibjtcZkA==   -- Invite
-                    //   T3EMY1WWZ9IscHIj3dbcNw==   -- Request
-
-                    var transTypeDecr = CommonHelper.GetDecryptedData(TransType);
-                    var userTypeDecr = CommonHelper.GetDecryptedData(UserType);
-
-                    // TransType = request,  UserType = Existing or NonRegistered
-                    if (transTypeDecr == "Request" &&
-                        (userTypeDecr == "Existing" || userTypeDecr == "NonRegistered"))
-                    {
-                        Logger.Info("TDA -> RejectMoneyCommon - CHECKPOINT 1 REACHED - User Type = Existing, TransType = Requst");
-                        // Request sent to existing user -- 'Rejector' is SenderId in transactionDetail
-                        SenderFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member1.FirstName));
-                        SenderLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member1.LastName));
-                        RejectorFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member.FirstName));
-                        RejectorLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member.LastName));
-                        RejectorFullName = RejectorFirstName + " " + RejectorLastName;
-                    }
-
-                    // UserType = NEW, TransType = REQUEST or INVITE
-                    else if (userTypeDecr == "New" &&
-                             (transTypeDecr == "Request" || transTypeDecr == "Invite"))
-                    {
-                        Logger.Info("TDA -> RejectMoneyCommon - CHECKPOINT 2 REACHED - User Type = New, TransType = Requst or Invite, Link Source = Email");
-                        // Request sent to Non-Nooch user -- 'Rejector' is email address InvitationSentTo in transactionDetail
-                        SenderFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member.FirstName));
-                        SenderLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member.LastName));
-                        RejectorFirstName = "";
-                        RejectorLastName = "";
-
-                        // LinkSource = EMAIL
-                        if (LinkSource == "75U7bZRpVVxLNbQuoMQEGQ==" ||
-                            (!String.IsNullOrEmpty(transactionDetail.InvitationSentTo) &&
-                            (transactionDetail.IsPhoneInvitation == false ||
-                             transactionDetail.IsPhoneInvitation == null)))
-                        {
-                            RejectorEmail = CommonHelper.GetDecryptedData(transactionDetail.InvitationSentTo);
+                            Logger.Info("TDA -> RejectMoneyCommon - CHECKPOINT 1 REACHED - User Type = Existing, TransType = Requst");
+                            // Request sent to existing user -- 'Rejector' is SenderId in transactionDetail
+                            SenderFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member1.FirstName));
+                            SenderLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member1.LastName));
+                            RejectorFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member.FirstName));
+                            RejectorLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member.LastName));
+                            RejectorFullName = RejectorFirstName + " " + RejectorLastName;
                         }
 
-                        //LinkSource = PHONE
-                        if (LinkSource == "Um3I3RNHEGWqKM9MLsQ1lg==" ||
-                            (String.IsNullOrEmpty(transactionDetail.InvitationSentTo) &&
-                            (transactionDetail.IsPhoneInvitation != false ||
-                             transactionDetail.IsPhoneInvitation != null)))
+                        // UserType = NEW, TransType = REQUEST or INVITE
+                        else if (userTypeDecr == "New" &&
+                                 (transTypeDecr == "Request" || transTypeDecr == "Invite"))
                         {
-                            RejectorPhone = CommonHelper.GetDecryptedData(transactionDetail.PhoneNumberInvited);
-                        }
-                    }
+                            Logger.Info("TDA -> RejectMoneyCommon - CHECKPOINT 2 REACHED - User Type = New, TransType = Requst or Invite, Link Source = Email");
+                            // Request sent to Non-Nooch user -- 'Rejector' is email address InvitationSentTo in transactionDetail
+                            SenderFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member.FirstName));
+                            SenderLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member.LastName));
+                            RejectorFirstName = "";
+                            RejectorLastName = "";
 
-                    #endregion Setting all variables depending upon trans type
-
-
-                    #region Notification And Email for transaction Between Existing users
-
-                    // UserType = EXISTING, TransType = REQUEST
-                    if (transTypeDecr == "Request" &&
-                        (userTypeDecr == "Existing" || userTypeDecr == "NonRegistered"))
-                    {
-                        Guid RequestSenderId = Utility.ConvertToGuid(transactionDetail.Member1.MemberId.ToString());
-
-                        var memberObj = new Member();
-                        memberObj = _dbContext.Members.FirstOrDefault(memberTemp =>
-                                            memberTemp.MemberId.Equals(RequestSenderId) &&
-                                            memberTemp.IsDeleted == false &&
-                                            memberTemp.ContactNumber != null &&
-                                            memberTemp.IsVerifiedPhone == true);
-
-                        if (memberObj != null && !String.IsNullOrEmpty(memberObj.DeviceToken) && memberObj.DeviceToken.Length > 6)
-                        {
-                            try
+                            // LinkSource = EMAIL
+                            if (LinkSource == "75U7bZRpVVxLNbQuoMQEGQ==" ||
+                                (!String.IsNullOrEmpty(transactionDetail.InvitationSentTo) &&
+                                (transactionDetail.IsPhoneInvitation == false ||
+                                 transactionDetail.IsPhoneInvitation == null)))
                             {
-                                string mailBodyText = RejectorFullName + " just denied your payment request for $" + wholeAmount + ".";
-
-                                Utility.SendNotificationMessage(mailBodyText, 0, null,
-                                                                memberObj.DeviceToken,
-                                                                Utility.GetValueFromConfig("AppKey"), Utility.GetValueFromConfig("MasterSecret"));
-
-                                Logger.Info("TDA -> RejectMoneyCommon Request Denied - Push notification sent to [" +
-                                            memberObj.UDID1 + "] successfully");
+                                RejectorEmail = CommonHelper.GetDecryptedData(transactionDetail.InvitationSentTo);
                             }
-                            catch (Exception ex)
+
+                            //LinkSource = PHONE
+                            if (LinkSource == "Um3I3RNHEGWqKM9MLsQ1lg==" ||
+                                (String.IsNullOrEmpty(transactionDetail.InvitationSentTo) &&
+                                (transactionDetail.IsPhoneInvitation != false ||
+                                 transactionDetail.IsPhoneInvitation != null)))
                             {
-                                Logger.Error("TDA -> RejectMoneyCommon Request Denied - Push notification NOT sent to [" +
-                                             memberObj.UDID1 + "], Exception: [" + ex.Message + "]");
+                                RejectorPhone = CommonHelper.GetDecryptedData(transactionDetail.PhoneNumberInvited);
                             }
                         }
 
-                        var tokens = new Dictionary<string, string>
+                        #endregion Setting all variables depending upon trans type
+
+
+                        #region Notification And Email for transaction Between Existing users
+
+                        // UserType = EXISTING, TransType = REQUEST
+                        if (transTypeDecr == "Request" &&
+                            (userTypeDecr == "Existing" || userTypeDecr == "NonRegistered"))
+                        {
+                            Guid RequestSenderId = Utility.ConvertToGuid(transactionDetail.Member1.MemberId.ToString());
+
+                            var memberObj = new Member();
+                            memberObj = _dbContext.Members.FirstOrDefault(memberTemp =>
+                                                memberTemp.MemberId.Equals(RequestSenderId) &&
+                                                memberTemp.IsDeleted == false &&
+                                                memberTemp.ContactNumber != null &&
+                                                memberTemp.IsVerifiedPhone == true);
+
+                            if (memberObj != null && !String.IsNullOrEmpty(memberObj.DeviceToken) && memberObj.DeviceToken.Length > 6)
+                            {
+                                try
+                                {
+                                    string mailBodyText = RejectorFullName + " just denied your payment request for $" + wholeAmount + ".";
+
+                                    Utility.SendNotificationMessage(mailBodyText, 0, null,
+                                                                    memberObj.DeviceToken,
+                                                                    Utility.GetValueFromConfig("AppKey"), Utility.GetValueFromConfig("MasterSecret"));
+
+                                    Logger.Info("TDA -> RejectMoneyCommon Request Denied - Push notification sent to [" +
+                                                memberObj.UDID1 + "] successfully");
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.Error("TDA -> RejectMoneyCommon Request Denied - Push notification NOT sent to [" +
+                                                 memberObj.UDID1 + "], Exception: [" + ex.Message + "]");
+                                }
+                            }
+
+                            var tokens = new Dictionary<string, string>
                             {
                                 {Constants.PLACEHOLDER_FIRST_NAME, SenderFirstName},
                                 {Constants.PLACEHOLDER_RECIPIENT_FULL_NAME, RejectorFullName},
@@ -2855,28 +2857,28 @@ namespace Nooch.DataAccess
                                 {Constants.MEMO, memo}
                             };
 
-                        toAddress = CommonHelper.GetDecryptedData(transactionDetail.Member1.UserName);
+                            toAddress = CommonHelper.GetDecryptedData(transactionDetail.Member1.UserName);
 
-                        try
-                        {
-                            Utility.SendEmail("requestDeniedToSender", fromAddress, toAddress, null, RejectorFullName +
-                                " denied your payment request", null,
-                                tokens, null, null, null);
+                            try
+                            {
+                                Utility.SendEmail("requestDeniedToSender", fromAddress, toAddress, null, RejectorFullName +
+                                    " denied your payment request", null,
+                                    tokens, null, null, null);
 
-                            Logger.Info("TDA -> RejectMoneyCommon requestDeniedToSender - Email sent to [" +
-                                        toAddress + "].");
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Error("TDA -> RejectMoneyCommon requestDeniedToSender - Email NOT sent to [" + toAddress +
-                                         "], Exception: [" + ex.Message + "]");
-                        }
+                                Logger.Info("TDA -> RejectMoneyCommon requestDeniedToSender - Email sent to [" +
+                                            toAddress + "].");
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.Error("TDA -> RejectMoneyCommon requestDeniedToSender - Email NOT sent to [" + toAddress +
+                                             "], Exception: [" + ex.Message + "]");
+                            }
 
-                        // Send email to user who REJECTED this request (ie.: RECIPIENT) - will be an EXISTING user
+                            // Send email to user who REJECTED this request (ie.: RECIPIENT) - will be an EXISTING user
 
-                        SenderFullName = SenderFirstName + " " + SenderLastName;
+                            SenderFullName = SenderFirstName + " " + SenderLastName;
 
-                        var tokens2 = new Dictionary<string, string>
+                            var tokens2 = new Dictionary<string, string>
                             {
                                 {Constants.PLACEHOLDER_FIRST_NAME, RejectorFirstName},
                                 {Constants.PLACEHOLDER_SENDER_FULL_NAME, SenderFullName},
@@ -2885,96 +2887,96 @@ namespace Nooch.DataAccess
                                 {Constants.MEMO, memo}
                             };
 
-                        toAddress = CommonHelper.GetDecryptedData(transactionDetail.Member.UserName);
+                            toAddress = CommonHelper.GetDecryptedData(transactionDetail.Member.UserName);
 
-                        try
-                        {
-                            Utility.SendEmail("requestDeniedToRecipient", fromAddress, toAddress, null,
-                                "You rejected a payment request from " + SenderFullName, null,
-                                tokens2, null, null, null);
-
-                            Logger.Info("TDA -> RejectMoneyCommon - requestDeniedToRecipient - Email sent to [" +
-                                        toAddress + "] successfully");
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Error("TDA -> RejectMoneyCommon requestDeniedToRecipient - Email NOT sent to [" + toAddress +
-                                         "], Exception: [" + ex.Message + "]");
-                        }
-
-                        return "Success";
-                    }
-
-                    #endregion
-
-
-                    #region Notifications when trans is b/t EXISTING user and NON-NOOCH user
-
-                    // UserType = NEW,  TransType = REQUEST or INVITE,  LinkSource = EMAIL or PHONE
-                    if (userTypeDecr == "New" &&
-                        (transTypeDecr == "Request" || transTypeDecr == "Invite") &&
-                        (LinkSource == "75U7bZRpVVxLNbQuoMQEGQ==" || LinkSource == "Um3I3RNHEGWqKM9MLsQ1lg=="))
-                    {
-                        string TransRecipId = "";
-
-                        if (transactionDetail.IsPhoneInvitation == true &&
-                            transactionDetail.PhoneNumberInvited != null &&
-                            transactionDetail.InvitationSentTo == null)
-                        {
-                            TransRecipId = CommonHelper.GetDecryptedData(transactionDetail.PhoneNumberInvited);
-
-                            if (TransRecipId.Length == 10)
-                            {
-                                TransRecipId = "(" + TransRecipId;
-                                TransRecipId = TransRecipId.Insert(4, ")");
-                                TransRecipId = TransRecipId.Insert(5, " ");
-                                TransRecipId = TransRecipId.Insert(9, "-");
-                            }
-                        }
-                        else
-                        {
-                            TransRecipId = CommonHelper.GetDecryptedData(transactionDetail.InvitationSentTo);
-                        }
-
-                        #region Notify Sender
-
-                        #region Push Notification to Request Sender
-
-                        // Send push notification to Sender (who is always an existing user)
-                        Guid RecId = Utility.ConvertToGuid(transactionDetail.Member.MemberId.ToString());
-
-                        var noochMemberfornotification = new Member();
-                        noochMemberfornotification = _dbContext.Members.FirstOrDefault(memberTemp =>
-                                memberTemp.MemberId.Equals(transactionDetail.Member1.MemberId) &&
-                                memberTemp.IsDeleted == false && memberTemp.ContactNumber != null &&
-                                memberTemp.IsVerifiedPhone == true);
-
-
-                        if (noochMemberfornotification != null)
-                        {
                             try
                             {
-                                string pushBodyText = TransRecipId + " just rejected your payment request for $" + wholeAmount + ".";
+                                Utility.SendEmail("requestDeniedToRecipient", fromAddress, toAddress, null,
+                                    "You rejected a payment request from " + SenderFullName, null,
+                                    tokens2, null, null, null);
 
-                                Utility.SendNotificationMessage(pushBodyText, 1, null,
-                                    noochMemberfornotification.DeviceToken,
-                                    Utility.GetValueFromConfig("AppKey"), Utility.GetValueFromConfig("MasterSecret"));
-
-                                Logger.Info("TDA -> RejectMoneyCommon - Push notification sent to [" +
-                                                       noochMemberfornotification.UDID1 + "] successfully.");
+                                Logger.Info("TDA -> RejectMoneyCommon - requestDeniedToRecipient - Email sent to [" +
+                                            toAddress + "] successfully");
                             }
                             catch (Exception ex)
                             {
-                                Logger.Error("TDA -> RejectMoneyCommon - Push notification NOT sent to [" +
-                                                       noochMemberfornotification.UDID1 + "], Exception: [" + ex.Message + "]");
+                                Logger.Error("TDA -> RejectMoneyCommon requestDeniedToRecipient - Email NOT sent to [" + toAddress +
+                                             "], Exception: [" + ex.Message + "]");
                             }
+
+                            return "Success";
                         }
 
-                        #endregion Push Notification to Request Sender
+                        #endregion
 
-                        #region Send email to Request Sender
 
-                        var tokens = new Dictionary<string, string>
+                        #region Notifications when trans is b/t EXISTING user and NON-NOOCH user
+
+                        // UserType = NEW,  TransType = REQUEST or INVITE,  LinkSource = EMAIL or PHONE
+                        if (userTypeDecr == "New" &&
+                            (transTypeDecr == "Request" || transTypeDecr == "Invite") &&
+                            (LinkSource == "75U7bZRpVVxLNbQuoMQEGQ==" || LinkSource == "Um3I3RNHEGWqKM9MLsQ1lg=="))
+                        {
+                            string TransRecipId = "";
+
+                            if (transactionDetail.IsPhoneInvitation == true &&
+                                transactionDetail.PhoneNumberInvited != null &&
+                                transactionDetail.InvitationSentTo == null)
+                            {
+                                TransRecipId = CommonHelper.GetDecryptedData(transactionDetail.PhoneNumberInvited);
+
+                                if (TransRecipId.Length == 10)
+                                {
+                                    TransRecipId = "(" + TransRecipId;
+                                    TransRecipId = TransRecipId.Insert(4, ")");
+                                    TransRecipId = TransRecipId.Insert(5, " ");
+                                    TransRecipId = TransRecipId.Insert(9, "-");
+                                }
+                            }
+                            else
+                            {
+                                TransRecipId = CommonHelper.GetDecryptedData(transactionDetail.InvitationSentTo);
+                            }
+
+                            #region Notify Sender
+
+                            #region Push Notification to Request Sender
+
+                            // Send push notification to Sender (who is always an existing user)
+                            Guid RecId = Utility.ConvertToGuid(transactionDetail.Member.MemberId.ToString());
+
+                            var noochMemberfornotification = new Member();
+                            noochMemberfornotification = _dbContext.Members.FirstOrDefault(memberTemp =>
+                                    memberTemp.MemberId.Equals(transactionDetail.Member1.MemberId) &&
+                                    memberTemp.IsDeleted == false && memberTemp.ContactNumber != null &&
+                                    memberTemp.IsVerifiedPhone == true);
+
+
+                            if (noochMemberfornotification != null)
+                            {
+                                try
+                                {
+                                    string pushBodyText = TransRecipId + " just rejected your payment request for $" + wholeAmount + ".";
+
+                                    Utility.SendNotificationMessage(pushBodyText, 1, null,
+                                        noochMemberfornotification.DeviceToken,
+                                        Utility.GetValueFromConfig("AppKey"), Utility.GetValueFromConfig("MasterSecret"));
+
+                                    Logger.Info("TDA -> RejectMoneyCommon - Push notification sent to [" +
+                                                           noochMemberfornotification.UDID1 + "] successfully.");
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.Error("TDA -> RejectMoneyCommon - Push notification NOT sent to [" +
+                                                           noochMemberfornotification.UDID1 + "], Exception: [" + ex.Message + "]");
+                                }
+                            }
+
+                            #endregion Push Notification to Request Sender
+
+                            #region Send email to Request Sender
+
+                            var tokens = new Dictionary<string, string>
                             {
                                 {Constants.PLACEHOLDER_FIRST_NAME, SenderFirstName},
                                 {Constants.PLACEHOLDER_RECEPIENT_FULL_NAME, TransRecipId},
@@ -2984,57 +2986,57 @@ namespace Nooch.DataAccess
                                 {Constants.MEMO, memo}
                             };
 
-                        toAddress = CommonHelper.GetDecryptedData(transactionDetail.Member1.UserName);
+                            toAddress = CommonHelper.GetDecryptedData(transactionDetail.Member1.UserName);
 
-                        try
-                        {
-                            Utility.SendEmail("requestDeniedToSender", fromAddress, toAddress, null, TransRecipId + " denied your payment request", null,
-                                tokens, null, null, null);
+                            try
+                            {
+                                Utility.SendEmail("requestDeniedToSender", fromAddress, toAddress, null, TransRecipId + " denied your payment request", null,
+                                    tokens, null, null, null);
 
-                            Logger.Info("TDA -> RejectMoneyCommon requestDeniedToSender email sent to [" +
-                                                   toAddress + "] successfully.");
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Error("TDA -> RejectMoneyCommon requestDeniedToSender email NOT sent to [" +
-                                                   toAddress + "], Exception [" + ex.Message + "]");
-                        }
+                                Logger.Info("TDA -> RejectMoneyCommon requestDeniedToSender email sent to [" +
+                                                       toAddress + "] successfully.");
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.Error("TDA -> RejectMoneyCommon requestDeniedToSender email NOT sent to [" +
+                                                       toAddress + "], Exception [" + ex.Message + "]");
+                            }
 
-                        #endregion Send email to Request Sender
+                            #endregion Send email to Request Sender
 
-                        #endregion Notify Sender
+                            #endregion Notify Sender
 
-                        // Now notify (via email or SMS) user who rejected this request
-                        #region Notify user that just rejected this transaction
+                            // Now notify (via email or SMS) user who rejected this request
+                            #region Notify user that just rejected this transaction
 
-                        // SMS if sent using Phone Number.
-                        #region Notify rejector by SMS
+                            // SMS if sent using Phone Number.
+                            #region Notify rejector by SMS
 
-                        if (transactionDetail.IsPhoneInvitation == true &&
-                            transactionDetail.PhoneNumberInvited != null &&
-                            transactionDetail.InvitationSentTo == null)
-                        {
-                            // code to send sms
-                            string MessageToRecepient = "This is just confirmation that you denied a $" +
-                                                        wholeAmount.ToString() + " request from " +
-                                                        SenderFirstName + " " + SenderLastName + ".";
+                            if (transactionDetail.IsPhoneInvitation == true &&
+                                transactionDetail.PhoneNumberInvited != null &&
+                                transactionDetail.InvitationSentTo == null)
+                            {
+                                // code to send sms
+                                string MessageToRecepient = "This is just confirmation that you denied a $" +
+                                                            wholeAmount.ToString() + " request from " +
+                                                            SenderFirstName + " " + SenderLastName + ".";
 
-                            TransRecipId = TransRecipId.Replace("(", "");
-                            TransRecipId = TransRecipId.Replace(")", "");
-                            TransRecipId = TransRecipId.Replace(" ", "");
-                            TransRecipId = TransRecipId.Replace("-", "");
+                                TransRecipId = TransRecipId.Replace("(", "");
+                                TransRecipId = TransRecipId.Replace(")", "");
+                                TransRecipId = TransRecipId.Replace(" ", "");
+                                TransRecipId = TransRecipId.Replace("-", "");
 
-                            string s = Utility.SendSMS(TransRecipId, MessageToRecepient);
-                        }
+                                string s = Utility.SendSMS(TransRecipId, MessageToRecepient);
+                            }
 
-                        #endregion Notify rejector by SMS
+                            #endregion Notify rejector by SMS
 
-                        #region Notify rejector by Email
+                            #region Notify rejector by Email
 
-                        else
-                        {
-                            // Sending email if this transaction was not send using a phone number
-                            var tokens2 = new Dictionary<string, string>
+                            else
+                            {
+                                // Sending email if this transaction was not send using a phone number
+                                var tokens2 = new Dictionary<string, string>
                                 {
                                     {Constants.PLACEHOLDER_FIRST_NAME, TransRecipId},
                                     {Constants.PLACEHOLDER_SENDER_FULL_NAME, SenderFirstName + " " + SenderLastName},
@@ -3043,47 +3045,53 @@ namespace Nooch.DataAccess
                                     {Constants.MEMO, memo}
                                 };
 
-                            toAddress = CommonHelper.GetDecryptedData(transactionDetail.InvitationSentTo);
+                                toAddress = CommonHelper.GetDecryptedData(transactionDetail.InvitationSentTo);
 
-                            try
-                            {
-                                Utility.SendEmail("requestDeniedToRecipient", fromAddress, toAddress, null,
-                                    "You rejected a Nooch request from " + SenderFirstName + " " + SenderLastName,
-                                    null, tokens2, null, null, null);
+                                try
+                                {
+                                    Utility.SendEmail("requestDeniedToRecipient", fromAddress, toAddress, null,
+                                        "You rejected a Nooch request from " + SenderFirstName + " " + SenderLastName,
+                                        null, tokens2, null, null, null);
 
-                                Logger.Info(
-                                    "TDA -> RejectMoneyCommon - requestDeniedToRecipient status email sent to [" +
-                                    toAddress + "] successfully.");
+                                    Logger.Info(
+                                        "TDA -> RejectMoneyCommon - requestDeniedToRecipient status email sent to [" +
+                                        toAddress + "] successfully.");
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.Error(
+                                        "TDA -> RejectMoneyCommon - requestDeniedToRecipient email NOT sent to [" +
+                                        toAddress + "], Exception: [" + ex.Message + "]");
+                                }
                             }
-                            catch (Exception ex)
-                            {
-                                Logger.Error(
-                                    "TDA -> RejectMoneyCommon - requestDeniedToRecipient email NOT sent to [" +
-                                    toAddress + "], Exception: [" + ex.Message + "]");
-                            }
+
+                            #endregion Notify rejector by Email
+
+                            return "Success";
+
+                            #endregion
                         }
 
-                        #endregion Notify rejector by Email
 
-                        return "Success";
+                        #endregion Notifications when trans is b/t EXISTING user and NON-NOOCH user
 
-                        #endregion
+                        if (saveChanges > 0)
+                        {
+                            return "Success.";
+                        }
+
+                        #endregion If Transaction Found
                     }
-
-
-                    #endregion Notifications when trans is b/t EXISTING user and NON-NOOCH user
-
-                    if (saveChanges > 0)
+                    else
                     {
-                        return "Success.";
+                        Logger.Info("TDA -> RejectMoneyCommon FAILED - Transaction no longer pending! - TransactionID: [" + TransactionId + "]");
+                        return "Transaction found, but no longer pending.";
                     }
-
-                    #endregion If Transaction Found
                 }
                 else
                 {
-                    Logger.Info("TDA -> RejectMoneyCommon FAILED - Transaction not pending or not found! - TransactionID: [" + TransactionId + "]");
-                    return "Transaction no more pending or not found.";
+                    Logger.Info("TDA -> RejectMoneyCommon FAILED - Transaction not found! - TransactionID: [" + TransactionId + "]");
+                    return "Transaction not found.";
                 }
 
                 return "Server Error.";
@@ -3091,7 +3099,7 @@ namespace Nooch.DataAccess
             catch (Exception ex)
             {
                 Logger.Info("TDA -> RejectMoneyCommon FAILED - [Exception: " + ex.ToString() + "]");
-                return "Server Error.";
+                return "Server Error - Outer Exception TDA RejectMoneyCommon.";
             }
         }
 
