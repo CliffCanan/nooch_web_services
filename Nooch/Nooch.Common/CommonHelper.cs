@@ -1640,6 +1640,35 @@ namespace Nooch.Common
         }
 
 
+        /*public isReadyForSyanpse isUserReadyForSynapse(string MemberId)
+        {
+            isReadyForSyanpse res = new isReadyForSyanpse();
+
+            var id = Utility.ConvertToGuid(MemberId);
+
+            var memberEntity = GetMemberDetails(MemberId);
+
+            if (memberEntity != null)
+            {
+                res.hasName = !String.IsNullOrEmpty(memberEntity.FirstName) && !String.IsNullOrEmpty(memberEntity.LastName) ? true : false;
+                res.hasAddress = !String.IsNullOrEmpty(memberEntity.Address) ? true : false;
+                res.hasZip = !String.IsNullOrEmpty(memberEntity.Zipcode) ? true : false;
+                res.hasDOB = memberEntity.DateOfBirth != null ? true : false;
+                res.hasSSN = !String.IsNullOrEmpty(memberEntity.SSN) ? true : false;
+                res.hasFngrprnt = !String.IsNullOrEmpty(memberEntity.UDID1) ? true : false;
+            }
+
+            bool isMissingSomething = false;
+
+            if (isMissingSomething)
+            {
+                //Logger.Error("Common Helper -> sendUserSsnInfoToSynapseV3 ABORTED: Member has no DoB. [Username: " + userNameDecrypted + "], [Message: " + res.message + "]");
+            }
+
+            return res;
+        }*/
+
+
         public static GenericInternalResponseForSynapseMethods submitDocumentToSynapseV3(string MemberId, string ImageUrl)
         {
             Logger.Info("Common Helper -> submitDocumentToSynapseV3 Initialized - [MemberId: " + MemberId + "]");

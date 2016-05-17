@@ -283,7 +283,7 @@ namespace Nooch.Web.Controllers
 
         public BankLoginResult RegisterUserWithSynapse(string memberid)
         {
-            Logger.Info("**Add_Bank** CodeBehind -> RegisterUserWithSynapse Initiated - [MemberID: " + memberid + "]");
+            Logger.Info("Add Bank CodeBehind -> RegisterUserWithSynapse Initiated - [MemberID: " + memberid + "]");
 
             BankLoginResult res = new BankLoginResult();
             res.IsSuccess = false;
@@ -298,12 +298,14 @@ namespace Nooch.Web.Controllers
 
                 if (transaction.success == false)
                 {
+                    Logger.Error("Add Bank CodeBehind -> RegisterUserWithSynapse FAILED - Success was False, errorMsg: [" + transaction.errorMsg + "]");
                     res.Message = transaction.errorMsg;
                 }
-                if (transaction.success == true)
+                else if (transaction.success == true)
                 {
                     res.IsSuccess = true;
-                    res.Message = "OK";
+
+                    res.Message = (!String.IsNullOrEmpty(transaction.errorMsg) && transaction.errorMsg.IndexOf("Missing ") > -1) ? transaction.errorMsg : "OK";
                 }
 
                 res.ssn_verify_status = transaction.ssn_verify_status;
@@ -311,8 +313,8 @@ namespace Nooch.Web.Controllers
             catch (Exception we)
             {
                 res.Message = "RegisterUser Web Exception - local";
-                Logger.Error("**Add_Bank** CodeBehind -> RegisterUserWithSynapse FAILED - [MemberID: " + memberid +
-                                   "], [Exception: " + we.InnerException + "]");
+                Logger.Error("Add Bank CodeBehind -> RegisterUserWithSynapse FAILED - [MemberID: " + memberid +
+                             "], [Exception: " + we.InnerException + "]");
             }
 
             return res;

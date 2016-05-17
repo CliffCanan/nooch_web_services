@@ -12,7 +12,6 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
         public createUserV3Result_oauth oauth { get; set; }
         public synapseV3Result_user user { get; set; }
         public bool success { get; set; }
-        public string oauth_consumer_key { get; set; }
         public string user_id { get; set; }
         public string error_code { get; set; }
         public string http_code { get; set; }

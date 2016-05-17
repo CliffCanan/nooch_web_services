@@ -2770,7 +2770,7 @@ namespace Nooch.API.Controllers
 
                 var tda = new TransactionsDataAccess();
                 StringResult Re = new StringResult();
-                Re.Result = tda.RejectMoneyCommon(TransactionId, UserType, LinkSource, TransType);;
+                Re.Result = tda.RejectMoneyCommon(TransactionId, UserType, LinkSource, TransType); ;
 
                 return Re;
             }
@@ -3578,7 +3578,7 @@ namespace Nooch.API.Controllers
         [ActionName("SynapseV3AddNode")]
         public SynapseV3BankLoginResult_ServiceRes SynapseV3AddNode(string MemberId, string BnkName, string BnkUserName, string BnkPw)
         {
-            Logger.Info("Service Controller -> SynapseV3AddNode Initiated - MemberId: [" + MemberId + "], BankName: [" + BnkName + "]");
+            Logger.Info("Service Cntrlr -> SynapseV3AddNode Initiated - MemberId: [" + MemberId + "], BankName: [" + BnkName + "]");
 
             SynapseV3BankLoginResult_ServiceRes res = new SynapseV3BankLoginResult_ServiceRes();
             res.Is_success = false;
@@ -3618,17 +3618,14 @@ namespace Nooch.API.Controllers
 
             try
             {
-
                 #region Get the Member's Details
 
                 Guid id = Utility.ConvertToGuid(MemberId);
-
-
-                var noochMember = CommonHelper.GetMemberDetails(id.ToString());
+                var noochMember = _dbContext.Members.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
 
                 if (noochMember == null)
                 {
-                    Logger.Info("Service Controller -> SynapseV3 ADD NODE ERROR, but Member NOT FOUND.");
+                    Logger.Error("Service Cntrlr -> SynapseV3 ADD NODE ERROR, but Member NOT FOUND.");
 
                     res.errorMsg = "Member not found.";
                     return res;
@@ -3636,7 +3633,7 @@ namespace Nooch.API.Controllers
 
                 #endregion Get the Member's Details
 
-                #region Check Mermber's Status And Phone
+                #region Check Member's Status And Phone
 
                 // Checks on user account: is phone verified? Is user's status = 'Active'?
 
@@ -3644,22 +3641,22 @@ namespace Nooch.API.Controllers
                     noochMember.Status != "NonRegistered" &&
                     noochMember.Type != "Personal - Browser")
                 {
-                    Logger.Info("Service Controller -> SynapseV3 ADD NODE Attempted, but Member is Not 'Active' but [" + noochMember.Status + "] for MemberId: [" + MemberId + "]");
+                    Logger.Error("Service Cntrlr -> SynapseV3 ADD NODE Attempted, but Member is Not 'Active' but [" + noochMember.Status + "] for MemberId: [" + MemberId + "]");
 
                     res.errorMsg = "User status is not active but, " + noochMember.Status;
                     return res;
                 }
 
-                if ((noochMember.IsVerifiedPhone == null || noochMember.IsVerifiedPhone == false) &&
-                     noochMember.Status != "NonRegistered" && noochMember.Type != "Personal - Browser")
+                if (noochMember.IsVerifiedPhone != true &&
+                    noochMember.Status != "NonRegistered" && noochMember.Type != "Personal - Browser")
                 {
-                    Logger.Info("Service Controller -> SynapseV3 ADD NODE Attempted, but Member's Phone is Not Verified. MemberId: [" + MemberId + "]");
+                    Logger.Error("Service Cntrlr -> SynapseV3 ADD NODE Attempted, but Member's Phone is Not Verified. MemberId: [" + MemberId + "]");
 
                     res.errorMsg = "User phone is not verified";
                     return res;
                 }
 
-                #endregion Check Mermber's Status And Phone
+                #endregion Check Member's Status And Phone
 
                 #region Get Synapse Account Credentials
 
@@ -3705,8 +3702,27 @@ namespace Nooch.API.Controllers
                 login.oauth_key = CommonHelper.GetDecryptedData(createSynapseUserDetails.access_token);
 
                 SynapseV3Input_user user = new SynapseV3Input_user();
-                user.fingerprint = noochMember.UDID1;
+                if (!String.IsNullOrEmpty(noochMember.UDID1) && noochMember.UDID1.Length > 6)
+                {
+                    user.fingerprint = noochMember.UDID1;
+                }
+                else
+                {
+                    try
+                    {
+                        string newFingerprint = Guid.NewGuid().ToString("n").Substring(0, 24).ToLower();
+                        user.fingerprint = newFingerprint;
 
+                        noochMember.UDID1 = newFingerprint;
+                        int save = _dbContext.SaveChanges();
+
+                        Logger.Info("Service Cntrlr -> SynapseV3AddNode - User had no UDID1, but successfully created & saved a new one: Save: [" + save + "], [New UDID1 (Fngrprnt):" + newFingerprint + "]");
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error("Service Cntrlr -> SynapseV3AddNode - User had no UDID1, Attempted to create & save a new one, but FAILED - Exception: [" + ex.Message + "]");
+                    }
+                }
                 bankloginParameters.login = login;
                 bankloginParameters.user = user;
 
@@ -3729,9 +3745,12 @@ namespace Nooch.API.Controllers
                 string UrlToHit = "";
                 UrlToHit = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/node/add" : "https://synapsepay.com/api/v3/node/add";
 
-
                 #endregion Setup Call To SynapseV3 /node/add
 
+                Logger.Info("Serice Cntrlr -> SynapseV3AddNode - AddNode PAYLOAD IS: [Oauth_Key:" + bankloginParameters.login.oauth_key +
+                            "], [Fngrprnt: " + bankloginParameters.user.fingerprint + "], [Type: " + bankloginParameters.node.type +
+                            "], [Bank_ID: " + bankloginParameters.node.info.bank_id + "], [Bank_PW: " + bankloginParameters.node.info.bank_pw +
+                            "], [Bank_Name: " + bankloginParameters.node.info.bank_name + "], [Supp_ID: " + bankloginParameters.node.extra.supp_id + "]");
 
                 // Calling Synapse Bank Login service
                 #region Call SynapseV3 Add Node API
@@ -3761,20 +3780,16 @@ namespace Nooch.API.Controllers
                     if (bankLoginRespFromSynapse["success"].ToString().ToLower() == "true" &&
                         bankLoginRespFromSynapse["nodes"] != null)
                     {
+                        // CLIFF (5/16/16): Why was this block commented out?  Don't we need to update any pre-existing records as 'deleted'?
                         #region Marking Any Existing Synapse Bank Login Entries as Deleted
 
                         var removeExistingSynapseBankLoginResult = CommonHelper.RemoveSynapseBankLoginResultsForGivenMemberId(id.ToString());
-
 
                         //var memberLoginResultsCollection = CommonHelper.GetSynapseBankLoginResulList(id.ToString());
 
                         //foreach (SynapseBankLoginResult v in memberLoginResultsCollection)
                         //{
-
-
                         //    _dbContext.Set(v.GetType()).Add(v); 
-
-
                         //    v.IsDeleted = true;
                         //    _dbContext.SaveChanges();
                         //}
@@ -3800,7 +3815,6 @@ namespace Nooch.API.Controllers
                             sbr.mfaMessage = null; // For Code-Based MFA - NOT USED ANYMORE, SHOULD REMOVE FROM DB
                             sbr.BankAccessToken = CommonHelper.GetEncryptedData(bankLoginRespFromSynapse["nodes"][0]["_id"]["$oid"].ToString()); // CLIFF (8/21/15): Not sure if this syntax is correct
                             //res.bankMFA = bankLoginRespFromSynapse["nodes"][0]["_id"]["$oid"].ToString();
-
 
                             if (bankLoginRespFromSynapse["nodes"][0]["extra"]["mfa"] != null ||
                                 bankLoginRespFromSynapse["nodes"][0]["allowed"] == null)
@@ -3865,18 +3879,18 @@ namespace Nooch.API.Controllers
                                 // Return if MFA, otherwise continue on and parse the banks
                                 if (res.Is_MFA)
                                 {
-                                    Logger.Info("Service Controller -> SynapseV3AddNode SUCCESS - Added record to synapseBankLoginResults Table - Got MFA from Synapse - [UserName: " +
+                                    Logger.Info("Service Cntrlr -> SynapseV3AddNode SUCCESS - Added record to synapseBankLoginResults Table - Got MFA from Synapse - [UserName: " +
                                                 CommonHelper.GetDecryptedData(noochMember.UserName) + "], [MFA Question: " + res.mfaQuestion + "]");
 
                                     res.Is_success = true;
                                     return res;
                                 }
 
-                                Logger.Info("Service Controller -> SynapseV3AddNode SUCCESS - Added record to synapseBankLoginResults Table - NO MFA found - [UserName: " + CommonHelper.GetDecryptedData(noochMember.UserName) + "]");
+                                Logger.Info("Service Cntrlr -> SynapseV3AddNode SUCCESS - Added record to synapseBankLoginResults Table - NO MFA found - [UserName: " + CommonHelper.GetDecryptedData(noochMember.UserName) + "]");
                             }
                             else
                             {
-                                Logger.Error("Service Controller -> SynapseV3AddNode FAILURE - Could not save record in SynapseBankLoginResults Table - ABORTING - [MemberID: " + MemberId + "]");
+                                Logger.Error("Service Cntrlr -> SynapseV3AddNode FAILURE - Could not save record in SynapseBankLoginResults Table - ABORTING - [MemberID: " + MemberId + "]");
 
                                 res.errorMsg = "Failed to save entry in BankLoginResults table (inner)";
                                 return res;
@@ -3884,7 +3898,7 @@ namespace Nooch.API.Controllers
                         }
                         catch (Exception ex)
                         {
-                            Logger.Error("Service Controller -> SynapseV3AddNode EXCEPTION on attempting to save SynapseBankLogin response for MFA Bank in DB - [MemberID: " +
+                            Logger.Error("Service Cntrlr -> SynapseV3AddNode EXCEPTION on attempting to save SynapseBankLogin response for MFA Bank in DB - [MemberID: " +
                                           MemberId + "], [Exception: " + ex + "]");
 
                             res.errorMsg = "Got exception - Failed to save entry in BankLoginResults table";
@@ -3925,15 +3939,14 @@ namespace Nooch.API.Controllers
                                 b.nickname = bank.info.nickname;
                                 b.account_num = (bank.info.account_num);
 
-
                                 bankslistextint.Add(b);
                             }
                             nodesList.nodes = bankslistextint;
                             nodesList.success = true;
 
                             res.SynapseNodesList = nodesList;
-                            Logger.Info("Service Controller -> SynapseV3AddNode - No MFA - SUCCESSFUL, Now saving all banks found in Bank Array (n = " +
-                                                   allNodesParsedResult.nodes.Length + ") for: [" + MemberId + "]");
+                            Logger.Info("Service Cntrlr -> SynapseV3AddNode - No MFA - SUCCESSFUL, Now saving all banks found in Bank Array (n = " +
+                                        allNodesParsedResult.nodes.Length + ") for: [" + MemberId + "]");
 
                             #region Save Each Bank In Nodes Array From Synapse
 
@@ -4030,7 +4043,7 @@ namespace Nooch.API.Controllers
                     else
                     {
                         // Synapse response for 'success' was not true
-                        Logger.Error("Service Controller -> SynapseV3AddNode ERROR - Synapse response for 'success' was not true - [MemberID: " + MemberId + "]");
+                        Logger.Error("Service Cntrlr -> SynapseV3AddNode ERROR - Synapse response for 'success' was not true - [MemberID: " + MemberId + "]");
                         res.errorMsg = "Synapse response for success was not true";
                     }
                 }
@@ -4040,38 +4053,33 @@ namespace Nooch.API.Controllers
 
                     var errorCode = ((HttpWebResponse)we.Response).StatusCode;
 
-                    Logger.Info("MDA -> SynapseV3 ADD NODE FAILED. WebException was: [" + we.ToString() + "], and errorCode: [" + errorCode.ToString() + "]");
+                    Logger.Info("Service Cntrlr -> SynapseV3AddNode FAILED - HTTP ErrorCode: [" + errorCode.ToString() + "], WebException was: [" + we.ToString() + "]");
 
                     res.Is_success = false;
                     res.Is_MFA = false;
 
-                    if (errorCode != null) //.ToString().ToLower() == "badrequest" || errorCode.ToString().ToLower() == "unauthorized")
+                    var resp = new StreamReader(we.Response.GetResponseStream()).ReadToEnd();
+                    JObject jsonFromSynapse = JObject.Parse(resp);
+                    Logger.Info(jsonFromSynapse.ToString());
+
+                    var error_code = jsonFromSynapse["error_code"].ToString();
+                    res.errorMsg = jsonFromSynapse["error"]["en"].ToString();
+
+                    if (!String.IsNullOrEmpty(error_code))
                     {
-                        var resp = new StreamReader(we.Response.GetResponseStream()).ReadToEnd();
-                        JObject jsonFromSynapse = JObject.Parse(resp);
-
-                        JToken reason = jsonFromSynapse["reason"];
-
-                        if (reason != null)
-                        {
-                            Logger.Info("MDA -> SynapseBankLoginRequest FAILED. Synapse REASON was: [" + reason + "]");
-                            // CLIFF: This was jsonfromsynapse["message"] but I changed to "reason" based on Synapse docs... is that right?
-                            // Malkit: No, when I debugged I found response was "message" instead of "reason" I think they are sending 2 different things so instead of modifying this I am adding another case below
-                            res.errorMsg = jsonFromSynapse["reason"].ToString();
-                        }
-
-                        JToken message = jsonFromSynapse["message"];
-
-                        if (message != null)
-                        {
-                            Logger.Info("MDA -> SynapseBankLoginRequest FAILED. Synapse MESSAGE was: [" + message + "]");
-                            res.errorMsg = jsonFromSynapse["message"].ToString();
-                        }
+                        // Synapse Error could be:
+                        // "Fingerprint not registered to the user." ** NOT SURE HOW TO HANDLE **
+                        // "The username provided was not correct."
+                        Logger.Error("Service Cntrlr -> SynapseBankLoginRequest FAILED - [Synapse Error Code: " + error_code +
+                                     "], [Error Msg: " + res.errorMsg + "]");
+                    }
+                    if (!String.IsNullOrEmpty(res.errorMsg))
+                    {
+                        Logger.Info("Service Cntrlr -> SynapseBankLoginRequest FAILED. Synapse error msg was: [" + res.errorMsg + "]");
                     }
                     else
                     {
-                        Logger.Info("MDA -> SynapseBankLoginRequest FAILED. Synapse response did not include a 'reason' or 'message'.");
-                        res.errorMsg = "Error #6553 - Sorry this is not more helpful :-(";
+                        res.errorMsg = "Error in Synapse response - #4051";
                     }
 
                     return res;
@@ -4080,11 +4088,10 @@ namespace Nooch.API.Controllers
                 }
 
                 #endregion Call SynapseV3 Add Node API
-
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Controller -> SynapseV3AddNode FAILED - OUTER EXCEPTION - [MemberID: " + MemberId + "], [Exception: " + ex + "]");
+                Logger.Error("Service Cntrlr -> SynapseV3AddNode FAILED - OUTER EXCEPTION - [MemberID: " + MemberId + "], [Exception: " + ex + "]");
                 res.errorMsg = "Service Controller Outer Exception";
             }
 

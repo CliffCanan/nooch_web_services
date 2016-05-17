@@ -1878,12 +1878,11 @@ namespace Nooch.DataAccess
 
             Guid guid = Utility.ConvertToGuid(memberId);
 
-            // Get the member details
-
             var noochMember = CommonHelper.GetMemberDetails(memberId);
 
             if (noochMember != null)
             {
+                #region Initial Checks
                 // Checks on user account: Is user status 'Active'?
 
                 if (noochMember.Status != "Active" &&
@@ -1930,7 +1929,9 @@ namespace Nooch.DataAccess
                     return res;
                 }
 
-                /******  SYNAPSE V3  ******/
+                #endregion Initial Checks
+
+
                 #region Call Synapse V3 API: /v3/user/create
 
                 synapseCreateUserInput_int payload = new synapseCreateUserInput_int();
@@ -1981,12 +1982,11 @@ namespace Nooch.DataAccess
                     {
                         noochMember.UDID1 = randomTxt;
                         _dbContext.SaveChanges();
-
                     }
                     catch (Exception ex)
                     {
                         Logger.Error("MDA -> RegisterUserWithSynapseV3 - Had to create a Fingerprint, but failed on saving new value in DB - Continuing on - [MemberID: "
-                                               + memberId + "], [Exception: " + ex + "]");
+                                     + memberId + "], [Exception: " + ex + "]");
                     }
                 }
                 payload.fingerprints = new createUser_fingerprints[1];
@@ -2000,9 +2000,8 @@ namespace Nooch.DataAccess
                 extra.is_business = false; // CLIFF (10/10/12): For Landlords, this could potentially be true... but we'll figure that out later
 
                 payload.extra = extra;
-                var baseAddress = "";
-                baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/create" : "https://synapsepay.com/api/v3/user/create";
 
+                var baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/create" : "https://synapsepay.com/api/v3/user/create";
 
                 try
                 {
@@ -2046,7 +2045,7 @@ namespace Nooch.DataAccess
                     if (!String.IsNullOrEmpty(res.error_code))
                     {
                         Logger.Error("MDA -> RegisterUserWithSynapseV3 FAILED - [Synapse Error Code: " + res.error_code +
-                                               "], [Error Msg: " + res.errorMsg + "], [MemberID: " + memberId + "]");
+                                     "], [Error Msg: " + res.errorMsg + "], [MemberID: " + memberId + "]");
 
                         #region Email Already Registered
 
@@ -2056,17 +2055,15 @@ namespace Nooch.DataAccess
                             // case when synapse returned email already registered...chances are we have user id in SynapseCreateUserResults table
                             // checking Nooch DB
 
-                            var synapseRes =
-                                _dbContext.SynapseCreateUserResults.FirstOrDefault(
-                                    m => m.MemberId == guid && m.IsDeleted == false);
+                            var synapseRes = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == guid && m.IsDeleted == false);
 
                             if (synapseRes != null)
                             {
                                 res.success = true;
                                 res.errorMsg = "Account already in Nooch DB for that email";
                                 res.user_id = synapseRes.user_id.ToString();
-                                res.oauth_consumer_key = CommonHelper.GetDecryptedData(synapseRes.access_token);
-
+                                //res.oauth_consumer_key = CommonHelper.GetDecryptedData(synapseRes.access_token);
+                                res.oauth.oauth_key = CommonHelper.GetDecryptedData(synapseRes.access_token);
                                 return res;
                             }
                             else
@@ -2159,7 +2156,7 @@ namespace Nooch.DataAccess
                         newSynapseUser.expires_in = res.oauth.expires_at;
                         newSynapseUser.refresh_token = CommonHelper.GetEncryptedData(res.oauth.refresh_token);
                         newSynapseUser.username = CommonHelper.GetEncryptedData(res.user.logins[0].email);
-                        newSynapseUser.user_id = res.user._id.id; // this is no more int... this will be string from now onwards
+                        newSynapseUser.user_id = res.user._id.id;
 
                         // LETS USE THE EXISTING V2 DB TABLE FOR V3: 'SynapseCreateUserResults'... all the same, PLUS a few additional parameters (none are that important, but we should store them):
 
@@ -2196,6 +2193,7 @@ namespace Nooch.DataAccess
                         }
                         else if (res.user.permission == "SEND-AND-RECEIVE") // Probobly wouldn't ever be this b/c I don't think Synapse ever returns this for brand new users
                         {
+                            #region User Not Previously Verified But Got Send-Receive Permissions This Time
                             try
                             {
                                 Logger.Info("MDA -> RegisterUserWithSynapseV3 - ** ID Already Verified (Case 2) ** - [MemberID: " + memberId + "]");
@@ -2208,8 +2206,9 @@ namespace Nooch.DataAccess
                             catch (Exception ex)
                             {
                                 Logger.Error("MDA -> RegisterUserWithSynapseV3 - IsVerifiedWithSynapse is false, but Synapse returned Permission of \"SEND-AND-RECEIVE\" - " +
-                                                       "[Exception: " + ex + "]");
+                                             "[Exception: " + ex + "]");
                             }
+                            #endregion User Not Previously Verified But Got Send-Receive Permissions This Time
                         }
                         else
                         {
@@ -2220,8 +2219,10 @@ namespace Nooch.DataAccess
                                 // Now: SEND USER'S SSN INFO TO SYNAPSE
                                 submitIdVerificationInt submitSsn = CommonHelper.sendUserSsnInfoToSynapseV3(memberId);
                                 res.ssn_verify_status = submitSsn.message;
+                                res.errorMsg = submitSsn.message;
 
-                                // Next if/else are all just for logging
+                                #region Logging
+
                                 if (submitSsn.success == true)
                                 {
                                     if (!String.IsNullOrEmpty(submitSsn.message) &&
@@ -2238,6 +2239,8 @@ namespace Nooch.DataAccess
                                 {
                                     Logger.Info("MDA -> RegisterUserWithSynapseV3 - SSN Info Verified FAILED :-(  [Email: " + logins.email + "], [submitSsn.message: " + submitSsn.message + "]");
                                 }
+
+                                #endregion Logging
                             }
                             catch (Exception ex)
                             {
@@ -2248,6 +2251,8 @@ namespace Nooch.DataAccess
                     else
                     {
                         // FAILED TO ADD SYNAPSE RECORD TO DB
+                        Logger.Error("MDA -> RegisterUserWithSynapseV3 FAILED - Unable to save record in SynapseCreateUserResult Table - [MemberID: " + memberId + "]");
+                        res.errorMsg = "Unable to save record in SynapseCreateUserResult Table";
                     }
 
                     return res;
@@ -2272,7 +2277,7 @@ namespace Nooch.DataAccess
                         res.success = true;
                         res.errorMsg = "Account already in nooch db.";
                         res.user_id = synapseRes.user_id;
-                        res.oauth_consumer_key = CommonHelper.GetDecryptedData(synapseRes.access_token);
+                        res.oauth.oauth_key = CommonHelper.GetDecryptedData(synapseRes.access_token);
                         res.oauth.refresh_token = CommonHelper.GetDecryptedData(synapseRes.refresh_token);
 
                         return res;
@@ -2301,7 +2306,7 @@ namespace Nooch.DataAccess
             }
             else // Nooch member was not found in Members.dbo
             {
-                Logger.Info("MDA -> RegisterUserWithSynapseV3 FAILED: for [" + memberId + "]. Error #10455.");
+                Logger.Info("MDA -> RegisterUserWithSynapseV3 FAILED: for [" + memberId + "]. Error #2307.");
 
                 res.success = false;
                 res.errorMsg = "Given Member ID not found or Member is deleted.";
@@ -2684,7 +2689,7 @@ namespace Nooch.DataAccess
                             !String.IsNullOrEmpty(createSynapseUserResult.oauth.oauth_key))
                         {
                             Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 - Synapse User created SUCCESSFULLY (LN: 6796) - " +
-                                                   "[oauth_consumer_key: " + createSynapseUserResult.oauth_consumer_key + "]. Now attempting to save in Nooch DB.");
+                                        "[oauth_consumer_key: " + createSynapseUserResult.oauth.oauth_key + "]. Now attempting to save in Nooch DB.");
 
                             //   Entry in SynapseCreateUser Has been already done from RegisterUserWithSynapseV3 method  //
 
@@ -3261,7 +3266,7 @@ namespace Nooch.DataAccess
                             !String.IsNullOrEmpty(createSynapseUserResult.oauth.oauth_key))
                         {
                             Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - Synapse User created SUCCESSFULLY (LN: 6009) - " +
-                                                   "[oauth_consumer_key: " + createSynapseUserResult.oauth_consumer_key + "]. Now attempting to save in Nooch DB.");
+                                        "[oauth_consumer_key: " + createSynapseUserResult.oauth.oauth_key + "]. Now attempting to save in Nooch DB.");
                             // Synapse User created successfully
                             // Now make entry in [SynapseCreateUserResults] table
                             //   Entry in SynapseCreateUser Has been already done from RegisterUserWithSynapseV3 method  //
