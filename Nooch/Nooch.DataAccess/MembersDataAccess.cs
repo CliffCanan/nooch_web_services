@@ -1889,6 +1889,17 @@ namespace Nooch.DataAccess
                 var synapseCreateUserObjIfExists = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == guid && m.IsDeleted == false);
                 if (synapseCreateUserObjIfExists != null)
                 {
+                    try
+                    {
+
+                        CommonHelper.refreshSynapseV3OautKey((synapseCreateUserObjIfExists.access_token));
+                        synapseCreateUserObjIfExists = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == guid && m.IsDeleted == false);
+                    }
+                    catch (Exception exc)
+                    {
+                        Logger.Error("MDA -> RegisterUserWithSynapseV3 - Error in Refresh access");
+                    }
+
                     res.success = true;
 
                     res.oauth = new createUserV3Result_oauth()
