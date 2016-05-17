@@ -6064,7 +6064,7 @@ namespace Nooch.DataAccess
                         senderUserName, receiverUserName, iPForTransaction, senderLastName, recipientLastName);
 
                     short shouldSendFailureNotifications = 0;
-                    int saveToSynapseCreateOrderTable = 0;
+                   
                     int saveToTransTable = 0;
 
                     if (transactionResultFromSynapseAPI.success == true)
@@ -6167,8 +6167,7 @@ namespace Nooch.DataAccess
 
                         #region Transaction Updated in DB Successfully
 
-                        if (saveToTransTable > 0 &&
-                            saveToSynapseCreateOrderTable > 0)
+                        if (saveToTransTable > 0 )
                         {
                             Logger.Info("TDA -> TransferMoneyUsingSynapse CHECKPOINT #6 - ALL DB OPERATIONS SAVED SUCCESSFULLY");
 
