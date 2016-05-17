@@ -149,7 +149,12 @@ $(document).ready(function () {
 
                     $("#frame").attr("src",$('#addBank_Url').val()+  "?memberid=" + MemID_EXISTING +
                                           "&redUrl=" + redUrlForAddBank);
+
                     $('#AddBankDiv').removeClass('hidden').addClass('bounceIn');
+
+					setTimeout(function() {
+						scrollToAddBank();
+					}, 1000);
                 });
             }
 
@@ -226,7 +231,7 @@ function getParameterByName(name) {
 }
 
 
-function runIdWizard() {idVer
+function runIdWizard() {
     $('#idVer').modal({
         backdrop: 'static',
         keyboard: false
@@ -833,8 +838,13 @@ function idVerifiedSuccess() {
                                           "&redUrl=" + redUrlForAddBank);
 
             $('#AddBankDiv').removeClass('hidden').addClass('bounceIn');
+
+            setTimeout(function ()
+            {
+                scrollToAddBank();
+            }, 1000);
         });
-    }, 500);
+    }, 400);
 }
 
 
@@ -1249,6 +1259,18 @@ function rejectBtnClicked() {
     }
 }
 
+
+// -----------------------------
+//	Scroll To Section
+// -----------------------------
+function scrollToAddBank()
+{
+    var scroll_to = $('#frame').offset().top;
+
+    if ($(window).scrollTop() != scroll_to) {
+        $('html, body').stop().animate({ scrollTop: scroll_to }, 1000, null);
+    }
+}
 // -----------------
 // UNUSED FUNCTIONS
 // -----------------

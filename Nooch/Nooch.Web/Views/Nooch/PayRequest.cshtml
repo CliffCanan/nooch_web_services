@@ -15,15 +15,14 @@
 
     <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,400italic,500,500italic,700,900" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.4/themes/cupertino/jquery-ui.css" />
-    <link href="@Url.Content("~/Assets/Css/sweetalert-override.min.css")" rel="stylesheet" />
-
     <link rel="stylesheet" href="https://cdn.materialdesignicons.com/1.2.65/css/materialdesignicons.min.css" />
-    <link href="@Url.Content("~/Assets/Css/bootstrap-select.min.css")" rel="stylesheet" />
-    <link href="@Url.Content("~/Assets/Css/chosen.min.css")" rel="stylesheet" />
-    <link href="@Url.Content("~/Assets/Css/bootstrap-datetimepicker.min.css")" rel="stylesheet" />
-    <link href="@Url.Content("~/Assets/Css/jquery.steps.css")" rel="stylesheet" />
-    <link href="@Url.Content("~/Assets/Css/tweaks.css")" rel="stylesheet" />
-    <link href="@Url.Content("~/Assets/favicon.ico")" rel="stylesheet" />
+    <link rel="stylesheet" href="@Url.Content("~/Assets/Css/sweetalert-override.min.css")" />
+    <link rel="stylesheet" href="@Url.Content("~/Assets/Css/bootstrap-select.min.css")" />
+    <link rel="stylesheet" href="@Url.Content("~/Assets/Css/chosen.min.css")" />
+    <link rel="stylesheet" href="@Url.Content("~/Assets/Css/bootstrap-datetimepicker.min.css")" />
+    <link rel="stylesheet" href="@Url.Content("~/Assets/Css/jquery.steps.css")" />
+    <link rel="stylesheet" href="@Url.Content("~/Assets/Css/tweaks.css")" />
+    <link rel="icon" href="@Url.Content("~/Assets/favicon.ico")" />
 </head>
 
 <body id="body-depositNew" class="no-border pay-request-pg" style="background-color: rgba(230, 231, 232, 0.8);">
@@ -75,9 +74,10 @@
 
             <div id="memo_shell">
                 <div>
-                    @if (rpr.transMemo != null) {
+                    @if (rpr.transMemo != null)
+                    {
                         <label id="transMemo" text="">@rpr.transMemo</label>
-                }
+                    }
                 </div>
             </div>
 
@@ -85,7 +85,8 @@
                 <button type="button" class="btn btn-lg btn-default"><i class="mdi mdi-checkbox-marked-outline m-r-15"></i>Complete This Payment</button>
             </div>
 
-            @if (rpr.nonRegUsrContainer == true) {
+            @if (rpr.nonRegUsrContainer == true)
+            {
                 <div id="nonRegUsrContainer" class="clearfix">
 
                     <p class="depositInstructions animated fadeIn" style="margin: 12px auto 25px;"></p>
@@ -96,14 +97,15 @@
                     </div>
 
                 </div>
-        }
+            }
 
         </div>
     }
     <div class="errorMessage hidden"></div>
 
     <br />
-    @if (!rpr.PayorInitialInfo) {
+    @if (!rpr.PayorInitialInfo)
+    {
         <div id="PayorInitialInfo" class="animated bounceInUp hidden">
 
             <div class="row">
