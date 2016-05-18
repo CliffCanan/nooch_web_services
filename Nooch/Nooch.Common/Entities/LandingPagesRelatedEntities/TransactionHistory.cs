@@ -11,6 +11,8 @@ namespace Nooch.Common.Entities.LandingPagesRelatedEntities
         public List<TransactionClass> allTransactionsData { get; set; }
         public bool isSuccess { get; set; }
         public string msg { get; set; }
+        public string usersName { get; set; }
+        public string usersEmail { get; set; }
     }
 
     public class TransactionClass

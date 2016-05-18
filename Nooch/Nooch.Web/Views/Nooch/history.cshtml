@@ -43,116 +43,119 @@
 
     <div class="wrapper wrapper-content animated fadeInRight">
 
-		<div class="container">
-        <div class="row">
+        <div class="container">
+            <div class="row">
 
-            <div class="col-lg-12" id="memListAllTableDiv">
-                <div class="ibox float-e-margins">
-                    <div class="ibox-title">
+                <div class="col-lg-12" id="memListAllTableDiv">
+                    <div class="ibox float-e-margins">
+                        <div class="ibox-title">
 
-                        <h3>
-							Payment History
-							<span class="usersName">Realty Mark</span>
-						</h5>
+                            <h3>
+                                Payment History:&nbsp;
+                                <span class="usersName">@pData.usersName</span>
+                                <small class="usersEmail">@pData.usersEmail</small>
+                            </h3>
 
-                        <div class="ibox-tools">
+                            <div class="ibox-tools">
+                            </div>
+
                         </div>
 
-                    </div>
+                        <div class="ibox-content">
 
-                    <div class="ibox-content">
-
-                        <div class="row">
-                        </div>
-                        <table class="table table-striped table-bordered table-hover" id="AllMembers">
-                            <thead>
-                                <tr>
-                                    <th>Trans ID</th>
-                                    <th>Type</th>
-                                    <th>Status</th>
-                                    <th>Date</th>
-                                    <th>Sender</th>
-                                    <th>Recipient</th>
-                                    <th>Amount</th>
-                                    <th>Memo</th>
-                                    <th>Location</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-
-                            <tbody id="TBOdy">
-
-                                @foreach (TransactionClass ad in allTransactions)
-                                {
-                                    <tr class="gradeX">
-
-                                        <td><small>@ad.TransactionId</small></td>
-
-                                        <td>@ad.TransactionType</td>
-
-                                        <td id="@ad.TransactionId">
-                                            @if (ad.TransactionStatus == "Pending")
-                                            {
-                                                <span class="text-primary">Pending</span>
-                                            }
-                                            else if (ad.TransactionStatus == "Cancelled" || ad.TransactionStatus == "Rejected")
-                                            {
-                                                <span class="text-danger"><strong>@ad.TransactionStatus</strong></span>
-                                            }
-                                            else if (ad.TransactionStatus == "Success")
-                                            {
-                                                <span class="text-success"><strong>@ad.TransactionStatus</strong></span>
-                                            }
-                                        </td>
-
-                                        <td>@ad.TransactionDate1</td>
-
-                                        @*<td><a href='@Url.Action("Detail", "Member", new { NoochId=@ad.SenderNoochId} )'>@ad.SenderName</a></td>*@
-                                        <td><a href='#'>
-                                            @ad.SenderName
-                                        </a></td>
-
-                                        @*<td><a href='@Url.Action("Detail", "Member", new { NoochId=@ad.RecepientNoochId} )'>@ad.RecipienName</a></td>*@
-                                        <td><a href='#'>@ad.RecipienName</a></td>
-
-                                        <td><b>$@ad.Amount</b></td>
-
-                                        <td><em style="font-weight:normal">"@ad.Memo"</em></td>
-
-                                        <td>
-                                            <button type="button" id="btnLocation" class="btn btn-link btn-xs " onclick="showLocationModal('@ad.TransLati','@ad.TransLongi','@ad.state')">@ad.city @ad.state</button>
-                                        </td>
-
-                                        <td>
-                                            @if (ad.TransactionStatus == "Pending")
-                                            {
-                                                <button type="button" data-val="@ad.TransactionId" class="btn btn-icon btn-xs btnCancel" onclick="statusCancel(@ad.TransactionId)" data-toggle="tooltip" data-placement="auto" title="Cancel this transaction">
-                                                    <span class="fa-stack fa-lg">
-                                                        <i class="fa fa-circle fa-stack-2x text-danger"></i>
-                                                        <i class="fa fa-ban fa-stack-1x fa-inverse"></i>
-                                                    </span>
-                                                </button>
-
-                                                <button type="button" data-val="@ad.TransactionId" class="btn btn-icon btn-xs btnRemind" data-toggle="tooltip" data-placement="auto" title="Send a reminder">
-                                                    <span class="fa-stack fa-lg">
-                                                        <i class="fa fa-circle fa-stack-2x text-primary"></i>
-                                                        <i class="fa fa-bell fa-stack-1x fa-inverse"></i>
-                                                    </span>
-                                                </button>
-                                            }
-                                        </td>
+                            <div class="row">
+                            </div>
+                            <table class="table table-striped table-bordered table-hover" id="AllMembers">
+                                <thead>
+                                    <tr>
+                                        <th>Trans ID</th>
+                                        <th>Type</th>
+                                        <th>Status</th>
+                                        <th>Date</th>
+                                        <th>Sender</th>
+                                        <th>Recipient</th>
+                                        <th>Amount</th>
+                                        <th>Memo</th>
+                                        <th>Location</th>
+                                        <th>Actions</th>
                                     </tr>
-                                }
-                            </tbody>
-                            <tfoot>
-                            </tfoot>
-                        </table>
+                                </thead>
+
+                                <tbody id="TBOdy">
+
+                                    @foreach (TransactionClass ad in allTransactions)
+                                    {
+                                        <tr class="gradeX">
+
+                                            <td><small>@ad.TransactionId</small></td>
+
+                                            <td>@ad.TransactionType</td>
+
+                                            <td id="@ad.TransactionId">
+                                                @if (ad.TransactionStatus == "Pending")
+                                                {
+                                                    <span class="text-primary">Pending</span>
+                                                }
+                                                else if (ad.TransactionStatus == "Cancelled" || ad.TransactionStatus == "Rejected")
+                                                {
+                                                    <span class="text-danger"><strong>@ad.TransactionStatus</strong></span>
+                                                }
+                                                else if (ad.TransactionStatus == "Success")
+                                                {
+                                                    <span class="text-success"><strong>@ad.TransactionStatus</strong></span>
+                                                }
+                                            </td>
+
+                                            <td>@ad.TransactionDate1</td>
+
+                                            @*<td><a href='@Url.Action("Detail", "Member", new { NoochId=@ad.SenderNoochId} )'>@ad.SenderName</a></td>*@
+                                            <td>
+                                                <a href='#'>
+                                                    @ad.SenderName
+                                                </a>
+                                            </td>
+
+                                            @*<td><a href='@Url.Action("Detail", "Member", new { NoochId=@ad.RecepientNoochId} )'>@ad.RecipienName</a></td>*@
+                                            <td><a href='#'>@ad.RecipienName</a></td>
+
+                                            <td><b>$@ad.Amount</b></td>
+
+                                            <td><em style="font-weight:normal">"@ad.Memo"</em></td>
+
+                                            <td>
+                                                <button type="button" id="btnLocation" class="btn btn-link btn-xs " onclick="showLocationModal('@ad.TransLati','@ad.TransLongi','@ad.state')">@ad.city @ad.state</button>
+                                            </td>
+
+                                            <td>
+                                                @if (ad.TransactionStatus == "Pending")
+                                                {
+                                                    <button type="button" data-val="@ad.TransactionId" class="btn btn-icon btn-xs btnCancel" onclick="statusCancel(@ad.TransactionId)" data-toggle="tooltip" data-placement="auto" title="Cancel this transaction">
+                                                        <span class="fa-stack fa-lg">
+                                                            <i class="fa fa-circle fa-stack-2x text-danger"></i>
+                                                            <i class="fa fa-ban fa-stack-1x fa-inverse"></i>
+                                                        </span>
+                                                    </button>
+
+                                                    <button type="button" data-val="@ad.TransactionId" class="btn btn-icon btn-xs btnRemind" data-toggle="tooltip" data-placement="auto" title="Send a reminder">
+                                                        <span class="fa-stack fa-lg">
+                                                            <i class="fa fa-circle fa-stack-2x text-primary"></i>
+                                                            <i class="fa fa-bell fa-stack-1x fa-inverse"></i>
+                                                        </span>
+                                                    </button>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot>
+                                </tfoot>
+                            </table>
+                        </div>
                     </div>
                 </div>
-            </div>
 
+            </div>
         </div>
-		</div>
 
     </div>
 
@@ -194,53 +197,51 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
 
     <script src='@Url.Content("~/js/sweetalert.min.js")'></script>
-    <script src='@Url.Content("~/js/sweetalert.min.js")'></script>
-    <script src='@Url.Content("~/js/sweetalert.min.js")'></script>
     <script src="../js/jquery.blockUI.min.js"></script>
 
-	<script src="~/js/dataTables/jquery.dataTables.js"></script>
-	<script src="~/js/dataTables/dataTables.bootstrap.js"></script>
-	<script src="~/js/dataTables/dataTables.responsive.js"></script>
-	<script src="~/js/dataTables/dataTables.tableTools.min.js"></script>
+    <script src="~/js/dataTables/jquery.dataTables.js"></script>
+    <script src="~/js/dataTables/dataTables.bootstrap.js"></script>
+    <script src="~/js/dataTables/dataTables.responsive.js"></script>
+    <script src="~/js/dataTables/dataTables.tableTools.min.js"></script>
 
     <script type="text/javascript">
-    $(document).ready(function (e)
-    {
-        $(".btnCancel").click(function (e)
+        $(document).ready(function (e)
         {
-            var data_val = $(this).attr('data-val');
-
-            swal({
-                title: "Are you sure?",
-                text: "Do you want to cancel this transaction?",
-                type: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#DD6B55",
-                confirmButtonText: "Yes - Cancel",
-                closeOnConfirm: false
-            }, function (isConfirm)
+            $(".btnCancel").click(function (e)
             {
-                if (isConfirm) {
-                    var url = "../Admin/CancelTransaction";
-                    var data = {};
-                    data.transactionId = data_val;
+                var data_val = $(this).attr('data-val');
 
-                    $.post(url, data, function (result)
-                    {
-                        if (result.IsSuccess == true) {
-                            toastr.success(result.Message, 'Transaction cancelled successfully ')
-                            swal("Done!", "Transaction cancelled successfully ", "success");
+                swal({
+                    title: "Are you sure?",
+                    text: "Do you want to cancel this transaction?",
+                    type: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#DD6B55",
+                    confirmButtonText: "Yes - Cancel",
+                    closeOnConfirm: false
+                }, function (isConfirm)
+                {
+                    if (isConfirm) {
+                        var url = "../Admin/CancelTransaction";
+                        var data = {};
+                        data.transactionId = data_val;
 
-                            $("#" + data_val).html("<span class='text-danger'><strong>Cancelled</strong></span>");
-                        }
-                        else {
-                            tostr.error(result.Message, 'Error');
-                        }
-                    });
-                }
+                        $.post(url, data, function (result)
+                        {
+                            if (result.IsSuccess == true) {
+                                toastr.success(result.Message, 'Transaction cancelled successfully ')
+                                swal("Done!", "Transaction cancelled successfully ", "success");
+
+                                $("#" + data_val).html("<span class='text-danger'><strong>Cancelled</strong></span>");
+                            }
+                            else {
+                                tostr.error(result.Message, 'Error');
+                            }
+                        });
+                    }
+                });
             });
         });
-    });
     </script>
 
     <script type="text/javascript">

@@ -2797,6 +2797,7 @@ namespace Nooch.Web.Controllers
                                 obj.TransLongi = (trans.GeoLocation != null && trans.GeoLocation.Longitude != null) ? (float)trans.GeoLocation.Longitude : default(float);
 
                                 #region Transaction Type Transfer
+
                                 if (obj.TransactionType == "Transfer" || obj.TransactionType == "Disputed" || obj.TransactionType == "Reward" || obj.TransactionType == "Invite" || obj.TransactionType == "Rent" || obj.TransactionType == "Request")
                                 {
                                     if (String.IsNullOrEmpty(trans.InvitationSentTo) &&
@@ -2811,7 +2812,6 @@ namespace Nooch.Web.Controllers
                                         obj.RecipienName = CommonHelper.GetDecryptedData(trans.Member1.FirstName) + " " + CommonHelper.GetDecryptedData(trans.Member1.LastName);
                                         obj.RecepientNoochId = trans.Member1.Nooch_ID;
                                         obj.IsInvitation = false;
-
                                     }
                                     else
                                     {
@@ -2820,14 +2820,11 @@ namespace Nooch.Web.Controllers
                                         obj.SenderName = CommonHelper.GetDecryptedData(trans.Member.FirstName) + " " + CommonHelper.GetDecryptedData(trans.Member.LastName);
                                         obj.SenderNoochId = trans.Member.Nooch_ID;
 
-
                                         if (!String.IsNullOrEmpty(trans.InvitationSentTo))
                                         {
                                             // invite through email case
 
                                             obj.RecipienName = CommonHelper.GetDecryptedData(trans.InvitationSentTo);
-
-
                                         }
                                         if (trans.IsPhoneInvitation == true &&
                                             !String.IsNullOrEmpty(trans.PhoneNumberInvited))
@@ -2835,7 +2832,6 @@ namespace Nooch.Web.Controllers
                                             // invite through sms case
                                             obj.RecipienName = CommonHelper.FormatPhoneNumber(CommonHelper.GetDecryptedData(trans.PhoneNumberInvited));
                                         }
-
                                     }
                                 }
 
@@ -2849,7 +2845,7 @@ namespace Nooch.Web.Controllers
                             {
                                 Logger.Error("History CodeBehind - ERROR - Inner Exception during loop through all transactions - " +
                                              "MemberID: [" + memberId + "], TransID: [" + trans.TransactionId +
-                                             "], Amount: [" + trans.Amount.ToString("n2") + "], Exception: [" + ex + "]");
+                                             "], Amount: [" + trans.Amount.ToString("n2") + "], Exception: [" + ex.Message + "]");
                                 continue;
                             }
                         }
@@ -2859,16 +2855,27 @@ namespace Nooch.Web.Controllers
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("History CodeBehind -> OUTER EXCEPTION - [TransactionId Parameter: " +
-                                 Request.QueryString["TransactionId"] +
-                                 "], [Exception: " + ex.Message + "]");
+                    Logger.Error("History CodeBehind -> OUTER EXCEPTION - [MemberID Parameter: " + memId + "], [Exception: " + ex.Message + "]");
                     res.msg = "Server Error.";
+                }
+
+                // Now get the user's Name
+                var memberObj = CommonHelper.GetMemberDetails(memId);
+                if (memberObj != null && !String.IsNullOrEmpty(memberObj.FirstName))
+                {
+                    res.usersName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName));
+
+                    if (!String.IsNullOrEmpty(memberObj.LastName))
+                    {
+                        res.usersName += " " + CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.LastName));
+                    }
+
+                    res.usersEmail = CommonHelper.GetDecryptedData(memberObj.UserName);
                 }
             }
 
             return View(res);
         }
-
     }
 
 

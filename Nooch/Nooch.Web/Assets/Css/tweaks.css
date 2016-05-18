@@ -2664,10 +2664,29 @@ form .table-header {
     }
 }
 
+table.dataTable {background:#fff;}
+#history .form-control {
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 14px;
+  height: 36px;
+  padding: 6px 14px;
+  margin-left: 10px;
+}
+#history .form-control:focus {
+  border-color: #66afe9;
+  outline: 0;
+  -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075),0 0 8px rgba(102,175,233,.6) !important;
+  box-shadow: inset 0 1px 1px rgba(0,0,0,.075),0 0 8px rgba(102,175,233,.6) !important;
+}
 
-body#history #memListAllTableDiv {margin-top: 80px;}
-
-body#history h3 {margin: 5px 0 20px; font-weight:bold;}
+body#history #memListAllTableDiv {margin-top: 84px;}
+body#history h3 {
+  margin: 5px 0 20px;
+  font-family: 'Helvetica Neue',Helvetica,'Open Sans',Arial,sans-serif;
+  font-size:22px;
+  font-weight:bold;
+}
 body#history table tr > td:first-child {
 	font-size: 80%;
 	max-width: 110px;
@@ -2677,6 +2696,13 @@ body#history table tr > td {
 }
 body#history .footer {background-color: transparent;}
 body#history .footer li a {color: #3fabe1;}
+
+.ibox-title h3 small {
+  border-left: 1px solid #aaa;
+  font-size: 85%;
+  margin-left: 10px;
+  padding-left: 12px;
+}
 
 /*==============================================
                 ANIMATIONS
