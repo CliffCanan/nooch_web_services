@@ -648,7 +648,7 @@ html.landlord #popularBanks .popBank-label { font-size: 13px; }
 .blockUI .loadingMsg {
   display:block;
   font-size:16px;
-  margin: 7px auto 0;
+  margin: 12px auto 0;
 }
 element.style {
   font-size: 20px;

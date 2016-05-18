@@ -36,15 +36,15 @@ function bankHasBeenSelected(selectedBankName) {
 		message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Connecting...</span>', 
 		css: {
             border: 'none',
-            padding: '20px 8px 14px',
+            padding: '26px 8px 20px',
             backgroundColor: '#000',
-            '-webkit-border-radius': '12px',
-            '-moz-border-radius': '12px',
-            'border-radius': '12px',
-            opacity: '.75',
-			width: '66%',
-			left: '17%',
-			top: '30px',
+            '-webkit-border-radius': '15px',
+            '-moz-border-radius': '15px',
+            'border-radius': '15px',
+            opacity: '.8',
+			width: '70%',
+			left: '15%',
+			top: '35px',
             color: '#fff'
         }
 	});
@@ -94,9 +94,6 @@ $(".manualLogin").click(function () {
 	if ($(window).width() > 767)
 	{
 	    step2height_manual = '650px'
-	    //if ($(window).width() > 1000) {
-	    //    step2height_manual = '680px'
-	    //}
 	}
 	//console.log("step2height_manual: " + step2height_manual);
 	$('#addBankManual').removeClass("hide",function() {
@@ -392,15 +389,15 @@ $('#bankLogin').submit(function(e) {
 				    message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Attempting login...</span>',
 				    css: {
 				        border: 'none',
-				        padding: '20px 8px 14px',
+				        padding: '26px 8px 20px',
 				        backgroundColor: '#000',
-				        '-webkit-border-radius': '12px',
-				        '-moz-border-radius': '12px',
-						'border-radius': '12px',
-				        opacity: '.75',
-				        width: '80%',
-				        left: '10%',
-				        top: '25px',
+				        '-webkit-border-radius': '15px',
+				        '-moz-border-radius': '15px',
+						'border-radius': '15px',
+				        opacity: '.8',
+				        width: '70%',
+				        left: '15%',
+				        top: '35px',
 				        color: '#fff' 
 				    }
 				});
@@ -474,7 +471,7 @@ function submitBnkLgn() {
 					bnkLoginResult.ERROR_MSG.indexOf('Please Enter the Correct Username and Password') >= 0 ||
 					bnkLoginResult.ERROR_MSG.indexOf('username or password provided were not correct') >= 0)
 				{
-					$('#bankLogin_errorMsg').append("<div><p class='parsley-errors-list filled'>" + bnkLoginResult.ERROR_MSG + "</p></div>");
+					$('#bankLogin_errorMsg').append("<div><p class='parsley-errors-list filled'>Invalid Credentials: Incorrect username or password.</p></div>");
 					$('#bankUsername').focus();
 				}
 				else if (bnkLoginResult.ERROR_MSG.indexOf('password provided was not correct') >= 0)
@@ -503,6 +500,26 @@ function submitBnkLgn() {
 					$('#modal-OtherError #par2').html("After setting up your online banking, then try connecting it to Nooch again.  If you continue to see this error we'd appreciate hearing about it at <a href='mailto:support@nooch.com' style='font-weight: 500;'>support@nooch.com</a>.");
 					$('#modal-OtherError').modal({
 						backdrop:'static'
+					});
+				}
+				else if (bnkLoginResult.ERROR_MSG.indexOf('Missing ') >= -1)
+				{
+					$('#bankLogin_errorMsg').append("<div><p class='parsley-errors-list filled'>" + bnkLoginResult.ERROR_MSG + "</p></div>");
+
+					swal({
+						title: "Error #511: Incomplete Profile",
+						text: "Very sorry about this, but it looks like your account is missing some information needed to verify your ID.<span class='show' style='margin-top:14px'>This can happen for a variety of reasons - our #1 priority is keeping your money safe, so sometimes our system is overly conservative.<span class='show' style='margin-top:14px;'><a href='mailto:support@nooch.com' target='_blank'>Contact our support team</a> and we'll be glad to help. Please mention:<br/><strong>Error #511</strong></span>",
+						type: "error",
+						showCancelButton: true,
+						confirmButtonColor: "#3fabe1",
+						confirmButtonText: "Ok",
+						cancelButtonText: "Contact Support",
+						closeOnCancel: false,
+						html: true
+					}, function (isConfirm) {
+						if (!isConfirm) {
+							window.open("mailto:support@nooch.com");
+						}
 					});
 				}
 				else if (bnkLoginResult.ERROR_MSG.indexOf('error occured at server') >= 0)
@@ -821,28 +838,12 @@ function submitManualBank() {
 }
 
 
-// Submit the MFA Code form
-$('#addBank-code').submit(function(e) {
-	e.preventDefault();
-
-	if ($('#securityCodeInput').parsley().validate() === true)
-	{
-		MFALogin();
-	}
-	else 
-	{
-		$('#securityCodeInput').velocity("callout.shake");
-		$('#securityCodeInput').focus();
-	}
-});
-
-
 // Submit the MFA Question form
 $('#addBank-sec-question').submit(function(e) {
 	e.preventDefault();
 
-	//console.log("#addBank-sec-question -> Submit Fired.");
-    //console.log("SEC_QUES_NO value is: " + SEC_QUES_NO);
+	console.log("#addBank-sec-question -> Submit Fired.");
+    console.log("SEC_QUES_NO value is: " + SEC_QUES_NO);
 
     // Check the right input based on which # question is being answered
 	if (SEC_QUES_NO == 1)
@@ -881,7 +882,6 @@ $('#addBank-sec-question').submit(function(e) {
 			$('#securityQuest3').focus();
 		}
 	}
-
 });
 
 
@@ -889,7 +889,7 @@ function MFALogin() {
     var mfaResp = '';
     var accessCode = $('#bankAccessTokenForQuestion').val();;
 
-	//console.log("SEC_QUES_NO value is: " + SEC_QUES_NO);
+	console.log("SEC_QUES_NO value is: " + SEC_QUES_NO);
 
     // Check the right input based on which # question is being answered
 	if (SEC_QUES_NO == 1) {
@@ -907,10 +907,10 @@ function MFALogin() {
         message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Checking that response</span>',
 		css: { 
 			border: 'none', 
-			padding: '20px 8px 14px',
+			padding: '26px 8px 26px',
 			backgroundColor: '#000', 
-			'-webkit-border-radius': '12px',
-			'-moz-border-radius': '12px',
+			'-webkit-border-radius': '15px',
+			'-moz-border-radius': '15px',
 			opacity: '.8',
 			width: '70%',
 			left: '15%',
@@ -919,7 +919,7 @@ function MFALogin() {
 		}
 	});
 
-	//console.log("Submitting MFA response with data:  {bank: '" + BANK_NAME + "', memberid: '" + MEMBER_ID + "', bankname: '" + BANK_NAME + "', MFA: '" + mfaResp + "', ba: '" + accessCode + "'}");
+	console.log("Submitting MFA response with data:  {bank: '" + BANK_NAME + "', memberid: '" + MEMBER_ID + "', bankname: '" + BANK_NAME + "', MFA: '" + mfaResp + "', ba: '" + accessCode + "'}");
     $.ajax({
         type: "POST",
         url: $('#MFALoginUrl').val(),
@@ -930,7 +930,7 @@ function MFALogin() {
         cache: "false",
         success: function (msg) {
             var res = msg;
-            //console.log(res);
+            console.log(res);
 
             // Hide UIBlock (loading box))
             $('.addBankContainer-body').unblock();
@@ -1045,7 +1045,7 @@ function MFALogin() {
 			else
 			{
 				// ERROR CAME BACK FROM Synapse FOR MFA ATTEMPT
-				console.log("SUBMIT BANK LOGIN ERROR IS: " + res.ERROR_MSG);
+				console.log("SUBMIT BANK LOGIN ERROR IS: " + res.ERROR_MSG + "]");
 				$('#mfa_question_errorMsg').html("<div><p class='parsley-errors-list filled'>" + res.ERROR_MSG + "</p></div>");
 
 				return;
@@ -1291,11 +1291,11 @@ function sendToRedUrl() {
                         message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Finishing...</span>',
                         css: {
                             border: 'none',
-                            padding: '20px 8px 14px',
+                            padding: '26px 8px 20px',
                             backgroundColor: '#000',
-                            '-webkit-border-radius': '12px',
-                            '-moz-border-radius': '12px',
-                            'border-radius': '12px',
+                            '-webkit-border-radius': '15px',
+                            '-moz-border-radius': '15px',
+                            'border-radius': '15px',
                             opacity: '.8',
                             width: '70%',
                             left: '15%',
@@ -1529,7 +1529,6 @@ function lookupRoutingNum(rn)
 function onLookupSuccess(data)
 {
 	//console.log(data);
-	//console.log(data["name"]);
 
 	$("#result").empty();
 
