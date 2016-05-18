@@ -30,14 +30,14 @@
         </div>
     </nav>
 
-    <div id="payinfobar" class="depositComplete-TransDetails col-xs-12 col-sm-offset-4 col-sm-4" style="float: none;">
+    <div id="payinfobar" class="depositComplete-TransDetails">
         <div class="media">
             <div class="transDetails-userpic pull-left">
 
                 <img class="media-object" id="senderImage" src="@rpc.senderImage" alt="Other User" />
             </div>
             <div class="media-body">
-                <span class="intro-header label label-success">Request From</span>
+                <span class="intro-header label label-success">Payment To</span>
                 <div id="senderName">
                     <label id="senderName1">@rpc.senderName1</label>
                 </div>
@@ -74,7 +74,7 @@
         </div>
     }
 
-    <div class="footer">
+    <div class="footer" style="position:fixed; bottom:3%;">
         <div>
             <ul class="list-inline">
                 <li><a href="https://www.nooch.com/overview">About</a></li>

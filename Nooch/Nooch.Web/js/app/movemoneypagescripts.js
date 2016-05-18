@@ -52,6 +52,8 @@ $(document).ready(function () {
         $('.landingHeaderLogo img').attr('alt', 'Rent Scene Logo');
         if (isLrgScrn)
             $('.landingHeaderLogo img').css('width', '211px');
+		
+		changeFavicon('../Assets/favicon2.ico')
     }
 
 
@@ -1260,9 +1262,9 @@ function rejectBtnClicked() {
 }
 
 
-// -----------------------------
+// -------------------
 //	Scroll To Section
-// -----------------------------
+// -------------------
 function scrollToAddBank()
 {
     var scroll_to = $('#frame').offset().top;
@@ -1271,6 +1273,19 @@ function scrollToAddBank()
         $('html, body').stop().animate({ scrollTop: scroll_to }, 1000, null);
     }
 }
+
+function changeFavicon(src) {
+  var link = document.createElement('link'),
+   oldLink = document.getElementById('dynamic-favicon');
+  link.id = 'dynamic-favicon';
+  link.rel = 'shortcut icon';
+  link.href = src;
+  if (oldLink) {
+    document.head.removeChild(oldLink);
+  }
+  document.head.appendChild(link);
+}
+
 // -----------------
 // UNUSED FUNCTIONS
 // -----------------

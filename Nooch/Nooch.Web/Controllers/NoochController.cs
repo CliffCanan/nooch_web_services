@@ -1529,6 +1529,7 @@ namespace Nooch.Web.Controllers
         private ResultPayRequestComplete completeTrans(string MemberIdAfterSynapseAccountCreation, string TransactionId, ResultPayRequestComplete resultPayComplete)
         {
             ResultPayRequestComplete rpc = resultPayComplete;
+            rpc.paymentSuccess = false;
 
             try
             {
@@ -1550,11 +1551,11 @@ namespace Nooch.Web.Controllers
                 Logger.Info("NoochController -> completeTrans - About to Query Nooch Service to move money - URL: [" +
                              String.Concat(serviceUrl, serviceMethod) + "]");
 
-                TransactionDto transaction = ResponseConverter<TransactionDto>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+                TransactionDto moveMoneyResult = ResponseConverter<TransactionDto>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
 
-                if (transaction != null)
+                if (moveMoneyResult != null)
                 {
-                    if (transaction.synapseTransResult == "Success")
+                    if (moveMoneyResult.synapseTransResult == "Success")
                     {
                         rpc.paymentSuccess = true;
                     }
@@ -1562,7 +1563,6 @@ namespace Nooch.Web.Controllers
                     {
                         Logger.Error("NoochController -> completeTrans FAILED - TransId: [" + TransactionId + "]");
 
-                        rpc.paymentSuccess = false;
                         Response.Write("<script>errorFromCodeBehind = 'failed';</script>");
                     }
                 }
@@ -1579,6 +1579,8 @@ namespace Nooch.Web.Controllers
 
         public ResultPayRequestComplete GetTransDetailsForPayRequestComplete(string TransactionId, ResultPayRequestComplete resultPayRequestComplt)
         {
+            Logger.Info("payRequestComplete CodeBehind -> GetTransDetailsForPayRequestComplete Initiated - [TransID: " + TransactionId + "]");
+
             ResultPayRequestComplete rpc = resultPayRequestComplt;
             string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
             string serviceMethod = "/GetTransactionDetailByIdForRequestPayPage?TransactionId=" + TransactionId;
@@ -1612,6 +1614,7 @@ namespace Nooch.Web.Controllers
                 if (!String.IsNullOrEmpty(transaction.TransactionType) &&
                     transaction.TransactionType == "Rent")
                 {
+                    Logger.Info("payRequestComplete CodeBehind -> GetTransDetailsForPayRequestComplete - Rent Payment Detected");
                     rpc.usrTyp = "Tenant";
                     rpc.payeeMemId = !String.IsNullOrEmpty(transaction.MemberId) ? transaction.MemberId : "none";
                 }
@@ -1629,6 +1632,8 @@ namespace Nooch.Web.Controllers
 
                 if (transaction.TransactionStatus != "Pending")
                 {
+                    Logger.Info("payRequestComplete CodeBehind -> GetTransDetailsForPayRequestComplete - Payment No Longer Pending - [TransID: " + TransactionId + "]");
+
                     Response.Write("<script>isStillPending = false;</script>");
                     rpc.IsTransactionStillPending = false;
                     return rpc;

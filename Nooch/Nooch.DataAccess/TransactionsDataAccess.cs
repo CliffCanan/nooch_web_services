@@ -3161,6 +3161,8 @@ namespace Nooch.DataAccess
                             {
                                 if (nodePermCheckRes.PermissionType == "CREDIT-AND-DEBIT") // Sender must have CREDIT-AND-DEBIT
                                 {
+                                    Logger.Info("TDA -> AddTransSynapseV3Reusable - Success! Found Sender's Bank with \"CREDIT-AND-DEBIT\" Permissions - " +
+                                                "[OID: " + sender_bank_node_id + "]");
                                     SenderSynapsePermissionOK = true;
                                     break;
                                 }
@@ -3193,8 +3195,8 @@ namespace Nooch.DataAccess
                             }
                             else // More users in the list to check, so continue iterating
                             {
-                                Logger.Error("TDA -> AddTransSynapseV3Reusable - No Bank Found for this Sender User - Username: [" + senderUserName +
-                                             "], [SenderUser OID:" + senderUser._id.oid + "] - More users in list from Synapse, continuing to iterate...");
+                                //Logger.Error("TDA -> AddTransSynapseV3Reusable - No Bank Found for this Sender User - Username: [" + senderUserName +
+                                //             "], [SenderUser OID:" + senderUser._id.oid + "] - More users in list from Synapse, continuing to iterate...");
                             }
                         }
                     }

@@ -1458,18 +1458,25 @@ namespace Nooch.DataAccess
 
         public SynapseBanksOfMember GetSynapseBankAccountDetails(string memberId)
         {
-            Logger.Info("MDA -> GetSynapseBankAccountDetails - MemberId: [" + memberId + "]");
-            var id = Utility.ConvertToGuid(memberId);
-
-            var memberAccountDetails = _dbContext.SynapseBanksOfMembers.Where(bank =>
-                                (bank.MemberId.Value == id &&
-                                 bank.IsDefault == true)).FirstOrDefault();
-            if (memberAccountDetails != null)
+            Logger.Info("MDA -> GetSynapseBankAccountDetails Initiated - MemberId: [" + memberId + "]");
+            try
             {
-                _dbContext.Entry(memberAccountDetails).Reload();
-            }
-            return memberAccountDetails;
+                var id = Utility.ConvertToGuid(memberId);
 
+                var bankDetails = _dbContext.SynapseBanksOfMembers.Where(bank =>
+                                    (bank.MemberId.Value == id &&
+                                     bank.IsDefault == true)).FirstOrDefault();
+                if (bankDetails != null)
+                {
+                    _dbContext.Entry(bankDetails).Reload();
+                }
+                return bankDetails;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("MDA -> GetSynapseBankAccountDetails FAILED - Exception: [" + ex.Message + "]");
+                return null;
+            }
         }
 
 
@@ -5593,8 +5600,7 @@ namespace Nooch.DataAccess
             {
                 Guid transGuid = Utility.ConvertToGuid(TransactionId);
 
-                var Transaction =
-                    _dbContext.Transactions.FirstOrDefault(m => m.TransactionId == transGuid && m.TransactionStatus == "pending");
+                var Transaction = _dbContext.Transactions.FirstOrDefault(m => m.TransactionId == transGuid && m.TransactionStatus == "pending");
 
                 if (Transaction != null)
                 {
@@ -5605,38 +5611,8 @@ namespace Nooch.DataAccess
                         var newUserObj = GetMemberDetails(MemberIdAfterSynapseAccountCreation);
                         string newUsersEmail = CommonHelper.GetDecryptedData(newUserObj.UserName);
 
-                        // Check if this is a TEST transaction by seeing if the new user's email includes "jones00" in it
-
-                        #region Check If Testing
-
-                        bool isTesting = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")); ;
-
-                        //try
-                        //{
-                        //    Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser -> Transaction.Members.MemberId: [" + Transaction.Member.MemberId + "]");
-
-                        //    if (Transaction.Member.MemberId.ToString() == "00bd3972-d900-429d-8a0d-28a5ac4a75d7...")
-                        //    {
-                        //        Logger.Info("** MDA -> GetTokensAndTransferMoneyToNewUser - THIS WAS A TEST TRANSACTION to TEAM NOOCH ! **");
-                        //        isTesting = true;
-                        //    }
-
-                        //    newUsersEmail = newUsersEmail.ToLower();
-
-                        //    if (newUsersEmail.IndexOf("jones00") > -1)
-                        //    {
-                        //        Logger.Info("**  MDA -> GetTokensAndTransferMoneyToNewUser -> THIS IS A TEST USER **  [UserName: " +
-                        //                              newUsersEmail + "]. Continuing On!  **");
-                        //        isTesting = true;
-                        //    }
-                        //}
-                        //catch (Exception ex)
-                        //{
-                        //    Logger.Error("**  MDA -> GetTokensAndTransferMoneyToNewUser -> ERROR while checking if this is a test transaction - " +
-                        //                           "Exception: [" + ex + "]. Continuing on...  **");
-                        //}
-
-                        #endregion Check If Testing
+                        // Check if this is a TEST transaction
+                        bool isTesting = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox"));
 
                         Guid SenderId, RecipientId;
 
@@ -5668,8 +5644,8 @@ namespace Nooch.DataAccess
                             }
                         }
 
-                        Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser - SENDER MemberId: [" + SenderId + "]");
-                        Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser - RECIPIENT MemberId: [" + RecipientId + "]");
+                        Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser - SENDER MemberId: [" + SenderId +
+                                    "], RECIPIENT MemberId: [" + RecipientId + "]");
 
                         var SenderUserAndBankDetails = CommonHelper.GetSynapseBankAndUserDetailsforGivenMemberId(SenderId.ToString());
 
@@ -5717,6 +5693,7 @@ namespace Nooch.DataAccess
                                 Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser - About to call AddTransSynapseV3Reusable() in TDA - " +
                                             "[TransID: " + transId + "], [Amount: " + amount + "], [Sender Name: " + moneySenderFirstName + " " + moneySenderLastName + "], " +
                                             "[Sender BankOID: " + senderBankOid + "], [Recip Name: " + moneyRecipientFirstName + " " + moneyRecipientLastName + "], [access_token: " + "]");
+
                                 SynapseV3AddTrans_ReusableClass Call_Synapse_Order_API_Result = tda.AddTransSynapseV3Reusable(access_token,
                                     senderFingerprint,
                                     senderBankOid,
@@ -5732,18 +5709,18 @@ namespace Nooch.DataAccess
                                     moneySenderLastName,
                                     moneyRecipientLastName);
 
-
                                 #endregion Call Synapse Order API
 
-                                if (Call_Synapse_Order_API_Result.success) // || isTesting)
+                                if (Call_Synapse_Order_API_Result.success)
                                 {
-                                    Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser -> Synapse Order API was SUCCESSFUL");
+                                    Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser - SUCCESS Response From SYNAPSE's /order/add API - " +
+                                                "Synapse OrderID: [" + Call_Synapse_Order_API_Result.responseFromSynapse.trans._id.oid + "]");
 
                                     //if (!isTesting)
                                     //{
                                     // If testing, keep this transaction as 'Pending' so we can more easily re-test with the same transaction.
                                     Transaction.TransactionStatus = "Success";
-                                    //_dbContext.SaveChanges();
+                                    int save = _dbContext.SaveChanges();
                                     //}
 
                                     #region Update Tenant Info If A RENT Payment
@@ -5763,132 +5740,134 @@ namespace Nooch.DataAccess
                                         }
                                         catch (Exception ex)
                                         {
-                                            Logger.Error("MDA - GetTokensAndTransferMoneyToNewUser - Failed to update TENANT info in DB - [MemberID: " + SenderId + "]");
+                                            Logger.Error("MDA - GetTokensAndTransferMoneyToNewUser - Failed to update TENANT info in DB - [MemberID: " +
+                                                         SenderId + "], Exception: [" + ex.Message + "]");
                                         }
                                     }
 
                                     #endregion Update Tenant Info If A RENT Payment
 
-                                    #region EMAIL NOTIFICATIONS
-
-                                    // NOW SEND EMAILS TO BOTH USERS
-
-                                    #region Setup Email Placeholders
-
-                                    Transaction.TransactionDate = DateTime.Now;
-                                    string fromAddress = Utility.GetValueFromConfig("transfersMail");
-
-                                    string newUserPhone = "";
-
-                                    if (Transaction.IsPhoneInvitation != null &&
-                                        Transaction.IsPhoneInvitation == true &&
-                                        !String.IsNullOrEmpty(Transaction.PhoneNumberInvited))
+                                    if (save > 0)
                                     {
-                                        newUserPhone = CommonHelper.GetDecryptedData(Transaction.PhoneNumberInvited);
-                                    }
+                                        #region EMAIL NOTIFICATIONS
 
-                                    bool isForRentScene = false;
-                                    if (recipient.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49" || // Rent Scene's account
-                                        recipient.MemberId.ToString().ToLower() == "a35c14e9-ee7b-4fc6-b5d5-f54961f2596a") // Just for testing: "sallyanejones00@nooch.com"
-                                    {
-                                        isForRentScene = true;
-                                        moneyRecipientFirstName = "Rent Scene";
-                                        moneyRecipientLastName = "";
-                                    }
+                                        // NOW SEND EMAILS TO BOTH USERS
 
-                                    string newUserNameForEmail = "";
+                                        #region Setup Email Placeholders
 
-                                    string recipientPic = (!String.IsNullOrEmpty(recipient.Photo) && recipient.Photo.Length > 20)
-                                                            ? recipient.Photo.ToString()
-                                                            : "https://www.noochme.com/noochweb/Assets/Images/userpic-default.png";
+                                        Transaction.TransactionDate = DateTime.Now;
+                                        string fromAddress = Utility.GetValueFromConfig("transfersMail");
 
+                                        string newUserPhone = "";
 
-                                    if (!String.IsNullOrEmpty(moneyRecipientFirstName))
-                                    {
-                                        newUserNameForEmail = moneyRecipientFirstName;
-
-                                        if (!String.IsNullOrEmpty(moneyRecipientLastName))
+                                        if (Transaction.IsPhoneInvitation != null &&
+                                            Transaction.IsPhoneInvitation == true &&
+                                            !String.IsNullOrEmpty(Transaction.PhoneNumberInvited))
                                         {
-                                            newUserNameForEmail = newUserNameForEmail + " " + moneyRecipientLastName;
+                                            newUserPhone = CommonHelper.GetDecryptedData(Transaction.PhoneNumberInvited);
                                         }
-                                    }
-                                    else if (newUsersEmail.Length > 2)
-                                    {
-                                        newUserNameForEmail = newUsersEmail;
-                                    }
-                                    else if (newUserPhone.Length > 2)
-                                    {
-                                        newUserNameForEmail = newUserPhone;
-                                    }
 
-                                    string wholeAmount = Transaction.Amount.ToString("n2");
-                                    string[] s3 = wholeAmount.Split('.');
-
-                                    string transDate = Convert.ToDateTime(Transaction.TransactionDate).ToString(("MMMM dd, yyyy"));
-
-                                    string memo = "";
-                                    if (!String.IsNullOrEmpty(Transaction.Memo))
-                                    {
-                                        if (Transaction.Memo.Length > 3)
+                                        bool isForRentScene = false;
+                                        if (recipient.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49" || // Rent Scene's account
+                                            recipient.MemberId.ToString().ToLower() == "a35c14e9-ee7b-4fc6-b5d5-f54961f2596a") // Just for testing: "sallyanejones00@nooch.com"
                                         {
-                                            string firstThreeChars = Transaction.Memo.Substring(0, 3).ToLower();
-                                            bool startsWithFor = firstThreeChars.Equals("for");
+                                            isForRentScene = true;
+                                            moneyRecipientFirstName = "Rent Scene";
+                                            moneyRecipientLastName = "";
+                                        }
 
-                                            if (startsWithFor)
+                                        string newUserNameForEmail = "";
+
+                                        string recipientPic = (!String.IsNullOrEmpty(recipient.Photo) && recipient.Photo.Length > 20)
+                                                                ? recipient.Photo.ToString()
+                                                                : "https://www.noochme.com/noochweb/Assets/Images/userpic-default.png";
+
+
+                                        if (!String.IsNullOrEmpty(moneyRecipientFirstName))
+                                        {
+                                            newUserNameForEmail = moneyRecipientFirstName;
+
+                                            if (!String.IsNullOrEmpty(moneyRecipientLastName))
                                             {
-                                                memo = Transaction.Memo.ToString();
+                                                newUserNameForEmail = newUserNameForEmail + " " + moneyRecipientLastName;
+                                            }
+                                        }
+                                        else if (newUsersEmail.Length > 2)
+                                        {
+                                            newUserNameForEmail = newUsersEmail;
+                                        }
+                                        else if (newUserPhone.Length > 2)
+                                        {
+                                            newUserNameForEmail = newUserPhone;
+                                        }
+
+                                        string wholeAmount = Transaction.Amount.ToString("n2");
+                                        string[] s3 = wholeAmount.Split('.');
+
+                                        string transDate = Convert.ToDateTime(Transaction.TransactionDate).ToString(("MMMM dd, yyyy"));
+
+                                        string memo = "";
+                                        if (!String.IsNullOrEmpty(Transaction.Memo))
+                                        {
+                                            if (Transaction.Memo.Length > 3)
+                                            {
+                                                string firstThreeChars = Transaction.Memo.Substring(0, 3).ToLower();
+                                                bool startsWithFor = firstThreeChars.Equals("for");
+
+                                                if (startsWithFor)
+                                                {
+                                                    memo = Transaction.Memo.ToString();
+                                                }
+                                                else
+                                                {
+                                                    memo = "For: " + Transaction.Memo.ToString();
+                                                }
                                             }
                                             else
                                             {
                                                 memo = "For: " + Transaction.Memo.ToString();
                                             }
                                         }
-                                        else
+
+                                        #endregion Setup Email Placeholders
+
+                                        if (TransactionType == "SentToNewUser")
                                         {
-                                            memo = "For: " + Transaction.Memo.ToString();
-                                        }
-                                    }
+                                            #region Emails for TRANSFER to NEW USER
 
-                                    #endregion Setup Email Placeholders
+                                            // Send email if invitation was from email and SMS if invitation was from SMS
+                                            #region Notify Transfer RECIPIENT (SMS or Email)
 
+                                            #region If Transfer Sent Using Phone Number
 
-                                    if (TransactionType == "SentToNewUser")
-                                    {
-                                        #region Emails for TRANSFER to NEW USER
-
-                                        // Send email if invitation was from email and SMS if invitation was from SMS
-                                        #region Notify Transfer RECIPIENT (SMS or Email)
-
-                                        #region If Transfer Sent Using Phone Number
-
-                                        if (newUserPhone.Length > 3)
-                                        {
-                                            // Send SMS notification to Nooch Recipient (the NEW user)
-
-                                            string SMSContent = "You accepted $" + wholeAmount + " sent by " + moneySenderFirstName + " " + moneySenderLastName +
-                                                                ". Amount will be credited to your bank account within 2-4 biz days.";
-                                            try
+                                            if (newUserPhone.Length > 3)
                                             {
-                                                Utility.SendSMS(newUserPhone, SMSContent);
+                                                // Send SMS notification to Nooch Recipient (the NEW user)
 
-                                                Logger.Info("TDA - GetTokensAndTransferMoneyToNewUser SUCCESS - SMS sent to recipient - [Phone: " +
-                                                    CommonHelper.FormatPhoneNumber(newUserPhone) + "] successfully.");
+                                                string SMSContent = "You accepted $" + wholeAmount + " sent by " + moneySenderFirstName + " " + moneySenderLastName +
+                                                                    ". Amount will be credited to your bank account within 2-4 biz days.";
+                                                try
+                                                {
+                                                    Utility.SendSMS(newUserPhone, SMSContent);
+
+                                                    Logger.Info("TDA - GetTokensAndTransferMoneyToNewUser SUCCESS - SMS sent to recipient - [Phone: " +
+                                                        CommonHelper.FormatPhoneNumber(newUserPhone) + "] successfully.");
+                                                }
+                                                catch (Exception ex)
+                                                {
+                                                    Logger.Error("TDA - GetTokensAndTransferMoneyToNewUser SUCCESS - But Failure sending SMS to recipient " +
+                                                        "- [Phone: " + CommonHelper.FormatPhoneNumber(newUserPhone) + "],  [Exception: " + ex.ToString() + "]");
+                                                }
                                             }
-                                            catch (Exception ex)
+
+                                            #endregion If Transfer Sent Using Phone Number
+
+                                            #region If Transfer Sent Using Email Address
+
+                                            else if (newUsersEmail.Length > 3)
                                             {
-                                                Logger.Error("TDA - GetTokensAndTransferMoneyToNewUser SUCCESS - But Failure sending SMS to recipient " +
-                                                    "- [Phone: " + CommonHelper.FormatPhoneNumber(newUserPhone) + "],  [Exception: " + ex.ToString() + "]");
-                                            }
-                                        }
-
-                                        #endregion If Transfer Sent Using Phone Number
-
-                                        #region If Transfer Sent Using Email Address
-
-                                        else if (newUsersEmail.Length > 3)
-                                        {
-                                            // Email to Nooch Recipient (the NEW user)
-                                            var tokens = new Dictionary<string, string>
+                                                // Email to Nooch Recipient (the NEW user)
+                                                var tokens = new Dictionary<string, string>
                                                         {
                                                             {Constants.MEMO, memo},
                                                             {Constants.PLACEHOLDER_TRANSFER_AMOUNT, wholeAmount},
@@ -5896,33 +5875,33 @@ namespace Nooch.DataAccess
                                                             {Constants.PLACEHOLDER_FRIEND_FIRST_NAME, moneySenderFirstName + " " + moneySenderLastName},
                                                         };
 
-                                            try
-                                            {
-                                                string subject = isForRentScene
-                                                                 ? "Payment from Rent Scene accepted - $" + wholeAmount
-                                                                 : "Nooch payment from " + moneySenderFirstName + " " + moneySenderLastName + " accepted - $" + wholeAmount;
+                                                try
+                                                {
+                                                    string subject = isForRentScene
+                                                                     ? "Payment from Rent Scene accepted - $" + wholeAmount
+                                                                     : "Nooch payment from " + moneySenderFirstName + " " + moneySenderLastName + " accepted - $" + wholeAmount;
 
-                                                Utility.SendEmail("transferAcceptedToRecipient", fromAddress, newUsersEmail,
-                                                                            null, subject, null, tokens, null, null, null);
+                                                    Utility.SendEmail("transferAcceptedToRecipient", fromAddress, newUsersEmail,
+                                                                                null, subject, null, tokens, null, null, null);
 
-                                                Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser -> transferAcceptedToRecipient Email sent to [" +
-                                                                       newUsersEmail + "] successfully.");
+                                                    Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser -> transferAcceptedToRecipient Email sent to [" +
+                                                                           newUsersEmail + "] successfully.");
+                                                }
+                                                catch (Exception ex)
+                                                {
+                                                    Logger.Error("MDA -> GetTokensAndTransferMoneyToNewUser -> transferAcceptedToRecipient Email NOT sent to [" +
+                                                                           newUsersEmail + "], Exception: [" + ex.Message + "]");
+                                                }
                                             }
-                                            catch (Exception ex)
-                                            {
-                                                Logger.Error("MDA -> GetTokensAndTransferMoneyToNewUser -> transferAcceptedToRecipient Email NOT sent to [" +
-                                                                       newUsersEmail + "], Exception: [" + ex.Message + "]");
-                                            }
-                                        }
 
-                                        #endregion If Transfer Sent Using Email Address
+                                            #endregion If Transfer Sent Using Email Address
 
-                                        #endregion Notify Transfer RECIPIENT (SMS or Email)
+                                            #endregion Notify Transfer RECIPIENT (SMS or Email)
 
 
-                                        #region Email to Transfer SENDER
+                                            #region Email to Transfer SENDER
 
-                                        var tokens2 = new Dictionary<string, string>
+                                            var tokens2 = new Dictionary<string, string>
                                                 {
                                                     {Constants.PLACEHOLDER_FIRST_NAME, moneySenderFirstName},
                                                     {Constants.MEMO, memo},
@@ -5930,64 +5909,64 @@ namespace Nooch.DataAccess
                                                     {Constants.PLACEHOLDER_TRANSFER_AMOUNT, wholeAmount},
                                                 };
 
-                                        var toAddress = CommonHelper.GetDecryptedData(Transaction.Member.UserName);
-                                        try
-                                        {
-                                            Utility.SendEmail("transferAcceptedToSender", fromAddress, toAddress,
-                                                null, newUserNameForEmail + " accepted your payment",
-                                                null, tokens2, null, null, null);
-
-                                            Logger.Info(
-                                                "MDA -> GetTokensAndTransferMoneyToNewUser - TransferAcceptedToSender - Email sent to [" +
-                                                toAddress + "] successfully.");
-                                        }
-                                        catch (Exception ex)
-                                        {
-                                            Logger.Error(
-                                                "MDA -> GetTokensAndTransferMoneyToNewUser - TransferAcceptedToSender - Email NOT sent to [" +
-                                                toAddress + "],  [Exception: " + ex.ToString() + "]");
-                                        }
-
-                                        #endregion Email to Transfer SENDER
-
-                                        #endregion Emails for TRANSFER to NEW USER
-                                    }
-
-                                    if (TransactionType == "RequestToNewUser")
-                                    {
-                                        #region Emails for REQUEST to NEW USER
-
-                                        // Send email if request was via email and SMS if request was via Email to
-                                        // Nooch RECIPIENT (non-Nooch person who just paid the request)
-                                        #region Notify Request RECIPIENT (New user who paid the request)
-
-                                        #region If Transfer Sent Using Phone Number
-
-                                        if (newUserPhone.Length > 3)
-                                        {
-                                            string SMSContent = "You paid a $" + wholeAmount + " request from " + moneySenderFirstName + " " + moneySenderLastName +
-                                                                ". Amount will be deducted to your bank account in 2-4 biz days.";
+                                            var toAddress = CommonHelper.GetDecryptedData(Transaction.Member.UserName);
                                             try
                                             {
-                                                Utility.SendSMS(newUserPhone, SMSContent);
+                                                Utility.SendEmail("transferAcceptedToSender", fromAddress, toAddress,
+                                                    null, newUserNameForEmail + " accepted your payment",
+                                                    null, tokens2, null, null, null);
 
-                                                Logger.Info("MDA - GetTokensAndTransferMoneyToNewUser SUCCESS - Request Paid SMS sent to recipient - " +
-                                                                       "[Phone: " + CommonHelper.FormatPhoneNumber(newUserPhone) + "] successfully.");
+                                                Logger.Info(
+                                                    "MDA -> GetTokensAndTransferMoneyToNewUser - TransferAcceptedToSender - Email sent to [" +
+                                                    toAddress + "] successfully.");
                                             }
                                             catch (Exception ex)
                                             {
-                                                Logger.Error("MDA - GetTokensAndTransferMoneyToNewUser SUCCESS - But failed to send Request Paid SMS to recipient - " +
-                                                                       "[Phone: " + CommonHelper.FormatPhoneNumber(newUserPhone) + "],  [Exception: " + ex + "]");
+                                                Logger.Error(
+                                                    "MDA -> GetTokensAndTransferMoneyToNewUser - TransferAcceptedToSender - Email NOT sent to [" +
+                                                    toAddress + "],  [Exception: " + ex.ToString() + "]");
                                             }
+
+                                            #endregion Email to Transfer SENDER
+
+                                            #endregion Emails for TRANSFER to NEW USER
                                         }
 
-                                        #endregion If Transfer Sent Using Phone Number
-
-                                        #region If Transfer Sent Using Email Address
-
-                                        else
+                                        if (TransactionType == "RequestToNewUser")
                                         {
-                                            var tokens = new Dictionary<string, string> 
+                                            #region Emails for REQUEST to NEW USER
+
+                                            // Send email if request was via email and SMS if request was via Email to
+                                            // Nooch RECIPIENT (non-Nooch person who just paid the request)
+                                            #region Notify Request RECIPIENT (New user who paid the request)
+
+                                            #region If Transfer Sent Using Phone Number
+
+                                            if (newUserPhone.Length > 3)
+                                            {
+                                                string SMSContent = "You paid a $" + wholeAmount + " request from " + moneySenderFirstName + " " + moneySenderLastName +
+                                                                    ". Amount will be deducted to your bank account in 2-4 biz days.";
+                                                try
+                                                {
+                                                    Utility.SendSMS(newUserPhone, SMSContent);
+
+                                                    Logger.Info("MDA - GetTokensAndTransferMoneyToNewUser SUCCESS - Request Paid SMS sent to recipient - " +
+                                                                           "[Phone: " + CommonHelper.FormatPhoneNumber(newUserPhone) + "] successfully.");
+                                                }
+                                                catch (Exception ex)
+                                                {
+                                                    Logger.Error("MDA - GetTokensAndTransferMoneyToNewUser SUCCESS - But failed to send Request Paid SMS to recipient - " +
+                                                                           "[Phone: " + CommonHelper.FormatPhoneNumber(newUserPhone) + "],  [Exception: " + ex + "]");
+                                                }
+                                            }
+
+                                            #endregion If Transfer Sent Using Phone Number
+
+                                            #region If Transfer Sent Using Email Address
+
+                                            else
+                                            {
+                                                var tokens = new Dictionary<string, string> 
                                                         {
                                                             {Constants.PLACEHOLDER_FIRST_NAME, moneySenderFirstName},
                                                             {"$UserPicture$", recipientPic},
@@ -5997,33 +5976,33 @@ namespace Nooch.DataAccess
                                                             {Constants.PLACEHOLDER_TRANSFER_AMOUNT, wholeAmount}
                                                         };
 
-                                            try
-                                            {
-                                                string subject = isForRentScene
-                                                                 ? "Your Payment to Rent Scene"
-                                                                 : "Your payment to " + moneyRecipientFirstName + " " + moneyRecipientLastName;
+                                                try
+                                                {
+                                                    string subject = isForRentScene
+                                                                     ? "Your Payment to Rent Scene"
+                                                                     : "Your payment to " + moneyRecipientFirstName + " " + moneyRecipientLastName;
 
-                                                Utility.SendEmail("requestPaidToRecipient", fromAddress,
-                                                    newUsersEmail, null, subject, null, tokens, null, null, null);
+                                                    Utility.SendEmail("requestPaidToRecipient", fromAddress,
+                                                        newUsersEmail, null, subject, null, tokens, null, null, null);
 
-                                                Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser - requestPaidToRecipient Email sent to [" +
-                                                                       newUsersEmail + "] successfully.");
+                                                    Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser - requestPaidToRecipient Email sent to [" +
+                                                                           newUsersEmail + "] successfully.");
+                                                }
+                                                catch (Exception ex)
+                                                {
+                                                    Logger.Error("MDA -> GetTokensAndTransferMoneyToNewUser - requestPaidToRecipient Email NOT sent to [" +
+                                                        newUsersEmail + "], Exception: [" + ex.Message + "]");
+                                                }
                                             }
-                                            catch (Exception ex)
-                                            {
-                                                Logger.Error("MDA -> GetTokensAndTransferMoneyToNewUser - requestPaidToRecipient Email NOT sent to [" +
-                                                    newUsersEmail + "], Exception: [" + ex.Message + "]");
-                                            }
-                                        }
 
-                                        #endregion If Transfer Sent Using Email Address
+                                            #endregion If Transfer Sent Using Email Address
 
-                                        #endregion Notify Request RECIPIENT (New user who paid the request)
+                                            #endregion Notify Request RECIPIENT (New user who paid the request)
 
-                                        #region Email to Request SENDER who is now receiving the money
+                                            #region Email to Request SENDER who is now receiving the money
 
-                                        // Email to Nooch Sender (person that originally sent the Request)
-                                        var tokens2 = new Dictionary<string, string>
+                                            // Email to Nooch Sender (person that originally sent the Request)
+                                            var tokens2 = new Dictionary<string, string>
                                                     {
                                                         {Constants.PLACEHOLDER_FIRST_NAME, moneyRecipientFirstName},
                                                         {Constants.MEMO, memo},
@@ -6032,36 +6011,41 @@ namespace Nooch.DataAccess
                                                         {Constants.PLACEHOLDER_TRANSFER_AMOUNT, wholeAmount},
                                                     };
 
-                                        var toAddress = CommonHelper.GetDecryptedData(recipient.UserName);
+                                            var toAddress = CommonHelper.GetDecryptedData(recipient.UserName);
 
-                                        try
-                                        {
-                                            Utility.SendEmail("requestPaidToSender", fromAddress,
-                                                toAddress, null, moneySenderFirstName + " " + moneySenderLastName + " paid your request on Nooch",
-                                                null, tokens2, null, null, null);
+                                            try
+                                            {
+                                                Utility.SendEmail("requestPaidToSender", fromAddress,
+                                                    toAddress, null, moneySenderFirstName + " " + moneySenderLastName + " paid your request on Nooch",
+                                                    null, tokens2, null, null, null);
 
-                                            Logger.Info("TDA -> GetTokensAndTransferMoneyToNewUser - requestPaidToSender - Email sent to [" +
-                                                                   toAddress + "] successfully.");
+                                                Logger.Info("TDA -> GetTokensAndTransferMoneyToNewUser - requestPaidToSender - Email sent to [" +
+                                                                       toAddress + "] successfully.");
+                                            }
+                                            catch (Exception ex)
+                                            {
+                                                Logger.Error("TDA -> GetTokensAndTransferMoneyToNewUser - requestPaidToSender - Email NOT sent to [" +
+                                                    toAddress + "], Exception: [" + ex.Message + "]");
+                                            }
+
+                                            #endregion Email to Request SENDER who is now receiving the money
+
+                                            #endregion Emails for REQUEST to NEW USER
                                         }
-                                        catch (Exception ex)
-                                        {
-                                            Logger.Error("TDA -> GetTokensAndTransferMoneyToNewUser - requestPaidToSender - Email NOT sent to [" +
-                                                toAddress + "], Exception: [" + ex.Message + "]");
-                                        }
 
-                                        #endregion Email to Request SENDER who is now receiving the money
+                                        #endregion EMAIL NOTIFICATIONS
 
-                                        #endregion Emails for REQUEST to NEW USER
+                                        return "Success";
                                     }
-
-                                    #endregion EMAIL NOTIFICATIONS
-
-                                    return "Success";
+                                    else
+                                    {
+                                        Logger.Error("MDA -> GetTokensAndTransferMoneyToNewUser FAILED - Unable to update transaction status in DB");
+                                        return "Error updating transaction status in DB";
+                                    }
                                 }
                                 else
                                 {
                                     Logger.Error("MDA - GetTokensAndTransferMoneyToNewUser FAILED -> Synapse Response was NOT successful");
-
                                     return "Error from syn";
                                 }
                             }
@@ -6069,7 +6053,6 @@ namespace Nooch.DataAccess
                             {
                                 Logger.Error("MDA - GetTokensAndTransferMoneyToNewUser FAILED -> Couldn't find Synapse User or Bank " +
                                              "Details for Recipient - [TransID: " + TransactionId + "]");
-
                                 return "Request payor bank account details not found or syn user id not found";
                             }
                         }
@@ -6077,7 +6060,6 @@ namespace Nooch.DataAccess
                         {
                             Logger.Error("MDA - GetTokensAndTransferMoneyToNewUser FAILED -> MemberIdAfterSynapseAccountCreation " +
                                          "was Null or empty - [TransID: " + TransactionId + "]");
-
                             return "Request payor bank account details not found or syn user id not found";
                         }
                     }
@@ -6085,7 +6067,6 @@ namespace Nooch.DataAccess
                     {
                         Logger.Error("MDA - GetTokensAndTransferMoneyToNewUser FAILED -> Couldn't find Synapse User or Bank " +
                                      "Details for EXISTING user (which is bad...) - [TransID: " + TransactionId + "]");
-
                         return "Missing 'MemberIdAfterSynapseAccountCreation' [9080]";
                     }
                 }
@@ -6093,7 +6074,6 @@ namespace Nooch.DataAccess
                 {
                     Logger.Error("MDA - GetTokensAndTransferMoneyToNewUser FAILED -> Couldn't find this Transaction - " +
                                  "[TransID: " + TransactionId + "]");
-
                     return "Either transaction already paid or transaction not found";
                 }
             }

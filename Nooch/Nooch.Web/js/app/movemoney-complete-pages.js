@@ -2,9 +2,11 @@ var TRANS_TYPE = $('#transType').val();
 console.log("transType is: [" + TRANS_TYPE + "]");
 var FOR_RENTSCENE = $('#rs').val();
 
+// http://mathiasbynens.be/notes/document-head
+document.head || (document.head = document.getElementsByTagName('head')[0]);
+
 $(document).ready(function ()
 {
-
     console.log("errorFromCodeBehind is: " + errorFromCodeBehind);
 
     if (FOR_RENTSCENE == "true") {
@@ -15,11 +17,13 @@ $(document).ready(function ()
         if ($(window).width() > 1000) {
             $('.landingHeaderLogo img').css('width', '211px');
         }
+		
+		changeFavicon('../Assets/favicon2.ico')
     }
 
     if (areThereErrors() == false) {
         if (checkIfStillPending() == true) {
-            console.log(checkIfStillPending());
+            //console.log(checkIfStillPending());
 
             var alertTitle = "";
             var alertBody = "";
@@ -60,18 +64,19 @@ $(document).ready(function ()
 
 function areThereErrors()
 {
-
-    if (errorFromCodeBehind != '0') {
+    if (errorFromCodeBehind != '0') 
+	{
         var alertTitle = "";
         var alertBodyText = "";
         var companyName = "Nooch";
         var supportEmail = "support@nooch.com";
+
         if (FOR_RENTSCENE == "true") {
             companyName = "Rent Scene"
             supportEmail = "payments@rentscene.com"
         }
 
-        console.log('areThereErrors -> errorFromCodeBehind is: [' + errorFromCodeBehind + "]");
+        console.log('areThereErrors -> YES -> errorFromCodeBehind is: [' + errorFromCodeBehind + "]");
 
         if (errorFromCodeBehind == '1') {
             alertTitle = "Errors Are The Worst!";
@@ -102,7 +107,7 @@ function areThereErrors()
         // Position the footer absolutely so it's at the bottom of the screen (it's normally pushed down by the body content)
         $('.footer').css({
             position: 'fixed',
-            bottom: '5%'
+            bottom: '3%'
         })
 
         swal({
@@ -117,8 +122,7 @@ function areThereErrors()
             closeOnCancel: false,
             allowEscapeKey: false,
             html: true
-        }, function (isConfirm)
-        {
+        }, function (isConfirm) {
             if (!isConfirm) {
                 if (FOR_RENTSCENE == "true") {
                     window.open("mailto:payments@rentscene.com");
@@ -164,4 +168,16 @@ function checkIfStillPending()
     {
         return true;
     }
+}
+
+function changeFavicon(src) {
+  var link = document.createElement('link'),
+   oldLink = document.getElementById('dynamic-favicon');
+  link.id = 'dynamic-favicon';
+  link.rel = 'shortcut icon';
+  link.href = src;
+  if (oldLink) {
+    document.head.removeChild(oldLink);
+  }
+  document.head.appendChild(link);
 }

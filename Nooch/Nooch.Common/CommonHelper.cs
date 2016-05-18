@@ -1963,9 +1963,7 @@ namespace Nooch.Common
             }
 
             res.users = SEARCHED_USERS.ToArray();
-            //SEARCHUSER_CURRENT_PAGE = 1;
-            //SEARCHUSER_TOTAL_PAGES_COUNT = 0;
-            //SEARCHED_USERS.Clear();
+
             return res;
         }
 

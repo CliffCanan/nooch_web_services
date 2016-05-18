@@ -1208,10 +1208,12 @@ a { cursor: pointer; }
   width:96%;
 }
 .depositComplete-TransDetails {
-    margin-top: 20px;
+    margin: 20px auto;
+	max-width: 350px;
     overflow: visible;
     padding: 10px 0;
     white-space: nowrap;
+	width: 92%;
 }
 .depositComplete-TransDetails * {
     color: #FFFFFF;

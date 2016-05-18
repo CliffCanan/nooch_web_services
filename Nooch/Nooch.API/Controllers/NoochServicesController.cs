@@ -2586,8 +2586,8 @@ namespace Nooch.API.Controllers
                 trans.RecepientName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(tr.Member1.FirstName)) + " " +
                                       CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(tr.Member1.LastName));
 
-                Logger.Info("Service Controller -> GetTransactionDetailByIdForRequestPayPage - [trans.Name is: " + trans.Name + "]");
-                Logger.Info("Service Controller -> GetTransactionDetailByIdForRequestPayPage - [trans.RecepientName is: " + trans.RecepientName + "]");
+                Logger.Info("Service Controller -> GetTransactionDetailByIdForRequestPayPage - [trans.Name is: " + trans.Name +
+                            "], [trans.RecepientName is: " + trans.RecepientName + "]");
 
                 trans.SenderPhoto = tr.Member.Photo ?? "https://www.noochme.com/noochweb/Assets/Images/userpic-default.png";
                 trans.RecepientPhoto = tr.Member1.Photo ?? "https://www.noochme.com/noochweb/Assets/Images/userpic-default.png";
@@ -2627,8 +2627,8 @@ namespace Nooch.API.Controllers
                     //(trans.TransactionType == "Rent" || tr.TransactionType != "EnOIzpmFFTEaAP16hm9Wsw==")) // "EnOIzpmFFTEaAP16hm9Wsw==" = "Rent"
                      ))
                 {
-                    Logger.Info("Service Controller -> GetTransactionDetailByIdForRequestPayPage CHECKPOINT 2 - This request is to an existing user - " +
-                                           "About to get Synapse Bank info for Payor -> [trans.RecepientName is: " + trans.RecepientName + "]");
+                    Logger.Info("Service Controller -> GetTransactionDetailByIdForRequestPayPage - This request is to an EXISTING user - " +
+                                "About to get Synapse Bank info for Payer -> [trans.RecepientName is: " + trans.RecepientName + "]");
 
                     trans.IsExistingButNonRegUser = true;
 
