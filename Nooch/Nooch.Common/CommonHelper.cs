@@ -2150,7 +2150,7 @@ namespace Nooch.Common
 
                     #region Found Refresh Token
 
-                    Logger.Info("Common Helper -> synapseV3checkUsersOauthKey - Found Member By Original OAuth Key");
+                    Logger.Info("Common Helper -> refreshSynapseV3OautKey - Found Member By Original OAuth Key");
 
                     SynapseV3RefreshOauthKeyAndSign_Input input = new SynapseV3RefreshOauthKeyAndSign_Input();
 
@@ -2185,7 +2185,7 @@ namespace Nooch.Common
 
                     if (Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")))
                     {
-                        Logger.Info("Common Helper -> synapseV3checkUsersOauthKey - TEST USER DETECTED - About to ping Synapse V3 Sandbox /user/signin...");
+                        Logger.Info("Common Helper -> refreshSynapseV3OautKey - TEST USER DETECTED - About to ping Synapse V3 Sandbox /user/signin...");
                     }
 
                     var http = (HttpWebRequest)WebRequest.Create(new Uri(UrlToHit));
@@ -2221,16 +2221,17 @@ namespace Nooch.Common
                         if ((refreshResponse["success"] != null && Convert.ToBoolean(refreshResponse["success"])) ||
                              refreshResultFromSyn.success.ToString() == "true")
                         {
-                            Logger.Info("Common Helper -> synapseV3checkUsersOauthKey - Signed User In With Synapse Successfully!");
+                            //Logger.Info("Common Helper -> synapseV3checkUsersOauthKey - Signed User In With Synapse Successfully!");
 
                             // Check if Token from Synapse /user/signin is same as the one we already have saved in DB for this suer
                             if (synCreateUserObject.access_token == GetEncryptedData(refreshResultFromSyn.oauth.oauth_key))
                             {
-                                Logger.Info("Common Helper -> synapseV3checkUsersOauthKey - Access_Token from Synapse MATCHES what we already had in DB.");
+                                res.success = true;
+                                Logger.Info("Common Helper -> refreshSynapseV3OautKey - Access_Token from Synapse MATCHES what we already had in DB.");
                             }
                             else // New Access Token...
                             {
-                                Logger.Info("Common Helper -> synapseV3checkUsersOauthKey - Access_Token from Synapse MATCHES what we already had in DB.");
+                                Logger.Info("Common Helper -> refreshSynapseV3OautKey - Access_Token from Synapse MATCHES what we already had in DB.");
                             }
 
                             // Update all values no matter what, even if access_token hasn't changed - possible one of the other values did
@@ -2318,7 +2319,7 @@ namespace Nooch.Common
             }
             catch (Exception ex)
             {
-                Logger.Error("Common Helper -> synapseV3checkUsersOauthKey FAILED: Outer Catch Error - Orig. OAuth Key (enc): [" + oauthKey +
+                Logger.Error("Common Helper -> refreshSynapseV3OautKey FAILED: Outer Catch Error - Orig. OAuth Key (enc): [" + oauthKey +
                              "], [Exception: " + ex + "]");
 
                 res.msg = "Nooch Server Error: Outer Exception #2326.";
