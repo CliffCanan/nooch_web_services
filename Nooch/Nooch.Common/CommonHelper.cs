@@ -1200,7 +1200,6 @@ namespace Nooch.Common
 
                     string usersAddress = "";
                     string usersZip = "";
-                    //string usersCity = "";
 
                     DateTime usersDob;
                     string usersDobDay = "";
@@ -1212,10 +1211,10 @@ namespace Nooch.Common
                     string usersSynapseOauthKey = "";
                     string usersFingerprint = "";
 
+                    #region Check User For All Required Data
+
                     try
                     {
-                        #region Check User For All Required Data
-
                         bool isMissingSomething = false;
                         // Member found, now check that they have added a full Address (including city, zip), SSN, & DoB
 
@@ -1301,8 +1300,6 @@ namespace Nooch.Common
                             _dbContext.Entry(usersSynapseDetails).Reload();
                             usersSynapseOauthKey = GetDecryptedData(usersSynapseDetails.access_token);
                         }
-
-                        #endregion Check User For All Required Data
                     }
                     catch (Exception ex)
                     {
@@ -1310,18 +1307,21 @@ namespace Nooch.Common
                                       userNameDecrypted + "], [Exception: " + ex + "]");
                     }
 
-                    // Update Member's DB record from NULL to false (update to true later on if Verification from Synapse is completely successful)
-                    Logger.Info("Common Helper -> sendUserSsnInfoToSynapseV3 - About to set IsVerifiedWithSynapse to False before calling Synapse: [Username: " +
-                                 userNameDecrypted + "]");
-                    memberEntity.IsVerifiedWithSynapse = false;
+                    #endregion Check User For All Required Data
+
+                    if (memberEntity.IsVerifiedWithSynapse == null)
+                    {
+                        // Update Member's DB record from NULL to false (update to true later on if Verification from Synapse is completely successful)
+                        Logger.Info("Common Helper -> sendUserSsnInfoToSynapseV3 - About to set IsVerifiedWithSynapse to False before calling Synapse: [Username: " +
+                                     userNameDecrypted + "]");
+                        memberEntity.IsVerifiedWithSynapse = false;
+                    }
 
                     #region Send SSN Info To Synapse
 
                     try
                     {
                         #region Call Synapse V3 /user/doc/add API
-
-                        Logger.Info("Common Helper -> sendUserSsnInfoToSynapseV3 - Checkpoint 1230 - About To Query Synapse");
 
                         synapseAddKycInfoInputV3Class synapseKycInput = new synapseAddKycInfoInputV3Class();
 
@@ -1354,9 +1354,9 @@ namespace Nooch.Common
                                       : "https://synapsepay.com/api/v3/user/doc/add";
 
 
-                        #region For Testing
+                        #region For Testing & Logging
 
-                        if (GetDecryptedData(memberEntity.UserName).IndexOf("jones00") > -1)
+                        if (Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) || GetDecryptedData(memberEntity.UserName).IndexOf("jones00") > -1)
                         {
                             Logger.Info("****  sendUserSSNInfoToSynapseV3 -> JUST A TEST BLOCK REACHED! [" + userNameDecrypted + "] ****");
                             baseAddress = "https://sandbox.synapsepay.com/api/v3/user/doc/add";
@@ -1369,7 +1369,7 @@ namespace Nooch.Common
 
                         try
                         {
-                            Logger.Info("Send User's SSN Info To Synapse V3 -> Payload to send to Synapse: [OauthKey: " + login.oauth_key +
+                            Logger.Info("Common Helper -> sendUserSsnInfoToSynapseV3 - About To Query Synapse (/v3/user/doc/add) -> Payload to send to Synapse: [OauthKey: " + login.oauth_key +
                                 "], [Birth_day: " + doc.birth_day + "], [Birth_month: " + doc.birth_month +
                                 "], [Birth_year: " + doc.birth_year + "], [name_first: " + doc.name_first +
                                 "], [name_last: " + doc.name_last + "], [ssn: " + doc.document_value +
@@ -1382,8 +1382,7 @@ namespace Nooch.Common
                             Logger.Error("Common Helper -> sendUserSSNInfoToSynapseV3 - Couldn't log Synapse SSN Payload. [Exception: " + ex + "]");
                         }
 
-                        #endregion For Testing
-
+                        #endregion For Testing & Logging
 
                         var http = (HttpWebRequest)WebRequest.Create(new Uri(baseAddress));
                         http.Accept = "application/json";
@@ -1432,7 +1431,7 @@ namespace Nooch.Common
                                 if (synapseResponse.question_set != null)
                                 {
                                     // Further Verification is needed...
-                                    res.message = "additional questions needed";
+                                    #region Additional Verification Questions Returned
 
                                     // Now make sure an Array[] set of 'questions' was returned (could be up to 5 questions, each with 5 possible answer choices)
                                     if (synapseResponse.question_set.questions != null)
@@ -1488,20 +1487,22 @@ namespace Nooch.Common
                                             _dbContext.SaveChanges();
                                         }
 
+                                        res.message = "additional questions needed";
+
                                         #endregion Iterate Through Each Question And Save in DB
                                     }
+
+                                    #endregion Additional Verification Questions Returned
                                 }
                                 else if (synapseResponse.user != null)
                                 {
                                     // User is verified completely. In this case response is same as Register User With Synapse...
                                     // Just update permission in CreateSynapseUserResults table
-
                                     #region Update Permission in SynapseCreateUserResults Table
 
                                     try
                                     {
                                         // Get existing records from dbo.SynapseCreateUserResults for this Member
-
                                         var synapseRes = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == id &&
                                                                                                                  m.IsDeleted == false);
 
@@ -1525,6 +1526,7 @@ namespace Nooch.Common
                                     // Update Member's DB record
                                     memberEntity.IsVerifiedWithSynapse = true;
                                     memberEntity.ValidatedDate = DateTime.Now;
+                                    memberEntity.DateModified = DateTime.Now;
 
                                     res.message = "complete success";
                                 }
@@ -1545,15 +1547,10 @@ namespace Nooch.Common
                         }
 
                         #endregion Parse Synapse Response
-
                     }
                     catch (WebException we)
                     {
                         var httpStatusCode = ((HttpWebResponse)we.Response).StatusCode;
-
-                        Logger.Error("Common Helper -> sendUserSsnInfoToSynapseV3 FAILED (Outer) - [errorCode: " + httpStatusCode.ToString() + "], [Message" + we.Message + "]");
-
-                        res.message = "CommonHelper Exception";
 
                         var response = new StreamReader(we.Response.GetResponseStream()).ReadToEnd();
                         JObject errorJsonFromSynapse = JObject.Parse(response);
@@ -1563,65 +1560,78 @@ namespace Nooch.Common
                         //                   back the error number & msg to the function that called this method.
                         string errorMsg = errorJsonFromSynapse["error"]["en"].ToString();
 
-                        if (!String.IsNullOrEmpty(errorMsg) &&
-                            (errorMsg.IndexOf("Unable to verify") > -1 ||
-                             errorMsg.IndexOf("submit a valid copy of passport") > -1))
+                        if (errorMsg != null)
                         {
-                            Logger.Info("****  THIS USER'S SSN INFO WAS NOT VERIFIED AT ALL. MUST INVESTIGATE WHY (COULD BE TYPO WITH PERSONAL INFO). " +
-                                        "DETERMINE IF NECESSARY TO ASK FOR DRIVER'S LICENSE.  ****");
+                            Logger.Error("Common Helper -> sendUserSsnInfoToSynapseV3 FAILED (Outer) - [errorCode: " + httpStatusCode.ToString() +
+                                         "], [Error Message from Synapse: " + errorMsg + "]");
 
-                            memberEntity.AdminNotes = "SSN INFO WAS INVALID WHEN SENT TO SYNAPSE. NEED TO COLLECT DRIVER'S LICENSE.";
+                            res.message = errorMsg;
 
-                            // Email Nooch Admin about this user for manual follow-up (Send email to Cliff)
-                            #region Notify Nooch Admin About Failed SSN Validation
-
-                            try
+                            if (!String.IsNullOrEmpty(errorMsg) &&
+                                (errorMsg.IndexOf("Unable to verify") > -1 ||
+                                 errorMsg.IndexOf("submit a valid copy of passport") > -1))
                             {
-                                StringBuilder st = new StringBuilder();
+                                Logger.Info("****  THIS USER'S SSN INFO WAS NOT VERIFIED AT ALL. MUST INVESTIGATE WHY (COULD BE TYPO WITH PERSONAL INFO). " +
+                                            "DETERMINE IF NECESSARY TO ASK FOR DRIVER'S LICENSE.  ****");
 
-                                string city = !String.IsNullOrEmpty(memberEntity.City) ? CommonHelper.GetDecryptedData(memberEntity.City) : "NONE";
+                                memberEntity.AdminNotes = "SSN INFO WAS INVALID WHEN SENT TO SYNAPSE. NEED TO COLLECT DRIVER'S LICENSE.";
 
-                                st.Append("<table border='1' cellpadding='6' style='border-collapse:collapse;text-align:center;'>" +
-                                          "<tr><th>PARAMETER</th><th>VALUE</th></tr>");
-                                st.Append("<tr><td><strong>Name</strong></td><td>" + usersFirstName + " " + usersLastName + "</td></tr>");
-                                st.Append("<tr><td><strong>MemberId</strong></td><td>" + MemberId + "</td></tr>");
-                                st.Append("<tr><td><strong>Nooch_ID</strong></td><td><a href=\"https://noochme.com/noochnewadmin/Member/Detail?NoochId=" + memberEntity.Nooch_ID + "\" target='_blank'>" + memberEntity.Nooch_ID + "</a></td></tr>");
-                                st.Append("<tr><td><strong>Status</strong></td><td><strong>" + memberEntity.Status + "</strong></td></tr>");
-                                st.Append("<tr><td><strong>DOB</strong></td><td>" + Convert.ToDateTime(memberEntity.DateOfBirth).ToString("MMMM dd, yyyy") + "</td></tr>");
-                                st.Append("<tr><td><strong>SSN</strong></td><td>" + usersSsnLast4 + "</td></tr>");
-                                st.Append("<tr><td><strong>Address</strong></td><td>" + usersAddress + "</td></tr>");
-                                st.Append("<tr><td><strong>City</strong></td><td>" + city + "</td></tr>");
-                                st.Append("<tr><td><strong>ZIP</strong></td><td>" + usersZip + "</td></tr>");
-                                st.Append("<tr><td><strong>Contact #</strong></td><td>" + CommonHelper.FormatPhoneNumber(memberEntity.ContactNumber) + "</td></tr>");
-                                st.Append("<tr><td><strong>Phone Verified?</strong></td><td>" + memberEntity.IsVerifiedPhone.ToString() + "</td></tr>");
-                                st.Append("<tr><td><strong>IsVerifiedWithSynapse</strong></td><td>" + memberEntity.IsVerifiedWithSynapse.ToString() + "</td></tr>");
-                                st.Append("</table>");
+                                // Email Nooch Admin about this user for manual follow-up (Send email to Cliff)
+                                #region Notify Nooch Admin About Failed SSN Validation
 
-                                StringBuilder completeEmailTxt = new StringBuilder();
-                                string s = "<html><body><h3>Nooch SSN Verification Failure</h3><p style='margin:0 auto 20px;'>The following Nooch user just failed an SSN Verification attempt:</p>"
-                                           + st.ToString() +
-                                           "<br/><br/><small>This email was generated automatically during <strong>[CommonHelper -> sendUserSsnInfoToSynapseV3]</strong>.</small></body></html>";
+                                try
+                                {
+                                    StringBuilder st = new StringBuilder();
 
-                                completeEmailTxt.Append(s);
-                                Utility.SendEmail(null, "SSNFAILURE@nooch.com", "cliff@nooch.com",
-                                                  null, "NOOCH USER'S SSN (V3) VALIDATION FAILED", null, null, null, null, completeEmailTxt.ToString());
+                                    string city = !String.IsNullOrEmpty(memberEntity.City) ? CommonHelper.GetDecryptedData(memberEntity.City) : "NONE";
+
+                                    st.Append("<table border='1' cellpadding='6' style='border-collapse:collapse;text-align:center;'>" +
+                                              "<tr><th>PARAMETER</th><th>VALUE</th></tr>");
+                                    st.Append("<tr><td><strong>Name</strong></td><td>" + usersFirstName + " " + usersLastName + "</td></tr>");
+                                    st.Append("<tr><td><strong>MemberId</strong></td><td>" + MemberId + "</td></tr>");
+                                    st.Append("<tr><td><strong>Nooch_ID</strong></td><td><a href=\"https://noochme.com/noochnewadmin/Member/Detail?NoochId=" + memberEntity.Nooch_ID + "\" target='_blank'>" + memberEntity.Nooch_ID + "</a></td></tr>");
+                                    st.Append("<tr><td><strong>Status</strong></td><td><strong>" + memberEntity.Status + "</strong></td></tr>");
+                                    st.Append("<tr><td><strong>DOB</strong></td><td>" + Convert.ToDateTime(memberEntity.DateOfBirth).ToString("MMMM dd, yyyy") + "</td></tr>");
+                                    st.Append("<tr><td><strong>SSN</strong></td><td>" + usersSsnLast4 + "</td></tr>");
+                                    st.Append("<tr><td><strong>Address</strong></td><td>" + usersAddress + "</td></tr>");
+                                    st.Append("<tr><td><strong>City</strong></td><td>" + city + "</td></tr>");
+                                    st.Append("<tr><td><strong>ZIP</strong></td><td>" + usersZip + "</td></tr>");
+                                    st.Append("<tr><td><strong>Contact #</strong></td><td>" + CommonHelper.FormatPhoneNumber(memberEntity.ContactNumber) + "</td></tr>");
+                                    st.Append("<tr><td><strong>Phone Verified?</strong></td><td>" + memberEntity.IsVerifiedPhone.ToString() + "</td></tr>");
+                                    st.Append("<tr><td><strong>IsVerifiedWithSynapse</strong></td><td>" + memberEntity.IsVerifiedWithSynapse.ToString() + "</td></tr>");
+                                    st.Append("</table>");
+
+                                    StringBuilder completeEmailTxt = new StringBuilder();
+                                    string s = "<html><body><h3>Nooch SSN Verification Failure</h3><p style='margin:0 auto 20px;'>The following Nooch user just failed an SSN Verification attempt:</p>"
+                                               + st.ToString() +
+                                               "<br/><br/><small>This email was generated automatically during <strong>[CommonHelper -> sendUserSsnInfoToSynapseV3]</strong>.</small></body></html>";
+
+                                    completeEmailTxt.Append(s);
+                                    Utility.SendEmail(null, "SSNFAILURE@nooch.com", "cliff@nooch.com",
+                                                      null, "NOOCH USER'S SSN (V3) VALIDATION FAILED", null, null, null, null, completeEmailTxt.ToString());
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.Error("Common Helper -> sendUserSsnInfoToSynapseV3 FAILED - Attempted to notify Nooch Admin via email but got Exception: [" + ex + "]");
+                                }
+
+                                #endregion Notify Nooch Admin About Failed SSN Validation
+
+
+                                // Now try to send ID verification document (IF VerificationDoc is AVAILABLE... WHICH IT PROBABLY WON'T BE)
+                                if (!String.IsNullOrEmpty(memberEntity.VerificationDocumentPath))
+                                {
+                                    Logger.Info("CommonHelper -> sendUserSsnInfoToSynapseV3 - ID Document Path found, so attempting submitDocumentToSynapseV3()");
+
+                                    // CLIFF (10/10/15): I guess we will have to add more code depending on what the response for this next line is...
+                                    submitDocumentToSynapseV3(memberEntity.MemberId.ToString(), memberEntity.VerificationDocumentPath);
+                                }
                             }
-                            catch (Exception ex)
-                            {
-                                Logger.Error("Common Helper -> sendUserSsnInfoToSynapseV3 FAILED - Attempted to notify Nooch Admin via email but got Exception: [" + ex + "]");
-                            }
+                        }
+                        else
+                        {
+                            res.message = "CommonHelper Exception";
 
-                            #endregion Notify Nooch Admin About Failed SSN Validation
-
-
-                            // Now try to send ID verification document (IF VerificationDoc is AVAILABLE... WHICH IT PROBABLY WON'T BE)
-                            if (!String.IsNullOrEmpty(memberEntity.VerificationDocumentPath))
-                            {
-                                Logger.Info("CommonHelper -> sendUserSsnInfoToSynapseV3 - ID Document Path found, so attempting submitDocumentToSynapseV3()");
-
-                                // CLIFF (10/10/15): I guess we will have to add more code depending on what the response for this next line is...
-                                submitDocumentToSynapseV3(memberEntity.MemberId.ToString(), memberEntity.VerificationDocumentPath);
-                            }
                         }
                     }
 
@@ -1629,7 +1639,7 @@ namespace Nooch.Common
                     memberEntity.DateModified = DateTime.Now;
                     _dbContext.SaveChanges();
 
-                    #endregion Parse Synapse Response
+                    #endregion Send SSN Info To Synapse
                 }
                 else
                 {

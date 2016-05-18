@@ -1897,8 +1897,6 @@ namespace Nooch.DataAccess
 
                         if (refreshTokenResult != null && refreshTokenResult.success)
                         {
-                            res.success = true;
-
                             res.oauth = new createUserV3Result_oauth()
                             {
                                 expires_at = synapseCreateUserObjIfExists.expires_at,
@@ -1921,6 +1919,7 @@ namespace Nooch.DataAccess
                             };
                             res.user_id = synapseCreateUserObjIfExists.user_id;
 
+                            res.success = true;
 
                             if (noochMember.IsVerifiedWithSynapse == true)
                             {
@@ -1929,10 +1928,10 @@ namespace Nooch.DataAccess
                             }
                             else if (res.user.permission == "SEND-AND-RECEIVE")
                             {
-                                #region User Not Previously Verified But Got Send-Receive Permissions This Time
+                                #region Update IsVerifiedWithSynapse Value In Member Table
                                 try
                                 {
-                                    Logger.Info("MDA -> RegisterUserWithSynapseV3 - ** ID Already Verified (Case 2) ** - [MemberID: " + memberId + "]");
+                                    Logger.Info("MDA -> RegisterUserWithSynapseV3 - ** ID Already Verified  - Got SEND-AND-RECEIVE in SynapseCreateUser Table (Case 2) ** - [MemberID: " + memberId + "]");
 
                                     noochMember.IsVerifiedWithSynapse = true;
                                     _dbContext.SaveChanges();
@@ -1944,7 +1943,7 @@ namespace Nooch.DataAccess
                                     Logger.Error("MDA -> RegisterUserWithSynapseV3 - IsVerifiedWithSynapse is false, but Synapse returned Permission of \"SEND-AND-RECEIVE\" - " +
                                                  "[Exception: " + ex + "]");
                                 }
-                                #endregion User Not Previously Verified But Got Send-Receive Permissions This Time
+                                #endregion Update IsVerifiedWithSynapse Value In Member Table
                             }
                             else
                             {
@@ -1974,6 +1973,7 @@ namespace Nooch.DataAccess
                                     else
                                     {
                                         Logger.Info("MDA -> RegisterUserWithSynapseV3 - SSN Info Verified FAILED :-(  [Email: " + CommonHelper.GetDecryptedData(noochMember.UserName) + "], [submitSsn.message: " + submitSsn.message + "]");
+                                        res.ssn_verify_status = "Not Verified";
                                     }
 
                                     #endregion Logging
@@ -1983,6 +1983,11 @@ namespace Nooch.DataAccess
                                     Logger.Error("MDA -> RegisterUserWithSynapseV3 - Attempted sendUserSsnInfoToSynapseV3 but got Exception: [" + ex.Message + "]");
                                 }
                             }
+
+                            // Cliff (5/17/16): This returns true even if the SSN was unable to be verified above, as long as an Access_Token was found in Nooch's DB to send back/
+                            //                  The user may be adding a bank and might still need to answer the ID Verification questions afterwards,
+                            //                  or it could be a Rent Scene user who don't use the iOS app, so we can deal with fixing their Permissions after they connect a bank.
+                            res.success = true;
                         }
                         else
                         {
@@ -4523,6 +4528,7 @@ namespace Nooch.DataAccess
             Logger.Info("MDA -> SynapseV3MFABankVerify Initiated. [MemberId: " + MemberId + "], [BankName: " + BankName + "], [MFA Response: " + MfaResponse + "]");
 
             SynapseBankLoginV3_Response_Int res = new SynapseBankLoginV3_Response_Int();
+            res.Is_success = false;
 
             #region Check If All Data Passed
 
@@ -4575,84 +4581,63 @@ namespace Nooch.DataAccess
                         noochMember.Type != "Landlord" && noochMember.Type != "Tenant" && noochMember.Type != "Personal - Browser")
                     {
                         Logger.Info("MDA -> SynapseV3MFABankVerify ERROR: Member is not Active [" + MemberId + "]");
-
-                        res.Is_success = false;
                         res.errorMsg = "User status is not active but: " + noochMember.Status;
                         return res;
                     }
 
-                    if ((noochMember.IsVerifiedPhone == null || noochMember.IsVerifiedPhone == false) &&
-                         noochMember.Type != "Landlord" && noochMember.Type != "Tenant" && noochMember.Type != "Personal - Browser" &&
-                         noochMember.Status != "NonRegistered")
+                    if (noochMember.IsVerifiedPhone != true &&
+                        noochMember.Type != "Landlord" && noochMember.Type != "Tenant" && noochMember.Type != "Personal - Browser" &&
+                        noochMember.Status != "NonRegistered")
                     {
                         Logger.Info("MDA -> SynapseV3MFABankVerify ERROR: Member's phone is not verified [" + MemberId + "]");
-
-                        res.Is_success = false;
                         res.errorMsg = "User phone is not verified";
                         return res;
                     }
+
                     #endregion Check For Active Status and Verified Phone
 
-                    // checking member auth token in db stored after synapse create user service call
-                    #region CHECKING FOR SYNAPSE AUTH TOKEN
+                    // Checking member auth token in DB stored after synapse create user service call
 
                     var noochMemberResultFromSynapseAuth = CommonHelper.GetSynapseCreateaUserDetails(id.ToString());
-
-
                     if (noochMemberResultFromSynapseAuth == null)
                     {
                         Logger.Info("MDA - SynapseV3MFABankVerify -> could not locate Synapse Auth Token for Member: [" + MemberId + "]");
-
-                        res.Is_success = false;
                         res.errorMsg = "No Synapse Authentication code found for given user.";
                         return res;
                     }
-
-                    #endregion CHECKING FOR SYNAPSE AUTH TOKEN
 
                     #region GOT USERS SYNAPSE AUTH TOKEN
 
                     else
                     {
-                        // we have authentication token
                         SynapseBankVerifyV3_Input bankLoginPars = new SynapseBankVerifyV3_Input();
 
-                        //user login
                         SynapseV3Input_login log = new SynapseV3Input_login()
                         {
                             oauth_key = CommonHelper.GetDecryptedData(noochMemberResultFromSynapseAuth.access_token)
                         };
-
                         bankLoginPars.login = log;
 
-                        //user finger print
                         SynapseV3Input_user fing = new SynapseV3Input_user()
                         {
                             fingerprint = noochMember.UDID1
                         };
-
                         bankLoginPars.user = fing;
 
-
-                        // node object
-                        SynapseBankVerifyV3_Input_node no = new SynapseBankVerifyV3_Input_node();
+                        SynapseBankVerifyV3_Input_node node = new SynapseBankVerifyV3_Input_node();
 
                         SynapseNodeId node_id = new SynapseNodeId() { oid = BankId };
-                        no._id = node_id;
+                        node._id = node_id;
 
                         SynapseBankVerifyV3_Input_node_verify veri = new SynapseBankVerifyV3_Input_node_verify();
                         veri.mfa = MfaResponse;
 
-                        no.verify = veri;
+                        node.verify = veri;
 
-                        bankLoginPars.node = no;
-
-                        //bankLoginPars.node._id.oid = BankId;
-                        //bankLoginPars.node.verify.mfa = MfaResponse;
+                        bankLoginPars.node = node;
 
                         string UrlToHit = "";
                         UrlToHit = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/node/verify" : "https://synapsepay.com/api/v3/node/verify";
-
 
                         // Calling Synapse Bank Login service (Link a Bank Account)
 
@@ -4676,14 +4661,13 @@ namespace Nooch.DataAccess
                             var sr = new StreamReader(stream);
                             var content = sr.ReadToEnd();
 
-                            //dynamic bankLoginResponseFromSynapse = JsonConvert.DeserializeObject <dynamic>(content);
-                            //dynamic bankLoginResponseFromSynapse = JArray.Parse(content);
-
                             JObject bankLoginRespFromSynapse = JObject.Parse(content);
 
                             if (bankLoginRespFromSynapse["success"].ToString().ToLower() == "true" &&
                                 bankLoginRespFromSynapse["nodes"] != null)
                             {
+                                Logger.Info("MDA -> SynapseV3MFABankVerify - Sucess from Synapse!");
+
                                 res.Is_success = true;
 
                                 #region Marking Any Existing Synapse Bank Login Entries as Deleted
@@ -4695,12 +4679,11 @@ namespace Nooch.DataAccess
                                 //{
                                 //    v.IsDeleted = true;
                                 //    _dbContext.SaveChanges();
-
                                 //}
 
                                 #endregion Marking Any Existing Synapse Bank Login Entries as Deleted
 
-                                #region Check if MFA was returned
+                                #region Check If Another MFA Was Returned
 
                                 if (bankLoginRespFromSynapse["nodes"][0]["extra"]["mfa"] != null ||
                                     bankLoginRespFromSynapse["nodes"][0]["allowed"] == null)
@@ -4714,11 +4697,11 @@ namespace Nooch.DataAccess
                                     sbr.dateCreated = DateTime.Now;
                                     sbr.IsDeleted = false;
                                     sbr.IsMfa = true;
-                                    sbr.IsCodeBasedAuth = false;  // NO MORE CODE-BASED WITH SYNAPSE V3, EVERY MFA IS THE SAME NOW
+                                    sbr.IsCodeBasedAuth = false; // NO MORE CODE-BASED WITH SYNAPSE V3, EVERY MFA IS THE SAME NOW
                                     sbr.IsQuestionBasedAuth = true;
                                     sbr.mfaQuestion = bankLoginRespFromSynapse["nodes"][0]["extra"]["mfa"]["message"].ToString();
                                     sbr.mfaMessage = null; // For Code-Based MFA - NOT USED ANYMORE, SHOULD REMOVE FROM DB
-                                    sbr.BankAccessToken = CommonHelper.GetEncryptedData(bankLoginRespFromSynapse["nodes"][0]["_id"]["$oid"].ToString()); // CLIFF (8/22/15): Not sure if this syntax is correct
+                                    sbr.BankAccessToken = CommonHelper.GetEncryptedData(bankLoginRespFromSynapse["nodes"][0]["_id"]["$oid"].ToString());
                                     sbr.AuthType = "questions";
 
                                     // Add object to Nooch DB
@@ -4732,63 +4715,57 @@ namespace Nooch.DataAccess
                                     _id idd = new _id();
                                     idd.oid = bankLoginRespFromSynapse["nodes"][0]["_id"]["$oid"].ToString();
                                     //res.SynapseNodesList.nodes[0]._id.oid = bankLoginRespFromSynapse["nodes"][0]["_id"]["$oid"].ToString(); // Not sure this syntax is right   -- -- Malkit - me neither..will check this when I get any such response from web sevice.
+
                                     RootBankObject rObj = new RootBankObject();
+
                                     nodes nod = new nodes();
                                     nod._id = idd;
+
                                     nodes[] arr = new nodes[1];
                                     arr[0] = new nodes() { _id = idd };
+
                                     rObj.nodes = arr;
-                                    //rObj.
+
                                     res.SynapseNodesList = rObj;
                                     res.mfaMessage = bankLoginRespFromSynapse["nodes"][0]["extra"]["mfa"]["message"].ToString();
 
-                                    Logger.Info("MDA -> SynapseV3MFABankVerify: SUCCESS, Got MFA Again from Synapse - [UserName: " + CommonHelper.GetDecryptedData(noochMember.UserName) + "]");
+                                    Logger.Info("MDA -> SynapseV3MFABankVerify - Got another MFA Question - [Question: " + bankLoginRespFromSynapse["nodes"][0]["extra"]["mfa"]["message"] + "]");
 
                                     return res;
-
-
-                                    //res.Is_MFA = true;
-                                    //res.errorMsg = "OK";
-                                    //res.SynapseNodesList.nodes[0]._id.oid = bankLoginRespFromSynapse["nodes"][0]["_id"]["$oid"].ToString(); // Not sure this syntax is right
-                                    //res.mfaMessage = bankLoginRespFromSynapse["nodes"][0]["extra"]["mfa"]["message"].ToString();
-
-                                    //Logger.LogDebugMessage("MDA -> SynapseV3MFABankVerify: SUCCESS, Got MFA Again from Synapse - [UserName: " + CommonHelper.GetDecryptedData(noochMember.UserName) + "]");
-
-                                    //return res;
                                 }
 
-                                #endregion Check if MFA was returned
+                                #endregion Check If Another MFA Was Returned
 
                                 #region No MFA response returned
 
                                 else
                                 {
-                                    // Now we know MFA is NOT required this time
+                                    res.Is_MFA = false;
 
                                     // Array[] of banks ("nodes") expected here
                                     RootBankObject allNodesParsedResult = JsonConvert.DeserializeObject<RootBankObject>(content);
 
                                     if (allNodesParsedResult != null)
                                     {
-                                        res.Is_MFA = false;
                                         res.errorMsg = "OK";
                                         res.SynapseNodesList = allNodesParsedResult;
 
                                         Logger.Info("MDA -> SynapseV3MFABankVerify (No MFA Again): SUCCESSFUL, returning Bank Array for: [" + MemberId + "]");
 
-                                        // saving these banks ("nodes) in DB, later one of these banks will be set as default bank
+                                        // saving these banks ('nodes') in DB, later one of these banks will be set as default bank
                                         foreach (nodes v in allNodesParsedResult.nodes)
                                         {
                                             SynapseBanksOfMember sbm = new SynapseBanksOfMember();
 
-                                            sbm.AddedOn = DateTime.Now;
-                                            sbm.IsDefault = false;
+                                            // Cliff (5/17/16): Shouldn't this block also save the commented out lines below...'account_class', 'account_type', etc.?
                                             Guid memId = Utility.ConvertToGuid(MemberId);
                                             sbm.MemberId = memId;
-                                            //   sbm.account_class = v.account_class;
+                                            sbm.AddedOn = DateTime.Now;
+                                            sbm.IsDefault = false;
+                                            // sbm.account_class = v.account_class;
 
                                             sbm.account_number_string = CommonHelper.GetEncryptedData(v.info.account_num);
-                                            //    sbm.account_type = v.type_synapse;
+                                            //  sbm.account_type = v.type_synapse;
 
                                             sbm.bank_name = CommonHelper.GetEncryptedData(v.info.bank_name);
                                             //sbm.bankAdddate = v.date;
@@ -4810,17 +4787,12 @@ namespace Nooch.DataAccess
                                             _dbContext.SynapseBanksOfMembers.Add(sbm);
                                             _dbContext.SaveChanges();
                                             _dbContext.Entry(sbm).Reload();
-
-
                                         }
                                     }
                                     else
                                     {
                                         Logger.Info("MDA -> SynapseV3MFABankVerify (No MFA Again) ERROR: allbanksParsedResult was NULL for: [" + MemberId + "]");
-
-                                        res.Is_MFA = false;
                                         res.errorMsg = "Error occured while parsing banks list.";
-                                        res.Is_success = false;
                                     }
 
                                     return res;
@@ -4833,7 +4805,6 @@ namespace Nooch.DataAccess
                                 // Synapse response for 'success' was not true
                                 Logger.Info("MDA -> SynapseV3MFABankVerify ERROR: Synapse response for 'success' was not true for Member [" + MemberId + "]");
 
-                                res.Is_success = false;
                                 res.errorMsg = "Synapse response for success was not true";
                                 return res;
                             }
@@ -4842,8 +4813,8 @@ namespace Nooch.DataAccess
                         {
                             var errorCode = ((HttpWebResponse)we.Response).StatusCode;
 
-                            Logger.Error("MDA -> SynapseV3MFABankVerify FAILED. Exception was: ["
-                                                   + we.ToString() + "], and errorCode: [" + errorCode.ToString() + "]");
+                            Logger.Error("MDA -> SynapseV3MFABankVerify FAILED. Exception was: [" +
+                                         we.ToString() + "], and errorCode: [" + errorCode.ToString() + "]");
 
                             res.Is_success = false;
                             res.Is_MFA = false;
@@ -4873,8 +4844,6 @@ namespace Nooch.DataAccess
                 else
                 {
                     Logger.Info("MDA -> SynapseV3MFABankVerify ERROR: Member not found: [" + MemberId + "]");
-
-                    res.Is_success = false;
                     res.errorMsg = "Member not found.";
                     return res;
                 }

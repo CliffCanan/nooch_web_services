@@ -3692,8 +3692,7 @@ namespace Nooch.API.Controllers
                 #endregion Get Synapse Account Credentials
 
 
-                // We have Synapse authentication token
-
+                // We have Synapse authentication token, now call Synapse /v3/node/add
                 #region Setup Call To SynapseV3 /node/add
 
                 SynapseBankLoginv3_Input bankloginParameters = new SynapseBankLoginv3_Input();
@@ -3747,7 +3746,7 @@ namespace Nooch.API.Controllers
 
                 #endregion Setup Call To SynapseV3 /node/add
 
-                Logger.Info("Serice Cntrlr -> SynapseV3AddNode - AddNode PAYLOAD IS: [Oauth_Key:" + bankloginParameters.login.oauth_key +
+                Logger.Info("Serice Cntrlr -> SynapseV3AddNode - /node/add PAYLOAD IS: [Oauth_Key:" + bankloginParameters.login.oauth_key +
                             "], [Fngrprnt: " + bankloginParameters.user.fingerprint + "], [Type: " + bankloginParameters.node.type +
                             "], [Bank_ID: " + bankloginParameters.node.info.bank_id + "], [Bank_PW: " + bankloginParameters.node.info.bank_pw +
                             "], [Bank_Name: " + bankloginParameters.node.info.bank_name + "], [Supp_ID: " + bankloginParameters.node.extra.supp_id + "]");
@@ -3813,7 +3812,7 @@ namespace Nooch.API.Controllers
                             sbr.IsDeleted = false;
                             sbr.IsCodeBasedAuth = false;  // NO MORE CODE-BASED WITH SYNAPSE V3, EVERY MFA IS THE SAME NOW
                             sbr.mfaMessage = null; // For Code-Based MFA - NOT USED ANYMORE, SHOULD REMOVE FROM DB
-                            sbr.BankAccessToken = CommonHelper.GetEncryptedData(bankLoginRespFromSynapse["nodes"][0]["_id"]["$oid"].ToString()); // CLIFF (8/21/15): Not sure if this syntax is correct
+                            sbr.BankAccessToken = CommonHelper.GetEncryptedData(bankLoginRespFromSynapse["nodes"][0]["_id"]["$oid"].ToString());
                             //res.bankMFA = bankLoginRespFromSynapse["nodes"][0]["_id"]["$oid"].ToString();
 
                             if (bankLoginRespFromSynapse["nodes"][0]["extra"]["mfa"] != null ||
@@ -3845,8 +3844,7 @@ namespace Nooch.API.Controllers
                                 nodes nodenew = new nodes();
                                 nodenew._id = idd;
                                 nodenew.allowed = bankLoginRespFromSynapse["nodes"][0]["allowed"] != null ?
-                                                  bankLoginRespFromSynapse["nodes"][0]["allowed"].ToString() :
-                                                  null;
+                                                  bankLoginRespFromSynapse["nodes"][0]["allowed"].ToString() : null;
                                 nodenew.extra = new extra();
                                 nodenew.extra.mfa = new extra_mfa();
                                 nodenew.extra.mfa.message = bankLoginRespFromSynapse["nodes"][0]["extra"]["mfa"]["message"].ToString().Trim();
@@ -4135,7 +4133,6 @@ namespace Nooch.API.Controllers
                     b.nickname = bank.info.nickname;
                     b.account_num = (bank.info.account_num);
 
-
                     bankslistextint.Add(b);
                 }
                 nodesList.nodes = bankslistextint;
@@ -4150,12 +4147,11 @@ namespace Nooch.API.Controllers
 
             else if (mdaResult.Is_MFA == true)
             {
-                //res.Bank_Access_Token = mdaResult.Bank_Access_Token;
+                res.bankOid = mdaResult.SynapseNodesList.nodes[0]._id.oid;
 
                 if (!String.IsNullOrEmpty(mdaResult.mfaMessage))
                 {
                     res.mfaQuestion = mdaResult.mfaMessage;
-                    res.bankOid = mdaResult.SynapseNodesList.nodes[0]._id.oid;
                 }
             }
 

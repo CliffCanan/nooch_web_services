@@ -331,21 +331,21 @@ namespace Nooch.Web.Controllers
             try
             {
                 // 1. Attempt to register the user with Synapse
-                BankLoginResult accountCreateResult = RegisterUserWithSynapse(inp.memberid);
+                BankLoginResult registerSynapseUserResult = RegisterUserWithSynapse(inp.memberid);
 
-                res.ssn_verify_status = accountCreateResult.ssn_verify_status; // Will be overwritten if Bank Login is successful below
+                res.ssn_verify_status = registerSynapseUserResult.ssn_verify_status; // Will be overwritten if Bank Login is successful below
 
-                if (accountCreateResult.IsSuccess == true)
+                if (registerSynapseUserResult.IsSuccess == true)
                 {
                     Logger.Info("NoochController -> BankLogin -> Synapse account created successfully! [MemberID: " + inp.memberid +
-                                "], [SSN Status: " + accountCreateResult.ssn_verify_status + "]");
+                                "], [SSN Status: " + registerSynapseUserResult.ssn_verify_status + "]");
 
                     // 2. Now call the bank login service.
                     //    Response could be: 1.) array[] of banks,  2.) Question-based MFA,  3.) Code-based MFA, or  4.) Failure/Error
 
                     string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-                    string serviceMethod = "/SynapseV3AddNode?MemberId=" + inp.memberid + "&BnkName=" + inp.bankname + "&BnkUserName=" + inp.username
-                                           + "&BnkPw=" + inp.password;
+                    string serviceMethod = "/SynapseV3AddNode?MemberId=" + inp.memberid + "&BnkName=" + inp.bankname + "&BnkUserName=" + inp.username +
+                                           "&BnkPw=" + inp.password;
 
                     SynapseV3BankLoginResult_ServiceRes bankLoginResult = ResponseConverter<SynapseV3BankLoginResult_ServiceRes>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
 
@@ -396,16 +396,16 @@ namespace Nooch.Web.Controllers
                 }
                 else
                 {
-                    Logger.Error("NoochController -> BankLogin -> Register Synapse User FAILED -> [MemberID: " + inp.memberid + "], [Error Msg: " + accountCreateResult.Message + "]");
-                    res.ERROR_MSG = accountCreateResult.Message;
+                    Logger.Error("NoochController -> BankLogin -> Register Synapse User FAILED -> [MemberID: " + inp.memberid + "], [Error Msg: " + registerSynapseUserResult.Message + "]");
+                    res.ERROR_MSG = registerSynapseUserResult.Message;
                 }
 
                 // Check if Register method and Bank Login method both got same result for ssn_verify_status
                 // ... not sure which one to prioritize yet in the case of a discrepency, but going with BankLogin one for now.
-                if (res.ssn_verify_status != accountCreateResult.ssn_verify_status)
+                if (res.ssn_verify_status != registerSynapseUserResult.ssn_verify_status)
                 {
                     Logger.Info("NoochController -> BankLogin -> ssn_verify_status from Registering User was [" +
-                                accountCreateResult.ssn_verify_status + "], but ssn_verify_status from BankLogin was: [" +
+                                registerSynapseUserResult.ssn_verify_status + "], but ssn_verify_status from BankLogin was: [" +
                                 res.ssn_verify_status + "]");
                 }
             }
@@ -512,15 +512,15 @@ namespace Nooch.Web.Controllers
                 var scriptSerializer = new JavaScriptSerializer();
                 string json;
 
-                SynapseV3VerifyNode_ServiceInput inpu = new SynapseV3VerifyNode_ServiceInput();
-                inpu.BankName = inp.bank; // not required..keeping it for just in case we need something to do with it.
-                inpu.MemberId = inp.memberid;
-                inpu.mfaResponse = inp.MFA;
-                inpu.bankId = inp.ba;   // this is bank_node_id...grabbed during earlier step
+                SynapseV3VerifyNode_ServiceInput verifyNodeObj = new SynapseV3VerifyNode_ServiceInput();
+                verifyNodeObj.BankName = inp.bank; // not required..keeping it for just in case we need something to do with it.
+                verifyNodeObj.MemberId = inp.memberid;
+                verifyNodeObj.mfaResponse = inp.MFA;
+                verifyNodeObj.bankId = inp.ba;   // this is bank_node_id...grabbed during earlier step
 
                 try
                 {
-                    json = scriptSerializer.Serialize(inpu);
+                    json = scriptSerializer.Serialize(verifyNodeObj);
 
                     string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
                     string serviceMethod = "/SynapseV3MFABankVerify";
@@ -528,6 +528,8 @@ namespace Nooch.Web.Controllers
 
                     if (bnkloginresult.Is_success == true)
                     {
+                        Logger.Info("NoochController -> MFALogin Success! -> [MemberID: " + inp.memberid + "], [Bank: " + inp.bank + "]");
+
                         res.Is_success = true;
                         res.Is_MFA = bnkloginresult.Is_MFA;
 
@@ -538,10 +540,8 @@ namespace Nooch.Web.Controllers
                             sbc.account_class = bankNode.account_class;
                             sbc.account_number_string = bankNode.account_num;
                             sbc.account_type = bankNode.account_type.ToString();
-
-                            //sbc.balance = bankNode.;
                             sbc.bank_name = bankNode.bank_name;
-                            sbc.bankoid = bankNode.oid;  // using this same id to set bank account as default
+                            sbc.bankoid = bankNode.oid;  // will use this ID to set bank account as default
                             sbc.nickname = bankNode.nickname;
                             sbc.routing_number_string = bankNode.routing_num;
                             sbc.is_active = bankNode.is_active;
@@ -574,7 +574,7 @@ namespace Nooch.Web.Controllers
                     else
                     {
                         Logger.Error("NoochController -> MFALogin FAILED -> [Error Msg: " + bnkloginresult.errorMsg +
-                                               "], [MemberID: " + inp.memberid + "], [Bank: " + inp.bank + "], [MFA: " + inp.MFA + "]");
+                                     "], [MemberID: " + inp.memberid + "], [Bank: " + inp.bank + "], [MFA: " + inp.MFA + "]");
                         res.Is_success = false;
                         res.ERROR_MSG = bnkloginresult.errorMsg;
                     }
