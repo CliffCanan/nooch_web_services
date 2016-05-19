@@ -3746,7 +3746,7 @@ namespace Nooch.API.Controllers
 
                 #endregion Setup Call To SynapseV3 /node/add
 
-                Logger.Info("Serice Cntrlr -> SynapseV3AddNode - /node/add PAYLOAD IS: [Oauth_Key:" + bankloginParameters.login.oauth_key +
+                Logger.Info("Service Cntrlr -> SynapseV3AddNode - /node/add PAYLOAD IS: [Oauth_Key:" + bankloginParameters.login.oauth_key +
                             "], [Fngrprnt: " + bankloginParameters.user.fingerprint + "], [Type: " + bankloginParameters.node.type +
                             "], [Bank_ID: " + bankloginParameters.node.info.bank_id + "], [Bank_PW: " + bankloginParameters.node.info.bank_pw +
                             "], [Bank_Name: " + bankloginParameters.node.info.bank_name + "], [Supp_ID: " + bankloginParameters.node.extra.supp_id + "]");
@@ -3813,7 +3813,6 @@ namespace Nooch.API.Controllers
                             sbr.IsCodeBasedAuth = false;  // NO MORE CODE-BASED WITH SYNAPSE V3, EVERY MFA IS THE SAME NOW
                             sbr.mfaMessage = null; // For Code-Based MFA - NOT USED ANYMORE, SHOULD REMOVE FROM DB
                             sbr.BankAccessToken = CommonHelper.GetEncryptedData(bankLoginRespFromSynapse["nodes"][0]["_id"]["$oid"].ToString());
-                            //res.bankMFA = bankLoginRespFromSynapse["nodes"][0]["_id"]["$oid"].ToString();
 
                             if (bankLoginRespFromSynapse["nodes"][0]["extra"]["mfa"] != null ||
                                 bankLoginRespFromSynapse["nodes"][0]["allowed"] == null)
@@ -4049,16 +4048,14 @@ namespace Nooch.API.Controllers
                 {
                     #region Bank Login Catch
 
-                    var errorCode = ((HttpWebResponse)we.Response).StatusCode;
-
-                    Logger.Info("Service Cntrlr -> SynapseV3AddNode FAILED - HTTP ErrorCode: [" + errorCode.ToString() + "], WebException was: [" + we.ToString() + "]");
-
                     res.Is_success = false;
                     res.Is_MFA = false;
 
+                    var errorCode = ((HttpWebResponse)we.Response).StatusCode;
                     var resp = new StreamReader(we.Response.GetResponseStream()).ReadToEnd();
+
                     JObject jsonFromSynapse = JObject.Parse(resp);
-                    Logger.Info(jsonFromSynapse.ToString());
+                    Logger.Error("Service Cntrlr -> SynapseBankLoginRequest FAILED - Synapse Response JSON: [" + jsonFromSynapse.ToString() + "]");
 
                     var error_code = jsonFromSynapse["error_code"].ToString();
                     res.errorMsg = jsonFromSynapse["error"]["en"].ToString();
@@ -4066,18 +4063,17 @@ namespace Nooch.API.Controllers
                     if (!String.IsNullOrEmpty(error_code))
                     {
                         // Synapse Error could be:
-                        // "Fingerprint not registered to the user." ** NOT SURE HOW TO HANDLE **
-                        // "The username provided was not correct."
-                        Logger.Error("Service Cntrlr -> SynapseBankLoginRequest FAILED - [Synapse Error Code: " + error_code +
-                                     "], [Error Msg: " + res.errorMsg + "]");
+                        // "Incorrect oauth_key/fingerprint"
+                        Logger.Error("Service Cntrlr -> SynapseBankLoginRequest FAILED - [Synapse Error Code: " + error_code + "]");
                     }
                     if (!String.IsNullOrEmpty(res.errorMsg))
                     {
-                        Logger.Info("Service Cntrlr -> SynapseBankLoginRequest FAILED. Synapse error msg was: [" + res.errorMsg + "]");
+                        Logger.Error("Service Cntrlr -> SynapseBankLoginRequest FAILED. Synapse Error Msg was: [" + res.errorMsg + "]");
                     }
                     else
                     {
-                        res.errorMsg = "Error in Synapse response - #4051";
+                        Logger.Error("Service Cntrlr -> SynapseV3AddNode FAILED - HTTP ErrorCode: [" + errorCode.ToString() + "], WebException was: [" + we.ToString() + "]");
+                        res.errorMsg = "Error in Synapse response - #4077";
                     }
 
                     return res;
@@ -4102,60 +4098,75 @@ namespace Nooch.API.Controllers
         public SynapseV3BankLoginResult_ServiceRes SynapseV3MFABankVerify(SynapseV3VerifyNode_ServiceInput input)
         {
             SynapseV3BankLoginResult_ServiceRes res = new SynapseV3BankLoginResult_ServiceRes();
+            res.Is_success = false;
 
-            MembersDataAccess mda = new MembersDataAccess();
-
-            SynapseBankLoginV3_Response_Int mdaResult = new SynapseBankLoginV3_Response_Int();
-            mdaResult = mda.SynapseV3MFABankVerify(input.MemberId, input.BankName, input.mfaResponse, input.bankId);
-
-            res.Is_success = mdaResult.Is_success;
-            res.Is_MFA = mdaResult.Is_MFA;
-            res.errorMsg = mdaResult.errorMsg;
-
-            #region Bank List Returned
-
-            if (mdaResult.SynapseNodesList != null && mdaResult.SynapseNodesList.nodes.Length > 0 && !mdaResult.Is_MFA)
+            try
             {
-                SynapseNodesListClass nodesList = new SynapseNodesListClass();
-                List<SynapseIndividualNodeClass> bankslistextint = new List<SynapseIndividualNodeClass>();
+                MembersDataAccess mda = new MembersDataAccess();
 
-                foreach (nodes bank in mdaResult.SynapseNodesList.nodes)
+                SynapseBankLoginV3_Response_Int mdaResult = new SynapseBankLoginV3_Response_Int();
+                mdaResult = mda.SynapseV3MFABankVerify(input.MemberId, input.BankName, input.mfaResponse, input.bankId);
+
+                res.Is_success = mdaResult.Is_success;
+                res.Is_MFA = mdaResult.Is_MFA;
+                res.errorMsg = mdaResult.errorMsg;
+
+                #region Bank List Returned
+
+                if (mdaResult.SynapseNodesList != null && mdaResult.SynapseNodesList.nodes.Length > 0 && !mdaResult.Is_MFA)
                 {
-                    SynapseIndividualNodeClass b = new SynapseIndividualNodeClass();
-                    b.account_class = bank.info._class;
-                    b.bank_name = bank.info.bank_name;
-                    //b.date = bank.date;
-                    b.oid = bank._id.oid;
-                    b.is_active = bank.is_active;
-                    //b.is_verified = bank.is_verified;
-                    //b.mfa_verifed = bank.mfa_verifed;
-                    b.name_on_account = bank.info.name_on_account;
-                    b.nickname = bank.info.nickname;
-                    b.account_num = (bank.info.account_num);
+                    SynapseNodesListClass nodesList = new SynapseNodesListClass();
+                    List<SynapseIndividualNodeClass> bankslistextint = new List<SynapseIndividualNodeClass>();
 
-                    bankslistextint.Add(b);
+                    foreach (nodes bank in mdaResult.SynapseNodesList.nodes)
+                    {
+                        SynapseIndividualNodeClass b = new SynapseIndividualNodeClass();
+                        b.account_class = bank.info._class;
+                        b.bank_name = bank.info.bank_name;
+                        //b.date = bank.date;
+                        b.oid = bank._id.oid;
+                        b.is_active = bank.is_active;
+                        //b.is_verified = bank.is_verified;
+                        //b.mfa_verifed = bank.mfa_verifed;
+                        b.name_on_account = bank.info.name_on_account;
+                        b.nickname = bank.info.nickname;
+                        b.account_num = (bank.info.account_num);
+
+                        bankslistextint.Add(b);
+                    }
+                    nodesList.nodes = bankslistextint;
+                    nodesList.success = mdaResult.Is_success;
+
+                    res.SynapseNodesList = nodesList;
                 }
-                nodesList.nodes = bankslistextint;
-                nodesList.success = mdaResult.Is_success;
 
-                res.SynapseNodesList = nodesList;
+                #endregion Bank List Returned
+
+                #region MFA Required
+
+                else if (mdaResult.Is_MFA == true)
+                {
+                    // Most likely the user submitted an incorrect answer, so they can try again...
+                    // (Don't need to pass back the Bank ID or question since the HTML page still has it.)
+                    // Also possible: another MFA Question from Synapse just like the Bank Login service (/node/add)
+                    if (mdaResult.SynapseNodesList != null &&
+                        mdaResult.SynapseNodesList.nodes.Length > 0)
+                    {
+                        res.bankOid = mdaResult.SynapseNodesList.nodes[0]._id.oid;
+                    }
+
+                    if (!String.IsNullOrEmpty(mdaResult.mfaMessage))
+                    {
+                        res.mfaQuestion = mdaResult.mfaMessage;
+                    }
+                }
+
+                #endregion MFA Required
             }
-
-            #endregion Bank List Returned
-
-            #region MFA Required
-
-            else if (mdaResult.Is_MFA == true)
+            catch (Exception ex)
             {
-                res.bankOid = mdaResult.SynapseNodesList.nodes[0]._id.oid;
-
-                if (!String.IsNullOrEmpty(mdaResult.mfaMessage))
-                {
-                    res.mfaQuestion = mdaResult.mfaMessage;
-                }
+                Logger.Error("Service Cntrlr - SynapseV3MFABankVerify FAILED - Exception: [" + ex.Message + "]");
             }
-
-            #endregion MFA Required
 
             return res;
         }

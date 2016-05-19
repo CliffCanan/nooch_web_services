@@ -892,15 +892,15 @@ function MFALogin() {
 	console.log("SEC_QUES_NO value is: " + SEC_QUES_NO);
 
     // Check the right input based on which # question is being answered
-	if (SEC_QUES_NO == 1) {
+	//if (SEC_QUES_NO == 1) {
 	    mfaResp = $('#securityQuest1').val();
-	}
-	else if (SEC_QUES_NO == 2) {
-	    mfaResp = $('#securityQuest2').val();
-	}
-	else if (SEC_QUES_NO == 3) {
-	    mfaResp = $('#securityQuest3').val();
-	}
+	//}
+	//else if (SEC_QUES_NO == 2) {
+	//    mfaResp = $('#securityQuest2').val();
+	//}
+	//else if (SEC_QUES_NO == 3) {
+	//    mfaResp = $('#securityQuest3').val();
+	//}
 
 	// ADD THE LOADING BOX
     $('.addBankContainer-body').block({
@@ -938,63 +938,74 @@ function MFALogin() {
 			if (res.Is_success == true)
 			{
 				console.log('MFALogin response was SUCCESSFUL');
-				//console.log(res);
 
 				// Checking if response contains another MFA
 				if (res.Is_MFA == true && res.mfaMessage != null)
 				{
-					// Expecting Question No. 2 here (1st question would come after Bank Login)
-
+				    console.log('Got another MFA Question');
 					$('#addBank-sec-question .sec-question-input').val('');
+					$('#addBank-sec-question #securityQuest1').parsley().reset();
 
-					if (SEC_QUES_NO == 1) {
-						console.log("We got to SEC_QUES_NO == 1");
-
-						$('#ques1Div').velocity("transition.slideLeftBigOut",600, function() {
-							$('#ques2Div').removeClass('hide');
-							$('#ques2Div').velocity("transition.expandIn",700, function() {
-								$('#securityQuest2').focus();
-							});
-						});
-					    $('#ques3Div').addClass('hide');
-						$('#securityQuestionTwoFromServer').html(res.mfaMessage);
-						$('#securityQuest1').attr('data-parsley-required', 'false');
-						$('#securityQuest2').attr('data-parsley-required', 'true');
+					// Expecting Question No. 2 here (1st question would come after Bank Login)
+					if (res.mfaMessage != "-same-") {
+					    $('#securityQuestionOneFromServer').html(res.mfaMessage);
+						$('#ques1Div > label').text("Security Question #2").addClass('animated pulse');
 					}
-					else if (SEC_QUES_NO == 2) {
-						console.log("We got to SEC_QUES_NO == 2");
+					
+					$('#ques1Div > .sec-questionText').text(res.mfaMessage).addClass('animated pulse');
+					
 
-						$('#ques2Div').velocity("transition.slideLeftBigOut",600, function() {
-							$('#ques3Div').removeClass('hide');
-							$('#ques3Div').velocity("transition.expandIn",700, function() {
-								$('#securityQuest3').focus();
-							});
-						});
-
-						$('#securityQuestionThreeFromServer').html(res.mfaMessage);
-						$('#securityQuest2').attr('data-parsley-required', 'false');
-						$('#securityQuest3').attr('data-parsley-required', 'true');
+					if (typeof res.bankoid != null) {
+					    $('#bankAccessTokenForQuestion').val(res.bankoid);
 					}
-					else
-					{
-						console.log("We got to SEC_QUES_NO == else... we got a problem!");
-						//shouldn't ever reach here, but just in case, we'll go back to the 1st Question div to display any additional MFA questions
+
+					//if (SEC_QUES_NO == 1) {
+					//	console.log("We got to SEC_QUES_NO == 1");
+
+					//	$('#ques1Div').velocity("transition.slideLeftBigOut",600, function() {
+					//		$('#ques2Div').removeClass('hide');
+					//		$('#ques2Div').velocity("transition.expandIn",700, function() {
+					//			$('#securityQuest2').focus();
+					//		});
+					//	});
+					//    $('#ques3Div').addClass('hide');
+					//	$('#securityQuestionTwoFromServer').html(res.mfaMessage);
+					//	$('#securityQuest1').attr('data-parsley-required', 'false');
+					//	$('#securityQuest2').attr('data-parsley-required', 'true');
+					//}
+					//else if (SEC_QUES_NO == 2) {
+					//	console.log("We got to SEC_QUES_NO == 2");
+
+					//	$('#ques2Div').velocity("transition.slideLeftBigOut",600, function() {
+					//		$('#ques3Div').removeClass('hide');
+					//		$('#ques3Div').velocity("transition.expandIn",700, function() {
+					//			$('#securityQuest3').focus();
+					//		});
+					//	});
+
+					//	$('#securityQuestionThreeFromServer').html(res.mfaMessage);
+					//	$('#securityQuest2').attr('data-parsley-required', 'false');
+					//	$('#securityQuest3').attr('data-parsley-required', 'true');
+					//}
+					//else
+					//{
+					//	console.log("We got to SEC_QUES_NO == else... we got a problem!");
+					//	//shouldn't ever reach here, but just in case, we'll go back to the 1st Question div to display any additional MFA questions
 						
-						$('#ques1Div').removeClass('hide');
-						$('#ques1Div').velocity("transition.expandIn",600);
-						$('#ques2Div').velocity("transition.slideLeftBigOut",400);
-						$('#ques3Div').velocity("transition.slideLeftBigOut",400);
+					//	$('#ques1Div').removeClass('hide');
+					//	$('#ques1Div').velocity("transition.expandIn",600);
+					//	$('#ques2Div').velocity("transition.slideLeftBigOut",400);
+					//	$('#ques3Div').velocity("transition.slideLeftBigOut",400);
 
-						$('#securityQuest1').html('Security Question'); 
-						$('#securityQuestionOneFromServer').html(res.mfaMessage);
+					//	$('#securityQuest1').html('Security Question'); 
+					//	$('#securityQuestionOneFromServer').html(res.mfaMessage);
 
-						$('#securityQuest1').attr('data-parsley-required', 'true');
-						$('#securityQuest2').attr('data-parsley-required', 'false');
-						$('#securityQuest3').attr('data-parsley-required', 'false');
-					}
+					//	$('#securityQuest1').attr('data-parsley-required', 'true');
+					//	$('#securityQuest2').attr('data-parsley-required', 'false');
+					//	$('#securityQuest3').attr('data-parsley-required', 'false');
+					//}
 
-					SEC_QUES_NO++; // incremented it to write question mfa for 2nd round.
-					$('#bankAccessTokenForQuestion').val(res.bankoid);
+					//SEC_QUES_NO++; // incremented it to write question mfa for 2nd round.
 				}
 
                 else if (res.Is_MFA == false && res.SynapseBanksList != null)
@@ -1045,7 +1056,13 @@ function MFALogin() {
 			else
 			{
 				// ERROR CAME BACK FROM Synapse FOR MFA ATTEMPT
-				console.log("SUBMIT BANK LOGIN ERROR IS: " + res.ERROR_MSG + "]");
+			    console.log("SUBMIT BANK LOGIN ERROR IS: " + res.ERROR_MSG + "]");
+
+			    if (res.ERROR_MSG == "-incorrect" || res.mfaMessage == "-same-")
+			    {
+			        // Answer was incorrect. Leave everything as is (Bank ID, question text, SEC_QUES_NO value, etc.) so the user can attempt again
+			    }
+
 				$('#mfa_question_errorMsg').html("<div><p class='parsley-errors-list filled'>" + res.ERROR_MSG + "</p></div>");
 
 				return;

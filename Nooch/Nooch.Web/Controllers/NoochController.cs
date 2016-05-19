@@ -502,6 +502,7 @@ namespace Nooch.Web.Controllers
         public ActionResult MFALogin(MFALoginInputClassForm inp)
         {
             SynapseBankLoginRequestResult res = new SynapseBankLoginRequestResult();
+            res.Is_success = false;
 
             try
             {
@@ -510,7 +511,6 @@ namespace Nooch.Web.Controllers
                 // preparing data for POST type request
 
                 var scriptSerializer = new JavaScriptSerializer();
-                string json;
 
                 SynapseV3VerifyNode_ServiceInput verifyNodeObj = new SynapseV3VerifyNode_ServiceInput();
                 verifyNodeObj.BankName = inp.bank; // not required..keeping it for just in case we need something to do with it.
@@ -520,71 +520,98 @@ namespace Nooch.Web.Controllers
 
                 try
                 {
-                    json = scriptSerializer.Serialize(verifyNodeObj);
+                    var json = scriptSerializer.Serialize(verifyNodeObj);
 
                     string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
                     string serviceMethod = "/SynapseV3MFABankVerify";
+
                     SynapseV3BankLoginResult_ServiceRes bnkloginresult = ResponseConverter<SynapseV3BankLoginResult_ServiceRes>.CallServicePostMethod(String.Concat(serviceUrl, serviceMethod), json);
+
+                    res.Is_success = bnkloginresult.Is_success;
+                    res.Is_MFA = bnkloginresult.Is_MFA;
 
                     if (bnkloginresult.Is_success == true)
                     {
-                        Logger.Info("NoochController -> MFALogin Success! -> [MemberID: " + inp.memberid + "], [Bank: " + inp.bank + "]");
+                        #region MFA Bank Verify Was Successfull
 
-                        res.Is_success = true;
-                        res.Is_MFA = bnkloginresult.Is_MFA;
+                        Logger.Info("NoochController -> MFALogin Success! -> [MemberID: " + inp.memberid + "], [Bank: " + inp.bank +
+                                    "], [Is_MFA (Again): " + bnkloginresult.Is_MFA + "]");
 
-                        List<SynapseBankClass> synbanksList = new List<SynapseBankClass>();
-                        foreach (SynapseIndividualNodeClass bankNode in bnkloginresult.SynapseNodesList.nodes)
+                        if (bnkloginresult.Is_MFA)
                         {
-                            SynapseBankClass sbc = new SynapseBankClass();
-                            sbc.account_class = bankNode.account_class;
-                            sbc.account_number_string = bankNode.account_num;
-                            sbc.account_type = bankNode.account_type.ToString();
-                            sbc.bank_name = bankNode.bank_name;
-                            sbc.bankoid = bankNode.oid;  // will use this ID to set bank account as default
-                            sbc.nickname = bankNode.nickname;
-                            sbc.routing_number_string = bankNode.routing_num;
-                            sbc.is_active = bankNode.is_active;
-                            synbanksList.Add(sbc);
+                            res.mfaMessage = !String.IsNullOrEmpty(bnkloginresult.mfaQuestion) && bnkloginresult.mfaQuestion.Length > 10
+                                             ? bnkloginresult.mfaQuestion
+                                             : "The bank returned with an error unfortunately. Please try again.";
+                            res.bankoid = !String.IsNullOrEmpty(bnkloginresult.bankOid) ? bnkloginresult.bankOid : null;
+
+                            //SynapseQuestionBasedMFAClass qbr = new SynapseQuestionBasedMFAClass();
+                            //qbr.is_mfa = true;
+                            //qbr.response = new SynapseQuestionBasedMFAResponseIntClass()
+                            //{
+                            //    type = "questions",
+                            //    access_token = "",
+                            //    mfa = new SynapseQuestionClass[1]
+                            //};
+
+                            //qbr.response.mfa[0].question = bnkloginresult.mfaQuestion;
+                            //res.SynapseQuestionBasedResponse = qbr;
+
                         }
-
-                        res.SynapseBanksList = new SynapseBanksListClass()
+                        else if (bnkloginresult.SynapseNodesList != null && bnkloginresult.SynapseNodesList.nodes.Count > 0)
                         {
-                            banks = synbanksList,
-                            success = true
-                        };
-
-                        if (res.Is_MFA)
-                        {
-                            SynapseQuestionBasedMFAClass qbr = new SynapseQuestionBasedMFAClass();
-                            qbr.is_mfa = true;
-                            qbr.response = new SynapseQuestionBasedMFAResponseIntClass()
+                            List<SynapseBankClass> synbanksList = new List<SynapseBankClass>();
+                            foreach (SynapseIndividualNodeClass bankNode in bnkloginresult.SynapseNodesList.nodes)
                             {
-                                type = "questions",
-                                access_token = "",
-                                mfa = new SynapseQuestionClass[1]
-                            };
+                                SynapseBankClass sbc = new SynapseBankClass();
+                                sbc.account_class = bankNode.account_class;
+                                sbc.account_number_string = bankNode.account_num;
+                                sbc.account_type = bankNode.account_type.ToString();
+                                sbc.bank_name = bankNode.bank_name;
+                                sbc.bankoid = bankNode.oid;  // will use this ID to set bank account as default
+                                sbc.nickname = bankNode.nickname;
+                                sbc.routing_number_string = bankNode.routing_num;
+                                sbc.is_active = bankNode.is_active;
+                                synbanksList.Add(sbc);
+                            }
 
-                            qbr.response.mfa[0].question = bnkloginresult.mfaQuestion;
-                            res.SynapseQuestionBasedResponse = qbr;
+                            res.SynapseBanksList = new SynapseBanksListClass()
+                            {
+                                banks = synbanksList,
+                                success = true
+                            };
                         }
 
                         res.ERROR_MSG = "OK";
+
+                        #endregion MFA Bank Verify Was Successfull
                     }
                     else
                     {
-                        Logger.Error("NoochController -> MFALogin FAILED -> [Error Msg: " + bnkloginresult.errorMsg +
-                                     "], [MemberID: " + inp.memberid + "], [Bank: " + inp.bank + "], [MFA: " + inp.MFA + "]");
-                        res.Is_success = false;
+                        #region MFA Bank Verify Was NOT Successfull
+
+                        // Could have been an incorrect answer from the user, check the error msg...
                         res.ERROR_MSG = bnkloginresult.errorMsg;
+
+                        if (bnkloginresult.errorMsg == "-incorrect-")
+                        {
+                            Logger.Error("NoochController -> MFALogin - Incorrect answer submitted - [Error Msg: " + bnkloginresult.errorMsg +
+                                     "], [MemberID: " + inp.memberid + "], [Bank: " + inp.bank + "], [MFA: " + inp.MFA + "]");
+                            res.Is_MFA = true;
+                            res.mfaMessage = bnkloginresult.mfaQuestion; // Would be "-same-"...JS already has the original question for the user to re-answer.
+                        }
+                        else
+                        {
+                            Logger.Error("NoochController -> MFALogin FAILED -> [Error Msg: " + bnkloginresult.errorMsg +
+                                         "], [MemberID: " + inp.memberid + "], [Bank: " + inp.bank + "], [MFA: " + inp.MFA + "]");
+                        }
+
+                        #endregion MFA Bank Verify Was NOT Successfull
                     }
                 }
-                catch (Exception ec)
+                catch (Exception ex)
                 {
-                    res.Is_success = false;
-                    res.ERROR_MSG = "";
-                    Logger.Error("NoochController -> MFALogin FAILED - [MemberID: " + inp.memberid +
-                                  "], [Exception: " + ec + "]");
+                    Logger.Error("NoochController -> MFALogin FAILED - [MemberID: " + inp.memberid + "], [Exception: " + ex + "]");
+                    res.ERROR_MSG = "NoochController Exception - 585";
                 }
             }
             catch (Exception we)

@@ -4625,26 +4625,32 @@ namespace Nooch.DataAccess
                         };
                         bankLoginPars.login = log;
 
-                        SynapseV3Input_user fing = new SynapseV3Input_user()
+                        SynapseV3Input_user fngrprnt = new SynapseV3Input_user()
                         {
                             fingerprint = noochMember.UDID1
                         };
-                        bankLoginPars.user = fing;
+                        bankLoginPars.user = fngrprnt;
 
                         SynapseBankVerifyV3_Input_node node = new SynapseBankVerifyV3_Input_node();
 
                         SynapseNodeId node_id = new SynapseNodeId() { oid = BankId };
                         node._id = node_id;
 
-                        SynapseBankVerifyV3_Input_node_verify veri = new SynapseBankVerifyV3_Input_node_verify();
-                        veri.mfa = MfaResponse;
+                        SynapseBankVerifyV3_Input_node_verify answer = new SynapseBankVerifyV3_Input_node_verify();
+                        answer.mfa = MfaResponse;
 
-                        node.verify = veri;
+                        node.verify = answer;
 
                         bankLoginPars.node = node;
 
                         string UrlToHit = "";
                         UrlToHit = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/node/verify" : "https://synapsepay.com/api/v3/node/verify";
+
+
+                        Logger.Info("MDA -> SynapseV3MFABankVerify - /node/verify PAYLOAD IS: [Oauth_Key:" + bankLoginPars.login.oauth_key +
+                                    "], [Fngrprnt: " + bankLoginPars.user.fingerprint + "], [Node OID: " + bankLoginPars.node._id.oid +
+                                    "], [Bank_PW: " + bankLoginPars.node.verify.mfa + "], [URL: " + UrlToHit + "]");
+
 
                         // Calling Synapse Bank Login service (Link a Bank Account)
 
@@ -4669,6 +4675,8 @@ namespace Nooch.DataAccess
                             var content = sr.ReadToEnd();
 
                             JObject bankLoginRespFromSynapse = JObject.Parse(content);
+
+                            Logger.Info("MDA -> SynapseV3MFABankVerify SYNAPSE RESPONSE - [..." + bankLoginRespFromSynapse + "...]");
 
                             if (bankLoginRespFromSynapse["success"].ToString().ToLower() == "true" &&
                                 bankLoginRespFromSynapse["nodes"] != null)
@@ -4818,28 +4826,43 @@ namespace Nooch.DataAccess
                         }
                         catch (WebException we)
                         {
-                            var errorCode = ((HttpWebResponse)we.Response).StatusCode;
-
-                            Logger.Error("MDA -> SynapseV3MFABankVerify FAILED. Exception was: [" +
-                                         we.ToString() + "], and errorCode: [" + errorCode.ToString() + "]");
-
                             res.Is_success = false;
                             res.Is_MFA = false;
 
-                            if (errorCode != null)
-                            {
-                                var resp = new StreamReader(we.Response.GetResponseStream()).ReadToEnd();
-                                JObject jsonfromsynapse = JObject.Parse(resp);
-                                JToken token = jsonfromsynapse["reason"];
+                            var errorCode = ((HttpWebResponse)we.Response).StatusCode;
+                            var resp = new StreamReader(we.Response.GetResponseStream()).ReadToEnd();
 
-                                if (token != null)
+                            JObject jsonFromSynapse = JObject.Parse(resp);
+
+                            Logger.Info("MDA -> SynapseV3MFABankVerify FAILED - HTTP ErrorCode: [" + errorCode.ToString() + "], WebException was: [" + we.ToString() + "]");
+                            Logger.Info(jsonFromSynapse.ToString());
+
+                            var error_code = jsonFromSynapse["error_code"].ToString();
+                            res.errorMsg = jsonFromSynapse["error"]["en"].ToString();
+
+                            if (!String.IsNullOrEmpty(error_code))
+                            {
+                                // Synapse Error could be:
+                                // "Incorrect verification information supplied"
+                                Logger.Error("MDA -> SynapseV3MFABankVerify FAILED - [Synapse Error Code: " + error_code + "]");
+                            }
+                            if (!String.IsNullOrEmpty(res.errorMsg))
+                            {
+                                Logger.Error("MDA -> SynapseV3MFABankVerify FAILED. Synapse Rrror Msg was: [" + res.errorMsg + "]");
+
+                                if (res.errorMsg.ToLower().IndexOf("incorrect verification info") > -1)
                                 {
-                                    res.errorMsg = jsonfromsynapse["reason"].ToString();
+                                    // Answer was incorrect, so send back the same MFA Question info to let the user try again.
+                                    res.Is_MFA = true;
+                                    res.mfaMessage = "-same-";
+                                    res.bankMFA = BankId;
+                                    res.errorMsg = "-incorrect-";
                                 }
                             }
                             else
                             {
-                                res.errorMsg = "Error #140 returned from Synapse";
+                                Logger.Error("MDA -> SynapseV3MFABankVerify FAILED - HTTP ErrorCode: [" + errorCode.ToString() + "], WebException was: [" + we.Message + "]");
+                                res.errorMsg = "Error in Synapse response - #4079";
                             }
 
                             return res;
