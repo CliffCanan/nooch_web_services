@@ -6111,7 +6111,6 @@ namespace Nooch.DataAccess
                         Logger.Info("TDA -> TransferMoneyUsingSynapse - SUCCESS Response From SYNAPSE's /order/add API - " +
                                     "Synapse OrderID: [" + transactionResultFromSynapseAPI.responseFromSynapse.trans._id.oid + "]");
 
-
                         #region Save Info in Transaction Details Table
 
                         Transaction transactionDetail = new Transaction();

@@ -325,13 +325,13 @@
   .questionTitleLabel { font-size: 18px; }
 
   .radio { margin: 0; }
-  .wizard > .content .body .radio label { padding: 10px 15px 10px 35px; }
+  .wizard > .content .body .radio label { padding: 10px 15px 10px 38px; }
 }
 
 @media screen and (min-width: 1030px)
 {
     .wizard > .content { min-height: 29.5em; }
-    .wizard > .content .body .radio label { padding: 12px 15px 12px 35px; }
+    .wizard > .content .body .radio label { padding: 12px 15px 12px 50px; }
     .well { font-size:18px; line-height:1.6; padding: 12px; }
     .wizard section > .form-group { margin-top: 20px; }
     .radio { margin: 0; }

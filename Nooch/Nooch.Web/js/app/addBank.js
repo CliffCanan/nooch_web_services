@@ -951,9 +951,9 @@ function MFALogin() {
 					    $('#securityQuestionOneFromServer').html(res.mfaMessage);
 						$('#ques1Div > label').text("Security Question #2").addClass('animated pulse');
 					}
-					
+
 					$('#ques1Div > .sec-questionText').text(res.mfaMessage).addClass('animated pulse');
-					
+
 
 					if (typeof res.bankoid != null) {
 					    $('#bankAccessTokenForQuestion').val(res.bankoid);

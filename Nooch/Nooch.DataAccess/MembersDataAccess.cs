@@ -5039,19 +5039,16 @@ namespace Nooch.DataAccess
 
         public synapseIdVerificationQuestionsForDisplay getIdVerificationQuestionsV3(string MemberId)
         {
-            Logger.Info("MDA -> getIdVerificationQuestionsV2 Initialized - [MemberId: " + MemberId + "]");
+            Logger.Info("MDA -> getIdVerificationQuestionsV3 Initialized - [MemberId: " + MemberId + "]");
 
             synapseIdVerificationQuestionsForDisplay response = new synapseIdVerificationQuestionsForDisplay();
             response.success = false;
             response.memberId = MemberId;
 
-            // CLIFF (10/1/15): NEED TO ADD A BLOCK TO CHECK THE MEMBERS TABLE AND SEE IF THIS USER'S IsVerifiedWithSynapse IS ALREADY TRUE
-            //                  IF IT IS, THEN DON'T NEED TO RE-ASK THESE QUESTIONS, PASS BACK MESSAGE TO CLIENT AND HANDLE APPROPRIATELY
-
             Member noochMember = GetMemberDetails(MemberId);
             if (noochMember.IsVerifiedWithSynapse == true)
             {
-                Logger.Info("MDA -> getIdVerificationQuestionsV2 ABORTED: Member's ID already verified with Synapse  :-) - [Member's Name: " +
+                Logger.Info("MDA -> getIdVerificationQuestionsV3 ABORTED: Member's ID already verified with Synapse  :-) - [Member's Name: " +
                                       CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(noochMember.FirstName)) + " " +
                                       CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(noochMember.LastName)) + "], MemberId: " + MemberId + "]");
                 response.msg = "ID already verified successfully";
@@ -5069,7 +5066,7 @@ namespace Nooch.DataAccess
 
             if (questions.Count == 0)
             {
-                Logger.Info("MDA -> getIdVerificationQuestionsV2 ABORTED: Member's Synapse User Details not found. [MemberId: " + MemberId + "]");
+                Logger.Info("MDA -> getIdVerificationQuestionsV3 ABORTED: Member's Synapse User Details not found. [MemberId: " + MemberId + "]");
 
                 return null;
             }
@@ -5201,7 +5198,7 @@ namespace Nooch.DataAccess
 
             if (usersSynapseDetails == null)
             {
-                Logger.Info("MDA -> submitIdVerificationAnswersToSynapse ABORTED: Member's Synapse User Details not found. [MemberId: " + MemberId + "]");
+                Logger.Info("MDA -> submitIdVerificationAnswersToSynapseV3 ABORTED: Member's Synapse User Details not found. [MemberId: " + MemberId + "]");
                 res.message = "Could not find this member's account info";
                 return res;
             }
@@ -5213,7 +5210,6 @@ namespace Nooch.DataAccess
 
             #endregion Get User's Synapse OAuth Consumer Key
 
-            //synapseSubmitIdAnswers_answers_input input = new synapseSubmitIdAnswers_answers_input();
             synapseIdVerificationAnswersInput input = new synapseIdVerificationAnswersInput();
 
             input.login = new SynapseV3Input_login() { oauth_key = CommonHelper.GetDecryptedData(usersSynapseDetails.access_token) };
@@ -5233,7 +5229,6 @@ namespace Nooch.DataAccess
             quest[3] = new synapseSubmitIdAnswers_Input_quest { question_id = Convert.ToInt16(quest4id), answer_id = Convert.ToInt16(answer4id) };
             quest[4] = new synapseSubmitIdAnswers_Input_quest { question_id = Convert.ToInt16(quest5id), answer_id = Convert.ToInt16(answer5id) };
             input.user.doc.answers = quest;
-            //input.user.fingerprint = "";
 
 
             #region Call Synapse /user/ssn/answer API
@@ -5266,13 +5261,6 @@ namespace Nooch.DataAccess
 
                 if (resFromSynapse != null)
                 {
-                    #region Get Member Record To Update
-
-
-
-
-                    #endregion Get Member Record To Update
-
                     if (resFromSynapse.success.ToString().ToLower() == "true")
                     {
                         Logger.Info("MDA -> submitIdVerificationAnswersToSynapse SUCCESSFUL - [MemberID: " + MemberId + "]");
@@ -5349,33 +5337,39 @@ namespace Nooch.DataAccess
                     else
                     {
                         res.message = "Got a response, but verification was not successful";
-                        Logger.Info("MDA -> submitIdVerificationAnswersToSynapse FAILED - Got Synapse response, but success was NOT 'true' - [MemberID: " + MemberId + "]");
+                        Logger.Info("MDA -> submitIdVerificationAnswersToSynapseV3 FAILED - Got Synapse response, but success was NOT 'true' - [MemberID: " + MemberId + "]");
                     }
                 }
                 else
                 {
                     res.message = "Verification response was null";
-                    Logger.Info("MDA -> submitIdVerificationAnswersToSynapse FAILED - Synapse response was NULL - [MemberID: " + MemberId + "]");
+                    Logger.Info("MDA -> submitIdVerificationAnswersToSynapseV3 FAILED - Synapse response was NULL - [MemberID: " + MemberId + "]");
                 }
             }
             catch (WebException we)
             {
-                res.message = "MDA Exception #9304";
+                var httpStatusCode = ((HttpWebResponse)we.Response).StatusCode;
+
+                var response = new StreamReader(we.Response.GetResponseStream()).ReadToEnd();
+                JObject errorJsonFromSynapse = JObject.Parse(response);
+
+                Logger.Error("MDA -> submitIdVerificationAnswersToSynapseV3 FAILED - HTTP Status Code:[" + httpStatusCode + "], [Exception: " + errorJsonFromSynapse.ToString() + "]");
 
                 var errorCode = ((HttpWebResponse)we.Response).StatusCode;
+                JToken token = errorJsonFromSynapse["error"]["en"];
 
-                Logger.Info("MDA -> submitIdVerificationAnswersToSynapse FAILED - Outer Catch. Member: [" + MemberId + "]. WebEx: [" + errorCode.ToString() + "]");
-
-                if (errorCode.ToString() == "Unauthorized")
+                if (!String.IsNullOrEmpty(res.message))
                 {
-                    var resp = new StreamReader(we.Response.GetResponseStream()).ReadToEnd();
-                    JObject jsonfromsynapse = JObject.Parse(resp);
-                    JToken token = jsonfromsynapse["reason"];
+                    // Synapse Error Message could be:
+                    // "Incorrect oauth_key/fingerprint"
+                    res.message = token.ToString();
 
-                    if (token != null)
-                    {
-                        res.message = jsonfromsynapse["reason"].ToString();
-                    }
+                    Logger.Error("MDA -> submitIdVerificationAnswersToSynapseV3 FAILED - [Synapse Error Code: " + errorCode +
+                                 "], [Error Msg: " + res.message + "], [MemberID: " + MemberId + "]");
+                }
+                else
+                {
+                    res.message = "MDA Exception during submitIdVerificationAnswersToSynapseV3";
                 }
             }
 
