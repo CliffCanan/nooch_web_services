@@ -17,11 +17,11 @@ namespace Nooch.Data
         public Member()
         {
             this.MemberPrivacySettings = new HashSet<MemberPrivacySetting>();
-            this.Transactions = new HashSet<Transaction>();
-            this.Transactions1 = new HashSet<Transaction>();
             this.MemberNotifications = new HashSet<MemberNotification>();
             this.SynapseBankLoginResults = new HashSet<SynapseBankLoginResult>();
             this.PasswordResetRequests = new HashSet<PasswordResetRequest>();
+            this.Transactions = new HashSet<Transaction>();
+            this.Transactions1 = new HashSet<Transaction>();
         }
     
         public System.Guid MemberId { get; set; }
@@ -91,10 +91,10 @@ namespace Nooch.Data
         public string GoogleUserId { get; set; }
     
         public virtual ICollection<MemberPrivacySetting> MemberPrivacySettings { get; set; }
-        public virtual ICollection<Transaction> Transactions { get; set; }
-        public virtual ICollection<Transaction> Transactions1 { get; set; }
         public virtual ICollection<MemberNotification> MemberNotifications { get; set; }
         public virtual ICollection<SynapseBankLoginResult> SynapseBankLoginResults { get; set; }
         public virtual ICollection<PasswordResetRequest> PasswordResetRequests { get; set; }
+        public virtual ICollection<Transaction> Transactions { get; set; }
+        public virtual ICollection<Transaction> Transactions1 { get; set; }
     }
 }

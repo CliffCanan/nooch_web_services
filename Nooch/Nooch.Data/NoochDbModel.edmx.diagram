@@ -18,11 +18,7 @@
         <EntityTypeShape EntityType="NOOCHModel.PropertyUnit" Width="1.5" PointX="11.75" PointY="6.75" />
         <EntityTypeShape EntityType="NOOCHModel.SocialMediaPost" Width="1.5" PointX="11.75" PointY="12.75" />
         <EntityTypeShape EntityType="NOOCHModel.Tenant" Width="1.5" PointX="13.75" PointY="0.75" />
-        <EntityTypeShape EntityType="NOOCHModel.Transaction" Width="1.5" PointX="9.375" PointY="4.375" />
-        <AssociationConnector Association="NOOCHModel.FK_Transactions_GeoLocations" />
         <AssociationConnector Association="NOOCHModel.FK_MemberPrivacySettings_Members" />
-        <AssociationConnector Association="NOOCHModel.FK_Transactions_Members2" />
-        <AssociationConnector Association="NOOCHModel.FK_Transactions_Members3" />
         <EntityTypeShape EntityType="NOOCHModel.MemberNotification" Width="1.5" PointX="9" PointY="17.75" />
         <AssociationConnector Association="NOOCHModel.FK_MemberNotifications_Members" />
         <EntityTypeShape EntityType="NOOCHModel.AuthenticationToken" Width="1.5" PointX="0.75" PointY="15" />
@@ -39,6 +35,10 @@
         <EntityTypeShape EntityType="NOOCHModel.PasswordResetRequest" Width="1.5" PointX="9" PointY="30.25" />
         <AssociationConnector Association="NOOCHModel.FK_PasswordResetRequests_Members" />
         <EntityTypeShape EntityType="NOOCHModel.SynapseAddTransactionResult" Width="1.5" PointX="16.375" PointY="12" />
+        <EntityTypeShape EntityType="NOOCHModel.Transaction" Width="1.5" PointX="9" PointY="4.5" />
+        <AssociationConnector Association="NOOCHModel.FK_Transactions_GeoLocations" />
+        <AssociationConnector Association="NOOCHModel.FK_Transactions_Members2" />
+        <AssociationConnector Association="NOOCHModel.FK_Transactions_Members3" />
       </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>

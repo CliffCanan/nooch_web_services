@@ -40,7 +40,6 @@ namespace Nooch.Data
         public virtual DbSet<PropertyUnit> PropertyUnits { get; set; }
         public virtual DbSet<SocialMediaPost> SocialMediaPosts { get; set; }
         public virtual DbSet<Tenant> Tenants { get; set; }
-        public virtual DbSet<Transaction> Transactions { get; set; }
         public virtual DbSet<MemberNotification> MemberNotifications { get; set; }
         public virtual DbSet<AuthenticationToken> AuthenticationTokens { get; set; }
         public virtual DbSet<InviteCode> InviteCodes { get; set; }
@@ -54,6 +53,7 @@ namespace Nooch.Data
         public virtual DbSet<SDNSearchResult> SDNSearchResults { get; set; }
         public virtual DbSet<PasswordResetRequest> PasswordResetRequests { get; set; }
         public virtual DbSet<SynapseAddTransactionResult> SynapseAddTransactionResults { get; set; }
+        public virtual DbSet<Transaction> Transactions { get; set; }
     
         public virtual ObjectResult<GetMostFrequentFriends_Result> GetMostFrequentFriends(string memberId)
         {

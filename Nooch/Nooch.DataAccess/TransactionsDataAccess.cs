@@ -5494,7 +5494,9 @@ namespace Nooch.DataAccess
                         };
                         request.DeviceId = handleRequestDto.DeviceId;
                         request.TransactionStatus = "Success";
-                        request.TransactionDate = DateTime.Now;
+                        //request.TransactionDate = DateTime.Now;
+                        request.DateAccepted = DateTime.Now;
+                        
                         request.TransactionType = CommonHelper.GetEncryptedData(Constants.TRANSACTION_TYPE_TRANSFER);
 
                         int i = noochConnection.SaveChanges();
