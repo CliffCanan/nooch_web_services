@@ -532,7 +532,7 @@ function updateValidationUi(field, success) {
             helpBlockTxt = "Please enter a valid email address that you own."
         }
         else if (field == "phone") {
-            helpBlockTxt = "Please make sure you enter a valid 10-digit phone nuber."
+            helpBlockTxt = "Please enter a valid 10-digit phone number."
         }
 
         if (!$('#' + field + 'Grp .help-block').length) {

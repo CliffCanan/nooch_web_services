@@ -1394,7 +1394,6 @@ div#pwFormShell #depositCreateAccount,
   top: 2px;
 }
 .wizard .steps a i.mdi-account { font-size: 124%; }
-
 #idVerWiz  .form-group {
   margin-bottom: 10px;
   -webkit-transition: .25s all ease-in-out;
@@ -2653,6 +2652,8 @@ form .table-header {
     }
 
     #idWizContainer { padding: 0 3.5%; }
+
+	#idVerWiz-p-0 .well { padding: 9px 75px;}
 
     .addBank-instructions {
         font-size: 16px;
