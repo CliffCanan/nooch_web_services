@@ -691,14 +691,14 @@ $('#bankLoginManual').submit(function(e) {
 				    message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Submitting...</span>',
 				    css: {
 				        border: 'none',
-				        padding: '20px 8px 14px',
+				        padding: '26px 8px 20px',
 				        backgroundColor: '#000',
-				        '-webkit-border-radius': '12px',
-				        '-moz-border-radius': '12px',
-						'border-radius': '12px',
-				        opacity: '.75',
-				        width: '80%',
-				        left: '10%',
+				        '-webkit-border-radius': '15px',
+				        '-moz-border-radius': '15px',
+						'border-radius': '15px',
+				        opacity: '.8',
+				        width: '70%',
+				        left: '15%',
 				        top: '25px',
 				        color: '#fff' 
 				    }
@@ -731,7 +731,7 @@ $('#bankLoginManual').submit(function(e) {
 
 
 function submitManualBank() {
-	console.log("{MemberID: '" + MEMBER_ID + "'Full Name: '" + $('#userFullName').val() + "', Routing #: '" + $('#bankRout').val() + "', Account #: '" + $('#bankAcntNum').val() + "', Type: Checking: '" + $('#togChecking').is(':checked') + "', Savings: '" + $('#togSavings').is(':checked') + "'}");
+	console.log("submitMaualBank -> {MemberID: '" + MEMBER_ID + "'Full Name: '" + $('#userFullName').val() + "', Routing #: '" + $('#bankRout').val() + "', Account #: '" + $('#bankAcntNum').val() + "', Type: Checking: '" + $('#togChecking').is(':checked') + "', Savings: '" + $('#togSavings').is(':checked') + "'}");
 	isManual = true;
 
 	var typeString, classString;
@@ -762,8 +762,8 @@ function submitManualBank() {
         async: "true",
         cache: "false",
         success: function (msg) {
-            //console.log("SUBMIT BANK MANUAL response msg is...");
-            //console.log(msg.d);
+            console.log("SUBMIT BANK MANUAL response msg is...");
+            console.log(msg.d);
 	
 			// Hide UIBlock (loading box))
             $('.addBankContainer-body').unblock();
@@ -892,15 +892,7 @@ function MFALogin() {
 	console.log("SEC_QUES_NO value is: " + SEC_QUES_NO);
 
     // Check the right input based on which # question is being answered
-	//if (SEC_QUES_NO == 1) {
-	    mfaResp = $('#securityQuest1').val();
-	//}
-	//else if (SEC_QUES_NO == 2) {
-	//    mfaResp = $('#securityQuest2').val();
-	//}
-	//else if (SEC_QUES_NO == 3) {
-	//    mfaResp = $('#securityQuest3').val();
-	//}
+	mfaResp = $('#securityQuest1').val();
 
 	// ADD THE LOADING BOX
     $('.addBankContainer-body').block({
@@ -951,9 +943,9 @@ function MFALogin() {
 					    $('#securityQuestionOneFromServer').html(res.mfaMessage);
 						$('#ques1Div > label').text("Security Question #2").addClass('animated pulse');
 					}
-
+					
 					$('#ques1Div > .sec-questionText').text(res.mfaMessage).addClass('animated pulse');
-
+					
 
 					if (typeof res.bankoid != null) {
 					    $('#bankAccessTokenForQuestion').val(res.bankoid);
@@ -1121,11 +1113,11 @@ function SetDefaultAct() {
 		    message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Linking Account...</span>',
 			css: { 
 				border: 'none', 
-				padding: '20px 8px 14px',
+				padding: '26px 8px 20px',
 				backgroundColor: '#000', 
-				'-webkit-border-radius': '12px',
-				'-moz-border-radius': '12px',
-				'border-radius': '12px',
+				'-webkit-border-radius': '15px',
+				'-moz-border-radius': '15px',
+				'border-radius': '15px',
 				opacity: '.8',
 				width: '70%',
 				left: '15%',
@@ -1207,7 +1199,8 @@ function sendToRedUrl() {
         if (sendToIdVerQuestions == true)
         {
             console.log("sending to ID Verification page...");
-            window.top.location.href = "https://www.noochme.com/noochweb/Nooch/idVerification?memid=" + MEMBER_ID + "&from=addbnk&redUrl=" + RED_URL;
+            //window.top.location.href = "https://www.noochme.com/noochweb/Nooch/idVerification?memid=" + MEMBER_ID + "&from=addbnk&redUrl=" + RED_URL;
+            window.top.location.href = "http://54.201.43.89/noochweb/Nooch/idVerification?memid=" + MEMBER_ID + "&from=addbnk&redUrl=" + RED_URL;
         }
         else if (RED_URL.indexOf("rentscene") > -1) // For RentScene
         {
@@ -1230,17 +1223,17 @@ function sendToRedUrl() {
                 html: true
             }, function (isConfirm) {
                 $('.addBankContainer-body').block({
-                    message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Finishing...</span>',
+                    message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Completing payment...</span>',
                     css: {
                         border: 'none',
-                        padding: '20px 8px 14px',
+                        padding: '26px 8px 20px',
                         backgroundColor: '#000',
-                        '-webkit-border-radius': '12px',
-                        '-moz-border-radius': '12px',
-                        'border-radius': '12px',
-                        opacity: '.75',
-                        width: '80%',
-                        left: '10%',
+                        '-webkit-border-radius': '15px',
+                        '-moz-border-radius': '15px',
+                        'border-radius': '15px',
+                        opacity: '.8',
+                        width: '70%',
+                        left: '15%',
                         top: '25px',
                         color: '#fff'
                     }
@@ -1261,7 +1254,9 @@ function sendToRedUrl() {
         else if (RED_URL.indexOf('DepositMoneyComplete') > 1 ||
                  RED_URL.indexOf('PayRequestComplete') > 1)
         {
-            swal({
+			// CC (5/19/16): Commenting out this alert, better to just send the user to the Complete page otherwise they might think
+			//				 this is the end and not wait for the page to load after clicking 'Done' in this alert.
+            /*swal({
                 title: "Bank Linked Successfully",
                 text: "<p>Thanks for completing this <strong>one-time</strong> process. &nbsp;Now you can make secure payments with anyone and never share your bank details!</p>",
                 type: "success",
@@ -1275,18 +1270,18 @@ function sendToRedUrl() {
                     message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Finishing...</span>',
                     css: {
                         border: 'none',
-                        padding: '20px 8px 14px',
+                        padding: '26px 8px 20px',
                         backgroundColor: '#000',
-                        '-webkit-border-radius': '12px',
-                        '-moz-border-radius': '12px',
-                        'border-radius': '12px',
+                        '-webkit-border-radius': '15px',
+                        '-moz-border-radius': '15px',
+                        'border-radius': '15px',
                         opacity: '.8',
                         width: '70%',
                         left: '15%',
                         top: '25px',
                         color: '#fff'
                     }
-                });
+                });*/
 
                 setTimeout(function () {
                     window.top.location.href = RED_URL;
