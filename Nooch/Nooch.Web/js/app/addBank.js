@@ -686,25 +686,35 @@ $('#bankLoginManual').submit(function(e) {
 			$('#bankAcntNum').val($.trim($('#bankAcntNum').val()));
 			if ($('#bankAcntNum').parsley().validate() === true)
 			{
-				// ADD THE LOADING BOX
-			    $('.addBankContainer-body').block({
-				    message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Submitting...</span>',
-				    css: {
-				        border: 'none',
-				        padding: '26px 8px 20px',
-				        backgroundColor: '#000',
-				        '-webkit-border-radius': '15px',
-				        '-moz-border-radius': '15px',
-						'border-radius': '15px',
-				        opacity: '.8',
-				        width: '70%',
-				        left: '15%',
-				        top: '25px',
-				        color: '#fff' 
-				    }
-				});
+                // If account number is ok, then validation bank account nickname
+			    $('#bankAcntNickName').val($.trim($('#bankAcntNickName').val()));
+			    if ($('#bankAcntNickName').parsley().validate() === true)
+                {
+			        // ADD THE LOADING BOX
+			        $('.addBankContainer-body').block({
+			            message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Submitting...</span>',
+			            css: {
+			                border: 'none',
+			                padding: '20px 8px 14px',
+			                backgroundColor: '#000',
+			                '-webkit-border-radius': '12px',
+			                '-moz-border-radius': '12px',
+			                'border-radius': '12px',
+			                opacity: '.75',
+			                width: '80%',
+			                left: '10%',
+			                top: '25px',
+			                color: '#fff'
+			            }
+			        });
 
-				submitManualBank();
+			        submitManualBank();
+			    }
+			    else {
+			        $('#acntNickNameGroup input').velocity("callout.shake");
+			        $('#acntNickNameGroup .fa').velocity("callout.shake");
+			        $('#bankAcntNickName').focus();
+			    }
 			}
 			else
 			{
@@ -726,44 +736,45 @@ $('#bankLoginManual').submit(function(e) {
 		$('#fullNameGroup .fa').velocity("callout.shake");
 		$('#userFullName').focus();
 	}
-
 });
 
 
 function submitManualBank() {
-	console.log("submitMaualBank -> {MemberID: '" + MEMBER_ID + "'Full Name: '" + $('#userFullName').val() + "', Routing #: '" + $('#bankRout').val() + "', Account #: '" + $('#bankAcntNum').val() + "', Type: Checking: '" + $('#togChecking').is(':checked') + "', Savings: '" + $('#togSavings').is(':checked') + "'}");
+	console.log("submitMaualBank -> {MemberID: '" + MEMBER_ID + "'Full Name: '" + $('#userFullName').val() + "', Routing #: '" + $('#bankRout').val() + "', Account #: '" + $('#bankAcntNum').val() + "', Account Nick Name: '" + $('#bankAcntNickName').val() + "', Type: Checking: '" + $('#togChecking').is(':checked') + "', Savings: '" + $('#togSavings').is(':checked') + "'}");
+
 	isManual = true;
 
 	var typeString, classString;
-	if ($('#togChecking').is(':checked') && !$('#togSavings').is(':checked'))
-	{
-		typeString = "1"
-	}
-	else
-	{
-		typeString = "2"
-	}
-
+	
 	if ($('#togPersonal').is(':checked') && !$('#togBusiness').is(':checked'))
 	{
-		classString = "1"
+	    typeString = "PERSONAL"
 	}
 	else
 	{
-		classString = "2"
+	    typeString = "BUSINESS"
+	}
+
+		if ($('#togChecking').is(':checked') && !$('#togSavings').is(':checked'))
+	{
+		    classString = "CHECKING"
+	}
+	else
+	{
+		    classString = "SAVINGS"
 	}
 
 	$.ajax({
         type: "POST",
         url: "addBank",
-        data: "{memberid: '" + MEMBER_ID + "', fullname: '" + $('#userFullName').val() + "',routing: '" + $('#bankRout').val() + "',account: '" + $('#bankAcntNum').val() + "',nickname: '',cl: '" + classString + "',type: '" + typeString + "'}",
+        data: "{memberid: '" + MEMBER_ID + "', fullname: '" + $('#userFullName').val() + "',routing: '" + $('#bankRout').val() + "',account: '" + $('#bankAcntNum').val() + "',nickname: '" + $('#bankAcntNickName').val() + "',cl: '" + classString + "',type: '" + typeString + "'}",
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         async: "true",
         cache: "false",
-        success: function (msg) {
+        success: function (bnkManualResult) {
             console.log("SUBMIT BANK MANUAL response msg is...");
-            console.log(msg.d);
+            console.log(bnkManualResult);
 	
 			// Hide UIBlock (loading box))
             $('.addBankContainer-body').unblock();
@@ -773,7 +784,6 @@ function submitManualBank() {
 				$('#bankManual_errorMsg').html('');
 			}
 
-            var bnkManualResult = msg.d;
 
 			if (bnkManualResult.Is_success == true)
 			{
@@ -808,7 +818,7 @@ function submitManualBank() {
 				}
 
 				swal({
-					title: "Oh No!",
+					title: "Unexpected Error",
 					text: errorText,
 					type: "error",
 					confirmButtonColor: "#3fabe1",
@@ -1286,7 +1296,7 @@ function sendToRedUrl() {
                 setTimeout(function () {
                     window.top.location.href = RED_URL;
                 }, 300);
-            });
+            //});
         }
         else // All Others - most likely no RED_URL was passed in URL, so defaulting to a Sweet Alert
             {
@@ -1411,7 +1421,7 @@ $(document).ready(function () {
 	{
 	    swal({
 	        title: "Configuration Error",
-	        text: "It looks like we had trouble loading your Nooch account information.  Please contact <a href=\"mailto:support@nooch.com\">Nooch Support</a> to get help.",
+	        text: "It looks like we had trouble loading your account information.  Please contact <a href=\"mailto:support@nooch.com\">Nooch Support</a> to get help and mention Error #450.",
 	        type: "error",
 	        confirmButtonColor: "#3fabe1",
 	        confirmButtonText: "Ok",

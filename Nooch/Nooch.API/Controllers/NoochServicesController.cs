@@ -3541,6 +3541,17 @@ namespace Nooch.API.Controllers
                             Logger.Info("Service Controller -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber FAILED. Synapse MESSAGE was: [" + message + "]");
                             res.errorMsg = jsonFromSynapse["message"].ToString();
                         }
+
+                        JToken error = jsonFromSynapse["error"];
+
+                        if (error != null)
+                        {
+
+
+                            Logger.Info("Service Controller -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber FAILED. Synapse MESSAGE was: [" + error + "]");
+                            res.errorMsg = jsonFromSynapse["error"]["en"].ToString();
+                        }
+
                     }
                     else
                     {
