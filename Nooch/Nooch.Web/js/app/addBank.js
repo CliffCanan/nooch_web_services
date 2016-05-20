@@ -7,6 +7,8 @@ var SEC_QUES_NO = 0;
 var fromLandlordApp = '';
 var sendToIdVerQuestions = false;
 var isManual = false;
+var COMPANY = "Nooch";
+var SUPPORTLINK = "support@nooch.com";
 
 var step1height = '554px';
 var step2height = '520px';
@@ -491,13 +493,13 @@ function submitBnkLgn() {
 				    // ADD PROMPT FOR MANUAL ROUNTING/ACCOUNT #
 				    bankLoginErrorAlert();
 
-					$('#bankLogin_errorMsg').append("<div><p class='parsley-errors-list filled'>Oh no! Looks like we are experiencing some temporary trouble with " + BANK_NAME + ". :-( Please try again or contact Nooch Support.</p></div>");
+					$('#bankLogin_errorMsg').append("<div><p class='parsley-errors-list filled'>Oh no! Looks like we are experiencing some temporary trouble with " + BANK_NAME + ". :-( Please try again or contact " + COMPANY + " Support.</p></div>");
 				}
 				else if (bnkLoginResult.ERROR_MSG.indexOf("account has not been fully set up") >= 0 ||
 				         bnkLoginResult.ERROR_MSG.indexOf("Prompt the user to visit the issuing institution's site and finish the setup process") >= 0)
 				{
 					$('#modal-OtherError #par1').html("Looks like that " + BANK_NAME + " account is not fully set up for online banking yet.  Please visit " + BANK_NAME + "'s website to complete the setup process.");
-					$('#modal-OtherError #par2').html("After setting up your online banking, then try connecting it to Nooch again.  If you continue to see this error we'd appreciate hearing about it at <a href='mailto:support@nooch.com' style='font-weight: 500;'>support@nooch.com</a>.");
+					$('#modal-OtherError #par2').html("After setting up your online banking, then try connecting it to Nooch again.  If you continue to see this error we'd appreciate hearing about it at <a href='" + SUPPORTLINK + "' target='_blank' style='font-weight: 500;'>" + SUPPORTLINK + "</a>.");
 					$('#modal-OtherError').modal({
 						backdrop:'static'
 					});
@@ -508,7 +510,9 @@ function submitBnkLgn() {
 
 					swal({
 						title: "Error #511: Incomplete Profile",
-						text: "Very sorry about this, but it looks like your account is missing some information needed to verify your ID.<span class='show' style='margin-top:14px'>This can happen for a variety of reasons - our #1 priority is keeping your money safe, so sometimes our system is overly conservative.<span class='show' style='margin-top:14px;'><a href='mailto:support@nooch.com' target='_blank'>Contact our support team</a> and we'll be glad to help. Please mention:<br/><strong>Error #511</strong></span>",
+						text: "Very sorry about this, but it looks like your account is missing some information needed to verify your ID." +
+						      "<span class='show' style='margin-top:14px'>This can happen for a variety of reasons - our #1 priority is keeping your money safe, " +
+						      "so sometimes our system is overly conservative.<span class='show' style='margin-top:14px;'><a href='" + SUPPORTLINK + "' target='_blank'>Contact our support team</a> and we'll be glad to help. Please mention:<br/><strong>Error #511</strong></span>",
 						type: "error",
 						showCancelButton: true,
 						confirmButtonColor: "#3fabe1",
@@ -645,7 +649,9 @@ function submitBnkLgn() {
 function bankLoginErrorAlert() {
     swal({
         title: "Oh No!",
-        text: "We're having trouble verifying your login information - very sorry about this. Please contact <a href='mailto:support@nooch.com'>support@nooch</a> if the problem persists, or you can skip this step by entering your bank's routing/account # instead.",
+        text: "We're having trouble verifying your login information - very sorry about this. Please contact <a href='mailto:" + SUPPORTLINK +
+              "' target='_blank'>" + SUPPORTLINK + "</a> if the problem persists, or you can skip this step by entering your bank's routing/account # instead." +
+              "<small class='show' style='margin-top:12px'>Error Reference: <strong>#BLA-1</strong></small>",
         type: "error",
         showCancelButton: true,
         cancelButtonText: "Ok",
@@ -678,91 +684,84 @@ $('#bankLoginManual').submit(function(e) {
 
 	if ($('#userFullName').parsley().validate() === true)
 	{
-		// If username is ok, then validate Routing Number input
-		$('#bankRout').val($.trim($('#bankRout').val()));
-		if ($('#bankRout').parsley().validate() === true)
-		{
-			// If routing number is ok, then validate Account Number input
-			$('#bankAcntNum').val($.trim($('#bankAcntNum').val()));
-			if ($('#bankAcntNum').parsley().validate() === true)
-			{
-                // If account number is ok, then validation bank account nickname
-			    $('#bankAcntNickName').val($.trim($('#bankAcntNickName').val()));
-			    if ($('#bankAcntNickName').parsley().validate() === true)
-                {
-			        // ADD THE LOADING BOX
-			        $('.addBankContainer-body').block({
-			            message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Submitting...</span>',
-			            css: {
-			                border: 'none',
-			                padding: '20px 8px 14px',
-			                backgroundColor: '#000',
-			                '-webkit-border-radius': '12px',
-			                '-moz-border-radius': '12px',
-			                'border-radius': '12px',
-			                opacity: '.75',
-			                width: '80%',
-			                left: '10%',
-			                top: '25px',
-			                color: '#fff'
-			            }
-			        });
+	    // If username is ok, then validate Routing Number input
+	    $('#bankRout').val($.trim($('#bankRout').val()));
+	    if ($('#bankRout').parsley().validate() === true)
+	    {
+	        // If routing number is ok, then validate Account Number input
+	        $('#bankAcntNum').val($.trim($('#bankAcntNum').val()));
+	        if ($('#bankAcntNum').parsley().validate() === true)
+	        {
+	            // If account number is ok, then validation bank account nickname
+	            $('#bankAcntNickName').val($.trim($('#bankAcntNickName').val()));
+	            if ($('#bankAcntNickName').parsley().validate() === true)
+	            {
+	                // ADD THE LOADING BOX
+	                $('.addBankContainer-body').block({
+	                    message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Submitting...</span>',
+	                    css: {
+	                        border: 'none',
+	                        padding: '20px 8px 14px',
+	                        backgroundColor: '#000',
+	                        '-webkit-border-radius': '12px',
+	                        '-moz-border-radius': '12px',
+	                        'border-radius': '12px',
+	                        opacity: '.75',
+	                        width: '80%',
+	                        left: '10%',
+	                        top: '25px',
+	                        color: '#fff'
+	                    }
+	                });
 
-			        submitManualBank();
-			    }
-			    else {
-			        $('#acntNickNameGroup input').velocity("callout.shake");
-			        $('#acntNickNameGroup .fa').velocity("callout.shake");
-			        $('#bankAcntNickName').focus();
-			    }
-			}
-			else
-			{
-				$('#acntGroup input').velocity("callout.shake");
-				$('#acntGroup .fa').velocity("callout.shake");
-				$('#bankAcntNum').focus();
-			}
-		}
-		else 
-		{
-			$('#routGroup input').velocity("callout.shake");
-			$('#routGroup .fa').velocity("callout.shake");
-			$('#bankRout').focus();
-		}
+	                submitManualBank();
+	            }
+	            else {
+	                $('#acntNickNameGroup input').velocity("callout.shake");
+	                $('#acntNickNameGroup .fa').velocity("callout.shake");
+	                $('#bankAcntNickName').focus();
+	            }
+	        }
+	        else {
+	            $('#acntGroup input').velocity("callout.shake");
+	            $('#acntGroup .fa').velocity("callout.shake");
+	            $('#bankAcntNum').focus();
+	        }
+	    }
+	    else {
+	        $('#routGroup input').velocity("callout.shake");
+	        $('#routGroup .fa').velocity("callout.shake");
+	        $('#bankRout').focus();
+	    }
 	}
-	else 
-	{
-		$('#fullNameGroup input').velocity("callout.shake");
-		$('#fullNameGroup .fa').velocity("callout.shake");
-		$('#userFullName').focus();
+	else {
+	    $('#fullNameGroup input').velocity("callout.shake");
+	    $('#fullNameGroup .fa').velocity("callout.shake");
+	    $('#userFullName').focus();
 	}
 });
 
 
 function submitManualBank() {
-	console.log("submitMaualBank -> {MemberID: '" + MEMBER_ID + "'Full Name: '" + $('#userFullName').val() + "', Routing #: '" + $('#bankRout').val() + "', Account #: '" + $('#bankAcntNum').val() + "', Account Nick Name: '" + $('#bankAcntNickName').val() + "', Type: Checking: '" + $('#togChecking').is(':checked') + "', Savings: '" + $('#togSavings').is(':checked') + "'}");
+    console.log("submitMaualBank -> {MemberID: '" + MEMBER_ID + "'Full Name: '" + $('#userFullName').val() + "', Routing #: '" + $('#bankRout').val() + "', Account #: '" + $('#bankAcntNum').val() + "', Account Nick Name: '" + $('#bankAcntNickName').val() + "', Type: Checking: '" + $('#togChecking').is(':checked') + "', Savings: '" + $('#togSavings').is(':checked') + "'}");
 
-	isManual = true;
+    isManual = true;
 
-	var typeString, classString;
+    var typeString, classString;
 	
-	if ($('#togPersonal').is(':checked') && !$('#togBusiness').is(':checked'))
-	{
-	    typeString = "PERSONAL"
-	}
-	else
-	{
-	    typeString = "BUSINESS"
-	}
+    if ($('#togPersonal').is(':checked') && !$('#togBusiness').is(':checked')) {
+        typeString = "PERSONAL"
+    }
+    else {
+        typeString = "BUSINESS"
+    }
 
-		if ($('#togChecking').is(':checked') && !$('#togSavings').is(':checked'))
-	{
-		    classString = "CHECKING"
-	}
-	else
-	{
-		    classString = "SAVINGS"
-	}
+    if ($('#togChecking').is(':checked') && !$('#togSavings').is(':checked')) {
+        classString = "CHECKING"
+    }
+    else {
+        classString = "SAVINGS"
+    }
 
 	$.ajax({
         type: "POST",
@@ -805,16 +804,22 @@ function submitManualBank() {
 
 				$('#bankLogin').velocity("callout.shake");
 
-				var errorText = "Something went wrong - very sorry about this. We hate it when something breaks! Please try again or contact support@nooch if the problem happens again.";
+				var errorText = "Something went wrong - very sorry about this. We hate it when something breaks! Please try again or contact <a href='mailto:" + SUPPORTLINK +
+				                "' target='_blank'>" + SUPPORTLINK + "</a> if the problem happens again." +
+				                "<small class='show' style='margin-top:12px'>Error Reference: <strong>#SMB-1</strong></small>";
 
 				if (bnkManualResult.ERROR_MSG.indexOf('Currently we are unable to login to') >= 0 ||
 				    bnkManualResult.ERROR_MSG.indexOf('Please try again later') >= 0)
 				{
-				    errorText: "Something went wrong - terrible sorry about this. We hate it when something breaks! Please try again or contact support@nooch if the problem happens again."
+				    errorText: "Something went wrong - terrible sorry about this. We hate it when something breaks! Please try again or contact <a href='mailto:" + SUPPORTLINK +
+				               "' target='_blank'>" + SUPPORTLINK + "</a> if the problem happens again." +
+				               "<small class='show' style='margin-top:12px'>Error Reference: <strong>#SMB-2</strong></small>";
 				}
 				else if (bnkManualResult.ERROR_MSG.indexOf('error occured at server') >= 0)
 				{
-				    errorText: "Something went wrong - extremely sorry about this. We hate it when something breaks! Please try again or contact support@nooch if the problem happens again."
+				    errorText: "Something went wrong - extremely sorry about this. We hate it when something breaks! Please try again or contact <a href='mailto:" + SUPPORTLINK +
+				               "' target='_blank'>" + SUPPORTLINK + "</a> if the problem happens again." +
+				               "<small class='show' style='margin-top:12px'>Error Reference: <strong>#SMB-3</strong></small>";
 				}
 
 				swal({
@@ -822,7 +827,8 @@ function submitManualBank() {
 					text: errorText,
 					type: "error",
 					confirmButtonColor: "#3fabe1",
-					confirmButtonText: "Ok"
+					confirmButtonText: "Ok",
+					html: true
 				});
 
 				return;
@@ -837,7 +843,7 @@ function submitManualBank() {
 
 			swal({
 				title: "Oh No!",
-				text: "Something went wrong - very sorry about this. We hate it when something breaks! Please try again or contact <a href='mailto:support@nooch.com'>support@nooch.com</a> if the problem happens again.",
+				text: "Something went wrong - very sorry about this. We hate it when something breaks! Please try again or contact <a href='mailto:" + SUPPORTLINK + "' target='_blank'>" + SUPPORTLINK + "</a> if the problem happens again.",
 				type: "error",
 				confirmButtonColor: "#3fabe1",
 				confirmButtonText: "Ok",
@@ -856,8 +862,8 @@ $('#addBank-sec-question').submit(function(e) {
     console.log("SEC_QUES_NO value is: " + SEC_QUES_NO);
 
     // Check the right input based on which # question is being answered
-	if (SEC_QUES_NO == 1)
-	{
+	//if (SEC_QUES_NO == 1)
+	//{
 		if ($('#securityQuest1').parsley().validate() === true)
 		{
 			MFALogin();
@@ -867,7 +873,7 @@ $('#addBank-sec-question').submit(function(e) {
 			$('#securityQuest1').velocity("callout.shake");
 			$('#securityQuest1').focus();
 		}
-	}
+	/*}
 	else if (SEC_QUES_NO == 2)
 	{
 		if ($('#securityQuest2').parsley().validate() === true)
@@ -891,7 +897,7 @@ $('#addBank-sec-question').submit(function(e) {
 			$('#securityQuest3').velocity("callout.shake");
 			$('#securityQuest3').focus();
 		}
-	}
+	}*/
 });
 
 
@@ -1087,7 +1093,8 @@ function MFALogin() {
 function mfaErrorAlert() {
     swal({
         title: "Oh No!",
-        text: "We're having trouble verifying your answer - very sorry about this. Contact <a href='mailto:support@nooch.com'>support@nooch</a> if the problem persists, or you can skip this step by entering your bank's routing/account # instead.",
+        text: "We're having trouble verifying your answer - very sorry about this. Contact <a href='mailto:" + SUPPORTLINK + "' target='_blank'>" + SUPPORTLINK + "</a> if the problem persists, or you can skip this step by entering your bank's routing/account # instead." +
+              "<small class='show' style='margin-top:12px'>Error Reference: <strong>#MFA-1</strong></small>",
         type: "error",
         showCancelButton: true,
         cancelButtonText: "Ok",
@@ -1156,9 +1163,13 @@ function SetDefaultAct() {
 				}
 				else
 				{
+				    var linkTxt = "support@nooch.com";
+				    if (COMPANY == "Rent Scene") {
+				        linkTxt = "payments@rentscene.com";
+				    }
 				    swal({
 						title: "Oh No!",
-						text: "Something went wrong - very sorry about this. We hate it when things break! Please try again or contact <a href='mailto:support@nooch.com' target='_blank'>support@nooch</a> and we'll be glad to help." +
+						text: "Something went wrong - very sorry about this. We hate it when things break! Please try again or contact <a href='mailto:" + SUPPORTLINK + "' target='_blank'>" + SUPPORTLINK + "</a> and we'll be glad to help." +
 						      "<small class='show' style='margin-top:12px'>Error Reference: <strong>#SD-1</strong></small>",
 						type: "error",
 						confirmButtonColor: "#3fabe1",
@@ -1233,7 +1244,7 @@ function sendToRedUrl() {
                 html: true
             }, function (isConfirm) {
                 $('.addBankContainer-body').block({
-                    message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Completing payment...</span>',
+                    message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Completing Payment...</span>',
                     css: {
                         border: 'none',
                         padding: '26px 8px 20px',
@@ -1336,7 +1347,6 @@ function sendToRedUrl() {
 }
 
 
-
 $(document).ready(function () {
 	$('.popBank-shell.group1').addClass('zoomIn').queue(function(){
 		$(this).addClass('finishedAnimating').dequeue();
@@ -1381,6 +1391,10 @@ $(document).ready(function () {
     {
         console.log("No RED_URL found!")
         RED_URL = "https://www.nooch.com"
+    }
+    else if (RED_URL.indexOf("rentscene") > -1) {
+        COMPANY = "Rent Scene";
+        SUPPORTLINK = "payments@rentscene.com";
     }
 
     fromLandlordApp = getParameterByName('ll');
@@ -1429,7 +1443,7 @@ $(document).ready(function () {
 	    })
 	}
 
-	else if (RED_URL.indexOf("rentscene") > -1) {
+	else if (COMPANY == "Rent Scene") {
 	    $('#form1').append('<img src="https://noochme.com/noochweb/Assets/Images/rentscene.png" class="brandedLogo desk-only" />');
 
 	    swal({
@@ -1455,7 +1469,6 @@ $(document).ready(function () {
 	}
 
 	/**** CREATING AUTO-COMPLETE LIST OF BANKS FOR SEARCHING ****/
-
 	$("#bankSearch").autoComplete({
 	    minChars: 2,
 	    cache: true, // might want to turn off
