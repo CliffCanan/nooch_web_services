@@ -686,25 +686,33 @@ $('#bankLoginManual').submit(function(e) {
 			$('#bankAcntNum').val($.trim($('#bankAcntNum').val()));
 			if ($('#bankAcntNum').parsley().validate() === true)
 			{
-				// ADD THE LOADING BOX
-			    $('.addBankContainer-body').block({
-				    message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Submitting...</span>',
-				    css: {
-				        border: 'none',
-				        padding: '20px 8px 14px',
-				        backgroundColor: '#000',
-				        '-webkit-border-radius': '12px',
-				        '-moz-border-radius': '12px',
-						'border-radius': '12px',
-				        opacity: '.75',
-				        width: '80%',
-				        left: '10%',
-				        top: '25px',
-				        color: '#fff' 
-				    }
-				});
+			    $('#bankAcntNickName').val($.trim($('#bankAcntNickName').val()));
+                // If account number is ok, then validation account nick name
+			    if ($('#bankAcntNickName').parsley().validate() === true) {
+			        // ADD THE LOADING BOX
+			        $('.addBankContainer-body').block({
+			            message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Submitting...</span>',
+			            css: {
+			                border: 'none',
+			                padding: '20px 8px 14px',
+			                backgroundColor: '#000',
+			                '-webkit-border-radius': '12px',
+			                '-moz-border-radius': '12px',
+			                'border-radius': '12px',
+			                opacity: '.75',
+			                width: '80%',
+			                left: '10%',
+			                top: '25px',
+			                color: '#fff'
+			            }
+			        });
 
-				submitManualBank();
+			        submitManualBank();
+			    } else {
+			        $('#acntNickNameGroup input').velocity("callout.shake");
+			        $('#acntNickNameGroup .fa').velocity("callout.shake");
+			        $('#bankAcntNickName').focus();
+			    }
 			}
 			else
 			{
@@ -731,37 +739,38 @@ $('#bankLoginManual').submit(function(e) {
 
 
 function submitManualBank() {
-	console.log("{MemberID: '" + MEMBER_ID + "'Full Name: '" + $('#userFullName').val() + "', Routing #: '" + $('#bankRout').val() + "', Account #: '" + $('#bankAcntNum').val() + "', Type: Checking: '" + $('#togChecking').is(':checked') + "', Savings: '" + $('#togSavings').is(':checked') + "'}");
+    console.log("{MemberID: '" + MEMBER_ID + "'Full Name: '" + $('#userFullName').val() + "', Routing #: '" + $('#bankRout').val() + "', Account #: '" + $('#bankAcntNum').val() + "', Account Nick Name: '" + $('#bankAcntNickName').val() + "', Type: Checking: '" + $('#togChecking').is(':checked') + "', Savings: '" + $('#togSavings').is(':checked') + "'}");
 	isManual = true;
 
 	var typeString, classString;
-	if ($('#togChecking').is(':checked') && !$('#togSavings').is(':checked'))
-	{
-		typeString = "1"
-	}
-	else
-	{
-		typeString = "2"
-	}
-
+	
 	if ($('#togPersonal').is(':checked') && !$('#togBusiness').is(':checked'))
 	{
-		classString = "1"
+	    typeString = "PERSONAL"
 	}
 	else
 	{
-		classString = "2"
+	    typeString = "BUSINESS"
+	}
+
+		if ($('#togChecking').is(':checked') && !$('#togSavings').is(':checked'))
+	{
+		    classString = "CHECKING"
+	}
+	else
+	{
+		    classString = "SAVINGS"
 	}
 
 	$.ajax({
         type: "POST",
         url: "addBank",
-        data: "{memberid: '" + MEMBER_ID + "', fullname: '" + $('#userFullName').val() + "',routing: '" + $('#bankRout').val() + "',account: '" + $('#bankAcntNum').val() + "',nickname: '',cl: '" + classString + "',type: '" + typeString + "'}",
+        data: "{memberid: '" + MEMBER_ID + "', fullname: '" + $('#userFullName').val() + "',routing: '" + $('#bankRout').val() + "',account: '" + $('#bankAcntNum').val() + "',nickname: '" + $('#bankAcntNickName').val() + "',cl: '" + classString + "',type: '" + typeString + "'}",
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         async: "true",
         cache: "false",
-        success: function (msg) {
+        success: function (bnkManualResult) {
             //console.log("SUBMIT BANK MANUAL response msg is...");
             //console.log(msg.d);
 	
@@ -773,7 +782,7 @@ function submitManualBank() {
 				$('#bankManual_errorMsg').html('');
 			}
 
-            var bnkManualResult = msg.d;
+            //var bnkManualResult = msg.d;
 
 			if (bnkManualResult.Is_success == true)
 			{

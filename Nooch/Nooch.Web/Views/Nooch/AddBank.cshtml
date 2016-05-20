@@ -312,33 +312,43 @@
                             <div class="form-group hasInputIcon" id="acntGroup">
                                 <div class="col-xs-12">
                                     <i class="fa fa-fw fa-user"></i>
-                                    <input type="text" pattern="[0-9]*" class="form-control" id="bankAcntNum" name="bankAcntNum" placeholder="Account Number" data-parsley-type="digits" data-parsley-trigger="change focusout" required="true" minlength="6" maxlength="18" data-parsley-type-message="Your account # should be only digits, i.e. 0-9." data-parsley-required-message="Enter the Account Number for this bank account." data-parsley-minlength-message="Hmmm, that should be a little longer..." />
+                                    <input type="text" pattern="[0-9]*" class="form-control" id="bankAcntNum" name="bankAcntNum" placeholder="Account Number" data-parsley-type="digits" data-parsley-trigger="change focusout" required="true" minlength="6" maxlength="18" data-parsley-type-message="Your account # should be only digits, i.e. 0-9." data-parsley-required-message="Enter the Account Number for this bank account." data-parsley-minlength-message="Hmmm, that should be a little longer..."/>
                                 </div>
                             </div>
+
+                            <div class="form-group hasInputIcon" id="acntNickNameGroup">
+                                <div class="col-xs-12">
+                                    <i class="fa fa-fw fa-user"></i>
+                                    <input type="text" class="form-control" id="bankAcntNickName" name="bankAcntNickName" placeholder="Account Nick Name" data-parsley-whitespace="squish" parsley-trigger="change focusout" required="true" parsley-minlength="4" maxlength="40" data-parsley-required-message="Enter bank account nick name." data-parsley-minlength-message="Hmmm, that looks too short..." />
+                                </div>
+                            </div>
+
+
 
                             <div class="form-group">
                                 <label class="col-xs-4 col-md-5 control-label">Type</label>
                                 <div class="col-xs-8 col-md-7">
                                     <div class="switch-toggle switch-ios">
-                                        <input id="togChecking" name="tog-accntType" type="radio" checked />
-                                        <label for="togChecking" onclick="">Checking</label>
+                                        <input id="togPersonal" name="tog-accntType" type="radio" checked />
+                                        <label for="togPersonal" onclick="">PERSONAL</label>
 
-                                        <input id="togSavings" name="tog-accntType" type="radio" />
-                                        <label for="togSavings" onclick="">Savings</label>
+                                        <input id="togBusiness" name="tog-accntType" type="radio" />
+                                        <label for="togBusiness" onclick="">BUSINESS</label>
                                         <a></a>
                                     </div>
                                 </div>
                             </div>
 
+                          
                             <div class="form-group">
                                 <label class="col-xs-4 col-md-5 control-label">Class</label>
                                 <div class="col-xs-8 col-md-7">
                                     <div class="switch-toggle switch-ios">
-                                        <input id="togPersonal" name="tog-accntClass" type="radio" checked />
-                                        <label for="togPersonal" onclick="">Personal</label>
+                                        <input id="togChecking" name="tog-accntClass" type="radio" checked />
+                                        <label for="togChecking" onclick="">CHECKING</label>
 
-                                        <input id="togBusiness" name="tog-accntClass" type="radio" />
-                                        <label for="togBusiness" onclick="">Business</label>
+                                        <input id="togSavings" name="tog-accntClass" type="radio" />
+                                        <label for="togSavings" onclick="">SAVINGS</label>
                                         <a></a>
                                     </div>
                                 </div>

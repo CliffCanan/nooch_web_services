@@ -421,7 +421,11 @@ namespace Nooch.Web.Controllers
         }
 
 
-        public static SynapseBankLoginRequestResult addBank(bankaddInputFormClass inp)
+
+
+        [HttpPost]
+        [ActionName("addBank")]
+        public ActionResult addBank(bankaddInputFormClass inp)
         {
             Logger.Info("NoochController -> addBank (for manual routing/account #) Initiated - [MemberID: " + inp.memberid + "]");
 
@@ -479,7 +483,7 @@ namespace Nooch.Web.Controllers
                     res.ERROR_MSG = bankAddRes.errorMsg;
                 }
 
-                return res;
+                return Json( res);
             }
             catch (Exception we)
             {
@@ -487,7 +491,7 @@ namespace Nooch.Web.Controllers
                                    "], [Exception: " + we.InnerException + "]");
 
                 res.ERROR_MSG = "Error did occur at server. Ohh nooo!!";
-                return res;
+                return Json(res);
             }
         }
 
