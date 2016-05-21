@@ -1163,10 +1163,6 @@ function SetDefaultAct() {
 				}
 				else
 				{
-				    var linkTxt = "support@nooch.com";
-				    if (COMPANY == "Rent Scene") {
-				        linkTxt = "payments@rentscene.com";
-				    }
 				    swal({
 						title: "Oh No!",
 						text: "Something went wrong - very sorry about this. We hate it when things break! Please try again or contact <a href='mailto:" + SUPPORTLINK + "' target='_blank'>" + SUPPORTLINK + "</a> and we'll be glad to help." +

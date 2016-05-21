@@ -3066,23 +3066,24 @@ namespace Nooch.DataAccess
                 #region Get Invite Code ID from transaction
 
                 string inviteCode = "";
+                Transaction trans = new Transaction();
 
                 try
                 {
                     Guid tid = Utility.ConvertToGuid(transId);
 
-                    var transDetail = _dbContext.Transactions.FirstOrDefault(transIdTemp => transIdTemp.TransactionId == tid);
+                    trans = _dbContext.Transactions.FirstOrDefault(transIdTemp => transIdTemp.TransactionId == tid);
 
-                    if (transDetail != null)
+                    if (trans != null)
                     {
-                        _dbContext.Entry(transDetail).Reload();
-                        inviteCode = transDetail.Member.InviteCodeId.ToString();
+                        _dbContext.Entry(trans).Reload();
+                        inviteCode = trans.Member.InviteCodeId.ToString();
                     }
                 }
                 catch (Exception ex)
                 {
                     Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 -> FAILED to lookup Invite Code from Transaction - " +
-                                           "TransID: [" + transId + "], Exception: [" + ex + "]");
+                                 "TransID: [" + transId + "], Exception: [" + ex + "]");
                 }
 
                 #endregion Get Invite Code ID from transaction
@@ -3136,12 +3137,18 @@ namespace Nooch.DataAccess
 
                 string userNameLowerCase = userEmail.Trim().ToLower();
                 string userNameLowerCaseEncr = CommonHelper.GetEncryptedData(userNameLowerCase);
+                string secondaryEmail;
+
+                // CLIFF (5/21/16): If this new user was invited via Email, then set the SecondaryEmail as the InvitationSentTo value.
+                //                  This helps if the user enters a different email during ID Verification form.
+                secondaryEmail = !String.IsNullOrEmpty(trans.InvitationSentTo)
+                                 ? trans.InvitationSentTo
+                                 : userNameLowerCaseEncr;
 
                 string pinNumber = Utility.GetRandomPinNumber();
                 pinNumber = CommonHelper.GetEncryptedData(pinNumber);
 
                 #endregion Parse And Format Data To Save
-
 
 
                 var member = new Member
@@ -3152,7 +3159,7 @@ namespace Nooch.DataAccess
                     LastName = LastName,
                     UserName = userNameLowerCaseEncr,
                     UserNameLowerCase = userNameLowerCaseEncr,
-                    SecondaryEmail = userNameLowerCaseEncr,
+                    SecondaryEmail = secondaryEmail,
                     RecoveryEmail = userNameLowerCaseEncr,
                     ContactNumber = userPhone,
                     Address = !String.IsNullOrEmpty(address) ? CommonHelper.GetEncryptedData(address) : null,
@@ -3164,13 +3171,11 @@ namespace Nooch.DataAccess
                     Status = Constants.STATUS_NON_REGISTERED,
                     IsDeleted = false,
                     DateCreated = DateTime.Now,
-                    Type = "Personal",
+                    Type = "Personal - Browser",
                     Photo = Utility.GetValueFromConfig("PhotoUrl") + "gv_no_photo.png",
                     UDID1 = !String.IsNullOrEmpty(fngprnt) ? fngprnt : null,
                     IsVerifiedWithSynapse = false
                 };
-
-
 
                 if (inviteCode.Length > 0)
                 {
@@ -3185,12 +3190,14 @@ namespace Nooch.DataAccess
                     _dbContext.Members.Add(member);
                     addNewMemberToDB = _dbContext.SaveChanges();
                     _dbContext.Entry(member).Reload();
-
                 }
                 catch (Exception ex)
                 {
+                    Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 - FAILED to save new member in DB - Email: [" + userEmail +
+                                 "], Exception: [" + ex.Message + "]");
                     throw ex;
                 }
+
                 #endregion Create New Nooch Member Record in Members.dbo
 
                 NewUsersNoochMemId = member.MemberId.ToString();
@@ -3205,7 +3212,7 @@ namespace Nooch.DataAccess
                 catch (Exception ex)
                 {
                     Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 EXCEPTION on trying to save new Member's IP Address - " +
-                                           "MemberID: [" + NewUsersNoochMemId + "], [Exception: " + ex + "]");
+                                 "MemberID: [" + NewUsersNoochMemId + "], [Exception: " + ex + "]");
                 }
 
                 #region Member Added to Nooch DB Successfully
@@ -3614,14 +3621,12 @@ namespace Nooch.DataAccess
                 else
                 {
                     Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 - FAILED to add new Member to DB");
-
                     res.reason = "Failed to save new Nooch Member in DB.";
                 }
             }
             else
             {
                 Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 - FAILED - couldn't generate a Nooch ID.");
-
                 res.reason = "Duplicate Nooch_Id generated, contact Nooch support."; // CLIFF (7/28/15): Well actually it wouldn't be a duplicate since it would have to be null...
             }
 

@@ -5494,7 +5494,6 @@ namespace Nooch.DataAccess
                         };
                         request.DeviceId = handleRequestDto.DeviceId;
                         request.TransactionStatus = "Success";
-                        //request.TransactionDate = DateTime.Now;
                         request.DateAccepted = DateTime.Now;
                         
                         request.TransactionType = CommonHelper.GetEncryptedData(Constants.TRANSACTION_TYPE_TRANSFER);
@@ -5503,8 +5502,8 @@ namespace Nooch.DataAccess
 
                         if (i <= 0)
                         {
-                            Logger.Error("HandleRequestMoney -> Success from Synapse but FAILED to update this request in DB - " +
-                                                   "[Request TransId is: " + request.TransactionId + "]");
+                            Logger.Error("TDA -> HandleRequestMoney - Success from Synapse but FAILED to update this request in DB - " +
+                                         "[Request TransId is: " + request.TransactionId + "]");
 
                             return "Internal error. Funds were transferred, but transaction not updated in DB.";
                         }
@@ -5512,7 +5511,7 @@ namespace Nooch.DataAccess
                     catch (Exception ex)
                     {
                         Logger.Error("TDA -> HandleRequestMoney -> Success from Synapse but FAILED to update this request in DB - [Request TransID: " +
-                                               request.TransactionId + "], [Exception: " + ex + "]");
+                                     request.TransactionId + "], [Exception: " + ex + "]");
                     }
 
                     #endregion Update This Request In Transactions DB
