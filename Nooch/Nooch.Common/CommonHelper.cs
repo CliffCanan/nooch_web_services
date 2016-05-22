@@ -69,20 +69,6 @@ namespace Nooch.Common
             return System.Convert.ToBase64String(plainTextBytes);
         }
 
-        public static string FormatPhoneNumber(string sourcePhone)
-        {
-            sourcePhone.Trim();
-            if (String.IsNullOrEmpty(sourcePhone) || sourcePhone.Length != 10)
-            {
-                return sourcePhone;
-            }
-            sourcePhone = "(" + sourcePhone;
-            sourcePhone = sourcePhone.Insert(4, ")");
-            sourcePhone = sourcePhone.Insert(5, " ");
-            sourcePhone = sourcePhone.Insert(9, "-");
-            return sourcePhone;
-        }
-
         public static string ForgotPassword(string userName)
         {
             Logger.Info("Common Helper -> ForgotPassword - [userName: " + userName + "]");
@@ -111,6 +97,7 @@ namespace Nooch.Common
                                 "/ForgotPassword/ResetPassword.aspx?memberId=" + getMember.MemberId)
                         }
                     };
+
                     PasswordResetRequest prr = new PasswordResetRequest();
                     prr.RequestedOn = DateTime.Now;
                     prr.MemberId = getMember.MemberId;
@@ -121,8 +108,8 @@ namespace Nooch.Common
                     {
                         _dbContext.Entry(prr).Reload();
                         status = true;
-                        Utility.SendEmail(Constants.TEMPLATE_FORGOT_PASSWORD, fromAddress, GetDecryptedData(getMember.UserName), null, "Reset your Nooch password"
-                    , null, tokens, null, null, null);
+                        Utility.SendEmail(Constants.TEMPLATE_FORGOT_PASSWORD, fromAddress, GetDecryptedData(getMember.UserName),
+                                          null, "Reset your Nooch password", null, tokens, null, null, null);
                     }
 
                     return status
@@ -131,10 +118,25 @@ namespace Nooch.Common
                 }
                 return "Problem occured while sending mail.";
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Logger.Error("Common Helper -> ForgotPassword FAILED - Exception: [" + ex.Message + "]");
                 return "Problem occured while sending mail.";
             }
+        }
+
+        public static string FormatPhoneNumber(string sourcePhone)
+        {
+            sourcePhone.Trim();
+            if (String.IsNullOrEmpty(sourcePhone) || sourcePhone.Length != 10)
+            {
+                return sourcePhone;
+            }
+            sourcePhone = "(" + sourcePhone;
+            sourcePhone = sourcePhone.Insert(4, ")");
+            sourcePhone = sourcePhone.Insert(5, " ");
+            sourcePhone = sourcePhone.Insert(9, "-");
+            return sourcePhone;
         }
 
         public static string RemovePhoneNumberFormatting(string sourceNum)
@@ -152,7 +154,7 @@ namespace Nooch.Common
             }
             else
             {
-                Logger.Info("CommonHelper -> RemovePhoneNumberFormatting Source String was NULL or EMPTY - [SourceData: " + sourceNum + "]");
+                Logger.Error("CommonHelper -> RemovePhoneNumberFormatting Source String was NULL or EMPTY - [SourceData: " + sourceNum + "]");
             }
             return sourceNum;
         }
@@ -169,7 +171,7 @@ namespace Nooch.Common
 
         public static bool IsValidRequest(string accessToken, string memberId)
         {
-            if (!string.IsNullOrEmpty(accessToken) || !string.IsNullOrEmpty(memberId))
+            if (!string.IsNullOrEmpty(accessToken) && !string.IsNullOrEmpty(memberId))
             {
                 Guid memGuid = new Guid(memberId);
                 accessToken = accessToken.Replace(' ', '+');
@@ -249,34 +251,49 @@ namespace Nooch.Common
 
         public static string GetMemberIdByUserName(string userName)
         {
-            var userNameLowerCase = GetEncryptedData(userName.ToLower());
-            userName = GetEncryptedData(userName);
-
-            var noochMember = _dbContext.Members.FirstOrDefault(m => (m.UserNameLowerCase == userNameLowerCase || m.UserName == userName) && m.IsDeleted == false);
-
-            if (noochMember != null)
+            try
             {
-                _dbContext.Entry(noochMember).Reload();
-                return noochMember.MemberId.ToString();
-            }
+                var userNameLowerCase = GetEncryptedData(userName.ToLower());
+                userName = GetEncryptedData(userName);
 
+                var noochMember = _dbContext.Members.FirstOrDefault(m => (m.UserNameLowerCase == userNameLowerCase || m.UserName == userName) && m.IsDeleted == false);
+
+                if (noochMember != null)
+                {
+                    _dbContext.Entry(noochMember).Reload();
+                    return noochMember.MemberId.ToString();
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Common Helper -> GetMemberIdByUserName FAILED - Exception: [" + ex.Message + "]");
+            }
             return null;
         }
 
         public static string GetMemberUsernameByMemberId(string MemberId)
         {
-            Guid memGuid = Utility.ConvertToGuid(MemberId);
-
-            var noochMember =
-                _dbContext.Members.FirstOrDefault(
-                    m => m.MemberId == memGuid && m.IsDeleted == false);
-
-            if (noochMember != null)
+            try
             {
-                _dbContext.Entry(noochMember).Reload();
+                Guid memGuid = Utility.ConvertToGuid(MemberId);
+
+                var noochMember =
+                    _dbContext.Members.FirstOrDefault(
+                        m => m.MemberId == memGuid && m.IsDeleted == false);
+
+                if (noochMember != null)
+                {
+                    _dbContext.Entry(noochMember).Reload();
+                }
+
+                return noochMember != null ? GetDecryptedData(noochMember.UserName) : null;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Common Helper -> GetMembersUsernameByMemberId FAILED - Exception: [" + ex.Message + "]");
             }
 
-            return noochMember != null ? GetDecryptedData(noochMember.UserName) : null;
+            return null;
         }
 
         public static string GetPhoneNumberByMemberId(string MemberId)
@@ -331,18 +348,24 @@ namespace Nooch.Common
 
         public static string GetMemberNameByUserName(string userName)
         {
-            var userNameLowerCase = GetEncryptedData(userName.ToLower());
-            userName = GetEncryptedData(userName);
-
-            var noochMember =
-                _dbContext.Members.FirstOrDefault(
-                    m => m.UserNameLowerCase == userNameLowerCase && m.UserName == userName && m.IsDeleted == false);
-
-            if (noochMember != null)
+            try
             {
-                _dbContext.Entry(noochMember).Reload();
-                return UppercaseFirst(GetDecryptedData(noochMember.FirstName)) + " " + UppercaseFirst(GetDecryptedData(noochMember.LastName));
+                var userNameLowerCase = GetEncryptedData(userName.ToLower());
+                userName = GetEncryptedData(userName);
 
+                var noochMember =
+                    _dbContext.Members.FirstOrDefault(
+                        m => m.UserNameLowerCase == userNameLowerCase && m.UserName == userName && m.IsDeleted == false);
+
+                if (noochMember != null)
+                {
+                    _dbContext.Entry(noochMember).Reload();
+                    return UppercaseFirst(GetDecryptedData(noochMember.FirstName)) + " " + UppercaseFirst(GetDecryptedData(noochMember.LastName));
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Common Helper -> GetMemberNameByUserName FAILED - Exception: [" + ex.Message + "]");
             }
             return null;
         }
@@ -401,7 +424,6 @@ namespace Nooch.Common
 
         public static bool IsNonNoochMemberActivated(string emailId)
         {
-
             var noochMember = _dbContext.Members.FirstOrDefault(m => m.UserName == emailId && m.IsDeleted == false);
             if (noochMember != null)
             {
@@ -412,18 +434,26 @@ namespace Nooch.Common
 
         public static string IsDuplicateMember(string userName)
         {
-            Logger.Info("Common Helper -> IsDuplicateMember Initiated - [UserName to check: " + userName + "]");
-
-            var userNameLowerCase = GetEncryptedData(userName.ToLower());
-
-            var noochMember =
-                _dbContext.Members.FirstOrDefault(m => m.UserNameLowerCase == userNameLowerCase && m.IsDeleted == false);
-            if (noochMember != null)
+            try
             {
-                _dbContext.Entry(noochMember).Reload();
-            }
+                Logger.Info("Common Helper -> IsDuplicateMember Initiated - [UserName to check: " + userName + "]");
 
-            return noochMember != null ? "Username already exists for the primary email you entered. Please try with some other email." : "Not a nooch member.";
+                var userNameLowerCase = GetEncryptedData(userName.ToLower());
+
+                var noochMember =
+                    _dbContext.Members.FirstOrDefault(m => m.UserNameLowerCase == userNameLowerCase && m.IsDeleted == false);
+                if (noochMember != null)
+                {
+                    _dbContext.Entry(noochMember).Reload();
+                }
+
+                return noochMember != null ? "Username already exists for the primary email you entered. Please try with some other email." : "Not a nooch member.";
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Common Helper -> GetMemberNameByUserName FAILED - Exception: [" + ex.Message + "]");
+                return ex.Message;
+            }
         }
 
         public static bool IsWeeklyTransferLimitExceeded(Guid MemberId, decimal amount)
@@ -553,7 +583,7 @@ namespace Nooch.Common
 
         public static bool RemoveSynapseBankLoginResultsForGivenMemberId(string memberId)
         {
-            Logger.Info("Common Helper -> GetSynapseBankAccountDetails - MemberId: [" + memberId + "]");
+            Logger.Info("Common Helper -> GetSynapseBankAccountDetails Initiated - MemberId: [" + memberId + "]");
 
             var id = Utility.ConvertToGuid(memberId);
 
@@ -583,7 +613,7 @@ namespace Nooch.Common
         /// <returns></returns>
         public static SynapseBanksOfMember GetSynapseBankAccountDetails(string memberId)
         {
-            Logger.Info("Common Helper -> GetSynapseBankAccountDetails - MemberId: [" + memberId + "]");
+            Logger.Info("Common Helper -> GetSynapseBankAccountDetails Initiated - MemberId: [" + memberId + "]");
 
             var id = Utility.ConvertToGuid(memberId);
 
@@ -603,7 +633,7 @@ namespace Nooch.Common
         /// <returns></returns>
         public static SynapseCreateUserResult GetSynapseCreateaUserDetails(string memberId)
         {
-            Logger.Info("Common Helper -> GetSynapseCreateaUserDetails - MemberId: [" + memberId + "]");
+            Logger.Info("Common Helper -> GetSynapseCreateaUserDetails Initiated - MemberId: [" + memberId + "]");
 
             var id = Utility.ConvertToGuid(memberId);
 
@@ -618,7 +648,7 @@ namespace Nooch.Common
 
         public static MemberNotification GetMemberNotificationSettingsByUserName(string userName)
         {
-            Logger.Info("Common Helper -> GetMemberNotificationSettingsByUserName - UserName: [" + userName + "]");
+            Logger.Info("Common Helper -> GetMemberNotificationSettingsByUserName Initiated- UserName: [" + userName + "]");
 
             userName = GetEncryptedData(userName);
 
@@ -634,8 +664,8 @@ namespace Nooch.Common
         public static string IncreaseInvalidLoginAttemptCount(string memGuid, int loginRetryCountInDb)
         {
             Logger.Info("Common Helper -> IncreaseInvalidLoginAttemptCount Initiated (User's PW was incorrect during login attempt) - " +
-                                   "This is invalid attempt #: [" + (loginRetryCountInDb + 1).ToString() + "], " +
-                                   "MemberId: [" + memGuid + "]");
+                        "This is invalid attempt #: [" + (loginRetryCountInDb + 1).ToString() + "], " +
+                        "MemberId: [" + memGuid + "]");
 
             Member m = GetMemberDetails(memGuid);
 
@@ -649,7 +679,7 @@ namespace Nooch.Common
 
         public static bool UpdateAccessToken(string userName, string AccessToken)
         {
-            Logger.Info("Common Helper -> UpdateAccessToken - userName: [" + userName + "]");
+            Logger.Info("Common Helper -> UpdateAccessToken Initiated- userName: [" + userName + "]");
 
             try
             {
@@ -685,7 +715,7 @@ namespace Nooch.Common
             }
             catch (Exception ex)
             {
-                Logger.Error("Common Helper -> CheckTokenExistance FAILED - [Exception: " + ex + "]");
+                Logger.Error("Common Helper -> CheckTokenExistance FAILED - [Exception: " + ex.Message + "]");
                 return false;
             }
         }
@@ -693,7 +723,7 @@ namespace Nooch.Common
         public static bool IsListedInSDN(string lastName, Guid userId)
         {
             bool result = false;
-            Logger.Info("Common Helper -> IsListedInSDNList - userName: [" + lastName + "]");
+            Logger.Info("Common Helper -> IsListedInSDNList Initiated- userName: [" + lastName + "]");
 
             var noochMemberN =
                 _dbContext.Members.FirstOrDefault(
@@ -758,18 +788,12 @@ namespace Nooch.Common
                         Utility.GetValueFromConfig("SDNMailReciever"), null, "SDN Listed", null, null, null,
                         null, str.ToString());
 
-                    Logger.Info(
-                        "SDN Screening Alert - SDN Screening Results email sent to [" +
-                        "SDN@nooch.com" + "].");
-
-                    if (true)
+                    if (b)
                     {
-                        Logger.Info(
-                            "SDN Screening Alert - SDN Screening Results email sent to [" + "SDN@nooch.com" + "].");
+                        Logger.Info("Common Helper -> SDN Screening Alert - SDN Screening Results email sent to SDN@nooch.com");
                     }
                     {
-                        Logger.Error(
-                            "SDN Screening Alert - SDN Screening Results email NOT sent to [" + "SDN@nooch.com" + "].");
+                        Logger.Error("Common Helper -> SDN Screening Alert - SDN Screening Results email NOT sent to SDN@nooch.com.");
                     }
                 }
                 else
@@ -787,11 +811,9 @@ namespace Nooch.Common
             return result;
         }
 
-        private static string IncreaseInvalidPinAttemptCount(
-            Member memberEntity, int pinRetryCountInDb)
+        private static string IncreaseInvalidPinAttemptCount(Member memberEntity, int pinRetryCountInDb)
         {
             var mem = _dbContext.Members.Find(memberEntity.MemberId);
-
 
             mem.InvalidPinAttemptCount = pinRetryCountInDb + 1;
             mem.InvalidPinAttemptTime = DateTime.Now;
@@ -805,34 +827,38 @@ namespace Nooch.Common
 
         public static string ValidatePinNumberToEnterForEnterForeground(string memberId, string pinNumber)
         {
-            using (var noochConnection = new NOOCHEntities())
+            try
             {
-                var id = Utility.ConvertToGuid(memberId);
-
-
-                var memberEntity = noochConnection.Members.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
-
-
-                if (memberEntity != null)
+                using (var noochConnection = new NOOCHEntities())
                 {
-                    if (memberEntity.PinNumber.Equals(pinNumber.Replace(" ", "+")))
+                    var id = Utility.ConvertToGuid(memberId);
+
+                    var memberEntity = noochConnection.Members.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
+
+                    if (memberEntity != null)
                     {
-                        return "Success";
+                        if (memberEntity.PinNumber.Equals(pinNumber.Replace(" ", "+")))
+                        {
+                            return "Success";
+                        }
+                        else
+                        {
+                            return "Invalid Pin";
+                        }
                     }
-                    else
-                    {
-                        return "Invalid Pin";
-                    }
+                    return "Member not found.";
                 }
-                return "Member not found.";
+            }
+            catch (Exception ex)
+            {
+                Logger.Info("Common Helper - ValidatePinNumberToEnterForEnterForeground FAILED - Exception: [" + ex.Message + "]");
+                return ex.Message;
             }
         }
 
         public static string ValidatePinNumber(string memberId, string pinNumber)
         {
-
             var id = Utility.ConvertToGuid(memberId);
-
 
             var memberEntity = _dbContext.Members.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
             // _dbContext.Entry(memberEntity).Reload();
@@ -861,11 +887,10 @@ namespace Nooch.Common
                     var disputeReviewStatus = CommonHelper.GetEncryptedData(Constants.DISPUTE_STATUS_REVIEW);
 
                     if (
-                        !memberEntity.Transactions.Any(
-                            transaction =>
+                        !memberEntity.Transactions.Any(transaction =>
                                 (transaction.DisputeStatus == disputeStatus ||
                                  transaction.DisputeStatus == disputeReviewStatus) &&
-                                memberEntity.MemberId == transaction.RaisedById))
+                                 memberEntity.MemberId == transaction.RaisedById))
                     {
                         memberEntity.Status = Constants.STATUS_ACTIVE;
                     }
@@ -875,12 +900,11 @@ namespace Nooch.Common
                     _dbContext.Entry(memberEntity).Reload();
 
                     pinRetryCountInDb = memberEntity.InvalidPinAttemptCount.Equals(null)
-                        ? 0
-                        : memberEntity.InvalidPinAttemptCount.Value;
-                    ;
+                                        ? 0
+                                        : memberEntity.InvalidPinAttemptCount.Value;
 
-                    if (!memberEntity.PinNumber.Equals(pinNumber.Replace(" ", "+")))
                     // incorrect pinnumber after 24 hours
+                    if (!memberEntity.PinNumber.Equals(pinNumber.Replace(" ", "+")))
                     {
                         return IncreaseInvalidPinAttemptCount(memberEntity, pinRetryCountInDb);
                     }
@@ -899,15 +923,14 @@ namespace Nooch.Common
 
                 //Username is there in db, whereas pin number entered by user is incorrect.
                 if (memberEntity.InvalidPinAttemptCount == null || memberEntity.InvalidPinAttemptCount == 0)
-                //this is the first invalid try
                 {
+                    //this is the first invalid try
                     return IncreaseInvalidPinAttemptCount(memberEntity, pinRetryCountInDb);
                 }
 
                 if (pinRetryCountInDb == 3)
                 {
-                    return
-                        "Your account has been suspended. Please contact admin or send a mail to support@nooch.com if you need to reset your PIN number immediately.";
+                    return "Your account has been suspended. Please contact admin or send a mail to support@nooch.com if you need to reset your PIN number immediately.";
                 }
                 if (pinRetryCountInDb == 2)
                 {
@@ -916,7 +939,6 @@ namespace Nooch.Common
                     memberEntity.Status = Constants.STATUS_SUSPENDED;
                     _dbContext.SaveChanges();
                     _dbContext.Entry(memberEntity).Reload();
-
 
                     #region SendingEmailToUser
 
@@ -947,15 +969,14 @@ namespace Nooch.Common
 
                     #endregion
 
-                    return
-                        "Your account has been suspended for 24 hours from now. Please contact admin or send a mail to support@nooch.com if you need to reset your PIN number immediately.";
+                    return "Your account has been suspended for 24 hours from now. Please contact admin or send a mail to support@nooch.com if you need to reset your PIN number immediately.";
                     // this is 3rd try
                 }
                 return IncreaseInvalidPinAttemptCount(memberEntity, pinRetryCountInDb);
                 // this is second try.
             }
-            return "Member not found.";
 
+            return "Member not found.";
         }
 
 
@@ -964,7 +985,6 @@ namespace Nooch.Common
             try
             {
                 var id = Utility.ConvertToGuid(memberId);
-
 
                 // checking user details for given id
 
@@ -1101,17 +1121,24 @@ namespace Nooch.Common
 
         public static String ConvertImageURLToBase64(String url)
         {
-            if (!String.IsNullOrEmpty(url))
+            try
             {
-                Logger.Info("Common Helper -> ConvertImageURLToBase64 Initiated - Photo URL is: [" + url + "]");
+                if (!String.IsNullOrEmpty(url))
+                {
+                    Logger.Info("Common Helper -> ConvertImageURLToBase64 Initiated - Photo URL is: [" + url + "]");
 
-                StringBuilder _sb = new StringBuilder();
+                    StringBuilder _sb = new StringBuilder();
 
-                Byte[] _byte = GetImage(url);
+                    Byte[] _byte = GetImage(url);
 
-                _sb.Append(Convert.ToBase64String(_byte, 0, _byte.Length));
+                    _sb.Append(Convert.ToBase64String(_byte, 0, _byte.Length));
 
-                return _sb.ToString();
+                    return _sb.ToString();
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Common Helper -> ConvertImageURLToBase64 FAILED - Exception: [" + ex.Message + "]");
             }
 
             return "";
@@ -1535,7 +1562,7 @@ namespace Nooch.Common
                             {
                                 // Response from Synapse had 'success' != true
                                 // SHOULDN'T EVER GET HERE B/C IF SYNAPSE CAN'T VERIFY THE USER, IT RETURNS A 400 BAD REQUEST HTTP ERROR WITH A MESSAGE...SEE WEB EX BELOW
-                                Logger.Info("Common Helper -> sendUserSsnInfoToSynapseV3 FAILED: Synapse Result \"success != true\" - [Username: " + userNameDecrypted + "]");
+                                Logger.Error("Common Helper -> sendUserSsnInfoToSynapseV3 FAILED: Synapse Result \"success != true\" - [Username: " + userNameDecrypted + "]");
                                 res.message = "SSN response from synapse was false";
                             }
                         }
@@ -1571,8 +1598,8 @@ namespace Nooch.Common
                                 (errorMsg.IndexOf("Unable to verify") > -1 ||
                                  errorMsg.IndexOf("submit a valid copy of passport") > -1))
                             {
-                                Logger.Info("****  THIS USER'S SSN INFO WAS NOT VERIFIED AT ALL. MUST INVESTIGATE WHY (COULD BE TYPO WITH PERSONAL INFO). " +
-                                            "DETERMINE IF NECESSARY TO ASK FOR DRIVER'S LICENSE.  ****");
+                                Logger.Info("**  THIS USER'S SSN INFO WAS NOT VERIFIED AT ALL. MUST INVESTIGATE WHY (COULD BE TYPO WITH PERSONAL INFO). " +
+                                            "DETERMINE IF NECESSARY TO ASK FOR DRIVER'S LICENSE.  **");
 
                                 memberEntity.AdminNotes = "SSN INFO WAS INVALID WHEN SENT TO SYNAPSE. NEED TO COLLECT DRIVER'S LICENSE.";
 
@@ -1630,8 +1657,7 @@ namespace Nooch.Common
                         }
                         else
                         {
-                            res.message = "CommonHelper Exception";
-
+                            res.message = "CommonHelper Exception #1660";
                         }
                     }
 
@@ -1696,6 +1722,7 @@ namespace Nooch.Common
             var id = Utility.ConvertToGuid(MemberId);
 
             GenericInternalResponseForSynapseMethods res = new GenericInternalResponseForSynapseMethods();
+            res.success = false;
 
             #region Get User's Synapse OAuth Consumer Key
 
@@ -1706,14 +1733,12 @@ namespace Nooch.Common
             if (usersSynapseDetails == null)
             {
                 Logger.Error("Common Helper -> submitDocumentToSynapseV3 ABORTED: Member's Synapse User Details not found. [MemberId: " + MemberId + "]");
-
                 res.message = "Could not find this member's account info";
-
                 return res;
             }
             else
             {
-                _dbContext.Entry(usersSynapseOauthKey).Reload();
+                //_dbContext.Entry(usersSynapseDetails).Reload();
                 usersSynapseOauthKey = GetDecryptedData(usersSynapseDetails.access_token);
             }
 
@@ -1727,18 +1752,16 @@ namespace Nooch.Common
 
             if (member == null)
             {
-                Logger.Info("Common Helper -> submitDocumentToSynapseV3 ABORTED: Member not found. [MemberId: " + MemberId + "]");
+                Logger.Error("Common Helper -> submitDocumentToSynapseV3 ABORTED: Member not found. [MemberId: " + MemberId + "]");
                 res.message = "Member not found";
-
                 return res;
             }
             else
             {
                 if (String.IsNullOrEmpty(member.UDID1))
                 {
-                    Logger.Info("Common Helper -> submitDocumentToSynapseV3 ABORTED: Member's Fingerprint not found. [MemberId: " + MemberId + "]");
+                    Logger.Error("Common Helper -> submitDocumentToSynapseV3 ABORTED: Member's Fingerprint not found. [MemberId: " + MemberId + "]");
                     res.message = "Could not find this member's fingerprint";
-
                     return res;
                 }
                 else
@@ -1752,32 +1775,31 @@ namespace Nooch.Common
 
             #region Call Synapse /user/doc/attachments/add API
 
-            submitDocToSynapseV3Class answers = new submitDocToSynapseV3Class();
-
-            SynapseV3Input_login s_log = new SynapseV3Input_login();
-            s_log.oauth_key = usersSynapseOauthKey;
-            answers.login = s_log;
-
-            submitDocToSynapse_user sdtu = new submitDocToSynapse_user();
-            submitDocToSynapse_user_doc doc = new submitDocToSynapse_user_doc();
-            doc.attachment = "data:text/csv;base64," + ConvertImageURLToBase64(ImageUrl).Replace("\\", "");
-
-            sdtu.fingerprint = usersFingerprint;
-            sdtu.doc = doc;
-
-            answers.user = sdtu;
-
-            string baseAddress = "";
-            baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/doc/attachments/add" : "https://synapsepay.com/api/v3/user/doc/attachments/add";
-
             try
             {
+                submitDocToSynapseV3Class submitDocObj = new submitDocToSynapseV3Class();
+
+                SynapseV3Input_login login = new SynapseV3Input_login();
+                login.oauth_key = usersSynapseOauthKey;
+                submitDocObj.login = login;
+
+                submitDocToSynapse_user user = new submitDocToSynapse_user();
+                submitDocToSynapse_user_doc doc = new submitDocToSynapse_user_doc();
+                doc.attachment = "data:text/csv;base64," + ConvertImageURLToBase64(ImageUrl).Replace("\\", "");
+
+                user.fingerprint = usersFingerprint;
+                user.doc = doc;
+
+                submitDocObj.user = user;
+
+                string baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/doc/attachments/add" : "https://synapsepay.com/api/v3/user/doc/attachments/add";
+
                 var http = (HttpWebRequest)WebRequest.Create(new Uri(baseAddress));
                 http.Accept = "application/json";
                 http.ContentType = "application/json";
                 http.Method = "POST";
 
-                string parsedContent = JsonConvert.SerializeObject(answers);
+                string parsedContent = JsonConvert.SerializeObject(submitDocObj);
                 ASCIIEncoding encoding = new ASCIIEncoding();
                 Byte[] bytes = encoding.GetBytes(parsedContent);
 
@@ -1796,30 +1818,76 @@ namespace Nooch.Common
 
                 if (resFromSynapse != null)
                 {
-                    if (resFromSynapse.success.ToString().ToLower() == "true")
+                    if (resFromSynapse.success == true || resFromSynapse.success.ToString().ToLower() == "true")
                     {
-                        Logger.Info("Common Helper -> submitDocumentToSynapseV3 SUCCESSFUL - [MemberID: " + MemberId + "]");
+                        var permission = resFromSynapse.user.permission != null ? resFromSynapse.user.permission : "NOT FOUND";
+                        var physDoc = "NOT FOUND";
+                        var virtualDoc = "NOT FOUND";
+
+                        if (resFromSynapse.user.doc_status != null)
+                        {
+                            physDoc = resFromSynapse.user.doc_status.physical_doc;
+                            virtualDoc = resFromSynapse.user.doc_status.virtual_doc;
+                        }
+
+                        Logger.Info("Common Helper -> submitDocumentToSynapseV3 SUCCESSFUL - Permission: [" + permission +
+                                    "], Virtual_Doc: [" + virtualDoc + "], Physical_Doc: [" + physDoc + "], [MemberID: " + MemberId + "]");
 
                         res.success = true;
-
                         res.message = "";
+
+                        // Update User's "Permission" in SynapseCreateUserResults Table
+                        if (permission != "NOT FOUND")
+                        {
+                            usersSynapseDetails.permission = permission;
+                            usersSynapseDetails.photos = ImageUrl;
+
+                            // Cliff (5/21/16): ALSO NEED TO SAVE "virtual_doc" and "physical_doc" VALUES IN NOOCH DB, BUT FIELDS DON'T EXIST YET
+
+                            int save = _dbContext.SaveChanges();
+                            _dbContext.Entry(usersSynapseDetails).Reload();
+                        }
                     }
                     else
                     {
                         res.message = "Got a response, but success was not true";
-                        Logger.Info("Common Helper -> submitDocumentToSynapseV3 FAILED - Got Synapse response, but success was NOT 'true' - [MemberID: " + MemberId + "]");
+                        Logger.Error("Common Helper -> submitDocumentToSynapseV3 FAILED - Got Synapse response, but success was NOT 'true' - [MemberID: " + MemberId + "]");
                     }
                 }
                 else
                 {
                     res.message = "Verification response was null";
-                    Logger.Info("Common Helper -> submitDocumentToSynapseV3 FAILED - Synapse response was NULL - [MemberID: " + MemberId + "]");
+                    Logger.Error("Common Helper -> submitDocumentToSynapseV3 FAILED - Synapse response was NULL - [MemberID: " + MemberId + "]");
                 }
             }
-            catch (WebException ex)
+            catch (WebException we)
             {
-                res.message = "MDA Exception #1671";
-                Logger.Info("Common Helper -> submitDocumentToSynapseV3 FAILED - Catch [Exception: " + ex + "]");
+                var errorCode = ((HttpWebResponse)we.Response).StatusCode;
+                var resp = new StreamReader(we.Response.GetResponseStream()).ReadToEnd();
+
+                JObject jsonFromSynapse = JObject.Parse(resp);
+
+                Logger.Error("Common Helper -> submitDocumentToSynapseV3 FAILED - HTTP ErrorCode: [" + errorCode.ToString() + "], WebException was: [" + we.Message + "]");
+                Logger.Error(jsonFromSynapse.ToString());
+
+                var error_code = jsonFromSynapse["error_code"].ToString();
+                res.message = jsonFromSynapse["error"]["en"].ToString();
+
+                if (!String.IsNullOrEmpty(error_code))
+                {
+                    Logger.Error("Common Helper -> submitDocumentToSynapseV3 FAILED - [Synapse Error Code: " + error_code + "]");
+                }
+
+                if (!String.IsNullOrEmpty(res.message))
+                {
+                    // Synapse Error could be:
+                    // "Incorrect oauth_key/fingerprint"
+                    Logger.Error("Common Helper -> submitDocumentToSynapseV3 FAILED. Synapse Error Msg was: [" + res.message + "]");
+                }
+                else
+                {
+                    res.message = "Error in Synapse response - #1889";
+                }
             }
 
             #endregion Call Synapse /user/doc/attachments/add API
@@ -2340,11 +2408,13 @@ namespace Nooch.Common
         public static SynapseBankSetDefaultResult SetSynapseDefaultBank(string MemberId, string BankName, string BankOId)
         {
             Logger.Info("Common Helper -> SetSynapseDefaultBank Initiated. [MemberId: " + MemberId + "], [Bank Name: " +
-                                    BankName + "], [BankOId: " + BankOId + "]");
+                        BankName + "], [BankOId: " + BankOId + "]");
 
             SynapseBankSetDefaultResult res = new SynapseBankSetDefaultResult();
+            res.Is_success = false;
 
-            #region Check query data
+            #region Check Query Data
+
             if (String.IsNullOrEmpty(MemberId) ||
                 String.IsNullOrEmpty(BankName) ||
                 String.IsNullOrEmpty(BankOId))
@@ -2362,18 +2432,15 @@ namespace Nooch.Common
                     res.Message = "Invalid data - need Bank Id";
                 }
 
-                Logger.Info("Common Helper -> SetSynapseDefaultBank ERROR: [" + res.Message + "] for MemberId: [" + MemberId + "]");
-                res.Is_success = false;
+                Logger.Error("Common Helper -> SetSynapseDefaultBank ERROR: [" + res.Message + "] for MemberId: [" + MemberId + "]");
                 return res;
             }
-            #endregion Check query data
+
+            #endregion Check Query Data
 
             else
             {
-                Guid memId = Utility.ConvertToGuid(MemberId);
-
-
-                // Get Nooch username (primary email address) from MemberId
+                // Get Nooch UserName (primary email address) from MemberId
                 var noochUserName = GetMemberUsernameByMemberId(MemberId);
                 var MemberInfoInNoochDb = GetMemberDetails(MemberId);
 
@@ -2381,25 +2448,19 @@ namespace Nooch.Common
 
                 if (MemberInfoInNoochDb != null)
                 {
-                    // Get bank from saved banks list
-
                     #region Find the bank to be set as Default
-                    string bnaknameEncrypted = GetEncryptedData(BankName);
 
+                    string bankNameEncrypted = GetEncryptedData(BankName);
                     string bankOId = GetEncryptedData(BankOId);
 
-
-                    //var selectedBank = synapseBankRepository.SelectAll(memberSpecification).FirstOrDefault();
+                    var banksFound = _dbContext.SynapseBanksOfMembers.Where(memberTemp =>
+                                        memberTemp.MemberId.Value.Equals(MemberInfoInNoochDb.MemberId) &&
+                                        memberTemp.bank_name == bankNameEncrypted &&
+                                        memberTemp.oid == bankOId).ToList();
 
                     // CLIFF (10/7/15): ADDING THIS CODE TO MAKE SURE WE SELECT THE *MOST RECENT* BANK (b/c it creates problems when a user
                     //                  re-attaches the same bank... it has the same ID from Synapse, there may be more than one match)
-                    //                  So take the most recent addition...
-
-                    var banksFound = _dbContext.SynapseBanksOfMembers.Where(memberTemp =>
-                                        memberTemp.MemberId.Value.Equals(memId) &&
-                                        memberTemp.bank_name == bnaknameEncrypted &&
-                                        memberTemp.oid == bankOId).ToList();    /// or this would bankid ?? need to check... -Malkit
-
+                    //                  So take the one that was added most recently.
                     var selectedBank = (from c in banksFound select c)
                                       .OrderByDescending(bank => bank.AddedOn)
                                       .Take(1)
@@ -2409,8 +2470,8 @@ namespace Nooch.Common
 
                     if (selectedBank != null)
                     {
-                        // An existing Bank was found, now mark it as inactive
-                        SetOtherBanksInactiveForGivenMemberId(memId);
+                        // An existing Bank was found, now mark all banks for this user as inactive
+                        SetOtherBanksInactiveForGivenMemberId(MemberInfoInNoochDb.MemberId);
 
                         selectedBank.IsDefault = true;
 
@@ -2422,11 +2483,14 @@ namespace Nooch.Common
                         // 1.) If name, email, phone (strip out punctuation) all match, then automatically mark this bank's status as "Verified".
                         // 2.) Otherwise (i.e. No match, OR null values from Synapse), mark this bank's status as "Not Verified".
                         // 3.) Check if Synapse returned any Email Address for the bankId.  If YES, send Verification Email to THAT email (NOT the user's Nooch email)
-                        // 4.) If NO email returned from Synapse, then send the secondary Bank Verification Email (I'm making a new template, will add to server).
+                        // 4.) If NO email returned from Synapse, then send the secondary Bank Verification Email.
                         //     This will tell the user they must send Nooch any photo ID that matches the name on the bank.
                         //     Then I will have to manually update the bank's status to "Verified" (Need to add a button for this on the Member Details page in the Admin Dash).
 
-                        #region Check if Bank included user info & Compare to Nooch info
+                        // UPDATE (5/21/16) CLIFF: Synapse no longer passes phone or email from the bank b/c each back is different and there was too much
+                        //                         inconsistency.
+
+                        #region Check, Parse, & Compare Name from Bank Account
 
                         string noochEmailAddress = GetDecryptedData(MemberInfoInNoochDb.UserName).ToLower();
                         string noochPhoneNumber = RemovePhoneNumberFormatting(MemberInfoInNoochDb.ContactNumber);
@@ -2434,24 +2498,16 @@ namespace Nooch.Common
                         string noochLastName = GetDecryptedData(MemberInfoInNoochDb.LastName).ToLower();
                         string noochFullName = noochFirstName + " " + noochLastName;
 
-                        string fullNameFromBank = selectedBank.name_on_account.ToString();
+                        var fullNameFromBank = selectedBank.name_on_account != null ? selectedBank.name_on_account : "";
                         string firstNameFromBank = "";
                         string lastNameFromBank = "";
-                        string emailFromBank = selectedBank.email != null ? selectedBank.email.ToLower() : "";
-                        string phoneFromBank = selectedBank.phone_number != null ? RemovePhoneNumberFormatting(selectedBank.phone_number) : "";
 
                         bool bankIncludedName = false;
-                        bool bankIncludedEmail = false;
-                        bool bankIncludedPhone = false;
-
                         bool nameMatchedExactly = false;
                         bool lastNameMatched = false;
-                        bool firstNameMatched = false;
-                        bool emailMatchedExactly = false;
-                        bool emailMatchedPartly = false;
-                        bool phoneMatched = false;
 
-                        #region Check, Parse, & Compare Name from Bank Account
+                        var bankAllowed = selectedBank.allowed != null ? selectedBank.allowed : "";
+
                         if (!String.IsNullOrEmpty(fullNameFromBank))
                         {
                             bankIncludedName = true;
@@ -2460,6 +2516,7 @@ namespace Nooch.Common
                             fullNameFromBank = GetDecryptedData(fullNameFromBank).ToLower();
 
                             #region Parse Name
+
                             // Parse & compare NAME from Nooch account w/ NAME from this bank account
                             string[] nameFromBank_splitUp = fullNameFromBank.Split(' ');
 
@@ -2478,6 +2535,7 @@ namespace Nooch.Common
                                 // Take the last string in the array and set as Last Name From Bank (So, if a bank name was "John W. Smith", this would make 'Smith' the last name)
                                 lastNameFromBank = nameFromBank_splitUp[(nameFromBank_splitUp.Length - 1)];
                             }
+
                             #endregion Parse Name
 
                             #region Compare Name
@@ -2492,7 +2550,6 @@ namespace Nooch.Common
                             {
                                 nameMatchedExactly = true;
                                 lastNameMatched = true;
-                                firstNameMatched = true;
                             }
                             else if (noochLastName == lastNameFromBank || lastNameCompare > -1 || lastNameCompare2 > -1)
                             {
@@ -2506,63 +2563,14 @@ namespace Nooch.Common
                                 // This would be when the bank name is not an exact full match, and the last names also did not match, but bank name includes Nooch first name
                                 // This is very weak though, and could be true by accident if it's a common first name.  So may not use this as evidence of anything, just checking.
                                 // Ex.: "Clifford Smith" in Nooch vs. "Clifford S. Johnson" or "Smith, Clifford S." from the bank
-                                firstNameMatched = true;
+                                //firstNameMatched = true;
                             }
 
                             #endregion Compare Name
                         }
+
                         #endregion Check, Parse, & Compare Name from Bank Account
 
-                        #region Check & Compare Email Address
-                        if (!String.IsNullOrEmpty(emailFromBank))
-                        {
-                            bankIncludedEmail = true;
-
-                            // Compare EMAIL from bank w/ EMAIL from Nooch
-
-                            if (noochEmailAddress == emailFromBank) // Email matches exactly
-                            {
-                                emailMatchedExactly = true;
-                            }
-                            else
-                            {
-                                int emailCompare = noochEmailAddress.IndexOf(emailFromBank);  // Does Nooch EMAIL contain EMAIL from bank?
-                                int emailCompare2 = emailFromBank.IndexOf(noochEmailAddress); // Does EMAIL from bank contain Nooch EMAIL?
-
-                                if (emailCompare > -1 || emailCompare2 > -1)
-                                {
-                                    // This would be when the email addresses are nearly a match, i.e. one contains the other (in case there's some extra character at the beginning or end of the bank email)
-                                    emailMatchedPartly = true;
-                                }
-                            }
-                        }
-                        #endregion Check & Compare Email Address
-
-                        #region Check & Compare Phone
-                        if (!String.IsNullOrEmpty(phoneFromBank))
-                        {
-                            bankIncludedPhone = true;
-
-                            // Compare PHONE from bank w/ PHONE (i.e. 'ContactNumber' in DB) from Nooch
-                            if (noochPhoneNumber == phoneFromBank) // Phone number matches exactly
-                            {
-                                phoneMatched = true;
-                            }
-                            else
-                            {
-                                int phoneCompare = noochPhoneNumber.IndexOf(phoneFromBank);  // Does Nooch PHONE contain PHONE from bank?
-                                int phoneCompare2 = phoneFromBank.IndexOf(noochPhoneNumber); // Does PHONE from bank contain Nooch PHONE?
-
-                                if (phoneCompare > -1 || phoneCompare2 > -1)
-                                {
-                                    // This would be when the phone #'s are nearly a match, i.e. one contains the other (in case there's some extra character at the beginning or end of the bank phone.)
-                                    phoneMatched = true;
-                                }
-                            }
-                        }
-                        #endregion Check & Compare Phone
-
-                        #endregion Check if Bank included user info & Compare to Nooch info
 
                         #region Set Bank Logo URL Variable for Either Email Template
 
@@ -2638,154 +2646,87 @@ namespace Nooch.Common
                                 }
                                 break;
                         }
+
                         #endregion Set Bank Logo URL Variable for Either Email Template
 
 
-                        #region Scenarios for immediately VERIFYING this bank account
+                        #region Scenarios for Immediately VERIFYING this bank account
 
-                        if ((bankIncludedName && nameMatchedExactly == true) &&
-                            ((bankIncludedEmail && (emailMatchedExactly || emailMatchedPartly)) ||
-                             (bankIncludedPhone && phoneMatched)))
+                        // Cliff (5/21/16): Re-doing the rules for when a Synapse bank should be automatically verified b/c Synapse V3
+                        //                  doesn't return any phone or email info from the bank.  So need to check if the user's SSN
+                        //                  was verified successfully ('IsVerifiedWithSynapse'), and compare any name returned from the bank.
+                        if (MemberInfoInNoochDb.IsVerifiedWithSynapse == true && bankAllowed == "CREDIT-AND-DEBIT")
                         {
-                            // Name Matched exactly and EITHER email or phone matched
-                            // Now set this bank account as 'Verified'
                             selectedBank.Status = "Verified";
                             selectedBank.VerifiedOn = DateTime.Now;
 
-                            Logger.Info("Common Helper -> SetSynapseDefaultBank -> Bank VERIFIED (Case 1) - Names Matched EXACTLY - MemberId: [" + MemberId +
-                                        "]; BankName: [" + BankName + "]; bankIncludedEmail: [" + bankIncludedEmail + "]; bankIncludedPhone: [" + bankIncludedPhone + "]");
+                            Logger.Info("Common Helper -> SetSynapseDefaultBank -> Bank VERIFIED (Case 1) - [Names Matched Exactly: " + nameMatchedExactly +
+                                        "], [Bank Included Name: " + bankIncludedName + "], [Name From Bank: " + fullNameFromBank +
+                                        "], [Last Name Match: " + lastNameMatched + "], [Allowed: " + bankAllowed + "], [- MemberId: [" + MemberId +
+                                        "]; BankName: [" + BankName + "]");
                         }
 
-                        else if (bankIncludedName && lastNameMatched &&
-                                ((bankIncludedEmail && (emailMatchedExactly || emailMatchedPartly)) ||
-                                 (bankIncludedPhone && phoneMatched)))
-                        {
-                            // Same as previous, except Last Name matched, not full name
-                            // (separating this case for Logging purposes even though the outcome is the same as above)
-                            selectedBank.Status = "Verified";
-                            selectedBank.VerifiedOn = DateTime.Now;
-
-                            Logger.Info("Common Helper -> SetSynapseDefaultBank -> Bank VERIFIED (Case 2) - Last Name Matched - [MemberId: " + MemberId +
-                                        "];  [BankName: " + BankName + "];  [bankIncludedEmail: " + bankIncludedEmail + "];  [EmailFromBank: " + emailFromBank +
-                                        ";  [bankIncludedPhone: " + bankIncludedPhone + "];  [PhoneFromBank: " + phoneFromBank + "]");
-                        }
-
-                        else if (bankIncludedName &&
-                                 bankIncludedEmail &&
-                                 bankIncludedPhone && phoneMatched)
-                        {
-                            // Name included but no match; email included but no match; phone included AND matches
-                            // (separating this case for Logging purposes even though the outcome is the same as above)
-                            selectedBank.Status = "Verified";
-                            selectedBank.VerifiedOn = DateTime.Now;
-
-                            Logger.Info("Common Helper -> SetSynapseDefaultBank -> Bank VERIFIED (Case 3) - Phone Matched - MemberId: [" + MemberId +
-                                        "];  [BankName: " + BankName + "];  [bankIncludedEmail: " + bankIncludedEmail + "];  [EmailFromBank: " + emailFromBank +
-                                        ";  [bankIncludedPhone: " + bankIncludedPhone + "];  [PhoneFromBank: " + phoneFromBank + "]");
-                        }
-
-                        #endregion Scenarios for immediately VERIFYING this bank account
+                        #endregion Scenarios for Immediately VERIFYING this bank account
 
 
-                        #region Scenarios for cases where further verification needed
+                        #region Scenarios Where Further Verification Needed
 
-                        #region Non-Verified Scenario 1 - Email included from bank
+                        #region Non-Verified Scenario 1 - Email Included From Bank - NO LONGER USED W/ SYNAPSE V3
 
                         // Non-Verifed Scenario #1: Some email was included from bank, so send Bank Verification Email Template #1 (With Link)
-                        else if (bankIncludedEmail && emailFromBank.Length > 4)
+                        /*else if (bankIncludedEmail && emailFromBank.Length > 4)
                         {
                             // Bank included some Email which is at least 5 characters long (so not just a dummy letter that the bank might have)
                             // First, Mark as NOT Verified
                             selectedBank.Status = "Not Verified";
 
-                            #region Logging
-
-                            string caseNum = "";
-
-                            if (bankIncludedName &&
-                                (nameMatchedExactly || lastNameMatched || firstNameMatched))
-                            {
-                                caseNum = "4";
-                            }
-                            else
-                            {
-                                // Nothing matches, but at least an email was included from the Bank
-                                caseNum = "5";
-                            }
-
-                            // Bank included some name with at least partial match
-                            Logger.Info("Common Helper -> SetSynapseDefaultBank -> Bank NOT Verified (Case " + caseNum + ") -  MemberId: [" + MemberId +
-                                                   "]; BankName: [" + BankName + "]; bankIncludedName: [" + bankIncludedName + "]; nameMatchedExactly: [" +
-                                                   "]; nameMatchedExactly: [" + nameMatchedExactly + "]; lastNameMatched: [" + lastNameMatched + "];  nameFromBank: [" + fullNameFromBank +
-                                                   "]; bankIncludedEmail: [" + bankIncludedEmail + "]; EmailFromBank: [" + emailFromBank + "]; bankIncludedPhone: [" + bankIncludedPhone +
-                                                   "]; PhoneFromBank: [" + phoneFromBank + "]");
-
-                            #endregion Logging
-
                             // Now send Bank Verification Email (with Link) to the EMAIL FROM THE BANK ACCOUNT
                             #region Send Verify Bank Email TO EMAIL FROM THE BANK
 
-                            if (emailFromBank == "test@synapsepay.com")
-                            {
-                                Logger.Info("Common Helper -> SetSynapseDefaultBank TEST USER - EMAIL FROM BANK WAS [test@synapsepay.com] - NOT SENDING BANK VERIFICATION EMAIL");
-                            }
-                            else
-                            {
-                                var toAddress = emailFromBank;
-                                var fromAddress = Utility.GetValueFromConfig("adminMail");
+                            var toAddress = "";//emailFromBank;
+                            var fromAddress = Utility.GetValueFromConfig("adminMail");
 
-                                var firstNameForEmail = String.IsNullOrEmpty(firstNameFromBank)
-                                                        ? ""
-                                                        : " " + UppercaseFirst(firstNameFromBank); // Adding the extra space at the beginning of the FirstName for the Email template: So it's either "Hi," or "Hi John,"
-                                var fullNameFromBankTitleCase = UppercaseFirst(firstNameFromBank) + " " +
-                                                                UppercaseFirst(lastNameFromBank);
-                                var link = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
-                                                        "Nooch/BankVerification?tokenId=" + GetEncryptedData(selectedBank.Id.ToString()));
+                            var firstNameForEmail = String.IsNullOrEmpty(firstNameFromBank)
+                                                    ? ""
+                                                    : " " + UppercaseFirst(firstNameFromBank); // Adding the extra space at the beginning of the FirstName for the Email template: So it's either "Hi," or "Hi John,"
+                            var fullNameFromBankTitleCase = UppercaseFirst(firstNameFromBank) + " " +
+                                                            UppercaseFirst(lastNameFromBank);
+                            var link = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
+                                                    "Nooch/BankVerification?tokenId=" + GetEncryptedData(selectedBank.Id.ToString()));
 
-                                var tokens = new Dictionary<string, string>
+                            var tokens = new Dictionary<string, string>
                                             {
                                                 {Constants.PLACEHOLDER_FIRST_NAME, firstNameForEmail},
                                                 {Constants.PLACEHOLDER_BANK_NAME, BankName},
                                                 {Constants.PLACEHOLDER_RECIPIENT_FULL_NAME, fullNameFromBankTitleCase},
-                                                {Constants.PLACEHOLDER_Recepient_Email, emailFromBank},
+                                                {Constants.PLACEHOLDER_Recepient_Email, ""},//emailFromBank},
                                                 {Constants.PLACEHOLDER_BANK_BALANCE, bankLogoUrl},
                                                 {Constants.PLACEHOLDER_OTHER_LINK, link}
                                             };
 
-                                try
-                                {
-                                    Utility.SendEmail("bankEmailVerification",
-                                        fromAddress, toAddress, null,
-                                        "Your bank account was added to Nooch - Please Verify",
-                                        null, tokens, null, "bankAdded@nooch.com", null);
+                            Utility.SendEmail("bankEmailVerification", fromAddress, toAddress, null,
+                                              "Your bank account was added to Nooch - Please Verify", null,
+                                              tokens, null, "bankAdded@nooch.com", null);
 
-                                    Logger.Info("Common Helper -> SetSynapseDefaultBank --> Bank Verification w/ Link Email sent to: [" +
-                                                toAddress + "] for Nooch Username: [" + noochUserName + "]");
-                                }
-                                catch (Exception ex)
-                                {
-                                    Logger.Error("Common Helper -> SetSynapseDefaultBank --> Bank Verification w/ Link Email NOT sent to [" +
-                                                 toAddress + "] for Nooch Username: [" + noochUserName + "]; Exception: [" + ex.Message + "]");
-                                }
-                            }
+                            Logger.Info("Common Helper -> SetSynapseDefaultBank --> Bank Verification w/ Link Email sent to: [" +
+                                        toAddress + "] for Nooch Username: [" + noochUserName + "]");
 
                             #endregion Send Verify Bank Email TO EMAIL FROM THE BANK
-                        }
+                        }*/
 
-                        #endregion Non-Verified Scenario 1 - Email included from bank
+                        #endregion Non-Verified Scenario 1 - Email Included From Bank - NO LONGER USED W/ SYNAPSE V3
 
                         #region NonVerified Scanario 2 - Email NOT included from bank
 
-                        // Non-Verifed Scenario #2: Email was NOT included from bank, so send Bank Verification Email Template #2 (No Link)
+                        // Send Bank Verification Email Template #2 (No Link)
                         else
                         {
                             selectedBank.Status = "Not Verified";
 
                             Logger.Info("SetSynapseDefaultBank -> Bank NOT Verified (Case 6) -  MemberId: [" + MemberId +
-                                                   "]; BankName: [" + BankName + "]; bankIncludedName: [" + bankIncludedName + "]; nameMatchedExactly: [" +
-                                                   "]; nameMatchedExactly: [" + nameMatchedExactly + "]; lastNameMatched: [" + lastNameMatched + "];  nameFromBank: [" + fullNameFromBank +
-                                                   "]; bankIncludedEmail: [" + bankIncludedEmail + "]; EmailFromBank: [" + emailFromBank + "]; bankIncludedPhone: [" + bankIncludedPhone +
-                                                   "]; PhoneFromBank: [" + phoneFromBank + "]");
+                                        "]; BankName: [" + BankName + "]; bankIncludedName: [" + bankIncludedName +
+                                        "]; nameMatchedExactly: [" + nameMatchedExactly + "]; lastNameMatched: [" + lastNameMatched +
+                                        "]; nameFromBank: [" + fullNameFromBank + "]");
 
                             // If the User's ID was verified successfully, then don't send the Verfication email.  But keep the bank as "not verified" until a Nooch admin reviews
                             if (MemberInfoInNoochDb.IsVerifiedWithSynapse == true)
@@ -2803,13 +2744,7 @@ namespace Nooch.Common
                                           "<tr><td><strong>nameMatchedExactly:</strong></td><td>" + nameMatchedExactly + "</td></tr>" +
                                           "<tr><td><strong>lastNameMatched:</strong></td><td>" + lastNameMatched + "</td></tr>" +
                                           "<tr><td><strong>Nooch Email Address:</strong></td><td>" + noochEmailAddress + "</td></tr>" +
-                                          "<tr><td><strong>Bank Included Email?:</strong></td><td>" + bankIncludedEmail + "</td></tr>" +
-                                          "<tr><td><strong>Email Address From Bank:</strong></td><td>" + emailFromBank + "</td></tr>" +
-                                          "<tr><td><strong>emailMatchedExactly:</strong></td><td>" + emailMatchedExactly + "</td></tr>" +
                                           "<tr><td><strong>Nooch Phone #:</strong></td><td>" + MemberInfoInNoochDb.ContactNumber + "</td></tr>" +
-                                          "<tr><td><strong>Bank Included Phone #?:</strong></td><td>" + bankIncludedPhone + "</td></tr>" +
-                                          "<tr><td><strong>Phone # From Bank:</strong></td><td>" + phoneFromBank + "</td></tr>" +
-                                          "<tr><td><strong>Phone Matched?:</strong></td><td>" + phoneMatched + "</td></tr>" +
                                           "<tr><td><strong>Address:</strong></td><td>" + CommonHelper.GetDecryptedData(MemberInfoInNoochDb.Address) +
                                           "</td></tr></table><br/><br/>- Nooch Bot</body></html>");
 
@@ -2824,8 +2759,8 @@ namespace Nooch.Common
                                 completeEmailTxt.Append(s);
 
                                 Utility.SendEmail(null, "admin-autonotify@nooch.com", "bankAdded@nooch.com", null,
-                                            "Nooch Admin Alert: Bank Added, Awaiting Admin Approval",
-                                            null, null, null, null, completeEmailTxt.ToString());
+                                                  "Nooch Admin Alert: Bank Added, Awaiting Admin Approval",
+                                                  null, null, null, null, completeEmailTxt.ToString());
                             }
                             else
                             {
@@ -2865,44 +2800,51 @@ namespace Nooch.Common
 
                         #endregion NonVerified Scanario 2 - Email NOT included from bank
 
-                        #endregion Scenarios for cases where further verification needed
+                        #endregion Scenarios Where Further Verification Needed
 
                         // FINALLY, UPDATE THIS BANK IN NOOCH DB
-                        _dbContext.SaveChanges();
-                        res.Message = "Success";
-                        res.Is_success = true;
-                        _dbContext.Entry(MemberInfoInNoochDb).Reload();
-
-                        return res;
+                        try
+                        {
+                            if (_dbContext.SaveChanges() > 0)
+                            {
+                                res.Message = "Success";
+                                res.Is_success = true;
+                                _dbContext.Entry(MemberInfoInNoochDb).Reload();
+                            }
+                            else
+                            {
+                                Logger.Error("Commong Helper -> SetSynapseDefaultBank - FAILED while trying to save new bank in DB - Error #2751");
+                                res.Message = "Server Error: Unable to save bank - #2751";
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Error("Commong Helper -> SetSynapseDefaultBank - FAILED while trying to save new bank in DB - Exception: [" + ex.Message + "]");
+                            res.Message = "Server Error: Unable to save bank - [" + ex.Message + "]";
+                        }
                     }
                     else
                     {
-                        Logger.Info("Common Helper -> SetSynapseDefaultBank ERROR: Selected Bank not found in Nooch DB - MemberId: [" + MemberId + "]; BankId: [" + BankOId + "]");
-
+                        Logger.Error("Common Helper -> SetSynapseDefaultBank ERROR: Selected Bank not found in Nooch DB - MemberId: [" + MemberId + "]; BankId: [" + BankOId + "]");
                         res.Message = "Bank not found for given Member";
-                        res.Is_success = false;
-                        return res;
                     }
                 }
 
                 #endregion Member Found
 
-                #region Member NOT Found
                 else
                 {
-                    Logger.Info("Common Helper -> SetSynapseDefaultBank ERROR: Member not found in Nooch DB - MemberId: [" + MemberId + "]; BankId: [" + BankOId + "]");
+                    Logger.Error("Common Helper -> SetSynapseDefaultBank ERROR: Member not found in Nooch DB - MemberId: [" + MemberId + "]; BankId: [" + BankOId + "]");
                     res.Message = "Member not found";
-                    res.Is_success = false;
-                    return res;
                 }
-                #endregion Member NOT Found
             }
+
+            return res;
         }
 
 
         private static void SetOtherBanksInactiveForGivenMemberId(Guid memId)
         {
-
             var selectedBank =
                 _dbContext.SynapseBanksOfMembers.Where(memberTemp =>
                         memberTemp.MemberId.Value.Equals(memId) && memberTemp.IsDefault != false).ToList();

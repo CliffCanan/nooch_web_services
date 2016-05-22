@@ -5495,7 +5495,7 @@ namespace Nooch.DataAccess
                         request.DeviceId = handleRequestDto.DeviceId;
                         request.TransactionStatus = "Success";
                         request.DateAccepted = DateTime.Now;
-                        
+
                         request.TransactionType = CommonHelper.GetEncryptedData(Constants.TRANSACTION_TYPE_TRANSFER);
 
                         int i = noochConnection.SaveChanges();
@@ -5511,7 +5511,7 @@ namespace Nooch.DataAccess
                     catch (Exception ex)
                     {
                         Logger.Error("TDA -> HandleRequestMoney -> Success from Synapse but FAILED to update this request in DB - [Request TransID: " +
-                                     request.TransactionId + "], [Exception: " + ex + "]");
+                                     request.TransactionId + "], [Exception: " + ex.Message + "]");
                     }
 
                     #endregion Update This Request In Transactions DB
@@ -6540,10 +6540,9 @@ namespace Nooch.DataAccess
         public string TransferMoneyToNonNoochUserUsingSynapse(string inviteType, string receiverEmailId, TransactionEntity transactionEntity)
         {
             Logger.Info("TDA -> TransferMoneyToNonNoochUserUsingSynapse Initiated - " +
-                                   "MemberId: [" + transactionEntity.MemberId + "], " +
-                                   "Recipient: [" + receiverEmailId + "], " +
-
-                                   "Amount: [" + transactionEntity.Amount + "]");
+                        "MemberId: [" + transactionEntity.MemberId + "], " +
+                        "Recipient: [" + receiverEmailId + "], " +
+                        "Amount: [" + transactionEntity.Amount + "]");
 
             string trnsactionId = string.Empty;
 
@@ -6554,8 +6553,6 @@ namespace Nooch.DataAccess
             if (checkuser == null)
             {
                 // Receiver's email NOT already associated with a Nooch account
-
-
 
                 #region Initial Checks
 
@@ -6633,7 +6630,6 @@ namespace Nooch.DataAccess
                 // Save transaction details along with device and location details...
                 using (var noochConnection = new NOOCHEntities())
                 {
-
                     var sender = CommonHelper.GetMemberDetails(transactionEntity.MemberId);
                     var memid = Utility.ConvertToGuid(transactionEntity.MemberId);
 
@@ -6659,8 +6655,6 @@ namespace Nooch.DataAccess
                         ZipCode = transactionEntity.Location.ZipCode,
                         DateCreated = DateTime.Now,
                     };
-
-
 
 
                     noochConnection.Transactions.Add(transactionDetail);
@@ -6975,8 +6969,6 @@ namespace Nooch.DataAccess
                 {
                     receiverPhoneNumber = CommonHelper.RemovePhoneNumberFormatting(receiverPhoneNumber);
 
-
-
                     // Check if the user email already exists
                     var checkuser = CommonHelper.GetMemberIdByContactNumber(receiverPhoneNumber);
 
@@ -7272,7 +7264,7 @@ namespace Nooch.DataAccess
                                 catch (Exception ex)
                                 {
                                     Logger.Error("TDA -> TransferMoneyToNonNoochUserThroughPhoneUsingsynapse. SMS NOT sent to recipient [" + receiverPhoneNumber +
-                                                           "], [Exception:" + ex + "]");
+                                                 "], [Exception:" + ex + "]");
                                 }
 
                                 #endregion Send SMS To Non-Nooch Transfer Recipient

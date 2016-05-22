@@ -42,19 +42,22 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
         public string permission { get; set; }
         public string[] photos { get; set; }
         public string[] phone_numbers { get; set; }
+
+        public synapseV3Result_user_docStatus doc_status { get; set; }
     }
 
     public class synapseV3Result_user_id
     {
-
         [JsonProperty(PropertyName = "$oid")]
         public string id { get; set; }
     }
+
     public class synapseV3Result_user_client
     {
         public string id { get; set; } // This is an integer ID
         public string name { get; set; }
     }
+
     public class synapseV3Result_user_extra
     {
         public synapseV3Result_user_extra_dateJoined date_joined { get; set; }
@@ -66,10 +69,17 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
     {
         public DateTime date { get; set; }
     }
+
     public class synapseV3Result_user_logins
     {
         public string email { get; set; }
         public bool read_only { get; set; }
+    }
+
+    public class synapseV3Result_user_docStatus
+    {
+        public string physical_doc { get; set; } // This is an integer ID
+        public string virtual_doc { get; set; }
     }
 
     public class GenericInternalResponseForSynapseMethods
@@ -77,5 +87,5 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
         public bool success { get; set; }
         public string message { get; set; }
     }
-    
+
 }

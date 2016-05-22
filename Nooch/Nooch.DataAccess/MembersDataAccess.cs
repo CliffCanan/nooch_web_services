@@ -4681,12 +4681,12 @@ namespace Nooch.DataAccess
 
                             JObject bankLoginRespFromSynapse = JObject.Parse(content);
 
-                            Logger.Info("MDA -> SynapseV3MFABankVerify SYNAPSE RESPONSE - [..." + bankLoginRespFromSynapse + "...]");
+                            //Logger.Info("MDA -> SynapseV3MFABankVerify SYNAPSE RESPONSE - [..." + bankLoginRespFromSynapse + "...]");
 
                             if (bankLoginRespFromSynapse["success"].ToString().ToLower() == "true" &&
                                 bankLoginRespFromSynapse["nodes"] != null)
                             {
-                                Logger.Info("MDA -> SynapseV3MFABankVerify - Sucess from Synapse!");
+                                Logger.Info("MDA -> SynapseV3MFABankVerify - Sucess from Synapse! - [" + bankLoginRespFromSynapse["nodes"].Count() + " Nodes Returned");
 
                                 res.Is_success = true;
 
@@ -4772,9 +4772,15 @@ namespace Nooch.DataAccess
 
                                         Logger.Info("MDA -> SynapseV3MFABankVerify (No MFA Again): SUCCESSFUL, returning Bank Array for: [" + MemberId + "]");
 
+                                        short nodeCount = 1;
+
                                         // saving these banks ('nodes') in DB, later one of these banks will be set as default bank
                                         foreach (nodes v in allNodesParsedResult.nodes)
                                         {
+                                            Logger.Info("MDA -> SynapseV3MFABankVerify - Node [" + nodeCount + "], Bank: [" + v.info.bank_name +
+                                                        "], Name on Account: [" + v.info.name_on_account + "], Allowed: [" + v.allowed + "], Type: [" + v.info.type + "]");
+                                            nodeCount += 1;
+
                                             SynapseBanksOfMember sbm = new SynapseBanksOfMember();
 
                                             // Cliff (5/17/16): Shouldn't this block also save the commented out lines below...'account_class', 'account_type', etc.?
@@ -4811,7 +4817,7 @@ namespace Nooch.DataAccess
                                     }
                                     else
                                     {
-                                        Logger.Info("MDA -> SynapseV3MFABankVerify (No MFA Again) ERROR: allbanksParsedResult was NULL for: [" + MemberId + "]");
+                                        Logger.Error("MDA -> SynapseV3MFABankVerify (No MFA Again) ERROR: allbanksParsedResult was NULL for: [" + MemberId + "]");
                                         res.errorMsg = "Error occured while parsing banks list.";
                                     }
 
@@ -4823,7 +4829,7 @@ namespace Nooch.DataAccess
                             else
                             {
                                 // Synapse response for 'success' was not true
-                                Logger.Info("MDA -> SynapseV3MFABankVerify ERROR: Synapse response for 'success' was not true for Member [" + MemberId + "]");
+                                Logger.Error("MDA -> SynapseV3MFABankVerify ERROR: Synapse response for 'success' was not true for Member [" + MemberId + "]");
 
                                 res.errorMsg = "Synapse response for success was not true";
                                 return res;
@@ -4831,6 +4837,8 @@ namespace Nooch.DataAccess
                         }
                         catch (WebException we)
                         {
+                            #region MFA Bank Verify Error From Synapse
+
                             res.Is_success = false;
                             res.Is_MFA = false;
 
@@ -4839,8 +4847,8 @@ namespace Nooch.DataAccess
 
                             JObject jsonFromSynapse = JObject.Parse(resp);
 
-                            Logger.Info("MDA -> SynapseV3MFABankVerify FAILED - HTTP ErrorCode: [" + errorCode.ToString() + "], WebException was: [" + we.ToString() + "]");
-                            Logger.Info(jsonFromSynapse.ToString());
+                            Logger.Error("MDA -> SynapseV3MFABankVerify FAILED - HTTP ErrorCode: [" + errorCode.ToString() + "], WebException was: [" + we.Message + "]");
+                            Logger.Error(jsonFromSynapse.ToString());
 
                             var error_code = jsonFromSynapse["error_code"].ToString();
                             res.errorMsg = jsonFromSynapse["error"]["en"].ToString();
@@ -4853,7 +4861,7 @@ namespace Nooch.DataAccess
                             }
                             if (!String.IsNullOrEmpty(res.errorMsg))
                             {
-                                Logger.Error("MDA -> SynapseV3MFABankVerify FAILED. Synapse Rrror Msg was: [" + res.errorMsg + "]");
+                                Logger.Error("MDA -> SynapseV3MFABankVerify FAILED. Synapse Error Msg was: [" + res.errorMsg + "]");
 
                                 if (res.errorMsg.ToLower().IndexOf("incorrect verification info") > -1)
                                 {
@@ -4866,11 +4874,10 @@ namespace Nooch.DataAccess
                             }
                             else
                             {
-                                Logger.Error("MDA -> SynapseV3MFABankVerify FAILED - HTTP ErrorCode: [" + errorCode.ToString() + "], WebException was: [" + we.Message + "]");
-                                res.errorMsg = "Error in Synapse response - #4079";
+                                res.errorMsg = "Error in Synapse response - #4877";
                             }
 
-                            return res;
+                            #endregion MFA Bank Verify Error From Synapse
                         }
                     }
 
@@ -4878,10 +4885,11 @@ namespace Nooch.DataAccess
                 }
                 else
                 {
-                    Logger.Info("MDA -> SynapseV3MFABankVerify ERROR: Member not found: [" + MemberId + "]");
+                    Logger.Error("MDA -> SynapseV3MFABankVerify ERROR: Member not found: [" + MemberId + "]");
                     res.errorMsg = "Member not found.";
-                    return res;
                 }
+
+                return res;
             }
         }
 
@@ -5071,8 +5079,7 @@ namespace Nooch.DataAccess
 
             if (questions.Count == 0)
             {
-                Logger.Info("MDA -> getIdVerificationQuestionsV3 ABORTED: Member's Synapse User Details not found. [MemberId: " + MemberId + "]");
-
+                Logger.Error("MDA -> getIdVerificationQuestionsV3 ABORTED: Member's Synapse User Details not found. [MemberId: " + MemberId + "]");
                 return null;
             }
             else if (questions.Count > 1)
@@ -5342,13 +5349,13 @@ namespace Nooch.DataAccess
                     else
                     {
                         res.message = "Got a response, but verification was not successful";
-                        Logger.Info("MDA -> submitIdVerificationAnswersToSynapseV3 FAILED - Got Synapse response, but success was NOT 'true' - [MemberID: " + MemberId + "]");
+                        Logger.Error("MDA -> submitIdVerificationAnswersToSynapseV3 FAILED - Got Synapse response, but success was NOT 'true' - [MemberID: " + MemberId + "]");
                     }
                 }
                 else
                 {
                     res.message = "Verification response was null";
-                    Logger.Info("MDA -> submitIdVerificationAnswersToSynapseV3 FAILED - Synapse response was NULL - [MemberID: " + MemberId + "]");
+                    Logger.Error("MDA -> submitIdVerificationAnswersToSynapseV3 FAILED - Synapse response was NULL - [MemberID: " + MemberId + "]");
                 }
             }
             catch (WebException we)
@@ -5388,55 +5395,75 @@ namespace Nooch.DataAccess
 
         public string SaveMemberSSN(string MemberId, string ssn)
         {
-            if (ssn.Length != 4)
+            try
             {
-                return "Invalid SSN passed.";
+                if (String.IsNullOrEmpty(ssn) || ssn.Length != 4)
+                {
+                    return "Invalid SSN passed.";
+                }
+
+                var noochMember = CommonHelper.GetMemberDetails(MemberId);
+
+                if (noochMember != null)
+                {
+                    noochMember.SSN = CommonHelper.GetEncryptedData(ssn);
+                    noochMember.DateModified = DateTime.Now;
+                    var dbContext = CommonHelper.GetDbContextFromEntity(noochMember);
+                    var res = dbContext.SaveChanges();
+
+                    return "SSN saved successfully.";
+                }
+                else
+                {
+                    return "Member Id not found or Member status deleted.";
+                }
             }
-
-            //Guid MemId = Utility.ConvertToGuid(MemberId);
-
-            var noochMember = CommonHelper.GetMemberDetails(MemberId);
-
-            if (noochMember != null)
+            catch (Exception ex)
             {
-                noochMember.SSN = CommonHelper.GetEncryptedData(ssn);
-                noochMember.DateModified = DateTime.Now;
-                var dbContext = CommonHelper.GetDbContextFromEntity(noochMember);
-                var res = dbContext.SaveChanges();
-
-                return "SSN saved successfully.";
-            }
-            else
-            {
-                return "Member Id not found or Member status deleted.";
+                Logger.Error("MDA -> SaveMemberSSN FAILED - MemberID: [" + MemberId + "], Exception: [" + ex.Message + "]");
+                return "MDA Exception: [" + ex.Message + "]";
             }
         }
 
 
         public string SaveDOBForMember(string MemberId, string dob)
         {
-            DateTime dateTime2;
-
-            if (!DateTime.TryParse(dob, out dateTime2))
+            try
             {
-                return "Invalid DOB passed.";
+                if (String.IsNullOrEmpty(MemberId))
+                {
+                    Logger.Error("MDA -> SaveDOBForMember FAILED - Missing MemberID - MemberID: [" + MemberId + "]");
+                    return "Missing MemberID";
+                }
+
+                DateTime dateTime2;
+
+                if (!DateTime.TryParse(dob, out dateTime2))
+                {
+                    Logger.Error("MDA -> SaveDOBForMember FAILED - Invalid DOB passed - MemberID: [" + MemberId + "], DOB: [" + dob + "]");
+                    return "Invalid DOB passed.";
+                }
+
+                var noochMember = CommonHelper.GetMemberDetails(MemberId);
+
+                if (noochMember != null)
+                {
+                    noochMember.DateOfBirth = dateTime2;
+                    noochMember.DateModified = DateTime.Now;
+                    var dbContext = CommonHelper.GetDbContextFromEntity(noochMember);
+                    dbContext.SaveChanges();
+
+                    return "DOB saved successfully.";
+                }
+                else
+                {
+                    return "MemberID not found or Member status deleted.";
+                }
             }
-
-            var noochMember = CommonHelper.GetMemberDetails(MemberId);
-
-            if (noochMember != null)
+            catch (Exception ex)
             {
-                noochMember.DateOfBirth = dateTime2;
-                noochMember.DateModified = DateTime.Now;
-                var dbContext = CommonHelper.GetDbContextFromEntity(noochMember);
-                dbContext.SaveChanges();
-                //   _dbContext.Entry(noochMember).Reload();
-
-                return "DOB saved successfully.";
-            }
-            else
-            {
-                return "Member Id not found or Member status deleted.";
+                Logger.Error("MDA -> SaveDOBForMember FAILED - MemberID: [" + MemberId + "], Exception: [" + ex.Message + "]");
+                return "MDA Exception: [" + ex.Message + "]";
             }
         }
 
@@ -5742,7 +5769,7 @@ namespace Nooch.DataAccess
                                     //{
                                     // If testing, keep this transaction as 'Pending' so we can more easily re-test with the same transaction.
                                     Transaction.TransactionStatus = "Success";
-                                    Transaction.DateAccepted = DateTime.Now;    
+                                    Transaction.DateAccepted = DateTime.Now;
                                     int save = _dbContext.SaveChanges();
                                     //}
 
@@ -5873,12 +5900,12 @@ namespace Nooch.DataAccess
                                                 {
                                                     Utility.SendSMS(newUserPhone, SMSContent);
 
-                                                    Logger.Info("TDA - GetTokensAndTransferMoneyToNewUser SUCCESS - SMS sent to recipient - [Phone: " +
+                                                    Logger.Info("MDA - GetTokensAndTransferMoneyToNewUser SUCCESS - SMS sent to recipient - [Phone: " +
                                                         CommonHelper.FormatPhoneNumber(newUserPhone) + "] successfully.");
                                                 }
                                                 catch (Exception ex)
                                                 {
-                                                    Logger.Error("TDA - GetTokensAndTransferMoneyToNewUser SUCCESS - But Failure sending SMS to recipient " +
+                                                    Logger.Error("MDA - GetTokensAndTransferMoneyToNewUser SUCCESS - But Failure sending SMS to recipient " +
                                                         "- [Phone: " + CommonHelper.FormatPhoneNumber(newUserPhone) + "],  [Exception: " + ex.ToString() + "]");
                                                 }
                                             }
@@ -5936,18 +5963,16 @@ namespace Nooch.DataAccess
                                             try
                                             {
                                                 Utility.SendEmail("transferAcceptedToSender", fromAddress, toAddress,
-                                                    null, newUserNameForEmail + " accepted your payment",
-                                                    null, tokens2, null, null, null);
+                                                                   null, newUserNameForEmail + " accepted your payment",
+                                                                   null, tokens2, null, null, null);
 
-                                                Logger.Info(
-                                                    "MDA -> GetTokensAndTransferMoneyToNewUser - TransferAcceptedToSender - Email sent to [" +
-                                                    toAddress + "] successfully.");
+                                                Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser - TransferAcceptedToSender - Email sent to [" +
+                                                             toAddress + "] successfully.");
                                             }
                                             catch (Exception ex)
                                             {
-                                                Logger.Error(
-                                                    "MDA -> GetTokensAndTransferMoneyToNewUser - TransferAcceptedToSender - Email NOT sent to [" +
-                                                    toAddress + "],  [Exception: " + ex.ToString() + "]");
+                                                Logger.Error("MDA -> GetTokensAndTransferMoneyToNewUser - TransferAcceptedToSender - Email NOT sent to [" +
+                                                             toAddress + "],  [Exception: " + ex.ToString() + "]");
                                             }
 
                                             #endregion Email to Transfer SENDER
@@ -5974,12 +5999,12 @@ namespace Nooch.DataAccess
                                                     Utility.SendSMS(newUserPhone, SMSContent);
 
                                                     Logger.Info("MDA - GetTokensAndTransferMoneyToNewUser SUCCESS - Request Paid SMS sent to recipient - " +
-                                                                           "[Phone: " + CommonHelper.FormatPhoneNumber(newUserPhone) + "] successfully.");
+                                                                "[Phone: " + CommonHelper.FormatPhoneNumber(newUserPhone) + "] successfully.");
                                                 }
                                                 catch (Exception ex)
                                                 {
                                                     Logger.Error("MDA - GetTokensAndTransferMoneyToNewUser SUCCESS - But failed to send Request Paid SMS to recipient - " +
-                                                                           "[Phone: " + CommonHelper.FormatPhoneNumber(newUserPhone) + "],  [Exception: " + ex + "]");
+                                                                 "[Phone: " + CommonHelper.FormatPhoneNumber(newUserPhone) + "],  [Exception: " + ex + "]");
                                                 }
                                             }
 
@@ -6039,15 +6064,15 @@ namespace Nooch.DataAccess
                                             try
                                             {
                                                 Utility.SendEmail("requestPaidToSender", fromAddress,
-                                                    toAddress, null, moneySenderFirstName + " " + moneySenderLastName + " paid your request on Nooch",
-                                                    null, tokens2, null, null, null);
+                                                                   toAddress, null, moneySenderFirstName + " " + moneySenderLastName + " paid your request on Nooch",
+                                                                   null, tokens2, null, null, null);
 
-                                                Logger.Info("TDA -> GetTokensAndTransferMoneyToNewUser - requestPaidToSender - Email sent to [" +
-                                                                       toAddress + "] successfully.");
+                                                Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser - requestPaidToSender - Email sent to [" +
+                                                            toAddress + "] successfully.");
                                             }
                                             catch (Exception ex)
                                             {
-                                                Logger.Error("TDA -> GetTokensAndTransferMoneyToNewUser - requestPaidToSender - Email NOT sent to [" +
+                                                Logger.Error("MDA -> GetTokensAndTransferMoneyToNewUser - requestPaidToSender - Email NOT sent to [" +
                                                     toAddress + "], Exception: [" + ex.Message + "]");
                                             }
 
