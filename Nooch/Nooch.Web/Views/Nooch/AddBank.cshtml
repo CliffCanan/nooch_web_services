@@ -297,13 +297,13 @@
                             <div class="form-group hasInputIcon" id="fullNameGroup">
                                 <div class="col-xs-12">
                                     <i class="fa fa-fw fa-user"></i>
-                                    <input type="text" class="form-control" id="userFullName" name="userFullName" placeholder="Account Holder's Full Name" data-parsley-whitespace="squish" parsley-trigger="change focusout" required="true" parsley-minlength="4" maxlength="40" data-parsley-required-message="Enter the full name (First & Last) of the bank account holder." data-parsley-minlength-message="Hmmm, that looks too short..." />
+                                    <input type="text" class="form-control" id="userFullName" name="userFullName" placeholder="Account Holder's Full Name" data-parsley-whitespace="squish" parsley-trigger="change focusout" required="true" parsley-minlength="4" maxlength="40" data-parsley-required-message="Enter the first & last name of the bank account holder." data-parsley-minlength-message="Hmmm, that looks too short..." />
                                 </div>
                             </div>
 
                             <div class="form-group hasInputIcon" id="routGroup">
                                 <div class="col-xs-12">
-                                    <i class="fa fa-fw fa-user"></i>
+                                    <i class="fa fa-fw fa-bank"></i>
                                     <input type="text" pattern="[0-9]*" class="form-control" id="bankRout" name="bankRout" placeholder="Routing Number" data-parsley-type="digits" data-parsley-trigger="change focusout" required="true" data-parsley-length="[9,9]" maxlength="9" data-parsley-type-message="Your routing # should be only digits, i.e. 0-9." data-parsley-length-message="Your routing # should be exactly 9 numbers." data-parsley-required-message="Enter the account's Routing Number." data-parsley-minlength-message="Hmmm, that should be a little longer..." />
                                     <div id="result"></div>
                                 </div>
@@ -311,8 +311,8 @@
 
                             <div class="form-group hasInputIcon" id="acntGroup">
                                 <div class="col-xs-12">
-                                    <i class="fa fa-fw fa-user"></i>
-                                    <input type="text" pattern="[0-9]*" class="form-control" id="bankAcntNum" name="bankAcntNum" placeholder="Account Number" data-parsley-type="digits" data-parsley-trigger="change focusout" required="true" minlength="6" maxlength="18" data-parsley-type-message="Your account # should be only digits, i.e. 0-9." data-parsley-required-message="Enter the Account Number for this bank account." data-parsley-minlength-message="Hmmm, that should be a little longer..."/>
+                                    <i class="fa fa-fw fa-crosshairs"></i>
+                                    <input type="text" pattern="[0-9]*" class="form-control" id="bankAcntNum" name="bankAcntNum" placeholder="Account Number" data-parsley-type="digits" data-parsley-trigger="change focusout" required="true" minlength="6" maxlength="18" data-parsley-type-message="Your account # should be only digits, i.e. 0-9." data-parsley-required-message="Enter the Account Number for this bank account." data-parsley-minlength-message="Hmmm, that should be a little longer..." />
                                 </div>
                             </div>
 
@@ -322,7 +322,6 @@
                                     <input type="text" class="form-control" id="bankAcntNickName" name="bankAcntNickName" placeholder="Account Nick Name" data-parsley-whitespace="squish" parsley-trigger="change focusout" required="true" parsley-minlength="4" maxlength="40" data-parsley-required-message="Enter bank account nick name." data-parsley-minlength-message="Hmmm, that looks too short..." />
                                 </div>
                             </div>
-
 
 
                             <div class="form-group">
@@ -339,7 +338,7 @@
                                 </div>
                             </div>
 
-                          
+
                             <div class="form-group">
                                 <label class="col-xs-4 col-md-5 control-label">Class</label>
                                 <div class="col-xs-8 col-md-7">

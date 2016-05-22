@@ -690,8 +690,8 @@ html.landlord #addBankManual .selectedBank-logo {
     padding: 10px;
     border-radius: 20%;
     box-shadow: 0px 6px 20px -5px rgba(64,65,66,0.3);
-    width: 145px;
-    height: 125px;
+    width: 130px;
+    height: 112px;
 }
 #addBankManual .selectedBank-logo > img {
     width: 98px;

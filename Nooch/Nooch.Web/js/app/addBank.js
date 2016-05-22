@@ -87,15 +87,15 @@ $(".manualLogin").click(function () {
 	});
 
 	$('body.body').css("overflow","visible");
-	var step2height_manual = '586px';
+	var step2height_manual = '616px';
 
 	if (fromLandlordApp == "yes")
 	{
-        step2height_manual = '672px'
+        step2height_manual = '712px'
 	}
 	if ($(window).width() > 767)
 	{
-	    step2height_manual = '650px'
+	    step2height_manual = '680px'
 	}
 	//console.log("step2height_manual: " + step2height_manual);
 	$('#addBankManual').removeClass("hide",function() {
@@ -1620,24 +1620,24 @@ function onLookupSuccess(data)
 
 function resetBankLogoSize() {
 	var img = $(".selectedBank-logo img").attr('src');
-	var width = "98px";
+	var width = "90px";
 
 	if (img.indexOf("/bank.png") < 0) // if the image IS currently one of the actual bank logos
 	{
 		if ($(window).width() > 767)
 		{
-			width = "125px";
+			width = "110px";
 		}
 		else
 		{
-			width = "110px";
+			width = "90px";
 		}
 	}
 	else // if the image is currently the default bank icon
 	{
 		if ($(window).width() > 767)
 		{
-			width = "98px";
+			width = "86px";
 		}
 	}
 	$("#addBankManual .selectedBank-logo > img").css({
