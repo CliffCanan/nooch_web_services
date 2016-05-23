@@ -1242,9 +1242,9 @@ namespace Nooch.Web.Controllers
         {
             ResultPayRequest rpr = new ResultPayRequest();
             rpr.payreqInfo = true;
-            rpr.PayorInitialInfo = true;
+            rpr.PayorInitialInfo = false; // <div> containing the old form for entering name/email/phone...keeping just for reference
 
-            Logger.Info("payRequest CodeBehind -> Page_load Initiated - [TransactionId Parameter: " + Request.QueryString["TransactionId"] + "]");
+            Logger.Info("payRequest CodeBehind -> Page_load Initiated - TransactionId Parameter: [" + Request.QueryString["TransactionId"] + "]");
 
             try
             {

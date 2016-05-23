@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Nooch.Common.Entities
 {
-   public class ResultPayRequest
+    public class ResultPayRequest
     {
         public string usrTyp { get; set; }
         public string transType { get; set; }
@@ -26,9 +26,5 @@ namespace Nooch.Common.Entities
         public bool nonRegUsrContainer { get; set; }
         public string invitationType { get; set; }
         public string invitationSentto { get; set; }
-
-        
-        
-
     }
 }

@@ -13,9 +13,9 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.6.0/css/font-awesome.min.css" />
 
+    <link rel="stylesheet" href="@Url.Content("~/Assets/Css/fileinput.min.css")" />
     <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,400italic,500,500italic,700,900" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.4/themes/cupertino/jquery-ui.css" />
-    <link rel="stylesheet" href="https://cdn.materialdesignicons.com/1.2.65/css/materialdesignicons.min.css" />
     <link rel="stylesheet" href="@Url.Content("~/Assets/Css/sweetalert-override.min.css")" />
     <link rel="stylesheet" href="@Url.Content("~/Assets/Css/bootstrap-select.min.css")" />
     <link rel="stylesheet" href="@Url.Content("~/Assets/Css/chosen.min.css")" />
@@ -50,7 +50,6 @@
     </nav>
     @if (rpr.payreqInfo != false)
     {
-
         <div id="payreqInfo">
 
             <div id="depositHeader">
@@ -82,7 +81,7 @@
             </div>
 
             <div id="relaunchIdwiz" class="hidden m-t-25 text-center animated bounceIn">
-                <button type="button" class="btn btn-lg btn-default"><i class="mdi mdi-checkbox-marked-outline m-r-15"></i>Complete This Payment</button>
+                <button type="button" class="btn btn-lg btn-default"><i class="fa fa-fw fa-check-square-o m-r-15"></i>Complete This Payment</button>
             </div>
 
             @if (rpr.nonRegUsrContainer == true)
@@ -103,8 +102,18 @@
     }
     <div class="errorMessage hidden"></div>
 
+    <!-- CLIFF (5/23/16)- THE FOLLOWING FORM IS JUST FOR TESTING THE FILE INPUT PLUGIN, WHICH WILL BE IN THE ID VERIFICATION WIZARD...
+         BUT SINCE IT'S NOT WORKING, IT'S ANNOYING TO CLICK THROUGH THE FIRST 3 STEPS EVERY TIME TO TEST, SO ADDING THIS SO 
+         YOU CAN SEE IT AS SOON AS THE PAGE LOADS. -->
+    <form>
+        <input id="idVer_idDoc2" class="file" type="file">
+        <br>
+        <button type="submit" class="btn btn-primary">Submit</button>
+        <button type="reset" class="btn btn-default">Reset</button>
+    </form>
+
     <br />
-    @if (!rpr.PayorInitialInfo)
+    @if (rpr.PayorInitialInfo)
     {
         <div id="PayorInitialInfo" class="animated bounceInUp hidden">
 
@@ -223,8 +232,8 @@
             <div class="modal-content">
 
                 <div class="modal-header">
-                    <h4 class="modal-title">Identity Verification <i class="mdi mdi-verified text-success m-l-10"></i></h4>
-                    <button type="button" class="btn btn-default btn-icon modalclose"><i class="mdi mdi-close"></i></button>
+                    <h4 class="modal-title">Identity Verification <i class="fa fa-fw fa-check-circle text-success m-l-10"></i></h4>
+                    <button type="button" class="btn btn-default btn-icon modalclose"><i class="fa fa-close" style="color:#bbb"></i></button>
                 </div>
 
                 <div class="modal-body">
@@ -233,7 +242,7 @@
 
                         <div id="idVerWiz" class="col-sm-12">
 
-                            <h3><i class="mdi mdi-account m-r-5"></i>Profile Info</h3>
+                            <h3><i class="fa fa-fw fa-user m-r-5"></i><br />Profile Info</h3>
                             <section>
 
                                 <form id="idVerForm1" role="form">
@@ -245,7 +254,7 @@
                                     <dl class="dl-horizontal" id="nameGrp">
                                         <dt class="p-t-10 withIcon">
                                             Your Name<br />
-                                            <i class="mdi mdi-information-outline help-icon f-15 m-l-5" data-trigger="hover" data-toggle="popover" data-placement="auto" data-content="Please enter your full legal name."></i>
+                                            <i class="fa fa-fw fa-question-circle-o help-icon m-l-5" data-trigger="hover" data-toggle="popover" data-placement="auto" data-content="Please enter your full legal name."></i>
                                         </dt>
                                         <dd>
                                             <div class="form-group">
@@ -259,11 +268,11 @@
                                     <dl class="dl-horizontal" id="dobGrp">
                                         <dt class="p-t-10 withIcon">
                                             Date of Birth<br />
-                                            <i class="mdi mdi-information-outline help-icon f-15 m-l-5" data-trigger="hover" data-toggle="popover" data-placement="auto" data-content="A date of birth is needed to verify a user's identity. Don't worry - nobody sees this!"></i>
+                                            <i class="fa fa-fw fa-question-circle-o help-icon m-l-5" data-trigger="hover" data-toggle="popover" data-placement="auto" data-content="A date of birth is needed to verify a user's identity. Don't worry - nobody sees this!"></i>
                                         </dt>
                                         <dd>
                                             <div class="form-group withIcon datePickerGrp">
-                                                <i class="mdi mdi-calendar"></i>
+                                                <i class="fa fa-fw fa-calendar-plus-o"></i>
                                                 <div class="dtp-container dropdown fg-line">
                                                     <input id="idVer-dob" type='text' class="form-control date-picker" data-toggle="dropdown" placeholder="eg. 08/05/1978" />
                                                 </div>
@@ -287,7 +296,7 @@
 
                             </section>
 
-                            <h3><i class="mdi mdi-map-marker m-r-5"></i>Address</h3>
+                            <h3><i class="fa fa-fw fa-map-marker m-r-5"></i><br />Address</h3>
                             <section>
 
                                 <div class="well well-sm">
@@ -320,7 +329,7 @@
 
                             </section>
 
-                            <h3><i class="mdi mdi-email-open m-r-5"></i>Contact Info</h3>
+                            <h3><i class="fa fa-fw fa-envelope m-r-5"></i><br />Contact Info</h3>
                             <section>
 
                                 <div class="well well-sm m-b-25">
@@ -351,6 +360,20 @@
 
                             </section>
 
+                            <h3><i class="fa fa-fw fa-picture-o m-r-5"></i><br />ID Document</h3>
+                            <section>
+
+                                <div class="well well-sm m-b-25">
+                                    <div class="f-15">Please upload an image of any government-issued <strong>photo ID</strong>.</div>
+                                </div>
+
+                                <div id="idDocWrap">
+                                    <label class="control-label">Select File</label>
+                                    <input id="idVer_idDoc" type="file" class="file">
+                                </div>
+
+                            </section>
+
                         </div>
 
                         <div id="idVerContainer" class="animated hidden">
@@ -366,30 +389,24 @@
         </div>
     </div>
 
-    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-    <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="//code.jquery.com/jquery-2.1.4.min.js"></script>
     <script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
-
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
-
+    <script src="../js/fileinput/fileinput.js"></script>
     <script src="../js/jasny-bootstrap.min.js"></script>
     <script src="../js/jquery.blockUI.min.js"></script>
-
     <script src="../js/input-mask.min.js"></script>
     <script src="../js/bootstrap-select.min.js"></script>
     <script src="../js/chosen.jquery.min.js"></script>
     <script src="../js/moment.min.js"></script>
     <script src="../js/bootstrap-datetimepicker.min.js"></script>
     <script src="../js/jquery.steps.min.js"></script>
-
     <script src="../js/fingerprint2.min.js"></script>
     <script type="text/javascript">
         var ipusr;
     </script>
     <script type="text/javascript" src="https://www.l2.io/ip.js?var=ipusr"></script>
     <script src="../js/sweetalert.min.js"></script>
-
-    <!-- Custom Scripts -->
     <script src="../js/app/movemoneypagescripts.js"></script>
 </body>
 </html>

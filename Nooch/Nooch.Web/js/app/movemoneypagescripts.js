@@ -261,8 +261,9 @@ function runIdWizard() {
         headerTag: "h3",
         bodyTag: "section",
         stepsOrientation: "horizontal",
-        transitionEffect: 'slideLeft',
+        transitionEffect: "slideLeft",
         transitionEffectSpeed: 400,
+		titleTemplate: "#title#",
 
         /* Labels */
         labels: {
@@ -281,8 +282,6 @@ function runIdWizard() {
 
             calendarIcon.click(function ()
             {
-                //console.log("FOCUS REACHED!");
-
                 setTimeout(function ()
                 {
                     $('#dobGrp .dtp-container.dropdown').addClass('fg-toggled open');
@@ -385,33 +384,6 @@ function runIdWizard() {
 
                         // Great, go to the next step of the wizard :-]
 
-                        // FILE INPUT DOCUMENTATION: http://plugins.krajee.com/file-input#options
-                        /*$("#IdWizPic_FileInput").fileinput({
-                            allowedFileTypes: ['image'],
-                            initialPreview: [
-                                "<img src='' class='file-preview-image' alt='Profile Picture' id='IdWizUserPicPreview'>"
-                            ],
-                            initialPreviewShowDelete: false,
-                            layoutTemplates: {
-                                icon: '<span class="md md-panorama m-r-10 kv-caption-icon"></span>',
-                            },
-                            maxFileCount: 1,
-                            maxFileSize: 250,
-                            msgSizeTooLarge: "File '{name}' ({size} KB) exceeds the maximum allowed file size of {maxSize} KB. Please try a slightly smaller picture!",
-                            showCaption: false,
-                            showUpload: false,
-                            //uploadUrl: URLs.UploadLandlordProfileImage,  // NEED TO ADD URL TO SERVICE FOR SAVING PROFILE PIC (SEPARATELY FROM SAVING THE REST OF THE PROFILE INFO)
-                            //uploadExtraData: {
-                                //LandlorId: $scope.userInfoInSession.memberId,
-                                //AccessToken: $scope.userInfoInSession.accessToken
-                            //},
-                            showPreview: true,
-                            resizeImage: true,
-                            maxImageWidth: 400,
-                            maxImageHeight: 400,
-                            resizePreference: 'width'
-                        });*/
-
                         $('#idVerWiz > .content').animate({ height: "19em" }, 500)
                         return true;
                     }
@@ -423,6 +395,63 @@ function runIdWizard() {
                     updateValidationUi("address", false);
                 }
             }
+
+			// IF going to Step 4
+			if (newIdex = 3)
+			{
+                // Check Address field
+				$('#idVer-email').val($('#idVer-email').val().trim());
+
+				if (ValidateEmail($('#idVer-email').val()) == true)
+				{
+					updateValidationUi("email", true);
+
+					// Finally, check the phone number's length
+					console.log($('#idVer-phone').cleanVal());
+
+					if ($('#idVer-phone').cleanVal().length == 10)
+					{
+						updateValidationUi("phone", true);
+
+                        // Great, go to the next step of the wizard :-]
+					    // FILE INPUT DOCUMENTATION: http://plugins.krajee.com/file-input#options
+						$("#idVer_idDoc").fileinput({
+						    allowedFileTypes: ['image'],
+						    initialPreview: [
+                                "<img src='' class='file-preview-image' alt='Profile Picture' id='IdWizUserPicPreview'>"
+						    ],
+						    initialPreviewShowDelete: false,
+						    layoutTemplates: {
+						        icon: '<span class="fa fa-photo m-r-10 kv-caption-icon"></span>',
+						    },
+						    maxFileCount: 1,
+						    maxFileSize: 500,
+						    msgSizeTooLarge: "File '{name}' ({size} KB) exceeds the maximum allowed file size of {maxSize} KB. Please try a slightly smaller picture!",
+						    showCaption: false,
+						    showUpload: false,
+						    //uploadUrl: URLs.UploadLandlordProfileImage,
+						    //uploadExtraData: {
+						    //},
+						    showPreview: true,
+						    resizeImage: true,
+						    maxImageWidth: 500,
+						    maxImageHeight: 500,
+						    resizePreference: 'width'
+						});
+
+                        $('#idVerWiz > .content').animate({ height: "21em" }, 500)
+                        return true;
+					}
+					else
+					{
+						updateValidationUi("phone", false);
+					}
+				}
+				else
+				{
+					updateValidationUi("email", false);
+				}
+			}
 
             // Allways allow previous action even if the current form is not valid!
             if (currentIndex > newIndex) {
@@ -438,38 +467,18 @@ function runIdWizard() {
             {
                 $('#idVer-email').focus();
             }
+			else if (currentIndex == 3)
+			{
+
+				console.log('Checkpoint #A FIRED');
+			}
         },
         onCanceled: function (event) {
             cancelIdVer();
         },
         onFinishing: function (event, currentIndex) {
-            // CHECK TO MAKE SURE ALL FIELDS WERE COMPLETED
-
-            $('#idVer-email').val($('#idVer-email').val().trim());
-
-            if (ValidateEmail($('#idVer-email').val()) == true)
-            {
-                updateValidationUi("email", true);
-
-                // Finally, check the phone number's length
-                console.log($('#idVer-phone').cleanVal());
-
-                if ($('#idVer-phone').cleanVal().length == 10)
-                {
-                    updateValidationUi("phone", true);
-
-                    // Finish the Wizard...
-                    return true;
-                }
-                else
-                {
-                    updateValidationUi("phone", false);
-                }
-            }
-            else
-            {
-                updateValidationUi("email", false);
-            }
+			// Finish the Wizard...
+			return true;
         },
         onFinished: function (event, currentIndex) {
 

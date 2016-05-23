@@ -2371,6 +2371,8 @@ namespace Nooch.DataAccess
                                 }
 
                                 #endregion Logging
+
+                                // CLIFF (5/22/16): Add call here to submitDocumentToSynapseV3
                             }
                             catch (Exception ex)
                             {
