@@ -30,6 +30,16 @@
     <script src="@Url.Content("~/js/sweetalert.min.js")"></script>
     <script src="@Url.Content("~/js/jquery.auto-complete.min.js")"></script>
 
+    <nav id="headerAlt" class="navbar navbar-default navbar-fixed-top hidden" role="navigation">
+        <div class="clearfix">
+            <a class="pull-left" href="https://www.nooch.com/" style="margin: 12px auto 12px !important;">
+                <img src="../Assets/Images/nooch-logo2.svg" class="center-block" alt="Rent Scene Logo" />
+            </a>
+            <div class="text-center" style="position: absolute; left: 10%; top: 0px; width: 80%;">
+                <h3 class="center-block f-25" style="font-family: 'Roboto', 'Open Sans', sans-serif">Link A Bank Account</h3>
+            </div>
+        </div>
+    </nav>
 
     <form id="form1" runat="server">
         <asp:ScriptManager ID="ScriptManager1" runat="server" EnablePageMethods="true"></asp:ScriptManager>
@@ -219,37 +229,6 @@
 
                             <div class="form-group">
                                 <button type="submit" id="submitMfaQuestion" class="btn btn-primary btn-block">Submit Answer</button>
-                            </div>
-
-                        </form>
-
-                    </div>
-
-
-                    <div id="addBank_mfa_code" class="hide">
-
-                        <div class="selectedBank-logo">
-                            <img src="" />
-                        </div>
-
-                        <form id="addBank-code">
-
-                            <div class="form-group center-block">
-                                <div class="addBank-instructions">To prevent fraud, your bank requires additional security info.</div>
-                            </div>
-
-                            <div id="mfa_code_errorMsg"></div>
-
-                            <div class="form-group sec-question">
-                                <label for="securityCodeInput">Security Code:</label>
-                                <p class="sec-questionText" id="codeMsg"></p>
-                                <input type="password" class="form-control sec-question-input" id="securityCodeInput" parsley-type="alphanum" parsley-trigger="focusout" data-parsley-required="true" data-parsley-minlength="2" placeholder="Enter Code" maxlength="12" />
-                            </div>
-
-                            <input type="hidden" id="bankAccessTokenForCode" name="" value="" />
-
-                            <div class="form-group">
-                                <button type="submit" id="submitMfaCode" class="btn btn-primary btn-block">Submit Code</button>
                             </div>
 
                         </form>

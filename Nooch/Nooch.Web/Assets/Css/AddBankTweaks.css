@@ -204,8 +204,6 @@ h1 a:hover {text-decoration:none;}
 .modal-logout .modal-dialog {max-width:400px;}
 
 
-
-
 /***********************************
 /******     PARSLEY FORMS     ******
 /***********************************/
@@ -339,8 +337,21 @@ a {cursor:pointer;}
 }
 .body-addBank nav {
 	min-height:40px;
-	height:40px;
 	z-index:-2;
+    margin-bottom: 0;
+    position: relative;
+    -webkit-box-shadow: 0 2px 12px -3px rgba(64,65,66,.3);
+    box-shadow: 0 2px 12px -3px rgba(64,65,66,.3);
+}
+.body-addBank nav img {
+    margin-left: 25px;
+    width: 120px;
+    -webkit-animation-name: bounceInDown;
+    animation-name: bounceInDown;
+    -webkit-animation-duration: 1.2s;
+    animation-duration: 1.2s;
+    -webkit-animation-fill-mode: both;
+    animation-fill-mode: both;
 }
 .body-addBank .title {
 	top: 10px;
@@ -767,35 +778,6 @@ form#addBank-selectAccount .input-group-lg > .input-group-btn > .btn {height:42p
 .sec-question label {margin-bottom: 10px;}
 
 .sec-question-input {text-align: center;}
-.sec-question-input#securityCodeInput {
-  letter-spacing: 4px;
-  font-size: 20px;
-  font-weight: 600;
-}
-.sec-question-input#securityCodeInput::-webkit-input-placeholder {
-	font-size: 16px;
-	font-weight:400;
-	letter-spacing: 1px;
-	padding: 4px 0 0;
-}
-.sec-question-input#securityCodeInput::-moz-placeholder {
-	font-size: 16px;
-	font-weight:400;
-	letter-spacing: 1px;
-	padding: 4px 0 0;
-}
-.sec-question-input#securityCodeInput:-moz-placeholder {   /* Older versions of Firefox */
-	font-size: 16px;
-	font-weight:400;
-	letter-spacing: 1px;
-	padding: 4px 0 0;
-}
-.sec-question-input#securityCodeInput:-ms-input-placeholder { 
-	font-size: 16px;
-	font-weight:400;
-	letter-spacing: 1px;
-	padding: 4px 0 0;	
-}
 .sec-question p { letter-spacing:.1px; }
 #codeMsg {
   font-weight:500;
@@ -1145,7 +1127,7 @@ html.landlord {overflow-y: visible;}
     .hide-xl {display:none; visibility:hidden;}
 
     .brandedLogo {
-        top: 15px;
+        top: 15%;
         left: 1%;
         max-width: 190px;
     }
@@ -1472,7 +1454,7 @@ html.landlord {overflow-y: visible;}
   }
 }
 
-.sweet-overlay { background: rgba(10, 10, 10, 0.6); }
+.sweet-overlay { background: rgba(10, 10, 10, 0.7); }
 .sweet-alert {
   font-family: Helvetica, "Roboto", "Open Sans", Arial, sans-serif;
   padding-bottom: 10px;

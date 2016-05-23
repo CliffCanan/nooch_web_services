@@ -10,6 +10,8 @@ var isManual = false;
 var COMPANY = "Nooch";
 var SUPPORTLINK = "support@nooch.com";
 
+var isUpgradeToV3 = 'false';
+
 var step1height = '554px';
 var step2height = '520px';
 
@@ -1394,8 +1396,9 @@ $(document).ready(function () {
     }
 
     fromLandlordApp = getParameterByName('ll');
+    isUpgradeToV3 = getParameterByName('update');
 
-	//console.log("fromLandlordApp is: [" + fromLandlordApp + "]");
+	console.log("isUpgradeToV3 is: [" + isUpgradeToV3 + "]");
 
 	$('#bankNotListed').removeClass('hide');
 
@@ -1410,13 +1413,18 @@ $(document).ready(function () {
 		step1height = '514px';
 		step2height = '496px';
 	}
-	else if ((fromLandlordApp.indexOf("yes") > -1) || ($(window).width() > 500))
+	else if (fromLandlordApp.indexOf("yes") > -1 || $(window).width() > 500)
 	{
 	    $('html').addClass('landlord');
 
 	    step1height = '652px';
 
 	    //$('.addBank-heading').hide();
+	}
+
+	if (isUpgradeToV3 == 'true')
+	{
+	    $('#headerAlt').removeClass('hidden');
 	}
 
 	if ($(window).width() > 1100)
@@ -1464,6 +1472,31 @@ $(document).ready(function () {
 		});
 	}
 
+	else if (isUpgradeToV3 == 'true')
+	{
+	    swal({
+	        title: "Security Upgrade Notice",
+	        text: "<p>Nooch offers a quick, secure way to pay anyone without giving them your sensitive bank or credit card information. &nbsp;Just select your bank and login to your online banking<span class='desk-only'> as you normally do</span>.</p>" +
+				  "<h4><strong>Benefits</strong></h4>" +
+				  "<ul class='fa-ul'><li><i class='fa-li fa fa-check'></i><strong>Faster Payments.</strong>&nbsp; Funds available by the 2nd day.</li>" +
+				  "<li><i class='fa-li fa fa-check'></i><strong>More Secure.</strong>&nbsp; This upgrade includes major under-the-hood updates to keep your money safe.</li>" +
+				  "<li><i class='fa-li fa fa-check'></i><strong>Clearer Statements.</strong>&nbsp; Now the memo on your bank statement will include transaction info.</li></ul>",
+	        imageUrl: "../Assets/Images/secure.svg",
+			imageSize: "194x80",
+			showCancelButton: true,
+			cancelButtonText: "Learn More",
+			closeOnCancel: false,
+	        confirmButtonColor: "#3fabe1",
+	        confirmButtonText: "Great, Let's Go!",
+	        customClass: "securityAlert",
+	        allowEscapeKey: false,
+	        html: true
+	    }, function (isConfirm) {
+			if (!isConfirm) {
+				window.top.location.href = "https://www.nooch.com/safe";
+			}
+		});
+	}
 	/**** CREATING AUTO-COMPLETE LIST OF BANKS FOR SEARCHING ****/
 	$("#bankSearch").autoComplete({
 	    minChars: 2,
