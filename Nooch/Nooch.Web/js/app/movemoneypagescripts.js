@@ -727,7 +727,9 @@ function createRecord() {
         "', 'address':'" + addressVal +
         "', 'zip':'" + zipVal +
         "', 'fngprnt':'" + fngprntVal +
-        "', 'ip':'" + ipVal + "'}";
+        "', 'ip':'" + ipVal +
+"', 'isIdImage':'" + isFileAdded +
+"', 'idImagedata':'" + FileData + "'}";
     
     console.log(dataToSend);
     

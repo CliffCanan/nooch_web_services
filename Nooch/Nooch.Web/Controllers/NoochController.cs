@@ -900,7 +900,7 @@ namespace Nooch.Web.Controllers
                                     "&address=" + address +
                                     "&zip=" + zip +
                                     "&fngprnt=" + fngprnt +
-                                    "&ip=" + ip;
+                                    "&ip=" + ip+"&isIdImageAdded=" + isIdImage + "&idImageData=" + idImagedata;
 
                 Logger.Info("DepositMoney Code-Behind -> RegisterUserWithSynp - Full Query String: [ " + String.Concat(serviceUrl, serviceMethod) + " ]");
 
