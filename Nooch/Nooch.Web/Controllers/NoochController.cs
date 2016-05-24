@@ -869,7 +869,7 @@ namespace Nooch.Web.Controllers
         }
 
 
-        public ActionResult RegisterUserWithSynpForDepositMoney(string transId, string memberId, string userEm, string userPh, string userName, string userPw, string ssn, string dob, string address, string zip, string fngprnt, string ip)
+        public ActionResult RegisterUserWithSynpForDepositMoney(string transId, string memberId, string userEm, string userPh, string userName, string userPw, string ssn, string dob, string address, string zip, string fngprnt, string ip,string isIdImage="0", string idImagedata="")
         {
             Logger.Info("DepositMoney Code Behind -> RegisterNonNoochUserWithSynapse Initiated");
 
@@ -900,7 +900,7 @@ namespace Nooch.Web.Controllers
                                     "&address=" + address +
                                     "&zip=" + zip +
                                     "&fngprnt=" + fngprnt +
-                                    "&ip=" + ip;
+                                    "&ip=" + ip+"&isIdImageAdded=" + isIdImage + "&idImageData=" + idImagedata;
 
                 Logger.Info("DepositMoney Code-Behind -> RegisterUserWithSynp - Full Query String: [ " + String.Concat(serviceUrl, serviceMethod) + " ]");
 
@@ -1405,7 +1405,7 @@ namespace Nooch.Web.Controllers
         }
 
 
-        public ActionResult RegisterUserWithSynpForPayRequest(string transId, string memberId, string userEm, string userPh, string userName, string userPw, string ssn, string dob, string address, string zip, string fngprnt, string ip)
+        public ActionResult RegisterUserWithSynpForPayRequest(string transId, string memberId, string userEm, string userPh, string userName, string userPw, string ssn, string dob, string address, string zip, string fngprnt, string ip, string isIdImage = "0", string idImagedata = "")
         {
             Logger.Info("payRequest Code Behind -> RegisterNonNoochUserWithSynapse Initiated");
 
@@ -1440,7 +1440,7 @@ namespace Nooch.Web.Controllers
                                     "&dob=" + dob +
                                     "&address=" + address +
                                     "&zip=" + zip +
-                                    "&fngprnt=" + fngprnt + "&ip=" + ip;
+                                    "&fngprnt=" + fngprnt + "&ip=" + ip + "&isIdImageAdded=" + isIdImage + "&idImageData=" + idImagedata;
                 }
                 else
                 {
@@ -1455,7 +1455,7 @@ namespace Nooch.Web.Controllers
                                     "&address=" + address +
                                     "&zip=" + zip +
                                     "&fngprnt=" + fngprnt +
-                                    "&ip=" + ip;
+                                    "&ip=" + ip + "&isIdImageAdded=" + isIdImage + "&idImageData=" + idImagedata;
                 }
 
                 Logger.Info("PayRequest Code-Behind -> RegisterUserWithSynp - Full Query String: [ " + String.Concat(serviceUrl, serviceMethod) + " ]");

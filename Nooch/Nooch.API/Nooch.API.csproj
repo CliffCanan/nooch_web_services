@@ -166,6 +166,7 @@
     <Folder Include="App_Data\" />
     <Folder Include="Logs\" />
     <Folder Include="Models\" />
+    <Folder Include="UploadedPhotos\SynapseIdDocs\" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App_Start\BundleConfig.cs" />

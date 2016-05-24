@@ -2933,7 +2933,7 @@ namespace Nooch.API.Controllers
 
         [HttpGet]
         [ActionName("RegisterExistingUserWithSynapseV3")]
-        public RegisterUserSynapseResultClassExt RegisterExistingUserWithSynapseV3(string transId, string memberId, string email, string phone, string fullname, string pw, string ssn, string dob, string address, string zip, string fngprnt, string ip)
+        public RegisterUserSynapseResultClassExt RegisterExistingUserWithSynapseV3(string transId, string memberId, string email, string phone, string fullname, string pw, string ssn, string dob, string address, string zip, string fngprnt, string ip,string isIdImageAdded="0", string idImageData="") // initialised id related parameters to avoid breakdown where this service is being called...just in case someone didn't sent anything
         {
             Logger.Info("Service Controller -> RegisterExistingUserWithSynapseV3 Initiated - MemberID: [" + memberId + "], " +
                         "Name: [" + fullname + "], Email: [" + email + "]");
@@ -2943,7 +2943,7 @@ namespace Nooch.API.Controllers
                 MembersDataAccess mda = new MembersDataAccess();
                 RegisterUserSynapseResultClassExt nc = new RegisterUserSynapseResultClassExt();
 
-                synapseCreateUserV3Result_int res = mda.RegisterExistingUserWithSynapseV3(transId, memberId, email, phone, fullname, pw, ssn, dob, address, zip, fngprnt, ip);
+                synapseCreateUserV3Result_int res = mda.RegisterExistingUserWithSynapseV3(transId, memberId, email, phone, fullname, pw, ssn, dob, address, zip, fngprnt, ip,isIdImageAdded,idImageData);
 
                 if (res.success == true)
                 {
@@ -2975,12 +2975,12 @@ namespace Nooch.API.Controllers
 
         [HttpGet]
         [ActionName("RegisterNonNoochUserWithSynapse")]
-        public RegisterUserSynapseResultClassExt RegisterNonNoochUserWithSynapse(string transId, string email, string phone, string fullname, string pw, string ssn, string dob, string address, string zip, string fngprnt, string ip)
+        public RegisterUserSynapseResultClassExt RegisterNonNoochUserWithSynapse(string transId, string email, string phone, string fullname, string pw, string ssn, string dob, string address, string zip, string fngprnt, string ip, string isIdImageAdded = "0", string idImageData = "")
         {
             try
             {
                 MembersDataAccess mda = new MembersDataAccess();
-                synapseCreateUserV3Result_int res = mda.RegisterNonNoochUserWithSynapseV3(transId, email, phone, fullname, pw, ssn, dob, address, zip, fngprnt, ip);
+                synapseCreateUserV3Result_int res = mda.RegisterNonNoochUserWithSynapseV3(transId, email, phone, fullname, pw, ssn, dob, address, zip, fngprnt, ip,isIdImageAdded,idImageData);
 
                 RegisterUserSynapseResultClassExt nc = new RegisterUserSynapseResultClassExt();
 
