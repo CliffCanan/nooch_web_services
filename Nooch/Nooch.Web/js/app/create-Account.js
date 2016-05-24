@@ -323,6 +323,8 @@ function runIdWizard() {
                     if ($('#idVer-phone').cleanVal().length == 10) {
                         updateValidationUi("phone", true);
 
+                        console.log('going in image wizard');
+
                         // Great, go to the next step of the wizard :-]
                         // FILE INPUT DOCUMENTATION: http://plugins.krajee.com/file-input#options
                         $("#idVer_idDoc").fileinput({
@@ -349,7 +351,7 @@ function runIdWizard() {
                             resizePreference: 'width'
                         });
 
-                        $('#idVerWiz > .content').animate({ height: "21em" }, 500)
+                        $('#idVerWiz > .content').animate({ height: "21em" }, 500);
                         return true;
                     }
                     else {

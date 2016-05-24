@@ -181,6 +181,8 @@
     <Content Include="Assets\Css\bootstrap-select.min.css" />
     <Content Include="Assets\Css\bootstrap.css" />
     <Content Include="Assets\Css\chosen.min.css" />
+    <Content Include="Assets\Css\fileinput.css" />
+    <Content Include="Assets\Css\fileinput.min.css" />
     <Content Include="Assets\Css\idverification.css" />
     <Content Include="Assets\Css\jquery.auto-complete.css" />
     <Content Include="Assets\Css\jquery.steps.css" />
@@ -274,6 +276,14 @@
     <Content Include="js\bootstrap-select.min.js" />
     <Content Include="js\bootstrap.js" />
     <Content Include="js\chosen.jquery.min.js" />
+    <Content Include="js\dataTables\dataTables.bootstrap.js" />
+    <Content Include="js\dataTables\dataTables.responsive.js" />
+    <Content Include="js\dataTables\dataTables.tableTools.min.js" />
+    <Content Include="js\dataTables\jquery.dataTables.js" />
+    <Content Include="js\dataTables\swf\copy_csv_xls.swf" />
+    <Content Include="js\dataTables\swf\copy_csv_xls_pdf.swf" />
+    <Content Include="js\fileinput\fileinput.js" />
+    <Content Include="js\fileinput\fileinput.min.js" />
     <Content Include="js\fingerprint2.min.js" />
     <Content Include="js\input-mask.min.js" />
     <Content Include="js\jasny-bootstrap.min.js" />
