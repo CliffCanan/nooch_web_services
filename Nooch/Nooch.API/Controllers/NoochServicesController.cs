@@ -2933,7 +2933,7 @@ namespace Nooch.API.Controllers
 
         [HttpGet]
         [ActionName("RegisterExistingUserWithSynapseV3")]
-        public RegisterUserSynapseResultClassExt RegisterExistingUserWithSynapseV3(string transId, string memberId, string email, string phone, string fullname, string pw, string ssn, string dob, string address, string zip, string fngprnt, string ip,string isIdImageAdded="0", string idImageData="") // initialised id related parameters to avoid breakdown where this service is being called...just in case someone didn't sent anything
+        public RegisterUserSynapseResultClassExt RegisterExistingUserWithSynapseV3(string transId, string memberId, string email, string phone, string fullname, string pw, string ssn, string dob, string address, string zip, string fngprnt, string ip, string isIdImageAdded = "0", string idImageData = "") // initialised id related parameters to avoid breakdown where this service is being called...just in case someone didn't sent anything
         {
             Logger.Info("Service Controller -> RegisterExistingUserWithSynapseV3 Initiated - MemberID: [" + memberId + "], " +
                         "Name: [" + fullname + "], Email: [" + email + "]");
@@ -2943,7 +2943,7 @@ namespace Nooch.API.Controllers
                 MembersDataAccess mda = new MembersDataAccess();
                 RegisterUserSynapseResultClassExt nc = new RegisterUserSynapseResultClassExt();
 
-                synapseCreateUserV3Result_int res = mda.RegisterExistingUserWithSynapseV3(transId, memberId, email, phone, fullname, pw, ssn, dob, address, zip, fngprnt, ip,isIdImageAdded,idImageData);
+                synapseCreateUserV3Result_int res = mda.RegisterExistingUserWithSynapseV3(transId, memberId, email, phone, fullname, pw, ssn, dob, address, zip, fngprnt, ip, isIdImageAdded, idImageData);
 
                 if (res.success == true)
                 {
@@ -2953,7 +2953,7 @@ namespace Nooch.API.Controllers
                     nc.refresh_token = res.oauth.refresh_token;
                     nc.success = res.success.ToString();
                     nc.user_id = res.user_id;
-                   // nc.username = res.user.logins[0].email;
+                    // nc.username = res.user.logins[0].email;
                     nc.memberIdGenerated = res.memberIdGenerated;
                     nc.ssn_verify_status = res.ssn_verify_status;
                 }
@@ -2980,7 +2980,7 @@ namespace Nooch.API.Controllers
             try
             {
                 MembersDataAccess mda = new MembersDataAccess();
-                synapseCreateUserV3Result_int res = mda.RegisterNonNoochUserWithSynapseV3(transId, email, phone, fullname, pw, ssn, dob, address, zip, fngprnt, ip,isIdImageAdded,idImageData);
+                synapseCreateUserV3Result_int res = mda.RegisterNonNoochUserWithSynapseV3(transId, email, phone, fullname, pw, ssn, dob, address, zip, fngprnt, ip, isIdImageAdded, idImageData);
 
                 RegisterUserSynapseResultClassExt nc = new RegisterUserSynapseResultClassExt();
 
@@ -3006,9 +3006,9 @@ namespace Nooch.API.Controllers
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Controller -> RegisterNonNoochUserWithSynapseV3 FAILED. [New Usr Name: " + fullname +
-                                       "], Email of New User: [" + email + "], TransactionID: [" + transId +
-                                       "], Exception: [" + ex.ToString() + "]");
+                Logger.Error("Service Controller -> RegisterNonNoochUserWithSynapse FAILED. [New Usr Name: " + fullname +
+                             "], Email of New User: [" + email + "], TransactionID: [" + transId +
+                             "], Exception: [" + ex.Message + "]");
                 return null;
             }
         }
@@ -3019,10 +3019,11 @@ namespace Nooch.API.Controllers
         public synapseV3GenericResponse submitDocumentToSynapseV3(SaveVerificationIdDocument DocumentDetails)
         {
             synapseV3GenericResponse res = new synapseV3GenericResponse();
+            res.isSuccess = false;
 
             try
             {
-                Logger.Info("Service Controller - submitDocumentToSynapseV3 [MemberId: " + DocumentDetails.MemberId + "]");
+                Logger.Info("Service Controller - submitDocumentToSynapseV3 Fired - [MemberId: " + DocumentDetails.MemberId + "]");
 
                 var mda = new MembersDataAccess();
 
