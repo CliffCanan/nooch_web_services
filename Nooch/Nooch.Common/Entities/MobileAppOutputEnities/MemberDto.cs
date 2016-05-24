@@ -23,6 +23,7 @@ namespace Nooch.Common.Entities.MobileAppOutputEnities
         public string City { get; set; }
         public string Zip { get; set; }
         public bool IsSSNAdded { get; set; }
+        public string ssnLast4 { get; set; }
         public DateTime? DateCreated { get; set; }
         public string DateCreatedString { get; set; }
         public decimal? LastLocationLat { get; set; }
@@ -32,6 +33,7 @@ namespace Nooch.Common.Entities.MobileAppOutputEnities
         public string DeviceToken { get; set; }
         public bool? IsVerifiedWithSynapse { get; set; }
         public string companyName { get; set; }
+        public string fngrprnt { get; set; }
     }
 
     public class genericResponse

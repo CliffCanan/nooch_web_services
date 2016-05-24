@@ -127,16 +127,28 @@ namespace Nooch.Common
 
         public static string FormatPhoneNumber(string sourcePhone)
         {
-            sourcePhone.Trim();
-            if (String.IsNullOrEmpty(sourcePhone) || sourcePhone.Length != 10)
+            if (String.IsNullOrEmpty(sourcePhone))
             {
-                return sourcePhone;
+                try
+                {
+                    sourcePhone.Trim();
+                    if (sourcePhone.Length != 10)
+                    {
+                        return sourcePhone;
+                    }
+                    sourcePhone = "(" + sourcePhone;
+                    sourcePhone = sourcePhone.Insert(4, ")");
+                    sourcePhone = sourcePhone.Insert(5, " ");
+                    sourcePhone = sourcePhone.Insert(9, "-");
+                    return sourcePhone;
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Common Helper -> FormatPhoneNumber FAILED - Exception: [" + ex.Message + "]");
+                }
             }
-            sourcePhone = "(" + sourcePhone;
-            sourcePhone = sourcePhone.Insert(4, ")");
-            sourcePhone = sourcePhone.Insert(5, " ");
-            sourcePhone = sourcePhone.Insert(9, "-");
-            return sourcePhone;
+
+            return null;
         }
 
         public static string RemovePhoneNumberFormatting(string sourceNum)
@@ -621,9 +633,10 @@ namespace Nooch.Common
             if (bankDetailsFromDB != null)
             {
                 _dbContext.Entry(bankDetailsFromDB).Reload();
+                return bankDetailsFromDB;
             }
 
-            return bankDetailsFromDB;
+            return null;
         }
 
         /// <summary>

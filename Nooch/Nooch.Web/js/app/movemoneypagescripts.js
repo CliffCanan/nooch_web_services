@@ -397,7 +397,7 @@ function runIdWizard() {
             }
 
 			// IF going to Step 4
-			if (newIdex = 3)
+			if (newIndex = 3)
 			{
                 // Check Address field
 				$('#idVer-email').val($('#idVer-email').val().trim());
@@ -994,7 +994,7 @@ function showErrorAlert(errorNum) {
 	    html: true
 	}, function (isConfirm) {
 	    if (!isConfirm) {
-	        window.open("mailto:support@nooch.com");
+	        window.open("mailto:" + supportEmail);
 	    }
 	    else if (shouldFocusOnEmail) {
 	        updateValidationUi("email", false);

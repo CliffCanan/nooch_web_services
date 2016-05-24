@@ -2275,12 +2275,10 @@ namespace Nooch.API.Controllers
         [ActionName("GetMemberDetailsForLandingPage")]
         public MemberDto GetMemberDetailsForLandingPage(string memberId)
         {
-            Logger.Info("Service Controller -> GetMemberDetailsForLandingPage - [MemberId: " + memberId + "]");
+            Logger.Info("Service Controller -> GetMemberDetailsForLandingPage Initiated - [MemberId: " + memberId + "]");
 
             try
             {
-                // Get the Member's Account Info
-
                 var memberEntity = CommonHelper.GetMemberDetails(memberId);
 
                 // Get Synapse Bank Account Info
@@ -2302,8 +2300,6 @@ namespace Nooch.API.Controllers
                     }
                 }
 
-                bool b = (synapseBank != null);
-
                 // Create MemberDTO Object to return to the app
                 var member = new MemberDto
                 {
@@ -2316,28 +2312,30 @@ namespace Nooch.API.Controllers
                     LastName = !String.IsNullOrEmpty(memberEntity.LastName) ?
                                CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberEntity.LastName)) :
                                "",
-                    DateOfBirth = (memberEntity.DateOfBirth == null) ? "" : Convert.ToDateTime(memberEntity.DateOfBirth).ToString("MM/dd/yyyy"),
+                    DateOfBirth = memberEntity.DateOfBirth == null ? "" : Convert.ToDateTime(memberEntity.DateOfBirth).ToString("MM/dd/yyyy"),
                     Address = !String.IsNullOrEmpty(memberEntity.Address) ?
                               CommonHelper.GetDecryptedData(memberEntity.Address) :
                               null,
                     City = !String.IsNullOrEmpty(memberEntity.City) ?
-                           CommonHelper.GetDecryptedData(memberEntity.City) :
+                           CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberEntity.City)) :
                            null,
                     Zip = !String.IsNullOrEmpty(memberEntity.Zipcode) ?
                           CommonHelper.GetDecryptedData(memberEntity.Zipcode) :
                           null,
-                    ContactNumber = memberEntity.ContactNumber,
+                    ContactNumber = CommonHelper.FormatPhoneNumber(memberEntity.ContactNumber),
                     IsVerifiedPhone = memberEntity.IsVerifiedPhone != null && Convert.ToBoolean(memberEntity.IsVerifiedPhone),
                     IsSSNAdded = memberEntity.SSN != null,
+                    ssnLast4 = !String.IsNullOrEmpty(memberEntity.SSN) ? CommonHelper.GetDecryptedData(memberEntity.SSN) : "",
                     PhotoUrl = memberEntity.Photo ?? Path.GetFileName("gv_no_photo.jpg"),
                     FacebookAccountLogin = memberEntity.FacebookAccountLogin != null ?
                                            CommonHelper.GetDecryptedData(memberEntity.FacebookAccountLogin) :
                                            "",
-                    IsSynapseBankAdded = b,
+                    IsSynapseBankAdded = synapseBank != null,
                     SynapseBankStatus = accountstatus,
                     IsVerifiedWithSynapse = memberEntity.IsVerifiedWithSynapse,
                     DateCreatedString = memberEntity.DateCreated == null ? "" : Convert.ToDateTime(memberEntity.DateCreated).ToString("MM/dd/yyyy"),
                     DeviceToken = memberEntity.DeviceToken,
+                    fngrprnt = !String.IsNullOrEmpty(memberEntity.UDID1) ? memberEntity.UDID1 : null
                 };
 
                 if (memberEntity.Type == "Landlord")
@@ -2360,7 +2358,7 @@ namespace Nooch.API.Controllers
                 Logger.Error("Service Controller -> GetMemberDetailsForLandingPage FAILED - [MemberId: " + memberId + "], [Exception: " + ex + "]");
             }
 
-            return new MemberDto();
+            return null;
         }
 
 

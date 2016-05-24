@@ -1776,17 +1776,18 @@ namespace Nooch.Web.Controllers
 
             try
             {
-                Logger.Info("createAccount Code Behind -> GetMemberDetails Initiated - MemberID: [" + memberId + "]");
+                Logger.Info("createAccount Code Behind -> GetMemberDetailsForCreateAccount Initiated - MemberID: [" + memberId + "]");
 
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
                 string serviceMethod = "/GetMemberDetailsForLandingPage?memberId=" + memberId;
 
-                Logger.Info("createAccount Code Behind -> GetMemberDetails - URL to Query: [" + String.Concat(serviceUrl, serviceMethod) + "]");
+                Logger.Info("createAccount Code Behind -> GetMemberDetailsForCreateAccount - URL to Query: [" + String.Concat(serviceUrl, serviceMethod) + "]");
 
                 MemberDto member = ResponseConverter<MemberDto>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
 
                 if (member == null)
                 {
+                    Logger.Error("createAccount Code Behind -> GetMemberDetailsForCreateAccount FAILED - Server did not find a user with the MemberID: [" + memberId + "]"); 
                     rca.errorId = "4";
                 }
                 else
@@ -1799,6 +1800,8 @@ namespace Nooch.Web.Controllers
                     rca.dob = member.DateOfBirth;
                     rca.email = member.UserName;
                     rca.phone = member.ContactNumber;
+                    rca.ssn = member.ssnLast4;
+                    rca.fngprnt = member.fngrprnt;
 
                     if (member.companyName != null && member.companyName.Length > 3)
                     {

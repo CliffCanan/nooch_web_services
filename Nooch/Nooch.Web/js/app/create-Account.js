@@ -9,11 +9,24 @@ var COMPANY = "Nooch";
 var memIdGen = "";
 var memid = $('#memId').val();
 
+var isUpgradeToV3 = 'false';
+
 $(document).ready(function () {
     var isSmScrn = false;
     if ($(window).width() < 768) {
         isSmScrn = true;
     }
+
+    function getParameterByName(name) {
+        name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+        var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+            results = regex.exec(location.search);
+        return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+    }
+
+    isUpgradeToV3 = getParameterByName('update');
+
+    console.log("isUpgradeToV3 is: [" + isUpgradeToV3 + "]");
 
     if (RENTSCENE == "yes") {
         COMPANY = "Rent Scene";
@@ -37,7 +50,6 @@ $(document).ready(function () {
             'font-weight': '600',
             'margin-top': '25px'
         })
-
         $('#nameInNav').hide();
     }
 
@@ -51,43 +63,84 @@ $(document).ready(function () {
             usrPhn = "";
         }
 
-        var confirmBtnTxt = isSmScrn ? "Let's Go!": "Great, Let's Go!";
+        if (isUpgradeToV3 == 'true') {
+            swal({
+                title: "Security Upgrade Notice",
+                text: "<p>" + COMPANY + " offers a quick, secure way to pay anyone without giving them your sensitive bank or credit card information. &nbsp;Just select your bank and login to your online banking<span class='desk-only'> as you normally do</span>.</p>" +
+                      "<h4><strong>Benefits</strong></h4>" +
+                      "<ul class='fa-ul'><li><i class='fa-li fa fa-check'></i><strong>Faster Payments.</strong>&nbsp; Funds available by the 2nd day.</li>" +
+                      "<li><i class='fa-li fa fa-check'></i><strong>More Secure.</strong>&nbsp; This upgrade includes major under-the-hood updates to keep your money safe.</li>" +
+                      "<li><i class='fa-li fa fa-check'></i><strong>Clearer Statements.</strong>&nbsp; Now the memo on your bank statement will include transaction info.</li></ul>",
+                imageUrl: "../Assets/Images/secure.svg",
+                imageSize: "194x80",
+                showCancelButton: true,
+                cancelButtonText: "Learn More",
+                closeOnCancel: false,
+                confirmButtonColor: "#3fabe1",
+                confirmButtonText: "Let's Go!",
+                customClass: "securityAlert",
+                allowEscapeKey: false,
+                html: true
+            }, function (isConfirm)
+            {
+                if (isConfirm) {
+                    //Get Fingerprint
+                    new Fingerprint2().get(function (result)
+                    {
+                        fingprint = result;
+                        console.log(fingprint);
+                    });
 
-        swal({
-            title: "Secure, Private, & Direct Payments",
-            text: "<p>Send money without having to leave your seat! &nbsp;Secure, direct, and traceable payments when you want them. &nbsp;Please verify your identity as an authorized user of your company's account.</p>" +
-                  "<ul class='fa-ul'>" +
-                  "<li><i class='fa-li fa fa-check'></i>We don't see or store your bank credentials</li>" +
-                  "<li><i class='fa-li fa fa-check'></i>We use <strong>bank-grade encryption</strong> to secure all data</li>" +
-                  "<li><i class='fa-li fa fa-check'></i>The recipient will never see your bank credentials</li></ul>",
-            imageUrl: "../Assets/Images/secure.svg",
-            imageSize: "194x80",
-            showCancelButton: false,
-            cancelButtonText: "Learn More",
-            confirmButtonColor: "#3fabe1",
-            confirmButtonText: confirmBtnTxt,
-            closeOnCancel: false,
-            customClass: "securityAlert",
-            allowEscapeKey: false,
-            html: true
-        }, function (isConfirm) {
-            if (isConfirm) {
-                //Get Fingerprint
-                new Fingerprint2().get(function (result) {
-                    fingprint = result;
-                    //console.log(fingprint);
-                });
+                    setTimeout(function ()
+                    {
+                        $('input#idVer-name').focus();
+                    }, 800)
+                }
+                else {
+                    window.open("https://www.nooch.com/safe");
+                }
+                console.log(ipusr);
+            });
+        }
+        else {
+            swal({
+                title: "Secure, Private, & Direct Payments",
+                text: "<p>Send money without having to leave your seat! &nbsp;Secure, direct, and traceable payments when you want them. &nbsp;Please verify your identity as an authorized user of your company's account.</p>" +
+                      "<ul class='fa-ul'>" +
+                      "<li><i class='fa-li fa fa-check'></i>We don't see or store your bank credentials</li>" +
+                      "<li><i class='fa-li fa fa-check'></i>We use <strong>bank-grade encryption</strong> to secure all data</li>" +
+                      "<li><i class='fa-li fa fa-check'></i>The recipient will never see your bank credentials</li></ul>",
+                imageUrl: "../Assets/Images/secure.svg",
+                imageSize: "194x80",
+                showCancelButton: false,
+                cancelButtonText: "Learn More",
+                confirmButtonColor: "#3fabe1",
+                confirmButtonText: "Let's Go!",
+                closeOnCancel: false,
+                customClass: "securityAlert",
+                allowEscapeKey: false,
+                html: true
+            }, function (isConfirm)
+            {
+                if (isConfirm) {
+                    //Get Fingerprint
+                    new Fingerprint2().get(function (result)
+                    {
+                        fingprint = result;
+                        //console.log(fingprint);
+                    });
 
-                setTimeout(function () {
-                    $('input#idVer-name').focus();
-                }, 800)
-            }
-            else {
-                window.open("https://www.nooch.com/safe");
-            }
-            //console.log(ipusr);
-        });
-
+                    setTimeout(function ()
+                    {
+                        $('input#idVer-name').focus();
+                    }, 800)
+                }
+                else {
+                    window.open("https://www.nooch.com/safe");
+                }
+                //console.log(ipusr);
+            });
+        }
         // Now show the wizard since there are no errors (hidden on initial page load because it takes
         // a split second to format the Steps plugin, so it was visible as un-formatted code briefly.
         $('#idWizContainer').removeClass('hidden');
@@ -118,8 +171,9 @@ function runIdWizard() {
         headerTag: "h3",
         bodyTag: "section",
         stepsOrientation: "horizontal",
-        transitionEffect: 'slideLeft',
+        transitionEffect: "slideLeft",
         transitionEffectSpeed: 400,
+        titleTemplate: "#title#",
 
         /* Labels */
         labels: {
@@ -131,7 +185,7 @@ function runIdWizard() {
             $('#idVerWiz > .content').animate({ height: "27em" }, 300)
 
             var DOB = $('#dob').val() ? $('#dob').val() : "1980 01 01";
-            console.log(DOB);
+
             //console.log(moment(DOB, "YYYY MM DD"));
             $('#idVer-dob').datetimepicker({
                 format: 'MM/DD/YYYY',
@@ -142,19 +196,16 @@ function runIdWizard() {
                     next: 'fa fa-fw fa-chevron-circle-right',
                     clear: 'fa fa-fw fa-trash-o'
                 },
-                maxDate: "1996-12-31",
+                maxDate: "1998-06-01",
                 viewMode: 'years',
                 //debug: true
             });
 
             $('#idVer-ssn').mask("0000");
             $('#idVer-zip').mask("00000");
-            $('#idVer-phone').val(usrPhn);
-            $('#idVer-email').val(usrEm);
             $('#idVer-phone').mask('(000) 000-0000');
 
             $('[data-toggle="popover"]').popover();
-
 
             var calendarIcon = $('#idVerForm1 .datePickerGrp i');
 
@@ -165,24 +216,6 @@ function runIdWizard() {
                     $('#idVer-dob').data("DateTimePicker").show();
                 }, 150);
             });
-
-
-            if (TYPE == "1") // For existing users
-            {
-                console.log("Existing user!");
-
-                var NAME = $('#name').val();
-                var ADDRESS = $('#address').val();
-                var ZIP = $('#zip').val();
-                var EMAIL = $('#email').val();
-                var PHONE = $('#phone').val();
-
-                $('#idVer-name').val(NAME);
-                $('#idVer-address').val(ADDRESS);
-                $('#idVer-zip').val(ZIP);
-                $('#idVer-email').val(EMAIL);
-                $('#idVer-phone').val(PHONE).mask('(000) 000-0000');
-            }
         },
         onStepChanging: function (event, currentIndex, newIndex) {
 
@@ -263,33 +296,6 @@ function runIdWizard() {
 
                         // Great, go to the next step of the wizard :-]
 
-                        // FILE INPUT DOCUMENTATION: http://plugins.krajee.com/file-input#options
-                        /*$("#IdWizPic_FileInput").fileinput({
-                            allowedFileTypes: ['image'],
-                            initialPreview: [
-                                "<img src='' class='file-preview-image' alt='Profile Picture' id='IdWizUserPicPreview'>"
-                            ],
-                            initialPreviewShowDelete: false,
-                            layoutTemplates: {
-                                icon: '<span class="md md-panorama m-r-10 kv-caption-icon"></span>',
-                            },
-                            maxFileCount: 1,
-                            maxFileSize: 250,
-                            msgSizeTooLarge: "File '{name}' ({size} KB) exceeds the maximum allowed file size of {maxSize} KB. Please try a slightly smaller picture!",
-                            showCaption: false,
-                            showUpload: false,
-                            //uploadUrl: URLs.UploadLandlordProfileImage,  // NEED TO ADD URL TO SERVICE FOR SAVING PROFILE PIC (SEPARATELY FROM SAVING THE REST OF THE PROFILE INFO)
-                            //uploadExtraData: {
-                                //LandlorId: $scope.userInfoInSession.memberId,
-                                //AccessToken: $scope.userInfoInSession.accessToken
-                            //},
-                            showPreview: true,
-                            resizeImage: true,
-                            maxImageWidth: 400,
-                            maxImageHeight: 400,
-                            resizePreference: 'width'
-                        });*/
-
                         $('#idVerWiz > .content').animate({ height: "20em" }, 500)
                         return true;
                     }
@@ -299,6 +305,59 @@ function runIdWizard() {
                 }
                 else {
                     updateValidationUi("address", false);
+                }
+            }
+
+            // IF going to Step 4
+            if (newIndex = 3)
+            {
+                // Check Address field
+                $('#idVer-email').val($('#idVer-email').val().trim());
+
+                if (ValidateEmail($('#idVer-email').val()) == true) {
+                    updateValidationUi("email", true);
+
+                    // Finally, check the phone number's length
+                    console.log($('#idVer-phone').cleanVal());
+
+                    if ($('#idVer-phone').cleanVal().length == 10) {
+                        updateValidationUi("phone", true);
+
+                        // Great, go to the next step of the wizard :-]
+                        // FILE INPUT DOCUMENTATION: http://plugins.krajee.com/file-input#options
+                        $("#idVer_idDoc").fileinput({
+                            allowedFileTypes: ['image'],
+                            initialPreview: [
+                                "<img src='' class='file-preview-image' alt='Profile Picture' id='IdWizUserPicPreview'>"
+                            ],
+                            initialPreviewShowDelete: false,
+                            layoutTemplates: {
+                                icon: '<span class="fa fa-photo m-r-10 kv-caption-icon"></span>',
+                            },
+                            maxFileCount: 1,
+                            maxFileSize: 500,
+                            msgSizeTooLarge: "File '{name}' ({size} KB) exceeds the maximum allowed file size of {maxSize} KB. Please try a slightly smaller picture!",
+                            showCaption: false,
+                            showUpload: false,
+                            //uploadUrl: URLs.UploadLandlordProfileImage,
+                            //  uploadExtraData: {
+                            //},
+                            showPreview: true,
+                            resizeImage: true,
+                            maxImageWidth: 500,
+                            maxImageHeight: 500,
+                            resizePreference: 'width'
+                        });
+
+                        $('#idVerWiz > .content').animate({ height: "21em" }, 500)
+                        return true;
+                    }
+                    else {
+                        updateValidationUi("phone", false);
+                    }
+                }
+                else {
+                    updateValidationUi("email", false);
                 }
             }
 
@@ -351,20 +410,20 @@ function runIdWizard() {
                 message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Validating Your Info...</span>',
                 css: {
                     border: 'none',
-                    padding: '20px 8px 14px',
+                    padding: '26px 8px 20px',
                     backgroundColor: '#000',
-                    '-webkit-border-radius': '12px',
-                    '-moz-border-radius': '12px',
-                    'border-radius': '12px',
+                    '-webkit-border-radius': '15px',
+                    '-moz-border-radius': '15px',
+                    'border-radius': '15px',
                     opacity: '.75',
-                    width: '260px',
+                    width: '270px',
                     margin: '0 auto',
                     color: '#fff'
                 }
             });
 
             // SUBMIT DATA TO NOOCH SERVER
-            if (TYPE == "1") // For existing users
+            if (TYPE == "1" || TYPE == "personal") // For existing users
             {
                 console.log("Existing user, so calling saveMemberInfo()")
                 saveMemberInfo();
@@ -380,7 +439,7 @@ function runIdWizard() {
 
 
 function updateValidationUi(field, success) {
-    console.log("Field: " + field + "; success: " + success);
+    //console.log("Field: " + field + "; success: " + success);
 
     if (success == true) {
         $('#' + field + 'Grp .form-group').removeClass('has-error').addClass('has-success');
@@ -755,11 +814,11 @@ $('body').bind('addBankComplete', function ()
             message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Validating Your Info...</span>',
             css: {
                 border: 'none',
-                padding: '20px 8px 14px',
+                padding: '26px 8px 20px',
                 backgroundColor: '#000',
-                '-webkit-border-radius': '12px',
-                '-moz-border-radius': '12px',
-                'border-radius': '12px',
+                '-webkit-border-radius': '15px',
+                '-moz-border-radius': '15px',
+                'border-radius': '15px',
                 opacity: '.75',
                 'z-index': '99999',
                 margin: '0 auto',
@@ -821,7 +880,6 @@ $('body').bind('addBankComplete', function ()
 
                 showErrorAlert('2');
             }
-
         });
     });
 });
@@ -831,7 +889,6 @@ function areThereErrors() {
 
     if (errorId != "0")
     {
-     
         console.log('areThereErrors -> errorId is: [' + errorId + "]");
 
         // Position the footer absolutely so it's at the bottom of the screen (it's normally pushed down by the body content)
@@ -857,42 +914,52 @@ function showErrorAlert(errorNum) {
     var shouldFocusOnPhone = false;
     var shouldShowErrorDiv = true;
 
+    var companyName = "Nooch";
+    var supportEmail = "support@nooch.com";
+    if (COMPANY == "Rent Scene") {
+        supportEmail = "payments@rentscene.com"
+    }
+
     console.log("ShowError -> errorNum is: [" + errorNum + "], resultReason is: [" + resultReason + "]");
 
     if (errorNum == '1') // Codebehind errors
     {
         alertTitle = "Errors Are The Worst!";
         alertBodyText = "We had trouble finding that transaction.  Please try again and if you continue to see this message, contact <span style='font-weight:600;'>Nooch Support</span>:" +
-                        "<br/><a href='mailto:support@nooch.com' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>support@nooch.com</a>";
+                        "<br/><a href='mailto:" + supportEmail + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + supportEmail + "</a>";
     }
-    else if (errorNum == '2' || errorNum == '3') // Errors after submitting ID verification AJAX
+    else if (errorNum == '2') // Errors after submitting ID verification AJAX
     {
         alertTitle = "Errors Are The Worst!";
-        alertBodyText = "Terrible sorry, but it looks like we had trouble processing your info.  Please refresh this page to try again and if you continue to see this message, contact <span style='font-weight:600;'>Nooch Support</span>:" +
-                        "<br/><a href='mailto:support@nooch.com' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>support@nooch.com</a>";
+        alertBodyText = "Terrible sorry, but it looks like we had trouble processing your info.  Please refresh this page to try again and if you continue to see this message, contact <span style='font-weight:600;'>" +
+                        companyName + " Support</span>:<br/><a href='mailto:" + supportEmail + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + supportEmail + "</a>";
+    }
+    else if (errorNum == '25') // Errors from the iFrame with the multiple choice verification questions
+    {
+        alertTitle = "Errors Are The Worst!";
+        alertBodyText = "Terrible sorry, but it looks like we had trouble processing your info.  Please refresh this page to try again and if you continue to see this message, contact <span style='font-weight:600;'>" +
+                        companyName + " Support</span>:<br/><a href='mailto:" + supportEmail + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + supportEmail + "</a>";
     }
     else if (errorNum == '20') // Submitted ID Verification info, but EMAIL came back as already registered with Nooch.
     {
         alertTitle = "Email Already Registered";
-        alertBodyText = "Looks like <strong>" + $('#idVer-email').val() + "</strong> is already registered to a Nooch account. &nbsp;Please try a different email address.";
+        alertBodyText = "Looks like <strong>" + $('#idVer-email').val() + "</strong> is already registered to a " + companyName + " account.  Please try a different email address.";
         shouldFocusOnEmail = true;
         shouldShowErrorDiv = false;
     }
     else if (errorNum == '30') // Submitted ID Verification info, but PHONE came back as already registered with Nooch.
     {
         alertTitle = "Phone Number Already Registered";
-        alertBodyText = "Looks like <strong>" + $('#idVer-phone').val() + "</strong> is already registered to a Nooch account. &nbsp;Please try a different number.";
+        alertBodyText = "Looks like <strong>" + $('#idVer-phone').val() + "</strong> is already registered to a " + companyName + " account.  Please try a different number.";
         shouldFocusOnPhone = true;
         shouldShowErrorDiv = false;
     }
     else // Generic Error
     {
         alertTitle = "Errors Are The Worst!";
-        alertBodyText = "Terrible sorry, but it looks like we had trouble processing your request. &nbsp;Please refresh this page to try again and if you continue to see this message, contact <span style='font-weight:600;'>Nooch Support</span>:" +
-                        "<br/><a href='mailto:support@nooch.com' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>support@nooch.com</a>";
+        alertBodyText = "Terrible sorry, but it looks like we had trouble processing your request.  Please refresh this page to try again and if you continue to see this message, contact <span style='font-weight:600;'>" +
+                        companyName + " Support</span>:<br/><a href='mailto:" + supportEmail + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + supportEmail + "</a>";
     }
-    console.log("Should Show Error Div is...");
-    console.log(shouldShowErrorDiv);
 
     if (shouldShowErrorDiv == true) {
         $(".errorMessage").removeClass('hidden');
@@ -909,7 +976,7 @@ function showErrorAlert(errorNum) {
         type: "error",
         showCancelButton: true,
         confirmButtonColor: "#3fabe1",
-        confirmButtonText: "Ok  :-(",
+        confirmButtonText: "Ok",
         cancelButtonText: "Contact Support",
         closeOnConfirm: true,
         closeOnCancel: false,
@@ -917,7 +984,7 @@ function showErrorAlert(errorNum) {
         html: true
     }, function (isConfirm) {
         if (!isConfirm) {
-            window.open("mailto:support@nooch.com");
+            window.open("mailto:" + supportEmail);
         }
         else if (shouldFocusOnEmail) {
             updateValidationUi("email", false);
