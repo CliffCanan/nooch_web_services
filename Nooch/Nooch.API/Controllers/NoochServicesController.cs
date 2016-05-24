@@ -2953,7 +2953,7 @@ namespace Nooch.API.Controllers
                     nc.refresh_token = res.oauth.refresh_token;
                     nc.success = res.success.ToString();
                     nc.user_id = res.user_id;
-                    nc.username = res.user.logins[0].email;
+                   // nc.username = res.user.logins[0].email;
                     nc.memberIdGenerated = res.memberIdGenerated;
                     nc.ssn_verify_status = res.ssn_verify_status;
                 }

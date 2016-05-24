@@ -1912,6 +1912,7 @@ namespace Nooch.DataAccess
                                 expires_in = synapseCreateUserObjIfExists.expires_in
                             };
 
+                            
                             res.user = new synapseV3Result_user()
                             {
                                 _id = new synapseV3Result_user_id() { id = synapseCreateUserObjIfExists.user_id },
@@ -1919,6 +1920,7 @@ namespace Nooch.DataAccess
                                 {
                                     is_business = synapseCreateUserObjIfExists.is_business != null && Convert.ToBoolean(synapseCreateUserObjIfExists.is_business)
                                 },
+                                 
                                 legal_names = new[] { synapseCreateUserObjIfExists.legal_name },
                                 phone_numbers = new[] { synapseCreateUserObjIfExists.Phone_number },
                                 photos = new[] { synapseCreateUserObjIfExists.photos },

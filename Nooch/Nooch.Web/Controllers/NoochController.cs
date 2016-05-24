@@ -1704,6 +1704,8 @@ namespace Nooch.Web.Controllers
                     Session["TransId"] = Request.QueryString["TransId"];
 
                     rca = GetTransDetailsForCreateAccount(Request.QueryString["TransId"].ToString(), rca);
+                   
+                    
                 }
                 else if (!String.IsNullOrEmpty(Request.QueryString["type"]))
                 {
@@ -1785,6 +1787,7 @@ namespace Nooch.Web.Controllers
 
                 MemberDto member = ResponseConverter<MemberDto>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
 
+                
                 if (member == null)
                 {
                     Logger.Error("createAccount Code Behind -> GetMemberDetailsForCreateAccount FAILED - Server did not find a user with the MemberID: [" + memberId + "]"); 
@@ -1858,13 +1861,28 @@ namespace Nooch.Web.Controllers
             try
             {
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-                string serviceMethod = "/UpdateMemberProfile?memId=" + rca.memId +
-                                       "&fname=" + rca.name + "&lname=" + rca.name +
-                                       "&email=" + rca.email + "&phone=" + rca.phone +
-                                       "&address=" + rca.address + "&zip=" + rca.zip +
-                                       "&dob=" + rca.dob + "&ssn=" + rca.ssn +
-                                       "&fngprnt=" + rca.fngprnt + "&ip=" + rca.ip +
-                                       "&pw=" + "";
+                //string serviceMethod = "/UpdateMemberProfile?memId=" + rca.memId +
+                //                       "&fname=" + rca.name + "&lname=" + rca.name +
+                //                       "&email=" + rca.email + "&phone=" + rca.phone +
+                //                       "&address=" + rca.address + "&zip=" + rca.zip +
+                //                       "&dob=" + rca.dob + "&ssn=" + rca.ssn +
+                //                       "&fngprnt=" + rca.fngprnt + "&ip=" + rca.ip +
+                //                       "&pw=" + "";
+
+
+                string serviceMethod = "/RegisterExistingUserWithSynapseV3?transId=" + null +
+                                    "&memberId=" + rca.memId +
+                                    "&email=" + rca.email +
+                                    "&phone=" + rca.phone +
+                                    "&fullname=" + rca.name  +
+                                    "&pw=" + "" +
+                                    "&ssn=" + rca.ssn +
+                                    "&dob=" + rca.dob +
+                                    "&address=" + rca.address +
+                                    "&zip=" + rca.zip +
+                                    "&fngprnt=" + rca.fngprnt + "&ip=" + rca.ip;
+
+
 
                 string urlToUse = String.Concat(serviceUrl, serviceMethod);
 
@@ -1890,30 +1908,51 @@ namespace Nooch.Web.Controllers
             return Json(res);
         }
 
+        
 
         [HttpPost]
         [ActionName("CreateAccountInDB")]
-        public ActionResult CreateAccountInDB(CreateAccountInDB createAccountInDB)
+       // public ActionResult CreateAccountInDB(CreateAccountInDB createAccountInDB)
+        public ActionResult CreateAccountInDB(ResultcreateAccount resultcreateAccount)
         {
-            CreateAccountInDB createAccount = createAccountInDB;
-
+            ResultcreateAccount rca = resultcreateAccount;
+            
             string serviceMethod = string.Empty;
             var scriptSerializer = new JavaScriptSerializer();
             string json;
 
-            createAccount.name = CommonHelper.GetEncryptedData(createAccount.name);
-            createAccount.email = CommonHelper.GetEncryptedData(createAccount.email);
-            createAccount.pw = CommonHelper.GetEncryptedData(createAccount.pw);
-            createAccount.TransId = Session["TransId"].ToString();
+            genericResponse res = new genericResponse();
+            res.success = false;
+            res.msg = "Initial - code behind";
+            //createAccount.name = CommonHelper.GetEncryptedData(createAccount.name);
+            //createAccount.email = CommonHelper.GetEncryptedData(createAccount.email);
+            //createAccount.pw = CommonHelper.GetEncryptedData(createAccount.pw);
+            //createAccount.TransId = Session["TransId"].ToString();
 
-            json = "{\"input\":" + scriptSerializer.Serialize(createAccount) + "}";
+            //json = "{\"input\":" + scriptSerializer.Serialize(createAccount) + "}";
             string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-            serviceMethod = "/CreateNonNoochUserAccountAfterRejectMoney?TransId=" + Session["TransId"].ToString() + "&password=" + createAccount.pw + "&EmailId=" + createAccount.email + "&UserName=" + createAccount.name;
-            var serviceResult = ResponseConverter<Nooch.Common.Entities.StringResult>.CallServicePostMethod(String.Concat(serviceUrl, serviceMethod), json);
+           // serviceMethod = "/CreateNonNoochUserAccountAfterRejectMoney?TransId=" + Session["TransId"].ToString() + "&password=" + createAccount.pw + "&EmailId=" + createAccount.email + "&UserName=" + createAccount.name;
 
-            createAccount.result = serviceResult.Result;
+            serviceMethod = "/RegisterNonNoochUserWithSynapse?transId=" + rca.transId +
+                                    "&memberId=" + rca.memId +
+                                    "&email=" + rca.email +
+                                    "&phone=" + rca.phone +
+                                    "&fullname=" + rca.name  +
+                                    "&pw=" + "" +
+                                    "&ssn=" + rca.ssn +
+                                    "&dob=" + rca.dob +
+                                    "&address=" + rca.address +
+                                    "&zip=" + rca.zip +
+                                    "&fngprnt=" + rca.fngprnt + "&ip=" + rca.ip;
+             genericResponse response = ResponseConverter<genericResponse>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
 
-            return Json(createAccount);
+             if (response.success == true)
+             {
+                 res.success = true;
+                 res.msg = "Successfully updated member record on server!";
+             }
+
+             return Json(res);
 
             //return serviceResult.Result;
             //if (serviceResult.Result == "Thanks for registering! Check your email to complete activation.")
