@@ -15,6 +15,10 @@ var sendToXtraVer = false;
 var isSmScrn = false;
 var isLrgScrn = false;
 
+// to be used with upload doc related stuff
+var isFileAdded = "0";
+var FileData = null;
+
 $(document).ready(function () {
     // For large scrns, animate payment info to left side to be visible under the ID Ver Modal
     if ($(window).width() < 768) {
@@ -439,6 +443,41 @@ function runIdWizard() {
 						    resizePreference: 'width'
 						});
 
+
+
+
+						$('#idVer_idDoc').on('fileloaded', function (event, file, previewId, index, reader) {
+						    console.log(" launched  ");
+						    isFileAdded = "1";
+						    var readerN = new FileReader();
+						    
+
+						    readerN.readAsDataURL(file);
+						    readerN.onload = function (e) {
+						        // browser completed reading file - display it
+
+						        var splittable = e.target.result.split(',');
+						        //var string1 = splittable[0];
+						        var string2 = splittable[1];
+						        //console.log(string2);
+						        FileData = string2;
+
+						       // console.log("image data is -> " + FileData);
+						    };
+						});
+
+						$('#idVer_idDoc').on('fileclear', function (event) {
+						    isFileAdded = "0";
+						    FileData = null;
+						    console.log("fileclear");
+						});
+
+						$('#idVer_idDoc').on('filecleared', function (event) {
+						    isFileAdded = "0";
+						    FileData = null;
+						    console.log("filecleared");
+						});
+
                         $('#idVerWiz > .content').animate({ height: "21em" }, 500)
                         return true;
 					}
@@ -658,9 +697,11 @@ function createRecord() {
     var zipVal = $('#idVer-zip').val().trim();
     var fngprntVal = fingprint;
     var ipVal = ipusr;
+    var isImageAdded = isFileAdded;
+    var imageData = FileData;
 
     console.log("{transId: " + TRANSID + ", userEm: " + userEmVal + ", userPh: " + userPhVal + ", userName: " + userNameVal +
-                ", userPw: " + userPwVal + ", ssn: " + ssnVal + ", dob: " + dobVal + ", fngprnt: " + fngprntVal + ", ip: " + ipVal + "}");
+                ", userPw: " + userPwVal + ", ssn: " + ssnVal + ", dob: " + dobVal + ", fngprnt: " + fngprntVal + ", ip: " + ipVal + ", isIdImage: " + isImageAdded + ", idImagedata: " + imageData + "}");
 
     var urlToUse = "";
     if (transType == "send")
@@ -676,17 +717,17 @@ function createRecord() {
     var dataToSend = "";
 
     dataToSend = "{'transId':'" + TRANSID +
-                 "', 'memberId':'" + MemID_EXISTING +
-                 "', 'userEm':'" + userEmVal +
-                 "', 'userPh':'" + userPhVal +
-                 "', 'userName':'" + userNameVal +
-                 "', 'userPw':'" + userPwVal +
-                 "', 'ssn':'" + ssnVal +
-                 "', 'dob':'" + dobVal +
-                 "', 'address':'" + addressVal +
-                 "', 'zip':'" + zipVal +
-                 "', 'fngprnt':'" + fngprntVal +
-                 "', 'ip':'" + ipVal + "'}"
+        "', 'memberId':'" + MemID_EXISTING +
+        "', 'userEm':'" + userEmVal +
+        "', 'userPh':'" + userPhVal +
+        "', 'userName':'" + userNameVal +
+        "', 'userPw':'" + userPwVal +
+        "', 'ssn':'" + ssnVal +
+        "', 'dob':'" + dobVal +
+        "', 'address':'" + addressVal +
+        "', 'zip':'" + zipVal +
+        "', 'fngprnt':'" + fngprntVal +
+        "', 'ip':'" + ipVal + "'}";
     
     console.log(dataToSend);
     
@@ -1334,3 +1375,4 @@ function checkPwForm() {
     }
 }
 }*/
+

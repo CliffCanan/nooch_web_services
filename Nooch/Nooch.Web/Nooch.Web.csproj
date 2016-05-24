@@ -349,6 +349,7 @@
     <Folder Include="App_Data\" />
     <Folder Include="Logs\" />
     <Folder Include="Models\" />
+    <Folder Include="UploadedPhotos\SynapdeIdDocs\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="fonts\glyphicons-halflings-regular.woff" />

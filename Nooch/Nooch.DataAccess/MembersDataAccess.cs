@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Mail;
+using System.Net.Mime;
 using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
@@ -17,6 +18,9 @@ using Nooch.Common.Resources;
 using Nooch.Common.Rules;
 using Nooch.Data;
 using System.Web;
+using System.Web.Hosting;
+
+using System.Drawing;
 
 namespace Nooch.DataAccess
 {
@@ -2448,7 +2452,7 @@ namespace Nooch.DataAccess
         }
 
 
-        public synapseCreateUserV3Result_int RegisterExistingUserWithSynapseV3(string transId, string memberId, string userEmail, string userPhone, string userName, string pw, string ssn, string dob, string address, string zip, string fngprnt, string ip)
+        public synapseCreateUserV3Result_int RegisterExistingUserWithSynapseV3(string transId, string memberId, string userEmail, string userPhone, string userName, string pw, string ssn, string dob, string address, string zip, string fngprnt, string ip,  string isIdImageAdded = "0", string idImageData = "")
         {
             Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 Initiated. [Name: " + userName +
                         "], Email: [" + userEmail +
@@ -2846,6 +2850,29 @@ namespace Nooch.DataAccess
                             //  if (addRecordToSynapseCreateUserTable > 0)                                
                             if (createSynapseUserResult.success == true)                                // asuming createSynapseUserResult.success to be equals addRecordToSynapseCreateUserTable > 0
                             {
+
+                                // checking ig image is attached 
+                                if (isIdImageAdded == "1" && !String.IsNullOrEmpty(idImageData))
+                                {
+                                    // we have image for id verification... calling subid v3 method
+                                    try
+                                    {
+                                        Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 -> Going in to submit id doc to synapse ->  [Email: " + userEmail + "], [Member_Id: " + res.memberIdGenerated + "]");
+
+                                        string filepathmade = SaveBase64AsImage (res.memberIdGenerated,idImageData);
+                                        submitDocumentToSynapseV3(res.memberIdGenerated, filepathmade);
+
+
+
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Logger.Error("MDA -> RegisterExistingUserWithSynapseV3 -> submit id doc to synapse failed-> [Reason: " + ex+ "], [Email: " + userEmail + "], [Member_Id: " + res.memberIdGenerated + "]");    
+                                        
+                                    }
+                                }
+
+
                                 if (!String.IsNullOrEmpty(res.reason) &&
                                     res.reason.IndexOf("Email already registered") > -1)
                                 {
@@ -2957,7 +2984,7 @@ namespace Nooch.DataAccess
         }
 
 
-        public synapseCreateUserV3Result_int RegisterNonNoochUserWithSynapseV3(string transId, string userEmail, string userPhone, string userName, string pw, string ssn, string dob, string address, string zip, string fngprnt, string ip)
+        public synapseCreateUserV3Result_int RegisterNonNoochUserWithSynapseV3(string transId, string userEmail, string userPhone, string userName, string pw, string ssn, string dob, string address, string zip, string fngprnt, string ip,string isIdImageAdded, string idImageData)
         {
             // What's the plan? -- Store new Nooch member, then create Synpase user, then check if user supplied a (is password.Length > 0)
             // then store data in new added field in SynapseCreateUserResults table for later use
@@ -3429,6 +3456,28 @@ namespace Nooch.DataAccess
 
                             if (createSynapseUserResult.success == true)
                             {
+
+                                if (isIdImageAdded == "1" && !String.IsNullOrEmpty(idImageData))
+                                {
+                                    // we have image for id verification... calling subid v3 method
+                                    try
+                                    {
+                                        Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 -> Going in to submit id doc to synapse ->  [Email: " + userEmail + "], [Member_Id: " + res.memberIdGenerated + "]");
+
+                                        string filepathmade = SaveBase64AsImage(res.memberIdGenerated, idImageData);
+                                        submitDocumentToSynapseV3(res.memberIdGenerated, filepathmade);
+
+
+
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 -> submit id doc to synapse failed-> [Reason: " + ex + "], [Email: " + userEmail + "], [Member_Id: " + res.memberIdGenerated + "]");
+
+                                    }
+                                }
+
+
                                 if (!String.IsNullOrEmpty(res.reason) &&
                                     res.reason.IndexOf("Email already registered") > -1)
                                 {
@@ -3682,6 +3731,45 @@ namespace Nooch.DataAccess
             return nonNoochUserId;
         }
 
+
+        public string SaveBase64AsImage(string fileNametobeused, string base64String)
+        {
+            string filnameMade = "";
+            byte[] bytes = Convert.FromBase64String(base64String);
+            string folderPath = Utility.GetValueFromConfig("SynapsePhotoPath");
+
+            string PhotoUrl = Utility.GetValueFromConfig("SynapseIdPhotoUrl");
+
+            Image image = byteArrayToImage(bytes);
+            string fullpathtoSaveimage = "";
+            using (MemoryStream ms = new MemoryStream(bytes))
+            {
+                image = Image.FromStream(ms);
+                Bitmap bm = new Bitmap(image);
+                fullpathtoSaveimage = Path.Combine(folderPath, fileNametobeused);
+                fullpathtoSaveimage = HostingEnvironment.MapPath(fullpathtoSaveimage);
+                filnameMade = fileNametobeused;
+
+                // checking if file with same name already exists
+                while (File.Exists(Path.Combine(folderPath, fileNametobeused)))
+                {
+                    filnameMade = fileNametobeused + "1";
+                    fullpathtoSaveimage = Path.Combine(folderPath, filnameMade);
+                    fullpathtoSaveimage = HostingEnvironment.MapPath(fullpathtoSaveimage);
+                }
+
+                bm.Save(fullpathtoSaveimage, System.Drawing.Imaging.ImageFormat.Png);
+            }
+
+            fullpathtoSaveimage = PhotoUrl + filnameMade;
+            return fullpathtoSaveimage;
+        }
+        public Image byteArrayToImage(byte[] byteArrayIn)
+        {
+            MemoryStream ms = new MemoryStream(byteArrayIn);
+            Image returnImage = Image.FromStream(ms);
+            return returnImage;
+        }
 
         public GenericInternalResponseForSynapseMethods submitDocumentToSynapseV3(string MemberId, string ImageUrl)
         {
