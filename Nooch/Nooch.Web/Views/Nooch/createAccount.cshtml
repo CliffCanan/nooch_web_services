@@ -23,9 +23,9 @@
     <link rel="stylesheet" href="@Url.Content("~/Assets/Css/bootstrap-datetimepicker.min.css")" />
     <link rel="stylesheet" href="@Url.Content("~/Assets/Css/jquery.steps.css")" />
 
-    <link rel="stylesheet" href="@Url.Content("~/Assets/Css/tweaks.css")"/>
+    <link rel="stylesheet" href="@Url.Content("~/Assets/Css/tweaks.css")" />
     <link rel="stylesheet" href="@Url.Content("~/Assets/Css/fileinput.min.css")" />
-    
+
     <link rel="icon" href="../Assets/favicon.ico" />
 </head>
 
@@ -72,7 +72,7 @@
     </div>
 
     <div class="resultDiv col-md-6 col-md-offset-3 col-lg-4 col-lg-offset-4 hidden">
-        <i class="mdi mdi-account-check"></i>
+        <i class="fa fa-check"></i>
         <h2>Thanks, You're All Set</h2>
         <p>Thanks for submitting your ID information. &nbsp;That helps us keep Rent Scene safe for everyone. &nbsp;We only use this information to prevent ID fraud and never share it without your permission.</p>
     </div>
@@ -141,14 +141,14 @@
                         <div class="well wellsm">
                             <div class="f-15">
                                 Please enter your <span class="f-700">current personal</span> street address and ZIP code.
-                                <i class="mdi mdi-information-outline c-gray f-15 m-l-5" data-trigger="click" data-toggle="popover" data-placement="left" data-content="Please enter the following information about YOU, the person creating this account." data-original-title="Contact Info"></i>
+                                <i class="fa fa-fw fa-question-circle-o help-icon" data-trigger="click" data-toggle="popover" data-placement="left" data-content="Please enter the following information about YOU, the person creating this account." data-original-title="Contact Info"></i>
                             </div>
                         </div>
 
                         <dl class="dl-horizontal" id="addressGrp">
                             <dt class="p-t-10 withIcon">
                                 Street Address<br />
-                                <i class="mdi mdi-information-outline help-icon f-15 m-l-5 pull-right" data-trigger="hover" data-toggle="popover" data-placement="auto" data-content="Proving you know your personal address and zip code helps verify your identity."></i>
+                                <i class="fa fa-fw fa-question-circle-o help-icon" data-trigger="hover" data-toggle="popover" data-placement="auto" data-content="Proving you know your personal address and zip code helps verify your identity."></i>
                             </dt>
                             <dd>
                                 <div class="form-group">
@@ -193,7 +193,7 @@
                         <dl class="dl-horizontal" id="phoneGrp">
                             <dt class="p-t-10 withIcon">
                                 Phone Number<br />
-                                <i class="mdi mdi-information-outline help-icon f-15 m-l-5 pull-right" data-trigger="hover" data-toggle="popover" data-placement="auto" data-content="Protect your account the most by entering a cell phone number. We'll send an SMS to verify that you own the number."></i>
+                                <i class="fa fa-fw fa-question-circle-o help-icon" data-trigger="hover" data-toggle="popover" data-placement="auto" data-content="Protect your account the most by entering a cell phone number. We'll send an SMS to verify that you own the number."></i>
                             </dt>
                             <dd>
                                 <div class="form-group">
@@ -209,13 +209,11 @@
                     <h3><i class="fa fa-fw fa-picture-o m-r-5"></i><br />ID Document</h3>
                     <section>
 
-                        <div class="well well-sm m-b-25">
+                        <div class="well well-sm m-b-15">
                             <div class="f-15">Please upload an image of any government-issued <strong>photo ID</strong>.</div>
-
                         </div>
 
                         <div id="idDocWrap">
-                            <label class="control-label">Select File</label>
                             <input id="idVer_idDoc" type="file" class="file">
                         </div>
 
@@ -247,39 +245,26 @@
         </div>
     </div>
 
-<script src="@Url.Content("//code.jquery.com/jquery-1.12.4.min.js")"></script>
-<script src="@Url.Content("//code.jquery.com/ui/1.11.4/jquery-ui.min.js")"></script>
+    <script src="@Url.Content("//code.jquery.com/jquery-1.12.4.min.js")"></script>
+    <script src="@Url.Content("//code.jquery.com/ui/1.11.4/jquery-ui.min.js")"></script>
     <script src="@Url.Content("https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js")"></script>
-
-
-<script src="@Url.Content("~/js/jasny-bootstrap.min.js")"></script>
-
-<script src="@Url.Content("~/js/jquery.blockUI.min.js")"></script>
-
+    <script src="@Url.Content("~/js/jasny-bootstrap.min.js")"></script>
+    <script src="@Url.Content("~/js/jquery.blockUI.min.js")"></script>
     <script src="@Url.Content("~/js/bootstrap-select.min.js")"></script>
-
-<script src="@Url.Content("~/js/chosen.jquery.min.js")"></script>
-
-
-<script src="@Url.Content("~/js/moment.min.js")"></script>
-<script src="@Url.Content("~/js/chosen.jquery.min.js")"></script>
-
-<script src="@Url.Content("~/js/bootstrap-datetimepicker.min.js")"></script>
-
-<script src="@Url.Content("~/js/jquery.steps.js")"></script>
+    <script src="@Url.Content("~/js/chosen.jquery.min.js")"></script>
+    <script src="@Url.Content("~/js/moment.min.js")"></script>
+    <script src="@Url.Content("~/js/chosen.jquery.min.js")"></script>
+    <script src="@Url.Content("~/js/bootstrap-datetimepicker.min.js")"></script>
+    <script src="@Url.Content("~/js/jquery.steps.js")"></script>
     <script src="@Url.Content("~/js/fingerprint2.min.js")"></script>
-
-
     <script src="@Url.Content("~/js/sweetalert.min.js")"></script>
-<script src="@Url.Content("~/js/app/create-Account.js")"></script>
-<script src="@Url.Content("~/js/input-mask.min.js")"></script>
-
-    <script src="@Url.Content("~/js/fileinput/fileinput.min.js")"></script>    
-
-<script type="text/javascript">
-    var ipusr;
-</script>
+    <script src="@Url.Content("~/js/app/create-Account.js")"></script>
+    <script src="@Url.Content("~/js/input-mask.min.js")"></script>
+    <script src="@Url.Content("~/js/fileinput/fileinput.min.js")"></script>
+    <script type="text/javascript">
+        var ipusr;
+    </script>
     <script src="@Url.Content("https://www.l2.io/ip.js?var=ipusr")"></script>
-    
+
 </body>
 </html>

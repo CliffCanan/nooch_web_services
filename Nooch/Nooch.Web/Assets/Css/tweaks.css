@@ -879,21 +879,7 @@ a { cursor: pointer; }
 }
 .nooch-bar { display: none; }
 
-@media only screen and (min-width: 481px) {
-  /*body:not(.no-border) {
-    -moz-border-bottom-colors: none;
-    -moz-border-left-colors: none;
-    -moz-border-right-colors: none;
-    -moz-border-top-colors: none;
-    border-color: -moz-use-text-color rgba(188, 190, 192, 0.5) rgba(188, 190, 192, 0.5);
-    border-image: none;
-    border-radius: 5px;
-    border-right: 2px solid rgba(188, 190, 192, 0.5);
-    border-style: none solid solid;
-    border-width: medium 2px 2px;
-    min-height: 430px;
-  }*/
-}
+
 #body-depositNew iframe#linkBank {
 /* -webkit-overflow-scrolling:touch !important;
     overflow:scroll !important; */
@@ -906,6 +892,9 @@ a { cursor: pointer; }
 }
 #body-depositNew {
     font-family: "Open Sans",Helvetica,"Roboto",Arial,sans-serif !important;
+    -webkit-animation: 20s linear 0s normal none infinite blink;
+    animation: 20s linear 0s normal none infinite blink;
+	padding-top: 60px;
 }
 #modal-addBankInstr .modal-dialog { margin-bottom: 60px; }
 #modal-addBankInstr .glyphicon { font-size: 100%; }
@@ -986,7 +975,6 @@ a { cursor: pointer; }
 
 #body-depositNew .navbar {
     margin-bottom: 0;
-    position: relative;
     -webkit-box-shadow: 0 2px 12px -3px rgba(64,65,66,.3);
     box-shadow: 0 2px 12px -3px rgba(64,65,66,.3);
 }
@@ -1173,10 +1161,7 @@ a { cursor: pointer; }
   text-shadow: none;
   font-size: 16px;
 }
-#body-depositNew {
-    -webkit-animation: 20s linear 0s normal none infinite blink;
-    animation: 20s linear 0s normal none infinite blink;
-}
+
 @-webkit-keyframes blink {
 	0% 	{ background:none repeat scroll 0 0 rgba(81,189,19,.8);}
 	20% 	{ background:none repeat scroll 0 0 rgba(0,163,27,.8); }
@@ -1380,7 +1365,13 @@ div#pwFormShell #depositCreateAccount,
 }
 .wizard > .content { overflow: visible; }
 #idVerWiz .content .body { text-align:center; }
-#idVerWiz > .steps > ul > li { width: 32%; }
+.wizard > .steps ul li a,
+.wizard > .steps ul li a:hover,
+.wizard > .steps ul li a:active {
+  text-align: center;
+  padding: 7px 5px 0;
+}
+.wizard > .steps a
 .wizard > .steps .current a,
 .wizard > .steps .current a:hover,
 .wizard > .steps .current a:active { background: #3fabe1; }
@@ -1388,12 +1379,11 @@ div#pwFormShell #depositCreateAccount,
     font-size: 15px;
     font-weight: 500;
 }
-.wizard .steps a i.mdi {
+.wizard .steps a i {
   font-size: 17px;
   position: relative;
-  top: 2px;
+  top: -2px;
 }
-.wizard .steps a i.mdi-account { font-size: 124%; }
 #idVerWiz  .form-group {
   margin-bottom: 10px;
   -webkit-transition: .25s all ease-in-out;
@@ -1426,6 +1416,13 @@ div#pwFormShell #depositCreateAccount,
   height: auto;
 }
 #idVerWiz .fileinput .fileinput-preview img { margin-top: -5px; }
+
+#idVerWiz .file-preview-frame {
+  float: none;
+  margin: 8px auto;
+}
+#idVerWiz .file-error-message { padding: 5px 6px; }
+#idVerWiz .file-actions { margin-top: 5px; }
 
 .has-success .form-control,
 .has-success .fg-line:after { border-color: #72bf44; }
@@ -1509,6 +1506,7 @@ div#pwFormShell #depositCreateAccount,
     overflow: visible;
 }
 .dl-horizontal .help-icon {
+    font-size: 14px;
     position: absolute;
     top: 32px;
     right: 0;
@@ -1757,12 +1755,12 @@ div#carousel ~ a:hover {
 .createAccountPg .securityAlert button:active { margin: 2px 0 -2px; }
 .idVerSuccessAlert button.confirm:after,
 .createAccountPg .securityAlert button.confirm:after {
-  content:"\f3f4";
-  font-family:'MaterialDesignIcons';
-  font-size: 20px;
-  margin-left: 6px;
+  content:"\f054";
+  font-family:'FontAwesome';
+  font-size: 14px;
+  margin-left: 10px;
   position: relative;
-  top: 1px;
+  top: -1px;
 }
 
 #body-depositNew iframe { height: 710px; }
@@ -2435,10 +2433,6 @@ form .table-header {
   font-size: 16.5px;
   letter-spacing: .25px;
 }
-.dl-horizontal .form-group.withIcon > i {
-  top: 8px;
-  font-size: 20px;
-}
 .dl-horizontal .form-group.withIcon .form-control {
   padding-left: 32px;
   letter-spacing: .5px;
@@ -2498,7 +2492,7 @@ form .table-header {
 
 #idVerWiz .content > section:nth-child(2):after {
   content: "* And comply with the USA Patriot Act. Imagine how bad we'd look if terrorists used us. So we take it pretty seriously.";
-  color: rgba(88,90,92,0.95);
+  color: rgb(88,90,92);
   display: block;
   position: absolute;
   bottom: -10px;
@@ -2588,7 +2582,10 @@ form .table-header {
   .securityAlert ul { font-size: 16px; line-height:1.4; }
   .sweet-alert ul > li { margin-top: .25em; }
 
+  #body-depositNew { padding-top: 80px; }
   #body-depositNew iframe { height: 760px; }
+
+  #idVer .modal-dialog { width: 640px; }
 }
 
 @media only screen and (min-width: 1000px) {

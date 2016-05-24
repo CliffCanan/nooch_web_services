@@ -343,14 +343,14 @@ function displayLoadingBox(text) {
         message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">' + text + '</span>',
         css: {
             border: 'none',
-            padding: '20px 8px 14px',
+            padding: '26px 8px 20px',
             backgroundColor: '#000',
-            '-webkit-border-radius': '12px',
-            '-moz-border-radius': '12px',
-            'border-radius': '12px',
-            opacity: '.7',
-            width: '80%',
-            left: '10%',
+            '-webkit-border-radius': '15px',
+            '-moz-border-radius': '15px',
+            'border-radius': '15px',
+            opacity: '.75',
+            width: '70%',
+            left: '15%',
             top: '25px',
             color: '#fff'
         }

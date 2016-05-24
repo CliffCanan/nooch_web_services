@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.6.0/css/font-awesome.min.css" />
 
-    
+
     <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,400italic,500,500italic,700,900" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.4/themes/cupertino/jquery-ui.css" />
     <link rel="stylesheet" href="@Url.Content("~/Assets/Css/sweetalert-override.min.css")" />
@@ -21,7 +21,7 @@
     <link rel="stylesheet" href="@Url.Content("~/Assets/Css/chosen.min.css")" />
     <link rel="stylesheet" href="@Url.Content("~/Assets/Css/bootstrap-datetimepicker.min.css")" />
     <link rel="stylesheet" href="@Url.Content("~/Assets/Css/jquery.steps.css")" />
-    <link rel="stylesheet" href="@Url.Content("~/Assets/Css/tweaks.css")"/>
+    <link rel="stylesheet" href="@Url.Content("~/Assets/Css/tweaks.css")" />
     <link rel="stylesheet" href="@Url.Content("~/Assets/Css/fileinput.min.css")" />
     <link rel="icon" href="@Url.Content("~/Assets/favicon.ico")" />
 </head>
@@ -101,19 +101,11 @@
 
         </div>
     }
+
     <div class="errorMessage hidden"></div>
 
-    <!-- CLIFF (5/23/16)- THE FOLLOWING FORM IS JUST FOR TESTING THE FILE INPUT PLUGIN, WHICH WILL BE IN THE ID VERIFICATION WIZARD...
-         BUT SINCE IT'S NOT WORKING, IT'S ANNOYING TO CLICK THROUGH THE FIRST 3 STEPS EVERY TIME TO TEST, SO ADDING THIS SO
-         YOU CAN SEE IT AS SOON AS THE PAGE LOADS. -->
-    @*<form>
-        <input id="idVer_idDoc2" class="file" type="file">
-        <br>
-        <button type="submit" class="btn btn-primary">Submit</button>
-        <button type="reset" class="btn btn-default">Reset</button>
-    </form>*@
-
     <br />
+
     @if (rpr.PayorInitialInfo)
     {
         <div id="PayorInitialInfo" class="animated bounceInUp hidden">
@@ -229,7 +221,7 @@
 
     <!-- Modal ID Verification -->
     <div class="modal fade" id="idVer" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog">
+        <div id="modalContainer" class="modal-dialog">
             <div class="modal-content">
 
                 <div class="modal-header">
@@ -364,12 +356,11 @@
                             <h3><i class="fa fa-fw fa-picture-o m-r-5"></i><br />ID Document</h3>
                             <section>
 
-                                <div class="well well-sm m-b-25">
+                                <div class="well well-sm m-b-15">
                                     <div class="f-15">Please upload an image of any government-issued <strong>photo ID</strong>.</div>
                                 </div>
 
                                 <div id="idDocWrap">
-                                    <label class="control-label">Select File</label>
                                     <input id="idVer_idDoc" type="file" class="">
                                 </div>
 
@@ -391,37 +382,21 @@
     </div>
 
 
-
     <script src="@Url.Content("//code.jquery.com/jquery-2.1.4.min.js")"></script>
     <script src="@Url.Content("//code.jquery.com/ui/1.11.4/jquery-ui.min.js")"></script>
-
     <script src="@Url.Content("https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js")"></script>
-
     <script src="@Url.Content("~/js/jasny-bootstrap.min.js")"></script>
     <script src="@Url.Content("~/js/jquery.blockUI.min.js")"></script>
-
     <script src="@Url.Content("~/js/input-mask.min.js")"></script>
-
     <script src="@Url.Content("~/js/bootstrap-select.min.js")"></script>
     <script src="@Url.Content("~/js/chosen.jquery.min.js")"></script>
-
-
-
     <script src="@Url.Content("~/js/moment.min.js")"></script>
-
-
     <script src="@Url.Content("~/js/bootstrap-datetimepicker.min.js")"></script>
-
     <script src="@Url.Content("~/js/jquery.steps.js")"></script>
     <script src="@Url.Content("~/js/fingerprint2.min.js")"></script>
-
-
     <script src="@Url.Content("~/js/sweetalert.min.js")"></script>
-
     <script src="@Url.Content("~/js/input-mask.min.js")"></script>
-
     <script src="@Url.Content("~/js/fileinput/fileinput.min.js")"></script>
-
 
     <script type="text/javascript">
         var ipusr;

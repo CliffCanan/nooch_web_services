@@ -226,6 +226,20 @@ $(document).ready(function () {
     if ($("#transMemo").text().length > 0) {
         $("#transMemo").prepend("<i class='fa fa-fw fa-commenting fa-flip-horizontal'>&nbsp;</i><em>&quot;</em>").append("<em>&quot;</em>");
     }
+	
+	            $('#idVer').on('hidden.bs.modal', function (e) {
+                if (isLrgScrn == true) {
+                    $("#payreqInfo").animate({
+                        width: '100%',
+                        left: '0%'
+                    }, 700, 'easeInOutCubic', function () {
+                        $('#relaunchIdwiz').removeClass('hidden').removeClass('bounceOut').addClass('bounceIn');
+						            setTimeout(function () {
+                $('#idVerWiz').steps('destroy');
+            }, 250);
+                    });
+                }
+            });
 });
 
 
@@ -245,8 +259,8 @@ function runIdWizard() {
 
     $('#idVer').on('shown.bs.modal', function (e) {
         if (isLrgScrn == true) {
-            $("#idVer .modal-dialog").animate({
-                'margin-left': '48%'
+            $("#idVer .modal-dialog#modalContainer").animate({
+                'margin-left': '45%'
             }, 750, 'easeInOutCubic', function () {
                 setTimeout(function () {
                     $('input#idVer-name').focus();
@@ -302,7 +316,7 @@ function runIdWizard() {
                     next: 'fa fa-fw fa-chevron-circle-right',
                     clear: 'fa fa-fw fa-trash-o'
                 },
-                maxDate: moment("1996 12 31", "MYYYY MM DD"),
+                maxDate: moment("1998 06 01", "MYYYY MM DD"),
                 viewMode: 'years',
                 //debug: true
             });
@@ -401,7 +415,7 @@ function runIdWizard() {
             }
 
 			// IF going to Step 4
-			if (newIndex = 3)
+			if (newIndex == 3)
 			{
                 // Check Address field
 				$('#idVer-email').val($('#idVer-email').val().trim());
@@ -421,21 +435,23 @@ function runIdWizard() {
 					    // FILE INPUT DOCUMENTATION: http://plugins.krajee.com/file-input#options
 						$("#idVer_idDoc").fileinput({
 						    allowedFileTypes: ['image'],
+							//allowedPreviewTypes: null,
 						    initialPreview: [
-                                "<img src='' class='file-preview-image' alt='Profile Picture' id='IdWizUserPicPreview'>"
+                                "<img src='../Assets/Images/securityheader.png' class='file-preview-image' alt='' id='IdWizIdDocPreview'>"
 						    ],
 						    initialPreviewShowDelete: false,
 						    layoutTemplates: {
 						        icon: '<span class="fa fa-photo m-r-10 kv-caption-icon"></span>',
 						    },
+							fileActionSettings: {
+								showZoom: false,
+								indicatorNew: '',
+							},
 						    maxFileCount: 1,
 						    maxFileSize: 500,
 						    msgSizeTooLarge: "File '{name}' ({size} KB) exceeds the maximum allowed file size of {maxSize} KB. Please try a slightly smaller picture!",
 						    showCaption: false,
 						    showUpload: false,
-						    //uploadUrl: URLs.UploadLandlordProfileImage,
-						    //uploadExtraData: {
-						    //},
 						    showPreview: true,
 						    resizeImage: true,
 						    maxImageWidth: 500,
@@ -443,26 +459,25 @@ function runIdWizard() {
 						    resizePreference: 'width'
 						});
 
-
-
+						$('#idVer_idDoc').on('fileerror', function(event, data, msg) {
+							$('#idVerWiz > .content').animate({ height: "28em" }, 600)
+						});
 
 						$('#idVer_idDoc').on('fileloaded', function (event, file, previewId, index, reader) {
-						    console.log(" launched  ");
+							$('#idVerWiz > .content').animate({ height: "26em" }, 500)
+
 						    isFileAdded = "1";
 						    var readerN = new FileReader();
-						    
 
 						    readerN.readAsDataURL(file);
 						    readerN.onload = function (e) {
 						        // browser completed reading file - display it
-
 						        var splittable = e.target.result.split(',');
-						        //var string1 = splittable[0];
 						        var string2 = splittable[1];
 						        //console.log(string2);
 						        FileData = string2;
 
-						       // console.log("image data is -> " + FileData);
+						        //console.log("image data is -> " + FileData);
 						    };
 						});
 
@@ -475,10 +490,20 @@ function runIdWizard() {
 						$('#idVer_idDoc').on('filecleared', function (event) {
 						    isFileAdded = "0";
 						    FileData = null;
-						    console.log("filecleared");
+						    console.log("filecleareD");
 						});
 
-                        $('#idVerWiz > .content').animate({ height: "21em" }, 500)
+						$('#idVer_idDoc').on('filezoomhidden', function(event, params) {
+							event.preventDefault();
+							console.log('File zoom hidden ', params.sourceEvent, params.previewId, params.modal);
+						});
+
+						$('#idVer_idDoc').on('filezoomhide', function(event, params) {
+							event.preventDefault();
+							console.log('File zoom hide ', params.sourceEvent, params.previewId, params.modal);
+						});
+
+                        $('#idVerWiz > .content').animate({ height: "25em" }, 800)
                         return true;
 					}
 					else
@@ -624,22 +649,6 @@ function cancelIdVer() {
     }, function (isConfirm) {
         if (!isConfirm) {
             $('#idVer').modal('hide');
-
-            $('#idVer').on('hidden.bs.modal', function (e) {
-                if (isLrgScrn == true) {
-                    $("#payreqInfo").animate({
-                        width: '100%',
-                        left: '0%'
-                    }, 700, 'easeInOutCubic', function () {
-                        $('#relaunchIdwiz').removeClass('hidden').removeClass('bounceOut').addClass('bounceIn');
-                    });
-                }
-            });
-
-            // Show the button to re-launch the ID Wizard
-            setTimeout(function () {
-                $('#idVerWiz').steps('destroy');
-            }, 250);
         }
     });
 }
@@ -701,7 +710,8 @@ function createRecord() {
     var imageData = FileData;
 
     console.log("{transId: " + TRANSID + ", userEm: " + userEmVal + ", userPh: " + userPhVal + ", userName: " + userNameVal +
-                ", userPw: " + userPwVal + ", ssn: " + ssnVal + ", dob: " + dobVal + ", fngprnt: " + fngprntVal + ", ip: " + ipVal + ", isIdImage: " + isImageAdded + ", idImagedata: " + imageData + "}");
+                ", userPw: " + userPwVal + ", ssn: " + ssnVal + ", dob: " + dobVal + ", fngprnt: " + fngprntVal + ", ip: " + ipVal +
+				", isIdImage: " + isImageAdded + "}");//", idImagedata: " + imageData + "}");
 
     var urlToUse = "";
     if (transType == "send")
@@ -728,8 +738,8 @@ function createRecord() {
         "', 'zip':'" + zipVal +
         "', 'fngprnt':'" + fngprntVal +
         "', 'ip':'" + ipVal +
-"', 'isIdImage':'" + isFileAdded +
-"', 'idImagedata':'" + FileData + "'}";
+        "', 'isIdImage':'" + isFileAdded + "'}";
+        //"', 'idImagedata':'" + FileData + "'}";
     
     console.log(dataToSend);
     
@@ -1319,7 +1329,7 @@ function rejectBtnClicked() {
 // -------------------
 function scrollToAddBank()
 {
-    var scroll_to = $('#frame').offset().top;
+    var scroll_to = $('#frame').offset().top - 75;
 
     if ($(window).scrollTop() != scroll_to) {
         $('html, body').stop().animate({ scrollTop: scroll_to }, 1000, null);
