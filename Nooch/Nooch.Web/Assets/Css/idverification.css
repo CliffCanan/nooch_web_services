@@ -64,7 +64,7 @@
 .radio label { font-size:15px; font-weight:500; }
 .radio label input:checked + span { font-weight:600; }
 .radio + .radio, .checkbox + .checkbox { margin-top: 0px; }
-.wizard > .content .body .radio label { margin: 0; padding: 10px 15px 10px 35px; width: 100%; }
+.wizard > .content .body .radio label { margin: 0; padding: 10px 15px 10px 45px; width: 100%; }
 
 .checkbox label,
 .radio label {

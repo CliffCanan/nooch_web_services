@@ -390,7 +390,7 @@ $('#bankLogin').submit(function(e) {
 			{
 				// ADD THE LOADING BOX
 		        $('.addBankContainer-body').block({
-				    message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Attempting login...</span>',
+				    message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Attempting Login...</span>',
 				    css: {
 				        border: 'none',
 				        padding: '26px 8px 20px',
@@ -914,7 +914,7 @@ function MFALogin() {
 
 	// ADD THE LOADING BOX
     $('.addBankContainer-body').block({
-        message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Checking that response</span>',
+        message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Checking that response...</span>',
 		css: { 
 			border: 'none', 
 			padding: '26px 8px 26px',
@@ -1154,7 +1154,6 @@ function SetDefaultAct() {
 			async: "true",
 			cache: "false",
 			success: function (msg) {
-				$('.addBankContainer-body').unblock();
 
 				var res = msg;
 
@@ -1165,6 +1164,8 @@ function SetDefaultAct() {
 				}
 				else
 				{
+					$('.addBankContainer-body').unblock();
+
 				    swal({
 						title: "Oh No!",
 						text: "Something went wrong - very sorry about this. We hate it when things break! Please try again or contact <a href='mailto:" + SUPPORTLINK + "' target='_blank'>" + SUPPORTLINK + "</a> and we'll be glad to help." +
@@ -1284,7 +1285,7 @@ function sendToRedUrl() {
                 customClass: "largeText",
                 html: true
             }, function (isConfirm)
-            {
+            {*/
                 $('.addBankContainer-body').block({
                     message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Finishing...</span>',
                     css: {
@@ -1300,7 +1301,7 @@ function sendToRedUrl() {
                         top: '25px',
                         color: '#fff'
                     }
-                });*/
+                });
 
                 setTimeout(function () {
                     window.top.location.href = RED_URL;
@@ -1421,7 +1422,7 @@ $(document).ready(function () {
 
 	    //$('.addBank-heading').hide();
 	}
-
+	
 	if (isUpgradeToV3 == 'true')
 	{
 	    $('#headerAlt').removeClass('hidden');
@@ -1495,7 +1496,7 @@ $(document).ready(function () {
 			if (!isConfirm) {
 				window.top.location.href = "https://www.nooch.com/safe";
 			}
-		});
+		});		
 	}
 	/**** CREATING AUTO-COMPLETE LIST OF BANKS FOR SEARCHING ****/
 	$("#bankSearch").autoComplete({

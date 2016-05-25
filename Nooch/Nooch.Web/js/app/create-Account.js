@@ -765,6 +765,125 @@ function saveMemberInfo() {
 }
 
 
+function createRecord() {
+    console.log('createRecord got called');
+     
+    var transId = $('#transId').val();
+    var memId = $('#memId').val();
+    var userNameVal = $('#idVer-name').val().trim();
+    var userEmVal = $('#idVer-email').val();
+    var userPhVal = $('#idVer-phone').cleanVal();
+    var userPwVal = "";  // Still need to add the option for users to create a PW (not sure where in the flow to do it)
+    var ssnVal = $('#idVer-ssn').val().trim();
+    var dobVal = $('#idVer-dob').val().trim();
+    var addressVal = $('#idVer-address').val().trim();
+    var zipVal = $('#idVer-zip').val().trim();
+    var fngprntVal = fingprint;
+    var ipVal = ipusr;
+
+    console.log("SAVE MEMBER INFO -> {memId: " + memId +
+                                   ", Name: " + userNameVal +
+                                   ", dob: " + dobVal +
+                                   ", ssn: " + ssnVal +
+                                   ", address: " + addressVal +
+                                   ", zip: " + zipVal +
+                                   ", email: " + userEmVal +
+                                   ", phone: " + userPhVal +
+                                   ", fngprnt: " + fngprntVal +
+                                   ", ip: " + ipVal + "}");
+
+    $.ajax({
+        type: "POST",
+        //url: "createAccount.aspx/saveMemberInfo",
+        url: "CreateAccountInDB",
+        data: "{  'transId':'" + transId +
+             "', 'memId':'" + memId +
+             "', 'name':'" + userNameVal +
+             "', 'dob':'" + dobVal +
+             "', 'ssn':'" + ssnVal +
+             "', 'address':'" + addressVal +
+             "', 'zip':'" + zipVal +
+             "', 'email':'" + userEmVal +
+             "', 'phone':'" + userPhVal +
+             "', 'fngprnt':'" + fngprntVal +
+             "', 'ip':'" + ipVal +
+             "', 'pw':'" + '' + "'}",
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        async: "true",
+        cache: "false",
+        success: function (msg) {
+            var result = msg;
+            console.log("SUCCESS -> Save Member Info result is... [next line]");
+            console.log(result);
+
+            resultReason = result.msg;
+
+            // Hide the Loading Block
+            $('#idWizContainer').unblock();
+
+            if (result.success == true) {
+                console.log("Success == true");
+
+                // HIDE THE MODAL CONTAINING THE WIZARD
+                $('#idVer').modal('hide')
+
+                // THEN DISPLAY SUCCESS ALERT...
+                swal({
+                    title: "Submitted Successfully",
+                    text: "<i class=\"mdi mdi-account-check text-success\"></i><br/>Thanks for submitting your ID information. That helps us keep " + COMPANY + " safe for everyone. &nbsp;We only use this information to prevent ID fraud and never share it without your permission.",
+                    //"<span>Next, link any checking account to complete this payment:</span>" +
+                    //"<span class=\"spanlist\"><span>1. &nbsp;Select your bank</span><span>2. &nbsp;Login with your regular online banking credentials</span><span>3. &nbsp;Choose which account to use</span></span>",
+                    type: "success",
+                    showCancelButton: false,
+                    confirmButtonColor: "#3fabe1",
+                    confirmButtonText: "Great!",
+                    closeOnConfirm: true,
+                    html: true,
+                    customClass: "idVerSuccessAlert",
+                });
+
+                $('#idWizContainer').fadeOut(600);
+
+                $('.resultDiv').removeClass('hidden');
+                //$('#AddBankDiv').removeClass('hidden');
+
+                //$("#frame").attr("src", "https://www.noochme.com/noochweb/trans/Add-Bank.aspx?MemberId=" + RegisterUserWithSynpResult.memberIdGenerated + "&redUrl=https://www.noochme.com/noochweb/trans/payRequestComplete.aspx?mem_id=" + RegisterUserWithSynpResult.memberIdGenerated + "," + transIdVal);
+            }
+            else {
+                console.log("Success != true");
+
+                if (resultReason != null) {
+                    if (resultReason.indexOf("email already registered") > -1) {
+                        showErrorAlert('20');
+                    }
+                    else if (resultReason.indexOf("phone number already registered") > -1) {
+                        showErrorAlert('30');
+                    }
+                    else if (resultReason.indexOf("Missing critical data") > -1) {
+                        showErrorAlert('2');
+                    }
+                }
+                else {
+                    console.log("Error checkpoint # 659");
+                    showErrorAlert('3');
+                }
+            }
+        },
+        Error: function (x, e) {
+            // Hide the Loading Block
+            $('#idWizContainer').unblock();
+
+            console.log("ERROR --> 'x', then 'e' is... ");
+            console.log(x);
+            console.log(e);
+
+            showErrorAlert('3');
+        }
+    });
+}
+
+
 // To handle success from Add-Bank page (CC: 1/20/16)
 $('body').bind('addBankComplete', function ()
 {

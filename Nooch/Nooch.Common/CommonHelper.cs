@@ -2949,6 +2949,8 @@ namespace Nooch.Common
                         mip.ModifiedOn = DateTime.Now;
                         mip.Ip = IP;
 
+                        _dbContext.MembersIPAddresses.Add(mip);
+
                         int b = _dbContext.SaveChanges();
 
                         if (b > 0)

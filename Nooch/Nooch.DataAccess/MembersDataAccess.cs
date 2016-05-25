@@ -1916,6 +1916,7 @@ namespace Nooch.DataAccess
                                 expires_in = synapseCreateUserObjIfExists.expires_in
                             };
 
+
                             res.user = new synapseV3Result_user()
                             {
                                 _id = new synapseV3Result_user_id() { id = synapseCreateUserObjIfExists.user_id },
@@ -1923,6 +1924,7 @@ namespace Nooch.DataAccess
                                 {
                                     is_business = synapseCreateUserObjIfExists.is_business != null && Convert.ToBoolean(synapseCreateUserObjIfExists.is_business)
                                 },
+
                                 legal_names = new[] { synapseCreateUserObjIfExists.legal_name },
                                 phone_numbers = new[] { synapseCreateUserObjIfExists.Phone_number },
                                 photos = new[] { synapseCreateUserObjIfExists.photos },
@@ -2244,6 +2246,7 @@ namespace Nooch.DataAccess
 
                 #endregion Call Synapse V3 API: /v3/user/create
 
+
                 #region Synapse Create User Response was SUCCESSFUL
 
                 if (res.success == true &&
@@ -2452,12 +2455,14 @@ namespace Nooch.DataAccess
         }
 
 
-        public synapseCreateUserV3Result_int RegisterExistingUserWithSynapseV3(string transId, string memberId, string userEmail, string userPhone, string userName, string pw, string ssn, string dob, string address, string zip, string fngprnt, string ip,  string isIdImageAdded = "0", string idImageData = "")
+        public synapseCreateUserV3Result_int RegisterExistingUserWithSynapseV3(string transId, string memberId, string userEmail, string userPhone, string userName, string pw, string ssn, string dob, string address, string zip, string fngprnt, string ip, string isIdImageAdded = "0", string idImageData = "")
         {
-            Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 Initiated. [Name: " + userName +
-                        "], Email: [" + userEmail +
-                        "], Phone: [" + userPhone +
-                        "], TransId: [" + transId + "]");
+            Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 Initiated - [Name: " + userName +
+                        "], Email: [" + userEmail + "], Phone: [" + userPhone +
+                        "], DOB: [" + dob + "], SSN: [" + ssn +
+                        "], Address: [" + address + "], ZIP: [" + zip +
+                        "], IP: [" + ip + "], Fngprnt: [" + fngprnt +
+                        "], TransId: [" + transId + "], isIdImageAdded: " + isIdImageAdded + "]");
 
             synapseCreateUserV3Result_int res = new synapseCreateUserV3Result_int();
             res.success = false;
@@ -2608,7 +2613,7 @@ namespace Nooch.DataAccess
                 memberObj.SSN = !String.IsNullOrEmpty(ssn) ? CommonHelper.GetEncryptedData(ssn) : null;
                 memberObj.DateOfBirth = dateofbirth;
                 memberObj.Status = "Active";
-                memberObj.UDID1 = !String.IsNullOrEmpty(fngprnt) ? fngprnt : null;
+                memberObj.UDID1 = !String.IsNullOrEmpty(fngprnt) ? fngprnt : memberObj.UDID1;
                 memberObj.DateModified = DateTime.Now;
                 if (!String.IsNullOrEmpty(pw))
                 {
@@ -2617,6 +2622,7 @@ namespace Nooch.DataAccess
 
                 int dbUpdatedSuccessfully = _dbContext.SaveChanges();
                 _dbContext.Entry(memberObj).Reload();
+
                 #endregion Update Member's Record in Members.dbo
 
                 // Now add the IP address record to the MembersIPAddress Table
@@ -2627,7 +2633,7 @@ namespace Nooch.DataAccess
                 catch (Exception ex)
                 {
                     Logger.Error("MDA -> RegisterExistingUserWithSynapseV3 EXCEPTION on trying to save new Member's IP Address - " +
-                                           "[MemberID: " + memberId + "], [Exception: " + ex + "]");
+                                 "[MemberID: " + memberId + "], [Exception: " + ex + "]");
                 }
 
                 #region Update Tenant Record If For A Tenant
@@ -2729,7 +2735,7 @@ namespace Nooch.DataAccess
                 if (dbUpdatedSuccessfully > 0)
                 {
                     Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 - Nooch Member UPDATED SUCCESSFULLY IN DB (via Browser Landing Page) - " +
-                                           "[UserName: " + userEmail + "], [MemberId: " + memberId + "]");
+                                "[UserName: " + userEmail + "], [MemberId: " + memberId + "]");
 
                     bool didUserAddPw = false;
 
@@ -2804,13 +2810,13 @@ namespace Nooch.DataAccess
                     try
                     {
                         // Now call Synapse create user service
-                        Logger.Info("** MDA -> RegisterExistingUserWithSynapseV3 ABOUT TO CALL CREATE SYNAPSE USER METHOD  **");
+                        Logger.Info(" MDA -> RegisterExistingUserWithSynapseV3 ABOUT TO CALL CREATE SYNAPSE USER METHOD");
                         createSynapseUserResult = RegisterUserWithSynapseV3(memberObj.MemberId.ToString());
                     }
                     catch (Exception ex)
                     {
                         Logger.Error("MDA -> RegisterExistingUserWithSynapseV3 - createSynapseUser FAILED - [Username: " + userEmail +
-                                               "], [Exception: " + ex.Message + "]");
+                                     "], [Exception: " + ex.Message + "]");
                     }
 
                     if (createSynapseUserResult != null)
@@ -2825,123 +2831,62 @@ namespace Nooch.DataAccess
                             Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 - Synapse User created SUCCESSFULLY (LN: 6796) - " +
                                         "[oauth_consumer_key: " + createSynapseUserResult.oauth.oauth_key + "]. Now attempting to save in Nooch DB.");
 
-                            //   Entry in SynapseCreateUser Has been already done from RegisterUserWithSynapseV3 method  //
+                            #region Send ID Doc To Synapse
 
-                            // Synapse User created successfully - Now make entry in [SynapseCreateUserResults] table
-                            //SynapseCreateUserResult nr = new SynapseCreateUserResult();
-                            //nr.MemberId = memberObj.MemberId;
-                            //nr.DateCreated = DateTime.Now;
-                            //nr.access_token = CommonHelper.GetEncryptedData(createSynapseUserResult.oauth_consumer_key);
-                            //nr.expires_in = createSynapseUserResult.oauth.expires_in;
-                            //nr.reason = createSynapseUserResult.reason;
-                            //nr.refresh_token = CommonHelper.GetEncryptedData(createSynapseUserResult.oauth.refresh_token);
-                            //nr.success = Convert.ToBoolean(res.success);
-                            //nr.username = CommonHelper.GetEncryptedData(createSynapseUserResult.user.logins[0].email);
-                            //nr.user_id = createSynapseUserResult.user._id.id;
-                            //nr.IsDeleted = false;
-                            //nr.ModifiedOn = DateTime.Now;
-                            //nr.IsForNonNoochUser = false;
-                            //nr.NonNoochUserEmail = userEmail;
-                            //nr.TransactionIdFromWhichInvited = Utility.ConvertToGuid(transId);
-                            //nr.HasNonNoochUserSignedUp = didUserAddPw;
-
-                            //int addRecordToSynapseCreateUserTable = _dbContext.SaveChanges();
-
-                            //  if (addRecordToSynapseCreateUserTable > 0)                                
-                            if (createSynapseUserResult.success == true)                                // asuming createSynapseUserResult.success to be equals addRecordToSynapseCreateUserTable > 0
+                            if (isIdImageAdded == "1" && !String.IsNullOrEmpty(idImageData))
                             {
-
-                                // checking ig image is attached 
-                                if (isIdImageAdded == "1" && !String.IsNullOrEmpty(idImageData))
+                                // We have ID Doc image... Now call submitDocumentToSynapseV3()
+                                try
                                 {
-                                    // we have image for id verification... calling subid v3 method
-                                    try
+                                    Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 -> Going in to submit id doc to synapse ->  [Email: " + userEmail + "], [Member_Id: " + res.memberIdGenerated + "]");
+
+                                    var saveImageOnServer = SaveBase64AsImage(res.memberIdGenerated, idImageData);
+
+                                    if (saveImageOnServer.success && !String.IsNullOrEmpty(saveImageOnServer.msg))
                                     {
-                                        Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 -> Going in to submit id doc to synapse ->  [Email: " + userEmail + "], [Member_Id: " + res.memberIdGenerated + "]");
-
-                                        string filepathmade = SaveBase64AsImage (res.memberIdGenerated,idImageData);
-                                        submitDocumentToSynapseV3(res.memberIdGenerated, filepathmade);
-
-
-
+                                        submitDocumentToSynapseV3(res.memberIdGenerated, saveImageOnServer.msg);
                                     }
-                                    catch (Exception ex)
+                                    else
                                     {
-                                        Logger.Error("MDA -> RegisterExistingUserWithSynapseV3 -> submit id doc to synapse failed-> [Reason: " + ex+ "], [Email: " + userEmail + "], [Member_Id: " + res.memberIdGenerated + "]");    
-                                        
+                                        Logger.Error("MDA -> RegisterExistingUserWithSynapseV3 -> Attempted to Save ID Doc on server but failed - SaveBase64AsImage Msg: [" +
+                                                     saveImageOnServer.msg + "]");
                                     }
                                 }
-
-
-                                if (!String.IsNullOrEmpty(res.reason) &&
-                                    res.reason.IndexOf("Email already registered") > -1)
+                                catch (Exception ex)
                                 {
-                                    // THIS HAPPENS WHEN THE USER ALREADY EXISTS AND WE USED 'force_create'='no'
-                                    res.reason = "User already existed, successfully received consumer_key.";
-
-                                    Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 SUCCESS -> [Reason: " + res.reason + "], [Email: " + userEmail + "], [user_id: " + res.user_id + "]");
+                                    Logger.Error("MDA -> RegisterExistingUserWithSynapseV3 -> Attempted to Save ID Doc on server but failed -> [Exception: " + ex.Message +
+                                                 "], [Email: " + userEmail + "], [Member_Id: " + res.memberIdGenerated + "]");
                                 }
-
-                                // EXPECTED OUTCOME for most users creating a new Synapse Account.
-                                // Synapse doesn't always return a "reason" anymore (they used to but stopped sending it for newly created users apparently)
-                                else
-                                {
-                                    Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 SUCCESS - [Email: " + userEmail + "], [user_id: " + createSynapseUserResult.user_id +
-                                                           "]. Now about to attempt to send SSN info to Synapse.");
-
-                                    // Now attempt to verify user's ID by sending SSN, DOB, name, & address to Synapse
-                                    /* No need of the following code any more as this has already been done in RegisterUserWithSynapseV3 method
-                                   try
-                                   {
-                                       
-                                       submitIdVerificationInt submitSsn = CommonHelper.sendUserSsnInfoToSynapseV3(memberObj.MemberId.ToString());
-                                       res.ssn_verify_status = submitSsn.message;
-
-                                       // Next if/else are all just for logging
-                                       if (submitSsn.success == true)
-                                       {
-                                           if (!String.IsNullOrEmpty(submitSsn.message) &&
-                                               submitSsn.message.IndexOf("additional") > -1)
-                                           {
-                                               Logger.Info("MDA -> RegisterExistingUserWithSynapseV2 - SSN Info verified, but have additional questions - [Email: " + userEmail + "], [submitSsn.message: " + submitSsn.message + "]");
-                                           }
-                                           else if (!String.IsNullOrEmpty(submitSsn.message) &&
-                                                submitSsn.message.IndexOf("Already") > -1)
-                                           {
-                                               Logger.Info("MDA -> RegisterExistingUserWithSynapseV2 - SSN Info Already Verified - [Email: " + userEmail + "], [submitSsn.message: " + submitSsn.message + "]");
-                                           }
-                                           else
-                                           {
-                                               Logger.Info("MDA -> RegisterExistingUserWithSynapseV2 - SSN Info verified completely :-) - [Email: " + userEmail + "], [submitSsn.message: " + submitSsn.message + "]");
-                                           }
-                                       }
-                                       else
-                                       {
-                                           Logger.Info("MDA -> RegisterExistingUserWithSynapseV2 - SSN Info verified FAILED :-(  [Email: " + userEmail + "], [submitSsn.message: " + submitSsn.message + "]");
-                                       }
-                                   }
-                                   catch (Exception ex)
-                                   {
-                                       Logger.Error("MDA -> RegisterExistingUserWithSynapseV2 - Attempted sendUserSsnInfoToSynapse but got Exception: [" + ex.Message + "]");
-                                   }
-                                     */
-                                }
-                                createUserV3Result_oauth oath = new createUserV3Result_oauth();
-                                res = createSynapseUserResult;
-                                res.success = true;
-                                oath.oauth_key = createSynapseUserResult.oauth.oauth_key; // Already know it's not NULL, so don't need to re-check
-                                res.user_id = !String.IsNullOrEmpty(createSynapseUserResult.user._id.id) ? createSynapseUserResult.user._id.id : "";
-                                oath.expires_in = !String.IsNullOrEmpty(createSynapseUserResult.oauth.expires_in) ? createSynapseUserResult.oauth.expires_in : "";
-                                res.oauth = oath;
-                                res.memberIdGenerated = memberObj.MemberId.ToString();
-                                res.error_code = createSynapseUserResult.error_code;
-                                res.errorMsg = createSynapseUserResult.errorMsg;
-
                             }
+
+                            #endregion Send ID Doc To Synapse
+
+                            if (!String.IsNullOrEmpty(res.reason) &&
+                                res.reason.IndexOf("Email already registered") > -1)
+                            {
+                                res.reason = "User already existed, successfully received consumer_key.";
+                                Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 SUCCESS -> [Reason: " + res.reason + "], [Email: " + userEmail + "], [user_id: " + res.user_id + "]");
+                            }
+
+                            // EXPECTED OUTCOME for most users creating a new Synapse Account.
+                            // Synapse doesn't always return a "reason" anymore (they used to but stopped sending it for newly created users apparently)
                             else
                             {
-                                Logger.Error("MDA -> RegisterExistingUserWithSynapseV3 - FAILED to add record to SynapseCreateUserResults.dbo - [user_id: " + res.user_id + "]");
+                                Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 SUCCESS - [Email: " + userEmail + "], [user_id: " + createSynapseUserResult.user_id +
+                                             "]. Now about to attempt to send SSN info to Synapse.");
                             }
+
+                            createUserV3Result_oauth oath = new createUserV3Result_oauth();
+                            res = createSynapseUserResult;
+                            oath.oauth_key = createSynapseUserResult.oauth.oauth_key; // Already know it's not NULL, so don't need to re-check
+                            res.user_id = !String.IsNullOrEmpty(createSynapseUserResult.user._id.id) ? createSynapseUserResult.user._id.id : "";
+                            oath.expires_in = !String.IsNullOrEmpty(createSynapseUserResult.oauth.expires_in) ? createSynapseUserResult.oauth.expires_in : "";
+                            res.oauth = oath;
+                            res.memberIdGenerated = memberObj.MemberId.ToString();
+                            res.error_code = createSynapseUserResult.error_code;
+                            res.errorMsg = createSynapseUserResult.errorMsg;
+
+                            res.success = true;
                         }
 
                         #endregion Created Synapse User Successfully
@@ -2949,14 +2894,13 @@ namespace Nooch.DataAccess
                         else
                         {
                             Logger.Error("MDA -> RegisterExistingUserWithSynapseV3 FAILED - Synapse Create user service failed (but wasn't null) - " +
-                                                   "[Reason: " + res.reason + "], [MemberID: " + memberId + "]");
+                                         "[Reason: " + res.reason + "], [MemberID: " + memberId + "]");
                             res.reason = createSynapseUserResult.reason;
                         }
                     }
                     else
                     {
                         Logger.Error("MDA -> RegisterExistingUserWithSynapseV3 - createSynapseUser FAILED & Returned NULL");
-                        res.success = false;
                         res.reason = !String.IsNullOrEmpty(createSynapseUserResult.reason) ? createSynapseUserResult.reason : "Reg NonNooch User w/ Syn: Error 5927.";
                     }
 
@@ -2968,15 +2912,12 @@ namespace Nooch.DataAccess
                 else
                 {
                     Logger.Error("MDA -> RegisterExistingUserWithSynapseV2 - FAILED to add new Member to DB");
-
-                    res.success = false;
                     res.reason = "Failed to save new Nooch Member in DB.";
                 }
             }
             else
             {
                 Logger.Error("MDA -> RegisterExistingUserWithSynapseV2 - FAILED - MemberID not found in DB - [MemberID: " + memberId + "]");
-                res.success = false;
                 res.reason = "MemberID not found in DB.";
             }
 
@@ -2984,17 +2925,17 @@ namespace Nooch.DataAccess
         }
 
 
-        public synapseCreateUserV3Result_int RegisterNonNoochUserWithSynapseV3(string transId, string userEmail, string userPhone, string userName, string pw, string ssn, string dob, string address, string zip, string fngprnt, string ip,string isIdImageAdded, string idImageData)
+        public synapseCreateUserV3Result_int RegisterNonNoochUserWithSynapseV3(string transId, string userEmail, string userPhone, string userName, string pw, string ssn, string dob, string address, string zip, string fngprnt, string ip, string isIdImageAdded, string idImageData)
         {
             // What's the plan? -- Store new Nooch member, then create Synpase user, then check if user supplied a (is password.Length > 0)
             // then store data in new added field in SynapseCreateUserResults table for later use
 
-            Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 Initiated. [Name: " + userName +
-                                   "], Email: [" + userEmail + "], Phone: [" + userPhone +
-                                   "], DOB: [" + dob + "], SSN: [" + ssn +
-                                   "], Address: [" + address + "], ZIP: [" + zip +
-                                   "], IP: [" + ip + "], Fngprnt: [" + fngprnt +
-                                   "], TransId: [" + transId + "]");
+            Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 Initiated - [Name: " + userName +
+                        "], Email: [" + userEmail + "], Phone: [" + userPhone +
+                        "], DOB: [" + dob + "], SSN: [" + ssn +
+                        "], Address: [" + address + "], ZIP: [" + zip +
+                        "], IP: [" + ip + "], Fngprnt: [" + fngprnt +
+                        "], TransId: [" + transId + "], isIdImageAdded: " + isIdImageAdded + "]");
 
             synapseCreateUserV3Result_int res = new synapseCreateUserV3Result_int();
             res.success = false;
@@ -3236,7 +3177,7 @@ namespace Nooch.DataAccess
                 // the UpdateIPAddress method will just create a new record if one doesn't exist, but just to be safe.)
                 try
                 {
-                    CommonHelper.UpdateMemberIPAddressAndDeviceId(NewUsersNoochMemId, ip, null);
+                    CommonHelper.UpdateMemberIPAddressAndDeviceId(NewUsersNoochMemId, ip, fngprnt);
                 }
                 catch (Exception ex)
                 {
@@ -3249,7 +3190,7 @@ namespace Nooch.DataAccess
                 if (addNewMemberToDB > 0)
                 {
                     Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - New Nooch Member successfully added to DB (via Browser Landing Page) - " +
-                                           "UserName: [" + userEmail + "], MemberID: " + member.MemberId + "]");
+                                "UserName: [" + userEmail + "], MemberID: " + member.MemberId + "]");
 
                     #region Set Up & Save Nooch Notification Settings
 
@@ -3412,7 +3353,7 @@ namespace Nooch.DataAccess
                     try
                     {
                         // Now call Synapse create user service
-                        Logger.Info("** MDA -> RegisterExistingUserWithSynapseV2 ABOUT TO CALL CREATE SYNAPSE USER METHOD  **");
+                        Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 ABOUT TO CALL CREATE SYNAPSE USER METHOD");
                         createSynapseUserResult = RegisterUserWithSynapseV3(member.MemberId.ToString());
                     }
                     catch (Exception ex)
@@ -3429,124 +3370,71 @@ namespace Nooch.DataAccess
                         if (createSynapseUserResult.success == true &&
                             !String.IsNullOrEmpty(createSynapseUserResult.oauth.oauth_key))
                         {
-                            Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - Synapse User created SUCCESSFULLY (LN: 6009) - " +
+                            Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - Synapse User created SUCCESSFULLY (LN: 3373) - " +
                                         "[oauth_consumer_key: " + createSynapseUserResult.oauth.oauth_key + "]. Now attempting to save in Nooch DB.");
-                            // Synapse User created successfully
-                            // Now make entry in [SynapseCreateUserResults] table
-                            //   Entry in SynapseCreateUser Has been already done from RegisterUserWithSynapseV3 method  //
 
-                            //SynapseCreateUserResults nr = new SynapseCreateUserResults();
-                            //nr.MemberId = Utility.ConvertToGuid(NewUsersNoochMemId);
-                            //nr.DateCreated = DateTime.Now;
-                            //nr.access_token = CommonHelper.GetEncryptedData(createSynapseUserResult.oauth_consumer_key);
-                            //nr.expires_in = createSynapseUserResult.expires_in;
-                            //nr.reason = createSynapseUserResult.reason;
-                            //nr.refresh_token = CommonHelper.GetEncryptedData(createSynapseUserResult.refresh_token);
-                            //nr.success = Convert.ToBoolean(res.success);
-                            //nr.username = CommonHelper.GetEncryptedData(createSynapseUserResult.username);
-                            //nr.user_id = createSynapseUserResult.user_id;
-                            //nr.IsDeleted = false;
-                            //nr.ModifiedOn = DateTime.Now;
-                            //nr.IsForNonNoochUser = false;
-                            //nr.NonNoochUserEmail = member.UserName;
-                            //nr.TransactionIdFromWhichInvited = Utility.ConvertToGuid(transId);
-                            //nr.HasNonNoochUserSignedUp = didUserAddPw;
+                            #region Send ID Doc To Synapse
 
-                            //int addRecordToSynapseCreateUserTable = synapseCreateUserRepo.AddEntity(nr);
-
-                            if (createSynapseUserResult.success == true)
+                            if (isIdImageAdded == "1" && !String.IsNullOrEmpty(idImageData))
                             {
-
-                                if (isIdImageAdded == "1" && !String.IsNullOrEmpty(idImageData))
+                                // We have ID Doc image... Now call submitDocumentToSynapseV3()
+                                try
                                 {
-                                    // we have image for id verification... calling subid v3 method
-                                    try
+                                    Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 -> Going in to submit id doc to synapse ->  [Email: " + userEmail + "], [Member_Id: " + res.memberIdGenerated + "]");
+
+                                    var saveImageOnServer = SaveBase64AsImage(res.memberIdGenerated, idImageData);
+
+                                    if (saveImageOnServer.success && !String.IsNullOrEmpty(saveImageOnServer.msg))
                                     {
-                                        Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 -> Going in to submit id doc to synapse ->  [Email: " + userEmail + "], [Member_Id: " + res.memberIdGenerated + "]");
-
-                                        string filepathmade = SaveBase64AsImage(res.memberIdGenerated, idImageData);
-                                        submitDocumentToSynapseV3(res.memberIdGenerated, filepathmade);
-
-
-
+                                        submitDocumentToSynapseV3(res.memberIdGenerated, saveImageOnServer.msg);
                                     }
-                                    catch (Exception ex)
+                                    else
                                     {
-                                        Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 -> submit id doc to synapse failed-> [Reason: " + ex + "], [Email: " + userEmail + "], [Member_Id: " + res.memberIdGenerated + "]");
-
+                                        Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 -> Attempted to Save ID Doc on server but failed - SaveBase64AsImage Msg: [" +
+                                                     saveImageOnServer.msg + "]");
                                     }
                                 }
-
-
-                                if (!String.IsNullOrEmpty(res.reason) &&
-                                    res.reason.IndexOf("Email already registered") > -1)
+                                catch (Exception ex)
                                 {
-                                    // THIS HAPPENS WHEN THE USER ALREADY EXISTS AND WE USED 'force_create'='no'
-                                    res.reason = "User already existed, successfully received consumer_key.";
-
-                                    Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 SUCCESS -> [Reason: " + res.reason + "], [Email: " + userEmail + "], [user_id: " + res.user_id + "]");
+                                    Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 -> Attempted to Save ID Doc on server but failed -> [Exception: " + ex.Message +
+                                                 "], [Email: " + userEmail + "], [Member_Id: " + res.memberIdGenerated + "]");
                                 }
-
-                                // EXPECTED OUTCOME for most users creating a new Synapse Account.
-                                // Synapse doesn't always return a "reason" anymore (they used to but stopped sending it for newly created users apparently)
-                                else
-                                {
-                                    Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 SUCCESS - [Email: " + userEmail + "], [user_id: " + createSynapseUserResult.user_id +
-                                                           "]. Now about to attempt to send SSN info to Synapse.");
-
-                                    // Now attempt to verify user's ID by sending SSN, DOB, name, & address to Synapse
-                                    /* No need of the following code any more as this has already been done in RegisterUserWithSynapseV3 method
-                               
-                                  try
-                                  {
-                                      submitIdVerificationInt submitSsn = sendUserSsnInfoToSynapse(member.MemberId.ToString());
-                                      res.ssn_verify_status = submitSsn.message;
-
-                                      // Next if/else are all just for logging
-                                      if (submitSsn.success == true)
-                                      {
-                                          if (!String.IsNullOrEmpty(submitSsn.message) &&
-                                              submitSsn.message.IndexOf("additional") > -1)
-                                          {
-                                              Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - SSN Info verified, but have additional questions - [Email: " + userEmail + "], [submitSsn.message: " + submitSsn.message + "]");
-                                          }
-                                          else if (!String.IsNullOrEmpty(submitSsn.message) &&
-                                                   submitSsn.message.IndexOf("Already") > -1)
-                                          {
-                                              Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - SSN Info Already Verified - [Email: " + userEmail + "], [submitSsn.message: " + submitSsn.message + "]");
-                                          }
-                                          else
-                                          {
-                                              Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - SSN Info verified completely :-) - [Email: " + userEmail + "], [submitSsn.message: " + submitSsn.message + "]");
-                                          }
-                                      }
-                                      else
-                                      {
-                                          Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - SSN Info verified FAILED :-(  [Email: " + userEmail + "], [submitSsn.message: " + submitSsn.message + "]");
-                                      }
-                                  }
-                                  catch (Exception ex)
-                                  {
-                                      Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 - Attempted sendUserSsnInfoToSynapse but got Exception: [" + ex.Message + "]");
-                                  }
-                                     */
-                                }
-
-                                createUserV3Result_oauth oath = new createUserV3Result_oauth();
-                                res = createSynapseUserResult;
-                                res.success = true;
-                                oath.oauth_key = createSynapseUserResult.oauth.oauth_key; // Already know it's not NULL, so don't need to re-check
-                                res.user_id = !String.IsNullOrEmpty(createSynapseUserResult.user._id.id) ? createSynapseUserResult.user._id.id : "";
-                                oath.expires_in = !String.IsNullOrEmpty(createSynapseUserResult.oauth.expires_in) ? createSynapseUserResult.oauth.expires_in : "";
-                                res.oauth = oath;
-                                res.memberIdGenerated = member.MemberId.ToString();
-                                res.error_code = createSynapseUserResult.error_code;
-                                res.errorMsg = createSynapseUserResult.errorMsg;
                             }
                             else
                             {
-                                Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 - FAILED to add record to SynapseCreateUserResults.dbo - [user_id: " + res.user_id + "]");
+                                Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - NO IMAGE SENT");
                             }
+
+                            #endregion Send ID Doc To Synapse
+
+                            if (!String.IsNullOrEmpty(res.reason) &&
+                                res.reason.IndexOf("Email already registered") > -1)
+                            {
+                                res.reason = "User already existed, successfully received consumer_key.";
+                                Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 SUCCESS -> [Reason: " + res.reason + "], [Email: " + userEmail + "], [user_id: " + res.user_id + "]");
+                            }
+
+                            // EXPECTED OUTCOME for most users creating a new Synapse Account.
+                            // Synapse doesn't always return a "reason" anymore (they used to but stopped sending it for newly created users apparently)
+                            else
+                            {
+                                Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 SUCCESS - [Email: " + userEmail + "], [user_id: " + createSynapseUserResult.user_id +
+                                            "]. Now about to attempt to send SSN info to Synapse.");
+
+                                // Now attempt to verify user's ID by sending SSN, DOB, name, & address to Synapse
+                                // UPDATE (April 2016): No need of the following code any more as this has already been done in RegisterUserWithSynapseV3 method
+                            }
+
+                            createUserV3Result_oauth oath = new createUserV3Result_oauth();
+                            res = createSynapseUserResult;
+                            res.success = true;
+                            oath.oauth_key = createSynapseUserResult.oauth.oauth_key; // Already know it's not NULL, so don't need to re-check
+                            res.user_id = !String.IsNullOrEmpty(createSynapseUserResult.user._id.id) ? createSynapseUserResult.user._id.id : "";
+                            oath.expires_in = !String.IsNullOrEmpty(createSynapseUserResult.oauth.expires_in) ? createSynapseUserResult.oauth.expires_in : "";
+                            res.oauth = oath;
+                            res.memberIdGenerated = member.MemberId.ToString();
+                            res.error_code = createSynapseUserResult.error_code;
+                            res.errorMsg = createSynapseUserResult.errorMsg;
                         }
 
                         #endregion Created Synapse User Successfully
@@ -3589,8 +3477,8 @@ namespace Nooch.DataAccess
                                     else
                                     {
                                         // (7/27/15) Cliff: We should use 'force_create'='no' in the /user/create call to Synapse. Then Synapse will return the user's Oauth key if found.
-                                        Logger.Info("MDA -> RegisterNonNoochUserWithSynapse[transId: " + transId +
-                                                               "] Synapse 401 Error User Already Registered BUT not found in Nooch DB.");
+                                        Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 Failed - User already registered with Synapse BUT not found in Nooch DB - " +
+                                                     "[transId: " + transId + "] ");
                                         res.reason = "Account already registered, but not found in Nooch DB.";
                                     }
                                 }
@@ -3611,7 +3499,6 @@ namespace Nooch.DataAccess
                     else
                     {
                         Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 - createSynapseUser FAILED & Returned NULL");
-
                         res.reason = !String.IsNullOrEmpty(createSynapseUserResult.reason) ? createSynapseUserResult.reason : "Reg NonNooch User w/ Syn: Error 5927.";
                     }
 
@@ -3732,38 +3619,55 @@ namespace Nooch.DataAccess
         }
 
 
-        public string SaveBase64AsImage(string fileNametobeused, string base64String)
+        public genericResponse SaveBase64AsImage(string fileNameToBeUsed, string base64String)
         {
-            string filnameMade = "";
-            byte[] bytes = Convert.FromBase64String(base64String);
-            string folderPath = Utility.GetValueFromConfig("SynapsePhotoPath");
+            genericResponse res = new genericResponse();
+            res.success = false;
 
-            string PhotoUrl = Utility.GetValueFromConfig("SynapseIdPhotoUrl");
-
-            Image image = byteArrayToImage(bytes);
-            string fullpathtoSaveimage = "";
-            using (MemoryStream ms = new MemoryStream(bytes))
+            try
             {
-                image = Image.FromStream(ms);
-                Bitmap bm = new Bitmap(image);
-                fullpathtoSaveimage = Path.Combine(folderPath, fileNametobeused);
-                fullpathtoSaveimage = HostingEnvironment.MapPath(fullpathtoSaveimage);
-                filnameMade = fileNametobeused;
+                string filnameMade = "";
+                byte[] bytes = Convert.FromBase64String(base64String);
+                string folderPath = Utility.GetValueFromConfig("SynapsePhotoPath");
+                string PhotoUrl = Utility.GetValueFromConfig("SynapseIdPhotoUrl");
 
-                // checking if file with same name already exists
-                while (File.Exists(Path.Combine(folderPath, fileNametobeused)))
+                Image image = byteArrayToImage(bytes);
+                string fullPathOfSavedImage = "";
+
+                using (MemoryStream ms = new MemoryStream(bytes))
                 {
-                    filnameMade = fileNametobeused + "1";
-                    fullpathtoSaveimage = Path.Combine(folderPath, filnameMade);
-                    fullpathtoSaveimage = HostingEnvironment.MapPath(fullpathtoSaveimage);
+                    image = Image.FromStream(ms);
+                    Bitmap bm = new Bitmap(image);
+                    fullPathOfSavedImage = Path.Combine(folderPath, fileNameToBeUsed);
+                    fullPathOfSavedImage = HostingEnvironment.MapPath(fullPathOfSavedImage);
+                    filnameMade = fileNameToBeUsed;
+
+                    // checking if file with same name already exists
+                    while (File.Exists(Path.Combine(folderPath, fileNameToBeUsed)))
+                    {
+                        filnameMade = fileNameToBeUsed + "1";
+                        fullPathOfSavedImage = Path.Combine(folderPath, filnameMade);
+                        fullPathOfSavedImage = HostingEnvironment.MapPath(fullPathOfSavedImage);
+                    }
+
+                    bm.Save(fullPathOfSavedImage, System.Drawing.Imaging.ImageFormat.Png);
                 }
 
-                bm.Save(fullpathtoSaveimage, System.Drawing.Imaging.ImageFormat.Png);
+                fullPathOfSavedImage = PhotoUrl + filnameMade;
+
+                res.msg = fullPathOfSavedImage;
+                res.success = true;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("MDA 0> SaveBase64AsImage FAILED - FileNameToBeUsed: [" + fileNameToBeUsed + "], Exception: [" + ex.Message + "]");
+                res.msg = "Exception: " + ex.Message;
             }
 
-            fullpathtoSaveimage = PhotoUrl + filnameMade;
-            return fullpathtoSaveimage;
+            return res;
         }
+
+
         public Image byteArrayToImage(byte[] byteArrayIn)
         {
             MemoryStream ms = new MemoryStream(byteArrayIn);
@@ -3771,148 +3675,178 @@ namespace Nooch.DataAccess
             return returnImage;
         }
 
+
         public GenericInternalResponseForSynapseMethods submitDocumentToSynapseV3(string MemberId, string ImageUrl)
         {
-            Logger.Info("MDA -> submitDocumentToSynapseV3 Initialized - [MemberId: " + MemberId + "]");
-
-            var id = Utility.ConvertToGuid(MemberId);
+            Logger.Info("MDA -> submitDocumentToSynapseV3 Initialized - [MemberId: " + MemberId +
+                        "], ImageURL: [" + ImageUrl + "]");
 
             GenericInternalResponseForSynapseMethods res = new GenericInternalResponseForSynapseMethods();
+            res.success = false;
 
-
-            #region Get User's Synapse OAuth Consumer Key
-
-            string usersSynapseOauthKey = "";
-
-
-            var usersSynapseDetails = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
-
-            if (usersSynapseDetails == null)
+            try
             {
-                Logger.Info("MDA -> submitDocumentToSynapseV3 ABORTED: Member's Synapse User Details not found. [MemberId: " + MemberId + "]");
+                Guid id = Utility.ConvertToGuid(MemberId);
 
-                res.message = "Could not find this member's account info";
+                #region Get User's Synapse OAuth Consumer Key
 
-                return res;
-            }
-            else
-            {
-                _dbContext.Entry(usersSynapseDetails).Reload();
-                usersSynapseOauthKey = CommonHelper.GetDecryptedData(usersSynapseDetails.access_token);
-            }
+                string usersSynapseOauthKey = "";
+                var usersSynapseDetails = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
 
-            #endregion Get User's Synapse OAuth Consumer Key
-
-
-            #region Get User's Fingerprint
-
-            string usersFingerprint = "";
-
-            var member = CommonHelper.GetMemberDetails(id.ToString()); ;
-
-            if (member == null)
-            {
-                Logger.Info("MDA -> submitDocumentToSynapseV3 ABORTED: Member not found. [MemberId: " + MemberId + "]");
-                res.message = "Member not found";
-                return res;
-            }
-            else
-            {
-                if (String.IsNullOrEmpty(member.UDID1))
+                if (usersSynapseDetails == null)
                 {
-                    Logger.Info("MDA -> submitDocumentToSynapseV3 ABORTED: Member's Fingerprint not found. [MemberId: " + MemberId + "]");
-                    res.message = "Could not find this member's fingerprint";
+                    Logger.Error("MDA -> submitDocumentToSynapseV3 ABORTED: Member's Synapse User Details not found. [MemberId: " + MemberId + "]");
+                    res.message = "Could not find this member's account info";
                     return res;
                 }
                 else
                 {
-                    usersFingerprint = member.UDID1;
+                    _dbContext.Entry(usersSynapseDetails).Reload();
+                    usersSynapseOauthKey = CommonHelper.GetDecryptedData(usersSynapseDetails.access_token);
                 }
-            }
 
-            #endregion Get User's Fingerprint
-
-            #region Call Synapse /user/doc/attachments/add API
-
-            submitDocToSynapseV3Class answers = new submitDocToSynapseV3Class();
-
-            SynapseV3Input_login s_log = new SynapseV3Input_login();
-            s_log.oauth_key = usersSynapseOauthKey;
-            answers.login = s_log;
-            //answers.login.oauth_key = usersSynapseOauthKey;
-
-            submitDocToSynapse_user sdtu = new submitDocToSynapse_user();
-            submitDocToSynapse_user_doc doc = new submitDocToSynapse_user_doc();
-            //doc.attachment = "data:text/csv;base64," + CommonHelper.ConvertImageURLToBase64(ImageUrl).Replace("\\","");
-            doc.attachment = "data:text/csv;base64,SUQsTmFtZSxUb3RhbCAoaW4gJCksRmVlIChpbiAkKSxOb3RlLFRyYW5zYWN0aW9uIFR5cGUsRGF0ZSxTdGF0dXMNCjUxMTksW0RlbW9dIEJlbHogRW50ZXJwcmlzZXMsLTAuMTAsMC4wMCwsQmFuayBBY2NvdW50LDE0MzMxNjMwNTEsU2V0dGxlZA0KNTExOCxbRGVtb10gQmVseiBFbnRlcnByaXNlcywtMS4wMCwwLjAwLCxCYW5rIEFjY291bnQsMTQzMzE2MjkxOSxTZXR0bGVkDQo1MTE3LFtEZW1vXSBCZWx6IEVudGVycHJpc2VzLC0xLjAwLDAuMDAsLEJhbmsgQWNjb3VudCwxNDMzMTYyODI4LFNldHRsZWQNCjUxMTYsW0RlbW9dIEJlbHogRW50ZXJwcmlzZXMsLTEuMDAsMC4wMCwsQmFuayBBY2NvdW50LDE0MzMxNjI2MzQsU2V0dGxlZA0KNTExNSxbRGVtb10gQmVseiBFbnRlcnByaXNlcywtMS4wMCwwLjAwLCxCYW5rIEFjY291bnQsMTQzMzE2MjQ5OCxTZXR0bGVkDQo0ODk1LFtEZW1vXSBMRURJQyBBY2NvdW50LC03LjAwLDAuMDAsLEJhbmsgQWNjb3VudCwxNDMyMjUwNTYyLFNldHRsZWQNCjQ4MTIsS2FyZW4gUGF1bCwtMC4xMCwwLjAwLCxCYW5rIEFjY291bnQsMTQzMTk5NDAzNixTZXR0bGVkDQo0NzgwLFNhbmthZXQgUGF0aGFrLC0wLjEwLDAuMDAsLEJhbmsgQWNjb3VudCwxNDMxODQ5NDgxLFNldHRsZWQNCjQzMTUsU2Fua2FldCBQYXRoYWssLTAuMTAsMC4wMCwsQmFuayBBY2NvdW50LDE0Mjk3NzU5MzcsU2V0dGxlZA0KNDMxNCxTYW5rYWV0IFBhdGhhaywtMC4xMCwwLjAwLCxCYW5rIEFjY291bnQsMTQyOTc3NTQzNCxTZXR0bGVkDQo0MzEzLFNhbmthZXQgUGF0aGFrLC0wLjEwLDAuMDAsLEJhbmsgQWNjb3VudCwxNDI5Nzc1MzY0LFNldHRsZWQNCjQzMTIsU2Fua2FldCBQYXRoYWssLTAuMTAsMC4wMCwsQmFuayBBY2NvdW50LDE0Mjk3NzUyNTAsU2V0dGxlZA0KNDMxMSxTYW5rYWV0IFBhdGhhaywtMC4xMCwwLjAwLCxCYW5rIEFjY291bnQsMTQyOTc3NTAxMyxTZXR0bGVkDQo0MjM1LFtEZW1vXSBCZWx6IEVudGVycHJpc2VzLC0wLjEwLDAuMDAsLEJhbmsgQWNjb3VudCwxNDI5MzMxODA2LFNldHRsZWQNCjQxMzYsU2Fua2FldCBQYXRoYWssLTAuMTAsMC4wMCwsQmFuayBBY2NvdW50LDE0Mjg4OTA4NjMsU2V0dGxlZA0KNDAzMCxTYW5rYWV0IFBhdGhhaywtMC4xMCwwLjAwLCxCYW5rIEFjY291bnQsMTQyODIxNTM5NixTZXR0bGVkDQo0MDE0LFtEZW1vXSBCZWx6IEVudGVycHJpc2VzLC0wLjEwLDAuMDAsLEJhbmsgQWNjb3VudCwxNDI4MTI1MzgwLENhbmNsZWQNCjM4MzIsU2Fua2FldCBQYXRoYWssLTAuMTAsMC4wMCwsQmFuayBBY2NvdW50LDE0MjcxMDc0NzAsU2V0dGxlZA0KMzgyNixTYW5rYWV0IFBhdGhhaywtMC4xMCwwLjAwLCxCYW5rIEFjY291bnQsMTQyNzAzNTM5MixTZXR0bGVkDQozODI1LFNhbmthZXQgUGF0aGFrLC0wLjEwLDAuMDAsLEJhbmsgQWNjb3VudCwxNDI3MDMyOTM3LFNldHRsZWQNCg==";
+                #endregion Get User's Synapse OAuth Consumer Key
 
 
-            sdtu.fingerprint = usersFingerprint;
+                #region Get User's Fingerprint
 
-            sdtu.doc = doc;
+                string usersFingerprint = "";
 
-            answers.user = sdtu;
+                var member = CommonHelper.GetMemberDetails(id.ToString()); ;
 
-            //answers.user.doc.attachment = "data:text/csv;base64," + ConvertImageURLToBase64(ImageUrl).Replace("\\", ""); // NEED TO GET THE ACTUAL DOC... EITHER PASS THE BYTES TO THIS METHOD, OR GET FROM DB
-            //answers.user.fingerprint = usersFingerprint;
-
-            string baseAddress = "";
-
-            baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/doc/attachments/add" : "https://synapsepay.com/api/v3/user/doc/attachments/add";
-
-
-            try
-            {
-                var http = (HttpWebRequest)WebRequest.Create(new Uri(baseAddress));
-                http.Accept = "application/json";
-                http.ContentType = "application/json";
-                http.Method = "POST";
-
-                string parsedContent = JsonConvert.SerializeObject(answers);
-                ASCIIEncoding encoding = new ASCIIEncoding();
-                Byte[] bytes = encoding.GetBytes(parsedContent);
-
-                Stream newStream = http.GetRequestStream();
-                newStream.Write(bytes, 0, bytes.Length);
-                newStream.Close();
-
-                var response = http.GetResponse();
-                var stream = response.GetResponseStream();
-                var sr = new StreamReader(stream);
-                var content = sr.ReadToEnd();
-
-                kycInfoResponseFromSynapse resFromSynapse = new kycInfoResponseFromSynapse();
-
-                resFromSynapse = JsonConvert.DeserializeObject<kycInfoResponseFromSynapse>(content);
-
-                if (resFromSynapse != null)
+                if (member == null)
                 {
-                    if (resFromSynapse.success.ToString().ToLower() == "true")
-                    {
-                        Logger.Info("MDA -> submitDocumentToSynapseV3 SUCCESSFUL - [MemberID: " + MemberId + "]");
-                        res.success = true;
-                        res.message = "";
-                    }
-                    else
-                    {
-                        res.message = "Got a response, but success was not true";
-                        Logger.Info("MDA -> submitDocumentToSynapseV3 FAILED - Got Synapse response, but success was NOT 'true' - [MemberID: " + MemberId + "]");
-                    }
+                    Logger.Info("MDA -> submitDocumentToSynapseV3 ABORTED: Member not found. [MemberId: " + MemberId + "]");
+                    res.message = "Member not found";
+                    return res;
                 }
                 else
                 {
-                    res.message = "Verification response was null";
-                    Logger.Info("MDA -> submitDocumentToSynapseV3 FAILED - Synapse response was NULL - [MemberID: " + MemberId + "]");
+                    if (String.IsNullOrEmpty(member.UDID1))
+                    {
+                        Logger.Info("MDA -> submitDocumentToSynapseV3 ABORTED: Member's Fingerprint not found. [MemberId: " + MemberId + "]");
+                        res.message = "Could not find this member's fingerprint";
+                        return res;
+                    }
+                    else
+                    {
+                        usersFingerprint = member.UDID1;
+                    }
                 }
+
+                #endregion Get User's Fingerprint
+
+
+                #region Call Synapse /user/doc/attachments/add API
+
+                try
+                {
+                    submitDocToSynapseV3Class submitDocObj = new submitDocToSynapseV3Class();
+
+                    SynapseV3Input_login login = new SynapseV3Input_login();
+                    login.oauth_key = usersSynapseOauthKey;
+                    submitDocObj.login = login;
+
+                    submitDocToSynapse_user user = new submitDocToSynapse_user();
+                    submitDocToSynapse_user_doc doc = new submitDocToSynapse_user_doc();
+                    doc.attachment = "data:text/csv;base64," + CommonHelper.ConvertImageURLToBase64(ImageUrl).Replace("\\", "");
+                    //doc.attachment = "data:text/csv;base64,SUQsTmFtZSxUb3RhbCAoaW4gJCksRmVlIChpbiAkKSxOb3RlLFRyYW5zYWN0aW9uIFR5cGUsRGF0ZSxTdGF0dXMNCjUxMTksW0RlbW9dIEJlbHogRW50ZXJwcmlzZXMsLTAuMTAsMC4wMCwsQmFuayBBY2NvdW50LDE0MzMxNjMwNTEsU2V0dGxlZA0KNTExOCxbRGVtb10gQmVseiBFbnRlcnByaXNlcywtMS4wMCwwLjAwLCxCYW5rIEFjY291bnQsMTQzMzE2MjkxOSxTZXR0bGVkDQo1MTE3LFtEZW1vXSBCZWx6IEVudGVycHJpc2VzLC0xLjAwLDAuMDAsLEJhbmsgQWNjb3VudCwxNDMzMTYyODI4LFNldHRsZWQNCjUxMTYsW0RlbW9dIEJlbHogRW50ZXJwcmlzZXMsLTEuMDAsMC4wMCwsQmFuayBBY2NvdW50LDE0MzMxNjI2MzQsU2V0dGxlZA0KNTExNSxbRGVtb10gQmVseiBFbnRlcnByaXNlcywtMS4wMCwwLjAwLCxCYW5rIEFjY291bnQsMTQzMzE2MjQ5OCxTZXR0bGVkDQo0ODk1LFtEZW1vXSBMRURJQyBBY2NvdW50LC03LjAwLDAuMDAsLEJhbmsgQWNjb3VudCwxNDMyMjUwNTYyLFNldHRsZWQNCjQ4MTIsS2FyZW4gUGF1bCwtMC4xMCwwLjAwLCxCYW5rIEFjY291bnQsMTQzMTk5NDAzNixTZXR0bGVkDQo0NzgwLFNhbmthZXQgUGF0aGFrLC0wLjEwLDAuMDAsLEJhbmsgQWNjb3VudCwxNDMxODQ5NDgxLFNldHRsZWQNCjQzMTUsU2Fua2FldCBQYXRoYWssLTAuMTAsMC4wMCwsQmFuayBBY2NvdW50LDE0Mjk3NzU5MzcsU2V0dGxlZA0KNDMxNCxTYW5rYWV0IFBhdGhhaywtMC4xMCwwLjAwLCxCYW5rIEFjY291bnQsMTQyOTc3NTQzNCxTZXR0bGVkDQo0MzEzLFNhbmthZXQgUGF0aGFrLC0wLjEwLDAuMDAsLEJhbmsgQWNjb3VudCwxNDI5Nzc1MzY0LFNldHRsZWQNCjQzMTIsU2Fua2FldCBQYXRoYWssLTAuMTAsMC4wMCwsQmFuayBBY2NvdW50LDE0Mjk3NzUyNTAsU2V0dGxlZA0KNDMxMSxTYW5rYWV0IFBhdGhhaywtMC4xMCwwLjAwLCxCYW5rIEFjY291bnQsMTQyOTc3NTAxMyxTZXR0bGVkDQo0MjM1LFtEZW1vXSBCZWx6IEVudGVycHJpc2VzLC0wLjEwLDAuMDAsLEJhbmsgQWNjb3VudCwxNDI5MzMxODA2LFNldHRsZWQNCjQxMzYsU2Fua2FldCBQYXRoYWssLTAuMTAsMC4wMCwsQmFuayBBY2NvdW50LDE0Mjg4OTA4NjMsU2V0dGxlZA0KNDAzMCxTYW5rYWV0IFBhdGhhaywtMC4xMCwwLjAwLCxCYW5rIEFjY291bnQsMTQyODIxNTM5NixTZXR0bGVkDQo0MDE0LFtEZW1vXSBCZWx6IEVudGVycHJpc2VzLC0wLjEwLDAuMDAsLEJhbmsgQWNjb3VudCwxNDI4MTI1MzgwLENhbmNsZWQNCjM4MzIsU2Fua2FldCBQYXRoYWssLTAuMTAsMC4wMCwsQmFuayBBY2NvdW50LDE0MjcxMDc0NzAsU2V0dGxlZA0KMzgyNixTYW5rYWV0IFBhdGhhaywtMC4xMCwwLjAwLCxCYW5rIEFjY291bnQsMTQyNzAzNTM5MixTZXR0bGVkDQozODI1LFNhbmthZXQgUGF0aGFrLC0wLjEwLDAuMDAsLEJhbmsgQWNjb3VudCwxNDI3MDMyOTM3LFNldHRsZWQNCg==";
+
+                    user.fingerprint = usersFingerprint;
+                    user.doc = doc;
+
+                    submitDocObj.user = user;
+
+                    string baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/doc/attachments/add" : "https://synapsepay.com/api/v3/user/doc/attachments/add";
+
+                    var http = (HttpWebRequest)WebRequest.Create(new Uri(baseAddress));
+                    http.Accept = "application/json";
+                    http.ContentType = "application/json";
+                    http.Method = "POST";
+
+                    string parsedContent = JsonConvert.SerializeObject(submitDocObj);
+                    ASCIIEncoding encoding = new ASCIIEncoding();
+                    Byte[] bytes = encoding.GetBytes(parsedContent);
+
+                    Stream newStream = http.GetRequestStream();
+                    newStream.Write(bytes, 0, bytes.Length);
+                    newStream.Close();
+
+                    var response = http.GetResponse();
+                    var stream = response.GetResponseStream();
+                    var sr = new StreamReader(stream);
+                    var content = sr.ReadToEnd();
+
+                    kycInfoResponseFromSynapse resFromSynapse = new kycInfoResponseFromSynapse();
+
+                    resFromSynapse = JsonConvert.DeserializeObject<kycInfoResponseFromSynapse>(content);
+
+                    if (resFromSynapse != null)
+                    {
+                        if (resFromSynapse.success == true || resFromSynapse.success.ToString().ToLower() == "true")
+                        {
+                            var permission = resFromSynapse.user.permission != null ? resFromSynapse.user.permission : "NOT FOUND";
+                            var physDoc = "NOT FOUND";
+                            var virtualDoc = "NOT FOUND";
+
+                            if (resFromSynapse.user.doc_status != null)
+                            {
+                                physDoc = resFromSynapse.user.doc_status.physical_doc;
+                                virtualDoc = resFromSynapse.user.doc_status.virtual_doc;
+                            }
+
+
+                            // Update Permission in SynapseCreateUserResults Table using value returned by Synapse
+                            // If any problem and 'permission' is 'NOT FOUND', leave the DB value as is.
+                            _dbContext.Entry(usersSynapseDetails).Reload();
+                            usersSynapseDetails.permission = permission != "NOT FOUND" ? permission : usersSynapseDetails.permission;
+                            usersSynapseDetails.photos = ImageUrl;
+
+                            // Cliff (5/24/16): ALSO NEED TO SAVE "virtual_doc" and "physical_doc" VALUES IN NOOCH DB, BUT FIELDS DON'T EXIST YET
+
+                            int save = _dbContext.SaveChanges();
+
+                            if (save > 0)
+                            {
+                                Logger.Info("MDA -> submitDocumentToSynapseV3 - SUCCESSFULLY updated user's Synapse Permission in SynapseCreateUserResult Table" +
+                                            "New Permission: [" + permission + "], ID Doc URL: [" + ImageUrl + "]");
+                                res.message = "ID doc saved and submitted successfully.";
+                                res.success = true;
+                            }
+                            else
+                            {
+                                Logger.Error("MDA -> submitDocumentToSynapseV3 - FAILED to save new Permission and ImageURL in SynapseCreateUserResult Table" +
+                                            "New Permission: [" + permission + "], ID Doc URL: [" + ImageUrl + "]");
+                                res.message = "Error saving ID doc";
+                            }
+                        }
+                        else
+                        {
+                            res.message = "Got a response, but success was not true";
+                            Logger.Info("MDA -> submitDocumentToSynapseV3 FAILED - Got Synapse response, but success was NOT 'true' - [MemberID: " + MemberId + "]");
+                        }
+                    }
+                    else
+                    {
+                        res.message = "Verification response was null";
+                        Logger.Info("MDA -> submitDocumentToSynapseV3 FAILED - Synapse response was NULL - [MemberID: " + MemberId + "]");
+                    }
+                }
+                catch (WebException ex)
+                {
+                    // TO DO: ADD ERROR HANDLING FOR SYNAPSE RESPONSE...
+
+                    res.message = "MDA Exception #3833";
+                    Logger.Error("MDA -> submitDocumentToSynapseV3 FAILED - Catch [Exception: " + ex + "]");
+                }
+
+                #endregion Call Synapse /user/doc/attachments/add API
             }
-            catch (WebException ex)
+            catch (Exception ex)
             {
-                res.message = "MDA Exception #9575";
-                Logger.Info("MDA -> submitDocumentToSynapseV3 FAILED - Catch [Exception: " + ex + "]");
+                Logger.Error("MDA -> submitDocumentToSynapseV3 FAILED - Outer Exception - " +
+                             "MemberID: [" + MemberId + "], Exception: [" + ex.Message + "]");
             }
-
-            #endregion Call Synapse /user/doc/attachments/add API
-
 
             return res;
         }
@@ -3921,7 +3855,7 @@ namespace Nooch.DataAccess
         public string CreateNonNoochUserAccountAfterRejectMoney(string TransId, string password, string EmailId, string UserName)
         {
             Logger.Info("MDA - CreateNonNoochUserAccountAfterRejectMoney Initiated - [TransId: " + TransId + "], " +
-                                   "[Email: " + EmailId + "], [Name: " + UserName + "]");
+                        "[Email: " + EmailId + "], [Name: " + UserName + "]");
 
             try
             {
@@ -4105,10 +4039,8 @@ namespace Nooch.DataAccess
 
                             #region Create Privacy Settings
 
-
                             var memberPrivacySettings = new MemberPrivacySetting
                             {
-
                                 MemberId = member.MemberId,
                                 AllowSharing = true,
                                 ShowInSearch = true,
@@ -4193,13 +4125,13 @@ namespace Nooch.DataAccess
 
                                         if (inviteCodeObj == null)
                                         {
-                                            Logger.Info("MDA -> CreateNonNoochUserAccountAfterRejectMoney - Attempted but invite code not found: [" +
-                                                                    inviteCode + "]");
+                                            Logger.Error("MDA -> CreateNonNoochUserAccountAfterRejectMoney - Attempted but invite code not found: [" +
+                                                         inviteCode + "]");
                                         }
                                         else if (inviteCodeObj.count >= inviteCodeObj.totalAllowed)
                                         {
-                                            Logger.Info("MDA -> CreateNonNoochUserAccountAfterRejectMoney - Attempted to notify referrer but Allowable limit of [" +
-                                                                   inviteCodeObj.totalAllowed + "] already reached for Code: [" + inviteCode + "]");
+                                            Logger.Error("MDA -> CreateNonNoochUserAccountAfterRejectMoney - Attempted to notify referrer but Allowable limit of [" +
+                                                         inviteCodeObj.totalAllowed + "] already reached for Code: [" + inviteCode + "]");
                                         }
                                         else
                                         {
@@ -5008,9 +4940,6 @@ namespace Nooch.DataAccess
 
                 string usersSynapseOauthKey = "";
 
-
-
-
                 var usersSynapseDetails = _dbContext.SynapseCreateUserResults.Where(synapseUser =>
                                     synapseUser.MemberId.Value.Equals(id) &&
                                     synapseUser.IsDeleted == false).FirstOrDefault();
@@ -5064,12 +4993,10 @@ namespace Nooch.DataAccess
                 #region Tell Synapse To Remove This Node
 
                 SynapseRemoveBankV3_Input removeBankPars = new SynapseRemoveBankV3_Input();
-                //removeBankPars.login.oauth_key = usersSynapseOauthKey;
 
                 SynapseV3Input_login log = new SynapseV3Input_login() { oauth_key = usersSynapseOauthKey };
                 removeBankPars.login = log;
 
-                //removeBankPars.user.fingerprint = usersFingerprint;
                 SynapseV3Input_user userr = new SynapseV3Input_user() { fingerprint = usersFingerprint };
                 removeBankPars.user = userr;
 
@@ -5077,7 +5004,6 @@ namespace Nooch.DataAccess
 
                 SynapseRemoveBankV3_Input_node nodem = new SynapseRemoveBankV3_Input_node() { _id = noId };
 
-                //removeBankPars.node._id.oid = bankAccountsFound[0].ToString();
                 removeBankPars.node = nodem;
 
                 string baseAddress = "";
@@ -5152,8 +5078,8 @@ namespace Nooch.DataAccess
             if (noochMember.IsVerifiedWithSynapse == true)
             {
                 Logger.Info("MDA -> getIdVerificationQuestionsV3 ABORTED: Member's ID already verified with Synapse  :-) - [Member's Name: " +
-                                      CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(noochMember.FirstName)) + " " +
-                                      CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(noochMember.LastName)) + "], MemberId: " + MemberId + "]");
+                            CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(noochMember.FirstName)) + " " +
+                            CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(noochMember.LastName)) + "], MemberId: " + MemberId + "]");
                 response.msg = "ID already verified successfully";
             }
 
@@ -5373,12 +5299,9 @@ namespace Nooch.DataAccess
                         // Now we have to update the "DateSubmitted" value for EACH question in the DB (should be exactly 5 per 'QuestionSetId')
                         #region Mark All 5 Questions as 'Submitted' in Nooch DB
 
-
-
                         List<SynapseIdVerificationQuestion> listOfQuestionsToUpdate =
                             _dbContext.SynapseIdVerificationQuestions.Where(m => m.QuestionSetId == questionSetId && m.MemberId == id).Distinct().OrderByDescending(o => o.DateCreated)
                                         .ToList();
-
 
                         if (listOfQuestionsToUpdate.Count > 0)
                         {
@@ -5387,7 +5310,7 @@ namespace Nooch.DataAccess
                             {
                                 if (n > 5)
                                 {
-                                    Logger.Info("MDA -> submitIdVerificationAnswersToSynapse - Unexpected: More than 5 answers (n = " + n + ") found in DB... Could be a problem somewhere");
+                                    Logger.Error("MDA -> submitIdVerificationAnswersToSynapse - Unexpected: More than 5 answers (n = " + n + ") found in DB... Could be a problem somewhere");
                                 }
                                 q.submitted = true;
                                 q.DateResponseSent = DateTime.Now;
@@ -5405,12 +5328,12 @@ namespace Nooch.DataAccess
                             }
                             else
                             {
-                                Logger.Info("MDA -> submitIdVerificationAnswersToSynapse - Unexpected: < 4 Questions were Marked as Submitted in DB. [Question Set ID: " + questionSetId + "]");
+                                Logger.Error("MDA -> submitIdVerificationAnswersToSynapse - Unexpected: < 4 Questions were Marked as Submitted in DB. [Question Set ID: " + questionSetId + "]");
                             }
                         }
                         else
                         {
-                            Logger.Info("MDA -> submitIdVerificationAnswersToSynapse FAILED TO UPDATE DB: List of Banks to Update was null - [MemberId: " + MemberId + "]");
+                            Logger.Error("MDA -> submitIdVerificationAnswersToSynapse FAILED TO UPDATE DB: List of Banks to Update was null - [MemberId: " + MemberId + "]");
                         }
 
                         #endregion Mark All 5 Questions as 'Submitted' in Nooch DB
