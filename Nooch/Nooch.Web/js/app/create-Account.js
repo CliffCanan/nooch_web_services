@@ -11,6 +11,12 @@ var memid = $('#memId').val();
 
 var isUpgradeToV3 = 'false';
 
+// to be used with upload doc related stuff
+var isFileAdded = "0";
+var FileData = null;
+
+var isIdVerified = false;
+
 $(document).ready(function () {
     var isSmScrn = false;
     if ($(window).width() < 768) {
@@ -351,6 +357,51 @@ function runIdWizard() {
                             resizePreference: 'width'
                         });
 
+
+                        $('#idVer_idDoc').on('fileerror', function (event, data, msg) {
+                            $('#idVerWiz > .content').animate({ height: "28em" }, 600)
+                        });
+
+                        $('#idVer_idDoc').on('fileloaded', function (event, file, previewId, index, reader) {
+                            $('#idVerWiz > .content').animate({ height: "26em" }, 500)
+
+                            isFileAdded = "1";
+                            var readerN = new FileReader();
+
+                            readerN.readAsDataURL(file);
+                            readerN.onload = function (e) {
+                                // browser completed reading file - display it
+                                var splittable = e.target.result.split(',');
+                                var string2 = splittable[1];
+                                //console.log(string2);
+                                FileData = string2;
+
+                                //console.log("image data is -> " + FileData);
+                            };
+                        });
+
+                        $('#idVer_idDoc').on('fileclear', function (event) {
+                            isFileAdded = "0";
+                            FileData = null;
+                            console.log("fileclear");
+                        });
+
+                        $('#idVer_idDoc').on('filecleared', function (event) {
+                            isFileAdded = "0";
+                            FileData = null;
+                            console.log("filecleareD");
+                        });
+
+                        $('#idVer_idDoc').on('filezoomhidden', function (event, params) {
+                            event.preventDefault();
+                            console.log('File zoom hidden ', params.sourceEvent, params.previewId, params.modal);
+                        });
+
+                        $('#idVer_idDoc').on('filezoomhide', function (event, params) {
+                            event.preventDefault();
+                            console.log('File zoom hide ', params.sourceEvent, params.previewId, params.modal);
+                        });
+
                         $('#idVerWiz > .content').animate({ height: "21em" }, 500);
                         return true;
                     }
@@ -543,105 +594,105 @@ function ValidateEmail(str) {
 };
 
 
-function createRecord() {
-    console.log('createRecord Initiated...');
+//function createRecord() {
+//    console.log('createRecord Initiated...');
 
-    var userEmVal = $('#idVer-email').val();
-    var userPhVal = $('#idVer-phone').cleanVal();
-    var userNameVal = $('#idVer-name').val().trim();
-    var userPwVal = "";  // Still need to add the option for users to create a PW (not sure where in the flow to do it)
-    var ssnVal = $('#idVer-ssn').val().trim();
-    var dobVal = $('#idVer-dob').val().trim();
-    var addressVal = $('#idVer-address').val().trim();
-    var zipVal = $('#idVer-zip').val().trim();
-    var fngprntVal = fingprint;
-    var ipVal = ipusr;
+//    var userEmVal = $('#idVer-email').val();
+//    var userPhVal = $('#idVer-phone').cleanVal();
+//    var userNameVal = $('#idVer-name').val().trim();
+//    var userPwVal = "";  // Still need to add the option for users to create a PW (not sure where in the flow to do it)
+//    var ssnVal = $('#idVer-ssn').val().trim();
+//    var dobVal = $('#idVer-dob').val().trim();
+//    var addressVal = $('#idVer-address').val().trim();
+//    var zipVal = $('#idVer-zip').val().trim();
+//    var fngprntVal = fingprint;
+//    var ipVal = ipusr;
 
-    console.log("CREATE RECORD -> {userEm: " + userEmVal + ", userPh: " + userPhVal +
-                                ", userName: " + userNameVal + ", userPw: " + userPwVal +
-                                ", ssn: " + ssnVal + ", dob: " + dobVal +
-                                ", address: " + addressVal + ", zip: " + zipVal +
-                                ", fngprnt: " + fngprntVal + ", ip: " + ipVal + "}");
+//    console.log("CREATE RECORD -> {userEm: " + userEmVal + ", userPh: " + userPhVal +
+//                                ", userName: " + userNameVal + ", userPw: " + userPwVal +
+//                                ", ssn: " + ssnVal + ", dob: " + dobVal +
+//                                ", address: " + addressVal + ", zip: " + zipVal +
+//                                ", fngprnt: " + fngprntVal + ", ip: " + ipVal + "}");
 
-    $.ajax({
-        type: "POST",
-        //url: "createAccount.aspx/CreateAccountInDB",
-        url: "CreateAccountInDB",
+//    $.ajax({
+//        type: "POST",
+//        //url: "createAccount.aspx/CreateAccountInDB",
+//        url: "CreateAccountInDB",
        
-        data: "{'name':'" + userNameVal +
-              //"', 'dob':'" + dobVal +
-              //"', 'ssn':'" + ssnVal +
-              //"', 'address':'" + addressVal +
-              //"', 'zip':'" + zipVal +
-              "', 'email':'" + userEmVal +
-              //"', 'phone':'" + userPhVal +
-              //"', 'fngprnt':'" + fngprntVal +
-              //"', 'ip':'" + ipVal +
-              "', 'pw':'" + ssnVal + "'}",
-        contentType: "application/json; charset=utf-8",
-        dataType: "json",
-        async: "true",
-        cache: "false",
-        success: function (msg) {
+//        data: "{'name':'" + userNameVal +
+//              //"', 'dob':'" + dobVal +
+//              //"', 'ssn':'" + ssnVal +
+//              //"', 'address':'" + addressVal +
+//              //"', 'zip':'" + zipVal +
+//              "', 'email':'" + userEmVal +
+//              //"', 'phone':'" + userPhVal +
+//              //"', 'fngprnt':'" + fngprntVal +
+//              //"', 'ip':'" + ipVal +
+//              "', 'pw':'" + ssnVal + "'}",
+//        contentType: "application/json; charset=utf-8",
+//        dataType: "json",
+//        async: "true",
+//        cache: "false",
+//        success: function (msg) {
       
-            var CreateAccountInDbRes = msg;
-            console.log("SUCCESS -> 'CreateAccountInDB' Result is... ");
-            console.log(CreateAccountInDbRes);
+//            var CreateAccountInDbRes = msg;
+//            console.log("SUCCESS -> 'CreateAccountInDB' Result is... ");
+//            console.log(CreateAccountInDbRes);
 
-            // Hide the Loading Block
-            $('.modal-content').unblock();       
+//            // Hide the Loading Block
+//            $('.modal-content').unblock();       
 
-            //if (CreateAccountInDbRes.success == true &&
-            //    CreateAccountInDbRes.note.length > 5) 
-            if (CreateAccountInDbRes != null)
-            {
-                //memIdGen = CreateAccountInDbRes.note.trim();
-                // CreateAccountInDbRes.MemberId.trim();
+//            //if (CreateAccountInDbRes.success == true &&
+//            //    CreateAccountInDbRes.note.length > 5) 
+//            if (CreateAccountInDbRes != null)
+//            {
+//                //memIdGen = CreateAccountInDbRes.note.trim();
+//                // CreateAccountInDbRes.MemberId.trim();
                
-                  var memberID = $('#memId').attr('value');
-                 // HIDE THE WIZARD
-                $('#idWizContainer').slideUp()
+//                  var memberID = $('#memId').attr('value');
+//                 // HIDE THE WIZARD
+//                $('#idWizContainer').slideUp()
 
-                // THEN DISPLAY SUCCESS ALERT...
-                swal({
-                    title: "Great Job!",
-                    text: "<i class=\"mdi mdi-account-check text-success\"></i><br/>Thanks for submitting your ID information. That helps us keep Nooch safe for everyone." +
-                           "<span>Next, link any checking account to complete this payment:</span>" +
-                           "<span class=\"spanlist\"><span>1. &nbsp;Select your bank</span><span>2. &nbsp;Login with your regular online banking credentials</span><span>3. &nbsp;Choose which account to use</span></span>",
-                    type: "success",
-                    showCancelButton: false,
-                    confirmButtonColor: "#3fabe1",
-                    confirmButtonText: "Continue",
-                    closeOnConfirm: true,
-                    html: true,
-                    customClass: "idVerSuccessAlert",
-                });
+//                // THEN DISPLAY SUCCESS ALERT...
+//                swal({
+//                    title: "Great Job!",
+//                    text: "<i class=\"mdi mdi-account-check text-success\"></i><br/>Thanks for submitting your ID information. That helps us keep Nooch safe for everyone." +
+//                           "<span>Next, link any checking account to complete this payment:</span>" +
+//                           "<span class=\"spanlist\"><span>1. &nbsp;Select your bank</span><span>2. &nbsp;Login with your regular online banking credentials</span><span>3. &nbsp;Choose which account to use</span></span>",
+//                    type: "success",
+//                    showCancelButton: false,
+//                    confirmButtonColor: "#3fabe1",
+//                    confirmButtonText: "Continue",
+//                    closeOnConfirm: true,
+//                    html: true,
+//                    customClass: "idVerSuccessAlert",
+//                });
 
-                $('#AddBankDiv').removeClass('hidden');
+//                $('#AddBankDiv').removeClass('hidden');
 
-                //$("#frame").attr("src", "https://www.noochme.com/noochweb/trans/Add-Bank.aspx?MemberId=" + CreateAccountInDbRes.note + "&redUrl=createaccnt");
-                $("#frame").attr("src", "AddBank?MemberId=" + memberID + "&redUrl=createaccnt");
-            }
-            else if (CreateAccountInDbRes.msg.indexOf("already a"))
-            {
-                showErrorAlert('20');
-            }
-            else
-            {
-                showErrorAlert('2');
-            }
-        },
-        Error: function (x, e) {
-            // Hide UIBlock (loading box)) 
-            // Hide the Loading Block
-            console.log("ERROR --> 'x', then 'e' is... ");
-            console.log(x);
-            console.log(e);
+//                //$("#frame").attr("src", "https://www.noochme.com/noochweb/trans/Add-Bank.aspx?MemberId=" + CreateAccountInDbRes.note + "&redUrl=createaccnt");
+//                $("#frame").attr("src", "AddBank?MemberId=" + memberID + "&redUrl=createaccnt");
+//            }
+//            else if (CreateAccountInDbRes.msg.indexOf("already a"))
+//            {
+//                showErrorAlert('20');
+//            }
+//            else
+//            {
+//                showErrorAlert('2');
+//            }
+//        },
+//        Error: function (x, e) {
+//            // Hide UIBlock (loading box)) 
+//            // Hide the Loading Block
+//            console.log("ERROR --> 'x', then 'e' is... ");
+//            console.log(x);
+//            console.log(e);
 
-            showErrorAlert('2');
-        }
-    });
-}
+//            showErrorAlert('2');
+//        }
+//    });
+//}
 
 
 function saveMemberInfo() {
@@ -658,7 +709,13 @@ function saveMemberInfo() {
     var zipVal = $('#idVer-zip').val().trim();
     var fngprntVal = fingprint;
     var ipVal = ipusr;
-
+    var isIdImage = "";
+    var idImagedata = "";
+    if ($('#idVer_idDoc').val() != "")
+    {
+          isIdImage = "1";
+          idImagedata = $('#idVer_idDoc').val()
+    }
     console.log("SAVE MEMBER INFO -> {memId: " + memId +
                                    ", Name: " + userNameVal +
                                    ", dob: " + dobVal +
@@ -684,7 +741,9 @@ function saveMemberInfo() {
              "', 'phone':'" + userPhVal +
              "', 'fngprnt':'" + fngprntVal +
              "', 'ip':'" + ipVal +
-             "', 'pw':'" + '' + "'}",
+             "', 'pw':'" + '' +
+             "', 'isIdImage':'" + isFileAdded +
+             "', 'idImagedata':'" + FileData + "'}",
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         async: "true",
@@ -807,7 +866,10 @@ function createRecord() {
              "', 'phone':'" + userPhVal +
              "', 'fngprnt':'" + fngprntVal +
              "', 'ip':'" + ipVal +
-             "', 'pw':'" + '' + "'}",
+             "', 'pw':'" + '' +
+             "', 'pw':'" + '' +
+             "', 'isIdImage':'" + isFileAdded +
+             "', 'idImagedata':'" + FileData + "'}",
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         async: "true",

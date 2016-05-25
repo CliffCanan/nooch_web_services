@@ -28,6 +28,8 @@ namespace Nooch.Common.Entities
         public string ip { get; set; }
         public string fngprnt { get; set; }
         public string pw { get; set; }
+        public string isIdImage { get; set; }
+        public string idImagedata { get; set; }
     }
 
     public class CreateAccountInDB

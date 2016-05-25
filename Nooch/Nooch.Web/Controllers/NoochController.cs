@@ -891,21 +891,62 @@ namespace Nooch.Web.Controllers
                                        ", address: " + address + ", zip: " + zip);
 
 
-                string serviceMethod = "/RegisterNonNoochUserWithSynapse?transId=" + transId +
-                                    "&email=" + userEm +
-                                    "&phone=" + userPh +
-                                    "&fullname=" + userName +
-                                    "&pw=" + userPw +
-                                    "&ssn=" + ssn +
-                                    "&dob=" + dob +
-                                    "&address=" + address +
-                                    "&zip=" + zip +
-                                    "&fngprnt=" + fngprnt +
-                                    "&ip=" + ip + "&isIdImageAdded=" + isIdImage + "&idImageData=" + idImagedata;
+                //string serviceMethod = "/RegisterNonNoochUserWithSynapse?transId=" + transId +
+                //                    "&email=" + userEm +
+                //                    "&phone=" + userPh +
+                //                    "&fullname=" + userName +
+                //                    "&pw=" + userPw +
+                //                    "&ssn=" + ssn +
+                //                    "&dob=" + dob +
+                //                    "&address=" + address +
+                //                    "&zip=" + zip +
+                //                    "&fngprnt=" + fngprnt +
+                //                    "&ip=" + ip + "&isIdImageAdded=" + isIdImage + "&idImageData=" + idImagedata;
+
+                var scriptSerializer = new JavaScriptSerializer();
+                string json = "";
+                string serviceMethod;
+                RegisterNonNoochUserWithSynapse_Input_Class inputclass = new RegisterNonNoochUserWithSynapse_Input_Class();
+                // Member DOES NOT already exist, so use RegisterNONNOOCHUserWithSynapse()
+                inputclass.address = address;
+                inputclass.dob = dob;
+                inputclass.email = userEm;
+                inputclass.fngprnt = fngprnt;
+                inputclass.fullname = userName;
+                inputclass.idImageData = idImagedata;
+                inputclass.ip = ip;
+                inputclass.isIdImageAdded = isIdImage;
+
+                inputclass.phone = userPh;
+                inputclass.pw = userPw;
+
+                inputclass.ssn = ssn;
+                inputclass.transId = transId;
+                inputclass.zip = zip;
+
+
+                //json = "{\"input\":" + scriptSerializer.Serialize(inputclass) + "}";
+                json = scriptSerializer.Serialize(inputclass);
+
+                serviceMethod = "/RegisterNonNoochUserWithSynapse";
+
+                //serviceMethod = "/RegisterNonNoochUserWithSynapse?transId=" + transId +
+                //                "&email=" + userEm +
+                //                "&phone=" + userPh +
+                //                "&fullname=" + userName +
+                //                "&pw=" + userPw +
+                //                "&ssn=" + ssn +
+                //                "&dob=" + dob +
+                //                "&address=" + address +
+                //                "&zip=" + zip +
+                //                "&fngprnt=" + fngprnt +
+                //                "&ip=" + ip + "&isIdImageAdded=" + isIdImage + "&idImageData=" + idImagedata;
+
+
 
                 Logger.Info("DepositMoney Code-Behind -> RegisterUserWithSynp - Full Query String: [ " + String.Concat(serviceUrl, serviceMethod) + " ]");
 
-                RegisterUserSynapseResultClassExt regUserResponse = ResponseConverter<RegisterUserSynapseResultClassExt>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+                RegisterUserSynapseResultClassExt regUserResponse = ResponseConverter<RegisterUserSynapseResultClassExt>.CallServicePostMethod(String.Concat(serviceUrl, serviceMethod), json);
 
                 if (regUserResponse.success == "True")
                 {
@@ -1906,6 +1947,9 @@ namespace Nooch.Web.Controllers
 
             try
             {
+                string serviceMethod = "";
+                var scriptSerializer = new JavaScriptSerializer();
+                string json = "";
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
                 //string serviceMethod = "/UpdateMemberProfile?memId=" + rca.memId +
                 //                       "&fname=" + rca.name + "&lname=" + rca.name +
@@ -1914,32 +1958,62 @@ namespace Nooch.Web.Controllers
                 //                       "&dob=" + rca.dob + "&ssn=" + rca.ssn +
                 //                       "&fngprnt=" + rca.fngprnt + "&ip=" + rca.ip + "&pw=" + "";
 
-                string serviceMethod = "/RegisterExistingUserWithSynapseV3?transId=" + null +
-                                    "&memberId=" + rca.memId +
-                                    "&email=" + rca.email +
-                                    "&phone=" + rca.phone +
-                                    "&fullname=" + rca.name +
-                                    "&pw=" + "" +
-                                    "&ssn=" + rca.ssn +
-                                    "&dob=" + rca.dob +
-                                    "&address=" + rca.address +
-                                    "&zip=" + rca.zip +
-                                    "&fngprnt=" + rca.fngprnt + "&ip=" + rca.ip;
+                //string serviceMethod = "/RegisterExistingUserWithSynapseV3?transId=" + null +
+                //                    "&memberId=" + rca.memId +
+                //                    "&email=" + rca.email +
+                //                    "&phone=" + rca.phone +
+                //                    "&fullname=" + rca.name +
+                //                    "&pw=" + "" +
+                //                    "&ssn=" + rca.ssn +
+                //                    "&dob=" + rca.dob +
+                //                    "&address=" + rca.address +
+                //                    "&zip=" + rca.zip +
+                //                    "&fngprnt=" + rca.fngprnt + "&ip=" + rca.ip;
+
+
+                RegisterExistingUserWithSynapseV3_InputClass inputClass = new RegisterExistingUserWithSynapseV3_InputClass();
+
+                inputClass.address = rca.address;
+                inputClass.dob = rca.dob;
+                inputClass.email = rca.email;
+                inputClass.fngprnt = rca.fngprnt;
+                inputClass.fullname = rca.name;
+                inputClass.idImageData = rca.idImagedata;
+                inputClass.ip = rca.ip;
+                inputClass.isIdImageAdded =  rca.isIdImage;
+                inputClass.memberId = rca.memId;
+                inputClass.phone = rca.phone;
+                inputClass.pw = rca.pw;
+
+                inputClass.ssn = rca.ssn;
+                inputClass.transId = rca.transId;
+                inputClass.zip = rca.zip;
+
+
+                //json = "{\"input\":" + scriptSerializer.Serialize(inputClass) + "}";
+                json = scriptSerializer.Serialize(inputClass);
+
+                serviceMethod = "/RegisterExistingUserWithSynapseV3";
 
 
                 string urlToUse = String.Concat(serviceUrl, serviceMethod);
 
                 Logger.Info("Create Account Code-Behind -> saveMemberInfo CHECKPOINT #1 - URL To Use: [" + urlToUse + "]");
 
-                genericResponse response = ResponseConverter<genericResponse>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+                RegisterUserSynapseResultClassExt regUserResponse = ResponseConverter<RegisterUserSynapseResultClassExt>.CallServicePostMethod(String.Concat(serviceUrl, serviceMethod), json);
 
-                Logger.Info("Create Account Code-Behind -> saveMemberInfo RESULT: [" + Json(response) + "]");
+                Logger.Info("Create Account Code-Behind -> saveMemberInfo RESULT: [" + Json(regUserResponse) + "]");
                 //Logger.Info("Create Account Code-Behind -> saveMemberInfo RESULT.Msg: [" + response.msg + "]");
 
-                if (response.success == true)
+                if (regUserResponse.success == "True")
                 {
                     res.success = true;
                     res.msg = "Successfully updated member record on server!";
+                }
+                else
+                {
+                    res.success = false;
+                    res.msg = regUserResponse.reason;
                 }
             }
             catch (Exception ex)
@@ -1975,21 +2049,48 @@ namespace Nooch.Web.Controllers
             string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
             // serviceMethod = "/CreateNonNoochUserAccountAfterRejectMoney?TransId=" + Session["TransId"].ToString() + "&password=" + createAccount.pw + "&EmailId=" + createAccount.email + "&UserName=" + createAccount.name;
 
-            serviceMethod = "/RegisterNonNoochUserWithSynapse?transId=" + rca.transId +
-                                    "&memberId=" + rca.memId +
-                                    "&email=" + rca.email +
-                                    "&phone=" + rca.phone +
-                                    "&fullname=" + rca.name +
-                                    "&pw=" + "" +
-                                    "&ssn=" + rca.ssn +
-                                    "&dob=" + rca.dob +
-                                    "&address=" + rca.address +
-                                    "&zip=" + rca.zip +
-                                    "&fngprnt=" + rca.fngprnt + "&ip=" + rca.ip;
-            genericResponse response = ResponseConverter<genericResponse>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+            //serviceMethod = "/RegisterNonNoochUserWithSynapse?transId=" + rca.transId +
+            //                        "&memberId=" + rca.memId +
+            //                        "&email=" + rca.email +
+            //                        "&phone=" + rca.phone +
+            //                        "&fullname=" + rca.name +
+            //                        "&pw=" + "" +
+            //                        "&ssn=" + rca.ssn +
+            //                        "&dob=" + rca.dob +
+            //                        "&address=" + rca.address +
+            //                        "&zip=" + rca.zip +
+            //                        "&fngprnt=" + rca.fngprnt + "&ip=" + rca.ip;
 
-            if (response.success == true)
+
+             
+            RegisterNonNoochUserWithSynapse_Input_Class inputclass = new RegisterNonNoochUserWithSynapse_Input_Class();
+            // Member DOES NOT already exist, so use RegisterNONNOOCHUserWithSynapse()
+            inputclass.address = rca.address;
+            inputclass.dob = rca.dob;
+            inputclass.email = rca.email;
+            inputclass.fngprnt = rca.fngprnt;
+            inputclass.fullname = rca.name;
+            inputclass.idImageData = rca.idImagedata;
+            inputclass.ip = rca.ip;
+            inputclass.isIdImageAdded = rca.isIdImage;
+
+            inputclass.phone = rca.phone;
+            inputclass.pw = rca.pw;
+
+            inputclass.ssn = rca.ssn;
+            inputclass.transId = rca.transId;
+            inputclass.zip = rca.zip;
+
+
+            //json = "{\"input\":" + scriptSerializer.Serialize(inputclass) + "}";
+            json = scriptSerializer.Serialize(inputclass);
+
+            serviceMethod = "/RegisterNonNoochUserWithSynapse";
+            RegisterUserSynapseResultClassExt regUserResponse = ResponseConverter<RegisterUserSynapseResultClassExt>.CallServicePostMethod(String.Concat(serviceUrl, serviceMethod), json);
+
+            if (regUserResponse.success == "True")
             {
+                res.msg = "Ok";
                 res.success = true;
                 res.msg = "Successfully updated member record on server!";
             }
@@ -2773,28 +2874,55 @@ namespace Nooch.Web.Controllers
 
 
         // Register user with Synapse      
-        public RegisterUserSynapseResultClassExt RegisterUserWithSynp(string transId, string userEmail, string userPhone, string userName, string userPassword)
+        public RegisterUserSynapseResultClassExt RegisterUserWithSynp(string transId, string userEmail, string userPhone, string userName, string userPassword, string isIdImageAdded = "", string idImagedata="")
         {
             RegisterUserSynapseResultClassExt res = new RegisterUserSynapseResultClassExt();
 
             try
             {
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+                string json;
+                var scriptSerializer = new JavaScriptSerializer();
                 userPhone = CommonHelper.RemovePhoneNumberFormatting(userPhone);
-                string serviceMethod = "/RegisterNonNoochUserWithSynapse?transId=" + transId + "&userEmail=" + userEmail + "&userPhone=" + userPhone + "&userName=" + userName + "&password=" + userPassword;
+                //string serviceMethod = "/RegisterNonNoochUserWithSynapse?transId=" + transId + "&userEmail=" + userEmail + "&userPhone=" + userPhone + "&userName=" + userName + "&password=" + userPassword;
+                string serviceMethod;
+                RegisterNonNoochUserWithSynapse_Input_Class inputclass = new RegisterNonNoochUserWithSynapse_Input_Class();
+                // Member DOES NOT already exist, so use RegisterNONNOOCHUserWithSynapse()
+                inputclass.address = "";
+                inputclass.dob = "";
+                inputclass.email = userEmail;
+                inputclass.fngprnt = "";
+                inputclass.fullname = userName;
+                inputclass.idImageData = idImagedata;
+                inputclass.ip = "";
+                inputclass.isIdImageAdded = isIdImageAdded;
 
-                RegisterUserSynapseResultClassExt transaction = ResponseConverter<RegisterUserSynapseResultClassExt>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
-                if (transaction.success == "false")
+                inputclass.phone = userPhone;
+                inputclass.pw = userPassword;
+
+                inputclass.ssn = "";
+                inputclass.transId = transId;
+                inputclass.zip = "";
+
+
+                //json = "{\"input\":" + scriptSerializer.Serialize(inputclass) + "}";
+                json = scriptSerializer.Serialize(inputclass);
+
+                serviceMethod = "/RegisterNonNoochUserWithSynapse";
+                RegisterUserSynapseResultClassExt regUserResponse = ResponseConverter<RegisterUserSynapseResultClassExt>.CallServicePostMethod(String.Concat(serviceUrl, serviceMethod), json);
+
+
+                if (regUserResponse.success == "false")
                 {
                     res.success = "false";
-                    res.reason = transaction.reason;
+                    res.reason = regUserResponse.reason;
                     res.memberIdGenerated = "";
                 }
-                if (transaction.success == "true")
+                if (regUserResponse.success == "true")
                 {
                     res.success = "true";
                     res.reason = "OK";
-                    res.memberIdGenerated = transaction.memberIdGenerated;
+                    res.memberIdGenerated = regUserResponse.memberIdGenerated;
                 }
                 return res;
             }
