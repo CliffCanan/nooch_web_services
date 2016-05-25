@@ -19,6 +19,8 @@ var isLrgScrn = false;
 var isFileAdded = "0";
 var FileData = null;
 
+var isIdVerified = false;
+
 $(document).ready(function () {
     // For large scrns, animate payment info to left side to be visible under the ID Ver Modal
     if ($(window).width() < 768) {
@@ -226,20 +228,23 @@ $(document).ready(function () {
     if ($("#transMemo").text().length > 0) {
         $("#transMemo").prepend("<i class='fa fa-fw fa-commenting fa-flip-horizontal'>&nbsp;</i><em>&quot;</em>").append("<em>&quot;</em>");
     }
-	
-	            $('#idVer').on('hidden.bs.modal', function (e) {
-                if (isLrgScrn == true) {
-                    $("#payreqInfo").animate({
-                        width: '100%',
-                        left: '0%'
-                    }, 700, 'easeInOutCubic', function () {
-                        $('#relaunchIdwiz').removeClass('hidden').removeClass('bounceOut').addClass('bounceIn');
-						            setTimeout(function () {
-                $('#idVerWiz').steps('destroy');
-            }, 250);
-                    });
-                }
+
+    $('#idVer').on('hidden.bs.modal', function (e)
+    {
+        if (isLrgScrn == true && isIdVerified == false) {
+            $("#payreqInfo").animate({
+                width: '100%',
+                left: '0%'
+            }, 700, 'easeInOutCubic', function ()
+            {
+                $('#relaunchIdwiz').removeClass('hidden').removeClass('bounceOut').addClass('bounceIn');
+                setTimeout(function ()
+                {
+                    $('#idVerWiz').steps('destroy');
+                }, 250);
             });
+        }
+    });
 });
 
 
@@ -738,10 +743,10 @@ function createRecord() {
         "', 'zip':'" + zipVal +
         "', 'fngprnt':'" + fngprntVal +
         "', 'ip':'" + ipVal +
-        "', 'isIdImage':'" + isFileAdded + "'}";
-        //"', 'idImagedata':'" + FileData + "'}";
-    
-    console.log(dataToSend);
+        "', 'isIdImage':'" + isFileAdded +
+        "', 'idImagedata':'" + FileData + "'}";
+
+		console.log(dataToSend);
     
     $.ajax({
         type: "POST",
@@ -782,7 +787,8 @@ function createRecord() {
 
 			            $("#idVerWiz").addClass("animated bounceOut");
 
-			            $("#idVerContainer iframe").attr("src", "https://www.noochme.com/noochweb/trans/idverification.aspx?memid=" + memIdGen + "&from=lndngpg");
+			            //$("#idVerContainer iframe").attr("src", "https://www.noochme.com/noochweb/trans/idverification.aspx?memid=" + memIdGen + "&from=lndngpg");
+			            $("#idVerContainer iframe").attr("src", "54.201.43.89/noochweb/Nooch/idVerification?memid=" + memIdGen + "&from=lndngpg");
 
 			            setTimeout(function () {
 			                $("#idVerWiz").css({
@@ -851,7 +857,10 @@ function createRecord() {
 }
 
 
-function idVerifiedSuccess() {
+function idVerifiedSuccess()
+{
+    isIdVerified = true;
+
     // HIDE THE MODAL CONTAINING THE WIZARD
     $('#idVer').modal('hide');
 

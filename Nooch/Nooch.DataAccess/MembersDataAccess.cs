@@ -3177,7 +3177,7 @@ namespace Nooch.DataAccess
                 // the UpdateIPAddress method will just create a new record if one doesn't exist, but just to be safe.)
                 try
                 {
-                    CommonHelper.UpdateMemberIPAddressAndDeviceId(NewUsersNoochMemId, ip, null);
+                    CommonHelper.UpdateMemberIPAddressAndDeviceId(NewUsersNoochMemId, ip, fngprnt);
                 }
                 catch (Exception ex)
                 {
@@ -3370,7 +3370,7 @@ namespace Nooch.DataAccess
                         if (createSynapseUserResult.success == true &&
                             !String.IsNullOrEmpty(createSynapseUserResult.oauth.oauth_key))
                         {
-                            Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - Synapse User created SUCCESSFULLY (LN: 6009) - " +
+                            Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - Synapse User created SUCCESSFULLY (LN: 3373) - " +
                                         "[oauth_consumer_key: " + createSynapseUserResult.oauth.oauth_key + "]. Now attempting to save in Nooch DB.");
 
                             #region Send ID Doc To Synapse
@@ -3399,6 +3399,10 @@ namespace Nooch.DataAccess
                                     Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 -> Attempted to Save ID Doc on server but failed -> [Exception: " + ex.Message +
                                                  "], [Email: " + userEmail + "], [Member_Id: " + res.memberIdGenerated + "]");
                                 }
+                            }
+                            else
+                            {
+                                Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - NO IMAGE SENT");
                             }
 
                             #endregion Send ID Doc To Synapse
