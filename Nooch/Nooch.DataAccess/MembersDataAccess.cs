@@ -2840,11 +2840,11 @@ namespace Nooch.DataAccess
                                 {
                                     Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 -> Going in to submit id doc to synapse ->  [Email: " + userEmail + "], [Member_Id: " + res.memberIdGenerated + "]");
 
-                                    var saveImageOnServer = SaveBase64AsImage(res.memberIdGenerated, idImageData);
+                                    var saveImageOnServer = SaveBase64AsImage(memberObj.MemberId.ToString() , idImageData);
 
                                     if (saveImageOnServer.success && !String.IsNullOrEmpty(saveImageOnServer.msg))
                                     {
-                                        submitDocumentToSynapseV3(res.memberIdGenerated, saveImageOnServer.msg);
+                                        submitDocumentToSynapseV3(memberObj.MemberId.ToString(), saveImageOnServer.msg );
                                     }
                                     else
                                     {
@@ -3382,11 +3382,11 @@ namespace Nooch.DataAccess
                                 {
                                     Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 -> Going in to submit id doc to synapse ->  [Email: " + userEmail + "], [Member_Id: " + res.memberIdGenerated + "]");
 
-                                    var saveImageOnServer = SaveBase64AsImage(res.memberIdGenerated, idImageData);
+                                    var saveImageOnServer = SaveBase64AsImage(member.MemberId.ToString(), idImageData);
 
                                     if (saveImageOnServer.success && !String.IsNullOrEmpty(saveImageOnServer.msg))
                                     {
-                                        submitDocumentToSynapseV3(res.memberIdGenerated, saveImageOnServer.msg);
+                                        submitDocumentToSynapseV3(member.MemberId.ToString() , saveImageOnServer.msg);
                                     }
                                     else
                                     {
@@ -3638,14 +3638,17 @@ namespace Nooch.DataAccess
                 {
                     image = Image.FromStream(ms);
                     Bitmap bm = new Bitmap(image);
+                     fileNameToBeUsed = fileNameToBeUsed + ".png";
+                    filnameMade = fileNameToBeUsed;
                     fullPathOfSavedImage = Path.Combine(folderPath, fileNameToBeUsed);
                     fullPathOfSavedImage = HostingEnvironment.MapPath(fullPathOfSavedImage);
-                    filnameMade = fileNameToBeUsed;
+                  
 
                     // checking if file with same name already exists
                     while (File.Exists(Path.Combine(folderPath, fileNameToBeUsed)))
                     {
-                        filnameMade = fileNameToBeUsed + "1";
+                        string[] name = fileNameToBeUsed.Split('.');
+                        filnameMade = name[0] + "1" + ".png";
                         fullPathOfSavedImage = Path.Combine(folderPath, filnameMade);
                         fullPathOfSavedImage = HostingEnvironment.MapPath(fullPathOfSavedImage);
                     }
