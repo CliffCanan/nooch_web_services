@@ -200,7 +200,7 @@
 
 
     <!-- Modal ID Verification -->
-    <div class="modal fade" id="idVer" tabindex="-1" role="dialog" aria-hidden="true">
+    @*<div class="modal fade" id="idVer" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
 
@@ -345,6 +345,167 @@
                 </div>
             </div>
         </div>
+    </div>*@
+
+    <div class="modal fade" id="idVer" tabindex="-1" role="dialog" aria-hidden="true">
+        <div id="modalContainer" class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h4 class="modal-title">Identity Verification <i class="fa fa-fw fa-check-circle text-success m-l-10"></i></h4>
+                    <button type="button" class="btn btn-default btn-icon modalclose"><i class="fa fa-close" style="color:#bbb"></i></button>
+                </div>
+
+                <div class="modal-body">
+
+                    <div class="row">
+
+                        <div id="idVerWiz" class="col-sm-12">
+
+                            <h3><i class="fa fa-fw fa-user m-r-5"></i><br />Profile Info</h3>
+                            <section>
+
+                                <form id="idVerForm1" role="form">
+                                    <div class="well well-sm">
+                                        <div>Please help us prevent identity theft<span class="ast desk-only">*</span> by completing the following fields.</div>
+                                    </div>
+
+
+                                    <dl class="dl-horizontal" id="nameGrp">
+                                        <dt class="p-t-10 withIcon">
+                                            Your Name<br />
+                                            <i class="fa fa-fw fa-question-circle-o help-icon m-l-5" data-trigger="hover" data-toggle="popover" data-placement="auto" data-content="Please enter your full legal name."></i>
+                                        </dt>
+                                        <dd>
+                                            <div class="form-group">
+                                                <div class="fg-line">
+                                                    <input id="idVer-name" type="text" class="form-control capitalize" value="" placeholder="First & Last Name" required />
+                                                </div>
+                                            </div>
+                                        </dd>
+                                    </dl>
+
+                                    <dl class="dl-horizontal" id="dobGrp">
+                                        <dt class="p-t-10 withIcon">
+                                            Date of Birth<br />
+                                            <i class="fa fa-fw fa-question-circle-o help-icon m-l-5" data-trigger="hover" data-toggle="popover" data-placement="auto" data-content="A date of birth is needed to verify a user's identity. Don't worry - nobody sees this!"></i>
+                                        </dt>
+                                        <dd>
+                                            <div class="form-group withIcon datePickerGrp">
+                                                <i class="fa fa-fw fa-calendar-plus-o"></i>
+                                                <div class="dtp-container dropdown fg-line">
+                                                    <input id="idVer-dob" type='text' class="form-control date-picker" data-toggle="dropdown" placeholder="eg. 08/05/1978" />
+                                                </div>
+                                            </div>
+                                        </dd>
+                                    </dl>
+
+                                    <dl class="dl-horizontal" id="ssnGrp">
+                                        <dt class="p-t-10">SSN<small>Last 4 Digits Only</small></dt>
+                                        <dd>
+                                            <div class="form-group">
+                                                <div class="dtp-container dropdown fg-line">
+                                                    <span id="ssnPrefix">XXX - XX -</span>
+                                                    <input id="idVer-ssn" type='text' class="form-control" value="" placeholder="1234" />
+                                                </div>
+                                            </div>
+                                        </dd>
+                                    </dl>
+
+                                </form>
+
+                            </section>
+
+                            <h3><i class="fa fa-fw fa-map-marker m-r-5"></i><br />Address</h3>
+                            <section>
+
+                                <div class="well well-sm">
+                                    <div>
+                                        Please enter your <span class="f-700">current</span> street address.
+                                    </div>
+                                </div>
+
+                                <dl class="dl-horizontal" id="addressGrp">
+                                    <dt class="p-t-10">Street Address<small>(no city needed)</small></dt>
+                                    <dd>
+                                        <div class="form-group">
+                                            <div class="dtp-container dropdown fg-line">
+                                                <input id="idVer-address" type='text' class="form-control" value="" placeholder="1600 Pennsylvania Ave" />
+                                            </div>
+                                        </div>
+                                    </dd>
+                                </dl>
+
+                                <dl class="dl-horizontal" id="zipGrp">
+                                    <dt class="p-t-10">ZIP Code</dt>
+                                    <dd>
+                                        <div class="form-group">
+                                            <div class="dtp-container dropdown fg-line">
+                                                <input id="idVer-zip" type='text' class="form-control" value="" placeholder="eg. 90210" />
+                                            </div>
+                                        </div>
+                                    </dd>
+                                </dl>
+
+                            </section>
+
+                            <h3><i class="fa fa-fw fa-envelope m-r-5"></i><br />Contact Info</h3>
+                            <section>
+
+                                <div class="well well-sm m-b-25">
+                                    <div class="f-15">Please confirm your <span>email address</span> and phone number. &nbsp;We will only use this to contact you about this payment.</div>
+                                </div>
+
+                                <dl class="dl-horizontal" id="emailGrp">
+                                    <dt class="p-t-10">Email Address</dt>
+                                    <dd>
+                                        <div class="form-group">
+                                            <div class="dtp-container dropdown fg-line">
+                                                <input id="idVer-email" type='text' class="form-control" value="" placeholder="" />
+                                            </div>
+                                        </div>
+                                    </dd>
+                                </dl>
+
+                                <dl class="dl-horizontal" id="phoneGrp">
+                                    <dt class="p-t-10">Phone Number</dt>
+                                    <dd>
+                                        <div class="form-group">
+                                            <div class="dtp-container dropdown fg-line">
+                                                <input id="idVer-phone" type='tel' class="form-control" value="" />
+                                            </div>
+                                        </div>
+                                    </dd>
+                                </dl>
+
+                            </section>
+
+                            <h3><i class="fa fa-fw fa-picture-o m-r-5"></i><br />ID Document</h3>
+                            <section>
+
+                                <div class="well well-sm m-b-15">
+                                    <div class="f-15">Please upload an image of any government-issued <strong>photo ID</strong>.</div>
+                                </div>
+
+                                <div id="idDocWrap">
+                                    <input id="idVer_idDoc" type="file" class="">
+                                </div>
+
+                            </section>
+
+                        </div>
+
+                        <div id="idVerContainer" class="animated hidden">
+                            <div class="clearfix">
+                                <iframe id="iframeIdVer" src="" width="100%" height="300"></iframe>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
     </div>
 
 
@@ -363,6 +524,7 @@
     <script src="../js/jquery.steps.min.js"></script>
 
     <script src="../js/fingerprint2.min.js"></script>
+    <script src="@Url.Content("~/js/fileinput/fileinput.min.js")"></script>
     <script type="text/javascript">
         var ipusr;
     </script>
