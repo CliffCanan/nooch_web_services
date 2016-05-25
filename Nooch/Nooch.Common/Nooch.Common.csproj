@@ -84,6 +84,7 @@
     <Compile Include="Entities\MobileAppInputEntities\MemberRegistrationInputDto.cs" />
     <Compile Include="Entities\MobileAppInputEntities\MySettingsInput.cs" />
     <Compile Include="Entities\MobileAppInputEntities\PrivacySettings.cs" />
+    <Compile Include="Entities\MobileAppInputEntities\RegisterExistingUserWithSynapseV3_InputClass.cs" />
     <Compile Include="Entities\MobileAppInputEntities\RemoveBankAccountInputEntity.cs" />
     <Compile Include="Entities\MobileAppInputEntities\SaveMemberDOB_Input.cs" />
     <Compile Include="Entities\MobileAppInputEntities\StringInput.cs" />

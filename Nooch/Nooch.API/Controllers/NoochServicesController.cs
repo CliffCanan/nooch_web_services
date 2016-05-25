@@ -2931,19 +2931,19 @@ namespace Nooch.API.Controllers
         }
 
 
-        [HttpGet]
+        [HttpPost]
         [ActionName("RegisterExistingUserWithSynapseV3")]
-        public RegisterUserSynapseResultClassExt RegisterExistingUserWithSynapseV3(string transId, string memberId, string email, string phone, string fullname, string pw, string ssn, string dob, string address, string zip, string fngprnt, string ip,string isIdImageAdded="0", string idImageData="") // initialised id related parameters to avoid breakdown where this service is being called...just in case someone didn't sent anything
+        public RegisterUserSynapseResultClassExt RegisterExistingUserWithSynapseV3(RegisterExistingUserWithSynapseV3_InputClass input)
         {
-            Logger.Info("Service Controller -> RegisterExistingUserWithSynapseV3 Initiated - MemberID: [" + memberId + "], " +
-                        "Name: [" + fullname + "], Email: [" + email + "]");
+            Logger.Info("Service Controller -> RegisterExistingUserWithSynapseV3 Initiated - MemberID: [" +input.memberId + "], " +
+                        "Name: [" + input.fullname + "], Email: [" + input.email + "]");
 
             try
             {
                 MembersDataAccess mda = new MembersDataAccess();
                 RegisterUserSynapseResultClassExt nc = new RegisterUserSynapseResultClassExt();
 
-                synapseCreateUserV3Result_int res = mda.RegisterExistingUserWithSynapseV3(transId, memberId, email, phone, fullname, pw, ssn, dob, address, zip, fngprnt, ip,isIdImageAdded,idImageData);
+                synapseCreateUserV3Result_int res = mda.RegisterExistingUserWithSynapseV3(input.transId, input.memberId, input.email, input.phone, input.fullname, input.pw, input.ssn, input.dob, input.address, input.zip, input.fngprnt, input.ip, input.isIdImageAdded, input.idImageData);
 
                 if (res.success == true)
                 {
@@ -2966,21 +2966,21 @@ namespace Nooch.API.Controllers
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Controller -> RegisterExistingUserWithSynapsev3 FAILED - [MemberID: " + memberId + "], [Name: " + fullname +
-                             ", [Email of New User: " + email + "], [Exception: " + ex.ToString() + "]");
+                Logger.Error("Service Controller -> RegisterExistingUserWithSynapsev3 FAILED - [MemberID: " + input.memberId + "], [Name: " + input.fullname +
+                             ", [Email of New User: " + input.email + "], [Exception: " + ex.ToString() + "]");
                 return null;
             }
         }
 
 
-        [HttpGet]
+        [HttpPost]
         [ActionName("RegisterNonNoochUserWithSynapse")]
-        public RegisterUserSynapseResultClassExt RegisterNonNoochUserWithSynapse(string transId, string email, string phone, string fullname, string pw, string ssn, string dob, string address, string zip, string fngprnt, string ip, string isIdImageAdded = "0", string idImageData = "")
+        public RegisterUserSynapseResultClassExt RegisterNonNoochUserWithSynapse(RegisterNonNoochUserWithSynapse_Input_Class input)
         {
             try
             {
                 MembersDataAccess mda = new MembersDataAccess();
-                synapseCreateUserV3Result_int res = mda.RegisterNonNoochUserWithSynapseV3(transId, email, phone, fullname, pw, ssn, dob, address, zip, fngprnt, ip,isIdImageAdded,idImageData);
+                synapseCreateUserV3Result_int res = mda.RegisterNonNoochUserWithSynapseV3(input.transId, input.email, input.phone, input.fullname, input.pw, input.ssn, input.dob, input.address, input.zip, input.fngprnt, input.ip, input.isIdImageAdded, input.idImageData);
 
                 RegisterUserSynapseResultClassExt nc = new RegisterUserSynapseResultClassExt();
 
@@ -3006,8 +3006,8 @@ namespace Nooch.API.Controllers
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Controller -> RegisterNonNoochUserWithSynapseV3 FAILED. [New Usr Name: " + fullname +
-                                       "], Email of New User: [" + email + "], TransactionID: [" + transId +
+                Logger.Error("Service Controller -> RegisterNonNoochUserWithSynapseV3 FAILED. [New Usr Name: " +input.fullname +
+                                       "], Email of New User: [" + input.email + "], TransactionID: [" +input. transId +
                                        "], Exception: [" + ex.ToString() + "]");
                 return null;
             }
