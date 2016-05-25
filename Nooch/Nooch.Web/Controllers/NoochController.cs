@@ -1468,9 +1468,10 @@ namespace Nooch.Web.Controllers
                                        ", ssn: " + ssn + ", dob: " + dob +
                                        ", address: " + address + ", zip: " + zip);
 
-                 string serviceMethod = "";
+                string serviceMethod = "";
                 var scriptSerializer = new JavaScriptSerializer();
-                string json="";
+                string json = "";
+
                 if (!String.IsNullOrEmpty(memberId) && memberId.Length > 30)
                 {
                     RegisterExistingUserWithSynapseV3_InputClass inputClass = new RegisterExistingUserWithSynapseV3_InputClass();
@@ -1486,34 +1487,20 @@ namespace Nooch.Web.Controllers
                     inputClass.memberId = memberId;
                     inputClass.phone = userPh;
                     inputClass.pw = userPw;
-
                     inputClass.ssn = ssn;
                     inputClass.transId = transId;
                     inputClass.zip = zip;
 
-
                     //json = "{\"input\":" + scriptSerializer.Serialize(inputClass) + "}";
-                    json = scriptSerializer.Serialize(inputClass) ;
-
-                    serviceMethod = "/RegisterExistingUserWithSynapseV3";
+                    json = scriptSerializer.Serialize(inputClass);
 
                     // Member must already exist, so use RegisterEXISTINGUserWithSynapseV3()
-                    //serviceMethod = "/RegisterExistingUserWithSynapseV3?transId=" + transId +
-                    //                "&memberId=" + memberId +
-                    //                "&email=" + userEm +
-                    //                "&phone=" + userPh +
-                    //                "&fullname=" + userName +
-                    //                "&pw=" + userPw +
-                    //                "&ssn=" + ssn +
-                    //                "&dob=" + dob +
-                    //                "&address=" + address +
-                    //                "&zip=" + zip +
-                    //                "&fngprnt=" + fngprnt + "&ip=" + ip + "&isIdImageAdded=" + isIdImage + "&idImageData=" + idImagedata;
+                    serviceMethod = "/RegisterExistingUserWithSynapseV3";
                 }
                 else
                 {
                     RegisterNonNoochUserWithSynapse_Input_Class inputclass = new RegisterNonNoochUserWithSynapse_Input_Class();
-                    // Member DOES NOT already exist, so use RegisterNONNOOCHUserWithSynapse()
+
                     inputclass.address = address;
                     inputclass.dob = dob;
                     inputclass.email = userEm;
@@ -1522,31 +1509,16 @@ namespace Nooch.Web.Controllers
                     inputclass.idImageData = idImagedata;
                     inputclass.ip = ip;
                     inputclass.isIdImageAdded = isIdImage;
-                    
                     inputclass.phone = userPh;
                     inputclass.pw = userPw;
-                    
                     inputclass.ssn = ssn;
                     inputclass.transId = transId;
                     inputclass.zip = zip;
 
-
-                    //json = "{\"input\":" + scriptSerializer.Serialize(inputclass) + "}";
                     json = scriptSerializer.Serialize(inputclass);
 
+                    // Member DOES NOT already exist, so use RegisterNONNOOCHUserWithSynapse()
                     serviceMethod = "/RegisterNonNoochUserWithSynapse";
-
-                    //serviceMethod = "/RegisterNonNoochUserWithSynapse?transId=" + transId +
-                    //                "&email=" + userEm +
-                    //                "&phone=" + userPh +
-                    //                "&fullname=" + userName +
-                    //                "&pw=" + userPw +
-                    //                "&ssn=" + ssn +
-                    //                "&dob=" + dob +
-                    //                "&address=" + address +
-                    //                "&zip=" + zip +
-                    //                "&fngprnt=" + fngprnt +
-                    //                "&ip=" + ip + "&isIdImageAdded=" + isIdImage + "&idImageData=" + idImagedata;
                 }
 
                 Logger.Info("PayRequest Code-Behind -> RegisterUserWithSynp - Full Query String: [ " + String.Concat(serviceUrl, serviceMethod) + " ]");
@@ -1800,7 +1772,12 @@ namespace Nooch.Web.Controllers
                 {
                     rca.type = Request.QueryString["type"];
 
-                    if (!String.IsNullOrEmpty(Request.QueryString["memId"]))
+                    if (String.IsNullOrEmpty(Request.QueryString["memId"]))
+                    {
+                        // No MemberID in URL, so must be creating a brand NEW user
+                        rca.errorId = "0";
+                    }
+                    else
                     {
                         Logger.Info("createAccount CodeBehind -> Page_load Initiated - [MemberID Parameter: " + Request.QueryString["memId"] + "]");
 
@@ -1867,7 +1844,7 @@ namespace Nooch.Web.Controllers
 
             try
             {
-                Logger.Info("createAccount Code Behind -> GetMemberDetailsForCreateAccount Initiated - MemberID: [" + memberId + "]");
+                //Logger.Info("createAccount Code Behind -> GetMemberDetailsForCreateAccount Initiated - MemberID: [" + memberId + "]");
 
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
                 string serviceMethod = "/GetMemberDetailsForLandingPage?memberId=" + memberId;
@@ -1875,7 +1852,6 @@ namespace Nooch.Web.Controllers
                 Logger.Info("createAccount Code Behind -> GetMemberDetailsForCreateAccount - URL to Query: [" + String.Concat(serviceUrl, serviceMethod) + "]");
 
                 MemberDto member = ResponseConverter<MemberDto>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
-
 
                 if (member == null)
                 {
@@ -1980,7 +1956,7 @@ namespace Nooch.Web.Controllers
                 inputClass.fullname = rca.name;
                 inputClass.idImageData = rca.idImagedata;
                 inputClass.ip = rca.ip;
-                inputClass.isIdImageAdded =  rca.isIdImage;
+                inputClass.isIdImageAdded = rca.isIdImage;
                 inputClass.memberId = rca.memId;
                 inputClass.phone = rca.phone;
                 inputClass.pw = rca.pw;
@@ -2062,7 +2038,7 @@ namespace Nooch.Web.Controllers
             //                        "&fngprnt=" + rca.fngprnt + "&ip=" + rca.ip;
 
 
-             
+
             RegisterNonNoochUserWithSynapse_Input_Class inputclass = new RegisterNonNoochUserWithSynapse_Input_Class();
             // Member DOES NOT already exist, so use RegisterNONNOOCHUserWithSynapse()
             inputclass.address = rca.address;
@@ -2874,7 +2850,7 @@ namespace Nooch.Web.Controllers
 
 
         // Register user with Synapse      
-        public RegisterUserSynapseResultClassExt RegisterUserWithSynp(string transId, string userEmail, string userPhone, string userName, string userPassword, string isIdImageAdded = "", string idImagedata="")
+        public RegisterUserSynapseResultClassExt RegisterUserWithSynp(string transId, string userEmail, string userPhone, string userName, string userPassword, string isIdImageAdded = "", string idImagedata = "")
         {
             RegisterUserSynapseResultClassExt res = new RegisterUserSynapseResultClassExt();
 

@@ -25,6 +25,11 @@ $(document).ready(function () {
     // For large scrns, animate payment info to left side to be visible under the ID Ver Modal
     if ($(window).width() < 768) {
         isSmScrn = true;
+
+		// CC (5/24/16): Attempt to change the input to show a number pad for smartphones - setting
+		// these originally in the HTML would break the input-mask for 4-char max, and hasn't worked successfully on an iPhone test anyway so far.
+		$("#idVer-ssn").attr("type","number");
+		$("#idVer-ssn").attr("pattern","/\d*");
     }
     else if ($(window).width() > 1000) {
         isLrgScrn = true;
@@ -326,6 +331,7 @@ function runIdWizard() {
                 //debug: true
             });
 
+			
             $('#idVer-ssn').mask("0000");
             $('#idVer-zip').mask("00000");
             $('#idVer-phone').val(usrPhn);
@@ -469,8 +475,7 @@ function runIdWizard() {
 						});
 
 						$('#idVer_idDoc').on('fileloaded', function (event, file, previewId, index, reader) {
-						    alert();
-						    $('#idVerWiz > .content').animate({ height: "26em" }, 500)
+							$('#idVerWiz > .content').animate({ height: "26em" }, 500)
 
 						    isFileAdded = "1";
 						    var readerN = new FileReader();

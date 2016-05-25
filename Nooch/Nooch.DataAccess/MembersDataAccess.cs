@@ -2840,13 +2840,11 @@ namespace Nooch.DataAccess
                                 {
                                     Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 -> Going in to submit id doc to synapse ->  [Email: " + userEmail + "], [Member_Id: " + res.memberIdGenerated + "]");
 
- 
-                                    var saveImageOnServer = SaveBase64AsImage(memberObj.MemberId.ToString() , idImageData);
+                                    var saveImageOnServer = SaveBase64AsImage(memberObj.MemberId.ToString(), idImageData);
 
                                     if (saveImageOnServer.success && !String.IsNullOrEmpty(saveImageOnServer.msg))
                                     {
-                                        submitDocumentToSynapseV3(memberObj.MemberId.ToString(), saveImageOnServer.msg );
- 
+                                        submitDocumentToSynapseV3(memberObj.MemberId.ToString(), saveImageOnServer.msg);
                                     }
                                     else
                                     {
@@ -3388,9 +3386,7 @@ namespace Nooch.DataAccess
 
                                     if (saveImageOnServer.success && !String.IsNullOrEmpty(saveImageOnServer.msg))
                                     {
- 
-                                        submitDocumentToSynapseV3(member.MemberId.ToString() , saveImageOnServer.msg);
- 
+                                        submitDocumentToSynapseV3(member.MemberId.ToString(), saveImageOnServer.msg);
                                     }
                                     else
                                     {
@@ -3526,7 +3522,7 @@ namespace Nooch.DataAccess
                             else if (inviteCodeObj.count >= inviteCodeObj.totalAllowed)
                             {
                                 Logger.Info("MDA - RegisterNonNoochUserWithSynapseV3 - Invite Code limit of [" + inviteCodeObj.totalAllowed +
-                                                       "] exceeded for Code: [" + inviteCodeObj.code + "]");
+                                            "] exceeded for Code: [" + inviteCodeObj.code + "]");
                             }
                             else
                             {
@@ -3642,11 +3638,10 @@ namespace Nooch.DataAccess
                 {
                     image = Image.FromStream(ms);
                     Bitmap bm = new Bitmap(image);
-                     fileNameToBeUsed = fileNameToBeUsed + ".png";
+                    fileNameToBeUsed = fileNameToBeUsed + ".png";
                     filnameMade = fileNameToBeUsed;
                     fullPathOfSavedImage = Path.Combine(folderPath, fileNameToBeUsed);
                     fullPathOfSavedImage = HostingEnvironment.MapPath(fullPathOfSavedImage);
-                  
 
                     // checking if file with same name already exists
                     while (File.Exists(Path.Combine(folderPath, fileNameToBeUsed)))
@@ -3667,7 +3662,7 @@ namespace Nooch.DataAccess
             }
             catch (Exception ex)
             {
-                Logger.Error("MDA 0> SaveBase64AsImage FAILED - FileNameToBeUsed: [" + fileNameToBeUsed + "], Exception: [" + ex.Message + "]");
+                Logger.Error("MDA -> SaveBase64AsImage FAILED - FileNameToBeUsed: [" + fileNameToBeUsed + "], Exception: [" + ex.Message + "]");
                 res.msg = "Exception: " + ex.Message;
             }
 

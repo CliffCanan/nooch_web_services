@@ -860,46 +860,17 @@ function submitManualBank() {
 $('#addBank-sec-question').submit(function(e) {
 	e.preventDefault();
 
-	console.log("#addBank-sec-question -> Submit Fired.");
-    console.log("SEC_QUES_NO value is: " + SEC_QUES_NO);
+	//console.log("#addBank-sec-question -> Submit Fired.");
 
-    // Check the right input based on which # question is being answered
-	//if (SEC_QUES_NO == 1)
-	//{
-		if ($('#securityQuest1').parsley().validate() === true)
-		{
-			MFALogin();
-		}
-		else 
-		{
-			$('#securityQuest1').velocity("callout.shake");
-			$('#securityQuest1').focus();
-		}
-	/*}
-	else if (SEC_QUES_NO == 2)
+	if ($('#securityQuest1').parsley().validate() === true)
 	{
-		if ($('#securityQuest2').parsley().validate() === true)
-		{
-			MFALogin();
-		}
-		else 
-		{
-			$('#securityQuest2').velocity("callout.shake");
-			$('#securityQuest2').focus();
-		}
+		MFALogin();
 	}
-	else if (SEC_QUES_NO == 3)
+	else 
 	{
-		if ($('#securityQuest3').parsley().validate() === true)
-		{
-			MFALogin();
-		}
-		else 
-		{
-			$('#securityQuest3').velocity("callout.shake");
-			$('#securityQuest3').focus();
-		}
-	}*/
+		$('#securityQuest1').velocity("callout.shake");
+		$('#securityQuest1').focus();
+	}
 });
 
 
@@ -929,7 +900,7 @@ function MFALogin() {
 		}
 	});
 
-	console.log("Submitting MFA response with data:  {bank: '" + BANK_NAME + "', memberid: '" + MEMBER_ID + "', bankname: '" + BANK_NAME + "', MFA: '" + mfaResp + "', ba: '" + accessCode + "'}");
+	//console.log("Submitting MFA response with data:  {bank: '" + BANK_NAME + "', memberid: '" + MEMBER_ID + "', bankname: '" + BANK_NAME + "', MFA: '" + mfaResp + "', ba: '" + accessCode + "'}");
     $.ajax({
         type: "POST",
         url: $('#MFALoginUrl').val(),
@@ -947,7 +918,7 @@ function MFALogin() {
 
 			if (res.Is_success == true)
 			{
-				console.log('MFALogin response was SUCCESSFUL');
+				//console.log('MFALogin response was SUCCESSFUL');
 
 				// Checking if response contains another MFA
 				if (res.Is_MFA == true && res.mfaMessage != null)
