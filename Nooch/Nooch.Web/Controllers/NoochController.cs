@@ -1427,7 +1427,7 @@ namespace Nooch.Web.Controllers
                                        ", ssn: " + ssn + ", dob: " + dob +
                                        ", address: " + address + ", zip: " + zip);
 
-                string serviceMethod = "";
+                 string serviceMethod = "";
                 var scriptSerializer = new JavaScriptSerializer();
                 string json="";
                 if (!String.IsNullOrEmpty(memberId) && memberId.Length > 30)
@@ -1451,7 +1451,8 @@ namespace Nooch.Web.Controllers
                     inputClass.zip = zip;
 
 
-                    json = "{\"input\":" + scriptSerializer.Serialize(inputClass) + "}";
+                    //json = "{\"input\":" + scriptSerializer.Serialize(inputClass) + "}";
+                    json = scriptSerializer.Serialize(inputClass) ;
 
                     serviceMethod = "/RegisterExistingUserWithSynapseV3";
 
@@ -1489,7 +1490,8 @@ namespace Nooch.Web.Controllers
                     inputclass.zip = zip;
 
 
-                    json = "{\"input\":" + scriptSerializer.Serialize(inputclass) + "}";
+                    //json = "{\"input\":" + scriptSerializer.Serialize(inputclass) + "}";
+                    json = scriptSerializer.Serialize(inputclass);
 
                     serviceMethod = "/RegisterNonNoochUserWithSynapse";
 
