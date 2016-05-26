@@ -151,9 +151,13 @@ function checkFormData()
 
 function submitPayment()
 {
+    var transType = $('input[name="type"]:checked').val();
+    isRequest = transType == "send" ? false : true;
+
     // ADD THE LOADING BOX
+    var loadingTxt = isRequest ? "Payment Request" : "Payment"
     $('#makePaymentContainer').block({
-        message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Submitting Payment...</span>',
+        message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Submitting ' + loadingTxt + '...</span>',
         css: {
             border: 'none',
             padding: '25px 8px 20px',
@@ -176,9 +180,6 @@ function submitPayment()
         $(".errorMessage a").addClass("bounceOut");
     }
 
-	var transType = $('input[name="type"]:checked').val();
-
-    isRequest = transType == "send" ? false : true;
     amount = $('#amount').val();
     name = $('#name').val();
     email = $('#email').val().trim();
@@ -347,9 +348,13 @@ function submitPayment()
 // This can only be called for SENDING payments IF the recipient has a fully verified user & bank account w/ Nooch & Synapse.
 function sendRequestToExistingUser()
 {
+    var transType = $('input[name="type"]:checked').val();
+    isRequest = transType == "send" ? false : true;
+
     // ADD THE LOADING BOX
+    var loadingTxt = isRequest ? "Payment Request" : "Payment"
     $('#makePaymentContainer').block({
-        message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Submitting Payment...</span>',
+        message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Submitting ' + loadingTxt + '...</span>',
         css: {
             border: 'none',
             padding: '25px 8px 20px',
@@ -364,10 +369,6 @@ function sendRequestToExistingUser()
         }
     });
 
-    var transType = $('input[name="type"]:checked').val();
-
-    isRequest = transType == "send" ? false : true;
-
     console.log("SUBMIT PAYMENT (2nd time - to existing user) -> {From: " + FROM +
                                  ", isRequest: " + isRequest +
                                  ", amount: " + amount +
@@ -381,9 +382,9 @@ function sendRequestToExistingUser()
 
     $.ajax({
         type: "POST",
-        url: URLs.submitRequestToExistingUser,
+        url: "submitRequestToExistingUser",
         data: "{'from':'" + FROM +
-              "', isRequest':'" + isRequest +
+              "', 'isRequest':'" + isRequest +
               "', 'amount':'" + amount +
               "', 'name':'" + name +
               "', 'email':'" + email +

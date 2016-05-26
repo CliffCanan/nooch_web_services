@@ -56,18 +56,18 @@
             <div id="depositHeader">
                 <div>Payment Request</div>
                 <div id="fromText">From</div>
-                <img cssclass="media-object" id="senderImage" src="@rpr.senderImage" alt="Request Sender" />
+                <img class="media-object" id="senderImage" src="@rpr.senderImage" alt="Request Sender" />
                 <span id="senderName">
-                    <span id="senderName1" text="Nooch User">@rpr.senderName1</span>
+                    <span id="senderName1">@rpr.senderName1</span>
                 </span>
             </div>
 
             <div id="amountShell">
                 <div>
                     <span id="dollarSign">$</span>
-                    <span id="transAmountd" text="">@rpr.transAmountd</span>
+                    <span id="transAmountd">@rpr.transAmountd</span>
                     <span id="cents">
-                        <span id="transAmountc" text="">@rpr.transAmountc</span>
+                        <span id="transAmountc">@rpr.transAmountc</span>
                     </span>
                 </div>
             </div>
@@ -76,7 +76,7 @@
                 <div>
                     @if (rpr.transMemo != null)
                     {
-                        <label id="transMemo" text="">@rpr.transMemo</label>
+                        <label id="transMemo">@rpr.transMemo</label>
                     }
                 </div>
             </div>
@@ -235,7 +235,7 @@
 
                         <div id="idVerWiz" class="col-sm-12">
 
-                            <h3><i class="fa fa-fw fa-user m-r-5"></i><br />Profile Info</h3>
+                            <h3><i class="fa fa-fw fa-user m-r-5"></i><br />Profile<span class="hide-sm"> Info</span></h3>
                             <section>
 
                                 <form id="idVerForm1" role="form">
@@ -322,12 +322,10 @@
 
                             </section>
 
-                            <h3><i class="fa fa-fw fa-envelope m-r-5"></i><br />Contact Info</h3>
+                            <h3><i class="fa fa-fw fa-envelope m-r-5"></i><br />Contact<span class="hide-sm"> Info</span></h3>
                             <section>
 
-                                <div class="well well-sm m-b-25">
-                                    <div class="f-15">Please confirm your <span>email address</span> and phone number. &nbsp;We will only use this to contact you about this payment.</div>
-                                </div>
+                                <div class="well well-sm m-b-25">Please confirm your <span>email address</span> and phone number. &nbsp;We will only use this to contact you about this payment.</div>
 
                                 <dl class="dl-horizontal" id="emailGrp">
                                     <dt class="p-t-10">Email Address</dt>
@@ -353,11 +351,11 @@
 
                             </section>
 
-                            <h3><i class="fa fa-fw fa-picture-o m-r-5"></i><br />ID Document</h3>
+                            <h3><i class="fa fa-fw fa-picture-o m-r-5"></i><br />ID Doc<span class="hide-sm">ument</span></h3>
                             <section>
 
                                 <div class="well well-sm m-b-15">
-                                    <div class="f-15">Please upload an image of any government-issued <strong>photo ID</strong>.</div>
+                                    <div>Please upload a picture of any government-issued <strong>photo ID</strong> with your name<span class="hide-sm"> on it</span>.</div>
                                 </div>
 
                                 <div id="idDocWrap">
@@ -382,7 +380,7 @@
     </div>
 
 
-    <script src="@Url.Content("//code.jquery.com/jquery-2.1.4.min.js")"></script>
+    <script src="@Url.Content("//code.jquery.com/jquery-1.12.4.min.js")"></script>
     <script src="@Url.Content("//code.jquery.com/ui/1.11.4/jquery-ui.min.js")"></script>
     <script src="@Url.Content("https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js")"></script>
     <script src="@Url.Content("~/js/jasny-bootstrap.min.js")"></script>
@@ -395,14 +393,11 @@
     <script src="@Url.Content("~/js/jquery.steps.js")"></script>
     <script src="@Url.Content("~/js/fingerprint2.min.js")"></script>
     <script src="@Url.Content("~/js/sweetalert.min.js")"></script>
-    <script src="@Url.Content("~/js/input-mask.min.js")"></script>
     <script src="@Url.Content("~/js/fileinput/fileinput.min.js")"></script>
-
     <script type="text/javascript">
         var ipusr;
     </script>
-    <script type="text/javascript" src="https://www.l2.io/ip.js?var=ipusr"></script>
-
+    <script src="@Url.Content("https://www.l2.io/ip.js?var=ipusr")"></script>
     <script src="@Url.Content("~/js/app/movemoneypagescripts.js")"></script>
 
 </body>

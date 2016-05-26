@@ -15,7 +15,7 @@ var sendToXtraVer = false;
 var isSmScrn = false;
 var isLrgScrn = false;
 
-// to be used with upload doc related stuff
+// For uploading ID Doc img
 var isFileAdded = "0";
 var FileData = null;
 
@@ -25,6 +25,11 @@ $(document).ready(function () {
     // For large scrns, animate payment info to left side to be visible under the ID Ver Modal
     if ($(window).width() < 768) {
         isSmScrn = true;
+
+		// CC (5/24/16): Attempt to change the input to show a number pad for smartphones - setting
+		// these originally in the HTML would break the input-mask for 4-char max, and hasn't worked successfully on an iPhone test anyway so far.
+		$("#idVer-ssn").attr("type","number");
+		$("#idVer-ssn").attr("pattern","/\d*");
     }
     else if ($(window).width() > 1000) {
         isLrgScrn = true;
@@ -148,7 +153,6 @@ $(document).ready(function () {
 
                     redUrlForAddBank = (FOR_RENTSCENE == "true") ? redUrlForAddBank + ",true"
                                                                  : redUrlForAddBank + ",false";
-
 
                     console.log("redUrlForAddBank IS: [" + redUrlForAddBank + "]");
 
@@ -286,7 +290,7 @@ function runIdWizard() {
         stepsOrientation: "horizontal",
         transitionEffect: "slideLeft",
         transitionEffectSpeed: 400,
-		titleTemplate: "#title#",
+        titleTemplate: "#title#",
 
         /* Labels */
         labels: {
@@ -298,8 +302,6 @@ function runIdWizard() {
             var heightToUse = isSmScrn ? "23em" : "24em";
 
             $('#idVerWiz > .content').animate({ height: heightToUse }, 300)
-
-            $('[data-toggle="popover"]').popover();
 
             var calendarIcon = $('#idVerForm1 .datePickerGrp i');
 
@@ -331,6 +333,8 @@ function runIdWizard() {
             $('#idVer-phone').val(usrPhn);
             $('#idVer-email').val(usrEm);
             $('#idVer-phone').mask('(000) 000-0000');
+
+            $('[data-toggle="popover"]').popover();
         },
         onStepChanging: function (event, currentIndex, newIndex) {
 
@@ -419,109 +423,97 @@ function runIdWizard() {
                 }
             }
 
-			// IF going to Step 4
-			if (newIndex == 3)
-			{
+            // IF going to Step 4
+            if (newIndex == 3)
+            {
                 // Check Address field
-				$('#idVer-email').val($('#idVer-email').val().trim());
+                $('#idVer-email').val($('#idVer-email').val().trim());
 
-				if (ValidateEmail($('#idVer-email').val()) == true)
-				{
-					updateValidationUi("email", true);
+                if (ValidateEmail($('#idVer-email').val()) == true) {
+                    updateValidationUi("email", true);
 
-					// Finally, check the phone number's length
-					console.log($('#idVer-phone').cleanVal());
+                    // Finally, check the phone number's length
+                    console.log($('#idVer-phone').cleanVal());
 
-					if ($('#idVer-phone').cleanVal().length == 10)
-					{
-						updateValidationUi("phone", true);
+                    if ($('#idVer-phone').cleanVal().length == 10) {
+                        updateValidationUi("phone", true);
 
                         // Great, go to the next step of the wizard :-]
-					    // FILE INPUT DOCUMENTATION: http://plugins.krajee.com/file-input#options
-						$("#idVer_idDoc").fileinput({
-						    allowedFileTypes: ['image'],
-							//allowedPreviewTypes: null,
-						    initialPreview: [
+                        // FILE INPUT DOCUMENTATION: http://plugins.krajee.com/file-input#options
+                        $("#idVer_idDoc").fileinput({
+                            allowedFileTypes: ['image'],
+                            initialPreview: [
                                 "<img src='../Assets/Images/securityheader.png' class='file-preview-image' alt='' id='IdWizIdDocPreview'>"
-						    ],
-						    initialPreviewShowDelete: false,
-						    layoutTemplates: {
-						        icon: '<span class="fa fa-photo m-r-10 kv-caption-icon"></span>',
-						    },
-							fileActionSettings: {
-								showZoom: false,
-								indicatorNew: '',
-							},
-						    maxFileCount: 1,
-						    maxFileSize: 500,
-						    msgSizeTooLarge: "File '{name}' ({size} KB) exceeds the maximum allowed file size of {maxSize} KB. Please try a slightly smaller picture!",
-						    showCaption: false,
-						    showUpload: false,
-						    showPreview: true,
-						    resizeImage: true,
-						    maxImageWidth: 500,
-						    maxImageHeight: 500,
-						    resizePreference: 'width'
-						});
+ 
+                            ],
+                            initialPreviewShowDelete: false,
+                            layoutTemplates: {
+                                icon: '<span class="fa fa-photo m-r-10 kv-caption-icon"></span>',
+                            },
+                            fileActionSettings: {
+                                showZoom: false,
+                                indicatorNew: '',
+                            },
+                            maxFileCount: 1,
+                            maxFileSize: 500,
+                            msgSizeTooLarge: "File '{name}' ({size} KB) is a bit too large! Max allowed file size is {maxSize} KB. Please try a slightly smaller picture!",
+                            showCaption: false,
+                            showUpload: false,
+                            showPreview: true,
+                            resizeImage: true,
+                            maxImageWidth: 500,
+                            maxImageHeight: 500,
+                            resizePreference: 'width'
+                        });
 
-						$('#idVer_idDoc').on('fileerror', function(event, data, msg) {
-							$('#idVerWiz > .content').animate({ height: "28em" }, 600)
-						});
+                        $('#idVer_idDoc').on('fileerror', function (event, data, msg)
+                        {
+                            $('#idVerWiz > .content').animate({ height: "28em" }, 600)
+                        });
 
-						$('#idVer_idDoc').on('fileloaded', function (event, file, previewId, index, reader) {
-						   
-						    $('#idVerWiz > .content').animate({ height: "26em" }, 500)
+                        $('#idVer_idDoc').on('fileloaded', function (event, file, previewId, index, reader)
+                        {
+                            $('#idVerWiz > .content').animate({ height: "26em" }, 500)
 
-						    isFileAdded = "1";
-						    var readerN = new FileReader();
+                            isFileAdded = "1";
+                            var readerN = new FileReader();
 
-						    readerN.readAsDataURL(file);
-						    readerN.onload = function (e) {
-						        // browser completed reading file - display it
-						        var splittable = e.target.result.split(',');
-						        var string2 = splittable[1];
-						        //console.log(string2);
-						        FileData = string2;
+                            readerN.readAsDataURL(file);
+                            readerN.onload = function (e) {
+                                // browser completed reading file - display it
+                                var splittable = e.target.result.split(',');
+                                var string2 = splittable[1];
+                                //console.log(string2);
+                                FileData = string2;
 
-						        //console.log("image data is -> " + FileData);
-						    };
-						});
+                                //console.log("image data is -> " + FileData);
+                            };
+                        });
 
-						$('#idVer_idDoc').on('fileclear', function (event) {
-						    isFileAdded = "0";
-						    FileData = null;
-						    console.log("fileclear");
-						});
+                        $('#idVer_idDoc').on('fileclear', function (event) {
+                            isFileAdded = "0";
+                            FileData = null;
+                            console.log("fileclear");
+                        });
 
-						$('#idVer_idDoc').on('filecleared', function (event) {
-						    isFileAdded = "0";
-						    FileData = null;
-						    console.log("filecleareD");
-						});
-
-						$('#idVer_idDoc').on('filezoomhidden', function(event, params) {
-							event.preventDefault();
-							console.log('File zoom hidden ', params.sourceEvent, params.previewId, params.modal);
-						});
-
-						$('#idVer_idDoc').on('filezoomhide', function(event, params) {
-							event.preventDefault();
-							console.log('File zoom hide ', params.sourceEvent, params.previewId, params.modal);
-						});
+                        $('#idVer_idDoc').on('filecleared', function (event) {
+                            isFileAdded = "0";
+                            FileData = null;
+                            console.log("filecleareD");
+                        });
+ 
 
                         $('#idVerWiz > .content').animate({ height: "25em" }, 800)
                         return true;
-					}
-					else
-					{
-						updateValidationUi("phone", false);
-					}
-				}
-				else
-				{
-					updateValidationUi("email", false);
-				}
-			}
+                    }
+                    else {
+                        updateValidationUi("phone", false);
+                    }
+                }
+                else {
+                    updateValidationUi("email", false);
+                }
+            }
 
             // Allways allow previous action even if the current form is not valid!
             if (currentIndex > newIndex) {
@@ -529,19 +521,12 @@ function runIdWizard() {
             }
         },
         onStepChanged: function (event, currentIndex, priorIndex) {
-            if (currentIndex == 1)
-            {
+            if (currentIndex == 1) {
                 $('#idVer-address').focus();
             }
-            else if (currentIndex == 2)
-            {
+            else if (currentIndex == 2) {
                 $('#idVer-email').focus();
             }
-			else if (currentIndex == 3)
-			{
-
-				console.log('Checkpoint #A FIRED');
-			}
         },
         onCanceled: function (event) {
             cancelIdVer();
@@ -747,7 +732,7 @@ function createRecord() {
         "', 'isIdImage':'" + isFileAdded +
         "', 'idImagedata':'" + FileData + "'}";
 
-		console.log(dataToSend);
+    //console.log(dataToSend);
     
     $.ajax({
         type: "POST",
@@ -789,7 +774,7 @@ function createRecord() {
 			            $("#idVerWiz").addClass("animated bounceOut");
 
 			            //$("#idVerContainer iframe").attr("src", "https://www.noochme.com/noochweb/trans/idverification.aspx?memid=" + memIdGen + "&from=lndngpg");
-			            $("#idVerContainer iframe").attr("src", "54.201.43.89/noochweb/Nooch/idVerification?memid=" + memIdGen + "&from=lndngpg");
+			            $("#idVerContainer iframe").attr("src", "http://54.201.43.89/noochweb/Nooch/idVerification?memid=" + memIdGen + "&from=lndngpg");
 
 			            setTimeout(function () {
 			                $("#idVerWiz").css({
@@ -814,6 +799,7 @@ function createRecord() {
 			else 
 			{
 			    console.log("RegisterUserWithSynpResult.success = false");
+
 			    if (resultReason != null)
 			    {
 			        console.log(resultReason);
@@ -1395,6 +1381,4 @@ function checkPwForm() {
         $('#usrPwGrp .errorMsg').text('Please enter a slightly longer password :-)').addClass('parsley-errors-list').addClass('filled');
         shakeInputField("#usrPwGrp");
     }
-}
 }*/
-

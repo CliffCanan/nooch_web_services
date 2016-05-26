@@ -1371,7 +1371,7 @@ div#pwFormShell #depositCreateAccount,
   text-align: center;
   padding: 7px 5px 0;
 }
-.wizard > .steps a
+.wizard > .steps a 
 .wizard > .steps .current a,
 .wizard > .steps .current a:hover,
 .wizard > .steps .current a:active { background: #3fabe1; }
@@ -1411,6 +1411,7 @@ div#pwFormShell #depositCreateAccount,
   font-weight: 400;
   letter-spacing: .75px;
 }
+#idVerWiz .file-preview-image { max-width: 100%; }
 #idVerWiz .fileinput .fileinput-preview {
   width: 180px;
   height: auto;
@@ -2529,6 +2530,7 @@ form .table-header {
 
 
 @media only screen and (max-width: 767px) {
+  .hide-sm { display: none !important; }
   .logo-reg { display: none; }
   .logo-icon { display: block; }
   .logo-icon img { width: 74px; }
@@ -2541,18 +2543,19 @@ form .table-header {
   .dl-horizontal { text-align: left; }
 
   .wizard, .tabcontrol { padding: 10px 0; }
-  .wizard > .steps i { display: none; }
+  .wizard > .steps i { font-size: 13px; }
   .wizard > .steps a,
   .wizard > .steps a:hover,
   .wizard > .steps a:active,
   #idVerWiz > .steps .current a {
-      padding: 3px 2px;
+      font-size: 13px;
+	  line-height: 1.3;
+	  padding: 4px 2px;
       text-align: center;
-      min-height: 48px;
   }
   #idVerWiz .well-sm { padding: 5px 3px; font-size: 14.5px; margin-bottom: 5px; }
   #idVerWiz .content { margin-top: 0; }
-
+  .modal dl { margin-bottom: 0px; }
   .blockUI.blockElement { top: 110px !important; }
 
   .sweet-alert { top: 33%; padding:10px; }
@@ -2569,6 +2572,9 @@ form .table-header {
   .sweet-alert.securityAlert ul { padding-left: 20px; }
 }
 
+@media only screen and (max-width: 360px) {
+	#idVerWiz #idVerWiz-p-2 .well-sm {font-size: 13px;}
+}
 @media only screen and (min-width: 768px) {
   .sweet-alert {
     padding-top: 45px;
@@ -2582,9 +2588,9 @@ form .table-header {
   .securityAlert ul { font-size: 16px; line-height:1.4; }
   .sweet-alert ul > li { margin-top: .25em; }
 
-  #body-depositNew { padding-top: 80px; }
+  #body-depositNew { padding-top: 70px; }
   #body-depositNew iframe { height: 760px; }
-
+  
   #idVer .modal-dialog { width: 640px; }
 }
 
@@ -2650,7 +2656,8 @@ form .table-header {
 
     #idWizContainer { padding: 0 3.5%; }
 
-	#idVerWiz-p-0 .well { padding: 9px 75px;}
+	#idVerWiz-p-0 .well,
+	#idVerWiz-p-3 .well { padding: 9px 65px;}
 
     .addBank-instructions {
         font-size: 16px;
