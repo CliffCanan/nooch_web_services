@@ -469,7 +469,7 @@ function runIdWizard() {
 						});
 
 						$('#idVer_idDoc').on('fileloaded', function (event, file, previewId, index, reader) {
-						    alert();
+						   
 						    $('#idVerWiz > .content').animate({ height: "26em" }, 500)
 
 						    isFileAdded = "1";
