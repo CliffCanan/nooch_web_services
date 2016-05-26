@@ -39,11 +39,12 @@ $(document).ready(function () {
 
         $('.landingHeaderLogo').attr('href', 'http://www.rentscene.com');
 
+        var w = isSmScrn ? '90px' : '130px'
         if (isSmScrn) {
-            $('.landingHeaderLogo img').attr('src', 'https://noochme.com/noochweb/Assets/Images/rentscene.png').css('width', '130px');
+            $('.landingHeaderLogo img').attr('src', 'https://noochme.com/noochweb/Assets/Images/rentscene.png').css('width', w);
         }
         else {
-            $('.landingHeaderLogo img').attr('src', 'https://noochme.com/noochweb/Assets/Images/rentscene.png').css('width', '170px');
+            $('.landingHeaderLogo img').attr('src', 'https://noochme.com/noochweb/Assets/Images/rentscene.png').css('width', w);
         }
     }
 
@@ -192,11 +193,21 @@ function runIdWizard() {
 
             var DOB = $('#dob').val() ? $('#dob').val() : "1980 01 01";
 
-            //console.log(moment(DOB, "YYYY MM DD"));
+            var calendarIcon = $('#idVerForm1 .datePickerGrp i');
+
+            calendarIcon.click(function ()
+            {
+                setTimeout(function ()
+                {
+                    $('#dobGrp .dtp-container.dropdown').addClass('fg-toggled open');
+                    $('#idVer-dob').data("DateTimePicker").show();
+                }, 150);
+            });
+
             $('#idVer-dob').datetimepicker({
                 format: 'MM/DD/YYYY',
                 useCurrent: false,
-                defaultDate: DOB,// moment(DOB, "YYYY MM DD"),
+                defaultDate: DOB,
                 icons: {
                     previous: 'fa fa-fw fa-chevron-circle-left',
                     next: 'fa fa-fw fa-chevron-circle-right',
@@ -212,16 +223,6 @@ function runIdWizard() {
             $('#idVer-phone').mask('(000) 000-0000');
 
             $('[data-toggle="popover"]').popover();
-
-            var calendarIcon = $('#idVerForm1 .datePickerGrp i');
-
-            calendarIcon.click(function ()
-            {
-                setTimeout(function () {
-                    $('#dobGrp .dtp-container.dropdown').addClass('fg-toggled open');
-                    $('#idVer-dob').data("DateTimePicker").show();
-                }, 150);
-            });
         },
         onStepChanging: function (event, currentIndex, newIndex) {
 
@@ -257,7 +258,7 @@ function runIdWizard() {
                             {
                                 updateValidationUi("ssn", true);
 
-                                // Great, we can finally go to the next step of the wizard :-]
+                                // Great, we can finally go to the next step of the wizard :-D
                                 $('#idVerWiz > .content').animate({ height: "20.5em" }, 600)
                                 return true;
                             }
@@ -315,7 +316,7 @@ function runIdWizard() {
             }
 
             // IF going to Step 4
-            if (newIndex = 3)
+            if (newIndex == 3)
             {
                 // Check Address field
                 $('#idVer-email').val($('#idVer-email').val().trim());
@@ -329,27 +330,26 @@ function runIdWizard() {
                     if ($('#idVer-phone').cleanVal().length == 10) {
                         updateValidationUi("phone", true);
 
-                        console.log('going in image wizard');
-
                         // Great, go to the next step of the wizard :-]
                         // FILE INPUT DOCUMENTATION: http://plugins.krajee.com/file-input#options
                         $("#idVer_idDoc").fileinput({
                             allowedFileTypes: ['image'],
                             initialPreview: [
-                                "<img src='' class='file-preview-image' alt='Profile Picture' id='IdWizUserPicPreview'>"
+                                "<img src='../Assets/Images/securityheader.png' class='file-preview-image' alt='' id='IdWizIdDocPreview'>"
                             ],
                             initialPreviewShowDelete: false,
                             layoutTemplates: {
                                 icon: '<span class="fa fa-photo m-r-10 kv-caption-icon"></span>',
                             },
+                            fileActionSettings: {
+                                showZoom: false,
+                                indicatorNew: '',
+                            },
                             maxFileCount: 1,
                             maxFileSize: 500,
-                            msgSizeTooLarge: "File '{name}' ({size} KB) exceeds the maximum allowed file size of {maxSize} KB. Please try a slightly smaller picture!",
+                            msgSizeTooLarge: "File '{name}' ({size} KB) is a bit too large! Max allowed file size is {maxSize} KB. Please try a slightly smaller picture!",
                             showCaption: false,
                             showUpload: false,
-                            //uploadUrl: URLs.UploadLandlordProfileImage,
-                            //  uploadExtraData: {
-                            //},
                             showPreview: true,
                             resizeImage: true,
                             maxImageWidth: 500,
@@ -357,12 +357,13 @@ function runIdWizard() {
                             resizePreference: 'width'
                         });
 
-
-                        $('#idVer_idDoc').on('fileerror', function (event, data, msg) {
-                            $('#idVerWiz > .content').animate({ height: "28em" }, 600)
+                        $('#idVer_idDoc').on('fileerror', function (event, data, msg)
+                        {
+                            $('#idVerWiz > .content').animate({ height: "26em" }, 600)
                         });
 
-                        $('#idVer_idDoc').on('fileloaded', function (event, file, previewId, index, reader) {
+                        $('#idVer_idDoc').on('fileloaded', function (event, file, previewId, index, reader)
+                        {
                             $('#idVerWiz > .content').animate({ height: "26em" }, 500)
 
                             isFileAdded = "1";
@@ -392,17 +393,7 @@ function runIdWizard() {
                             console.log("filecleareD");
                         });
 
-                        $('#idVer_idDoc').on('filezoomhidden', function (event, params) {
-                            event.preventDefault();
-                            console.log('File zoom hidden ', params.sourceEvent, params.previewId, params.modal);
-                        });
-
-                        $('#idVer_idDoc').on('filezoomhide', function (event, params) {
-                            event.preventDefault();
-                            console.log('File zoom hide ', params.sourceEvent, params.previewId, params.modal);
-                        });
-
-                        $('#idVerWiz > .content').animate({ height: "21em" }, 500);
+                        $('#idVerWiz > .content').animate({ height: "24em" }, 800);
                         return true;
                     }
                     else {
@@ -431,30 +422,10 @@ function runIdWizard() {
         onCanceled: function (event) {
             cancelIdVer();
         },
-        onFinishing: function (event, currentIndex) {
-            // CHECK TO MAKE SURE ALL FIELDS WERE COMPLETED
-
-            $('#idVer-email').val($('#idVer-email').val().trim());
-
-            if (ValidateEmail($('#idVer-email').val()) == true) {
-                updateValidationUi("email", true);
-
-                // Finally, check the phone number's length
-                console.log($('#idVer-phone').cleanVal());
-
-                if ($('#idVer-phone').cleanVal().length == 10) {
-                    updateValidationUi("phone", true);
-
-                    // Finish the Wizard...
-                    return true;
-                }
-                else {
-                    updateValidationUi("phone", false);
-                }
-            }
-            else {
-                updateValidationUi("email", false);
-            }
+        onFinishing: function (event, currentIndex)
+        {
+            // Finish the Wizard...
+            return true;
         },
         onFinished: function (event, currentIndex) {
 
@@ -476,16 +447,8 @@ function runIdWizard() {
             });
 
             // SUBMIT DATA TO NOOCH SERVER
-            if (TYPE == "1" || TYPE == "personal") // For existing users
-            {
-                console.log("Existing user, so calling saveMemberInfo()")
-                saveMemberInfo();
-            }
-            else
-            {
-                console.log("New user, so calling createRecord()")
-                createRecord();
-            }
+            console.log("New user, so calling createRecord()")
+            createRecord();
         }
     });
 }
@@ -594,239 +557,9 @@ function ValidateEmail(str) {
 };
 
 
-//function createRecord() {
-//    console.log('createRecord Initiated...');
-
-//    var userEmVal = $('#idVer-email').val();
-//    var userPhVal = $('#idVer-phone').cleanVal();
-//    var userNameVal = $('#idVer-name').val().trim();
-//    var userPwVal = "";  // Still need to add the option for users to create a PW (not sure where in the flow to do it)
-//    var ssnVal = $('#idVer-ssn').val().trim();
-//    var dobVal = $('#idVer-dob').val().trim();
-//    var addressVal = $('#idVer-address').val().trim();
-//    var zipVal = $('#idVer-zip').val().trim();
-//    var fngprntVal = fingprint;
-//    var ipVal = ipusr;
-
-//    console.log("CREATE RECORD -> {userEm: " + userEmVal + ", userPh: " + userPhVal +
-//                                ", userName: " + userNameVal + ", userPw: " + userPwVal +
-//                                ", ssn: " + ssnVal + ", dob: " + dobVal +
-//                                ", address: " + addressVal + ", zip: " + zipVal +
-//                                ", fngprnt: " + fngprntVal + ", ip: " + ipVal + "}");
-
-//    $.ajax({
-//        type: "POST",
-//        //url: "createAccount.aspx/CreateAccountInDB",
-//        url: "CreateAccountInDB",
-       
-//        data: "{'name':'" + userNameVal +
-//              //"', 'dob':'" + dobVal +
-//              //"', 'ssn':'" + ssnVal +
-//              //"', 'address':'" + addressVal +
-//              //"', 'zip':'" + zipVal +
-//              "', 'email':'" + userEmVal +
-//              //"', 'phone':'" + userPhVal +
-//              //"', 'fngprnt':'" + fngprntVal +
-//              //"', 'ip':'" + ipVal +
-//              "', 'pw':'" + ssnVal + "'}",
-//        contentType: "application/json; charset=utf-8",
-//        dataType: "json",
-//        async: "true",
-//        cache: "false",
-//        success: function (msg) {
-      
-//            var CreateAccountInDbRes = msg;
-//            console.log("SUCCESS -> 'CreateAccountInDB' Result is... ");
-//            console.log(CreateAccountInDbRes);
-
-//            // Hide the Loading Block
-//            $('.modal-content').unblock();       
-
-//            //if (CreateAccountInDbRes.success == true &&
-//            //    CreateAccountInDbRes.note.length > 5) 
-//            if (CreateAccountInDbRes != null)
-//            {
-//                //memIdGen = CreateAccountInDbRes.note.trim();
-//                // CreateAccountInDbRes.MemberId.trim();
-               
-//                  var memberID = $('#memId').attr('value');
-//                 // HIDE THE WIZARD
-//                $('#idWizContainer').slideUp()
-
-//                // THEN DISPLAY SUCCESS ALERT...
-//                swal({
-//                    title: "Great Job!",
-//                    text: "<i class=\"mdi mdi-account-check text-success\"></i><br/>Thanks for submitting your ID information. That helps us keep Nooch safe for everyone." +
-//                           "<span>Next, link any checking account to complete this payment:</span>" +
-//                           "<span class=\"spanlist\"><span>1. &nbsp;Select your bank</span><span>2. &nbsp;Login with your regular online banking credentials</span><span>3. &nbsp;Choose which account to use</span></span>",
-//                    type: "success",
-//                    showCancelButton: false,
-//                    confirmButtonColor: "#3fabe1",
-//                    confirmButtonText: "Continue",
-//                    closeOnConfirm: true,
-//                    html: true,
-//                    customClass: "idVerSuccessAlert",
-//                });
-
-//                $('#AddBankDiv').removeClass('hidden');
-
-//                //$("#frame").attr("src", "https://www.noochme.com/noochweb/trans/Add-Bank.aspx?MemberId=" + CreateAccountInDbRes.note + "&redUrl=createaccnt");
-//                $("#frame").attr("src", "AddBank?MemberId=" + memberID + "&redUrl=createaccnt");
-//            }
-//            else if (CreateAccountInDbRes.msg.indexOf("already a"))
-//            {
-//                showErrorAlert('20');
-//            }
-//            else
-//            {
-//                showErrorAlert('2');
-//            }
-//        },
-//        Error: function (x, e) {
-//            // Hide UIBlock (loading box)) 
-//            // Hide the Loading Block
-//            console.log("ERROR --> 'x', then 'e' is... ");
-//            console.log(x);
-//            console.log(e);
-
-//            showErrorAlert('2');
-//        }
-//    });
-//}
-
-
-function saveMemberInfo() {
-    console.log('saveMemberInfo got called');
-
-    var memId = $('#memId').val();
-    var userNameVal = $('#idVer-name').val().trim();
-    var userEmVal = $('#idVer-email').val();
-    var userPhVal = $('#idVer-phone').cleanVal();
-    var userPwVal = "";  // Still need to add the option for users to create a PW (not sure where in the flow to do it)
-    var ssnVal = $('#idVer-ssn').val().trim();
-    var dobVal = $('#idVer-dob').val().trim();
-    var addressVal = $('#idVer-address').val().trim();
-    var zipVal = $('#idVer-zip').val().trim();
-    var fngprntVal = fingprint;
-    var ipVal = ipusr;
-    var isIdImage = "";
-    var idImagedata = "";
-    if ($('#idVer_idDoc').val() != "")
-    {
-          isIdImage = "1";
-          idImagedata = $('#idVer_idDoc').val()
-    }
-    console.log("SAVE MEMBER INFO -> {memId: " + memId +
-                                   ", Name: " + userNameVal +
-                                   ", dob: " + dobVal +
-                                   ", ssn: " + ssnVal +
-                                   ", address: " + addressVal +
-                                   ", zip: " + zipVal +
-                                   ", email: " + userEmVal +
-                                   ", phone: " + userPhVal +
-                                   ", fngprnt: " + fngprntVal +
-                                   ", ip: " + ipVal + "}");
-
-    $.ajax({
-        type: "POST",
-        //url: "createAccount.aspx/saveMemberInfo",
-        url: "saveMemberInfo",
-        data: "{'memId':'" + memId +
-             "', 'name':'" + userNameVal +
-             "', 'dob':'" + dobVal +
-             "', 'ssn':'" + ssnVal +
-             "', 'address':'" + addressVal +
-             "', 'zip':'" + zipVal +
-             "', 'email':'" + userEmVal +
-             "', 'phone':'" + userPhVal +
-             "', 'fngprnt':'" + fngprntVal +
-             "', 'ip':'" + ipVal +
-             "', 'pw':'" + '' +
-             "', 'isIdImage':'" + isFileAdded +
-             "', 'idImagedata':'" + FileData + "'}",
-        contentType: "application/json; charset=utf-8",
-        dataType: "json",
-        async: "true",
-        cache: "false",
-        success: function (msg) {
-             var result = msg;
-            console.log("SUCCESS -> Save Member Info result is... [next line]");
-            console.log(result);
-
-            resultReason = result.msg;
-
-            // Hide the Loading Block
-            $('#idWizContainer').unblock();
-
-            if (result.success == true)
-            {
-                console.log("Success == true");
-
-                // HIDE THE MODAL CONTAINING THE WIZARD
-                $('#idVer').modal('hide')
-
-                // THEN DISPLAY SUCCESS ALERT...
-                swal({
-                    title: "Submitted Successfully",
-                    text: "<i class=\"mdi mdi-account-check text-success\"></i><br/>Thanks for submitting your ID information. That helps us keep " + COMPANY + " safe for everyone. &nbsp;We only use this information to prevent ID fraud and never share it without your permission.",
-                           //"<span>Next, link any checking account to complete this payment:</span>" +
-                           //"<span class=\"spanlist\"><span>1. &nbsp;Select your bank</span><span>2. &nbsp;Login with your regular online banking credentials</span><span>3. &nbsp;Choose which account to use</span></span>",
-                    type: "success",
-                    showCancelButton: false,
-                    confirmButtonColor: "#3fabe1",
-                    confirmButtonText: "Great!",
-                    closeOnConfirm: true,
-                    html: true,
-                    customClass: "idVerSuccessAlert",
-                });
-
-                $('#idWizContainer').fadeOut(600);
-
-                $('.resultDiv').removeClass('hidden');
-                //$('#AddBankDiv').removeClass('hidden');
-
-                //$("#frame").attr("src", "https://www.noochme.com/noochweb/trans/Add-Bank.aspx?MemberId=" + RegisterUserWithSynpResult.memberIdGenerated + "&redUrl=https://www.noochme.com/noochweb/trans/payRequestComplete.aspx?mem_id=" + RegisterUserWithSynpResult.memberIdGenerated + "," + transIdVal);
-            }
-            else
-            {
-                console.log("Success != true");
-
-                if (resultReason != null)
-                {
-                    if (resultReason.indexOf("email already registered") > -1) {
-                        showErrorAlert('20');
-                    }
-                    else if (resultReason.indexOf("phone number already registered") > -1) {
-                        showErrorAlert('30');
-                    }
-                    else if (resultReason.indexOf("Missing critical data") > -1) {
-                        showErrorAlert('2');
-                    }
-                }
-                else
-                {
-                    console.log("Error checkpoint # 659");
-                    showErrorAlert('3');
-                }
-            }
-        },
-        Error: function (x, e) {
-            // Hide the Loading Block
-            $('#idWizContainer').unblock();
-
-            console.log("ERROR --> 'x', then 'e' is... ");
-            console.log(x);
-            console.log(e);
-
-            showErrorAlert('3');
-        }
-    });
-}
-
-
 function createRecord() {
-    console.log('createRecord got called');
-     
+    console.log('createRecord fired');
+
     var transId = $('#transId').val();
     var memId = $('#memId').val();
     var userNameVal = $('#idVer-name').val().trim();
@@ -853,8 +586,7 @@ function createRecord() {
 
     $.ajax({
         type: "POST",
-        //url: "createAccount.aspx/saveMemberInfo",
-        url: "CreateAccountInDB",
+        url: "saveMemberInfo",
         data: "{  'transId':'" + transId +
              "', 'memId':'" + memId +
              "', 'name':'" + userNameVal +
@@ -867,15 +599,14 @@ function createRecord() {
              "', 'fngprnt':'" + fngprntVal +
              "', 'ip':'" + ipVal +
              "', 'pw':'" + '' +
-             "', 'pw':'" + '' +
              "', 'isIdImage':'" + isFileAdded +
              "', 'idImagedata':'" + FileData + "'}",
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         async: "true",
         cache: "false",
-        success: function (msg) {
-            var result = msg;
+        success: function (result)
+        {
             console.log("SUCCESS -> Save Member Info result is... [next line]");
             console.log(result);
 
@@ -884,7 +615,8 @@ function createRecord() {
             // Hide the Loading Block
             $('#idWizContainer').unblock();
 
-            if (result.success == true) {
+            if (result.success == true)
+            {
                 console.log("Success == true");
 
                 // HIDE THE MODAL CONTAINING THE WIZARD
@@ -893,7 +625,7 @@ function createRecord() {
                 // THEN DISPLAY SUCCESS ALERT...
                 swal({
                     title: "Submitted Successfully",
-                    text: "<i class=\"mdi mdi-account-check text-success\"></i><br/>Thanks for submitting your ID information. That helps us keep " + COMPANY + " safe for everyone. &nbsp;We only use this information to prevent ID fraud and never share it without your permission.",
+                    text: "<i class=\"fa fa-check text-success\"></i><br/>Thanks for submitting your ID information. That helps us keep " + COMPANY + " safe for everyone. &nbsp;We only use this information to prevent ID fraud and never share it without your permission.",
                     //"<span>Next, link any checking account to complete this payment:</span>" +
                     //"<span class=\"spanlist\"><span>1. &nbsp;Select your bank</span><span>2. &nbsp;Login with your regular online banking credentials</span><span>3. &nbsp;Choose which account to use</span></span>",
                     type: "success",
@@ -908,27 +640,58 @@ function createRecord() {
                 $('#idWizContainer').fadeOut(600);
 
                 $('.resultDiv').removeClass('hidden');
+
+
+                // This section used to be done in the Code-Behind file, now need to do it here///
+                // checkEmailMsg.Visible = true;
+                // if (serviceResult.Result == "Thanks for registering! Check your email to complete activation.")
+                // {
+                //    transResult.Text = serviceResult.Result;
+                // }
+                // else {
+                //    transResult.Visible = true;
+                //    transResult.Text = serviceResult.Result;
+                //    checkEmailMsg.Visible = true;
+                // }
+
+
+
                 //$('#AddBankDiv').removeClass('hidden');
 
                 //$("#frame").attr("src", "https://www.noochme.com/noochweb/trans/Add-Bank.aspx?MemberId=" + RegisterUserWithSynpResult.memberIdGenerated + "&redUrl=https://www.noochme.com/noochweb/trans/payRequestComplete.aspx?mem_id=" + RegisterUserWithSynpResult.memberIdGenerated + "," + transIdVal);
             }
-            else {
+            else
+            {
                 console.log("Success != true");
 
-                if (resultReason != null) {
-                    if (resultReason.indexOf("email already registered") > -1) {
+                if (resultReason != null)
+                {
+                    console.log(resultReason);
+
+                    if (resultReason.indexOf("email already registered") > -1)
+                    {
+                        console.log("Error: email already registered");
                         showErrorAlert('20');
                     }
-                    else if (resultReason.indexOf("phone number already registered") > -1) {
+                    else if (resultReason.indexOf("phone number already registered") > -1)
+                    {
+                        console.log("Error: phone number already registered");
                         showErrorAlert('30');
                     }
-                    else if (resultReason.indexOf("Missing critical data") > -1) {
+                    else if (resultReason.indexOf("Missing critical data") > -1)
+                    {
+                        console.log("Error: missing critical data");
+                        showErrorAlert('2');
+                    }
+                    else
+                    {
                         showErrorAlert('2');
                     }
                 }
-                else {
+                else
+                {
                     console.log("Error checkpoint # 659");
-                    showErrorAlert('3');
+                    showErrorAlert('2');
                 }
             }
         },
@@ -947,6 +710,7 @@ function createRecord() {
 
 
 // To handle success from Add-Bank page (CC: 1/20/16)
+// CC (5/24/16): NEED TO UPDATE FOR NEW ARCHITECHTURE
 $('body').bind('addBankComplete', function ()
 {
     $('#AddBankDiv').slideUp();

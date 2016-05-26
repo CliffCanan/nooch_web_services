@@ -56,18 +56,18 @@
             <div id="depositHeader">
                 <div>Payment Request</div>
                 <div id="fromText">From</div>
-                <img cssclass="media-object" id="senderImage" src="@rpr.senderImage" alt="Request Sender" />
+                <img class="media-object" id="senderImage" src="@rpr.senderImage" alt="Request Sender" />
                 <span id="senderName">
-                    <span id="senderName1" text="Nooch User">@rpr.senderName1</span>
+                    <span id="senderName1">@rpr.senderName1</span>
                 </span>
             </div>
 
             <div id="amountShell">
                 <div>
                     <span id="dollarSign">$</span>
-                    <span id="transAmountd" text="">@rpr.transAmountd</span>
+                    <span id="transAmountd">@rpr.transAmountd</span>
                     <span id="cents">
-                        <span id="transAmountc" text="">@rpr.transAmountc</span>
+                        <span id="transAmountc">@rpr.transAmountc</span>
                     </span>
                 </div>
             </div>
@@ -76,7 +76,7 @@
                 <div>
                     @if (rpr.transMemo != null)
                     {
-                        <label id="transMemo" text="">@rpr.transMemo</label>
+                        <label id="transMemo">@rpr.transMemo</label>
                     }
                 </div>
             </div>
@@ -382,7 +382,7 @@
     </div>
 
 
-    <script src="@Url.Content("//code.jquery.com/jquery-2.1.4.min.js")"></script>
+    <script src="@Url.Content("//code.jquery.com/jquery-1.12.4.min.js")"></script>
     <script src="@Url.Content("//code.jquery.com/ui/1.11.4/jquery-ui.min.js")"></script>
     <script src="@Url.Content("https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js")"></script>
     <script src="@Url.Content("~/js/jasny-bootstrap.min.js")"></script>
@@ -395,14 +395,11 @@
     <script src="@Url.Content("~/js/jquery.steps.js")"></script>
     <script src="@Url.Content("~/js/fingerprint2.min.js")"></script>
     <script src="@Url.Content("~/js/sweetalert.min.js")"></script>
-    <script src="@Url.Content("~/js/input-mask.min.js")"></script>
     <script src="@Url.Content("~/js/fileinput/fileinput.min.js")"></script>
-
     <script type="text/javascript">
         var ipusr;
     </script>
-    <script type="text/javascript" src="https://www.l2.io/ip.js?var=ipusr"></script>
-
+    <script src="@Url.Content("https://www.l2.io/ip.js?var=ipusr")"></script>
     <script src="@Url.Content("~/js/app/movemoneypagescripts.js")"></script>
 
 </body>

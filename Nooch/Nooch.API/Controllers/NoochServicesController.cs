@@ -2362,6 +2362,9 @@ namespace Nooch.API.Controllers
         }
 
 
+        // CLIFF (5/25/16): Commenting out this method b/c this isn't used anymore - it was for the CreateAccount page for existing users,
+        //                  but those are now being sent to RegisterExistingUserWithSynapseV3().
+        /*
         [HttpGet]
         [ActionName("UpdateMemberProfile")]
         public genericResponse UpdateMemberProfile(string memId, string fname, string lname, string email, string phone, string address, string zip, string dob, string ssn, string fngprnt, string ip, string pw)
@@ -2556,7 +2559,7 @@ namespace Nooch.API.Controllers
             }
 
             return res;
-        }
+        }*/
 
 
         [HttpGet]
@@ -2908,6 +2911,11 @@ namespace Nooch.API.Controllers
         /************************************************/
         #region Synapse-Related Services
 
+        /// <summary>
+        /// Used only by other methods WITHIN NoochServices Controller.
+        /// </summary>
+        /// <param name="memberId"></param>
+        /// <returns></returns>
         [HttpGet]
         [ActionName("RegisterUserWithSynapseV3")]
         public synapseCreateUserV3Result_int RegisterUserWithSynapseV3(string memberId)
@@ -2933,14 +2941,13 @@ namespace Nooch.API.Controllers
 
         [HttpPost]
         [ActionName("RegisterExistingUserWithSynapseV3")]
-
-        public RegisterUserSynapseResultClassExt RegisterExistingUserWithSynapseV3(RegisterExistingUserWithSynapseV3_InputClass input)
+        public RegisterUserSynapseResultClassExt RegisterExistingUserWithSynapseV3(RegisterUserWithSynapseV3_Input input)
         {
-            Logger.Info("Service Controller -> RegisterExistingUserWithSynapseV3 Initiated - MemberID: [" + input.memberId + "], " +
-                        "Name: [" + input.fullname + "], Email: [" + input.email + "]");
-
             try
             {
+                Logger.Info("Service Cntrlr -> RegisterExistingUserWithSynapseV3 Initiated - MemberID: [" + input.memberId + "], " +
+                            "Name: [" + input.fullname + "], Email: [" + input.email + "]");
+
                 MembersDataAccess mda = new MembersDataAccess();
                 RegisterUserSynapseResultClassExt nc = new RegisterUserSynapseResultClassExt();
 
@@ -2954,7 +2961,6 @@ namespace Nooch.API.Controllers
                     nc.refresh_token = res.oauth.refresh_token;
                     nc.success = res.success.ToString();
                     nc.user_id = res.user_id;
-                    // nc.username = res.user.logins[0].email;
                     nc.memberIdGenerated = res.memberIdGenerated;
                     nc.ssn_verify_status = res.ssn_verify_status;
                 }
@@ -2967,8 +2973,8 @@ namespace Nooch.API.Controllers
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Controller -> RegisterExistingUserWithSynapsev3 FAILED - [MemberID: " + input.memberId + "], [Name: " + input.fullname +
-                             ", [Email of New User: " + input.email + "], [Exception: " + ex.ToString() + "]");
+                Logger.Error("Service Cntrlr -> RegisterExistingUserWithSynapsev3 FAILED - [MemberID: " + input.memberId + "], [Name: " + input.fullname +
+                             ", [Email of New User: " + input.email + "], [Exception: " + ex.Message + "]");
                 return null;
             }
         }
@@ -2976,10 +2982,12 @@ namespace Nooch.API.Controllers
 
         [HttpPost]
         [ActionName("RegisterNonNoochUserWithSynapse")]
-        public RegisterUserSynapseResultClassExt RegisterNonNoochUserWithSynapse(RegisterNonNoochUserWithSynapse_Input_Class input)
+        public RegisterUserSynapseResultClassExt RegisterNonNoochUserWithSynapse(RegisterUserWithSynapseV3_Input input)
         {
             try
             {
+                Logger.Info("Service Cntrlr -> RegisterNonNoochUserWithSynapse Initiated.");
+
                 MembersDataAccess mda = new MembersDataAccess();
 
                 synapseCreateUserV3Result_int res = mda.RegisterNonNoochUserWithSynapseV3(input.transId, input.email, input.phone, input.fullname, input.pw, input.ssn, input.dob, input.address, input.zip, input.fngprnt, input.ip, input.isIdImageAdded, input.idImageData);
@@ -3008,10 +3016,9 @@ namespace Nooch.API.Controllers
             }
             catch (Exception ex)
             {
-
-                Logger.Error("Service Controller -> RegisterNonNoochUserWithSynapseV3 FAILED. [New Usr Name: " + input.fullname +
-                                       "], Email of New User: [" + input.email + "], TransactionID: [" + input.transId +
-                                       "], Exception: [" + ex.ToString() + "]");
+                Logger.Error("Service Cntrlr -> RegisterNonNoochUserWithSynapse FAILED. [New Usr Name: " + input.fullname +
+                             "], Email of New User: [" + input.email + "], TransactionID: [" + input.transId +
+                             "], Exception: [" + ex.Message + "]");
 
                 return null;
             }

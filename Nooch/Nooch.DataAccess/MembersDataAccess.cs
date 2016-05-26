@@ -2602,9 +2602,9 @@ namespace Nooch.DataAccess
 
                 string pinNumber = Utility.GetRandomPinNumber();
                 pinNumber = CommonHelper.GetEncryptedData(pinNumber);
-                memberObj.SecondaryEmail = memberObj.UserName; // In case the supplied email is different than what the Landlord used to invite, saving the original email here as secondary, and updating UserName in next line
                 memberObj.UserName = CommonHelper.GetEncryptedData(userEmail.Trim()); // Username might be different if user changes the email on the payRequest page
                 memberObj.UserNameLowerCase = CommonHelper.GetEncryptedData(userEmail.Trim().ToLower());
+                memberObj.SecondaryEmail = memberObj.UserName; // In case the supplied email is different than what the Landlord used to invite, saving the original email here as secondary, and updating UserName in next line
                 memberObj.FirstName = FirstName;
                 memberObj.LastName = LastName;
                 memberObj.ContactNumber = userPhone;
