@@ -2001,6 +2001,7 @@ namespace Nooch.DataAccess
                             //                  The user may be adding a bank and might still need to answer the ID Verification questions afterwards,
                             //                  or it could be a Rent Scene user who don't use the iOS app, so we can deal with fixing their Permissions after they connect a bank.
                             res.success = true;
+
                         }
                         else
                         {
