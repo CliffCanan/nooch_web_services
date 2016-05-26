@@ -2643,6 +2643,21 @@ namespace Nooch.Web.Controllers
         }
 
 
+        /// <summary>
+        /// For Submitting a payment from the MakePayment browser page when the server initially returns
+        /// that the recipient already has an account based on the email used in submitPayment() above.
+        /// </summary>
+        /// <param name="from"></param>
+        /// <param name="isRequest"></param>
+        /// <param name="amount"></param>
+        /// <param name="name"></param>
+        /// <param name="email"></param>
+        /// <param name="memo"></param>
+        /// <param name="pin"></param>
+        /// <param name="ip"></param>
+        /// <param name="memberId"></param>
+        /// <param name="nameFromServer"></param>
+        /// <returns></returns>
         public ActionResult submitRequestToExistingUser(string from, bool isRequest, string amount, string name, string email, string memo, string pin, string ip, string memberId, string nameFromServer)
         {
             Logger.Info("Make Payment Code-Behind -> submitRequestToExistingUser Initiated - From: [" + from + "], isRequest: [" + isRequest +
@@ -2655,13 +2670,35 @@ namespace Nooch.Web.Controllers
             res.success = false;
             res.msg = "Initial - code behind";
 
+            #region Lookup PIN
+
             pin = (String.IsNullOrEmpty(pin) || pin.Length != 4) ? "0000" : pin;
-            pin = CommonHelper.GetEncryptedData(pin);
+
+            if (from == "rentscene")
+            {
+                pin = CommonHelper.GetMemberPinByUserName("payments@rentscene.com");
+            }
+            else if (from == "nooch")
+            {
+                pin = CommonHelper.GetMemberPinByUserName("team@nooch.com");
+            }
+            else if (from == "appjaxx")
+            {
+                pin = CommonHelper.GetMemberPinByUserName("josh@appjaxx.com");
+            }
+
+            if (String.IsNullOrEmpty(pin))
+            {
+                res.msg = "Failed to get a PIN from the server.";
+                return Json(res);
+            }
+
+            #endregion Lookup PIN
 
             try
             {
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-                string serviceMethod = "/RequestMoneyToExistingUserForRentScene?name=" + name +
+                string serviceMethod = "/RequestMoneyToExistingUserForRentScene?from=" + from + "&name=" + name +
                                        "&email=" + email + "&amount=" + amount +
                                        "&memo=" + memo + "&pin=" + pin +
                                        "&ip=" + ip + "&isRequest=" + isRequest +
@@ -2687,12 +2724,12 @@ namespace Nooch.Web.Controllers
                     if (response.success == true)
                     {
                         Logger.Info("Make Payment Code-Behind -> submitRequestToExistingUser Success - Payment Request submitted to NEW user successfully - " +
-                                               "Recipient: [" + name + "], Email: [" + email + "], Amount: [" + amount + "], Memo: [" + memo + "]");
+                                    "Recipient: [" + name + "], Email: [" + email + "], Amount: [" + amount + "], Memo: [" + memo + "]");
                     }
                     else
                     {
                         Logger.Error("Make Payment Code-Behind -> submitRequestToExistingUser FAILED - Server response for RequestMoneyForRentScene() was NOT successful - " +
-                                               "Recipient: [" + name + "], Email: [" + email + "], Amount: [" + amount + "], Memo: [" + memo + "]");
+                                     "Recipient: [" + name + "], Email: [" + email + "], Amount: [" + amount + "], Memo: [" + memo + "]");
                     }
 
                     #endregion Logging For Debugging

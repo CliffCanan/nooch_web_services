@@ -2572,6 +2572,9 @@ form .table-header {
   .sweet-alert.securityAlert ul { padding-left: 20px; }
 }
 
+@media only screen and (max-width: 360px) {
+	#idVerWiz #idVerWiz-p-2 .well-sm {font-size: 13px;}
+}
 @media only screen and (min-width: 768px) {
   .sweet-alert {
     padding-top: 45px;
@@ -2585,7 +2588,7 @@ form .table-header {
   .securityAlert ul { font-size: 16px; line-height:1.4; }
   .sweet-alert ul > li { margin-top: .25em; }
 
-  #body-depositNew { padding-top: 80px; }
+  #body-depositNew { padding-top: 70px; }
   #body-depositNew iframe { height: 760px; }
   
   #idVer .modal-dialog { width: 640px; }
@@ -2653,7 +2656,8 @@ form .table-header {
 
     #idWizContainer { padding: 0 3.5%; }
 
-	#idVerWiz-p-0 .well { padding: 9px 75px;}
+	#idVerWiz-p-0 .well,
+	#idVerWiz-p-3 .well { padding: 9px 65px;}
 
     .addBank-instructions {
         font-size: 16px;

@@ -1063,9 +1063,9 @@ namespace Nooch.API.Controllers
         /// <returns></returns>
         [HttpGet]
         [ActionName("RequestMoneyToExistingUserForRentScene")]
-        public requestFromRentScene RequestMoneyToExistingUserForRentScene(string name, string email, string amount, string memo, string pin, string ip, bool isRequest, string memberId, string nameFromServer)
+        public requestFromRentScene RequestMoneyToExistingUserForRentScene(string from, string name, string email, string amount, string memo, string pin, string ip, bool isRequest, string memberId, string nameFromServer)
         {
-            Logger.Info("Service Controller - RequestMoneyToExistingUserForRentScene Initiated - [Name: " + name +
+            Logger.Info("Service Controller - RequestMoneyToExistingUserForRentScene Initiated - [From: " + from + ", [Name: " + name +
                         "], Email: [" + email + "], Amount: [" + amount +
                         "], Memo: [" + memo + "], PIN: [" + pin +
                         "], IP: [" + ip + "], isRequest: [" + isRequest + "]" +
@@ -1076,66 +1076,98 @@ namespace Nooch.API.Controllers
             res.isEmailAlreadyReg = false;
             res.msg = "Service Layer - Initial";
 
-            #region Check for Required Data
-
-            bool isMissingData = false;
-
-            if (String.IsNullOrEmpty(pin))
-            {
-                res.msg = "Missing PIN!";
-                isMissingData = true;
-            }
-            if (String.IsNullOrEmpty(name))
-            {
-                res.msg = "Missing name!";
-                isMissingData = true;
-            }
-            if (String.IsNullOrEmpty(email))
-            {
-                res.msg = "Missing email!";
-                isMissingData = true;
-            }
-            if (String.IsNullOrEmpty(amount))
-            {
-                res.msg = "Missing amount!";
-                isMissingData = true;
-            }
-
-            if (isMissingData)
-            {
-                Logger.Error("Service Controller -> RequestMoneyForRentScene FAILED - Missing required data - Msg is: [" + res.msg + "]");
-                return res;
-            }
-
-            #endregion Check for Required Data
-
             try
             {
+                #region Check for Required Data
+
+                bool isMissingData = false;
+
+                if (String.IsNullOrEmpty(from))
+                {
+                    res.msg = "Missing FROM!";
+                    isMissingData = true;
+                }
+                if (String.IsNullOrEmpty(pin))
+                {
+                    res.msg = "Missing PIN!";
+                    isMissingData = true;
+                }
+                if (String.IsNullOrEmpty(name))
+                {
+                    res.msg = "Missing name!";
+                    isMissingData = true;
+                }
+                if (String.IsNullOrEmpty(email))
+                {
+                    res.msg = "Missing email!";
+                    isMissingData = true;
+                }
+                if (String.IsNullOrEmpty(amount))
+                {
+                    res.msg = "Missing amount!";
+                    isMissingData = true;
+                }
+
+                if (isMissingData)
+                {
+                    Logger.Error("Service Controller -> RequestMoneyForRentScene FAILED - Missing required data - Msg is: [" + res.msg + "]");
+                    return res;
+                }
+
+                #endregion Check for Required Data
+
+
+                var address = "";
+                var city = "Philadelphia";
+                var zip = "";
+                var memIdOfRequester = "";
+
+
+                if (from == "appjaxx")
+                {
+                    address = "100 Fairhill Road";
+                    city = "Hatfield";
+                    zip = "19440";
+                    memIdOfRequester = "8b4b4983-f022-4289-ba6e-48d5affb5484";
+                }
+                else if (from == "rentscene")
+                {
+                    address = "1500 JFK Blvd";
+                    city = "Philadelphia";
+                    zip = "19102";
+                    memIdOfRequester = "852987e8-d5fe-47e7-a00b-58a80dd15b49";
+                }
+                else
+                {
+                    address = "3 Scarlet Oak Dr";
+                    city = "Haverford";
+                    zip = "19041";
+                    memIdOfRequester = "00bd3972-d900-429d-8a0d-28a5ac4a75d7"; // team@nooch.com
+                }
+
+                Logger.Info("Service Controller - RequestMoneyToExistingUserForRentScene - Checkpoint - address: [" + address +
+                            "], city: [" + city + "], zip + [" + zip + "], memIdOfRequest: [" + memIdOfRequester + "]");
+
                 string requestId = string.Empty;
 
                 RequestDto requestInput = new RequestDto()
                 {
-                    AddressLine1 = "1500 JFK Blvd",
+                    AddressLine1 = address,
                     Amount = Convert.ToDecimal(amount),
-                    City = "Philadelphia",
+                    City = city,
                     Country = "US",
                     Latitude = 39.95332018F,
                     Longitude = -75.1661824F,
-                    MemberId = "852987e8-d5fe-47e7-a00b-58a80dd15b49",
+                    MemberId = memIdOfRequester,
                     Memo = memo,
-                    MoneySenderEmailId = String.IsNullOrEmpty(memberId) ? email
-                                                                        : "",
+                    MoneySenderEmailId = String.IsNullOrEmpty(memberId) ? email : "",
                     Name = nameFromServer,
-                    PinNumber = !String.IsNullOrEmpty(pin) ? CommonHelper.GetEncryptedData(pin)
-                                                           : "eeR7e/xjfVaQpm1w7jCh8g==", // "0000" as the default
-                    SenderId = !String.IsNullOrEmpty(memberId) ? memberId
-                                                               : "",
+                    PinNumber = pin,
+                    SenderId = !String.IsNullOrEmpty(memberId) ? memberId : "",
                     State = "PA",
                     TransactionDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm"),
-                    ZipCode = "19102",
-                    //isTesting = "true" // REMOVE FOR PRODUCTION!!
+                    ZipCode = zip,
                 };
-
 
                 var tda = new TransactionsDataAccess();
                 StringResult tdaRes = new StringResult { Result = tda.RequestMoneyToExistingButNonregisteredUser(requestInput) };
@@ -1150,7 +1182,7 @@ namespace Nooch.API.Controllers
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Controller - RequestMoneyToExistingButNonRegisteredUser FAILED - [Email: " + email + "]. Exception: [" + ex + "]");
+                Logger.Error("Service Cntrlr - RequestMoneyToExistingUserForRentScene FAILED - [Email: " + email + "]. Exception: [" + ex + "]");
 
                 res.msg = ex.Message;
                 res.note = "Outer exception in Service Layer (RequestMoneyToExistingUserForRentScene)!";

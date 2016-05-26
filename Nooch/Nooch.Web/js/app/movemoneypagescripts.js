@@ -772,7 +772,7 @@ function createRecord() {
 			            $("#idVerWiz").addClass("animated bounceOut");
 
 			            //$("#idVerContainer iframe").attr("src", "https://www.noochme.com/noochweb/trans/idverification.aspx?memid=" + memIdGen + "&from=lndngpg");
-			            $("#idVerContainer iframe").attr("src", "54.201.43.89/noochweb/Nooch/idVerification?memid=" + memIdGen + "&from=lndngpg");
+			            $("#idVerContainer iframe").attr("src", "http://54.201.43.89/noochweb/Nooch/idVerification?memid=" + memIdGen + "&from=lndngpg");
 
 			            setTimeout(function () {
 			                $("#idVerWiz").css({
