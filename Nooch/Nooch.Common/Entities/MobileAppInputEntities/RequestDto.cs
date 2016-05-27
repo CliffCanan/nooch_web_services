@@ -16,6 +16,7 @@ namespace Nooch.Common.Entities.MobileAppInputEntities
 
         
         public string SenderId { get; set; }
+        public string ReceiverId { get; set; }
 
         
         public string Name { get; set; }
@@ -67,6 +68,8 @@ namespace Nooch.Common.Entities.MobileAppInputEntities
 
         
         public string MoneySenderEmailId { get; set; }
+
+        public string MoneyReceiverEmailId { get; set; }
 
         
         public byte[] Picture { get; set; }

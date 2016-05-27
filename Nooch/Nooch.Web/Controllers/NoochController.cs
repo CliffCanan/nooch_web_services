@@ -2585,11 +2585,23 @@ namespace Nooch.Web.Controllers
                 #endregion Lookup PIN
 
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-                string serviceMethod = "/RequestMoneyForRentScene?from=" + from +
-                                       "&name=" + name +
-                                       "&email=" + email + "&amount=" + amount +
-                                       "&memo=" + memo + "&pin=" + pin +
-                                       "&ip=" + ip + "&isRequest=" + isRequest;
+                string serviceMethod;
+                if (isRequest)
+                {
+                      serviceMethod = "/RequestMoneyForRentScene?from=" + from +
+                                           "&name=" + name +
+                                           "&email=" + email + "&amount=" + amount +
+                                           "&memo=" + memo + "&pin=" + pin +
+                                           "&ip=" + ip + "&isRequest=" + isRequest;
+                }
+                else
+                {
+                    serviceMethod = "/TransferMoneyToNonNoochUserUsingSynapseForRentScene?from=" + from +
+                                           "&name=" + name +
+                                           "&email=" + email + "&amount=" + amount +
+                                           "&memo=" + memo + "&pin=" + pin +
+                                           "&ip=" + ip + "&isRequest=" + isRequest;
+                }
 
                 string urlToUse = String.Concat(serviceUrl, serviceMethod);
 
@@ -2698,12 +2710,23 @@ namespace Nooch.Web.Controllers
             try
             {
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-                string serviceMethod = "/RequestMoneyToExistingUserForRentScene?from=" + from + "&name=" + name +
-                                       "&email=" + email + "&amount=" + amount +
-                                       "&memo=" + memo + "&pin=" + pin +
-                                       "&ip=" + ip + "&isRequest=" + isRequest +
-                                       "&memberId=" + memberId + "&nameFromServer=" + nameFromServer;
+                string serviceMethod;
+                if (isRequest)
+                {
+                    serviceMethod = "/RequestMoneyToExistingUserForRentScene?from=" + from + "&name=" + name +
+                                         "&email=" + email + "&amount=" + amount +
+                                         "&memo=" + memo + "&pin=" + pin +
+                                         "&ip=" + ip + "&isRequest=" + isRequest +
+                                         "&memberId=" + memberId + "&nameFromServer=" + nameFromServer;
+                }
+                else {
 
+                    serviceMethod = "/TransferMoneyToExistingUserForRentScene?from=" + from + "&name=" + name +
+                                         "&email=" + email + "&amount=" + amount +
+                                         "&memo=" + memo + "&pin=" + pin +
+                                         "&ip=" + ip + "&isRequest=" + isRequest +
+                                         "&memberId=" + memberId + "&nameFromServer=" + nameFromServer;
+                }
                 string urlToUse = String.Concat(serviceUrl, serviceMethod);
 
                 Logger.Info("Make Payment Code-Behind -> submitRequestToExistingUser - URL To Query: [" + urlToUse + "]");
