@@ -427,6 +427,9 @@
           <Property Name="Phone_number" Type="varchar(max)" />
           <Property Name="photos" Type="varchar(max)" />
           <Property Name="expires_at" Type="varchar" MaxLength="50" />
+          <Property Name="physical_doc" Type="varchar(max)" />
+          <Property Name="virtual_doc" Type="varchar(max)" />
+          <Property Name="extra_security" Type="varchar(max)" />
         </EntityType>
         <EntityType Name="SynapseIdVerificationQuestions">
           <Key>
@@ -1263,6 +1266,9 @@
           <Property Name="Phone_number" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
           <Property Name="photos" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
           <Property Name="expires_at" Type="String" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Name="physical_doc" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
+          <Property Name="virtual_doc" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
+          <Property Name="extra_security" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
         </EntityType>
         <EntityType Name="SynapseIdVerificationQuestion">
           <Key>
@@ -1910,6 +1916,9 @@
           <EntitySetMapping Name="SynapseCreateUserResults">
             <EntityTypeMapping TypeName="NOOCHModel.SynapseCreateUserResult">
               <MappingFragment StoreEntitySet="SynapseCreateUserResults">
+                <ScalarProperty Name="extra_security" ColumnName="extra_security" />
+                <ScalarProperty Name="virtual_doc" ColumnName="virtual_doc" />
+                <ScalarProperty Name="physical_doc" ColumnName="physical_doc" />
                 <ScalarProperty Name="expires_at" ColumnName="expires_at" />
                 <ScalarProperty Name="photos" ColumnName="photos" />
                 <ScalarProperty Name="Phone_number" ColumnName="Phone_number" />
