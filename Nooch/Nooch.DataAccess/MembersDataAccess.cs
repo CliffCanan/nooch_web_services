@@ -2139,7 +2139,7 @@ namespace Nooch.DataAccess
                 payload.extra = extra;
 
                 var baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/create" : "https://synapsepay.com/api/v3/user/create";
-
+                JObject refreshResponse = null;
                 try
                 {
                     var http = (HttpWebRequest)WebRequest.Create(new Uri(baseAddress));
@@ -2161,6 +2161,7 @@ namespace Nooch.DataAccess
                     var content = sr.ReadToEnd();
 
                     res = JsonConvert.DeserializeObject<synapseCreateUserV3Result_int>(content);
+                     refreshResponse = JObject.Parse(content);
                 }
                 catch (WebException we)
                 {
@@ -2305,6 +2306,28 @@ namespace Nooch.DataAccess
                         newSynapseUser.permission = res.user.permission ?? null;
                         newSynapseUser.Phone_number = res.user.phone_numbers.Length > 0 ? res.user.phone_numbers[0] : null;
                         newSynapseUser.photos = res.user.photos.Length > 0 ? res.user.photos[0] : null;
+
+
+
+                        //storing user.doc_status.physical_doc , user.doc_status.virtual_doc and user.extra.extra_security
+                        newSynapseUser.physical_doc = res.user.doc_status.physical_doc;
+                        newSynapseUser.virtual_doc = res.user.doc_status.virtual_doc;
+
+
+                        JToken http_code = refreshResponse["http_code"];
+                        if (http_code != null)
+                        {
+                            if (http_code.ToString() == "200")
+                            {
+                                JToken extra_Security_Obj = refreshResponse["user"]["extra"]["extra_security"];
+
+                                if (extra_Security_Obj != null)
+                                {
+                                    newSynapseUser.extra_security = extra_Security_Obj.ToString();
+                                }
+
+                            }
+                        }
 
                         // Now add the new record to the DB
                         _dbContext.SynapseCreateUserResults.Add(newSynapseUser);

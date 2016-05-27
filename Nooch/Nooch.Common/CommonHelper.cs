@@ -1551,7 +1551,29 @@ namespace Nooch.Common
                                         {
                                             // CLIFF (5/7/16): NEED TO ALSO STORE 3 MORE FIELDS: physical_doc, virtual_doc, & extra_security
                                             //                 But need to create those columns in the DB first...
+                                            // Malkit 27 May 2016  : This is done @cliff.
+                                            // Did this at here, after user sign, user create result and attach document. // comment out where you don't need.
                                             synapseRes.permission = synapseResponse.user.permission;
+
+                                            //storing user.doc_status.physical_doc , user.doc_status.virtual_doc and user.extra.extra_security
+                                            synapseRes.physical_doc = synapseResponse.user.doc_status.physical_doc;
+                                            synapseRes.virtual_doc = synapseResponse.user.doc_status.virtual_doc;
+                                            JObject refreshResponse = JObject.Parse(content);
+                                            JToken http_code = refreshResponse["http_code"];
+                                            if (http_code != null)
+                                            {
+                                                if (http_code.ToString() == "200")
+                                                {
+                                                    JToken extra_Security_Obj = refreshResponse["user"]["extra"]["extra_security"];
+
+                                                    if (extra_Security_Obj != null)
+                                                    {
+                                                        synapseRes.extra_security = extra_Security_Obj.ToString();
+                                                    }
+
+                                                }
+                                            }
+
                                             _dbContext.SaveChanges();
                                             _dbContext.Entry(synapseRes).Reload();
                                         }
@@ -1857,6 +1879,25 @@ namespace Nooch.Common
                             usersSynapseDetails.photos = ImageUrl;
 
                             // Cliff (5/21/16): ALSO NEED TO SAVE "virtual_doc" and "physical_doc" VALUES IN NOOCH DB, BUT FIELDS DON'T EXIST YET
+                            //storing user.doc_status.physical_doc , user.doc_status.virtual_doc and user.extra.extra_security
+                            usersSynapseDetails.physical_doc = physDoc;
+                            usersSynapseDetails.virtual_doc = virtualDoc;
+                            JObject refreshResponse = JObject.Parse(content);
+                            JToken http_code = refreshResponse["http_code"];
+                            if (http_code != null)
+                            {
+                                if (http_code.ToString() == "200")
+                                {
+                                    JToken extra_Security_Obj = refreshResponse["user"]["extra"]["extra_security"];
+
+                                    if (extra_Security_Obj != null)
+                                    {
+                                        usersSynapseDetails.extra_security = extra_Security_Obj.ToString();
+                                    }
+
+                                }
+                            }
+
 
                             int save = _dbContext.SaveChanges();
                             _dbContext.Entry(usersSynapseDetails).Reload();
@@ -2331,6 +2372,27 @@ namespace Nooch.Common
                             synCreateUserObject.expires_at = refreshResultFromSyn.oauth.expires_at;
 
 
+                            //storing user.doc_status.physical_doc , user.doc_status.virtual_doc and user.extra.extra_security
+                            synCreateUserObject.physical_doc = refreshResultFromSyn.user.doc_status.physical_doc;
+                            synCreateUserObject.virtual_doc = refreshResultFromSyn.user.doc_status.virtual_doc;
+
+                            JToken http_code = refreshResponse["http_code"];
+                            if (http_code != null)
+                            {
+                                if (http_code.ToString() == "200")
+                                {
+                                    JToken extra_Security_Obj = refreshResponse["user"]["extra"]["extra_security"];
+
+                                    if (extra_Security_Obj != null)
+                                    {
+                                        synCreateUserObject.extra_security = extra_Security_Obj.ToString();
+                                    }
+
+                                }
+                            }
+
+
+
                             if (!String.IsNullOrEmpty(refreshResultFromSyn.user.permission))
                             {
                                 synCreateUserObject.permission = refreshResultFromSyn.user.permission;
@@ -2417,6 +2479,14 @@ namespace Nooch.Common
 
             return res;
         }
+
+
+
+        // Method to change user fingerprint
+        // this required user's member id and new fingerprint
+        // from member id, we will get synapse id and password if any given
+
+
 
 
         public static SynapseBankSetDefaultResult SetSynapseDefaultBank(string MemberId, string BankName, string BankOId)
@@ -3165,6 +3235,6 @@ namespace Nooch.Common
         }
 
 
-     
+
     }
 }
