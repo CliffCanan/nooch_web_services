@@ -233,6 +233,7 @@
           <Property Name="TransferLimit" Type="varchar(max)" />
           <Property Name="FacebookUserId" Type="varchar(max)" />
           <Property Name="GoogleUserId" Type="varchar(max)" />
+          <Property Name="cipTag" Type="varchar(max)" />
         </EntityType>
         <EntityType Name="MembersIPAddresses">
           <Key>
@@ -902,6 +903,7 @@
           <NavigationProperty Name="PasswordResetRequests" Relationship="NOOCHModel.FK_PasswordResetRequests_Members" FromRole="Member" ToRole="PasswordResetRequest" />
           <NavigationProperty Name="Transactions" Relationship="NOOCHModel.FK_Transactions_Members2" FromRole="Member" ToRole="Transaction" />
           <NavigationProperty Name="Transactions1" Relationship="NOOCHModel.FK_Transactions_Members3" FromRole="Member" ToRole="Transaction" />
+          <Property Name="cipTag" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
         </EntityType>
         <EntityType Name="User">
           <Key>
@@ -1594,6 +1596,7 @@
           <EntitySetMapping Name="Members">
             <EntityTypeMapping TypeName="NOOCHModel.Member">
               <MappingFragment StoreEntitySet="Members">
+                <ScalarProperty Name="cipTag" ColumnName="cipTag" />
                 <ScalarProperty Name="MemberId" ColumnName="MemberId" />
                 <ScalarProperty Name="Nooch_ID" ColumnName="Nooch_ID" />
                 <ScalarProperty Name="FirstName" ColumnName="FirstName" />
