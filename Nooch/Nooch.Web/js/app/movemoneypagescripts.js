@@ -174,25 +174,8 @@ $(document).ready(function () {
             // CC (5/9/16): I noticed this was added but really don't think it is necessary b/c there is payBtnClicked()
             //              to handle existing users with a bank already linked. B/c this would automatically forward people to the Complete page...
             else if ((USERTYPE == "Registered" || USERTYPE == "Existing") &&
-                $('#bnkName').val() != "no bank found")
+                     $('#bnkName').val() != "no bank found")
             {
-                /*// user is already a nooch member and has bank added
-                if ($('#memidexst').val().length > 0) {
-                    MemID_EXISTING = $('#memidexst').val();
-                    //redUrlForAddBank = (transType == "send") ? "https://www.noochme.com/noochweb/nooch/depositMoneycomplete?mem_id="
-                    //                                        : "https://www.noochme.com/noochweb/nooch/payRequestComplete?mem_id=";
-                    redUrlForAddBank = (transType == "send") ? "http://localhost:2061/Nooch/DepositMoneyComplete?mem_id="
-                                                            : "http://localhost:2061/Nooch/PayRequestComplete?mem_id=";
-
-                    redUrlForAddBank = redUrlForAddBank + MemID_EXISTING + "," + TRANSID;
-
-                    redUrlForAddBank = (FOR_RENTSCENE == "true") ? redUrlForAddBank + ",true"
-                                                                 : redUrlForAddBank + ",false";
-
-                    console.log("redUrlForAddBank IS: [" + redUrlForAddBank + "]");
-
-                    window.location=redUrlForAddBank;
-                }*/
             }
             else {
                 console.log("181. There was an error! :-(");
@@ -299,20 +282,9 @@ function runIdWizard() {
 
         /* Events */
         onInit: function (event, currentIndex) {
-            var heightToUse = isSmScrn ? "23em" : "24em";
+            var heightToUse = isSmScrn ? "21em" : "22em";
 
             $('#idVerWiz > .content').animate({ height: heightToUse }, 300)
-
-            var calendarIcon = $('#idVerForm1 .datePickerGrp i');
-
-            calendarIcon.click(function ()
-            {
-                setTimeout(function ()
-                {
-                    $('#dobGrp .dtp-container.dropdown').addClass('fg-toggled open');
-                    $('#idVer-dob').data("DateTimePicker").show();
-                }, 150);
-            });
 
             $('#idVer-dob').datetimepicker({
                 format: 'MM/DD/YYYY',
@@ -327,7 +299,16 @@ function runIdWizard() {
                 viewMode: 'years',
                 //debug: true
             });
+                        var calendarIcon = $('.datePickerGrp i');
 
+                        calendarIcon.click(function ()
+                        {
+                            setTimeout(function ()
+                            {
+                                $('#dobGrp .dtp-container.dropdown').addClass('fg-toggled open');
+                                $('#idVer-dob').data("DateTimePicker").show();
+                            }, 150);
+                        });
             $('#idVer-ssn').mask("0000");
             $('#idVer-zip').mask("00000");
             $('#idVer-phone').val(usrPhn);
@@ -339,7 +320,7 @@ function runIdWizard() {
         onStepChanging: function (event, currentIndex, newIndex) {
 
             if (newIndex == 0) {
-                $('#idVerWiz > .content').animate({ height: "23em" }, 600)
+                $('#idVerWiz > .content').animate({ height: "22em" }, 600)
             }
 
             // IF going to Step 2
@@ -356,26 +337,30 @@ function runIdWizard() {
                     {
                         updateValidationUi("name", true);
 
-                        // Check DOB field
-                        if ($('#idVer-dob').val().length == 10)
-                        {
-                            updateValidationUi("dob", true);
+                        // Check Email field
+                        $('#idVer-email').val($('#idVer-email').val().trim());
 
-                            // Check SSN field
-                            if ($('#idVer-ssn').val().length == 4)
+                        if (ValidateEmail($('#idVer-email').val()) == true)
+                        {
+                            updateValidationUi("email", true);
+
+                            // Finally, check the phone number's length
+                            console.log($('#idVer-phone').cleanVal());
+
+                            if ($('#idVer-phone').cleanVal().length == 10)
                             {
-                                updateValidationUi("ssn", true);
+                                updateValidationUi("phone", true);
 
                                 // Great, we can finally go to the next step of the wizard :-D
                                 $('#idVerWiz > .content').animate({ height: "19em" }, 600)
                                 return true;
                             }
                             else {
-                                updateValidationUi("ssn", false);
+                                updateValidationUi("phone", false);
                             }
                         }
                         else {
-                            updateValidationUi("dob", false);
+                            updateValidationUi("email", false);
                         }
                     }
                     else {
@@ -410,8 +395,7 @@ function runIdWizard() {
                         updateValidationUi("zip", true);
 
                         // Great, go to the next step of the wizard :-]
-
-                        $('#idVerWiz > .content').animate({ height: "19em" }, 500)
+                        $('#idVerWiz > .content').animate({ height: "24em" }, 500)
                         return true;
                     }
                     else {
@@ -426,17 +410,16 @@ function runIdWizard() {
             // IF going to Step 4
             if (newIndex == 3)
             {
-                // Check Address field
-                $('#idVer-email').val($('#idVer-email').val().trim());
+                // Check DOB field
+                if ($('#idVer-dob').val().length == 10)
+                {
+                    updateValidationUi("dob", true);
 
-                if (ValidateEmail($('#idVer-email').val()) == true) {
-                    updateValidationUi("email", true);
+                    // Check SSN field
+                    if ($('#idVer-ssn').val().length == 4)
+                    {
+                        updateValidationUi("ssn", true);
 
-                    // Finally, check the phone number's length
-                    console.log($('#idVer-phone').cleanVal());
-
-                    if ($('#idVer-phone').cleanVal().length == 10) {
-                        updateValidationUi("phone", true);
 
                         // Great, go to the next step of the wizard :-]
                         // FILE INPUT DOCUMENTATION: http://plugins.krajee.com/file-input#options
@@ -444,7 +427,6 @@ function runIdWizard() {
                             allowedFileTypes: ['image'],
                             initialPreview: [
                                 "<img src='../Assets/Images/securityheader.png' class='file-preview-image' alt='' id='IdWizIdDocPreview'>"
- 
                             ],
                             initialPreviewShowDelete: false,
                             layoutTemplates: {
@@ -501,17 +483,16 @@ function runIdWizard() {
                             FileData = null;
                             console.log("filecleareD");
                         });
- 
 
-                        $('#idVerWiz > .content').animate({ height: "25em" }, 800)
+                        $('#idVerWiz > .content').animate({ height: "26em" }, 800)
                         return true;
                     }
                     else {
-                        updateValidationUi("phone", false);
+                        updateValidationUi("ssn", false);
                     }
                 }
                 else {
-                    updateValidationUi("email", false);
+                    updateValidationUi("dob", false);
                 }
             }
 
@@ -525,7 +506,7 @@ function runIdWizard() {
                 $('#idVer-address').focus();
             }
             else if (currentIndex == 2) {
-                $('#idVer-email').focus();
+                //$('#idVer-email').focus();
             }
         },
         onCanceled: function (event) {
@@ -939,7 +920,7 @@ function showLoadingBox(n) {
         msg = "Saving Password...";
     }
     else if (n == 3) {
-        msg = "Attempting Payment...";
+        msg = "Submitting...";
     }
     else {
         msg = "Submitting responses...";
@@ -1343,6 +1324,28 @@ function changeFavicon(src) {
   }
   document.head.appendChild(link);
 }
+
+// -------------------
+//	FACEBOOK
+// -------------------
+window.fbAsyncInit = function ()
+{
+    FB.init({
+        appId: '198279616971457',
+        xfbml: true,
+        version: 'v2.6'
+    });
+};
+
+(function (d, s, id)
+{
+    var js, fjs = d.getElementsByTagName(s)[0];
+    if (d.getElementById(id)) { return; }
+    js = d.createElement(s); js.id = id;
+    js.src = "//connect.facebook.net/en_US/sdk.js";
+    fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));
+
 
 // -----------------
 // UNUSED FUNCTIONS

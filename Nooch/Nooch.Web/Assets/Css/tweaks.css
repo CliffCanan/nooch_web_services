@@ -1508,10 +1508,7 @@ div#pwFormShell #depositCreateAccount,
 }
 .dl-horizontal .help-icon {
     font-size: 14px;
-    position: absolute;
-    top: 32px;
-    right: 0;
-    opacity: .8;
+    opacity: .85;
 }
 
 /**********
@@ -2491,7 +2488,7 @@ form .table-header {
     margin-bottom: 0;
 }
 
-#idVerWiz .content > section:nth-child(2):after {
+#idVerWiz .content > section:nth-child(6):after {
   content: "* And comply with the USA Patriot Act. Imagine how bad we'd look if terrorists used us. So we take it pretty seriously.";
   color: rgb(88,90,92);
   display: block;
@@ -2503,6 +2500,7 @@ form .table-header {
   width: 80%;
   left: 10%;
 }
+#idVerWiz .well { font-weight: bold; }
 #idVerWiz .well .ast > span { font-size: 92%; font-weight: 300; position: relative; top: -1px; left: 1px; opacity: 0.85; }
 #idVerWiz #ssnPrefix {
   left: 7px;
@@ -2657,6 +2655,7 @@ form .table-header {
     #idWizContainer { padding: 0 3.5%; }
 
 	#idVerWiz-p-0 .well,
+	#idVerWiz-p-2 .well,
 	#idVerWiz-p-3 .well { padding: 9px 65px;}
 
     .addBank-instructions {

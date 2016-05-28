@@ -778,12 +778,14 @@ namespace Nooch.Web.Controllers
                     {
                         string n = Request.QueryString["UserType"].ToString();
                         rdm.usrTyp = CommonHelper.GetDecryptedData(n);
-
-                        if (rdm.usrTyp == "NonRegistered" ||
-                           rdm.usrTyp == "Existing")
-                        {
                             Logger.Info("DepositMoney CodeBehind -> Page_load - UserType is: [" + rdm.usrTyp + "]");
-                        }
+                    }
+
+                    // CIP is new for Synapse V3 and tells the page what type of ID verification the new user will need.
+                    if (Request.Params.AllKeys.Contains("cip"))
+                    {
+                        rdm.cip = Request.QueryString["cip"].ToString();
+                        Logger.Info("DepositMoney CodeBehind -> Page_load - CIP is: [" + rdm.cip + "]");
                     }
 
                     rdm = GetTransDetailsForDepositMoney(Request.QueryString["TransactionId"].ToString(), rdm);
@@ -1264,12 +1266,14 @@ namespace Nooch.Web.Controllers
                     {
                         string n = Request.QueryString["UserType"].ToString();
                         rpr.usrTyp = CommonHelper.GetDecryptedData(n);
+                        Logger.Info("payRequest CodeBehind -> Page_load - UserType is: [" + rpr.usrTyp + "]");
+                    }
 
-                        if (rpr.usrTyp == "NonRegistered" ||
-                           rpr.usrTyp == "Existing")
-                        {
-                            Logger.Info("payRequest CodeBehind -> Page_load - UserType is: [" + rpr.usrTyp + "]");
-                        }
+                    // CIP is new for Synapse V3 and tells the page what type of ID verification the new user will need.
+                    if (Request.Params.AllKeys.Contains("cip"))
+                    {
+                        rpr.cip = Request.QueryString["cip"].ToString();
+                        Logger.Info("payRequest CodeBehind -> Page_load - CIP is: [" + rpr.cip + "]");
                     }
 
                     // Check if this is a RENT Payment request (from a Landlord)
@@ -2588,11 +2592,11 @@ namespace Nooch.Web.Controllers
                 string serviceMethod;
                 if (isRequest)
                 {
-                      serviceMethod = "/RequestMoneyForRentScene?from=" + from +
-                                           "&name=" + name +
-                                           "&email=" + email + "&amount=" + amount +
-                                           "&memo=" + memo + "&pin=" + pin +
-                                           "&ip=" + ip + "&isRequest=" + isRequest;
+                    serviceMethod = "/RequestMoneyForRentScene?from=" + from +
+                                         "&name=" + name +
+                                         "&email=" + email + "&amount=" + amount +
+                                         "&memo=" + memo + "&pin=" + pin +
+                                         "&ip=" + ip + "&isRequest=" + isRequest;
                 }
                 else
                 {
@@ -2719,7 +2723,8 @@ namespace Nooch.Web.Controllers
                                          "&ip=" + ip + "&isRequest=" + isRequest +
                                          "&memberId=" + memberId + "&nameFromServer=" + nameFromServer;
                 }
-                else {
+                else
+                {
 
                     serviceMethod = "/TransferMoneyToExistingUserForRentScene?from=" + from + "&name=" + name +
                                          "&email=" + email + "&amount=" + amount +

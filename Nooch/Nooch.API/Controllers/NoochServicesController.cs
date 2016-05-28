@@ -877,13 +877,13 @@ namespace Nooch.API.Controllers
         /// <returns></returns>
         [HttpGet]
         [ActionName("RequestMoneyForRentScene")]
-        public requestFromRentScene RequestMoneyForRentScene
-            (string from, string name, string email, string amount, string memo, string pin, string ip, bool isRequest)
+        public requestFromRentScene RequestMoneyForRentScene(string from, string name, string email, string amount, string memo, string pin, string ip, string cipTag, bool isRequest)
         {
-            Logger.Info("Service Controller - RequestMoneyForRentScene Initiated - [From: " + from + "], [Name: " + name +
-                        "], Email: [" + email + "], amount: [" + amount +
-                        "], memo: [" + memo + "], pin: [" + pin +
-                        "], ip: [" + ip + "], isRequest: [" + isRequest + "]");
+            Logger.Info("Service Controller - RequestMoneyForRentScene Initiated - [From: " + from +
+                        "], [Name: " + name + "], Email: [" + email +
+                        "], amount: [" + amount + "], memo: [" + memo +
+                        "], pin: [" + pin + "], ip: [" + ip +
+                        "], CIP Tag: [" + cipTag + "], isRequest: [" + isRequest + "]");
 
             requestFromRentScene res = new requestFromRentScene();
             res.success = false;
@@ -919,7 +919,11 @@ namespace Nooch.API.Controllers
                 res.msg = "Missing amount!";
                 isMissingData = true;
             }
-
+            if (String.IsNullOrEmpty(cipTag))
+            {
+                // Should never happen, but if it does just use "renter" as the default.
+                cipTag = "renter";
+            }
             if (isMissingData)
             {
                 Logger.Error("Service Controller -> RequestMoneyForRentScene FAILED - Missing required data - Msg is: [" + res.msg + "]");
@@ -927,44 +931,6 @@ namespace Nooch.API.Controllers
             }
 
             #endregion Check for Required Data
-
-            #region Check If Recipient Already Has A Nooch Account
-
-            // CLIFF (5/15/16): Moving this block to submitPayment() in NoochController. Since that can now access CommonHelper,
-            //                  no need to go an extra step to come here... that method can do everything in this block and save the trip to the server.
-            /*var memberObj = CommonHelper.GetMemberDetailsByUserName(email);
-
-            if (memberObj != null)
-            {
-                // This email address is already registered!
-                Logger.Info("Service Controller -> RequestMoneyForRentScene Attempted - Recipient email already exists: [" + email + "]");
-
-                res.isEmailAlreadyReg = true;
-                res.memberId = memberObj.MemberId.ToString();
-                res.name = (!String.IsNullOrEmpty(memberObj.FirstName)) ? CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName))
-                                                                        : "";
-                res.name = (!String.IsNullOrEmpty(memberObj.LastName)) ? res.name + " " + CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.LastName))
-                                                                       : res.name;
-                res.memberStatus = memberObj.Status;
-                res.dateCreated = Convert.ToDateTime(memberObj.DateCreated).ToString("MMM d, yyyy");
-
-                var userAndBankInfo = CommonHelper.GetSynapseBankAndUserDetailsforGivenMemberId(memberObj.MemberId.ToString());
-
-                if (userAndBankInfo != null &&
-                    userAndBankInfo.wereBankDetailsFound == true &&
-                    userAndBankInfo.BankDetails != null)
-                {
-                    res.isBankAttached = true;
-                    res.bankStatus = userAndBankInfo.BankDetails.Status;
-                }
-
-                res.msg = "Existing user found!";
-                res.note = "";
-                res.success = true;
-                return res;
-            }*/
-
-            #endregion Check If Recipient Already Has A Nooch Account
 
 
             #region Get MemberID of Sending User
@@ -1023,7 +989,9 @@ namespace Nooch.API.Controllers
                     SenderId = "",
                     State = "PA",
                     ZipCode = zipToUse,
-                    //isTesting = "true" // REMOVE FOR PRODUCTION!!
+                    cipTag = cipTag,
+                    from = from,
+                    //isTesting = "true"
                 };
 
                 var tda = new TransactionsDataAccess();

@@ -4858,8 +4858,7 @@ namespace Nooch.DataAccess
                     var logoToDisplay = "noochlogo";
 
                     bool isForRentScene = false;
-                    if (requester.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49" || // Rent Scene's account
-                        requester.MemberId.ToString().ToLower() == "a35c14e9-ee7b-4fc6-b5d5-f54961f2596a")  // Just for testing: "sallyanejones00@nooch.com"
+                    if (requestDto.from == "rentscene" || requester.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49") // Rent Scene's account
                     {
                         isForRentScene = true;
                         RequesterFirstName = "Rent Scene";
@@ -4904,15 +4903,15 @@ namespace Nooch.DataAccess
                     try
                     {
                         Utility.SendEmail("requestSent", fromAddress, RequesterEmail, null,
-                                                    "Your payment request to " + recipientsEmail + " is pending",
-                                                    null, tokens, null, null, null);
+                                          "Your payment request to " + recipientsEmail + " is pending",
+                                           null, tokens, null, null, null);
 
                         Logger.Info("TDA -> RequestMoneyToNonNoochUserUsingSynapse -> RequestSent email sent to [" + RequesterEmail + "] successfully.");
                     }
                     catch (Exception ex)
                     {
                         Logger.Error("TDA -> RequestMoneyToNonNoochUserUsingSynapse -> RequestSent email NOT sent to [" + RequesterEmail +
-                                               "], [Exception: " + ex + "]");
+                                     "], [Exception: " + ex + "]");
                     }
 
 
@@ -4920,7 +4919,7 @@ namespace Nooch.DataAccess
                     // In this case UserType would = 'New'
                     // TransType would = 'Request'
                     // and link source would = 'Email'
-                    cancelLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
+                    string rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
                                                "Nooch/RejectMoney?TransactionId=" + requestId +
                                                "&UserType=U6De3haw2r4mSgweNpdgXQ==" +
                                                "&LinkSource=75U7bZRpVVxLNbQuoMQEGQ==&" +
@@ -4934,6 +4933,13 @@ namespace Nooch.DataAccess
                         paylink = paylink + "&rs=1";
                     }
 
+                    // CIP will tell the PayRequest page what kind of verification the user must complete.
+                    // Options are "renter" (highest level), "landlord", or "vendor" (lowest level).
+                    if (!String.IsNullOrEmpty(requestDto.cipTag))
+                    {
+                        paylink += "&cip=" + requestDto.cipTag;
+                    }
+
                     var tokens2 = new Dictionary<string, string>
                         {
                             {"$Logo$", logoToDisplay},
@@ -4941,7 +4947,7 @@ namespace Nooch.DataAccess
 					        {Constants.PLACEHOLDER_NEWUSER, recipientsEmail},
 					        {Constants.PLACEHOLDER_TRANSFER_AMOUNT, s32[0].ToString()},
 					        {Constants.PLACEHLODER_CENTS, s32[1].ToString()},
-					        {Constants.PLACEHOLDER_REJECT_LINK, cancelLink},
+					        {Constants.PLACEHOLDER_REJECT_LINK, rejectLink},
 					        {Constants.PLACEHOLDER_SENDER_FULL_NAME, RequesterFirstName + " " + RequesterLastName},
 					        {Constants.MEMO,memo},
 					        {Constants.PLACEHOLDER_PAY_LINK, paylink}
@@ -4953,16 +4959,15 @@ namespace Nooch.DataAccess
                                          ? "Payment Request from Rent Scene"
                                          : RequesterFirstName + " " + RequesterLastName + " requested " + "$" + s22.ToString() + " with Nooch";
 
-                        Utility.SendEmail("requestReceivedToNewUser", fromAddress,
-                                                    recipientsEmail, null, subject, null, tokens2,
-                                                    null, null, null);
+                        Utility.SendEmail("requestReceivedToNewUser", fromAddress, recipientsEmail,
+                                           null, subject, null, tokens2, null, null, null);
 
                         Logger.Info("TDA -> RequestMoneyToNonNoochUserUsingSynapse -> requestReceivedToNewUser email sent to [" + recipientsEmail + "] successfully.");
                     }
                     catch (Exception ex)
                     {
                         Logger.Error("TDA -> RequestMoneyToNonNoochUserUsingSynapse -> requestReceivedToNewUser email NOT sent to [" + recipientsEmail +
-                                               "], Exception: [" + ex + "]");
+                                     "], Exception: [" + ex + "]");
                     }
 
                     #endregion Send Notifications
