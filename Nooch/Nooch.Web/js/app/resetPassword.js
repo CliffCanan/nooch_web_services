@@ -12,15 +12,20 @@ $(document).ready(function () {
             confirmButtonText: "Ok",
             html: true
         });
+
+        $('#pwFormShell').addClass('hidden');
     }
     $("#ResetPasswordButton").click(function () {
+        
         var PWDTextBox = $('#PWDTextBox').val();
         var memberId = getParameterByName('memberId');
+        var newUser = getParameterByName('newUser');
+        
         if ($('#form1').parsley().validate() == true) {
             $.ajax({
                 type: "POST",
                 url: "ResetPasswordButton_Click",
-                data: "{PWDText: '" + PWDTextBox + "', memberId: '" + memberId + "'}",
+                data: "{PWDText: '" + PWDTextBox + "', memberId: '" + memberId + "',newUser:'" + newUser + "'}",
                 contentType: "application/json; charset=utf-8",
                 dataType: "json",
                 async: "true",

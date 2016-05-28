@@ -1128,7 +1128,7 @@ namespace Nooch.Web.Controllers
 
             string strUserAgent = Request.UserAgent.ToLower();
             resultResetPassword.requestExpiredorNotFound = false;
-
+            
             if (strUserAgent != null)
             {
 
@@ -1151,14 +1151,15 @@ namespace Nooch.Web.Controllers
         }
 
 
-        public string ResetPasswordButton_Click(string PWDText, string memberId)
+        public string ResetPasswordButton_Click(string PWDText, string memberId,string newUser="")
         {
             var objAesAlgorithm = new AES();
             string encryptedPassword = objAesAlgorithm.Encrypt(PWDText.Trim(), string.Empty);
             string serviceMethod = string.Empty;
             string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
 
-            serviceMethod = "/ResetPassword?memberId=" + memberId + "&newPassword=" + encryptedPassword + "&newUser=true";
+           // serviceMethod = "/ResetPassword?memberId=" + memberId + "&newPassword=" + encryptedPassword + "&newUser=true";
+            serviceMethod = "/ResetPassword?memberId=" + memberId + "&newPassword=" + encryptedPassword + "&newUser="+newUser;
 
             var isMemberPwdResetted = ResponseConverter<Nooch.Common.Entities.BoolResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
             if (isMemberPwdResetted.Result)
@@ -1221,7 +1222,15 @@ namespace Nooch.Web.Controllers
                 else
                 {
                     resultResetPass.invalidUser = "true";
+                    rrp.pin = false;
+                    
                 }
+            }
+            else
+            {
+                resultResetPass.invalidUser = "true";
+                rrp.pin = false;
+                 
             }
 
             return resultResetPass;
