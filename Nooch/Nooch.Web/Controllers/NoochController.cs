@@ -778,12 +778,14 @@ namespace Nooch.Web.Controllers
                     {
                         string n = Request.QueryString["UserType"].ToString();
                         rdm.usrTyp = CommonHelper.GetDecryptedData(n);
-
-                        if (rdm.usrTyp == "NonRegistered" ||
-                           rdm.usrTyp == "Existing")
-                        {
                             Logger.Info("DepositMoney CodeBehind -> Page_load - UserType is: [" + rdm.usrTyp + "]");
-                        }
+                    }
+
+                    // CIP is new for Synapse V3 and tells the page what type of ID verification the new user will need.
+                    if (Request.Params.AllKeys.Contains("cip"))
+                    {
+                        rdm.cip = Request.QueryString["cip"].ToString();
+                        Logger.Info("DepositMoney CodeBehind -> Page_load - CIP is: [" + rdm.cip + "]");
                     }
 
                     rdm = GetTransDetailsForDepositMoney(Request.QueryString["TransactionId"].ToString(), rdm);
@@ -1126,7 +1128,7 @@ namespace Nooch.Web.Controllers
 
             string strUserAgent = Request.UserAgent.ToLower();
             resultResetPassword.requestExpiredorNotFound = false;
-
+            
             if (strUserAgent != null)
             {
 
@@ -1149,14 +1151,15 @@ namespace Nooch.Web.Controllers
         }
 
 
-        public string ResetPasswordButton_Click(string PWDText, string memberId)
+        public string ResetPasswordButton_Click(string PWDText, string memberId,string newUser="")
         {
             var objAesAlgorithm = new AES();
             string encryptedPassword = objAesAlgorithm.Encrypt(PWDText.Trim(), string.Empty);
             string serviceMethod = string.Empty;
             string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
 
-            serviceMethod = "/ResetPassword?memberId=" + memberId + "&newPassword=" + encryptedPassword + "&newUser=true";
+           // serviceMethod = "/ResetPassword?memberId=" + memberId + "&newPassword=" + encryptedPassword + "&newUser=true";
+            serviceMethod = "/ResetPassword?memberId=" + memberId + "&newPassword=" + encryptedPassword + "&newUser="+newUser;
 
             var isMemberPwdResetted = ResponseConverter<Nooch.Common.Entities.BoolResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
             if (isMemberPwdResetted.Result)
@@ -1219,7 +1222,15 @@ namespace Nooch.Web.Controllers
                 else
                 {
                     resultResetPass.invalidUser = "true";
+                    rrp.pin = false;
+                    
                 }
+            }
+            else
+            {
+                resultResetPass.invalidUser = "true";
+                rrp.pin = false;
+                 
             }
 
             return resultResetPass;
@@ -1264,12 +1275,14 @@ namespace Nooch.Web.Controllers
                     {
                         string n = Request.QueryString["UserType"].ToString();
                         rpr.usrTyp = CommonHelper.GetDecryptedData(n);
+                        Logger.Info("payRequest CodeBehind -> Page_load - UserType is: [" + rpr.usrTyp + "]");
+                    }
 
-                        if (rpr.usrTyp == "NonRegistered" ||
-                           rpr.usrTyp == "Existing")
-                        {
-                            Logger.Info("payRequest CodeBehind -> Page_load - UserType is: [" + rpr.usrTyp + "]");
-                        }
+                    // CIP is new for Synapse V3 and tells the page what type of ID verification the new user will need.
+                    if (Request.Params.AllKeys.Contains("cip"))
+                    {
+                        rpr.cip = Request.QueryString["cip"].ToString();
+                        Logger.Info("payRequest CodeBehind -> Page_load - CIP is: [" + rpr.cip + "]");
                     }
 
                     // Check if this is a RENT Payment request (from a Landlord)
@@ -2585,11 +2598,23 @@ namespace Nooch.Web.Controllers
                 #endregion Lookup PIN
 
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-                string serviceMethod = "/RequestMoneyForRentScene?from=" + from +
-                                       "&name=" + name +
-                                       "&email=" + email + "&amount=" + amount +
-                                       "&memo=" + memo + "&pin=" + pin +
-                                       "&ip=" + ip + "&isRequest=" + isRequest;
+                string serviceMethod;
+                if (isRequest)
+                {
+                    serviceMethod = "/RequestMoneyForRentScene?from=" + from +
+                                         "&name=" + name +
+                                         "&email=" + email + "&amount=" + amount +
+                                         "&memo=" + memo + "&pin=" + pin +
+                                         "&ip=" + ip + "&isRequest=" + isRequest;
+                }
+                else
+                {
+                    serviceMethod = "/TransferMoneyToNonNoochUserUsingSynapseForRentScene?from=" + from +
+                                           "&name=" + name +
+                                           "&email=" + email + "&amount=" + amount +
+                                           "&memo=" + memo + "&pin=" + pin +
+                                           "&ip=" + ip + "&isRequest=" + isRequest;
+                }
 
                 string urlToUse = String.Concat(serviceUrl, serviceMethod);
 
@@ -2698,12 +2723,24 @@ namespace Nooch.Web.Controllers
             try
             {
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-                string serviceMethod = "/RequestMoneyToExistingUserForRentScene?from=" + from + "&name=" + name +
-                                       "&email=" + email + "&amount=" + amount +
-                                       "&memo=" + memo + "&pin=" + pin +
-                                       "&ip=" + ip + "&isRequest=" + isRequest +
-                                       "&memberId=" + memberId + "&nameFromServer=" + nameFromServer;
+                string serviceMethod;
+                if (isRequest)
+                {
+                    serviceMethod = "/RequestMoneyToExistingUserForRentScene?from=" + from + "&name=" + name +
+                                         "&email=" + email + "&amount=" + amount +
+                                         "&memo=" + memo + "&pin=" + pin +
+                                         "&ip=" + ip + "&isRequest=" + isRequest +
+                                         "&memberId=" + memberId + "&nameFromServer=" + nameFromServer;
+                }
+                else
+                {
 
+                    serviceMethod = "/TransferMoneyToExistingUserForRentScene?from=" + from + "&name=" + name +
+                                         "&email=" + email + "&amount=" + amount +
+                                         "&memo=" + memo + "&pin=" + pin +
+                                         "&ip=" + ip + "&isRequest=" + isRequest +
+                                         "&memberId=" + memberId + "&nameFromServer=" + nameFromServer;
+                }
                 string urlToUse = String.Concat(serviceUrl, serviceMethod);
 
                 Logger.Info("Make Payment Code-Behind -> submitRequestToExistingUser - URL To Query: [" + urlToUse + "]");

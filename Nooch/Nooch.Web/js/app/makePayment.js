@@ -172,8 +172,8 @@ function submitPayment()
         }
     });
 
-	// Hide errorMessage <div> if showing
-	if (!$(".errorMessage").hasClass('hidden'))
+    // Hide errorMessage <div> if showing
+    if (!$(".errorMessage").hasClass('hidden'))
     {
         $(".errorMessage").addClass('hidden');
         $(".errorMessage").html('');
@@ -224,6 +224,10 @@ function submitPayment()
 
             if (sendPaymentResponse.success == true)
             {
+                // request type
+              if(isRequest==true)
+               {
+
                 if (sendPaymentResponse.isEmailAlreadyReg == true)
                 {
                     existNAME = sendPaymentResponse.name;
@@ -303,46 +307,125 @@ function submitPayment()
                         resetForm();
                     });
                 }
+
+              }
+                  // send type
+              else
+              {
+                  if (sendPaymentResponse.isEmailAlreadyReg == true) {
+                      existNAME = sendPaymentResponse.name;
+                      existMEMID = sendPaymentResponse.memberId;
+
+                      var status = "Active";
+                      var statusCssClass = "f-600";
+
+                      if (sendPaymentResponse.memberStatus == "Suspended" ||
+                          sendPaymentResponse.memberStatus == "Temporarily_Blocked") {
+                          status = "Suspended";
+                          statusCssClass = "label label-danger";
+                      }
+                      else if (sendPaymentResponse.memberStatus == "Active" ||
+                               sendPaymentResponse.memberStatus == "NonRegistered") {
+                          status = "Active";
+                          statusCssClass = "label label-success"
+                      }
+                      else if (sendPaymentResponse.memberStatus != null) {
+                          status = sendPaymentResponse.memberStatus;
+                          statusCssClass = "";
+                      }
+
+                      var bodyText = "<table border='0' width='95%' cellpadding='4' style='font-size: 16px; margin:12px auto 20px;'><tbody>" +
+                                     "<tr><td style='vertical-align:top'>Name:</td><td><strong>" + sendPaymentResponse.name + "</strong><span class='show m-b-5' style='line-height:1;'>" + email + "</span></td></tr>" +
+                                     "<tr><td>Status:</td><td><span class='" + statusCssClass + "'>" + status + "</span></td></tr>" +
+                                     "<tr><td>Date Created:</td><td>" + sendPaymentResponse.dateCreated + "</td></tr>" +
+                                     "<tr><td>Bank Linked:</td><td>" + sendPaymentResponse.isBankAttached + "</td></tr>";
+
+                      if (sendPaymentResponse.isBankAttached == true)
+                          bodyText = bodyText + "<tr><td>Bank Status:</td><td>" + sendPaymentResponse.bankStatus + "</td></tr>";
+
+                      bodyText = bodyText + "</tbody></table>";
+
+                      // THEN DISPLAY SUCCESS ALERT...
+                      swal({
+                          title: "Email Already Registered",
+                          text: bodyText +
+                                "<span class='show f-600' style='margin: 10px 30px;'>Do you still want to transfer money to " + sendPaymentResponse.name + "?</span>",
+                          type: "warning",
+                          showCancelButton: true,
+                          confirmButtonColor: "#3fabe1",
+                          confirmButtonText: "Send",
+                          html: true
+                      }, function (isConfirm) {
+                          if (isConfirm) {
+                              sendRequestToExistingUser();
+                          }
+                      });
+                  }
+                  else {
+                      $('.alert.alert-success #resultAmount').text('$' + amount);
+                      $('.alert.alert-success #resultName').text(name);
+                      $('.alert.alert-success').removeClass('hidden').slideDown();
+
+                      // THEN DISPLAY SUCCESS ALERT...
+                      swal({
+                          title: "Money Transferred Successfully",
+                          text: "<table border='0' width='95%' cellpadding='8'><tbody>" +
+                                "<tr><td>Amount</td><td>$" + amount + "</td></tr>" +
+                                "<tr><td>Name</td><td>" + name + "</td></tr>" +
+                                "<tr><td>Email</td><td>" + email + "</td></tr>" +
+                                "<tr><td>Memo</td><td>" + memo + "</td></tr></tbody></table>",
+                          type: "success",
+                          showCancelButton: false,
+                          confirmButtonColor: "#3fabe1",
+                          confirmButtonText: "Ok",
+                          html: true
+                      }, function () {
+                          resetForm();
+                      });
+                  }
+
+              }
             }
-            else
-            {
-                if (resultReason != null)
+                else
                 {
-                    if (resultReason.indexOf("email already registered") > -1)
+                    if (resultReason != null)
                     {
-                        showErrorAlert('20');
+                        if (resultReason.indexOf("email already registered") > -1)
+                        {
+                            showErrorAlert('20');
+                        }
+                        else if (resultReason.indexOf("Requester does not have any verified bank account") > -1)
+                        {
+                            showErrorAlert('4');
+                        }
+                        else if (resultReason.indexOf("Missing") > -1)
+                        {
+                            showErrorAlert('5');
+                        }
+                        else
+                        {
+                            showErrorAlert('2');
+                        }
                     }
-					else if (resultReason.indexOf("Requester does not have any verified bank account") > -1)
-					{
-						showErrorAlert('4');
-					}
-					else if (resultReason.indexOf("Missing") > -1)
-					{
-						showErrorAlert('5');
-					}
                     else
                     {
                         showErrorAlert('2');
                     }
                 }
-                else
-                {
-                    showErrorAlert('2');
-                }
+            },
+            Error: function (x, e)
+            {
+                // Hide the Loading Block
+                $('#makePaymentContainer').unblock();
+
+                console.log("ERROR --> 'x', then 'e' is... ");
+                console.log(x);
+                console.log(e);
+
+                showErrorAlert('2');
             }
-        },
-        Error: function (x, e)
-        {
-            // Hide the Loading Block
-            $('#makePaymentContainer').unblock();
-
-            console.log("ERROR --> 'x', then 'e' is... ");
-            console.log(x);
-            console.log(e);
-
-            showErrorAlert('2');
-        }
-    });
+        });
+ 
 }
 
 // This can only be called for SENDING payments IF the recipient has a fully verified user & bank account w/ Nooch & Synapse.
@@ -415,22 +498,40 @@ function sendRequestToExistingUser()
                 $('.alert.alert-success').removeClass('hidden').slideDown();
 
                 // THEN DISPLAY SUCCESS ALERT...
-                swal({
-                    title: "Payment Created Successfully",
-                    text: "<table border='0' width='95%' cellpadding='8'><tbody>" +
-                          "<tr><td>Amount</td><td>$" + amount + "</td></tr>" +
-                          "<tr><td>Name</td><td>" + existNAME + "</td></tr>" +
-                          "<tr><td>Email</td><td>" + email + "</td></tr>" +
-                          "<tr><td>Memo</td><td>" + memo + "</td></tr></tbody></table>",
-                    type: "success",
-                    showCancelButton: false,
-                    confirmButtonColor: "#3fabe1",
-                    confirmButtonText: "Ok",
-                    html: true
-                }, function ()
-                {
-                    resetForm();
-                });
+                if (isRequest == true) {
+                    swal({
+                        title: "Payment Created Successfully",
+                        text: "<table border='0' width='95%' cellpadding='8'><tbody>" +
+                              "<tr><td>Amount</td><td>$" + amount + "</td></tr>" +
+                              "<tr><td>Name</td><td>" + existNAME + "</td></tr>" +
+                              "<tr><td>Email</td><td>" + email + "</td></tr>" +
+                              "<tr><td>Memo</td><td>" + memo + "</td></tr></tbody></table>",
+                        type: "success",
+                        showCancelButton: false,
+                        confirmButtonColor: "#3fabe1",
+                        confirmButtonText: "Ok",
+                        html: true
+                    }, function () {
+                        resetForm();
+                    });
+                }
+                else {
+                    swal({
+                        title: "Money Transferred Successfully",
+                        text: "<table border='0' width='95%' cellpadding='8'><tbody>" +
+                              "<tr><td>Amount</td><td>$" + amount + "</td></tr>" +
+                              "<tr><td>Name</td><td>" + existNAME + "</td></tr>" +
+                              "<tr><td>Email</td><td>" + email + "</td></tr>" +
+                              "<tr><td>Memo</td><td>" + memo + "</td></tr></tbody></table>",
+                        type: "success",
+                        showCancelButton: false,
+                        confirmButtonColor: "#3fabe1",
+                        confirmButtonText: "Ok",
+                        html: true
+                    }, function () {
+                        resetForm();
+                    });
+                }
             }
             else
             {

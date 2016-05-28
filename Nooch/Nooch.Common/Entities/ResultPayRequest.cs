@@ -26,5 +26,6 @@ namespace Nooch.Common.Entities
         public bool nonRegUsrContainer { get; set; }
         public string invitationType { get; set; }
         public string invitationSentto { get; set; }
+        public string cip { get; set; }
     }
 }

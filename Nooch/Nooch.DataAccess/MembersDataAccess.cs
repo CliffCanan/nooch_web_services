@@ -156,7 +156,7 @@ namespace Nooch.DataAccess
 
                             // Cliff (1/21/16): Only send the confirmation email if it's truly a Reset... as opposed to a new user setting their PW
                             // from one of the browser pages, which also uses this service to set the pw after linking a bank.
-                            if (newUser.ToLower().Trim() != "true")
+                            if (!String.IsNullOrEmpty(newUser) && newUser.ToLower().Trim() != "true")
                             {
                                 SendPasswordUpdatedMail(noochMember, emailAddress);
                             }
@@ -2161,7 +2161,7 @@ namespace Nooch.DataAccess
                     var content = sr.ReadToEnd();
 
                     res = JsonConvert.DeserializeObject<synapseCreateUserV3Result_int>(content);
-                     refreshResponse = JObject.Parse(content);
+                    refreshResponse = JObject.Parse(content);
                 }
                 catch (WebException we)
                 {
@@ -2307,27 +2307,10 @@ namespace Nooch.DataAccess
                         newSynapseUser.Phone_number = res.user.phone_numbers.Length > 0 ? res.user.phone_numbers[0] : null;
                         newSynapseUser.photos = res.user.photos.Length > 0 ? res.user.photos[0] : null;
 
-
-
                         //storing user.doc_status.physical_doc , user.doc_status.virtual_doc and user.extra.extra_security
                         newSynapseUser.physical_doc = res.user.doc_status.physical_doc;
                         newSynapseUser.virtual_doc = res.user.doc_status.virtual_doc;
-
-
-                        JToken http_code = refreshResponse["http_code"];
-                        if (http_code != null)
-                        {
-                            if (http_code.ToString() == "200")
-                            {
-                                JToken extra_Security_Obj = refreshResponse["user"]["extra"]["extra_security"];
-
-                                if (extra_Security_Obj != null)
-                                {
-                                    newSynapseUser.extra_security = extra_Security_Obj.ToString();
-                                }
-
-                            }
-                        }
+                        newSynapseUser.extra_security = res.user.extra.extra_security != null ? res.user.extra.extra_security.ToString() : null;
 
                         // Now add the new record to the DB
                         _dbContext.SynapseCreateUserResults.Add(newSynapseUser);
@@ -3812,13 +3795,11 @@ namespace Nooch.DataAccess
                         if (resFromSynapse.success == true || resFromSynapse.success.ToString().ToLower() == "true")
                         {
                             var permission = resFromSynapse.user.permission != null ? resFromSynapse.user.permission : "NOT FOUND";
-                            var physDoc = "NOT FOUND";
-                            var virtualDoc = "NOT FOUND";
 
                             if (resFromSynapse.user.doc_status != null)
                             {
-                                physDoc = resFromSynapse.user.doc_status.physical_doc;
-                                virtualDoc = resFromSynapse.user.doc_status.virtual_doc;
+                                usersSynapseDetails.physical_doc = resFromSynapse.user.doc_status.physical_doc;
+                                usersSynapseDetails.virtual_doc = resFromSynapse.user.doc_status.virtual_doc;
                             }
 
 
@@ -6531,12 +6512,9 @@ namespace Nooch.DataAccess
 
             using (var noochConnection = new NOOCHEntities())
             {
-
-
                 var id = Utility.ConvertToGuid(memberId);
 
                 var memberPrivacySettings = noochConnection.MemberPrivacySettings.FirstOrDefault(m => m.MemberId == id);
-
 
                 if (memberPrivacySettings != null)
                 {
@@ -6558,6 +6536,7 @@ namespace Nooch.DataAccess
                 return value > 0 ? "Flag is updated successfully." : "Failure";
             }
         }
+
 
         public string SetShowInSearch(string memberId, bool showInSearch)
         {
@@ -7050,8 +7029,6 @@ namespace Nooch.DataAccess
         }
 
 
-
-
         public string RemoveSynapseBankAccount(string memberId, int bankId)
         {
             Logger.Info("MDA -> RemoveSynapseBankAccount - [MemberId: " + memberId + "]");
@@ -7065,18 +7042,18 @@ namespace Nooch.DataAccess
 
                 if (bankAccountsFound != null)
                 {
-
                     bankAccountsFound.IsDefault = false;
                     noochConnection.SaveChanges();
                     SynapseDetailsClass sdc = CommonHelper.GetSynapseBankAndUserDetailsforGivenMemberId(memberId);
+
                     if (!sdc.wereUserDetailsFound) return "Bank account deleted successfully";
+
                     if (!String.IsNullOrEmpty(sdc.UserDetails.access_token) &&
                         !String.IsNullOrEmpty(sdc.UserDetails.user_fingerprints))
                     {
                         CommonHelper.RemoveBankNodeFromSynapse(sdc.UserDetails.access_token,
                             sdc.UserDetails.user_fingerprints, CommonHelper.GetDecryptedData(bankAccountsFound.oid), memberId);
                     }
-
 
                     return "Bank account deleted successfully";
                 }
@@ -7086,6 +7063,7 @@ namespace Nooch.DataAccess
                 }
             }
         }
+
 
         public string LogOut(string memberId)
         {
@@ -7099,6 +7077,7 @@ namespace Nooch.DataAccess
             }
         }
 
+
         public string LogoutRequest(string memberId)
         {
             Logger.Info("MDA -> LogoutRequest Initiated - [MemberId: " + memberId + "]");
@@ -7107,7 +7086,6 @@ namespace Nooch.DataAccess
 
             using (var noochConnection = new NOOCHEntities())
             {
-
                 var memberEntity = noochConnection.Members.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
 
                 if (memberEntity != null)
@@ -7146,15 +7124,12 @@ namespace Nooch.DataAccess
                         noochConnection.Transactions.FirstOrDefault(
                             t => t.TransactionId == tid && (t.TransactionType == "DrRr1tU1usk7nNibjtcZkA==" || t.TransactionType == "T3EMY1WWZ9IscHIj3dbcNw=="));
 
-
                     if (transDetail != null)
                     {
 
                         var memdetails =
                             noochConnection.Members.FirstOrDefault(
                                 m => m.UserName == transDetail.InvitationSentTo && m.IsDeleted == false);
-
-
 
                         if (memdetails == null)
                         {
@@ -7359,42 +7334,30 @@ namespace Nooch.DataAccess
                 {
                     var id = Utility.ConvertToGuid(tenantId);
 
-                    var noochMember =
-                        noochConnection.Tenants.FirstOrDefault(t => t.TenantId == id && t.IsDeleted == false);
-
-
+                    var noochMember = noochConnection.Tenants.FirstOrDefault(t => t.TenantId == id && t.IsDeleted == false);
 
                     if (noochMember != null)
                     {
                         noochMember.IsAutopayOn = statustoSet;
                         noochConnection.SaveChanges();
 
-
                         if (statustoSet == true)
                             return "Autopay turned ON successfully.";
                         else
                             return "Autopay turned OFF successfully.";
-
-
                     }
                     else
                     {
                         return "No such tenant found.";
                     }
                 }
-
-
             }
             catch (Exception ex)
             {
-
                 Logger.Error("MemberDataAccess - Operation:SetAutoPayStatusForTenant[ tenantId:" + tenantId + "]. Error reason --> [ " + ex.ToString() + " ] ");
                 return "Server error.";
             }
         }
-
-
-
 
     }
 }

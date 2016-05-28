@@ -1,6 +1,8 @@
 var TRANS_TYPE = $('#transType').val();
 console.log("transType is: [" + TRANS_TYPE + "]");
 var FOR_RENTSCENE = $('#rs').val();
+var COMPANY = FOR_RENTSCENE == "true" ? "Rent Scene" : "Nooch";
+var SUPPORTEMAIL = FOR_RENTSCENE == "true" ? "payments@rentscene.com" : "support@nooch.com";
 
 // http://mathiasbynens.be/notes/document-head
 document.head || (document.head = document.getElementsByTagName('head')[0]);
@@ -68,40 +70,33 @@ function areThereErrors()
 	{
         var alertTitle = "";
         var alertBodyText = "";
-        var companyName = "Nooch";
-        var supportEmail = "support@nooch.com";
-
-        if (FOR_RENTSCENE == "true") {
-            companyName = "Rent Scene"
-            supportEmail = "payments@rentscene.com"
-        }
 
         console.log('areThereErrors -> YES -> errorFromCodeBehind is: [' + errorFromCodeBehind + "]");
 
         if (errorFromCodeBehind == '1') {
             alertTitle = "Errors Are The Worst!";
             alertBodyText = "We had trouble finding that transaction. &nbsp;Please try again and if you continue to see this message, contact <span style='font-weight:600;'>Nooch Support</span>:" +
-                            "<br/><a href='mailto:" + supportEmail + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + supportEmail + "</a>";
+                            "<br/><a href='mailto:" + SUPPORTEMAIL + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + SUPPORTEMAIL + "</a>";
         }
         else if (errorFromCodeBehind == '2') {
             alertTitle = "Errors Are The Worst!";
             alertBodyText = "Terrible sorry, but it looks like we had trouble processing your data. &nbsp;Please refresh this page and try again and if you continue to see this message, contact <span style='font-weight:600;'>" +
-							companyName + " Support</span>:<br/><a href='mailto:" + supportEmail + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + supportEmail + "</a>";
+							COMPANY + " Support</span>:<br/><a href='mailto:" + SUPPORTEMAIL + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + SUPPORTEMAIL + "</a>";
         }
         else if (errorFromCodeBehind == 'failed') {
             alertTitle = "Errors Are Annoying";
             if (TRANS_TYPE == "request") {
                 alertBodyText = "Our apologies, but we were not able to complete your payment request. &nbsp;Please refresh this page and try again and if you continue to see this message, contact <span style='font-weight:600;'>" +
-								companyName + " Support</span>:<br/><a href='mailto:" + supportEmail + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + supportEmail + "</a>";
+								COMPANY + " Support</span>:<br/><a href='mailto:" + SUPPORTEMAIL + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + SUPPORTEMAIL + "</a>";
             }
             else {
                 alertBodyText = "Our apologies, but we were not able to deposit money in your account. &nbsp;Please refresh this page and try again and if you continue to see this message, contact <span style='font-weight:600;'>" +
-								companyName + " Support</span>:<br/><a href='mailto:" + supportEmail + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + supportEmail + "</a>";
+								COMPANY + " Support</span>:<br/><a href='mailto:" + SUPPORTEMAIL + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + SUPPORTEMAIL + "</a>";
             }
         }
         else {
             alertTitle = "Errors are annoying";
-            alertBodyText = "Very sorry about this, but we're having trouble processing your information, but the exact reason is not clear.  Please try again, or if this message persists, contact <a href='" + supportEmail + "' target='_blank'>" + supportEmail + "</a> for additional help.";
+            alertBodyText = "Very sorry about this, but we're having trouble processing your information, but the exact reason is not clear.  Please try again, or if this message persists, contact <a href='" + SUPPORTEMAIL + "' target='_blank'>" + SUPPORTEMAIL + "</a> for additional help.";
         }
 
         // Position the footer absolutely so it's at the bottom of the screen (it's normally pushed down by the body content)
@@ -124,12 +119,7 @@ function areThereErrors()
             html: true
         }, function (isConfirm) {
             if (!isConfirm) {
-                if (FOR_RENTSCENE == "true") {
-                    window.open("mailto:payments@rentscene.com");
-                }
-                else {
-                    window.open("mailto:support@nooch.com");
-                }
+                window.open("mailto:" + SUPPORTEMAIL);
             }
         });
 
