@@ -68,13 +68,14 @@ namespace Nooch.DataAccess
 
                         if (resereq == null)
                         {
-                            return false;
+                            return false ;
                         }
                         else
                         {
                             DateTime req = Convert.ToDateTime(resereq.RequestedOn == null ? DateTime.Now : resereq.RequestedOn);
 
                             if (DateTime.Now < req.AddHours(3))
+                               
                             {
                                 return true;
                             }
@@ -156,7 +157,7 @@ namespace Nooch.DataAccess
 
                             // Cliff (1/21/16): Only send the confirmation email if it's truly a Reset... as opposed to a new user setting their PW
                             // from one of the browser pages, which also uses this service to set the pw after linking a bank.
-                            if (newUser.ToLower().Trim() != "true")
+                            if (!String.IsNullOrEmpty(newUser) && newUser.ToLower().Trim() != "true")
                             {
                                 SendPasswordUpdatedMail(noochMember, emailAddress);
                             }
