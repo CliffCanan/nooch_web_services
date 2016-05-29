@@ -4179,7 +4179,7 @@ namespace Nooch.DataAccess
                         {
                             TransactionId = Guid.NewGuid(),
                             RecipientId = Utility.ConvertToGuid(receivers[i]),
-                            SenderId  = Utility.ConvertToGuid(requestDto.MemberId),
+                            SenderId = Utility.ConvertToGuid(requestDto.MemberId),
                             Picture = (requestDto.Picture != null) ? requestDto.Picture : null,
                             Amount = requestDto.Amount - 0,
                             TransactionDate = DateTime.Now,
@@ -4214,7 +4214,7 @@ namespace Nooch.DataAccess
                             _dbContext.Entry(transaction).Reload();
                             requestId = transaction.TransactionId.ToString();
 
-                           //  BELOW CODE ADDED BY CLIFF (11/26/14) FOR SENDING EMAILS FOR WHEN THERE ARE MULTIPLE RECIPIENTS
+                            //  BELOW CODE ADDED BY CLIFF (11/26/14) FOR SENDING EMAILS FOR WHEN THERE ARE MULTIPLE RECIPIENTS
                             #region Cliffs Additions
 
                             var recipientOfRequest = CommonHelper.GetMemberDetails(receivers[i]);
@@ -4394,7 +4394,7 @@ namespace Nooch.DataAccess
                         TransactionId = Guid.NewGuid(),
 
                         RecipientId = receiver.MemberId,
-                        SenderId   = requester.MemberId,
+                        SenderId = requester.MemberId,
                         Amount = requestDto.Amount,
                         TransactionDate = DateTime.Now,
                         Picture = (requestDto.Picture != null) ? requestDto.Picture : null,
@@ -4933,8 +4933,8 @@ namespace Nooch.DataAccess
                         paylink = paylink + "&rs=1";
                     }
 
-                    // CIP will tell the PayRequest page what kind of verification the user must complete.
-                    // Options are "renter" (highest level), "landlord", or "vendor" (lowest level).
+                    // CC (5/29/16): CIP will tell the PayRequest page what kind of verification the user must complete
+                    // for Synapse V3. Options are: "renter" (highest level), "landlord", or "vendor" (lowest level).
                     if (!String.IsNullOrEmpty(requestDto.cipTag))
                     {
                         paylink += "&cip=" + requestDto.cipTag;
@@ -5167,8 +5167,7 @@ namespace Nooch.DataAccess
                     var logoToDisplay = "noochlogo";
 
                     bool isForRentScene = false;
-                    if (requester.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49" || // Rent Scene's account
-                        requester.MemberId.ToString().ToLower() == "a35c14e9-ee7b-4fc6-b5d5-f54961f2596a")  // Just for testing: "sallyanejones00@nooch.com"
+                    if (requester.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49")// Rent Scene's account
                     {
                         isForRentScene = true;
                         RequesterFirstName = "Rent Scene";
@@ -5213,15 +5212,15 @@ namespace Nooch.DataAccess
                     try
                     {
                         Utility.SendEmail("TransferSentForRentScene", fromAddress, RequesterEmail, null,
-                                                    "Your Transfer money to " + recipientsEmail + " is pending",
-                                                    null, tokens, null, null, null);
+                                          "Your Transfer money to " + recipientsEmail + " is pending",
+                                          null, tokens, null, null, null);
 
                         Logger.Info("TDA -> TransferMoneyToNonNoochUserUsingSynapseForRentScene -> TransferMoney email sent to [" + RequesterEmail + "] successfully.");
                     }
                     catch (Exception ex)
                     {
                         Logger.Error("TDA -> TransferMoneyToNonNoochUserUsingSynapseForRentScene -> TransferMoney email NOT sent to [" + RequesterEmail +
-                                               "], [Exception: " + ex + "]");
+                                     "], [Exception: " + ex + "]");
                     }
 
 
@@ -5229,7 +5228,7 @@ namespace Nooch.DataAccess
                     // In this case UserType would = 'New'
                     // TransType would = 'Request'
                     // and link source would = 'Email'
-                    cancelLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
+                    string rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
                                                "Nooch/RejectMoney?TransactionId=" + requestId +
                                                "&UserType=U6De3haw2r4mSgweNpdgXQ==" +
                                                "&LinkSource=75U7bZRpVVxLNbQuoMQEGQ==&" +
@@ -5243,6 +5242,13 @@ namespace Nooch.DataAccess
                         paylink = paylink + "&rs=1";
                     }
 
+                    // CC (5/29/16): CIP will tell the PayRequest page what kind of verification the user must complete
+                    // for Synapse V3. Options are: "renter" (highest level), "landlord", or "vendor" (lowest level).
+                    if (!String.IsNullOrEmpty(requestDto.cipTag))
+                    {
+                        paylink += "&cip=" + requestDto.cipTag;
+                    }
+
                     var tokens2 = new Dictionary<string, string>
                         {
                             {"$Logo$", logoToDisplay},
@@ -5250,7 +5256,7 @@ namespace Nooch.DataAccess
 					        {Constants.PLACEHOLDER_NEWUSER, recipientsEmail},
 					        {Constants.PLACEHOLDER_TRANSFER_AMOUNT, s32[0].ToString()},
 					        {Constants.PLACEHLODER_CENTS, s32[1].ToString()},
-					        {Constants.PLACEHOLDER_REJECT_LINK, cancelLink},
+					        {Constants.PLACEHOLDER_REJECT_LINK, rejectLink},
 					        {Constants.PLACEHOLDER_SENDER_FULL_NAME, RequesterFirstName + " " + RequesterLastName},
 					        {Constants.MEMO,memo},
 					        {Constants.PLACEHOLDER_PAY_LINK, paylink}
@@ -5263,15 +5269,15 @@ namespace Nooch.DataAccess
                                          : RequesterFirstName + " " + RequesterLastName + " transfered " + "$" + s22.ToString() + " with Nooch";
 
                         Utility.SendEmail("TransferReceivedForRentScene", fromAddress,
-                                                    recipientsEmail, null, subject, null, tokens2,
-                                                    null, null, null);
+                                          recipientsEmail, null, subject, null, tokens2,
+                                          null, null, null);
 
                         Logger.Info("TDA -> TransferMoneyToNonNoochUserUsingSynapseForRentScene -> transferMoneyToNewUser email sent to [" + recipientsEmail + "] successfully.");
                     }
                     catch (Exception ex)
                     {
                         Logger.Error("TDA -> TransferMoneyToNonNoochUserUsingSynapseForRentScene -> transferMoneyToNewUser email NOT sent to [" + recipientsEmail +
-                                               "], Exception: [" + ex + "]");
+                                     "], Exception: [" + ex + "]");
                     }
 
                     #endregion Send Notifications
@@ -5926,7 +5932,7 @@ namespace Nooch.DataAccess
                     TransactionId = Guid.NewGuid(),
                     RecipientId = requestRecipient.MemberId,
 
-                     SenderId   = requester.MemberId,
+                    SenderId = requester.MemberId,
                     Amount = requestDto.Amount,
                     TransactionDate = DateTime.Now,
                     Picture = (requestDto.Picture != null) ? requestDto.Picture : null,

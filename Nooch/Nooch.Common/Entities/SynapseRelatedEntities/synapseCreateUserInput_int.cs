@@ -46,5 +46,6 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
         public string note { get; set; }
         public string supp_id { get; set; }
         public bool is_business { get; set; }
+        public string cip_tag { get; set; }
     }
 }

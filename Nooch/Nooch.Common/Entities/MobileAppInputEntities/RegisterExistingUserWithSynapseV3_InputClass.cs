@@ -22,5 +22,6 @@ namespace Nooch.Common.Entities.MobileAppInputEntities
         public string isIdImageAdded { get; set; }
         public string idImageData { get; set; }
         public string fullname { get; set; }
+        public string cip { get; set; }
     }
 }

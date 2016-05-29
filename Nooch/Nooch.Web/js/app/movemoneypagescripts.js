@@ -4,6 +4,7 @@ var TRANSID = $('#transId').val();
 var USERTYPE = $('#usrTyp').val();
 var MemID_EXISTING = $('#memidexst').val();
 var FOR_RENTSCENE = $('#rs').val();
+var CIP = $('#cip').val();
 
 var usrPhn, usrEm;
 var resultReason = "";
@@ -505,9 +506,6 @@ function runIdWizard() {
             if (currentIndex == 1) {
                 $('#idVer-address').focus();
             }
-            else if (currentIndex == 2) {
-                //$('#idVer-email').focus();
-            }
         },
         onCanceled: function (event) {
             cancelIdVer();
@@ -683,7 +681,7 @@ function createRecord() {
 
     console.log("{transId: " + TRANSID + ", userEm: " + userEmVal + ", userPh: " + userPhVal + ", userName: " + userNameVal +
                 ", userPw: " + userPwVal + ", ssn: " + ssnVal + ", dob: " + dobVal + ", fngprnt: " + fngprntVal + ", ip: " + ipVal +
-				", isIdImage: " + isImageAdded + "}");//", idImagedata: " + imageData + "}");
+				", isIdImage: " + isImageAdded + ", CIP: " + CIP + "}");//", idImagedata: " + imageData + "}");
 
     var urlToUse = "";
     if (transType == "send")
@@ -710,6 +708,7 @@ function createRecord() {
         "', 'zip':'" + zipVal +
         "', 'fngprnt':'" + fngprntVal +
         "', 'ip':'" + ipVal +
+        "', 'cip':'" + CIP +
         "', 'isIdImage':'" + isFileAdded +
         "', 'idImagedata':'" + FileData + "'}";
 
@@ -1287,17 +1286,10 @@ function rejectBtnClicked() {
         userTypeEncr = "mx5bTcAYyiOf9I5Py9TiLw==";
     }
 
-    if (transType == "send")
-    {
-        //window.location = "https://www.noochme.com/noochweb/trans/depositMoneycomplete.aspx?mem_id=" + MemID_EXISTING + "," + ;
-    }
-    else // must be a request
-    {
-        window.location = "https://www.noochme.com/noochweb/trans/rejectMoney.aspx?TransactionId=" + TRANSID +
-                          "&UserType=" + userTypeEncr +
-                          "&LinkSource=75U7bZRpVVxLNbQuoMQEGQ==" +
-                          "&TransType=T3EMY1WWZ9IscHIj3dbcNw==";
-    }
+    window.location = "https://www.noochme.com/noochweb/trans/rejectMoney.aspx?TransactionId=" + TRANSID +
+                      "&UserType=" + userTypeEncr +
+                      "&LinkSource=75U7bZRpVVxLNbQuoMQEGQ==" +
+                      "&TransType=T3EMY1WWZ9IscHIj3dbcNw==";
 }
 
 

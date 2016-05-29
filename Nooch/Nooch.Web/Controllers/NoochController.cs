@@ -806,8 +806,9 @@ namespace Nooch.Web.Controllers
                 Response.Write("<script>var errorFromCodeBehind = '1';</script>");
 
                 Logger.Error("DepositMoney CodeBehind -> page_load OUTER EXCEPTION - [TransactionID: " + Request.QueryString["TransactionId"] +
-                                       "], [Exception: " + ex.Message + "]");
+                             "], [Exception: " + ex.Message + "]");
             }
+
             ViewData["OnLoaddata"] = rdm;
             return View();
         }
@@ -1428,10 +1429,10 @@ namespace Nooch.Web.Controllers
         }
 
 
-        public ActionResult RegisterUserWithSynpForPayRequest(string transId, string memberId, string userEm, string userPh, string userName, string userPw, string ssn, string dob, string address, string zip, string fngprnt, string ip, string isIdImage = "0", string idImagedata = "")
+        public ActionResult RegisterUserWithSynpForPayRequest(string transId, string memberId, string userEm, string userPh, string userName, string userPw, string ssn, string dob, string address, string zip, string fngprnt, string ip, string cip, string isIdImage = "0", string idImagedata = "")
         {
             Logger.Info("PayRequest Code Behind -> RegisterUserWithSynpForPayRequest Initiated - Email: [" + userEm +
-                        "], TransID: [" + transId + "], memberId: [" + memberId + "]");
+                        "], TransID: [" + transId + "], memberId: [" + memberId + "], CIP: [" + cip + "]");
 
             RegisterUserSynapseResultClassExt res = new RegisterUserSynapseResultClassExt();
             res.success = "false";
@@ -1443,63 +1444,80 @@ namespace Nooch.Web.Controllers
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
                 userPh = CommonHelper.RemovePhoneNumberFormatting(userPh);
 
-                Logger.Info("payRequest Code Behind -> RegisterUserWithSynp -> PARAMETERS: transId: " + transId +
-                                       ", memberId (If existing user): " + memberId + ", userEm: " + userEm +
-                                       ", userPh: " + userPh + ", userPw: " + userPw +
-                                       ", ssn: " + ssn + ", dob: " + dob +
-                                       ", address: " + address + ", zip: " + zip);
+                Logger.Info("payRequest Code Behind -> RegisterUserWithSynp -> PARAMETERS to send to Server: transId: " + transId +
+                            ", memberId (If existing user): " + memberId + ", userEm: " + userEm +
+                            ", userPh: " + userPh + ", userPw: " + userPw +
+                            ", ssn: " + ssn + ", dob: " + dob +
+                            ", address: " + address + ", zip: " + zip +
+                            ", Has ID Img: [" + isIdImage + "], CIP: [" + cip + "]");
+
+
+                #region Initial Checks
+
+                if (String.IsNullOrEmpty(userEm))
+                {
+                    res.reason = "Missing user's email address";
+                    return Json(res);
+                }
+                if (String.IsNullOrEmpty(userPh))
+                {
+                    res.reason = "Missing user's phone";
+                    return Json(res);
+                }
+                if (String.IsNullOrEmpty(dob))
+                {
+                    res.reason = "Missing user's date of birth";
+                    return Json(res);
+                }
+                if (String.IsNullOrEmpty(address))
+                {
+                    res.reason = "Missing user's address";
+                    return Json(res);
+                }
+                if (String.IsNullOrEmpty(zip))
+                {
+                    res.reason = "Missing user's ZIP";
+                    return Json(res);
+                }
+
+                #endregion Initial Checks
 
                 string serviceMethod = "";
                 var scriptSerializer = new JavaScriptSerializer();
                 string json = "";
 
+                RegisterUserWithSynapseV3_Input inputClass = new RegisterUserWithSynapseV3_Input();
+                inputClass.address = address;
+                inputClass.dob = dob;
+                inputClass.email = userEm;
+                inputClass.fngprnt = fngprnt;
+                inputClass.fullname = userName;
+                inputClass.isIdImageAdded = isIdImage;
+                inputClass.idImageData = idImagedata;
+                inputClass.ip = ip;
+                inputClass.phone = userPh;
+                inputClass.pw = userPw;
+                inputClass.ssn = ssn;
+                inputClass.transId = transId;
+                inputClass.zip = zip;
+                inputClass.cip = !String.IsNullOrEmpty(cip) ? cip : "renter";
+                
                 if (!String.IsNullOrEmpty(memberId) && memberId.Length > 30)
                 {
-                    RegisterUserWithSynapseV3_Input inputClass = new RegisterUserWithSynapseV3_Input();
-                    inputClass.address = address;
-                    inputClass.dob = dob;
-                    inputClass.email = userEm;
-                    inputClass.fngprnt = fngprnt;
-                    inputClass.fullname = userName;
-                    inputClass.idImageData = idImagedata;
-                    inputClass.ip = ip;
-                    inputClass.isIdImageAdded = isIdImage;
                     inputClass.memberId = memberId;
-                    inputClass.phone = userPh;
-                    inputClass.pw = userPw;
-                    inputClass.ssn = ssn;
-                    inputClass.transId = transId;
-                    inputClass.zip = zip;
-
-                    json = scriptSerializer.Serialize(inputClass);
 
                     // Member must already exist, so use RegisterEXISTINGUserWithSynapseV3()
                     serviceMethod = "/RegisterExistingUserWithSynapseV3";
                 }
                 else
                 {
-                    RegisterUserWithSynapseV3_Input inputclass = new RegisterUserWithSynapseV3_Input();
-                    inputclass.address = address;
-                    inputclass.dob = dob;
-                    inputclass.email = userEm;
-                    inputclass.fngprnt = fngprnt;
-                    inputclass.fullname = userName;
-                    inputclass.idImageData = idImagedata;
-                    inputclass.ip = ip;
-                    inputclass.isIdImageAdded = isIdImage;
-                    inputclass.phone = userPh;
-                    inputclass.pw = userPw;
-                    inputclass.ssn = ssn;
-                    inputclass.transId = transId;
-                    inputclass.zip = zip;
-
-                    json = scriptSerializer.Serialize(inputclass);
-
                     // Member DOES NOT already exist, so use RegisterNONNOOCHUserWithSynapse()
                     serviceMethod = "/RegisterNonNoochUserWithSynapse";
                 }
 
-                Logger.Info("PayRequest Code-Behind -> RegisterUserWithSynp - Full Query String: [ " + String.Concat(serviceUrl, serviceMethod) + " ]");
+                json = scriptSerializer.Serialize(inputClass);
+
+                Logger.Info("PayRequest Code-Behind -> RegisterUserWithSynpForPayRequest - Full Query String: [ " + String.Concat(serviceUrl, serviceMethod) + " ]");
 
                 RegisterUserSynapseResultClassExt regUserResponse = ResponseConverter<RegisterUserSynapseResultClassExt>.CallServicePostMethod(String.Concat(serviceUrl, serviceMethod), json);
 
@@ -1511,12 +1529,12 @@ namespace Nooch.Web.Controllers
                 }
                 else if (regUserResponse.success.ToLower() == "false")
                 {
-                    Logger.Error("PayRequest Code-Behind -> RegisterUserWithSynp FAILED - SERVER RETURNED 'success' = 'false' - [TransID: " + transId + "]");
+                    Logger.Error("PayRequest Code-Behind -> RegisterUserWithSynpForPayRequest FAILED - SERVER RETURNED 'success' = 'false' - [TransID: " + transId + "]");
                     res.reason = regUserResponse.reason;
                 }
                 else
                 {
-                    Logger.Error("PayRequest Code-Behind -> RegisterUserWithSynp FAILED - UNKNOWN ERROR FROM SERVER - [TransID: " + transId + "]");
+                    Logger.Error("PayRequest Code-Behind -> RegisterUserWithSynpForPayRequest FAILED - UNKNOWN ERROR FROM SERVER - [TransID: " + transId + "]");
                 }
 
                 res.ssn_verify_status = regUserResponse.ssn_verify_status;
@@ -1525,8 +1543,8 @@ namespace Nooch.Web.Controllers
             }
             catch (Exception ex)
             {
-                Logger.Error("PayRequest Code-Behind -> RegisterUserWithSynp attempt FAILED Failed - Reason: [" + res.reason + "], " +
-                             "TransId: [" + transId + "], [Exception: " + ex + "]");
+                Logger.Error("PayRequest Code-Behind -> RegisterUserWithSynpForPayRequest attempt FAILED Failed - Reason: [" + res.reason + "], " +
+                             "TransId: [" + transId + "], [Exception: " + ex.Message + "]");
                 return Json(res);
             }
         }
@@ -2514,6 +2532,7 @@ namespace Nooch.Web.Controllers
         /// For Submitting a payment from the MakePayment browser page.
         /// Currently only used for making Rent Scene requests - eventually want to add ability to send a transfer as well.
         /// </summary>
+        /// <param name="from"></param>
         /// <param name="isRequest"></param>
         /// <param name="amount"></param>
         /// <param name="name"></param>
@@ -2521,13 +2540,14 @@ namespace Nooch.Web.Controllers
         /// <param name="memo"></param>
         /// <param name="pin"></param>
         /// <param name="ip"></param>
+        /// <param name="cip"></param>
         /// <returns></returns>
-        public ActionResult submitPayment(string from, bool isRequest, string amount, string name, string email, string memo, string pin, string ip)
+        public ActionResult submitPayment(string from, bool isRequest, string amount, string name, string email, string memo, string pin, string ip, string cip)
         {
             Logger.Info("Make Payment Code-Behind -> submitPayment Initiated - From: [" + from + "], isRequest: [" + isRequest +
                         "], Name: [" + name + "], Email: [" + email +
                         "], Amount: [" + amount + "], memo: [" + memo +
-                        "], PIN: [" + pin + "], IP: [" + ip + "]");
+                        "], PIN: [" + pin + "], IP: [" + ip + "], CIP: [" + cip + "]");
 
             requestFromRentScene res = new requestFromRentScene();
             res.success = false;
@@ -2602,18 +2622,18 @@ namespace Nooch.Web.Controllers
                 if (isRequest)
                 {
                     serviceMethod = "/RequestMoneyForRentScene?from=" + from +
-                                         "&name=" + name +
-                                         "&email=" + email + "&amount=" + amount +
-                                         "&memo=" + memo + "&pin=" + pin +
-                                         "&ip=" + ip + "&isRequest=" + isRequest;
+                                    "&name=" + name + "&email=" + email +
+                                    "&amount=" + amount + "&memo=" + memo +
+                                    "&pin=" + pin + "&ip=" + ip +
+                                    "&cip=" + cip + "&isRequest=" + isRequest;
                 }
                 else
                 {
                     serviceMethod = "/TransferMoneyToNonNoochUserUsingSynapseForRentScene?from=" + from +
-                                           "&name=" + name +
-                                           "&email=" + email + "&amount=" + amount +
-                                           "&memo=" + memo + "&pin=" + pin +
-                                           "&ip=" + ip + "&isRequest=" + isRequest;
+                                    "&name=" + name + "&email=" + email +
+                                    "&amount=" + amount + "&memo=" + memo +
+                                    "&pin=" + pin + "&ip=" + ip +
+                                    "&cip=" + cip + "&isRequest=" + isRequest;
                 }
 
                 string urlToUse = String.Concat(serviceUrl, serviceMethod);

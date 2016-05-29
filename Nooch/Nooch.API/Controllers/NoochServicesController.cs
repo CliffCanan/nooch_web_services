@@ -877,13 +877,13 @@ namespace Nooch.API.Controllers
         /// <returns></returns>
         [HttpGet]
         [ActionName("RequestMoneyForRentScene")]
-        public requestFromRentScene RequestMoneyForRentScene(string from, string name, string email, string amount, string memo, string pin, string ip, string cipTag, bool isRequest)
+        public requestFromRentScene RequestMoneyForRentScene(string from, string name, string email, string amount, string memo, string pin, string ip, string cip, bool isRequest)
         {
             Logger.Info("Service Controller - RequestMoneyForRentScene Initiated - [From: " + from +
                         "], [Name: " + name + "], Email: [" + email +
                         "], amount: [" + amount + "], memo: [" + memo +
                         "], pin: [" + pin + "], ip: [" + ip +
-                        "], CIP Tag: [" + cipTag + "], isRequest: [" + isRequest + "]");
+                        "], CIP Tag: [" + cip + "], isRequest: [" + isRequest + "]");
 
             requestFromRentScene res = new requestFromRentScene();
             res.success = false;
@@ -919,10 +919,10 @@ namespace Nooch.API.Controllers
                 res.msg = "Missing amount!";
                 isMissingData = true;
             }
-            if (String.IsNullOrEmpty(cipTag))
+            if (String.IsNullOrEmpty(cip))
             {
                 // Should never happen, but if it does just use "renter" as the default.
-                cipTag = "renter";
+                cip = "renter";
             }
             if (isMissingData)
             {
@@ -989,7 +989,7 @@ namespace Nooch.API.Controllers
                     SenderId = "",
                     State = "PA",
                     ZipCode = zipToUse,
-                    cipTag = cipTag,
+                    cipTag = cip,
                     from = from,
                     //isTesting = "true"
                 };
@@ -3079,12 +3079,16 @@ namespace Nooch.API.Controllers
             try
             {
                 Logger.Info("Service Cntrlr -> RegisterExistingUserWithSynapseV3 Initiated - MemberID: [" + input.memberId + "], " +
-                            "Name: [" + input.fullname + "], Email: [" + input.email + "]");
+                            "Name: [" + input.fullname + "], Email: [" + input.email +
+                            "Is ID Img Sent: [" + input.isIdImageAdded + "], CIP: [" + input.cip + "]");
 
                 MembersDataAccess mda = new MembersDataAccess();
                 RegisterUserSynapseResultClassExt nc = new RegisterUserSynapseResultClassExt();
 
-                synapseCreateUserV3Result_int res = mda.RegisterExistingUserWithSynapseV3(input.transId, input.memberId, input.email, input.phone, input.fullname, input.pw, input.ssn, input.dob, input.address, input.zip, input.fngprnt, input.ip, input.isIdImageAdded, input.idImageData);
+                synapseCreateUserV3Result_int res = mda.RegisterExistingUserWithSynapseV3(input.transId, input.memberId, input.email,
+                                                                                          input.phone, input.fullname, input.pw, input.ssn,
+                                                                                          input.dob, input.address, input.zip, input.fngprnt,
+                                                                                          input.ip, input.cip, input.isIdImageAdded, input.idImageData);
 
                 if (res.success == true)
                 {
@@ -3107,7 +3111,7 @@ namespace Nooch.API.Controllers
             catch (Exception ex)
             {
                 Logger.Error("Service Cntrlr -> RegisterExistingUserWithSynapsev3 FAILED - [MemberID: " + input.memberId + "], [Name: " + input.fullname +
-                             ", [Email of New User: " + input.email + "], [Exception: " + ex.Message + "]");
+                             "], [Email of New User: " + input.email + "], [Exception: " + ex.Message + "]");
                 return null;
             }
         }
@@ -3119,11 +3123,16 @@ namespace Nooch.API.Controllers
         {
             try
             {
-                Logger.Info("Service Cntrlr -> RegisterNonNoochUserWithSynapse Initiated.");
+                Logger.Info("Service Cntrlr -> RegisterNonNoochUserWithSynapse Initiated - MemberID: [" + input.memberId + "], " +
+                            "Name: [" + input.fullname + "], Email: [" + input.email +
+                            "Is ID Img Sent: [" + input.isIdImageAdded + "], CIP: [" + input.cip + "]");
 
                 MembersDataAccess mda = new MembersDataAccess();
 
-                synapseCreateUserV3Result_int res = mda.RegisterNonNoochUserWithSynapseV3(input.transId, input.email, input.phone, input.fullname, input.pw, input.ssn, input.dob, input.address, input.zip, input.fngprnt, input.ip, input.isIdImageAdded, input.idImageData);
+                synapseCreateUserV3Result_int res = mda.RegisterNonNoochUserWithSynapseV3(input.transId, input.email, input.phone, input.fullname,
+                                                                                          input.pw, input.ssn, input.dob, input.address,
+                                                                                          input.zip, input.fngprnt, input.ip, input.cip,
+                                                                                          input.isIdImageAdded, input.idImageData);
 
                 RegisterUserSynapseResultClassExt nc = new RegisterUserSynapseResultClassExt();
 
@@ -6035,16 +6044,18 @@ namespace Nooch.API.Controllers
         [HttpGet]
         [ActionName("TransferMoneyToNonNoochUserUsingSynapseForRentScene")]
         public requestFromRentScene TransferMoneyToNonNoochUserUsingSynapseForRentScene
-             (string from, string name, string email, string amount, string memo, string pin, string ip, bool isRequest)
+             (string from, string name, string email, string amount, string memo, string pin, string ip, string cip, bool isRequest)
         {
             Logger.Info("Service Controller - TransferMoneyToNonNoochUserUsingSynapseForRentScene Initiated - [From: " + from + "], [Name: " + name +
                         "], Email: [" + email + "], amount: [" + amount +
                         "], memo: [" + memo + "], pin: [" + pin +
-                        "], ip: [" + ip + "], isRequest: [" + isRequest + "]");
+                        "], ip: [" + ip + "], CIP: [" + cip + "], isRequest: [" + isRequest + "]");
+
             requestFromRentScene res = new requestFromRentScene();
             res.success = false;
             res.isEmailAlreadyReg = false;
             res.msg = "Service Layer - Initial";
+
             #region Check for Required Data
 
             bool isMissingData = false;
@@ -6074,7 +6085,11 @@ namespace Nooch.API.Controllers
                 res.msg = "Missing amount!";
                 isMissingData = true;
             }
-
+            if (String.IsNullOrEmpty(cip))
+            {
+                // Should never happen, but if it does just use "renter" as the default.
+                cip = "renter";
+            }
             if (isMissingData)
             {
                 Logger.Error("Service Controller -> RequestMoneyForRentScene FAILED - Missing required data - Msg is: [" + res.msg + "]");
@@ -6117,6 +6132,7 @@ namespace Nooch.API.Controllers
             }
 
             #endregion Get MemberID of Sending User
+
             try
             {
                 string requestId = string.Empty;
@@ -6137,6 +6153,7 @@ namespace Nooch.API.Controllers
                     SenderId = "",
                     State = "PA",
                     ZipCode = zipToUse,
+                    cipTag = cip,
                     //isTesting = "true" // REMOVE FOR PRODUCTION!!
                 };
 
