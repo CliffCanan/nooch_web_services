@@ -2634,7 +2634,7 @@ namespace Nooch.Web.Controllers
                                          "&name=" + name +
                                          "&email=" + email + "&amount=" + amount +
                                          "&memo=" + memo + "&pin=" + pin +
-                                         "&ip=" + ip + "&isRequest=" + isRequest;
+                                         "&ip=" + ip + "&cip=0"  + "&isRequest=" + isRequest;
                     response = ResponseConverter<requestFromRentScene>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
                 }
                 else
