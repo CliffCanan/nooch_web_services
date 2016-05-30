@@ -302,16 +302,18 @@ function runIdWizard() {
                 viewMode: 'years',
                 //debug: true
             });
-                        var calendarIcon = $('.datePickerGrp i');
 
-                        calendarIcon.click(function ()
-                        {
-                            setTimeout(function ()
-                            {
-                                $('#dobGrp .dtp-container.dropdown').addClass('fg-toggled open');
-                                $('#idVer-dob').data("DateTimePicker").show();
-                            }, 150);
-                        });
+            var calendarIcon = $('.datePickerGrp i');
+
+            calendarIcon.click(function ()
+            {
+                setTimeout(function ()
+                {
+                    $('#dobGrp .dtp-container.dropdown').addClass('fg-toggled open');
+                    $('#idVer-dob').data("DateTimePicker").show();
+                }, 150);
+            });
+
             $('#idVer-ssn').mask("000 - 00 - 0000");
             $('#idVer-zip').mask("00000");
             $('#idVer-phone').val(usrPhn);
@@ -417,81 +419,81 @@ function runIdWizard() {
                 // Check DOB field
                 if ($('#idVer-dob').val().length == 10)
                 {
-                    updateValidationUi("dob", true);
+                    // Double check that DOB is not still "01/01/1980", which is the default and probably not the user's B-Day...
+                    if ($('#idVer-dob').val() != "01/01/1980") {
+                        updateValidationUi("dob", true);
 
-					var ssnVal = $('#idVer-ssn').val().trim();
-					ssnVal = ssnVal.replace(/ /g,"").replace(/-/g,"");
-                    // Check SSN field
-                    if (ssnVal.length == 9 || FBID != "not connected")
-                    {
-                        updateValidationUi("ssn", true);
+                        var ssnVal = $('#idVer-ssn').val().trim();
+                        ssnVal = ssnVal.replace(/ /g, "").replace(/-/g, "");
+                        // Check SSN field
+                        if (ssnVal.length == 9 || FBID != "not connected") {
+                            updateValidationUi("ssn", true);
 
-                        // Great, go to the next step of the wizard :-]
-                        // FILE INPUT DOCUMENTATION: http://plugins.krajee.com/file-input#options
-                        $("#idVer_idDoc").fileinput({
-                            allowedFileTypes: ['image'],
-                            initialPreview: [
-                                "<img src='../Assets/Images/securityheader.png' class='file-preview-image' alt='' id='IdWizIdDocPreview'>"
-                            ],
-                            initialPreviewShowDelete: false,
-                            layoutTemplates: {
-                                icon: '<span class="fa fa-photo m-r-10 kv-caption-icon"></span>',
-                            },
-                            fileActionSettings: {
-                                showZoom: false,
-                                indicatorNew: '',
-                            },
-                            maxFileCount: 1,
-                            maxFileSize: 750,
-                            msgSizeTooLarge: "<strong>'{name}' ({size} KB)</strong> is a bit too large! Max allowed file size is <strong>{maxSize} KB</strong>. &nbsp;Please try a smaller picture!",
-                            showCaption: false,
-                            showUpload: false,
-                            showPreview: true,
-                            resizeImage: true,
-                            maxImageWidth: 500,
-                            maxImageHeight: 500,
-                            resizePreference: 'width'
-                        });
+                            // Great, go to the next step of the wizard :-]
+                            // FILE INPUT DOCUMENTATION: http://plugins.krajee.com/file-input#options
+                            $("#idVer_idDoc").fileinput({
+                                allowedFileTypes: ['image'],
+                                initialPreview: [
+                                    "<img src='../Assets/Images/securityheader.png' class='file-preview-image' alt='' id='IdWizIdDocPreview'>"
+                                ],
+                                initialPreviewShowDelete: false,
+                                layoutTemplates: {
+                                    icon: '<span class="fa fa-photo m-r-10 kv-caption-icon"></span>',
+                                },
+                                fileActionSettings: {
+                                    showZoom: false,
+                                    indicatorNew: '',
+                                },
+                                maxFileCount: 1,
+                                maxFileSize: 750,
+                                msgSizeTooLarge: "<strong>'{name}' ({size} KB)</strong> is a bit too large! Max allowed file size is <strong>{maxSize} KB</strong>. &nbsp;Please try a smaller picture!",
+                                showCaption: false,
+                                showUpload: false,
+                                showPreview: true,
+                                resizeImage: true,
+                                maxImageWidth: 500,
+                                maxImageHeight: 500,
+                                resizePreference: 'width'
+                            });
 
-                        $('#idVer_idDoc').on('fileerror', function (event, data, msg)
-                        {
-                            $('#idVerWiz > .content').animate({ height: "28em" }, 600)
-                        });
+                            $('#idVer_idDoc').on('fileerror', function (event, data, msg) {
+                                $('#idVerWiz > .content').animate({ height: "28em" }, 600)
+                            });
 
-                        $('#idVer_idDoc').on('fileloaded', function (event, file, previewId, index, reader)
-                        {
-                            $('#idVerWiz > .content').animate({ height: "26em" }, 500)
+                            $('#idVer_idDoc').on('fileloaded', function (event, file, previewId, index, reader) {
+                                $('#idVerWiz > .content').animate({ height: "26em" }, 500)
 
-                            isFileAdded = "1";
-                            var readerN = new FileReader();
+                                isFileAdded = "1";
+                                var readerN = new FileReader();
 
-                            readerN.readAsDataURL(file);
-                            readerN.onload = function (e) {
-                                // browser completed reading file - display it
-                                var splittable = e.target.result.split(',');
-                                var string2 = splittable[1];
-                                //console.log(string2);
-                                FileData = string2;
+                                readerN.readAsDataURL(file);
+                                readerN.onload = function (e) {
+                                    // browser completed reading file - display it
+                                    var splittable = e.target.result.split(',');
+                                    var string2 = splittable[1];
+                                    FileData = string2;
+                                };
+                            });
 
-                                //console.log("image data is -> " + FileData);
-                            };
-                        });
+                            $('#idVer_idDoc').on('fileclear', function (event) {
+                                isFileAdded = "0";
+                                FileData = null;
+                            });
 
-                        $('#idVer_idDoc').on('fileclear', function (event) {
-                            isFileAdded = "0";
-                            FileData = null;
-                        });
+                            $('#idVer_idDoc').on('filecleared', function (event) {
+                                isFileAdded = "0";
+                                FileData = null;
+                            });
 
-                        $('#idVer_idDoc').on('filecleared', function (event) {
-                            isFileAdded = "0";
-                            FileData = null;
-                        });
-
-                        $('#idVerWiz > .content').animate({ height: "26em" }, 800)
-                        return true;
+                            $('#idVerWiz > .content').animate({ height: "26em" }, 800)
+                            return true;
+                        }
+                        else {
+                            updateValidationUi("ssn", false);
+                        }
                     }
                     else {
-                        updateValidationUi("ssn", false);
+                        updateValidationUi("dob-default", false);
                     }
                 }
                 else {
@@ -530,6 +532,22 @@ function runIdWizard() {
 
 function updateValidationUi(field, success) {
     //console.log("Field: " + field + "; success: " + success);
+
+    if (field == "dob-default") {
+        field = "dob";
+
+        swal({
+            title: "Forget Your Birthday?",
+            text: "We hate identify fraud.  With a passion.<span class='show m-t-15'>So to help protect our users from the Bad Guys, " +
+                  "please enter your <strong>date of birth</strong> to help verify your ID. &nbsp;Don't worry, this is never displayed anywhere and is only used to verify who you are.</span>" +
+                  "<i class='fa fa-smile-o' style='font-size:36px; margin: 10px 0 0;'></i>",
+            type: "warning",
+            showCancelButton: false,
+            confirmButtonColor: "#3fabe1",
+            confirmButtonText: "Ok",
+            html: true
+        });
+    }
 
     if (success == true) {
         $('#' + field + 'Grp .form-group').removeClass('has-error').addClass('has-success');
@@ -571,7 +589,7 @@ function updateValidationUi(field, success) {
             helpBlockTxt = "Please enter <strong>just the <span style='text-decoration:underline;'>street address</span></strong> of where you <strong>currently</strong> live."
         }
         else if (field == "zip") {
-            helpBlockTxt = "Please enter the zip code for the street address above."
+            helpBlockTxt = "Please enter the ZIP code for the street address above."
         }
         else if (field == "email") {
             helpBlockTxt = "Please enter a valid email address that you own."
@@ -686,7 +704,7 @@ function createRecord() {
                 ", userPw: " + userPwVal + ", ssn: " + ssnVal +
 				", dob: " + dobVal + ", fngprnt: " + fngprntVal +
 				", ip: " + ipVal + ", isIdImage: " + isImageAdded +
-				", CIP: " + CIP + "}");//", idImagedata: " + imageData + "}");
+				", CIP: " + CIP + ", FBID: " + FBID + "}");//", idImagedata: " + imageData + "}");
 
     var urlToUse = "";
     if (transType == "send")
@@ -717,8 +735,6 @@ function createRecord() {
         "', 'fbid':'" + FBID +
         "', 'isIdImage':'" + isFileAdded +
         "', 'idImagedata':'" + FileData + "'}";
-
-    //console.log(dataToSend);
     
     $.ajax({
         type: "POST",
@@ -742,6 +758,8 @@ function createRecord() {
 			if (RegisterUserWithSynpResult.success == "true" &&
 			    RegisterUserWithSynpResult.memberIdGenerated.length > 5)
 			{
+			    $(".errorMessage").addClass('hidden');
+
 			    memIdGen = RegisterUserWithSynpResult.memberIdGenerated;
 
 			    // Check if user's SSN verification was successful

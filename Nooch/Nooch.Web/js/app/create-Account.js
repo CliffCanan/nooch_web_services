@@ -8,6 +8,8 @@ var RENTSCENE = $('#rs').val();
 var COMPANY = "Nooch";
 var memIdGen = "";
 var memid = $('#memId').val();
+var ISNEW = $('#isNew').val();
+var FBID = "not connected";
 
 var isUpgradeToV3 = 'false';
 
@@ -16,9 +18,9 @@ var isFileAdded = "0";
 var FileData = null;
 
 var isIdVerified = false;
+var isSmScrn = false;
 
 $(document).ready(function () {
-    var isSmScrn = false;
     if ($(window).width() < 768) {
         isSmScrn = true;
     }
@@ -74,7 +76,7 @@ $(document).ready(function () {
             swal({
                 title: "Security Upgrade Notice",
                 text: "<p>" + COMPANY + " offers a quick, secure way to pay anyone without giving them your sensitive bank or credit card information. &nbsp;Just select your bank and login to your online banking<span class='desk-only'> as you normally do</span>.</p>" +
-                      "<h4><strong>Benefits</strong></h4>" +
+                      "<h4><strong class='text-success'>Benefits</strong></h4>" +
                       "<ul class='fa-ul'><li><i class='fa-li fa fa-check'></i><strong>Faster Payments.</strong>&nbsp; Funds available by the 2nd day.</li>" +
                       "<li><i class='fa-li fa fa-check'></i><strong>More Secure.</strong>&nbsp; This upgrade includes major under-the-hood updates to keep your money safe.</li>" +
                       "<li><i class='fa-li fa fa-check'></i><strong>Clearer Statements.</strong>&nbsp; Now the memo on your bank statement will include transaction info.</li></ul>",
@@ -85,7 +87,7 @@ $(document).ready(function () {
                 closeOnCancel: false,
                 confirmButtonColor: "#3fabe1",
                 confirmButtonText: "Let's Go!",
-                customClass: "securityAlert",
+                customClass: "upgradeNotice",
                 allowEscapeKey: false,
                 html: true
             }, function (isConfirm)
@@ -95,7 +97,7 @@ $(document).ready(function () {
                     new Fingerprint2().get(function (result)
                     {
                         fingprint = result;
-                        console.log(fingprint);
+                        //console.log(fingprint);
                     });
 
                     setTimeout(function ()
@@ -106,7 +108,7 @@ $(document).ready(function () {
                 else {
                     window.open("https://www.nooch.com/safe");
                 }
-                console.log(ipusr);
+                //console.log(ipusr);
             });
         }
         else {
@@ -193,17 +195,6 @@ function runIdWizard() {
 
             var DOB = $('#dob').val() ? $('#dob').val() : "1980 01 01";
 
-            var calendarIcon = $('#idVerForm1 .datePickerGrp i');
-
-            calendarIcon.click(function ()
-            {
-                setTimeout(function ()
-                {
-                    $('#dobGrp .dtp-container.dropdown').addClass('fg-toggled open');
-                    $('#idVer-dob').data("DateTimePicker").show();
-                }, 150);
-            });
-
             $('#idVer-dob').datetimepicker({
                 format: 'MM/DD/YYYY',
                 useCurrent: false,
@@ -218,7 +209,18 @@ function runIdWizard() {
                 //debug: true
             });
 
-            $('#idVer-ssn').mask("0000");
+            var calendarIcon = $('.datePickerGrp i');
+
+            calendarIcon.click(function ()
+            {
+                setTimeout(function ()
+                {
+                    $('#dobGrp .dtp-container.dropdown').addClass('fg-toggled open');
+                    $('#idVer-dob').data("DateTimePicker").show();
+                }, 150);
+            });
+
+            $('#idVer-ssn').mask("000 - 00 - 0000");
             $('#idVer-zip').mask("00000");
             $('#idVer-phone').mask('(000) 000-0000');
 
@@ -226,12 +228,12 @@ function runIdWizard() {
         },
         onStepChanging: function (event, currentIndex, newIndex) {
 
-            if (currentIndex == 1) {
-                $('.createAccountPg #idVerWiz').css('overflow', 'hidden');
+            if (newIndex == 0) {
+                $('#idVerWiz > .content').animate({ height: "26em" }, 600)
             }
 
-            if (newIndex == 0) {
-                $('#idVerWiz > .content').animate({ height: "27em" }, 600)
+            if (currentIndex == 1) {
+                $('.createAccountPg #idVerWiz').css('overflow', 'hidden');
             }
 
             // IF going to Step 2
@@ -248,26 +250,30 @@ function runIdWizard() {
                     {
                         updateValidationUi("name", true);
 
-                        // Check DOB field
-                        if ($('#idVer-dob').val().length == 10)
-                        {
-                            updateValidationUi("dob", true);
+                        // Check Email field
+                        $('#idVer-email').val($('#idVer-email').val().trim());
 
-                            // Check SSN field
-                            if ($('#idVer-ssn').val().length == 4)
+                        if (ValidateEmail($('#idVer-email').val()) == true)
+                        {
+                            updateValidationUi("email", true);
+
+                            // Finally, check the phone number's length
+                            console.log($('#idVer-phone').cleanVal());
+
+                            if ($('#idVer-phone').cleanVal().length == 10)
                             {
-                                updateValidationUi("ssn", true);
+                                updateValidationUi("phone", true);
 
                                 // Great, we can finally go to the next step of the wizard :-D
-                                $('#idVerWiz > .content').animate({ height: "20.5em" }, 600)
+                                $('#idVerWiz > .content').animate({ height: "19em" }, 600)
                                 return true;
                             }
                             else {
-                                updateValidationUi("ssn", false);
+                                updateValidationUi("phone", false);
                             }
                         }
                         else {
-                            updateValidationUi("dob", false);
+                            updateValidationUi("email", false);
                         }
                     }
                     else {
@@ -303,7 +309,7 @@ function runIdWizard() {
 
                         // Great, go to the next step of the wizard :-]
 
-                        $('#idVerWiz > .content').animate({ height: "20em" }, 500)
+                        $('#idVerWiz > .content').animate({ height: "26.5em" }, 500)
                         return true;
                     }
                     else {
@@ -318,90 +324,90 @@ function runIdWizard() {
             // IF going to Step 4
             if (newIndex == 3)
             {
-                // Check Address field
-                $('#idVer-email').val($('#idVer-email').val().trim());
+                // Check DOB field
+                if ($('#idVer-dob').val().length == 10)
+                {
+                    // Double check that DOB is not still "01/01/1980", which is the default and probably not the user's B-Day...
+                    if ($('#idVer-dob').val() != "01/01/1980") {
+                        updateValidationUi("dob", true);
 
-                if (ValidateEmail($('#idVer-email').val()) == true) {
-                    updateValidationUi("email", true);
+                        var ssnVal = $('#idVer-ssn').val().trim();
+                        ssnVal = ssnVal.replace(/ /g, "").replace(/-/g, "");
+                        // Check SSN field
+                        if (ssnVal.length == 9 || FBID != "not connected") {
+                            updateValidationUi("ssn", true);
 
-                    // Finally, check the phone number's length
-                    console.log($('#idVer-phone').cleanVal());
+                            // Great, go to the next step of the wizard :-]
+                            // FILE INPUT DOCUMENTATION: http://plugins.krajee.com/file-input#options
+                            $("#idVer_idDoc").fileinput({
+                                allowedFileTypes: ['image'],
+                                initialPreview: [
+                                    "<img src='../Assets/Images/securityheader.png' class='file-preview-image' alt='' id='IdWizIdDocPreview'>"
+                                ],
+                                initialPreviewShowDelete: false,
+                                layoutTemplates: {
+                                    icon: '<span class="fa fa-photo m-r-10 kv-caption-icon"></span>',
+                                },
+                                fileActionSettings: {
+                                    showZoom: false,
+                                    indicatorNew: '',
+                                },
+                                maxFileCount: 1,
+                                maxFileSize: 750,
+                                msgSizeTooLarge: "<strong>'{name}' ({size} KB)</strong> is a bit too large! Max allowed file size is <strong>{maxSize} KB</strong>. &nbsp;Please try a smaller picture!",
+                                showCaption: false,
+                                showUpload: false,
+                                showPreview: true,
+                                resizeImage: true,
+                                maxImageWidth: 500,
+                                maxImageHeight: 500,
+                                resizePreference: 'width'
+                            });
 
-                    if ($('#idVer-phone').cleanVal().length == 10) {
-                        updateValidationUi("phone", true);
+                            $('#idVer_idDoc').on('fileerror', function (event, data, msg) {
+                                $('#idVerWiz > .content').animate({ height: "30em" }, 700)
+                            });
 
-                        // Great, go to the next step of the wizard :-]
-                        // FILE INPUT DOCUMENTATION: http://plugins.krajee.com/file-input#options
-                        $("#idVer_idDoc").fileinput({
-                            allowedFileTypes: ['image'],
-                            initialPreview: [
-                                "<img src='../Assets/Images/securityheader.png' class='file-preview-image' alt='' id='IdWizIdDocPreview'>"
-                            ],
-                            initialPreviewShowDelete: false,
-                            layoutTemplates: {
-                                icon: '<span class="fa fa-photo m-r-10 kv-caption-icon"></span>',
-                            },
-                            fileActionSettings: {
-                                showZoom: false,
-                                indicatorNew: '',
-                            },
-                            maxFileCount: 1,
-                            maxFileSize: 500,
-                            msgSizeTooLarge: "File '{name}' ({size} KB) is a bit too large! Max allowed file size is {maxSize} KB. Please try a slightly smaller picture!",
-                            showCaption: false,
-                            showUpload: false,
-                            showPreview: true,
-                            resizeImage: true,
-                            maxImageWidth: 500,
-                            maxImageHeight: 500,
-                            resizePreference: 'width'
-                        });
+                            $('#idVer_idDoc').on('fileloaded', function (event, file, previewId, index, reader) {
+                                $('#idVerWiz > .content').animate({ height: "28em" }, 700)
 
-                        $('#idVer_idDoc').on('fileerror', function (event, data, msg)
-                        {
-                            $('#idVerWiz > .content').animate({ height: "26em" }, 600)
-                        });
+                                isFileAdded = "1";
+                                var readerN = new FileReader();
 
-                        $('#idVer_idDoc').on('fileloaded', function (event, file, previewId, index, reader)
-                        {
-                            $('#idVerWiz > .content').animate({ height: "26em" }, 500)
+                                readerN.readAsDataURL(file);
+                                readerN.onload = function (e) {
+                                    // browser completed reading file - display it
+                                    var splittable = e.target.result.split(',');
+                                    var string2 = splittable[1];
+                                    FileData = string2;
+                                };
+                            });
 
-                            isFileAdded = "1";
-                            var readerN = new FileReader();
+                            $('#idVer_idDoc').on('fileclear', function (event) {
+                                $('#idVerWiz > .content').animate({ height: "22em" }, 800)
+                                isFileAdded = "0";
+                                FileData = null;
+                            });
 
-                            readerN.readAsDataURL(file);
-                            readerN.onload = function (e) {
-                                // browser completed reading file - display it
-                                var splittable = e.target.result.split(',');
-                                var string2 = splittable[1];
-                                //console.log(string2);
-                                FileData = string2;
+                            $('#idVer_idDoc').on('filecleared', function (event) {
+                                $('#idVerWiz > .content').animate({ height: "22em" }, 800)
+                                isFileAdded = "0";
+                                FileData = null;
+                            });
 
-                                //console.log("image data is -> " + FileData);
-                            };
-                        });
-
-                        $('#idVer_idDoc').on('fileclear', function (event) {
-                            isFileAdded = "0";
-                            FileData = null;
-                            console.log("fileclear");
-                        });
-
-                        $('#idVer_idDoc').on('filecleared', function (event) {
-                            isFileAdded = "0";
-                            FileData = null;
-                            console.log("filecleareD");
-                        });
-
-                        $('#idVerWiz > .content').animate({ height: "24em" }, 800);
-                        return true;
+                            $('#idVerWiz > .content').animate({ height: "28em" }, 800)
+                            return true;
+                        }
+                        else {
+                            updateValidationUi("ssn", false);
+                        }
                     }
                     else {
-                        updateValidationUi("phone", false);
+                        updateValidationUi("dob-default", false);
                     }
                 }
                 else {
-                    updateValidationUi("email", false);
+                    updateValidationUi("dob", false);
                 }
             }
 
@@ -422,8 +428,7 @@ function runIdWizard() {
         onCanceled: function (event) {
             cancelIdVer();
         },
-        onFinishing: function (event, currentIndex)
-        {
+        onFinishing: function (event, currentIndex) {
             // Finish the Wizard...
             return true;
         },
@@ -457,6 +462,22 @@ function runIdWizard() {
 function updateValidationUi(field, success) {
     //console.log("Field: " + field + "; success: " + success);
 
+    if (field == "dob-default") {
+        field = "dob";
+
+        swal({
+            title: "Forget Your Birthday?",
+            text: "We hate identify fraud.  With a passion.<span class='show m-t-15'>So to help protect our users from the Bad Guys, " +
+                  "please enter your <strong>date of birth</strong> to help verify your ID. &nbsp;Don't worry, this is never displayed anywhere and is only used to verify who you are.</span>" +
+                  "<i class='fa fa-smile-o' style='font-size:36px; margin: 10px 0 0;'></i>",
+            type: "warning",
+            showCancelButton: false,
+            confirmButtonColor: "#3fabe1",
+            confirmButtonText: "Ok",
+            html: true
+        });
+    }
+
     if (success == true) {
         $('#' + field + 'Grp .form-group').removeClass('has-error').addClass('has-success');
         $('#' + field + 'Grp .help-block').slideUp();
@@ -485,15 +506,21 @@ function updateValidationUi(field, success) {
             helpBlockTxt = "Please enter your date of birth. &nbsp;Only needed to verify your ID!"
         }
         else if (field == "ssn") {
-            helpBlockTxt = "Please enter just the <strong>LAST 4 digits</strong> of your SSN. This is used solely to protect your account."
             $('#idVerWiz > .content').animate({ height: "28em" }, 600)
+            helpBlockTxt = isSmScrn ? "Please enter your SSN."
+                                    : "Please enter your SSN or connect with FB."
+
+            if (isSmScrn)
+            {
+                $('#idVerWiz > .content').animate({ height: "27em" }, 300)
+            }
         }
         else if (field == "address") {
-            helpBlockTxt = "Please enter the physical street address of where you <strong>currently</strong> live."
+            helpBlockTxt = "Please enter <strong>just the <span style='text-decoration:underline;'>street address</span></strong> of where you <strong>currently</strong> live."
             $('#idVerWiz > .content').animate({ height: "21em" }, 600);
         }
         else if (field == "zip") {
-            helpBlockTxt = "Please enter the zip code for the street address above."
+            helpBlockTxt = "Please enter the ZIP code for the street address above."
             $('#idVerWiz > .content').animate({ height: "21em" }, 600);
         }
         else if (field == "email") {
@@ -582,7 +609,9 @@ function createRecord() {
                                    ", email: " + userEmVal +
                                    ", phone: " + userPhVal +
                                    ", fngprnt: " + fngprntVal +
-                                   ", ip: " + ipVal + "}");
+								   ", isIdImage: " + isFileAdded +
+                                   ", IP: " + ipVal +
+								   ", FBID: " + FBID + "}");
 
     $.ajax({
         type: "POST",
@@ -599,6 +628,7 @@ function createRecord() {
              "', 'fngprnt':'" + fngprntVal +
              "', 'ip':'" + ipVal +
              "', 'pw':'" + '' +
+             "', 'fbid':'" + FBID +
              "', 'isIdImage':'" + isFileAdded +
              "', 'idImagedata':'" + FileData + "'}",
         contentType: "application/json; charset=utf-8",
@@ -619,13 +649,12 @@ function createRecord() {
             {
                 console.log("Success == true");
 
-                // HIDE THE MODAL CONTAINING THE WIZARD
-                $('#idVer').modal('hide')
+                $(".errorMessage").addClass('hidden');
 
                 // THEN DISPLAY SUCCESS ALERT...
                 swal({
                     title: "Submitted Successfully",
-                    text: "<i class=\"fa fa-check text-success\"></i><br/>Thanks for submitting your ID information. That helps us keep " + COMPANY + " safe for everyone. &nbsp;We only use this information to prevent ID fraud and never share it without your permission.",
+                    text: "Thanks for submitting your ID information. That helps us keep " + COMPANY + " safe for everyone. &nbsp;We only use this information to prevent ID fraud and never share it without your permission.",
                     //"<span>Next, link any checking account to complete this payment:</span>" +
                     //"<span class=\"spanlist\"><span>1. &nbsp;Select your bank</span><span>2. &nbsp;Login with your regular online banking credentials</span><span>3. &nbsp;Choose which account to use</span></span>",
                     type: "success",
@@ -639,22 +668,12 @@ function createRecord() {
 
                 $('#idWizContainer').fadeOut(600);
 
-                $('.resultDiv').removeClass('hidden');
-
-
-                // This section used to be done in the Code-Behind file, now need to do it here///
-                // checkEmailMsg.Visible = true;
-                // if (serviceResult.Result == "Thanks for registering! Check your email to complete activation.")
-                // {
-                //    transResult.Text = serviceResult.Result;
-                // }
-                // else {
-                //    transResult.Visible = true;
-                //    transResult.Text = serviceResult.Result;
-                //    checkEmailMsg.Visible = true;
-                // }
-
-
+                if (ISNEW == true) {
+                    $('#checkEmailMsg').removeClass('hidden');
+                }
+                else {
+                    $('.resultDiv').removeClass('hidden');
+                }
 
                 //$('#AddBankDiv').removeClass('hidden');
 
@@ -710,7 +729,7 @@ function createRecord() {
 
 
 // To handle success from Add-Bank page (CC: 1/20/16)
-// CC (5/24/16): NEED TO UPDATE FOR NEW ARCHITECHTURE
+// CC (5/24/16): NEED TO UPDATE FOR NEW ARCHITECTURE
 $('body').bind('addBankComplete', function ()
 {
     $('#AddBankDiv').slideUp();
@@ -968,3 +987,59 @@ $('body').on('blur', '.form-control', function () {
         $(this).closest('.fg-line').removeClass('fg-toggled');
     }
 });
+
+// -------------------
+//	FACEBOOK
+// -------------------
+window.fbAsyncInit = function ()
+{
+    FB.init({
+        appId: '198279616971457',
+        xfbml: true,
+        version: 'v2.6'
+    });
+};
+
+(function (d, s, id) {
+    var js, fjs = d.getElementsByTagName(s)[0];
+    if (d.getElementById(id)) { return; }
+    js = d.createElement(s); js.id = id;
+    js.src = "//connect.facebook.net/en_US/sdk.js";
+    fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));
+
+var fbStatus = "";
+// The response object is returned with a status field that lets the app know the current login status of the person.
+function checkLoginState() {
+    FB.getLoginStatus(function (response) {
+        console.log(response);
+        fbStatus = response.status;
+
+        if (response.status === 'connected') {
+            // Logged into your app and FB
+            FBID = response.authResponse.userID;
+            $('#fbLoginBtn span').text('Facebook Connected');
+            $('#fbResult').html('<strong>Facebook Connected Successfully! <i class="fa fa-smile-o m-l-5"></i></strong>')
+						  .addClass('bounceIn text-success').removeClass('hidden');
+        }
+        else {
+            // Not logged in, so attempt to Login to FB
+            fbLogin();
+        }
+    });
+}
+
+function fbLogin() {
+    FB.login(function (response) {
+        if (response.status === 'connected') {
+            FBID = response.authResponse.userID;
+
+            $('#fbLoginBtn span').text('Facebook Connected');
+            $('#fbResult').html('<strong>Facebook Connected Successfully! <i class="fa fa-smile-o m-l-5"></i></strong>')
+						  .addClass('bounceIn text-success').removeClass('hidden');
+        }
+        else {
+            FBID = "not connected";
+        }
+    });
+}

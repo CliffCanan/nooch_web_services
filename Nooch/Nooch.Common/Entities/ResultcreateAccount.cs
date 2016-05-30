@@ -30,6 +30,8 @@ namespace Nooch.Common.Entities
         public string pw { get; set; }
         public string isIdImage { get; set; }
         public string idImagedata { get; set; }
+        public string fbid { get; set; }
+        public bool isNewUser { get; set; }
     }
 
     public class CreateAccountInDB

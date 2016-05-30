@@ -2152,7 +2152,8 @@ namespace Nooch.DataAccess
                 }
                 else
                 {
-                    Logger.Error("MDA -> RegisterUserWithSynapseV3 - No CIP Tag found in DB for this user - ABORTING - MemberID: [" + memberId + "]");
+                    Logger.Error("MDA -> RegisterUserWithSynapseV3 - No CIP Tag found in DB for this user - Setting to 'RENTER' and continuing on - MemberID: [" + memberId + "]");
+                    extra.cip_tag = 1;
                 }
 
                 payload.extra = extra;
@@ -3158,7 +3159,7 @@ namespace Nooch.DataAccess
 
                 // CLIFF (5/21/16): If this new user was invited via Email, then set the SecondaryEmail as the InvitationSentTo value.
                 //                  This helps if the user enters a different email during ID Verification form.
-                secondaryEmail = !String.IsNullOrEmpty(trans.InvitationSentTo)
+                secondaryEmail = trans != null && !String.IsNullOrEmpty(trans.InvitationSentTo)
                                  ? trans.InvitationSentTo
                                  : userNameLowerCaseEncr;
 
@@ -3166,7 +3167,6 @@ namespace Nooch.DataAccess
                 pinNumber = CommonHelper.GetEncryptedData(pinNumber);
 
                 #endregion Parse And Format Data To Save
-
 
                 var member = new Member
                 {
@@ -3193,7 +3193,7 @@ namespace Nooch.DataAccess
                     Photo = Utility.GetValueFromConfig("PhotoUrl") + "gv_no_photo.png",
                     UDID1 = !String.IsNullOrEmpty(fngprnt) ? fngprnt : null,
                     IsVerifiedWithSynapse = false,
-                    cipTag = cip,
+                    cipTag = !String.IsNullOrEmpty(cip) ? cip : "renter",
                     FacebookUserId = !String.IsNullOrEmpty(fbid) ? fbid : null,
                 };
 
@@ -3201,7 +3201,7 @@ namespace Nooch.DataAccess
                 {
                     member.InviteCodeIdUsed = Utility.ConvertToGuid(inviteCode);
                 }
-
+                Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - CHECKPOINT #6");
                 NewUsersNoochMemId = member.MemberId.ToString();
 
                 // ADD NEWLY CREATED MEMBER TO NOOCH DB

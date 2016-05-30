@@ -1405,11 +1405,12 @@ div#pwFormShell #depositCreateAccount,
     letter-spacing: 1.5px;
 	text-align: center;
 }
-#ssnGrp label { font-size: 19px; }
+#idVerWiz-p-2 label,
+#idVerWiz-p-2 dt { font-size: 17.5px; }
 #idVerWiz .orDiv {
-    background-color: rgba(108,110,112,.1);
-    border-bottom: 1px solid #bbb;
-    border-top: 1px solid #bbb;
+    background-color: rgba(188,190,192,.1);
+    border-bottom: 1px solid #ccc;
+    border-top: 1px solid #ccc;
     padding: 17px 0px;
     font-weight: 700;
     font-size: 20px;
@@ -1733,7 +1734,8 @@ div#carousel ~ a:hover {
 .sweet-alert fieldset .sa-input-error { display: none; }
 
 .securityAlert p { font-size: 15.5px; line-height: 1.35; margin: 0 0 .9em; }
-.securityAlert ul { font-size: 15.5px; line-height: 1.35; text-align: left; }
+.securityAlert ul,
+.upgradeNotice ul { font-size: 15.5px; line-height: 1.35; text-align: left; }
 .securityAlert .sa-icon.sa-custom { margin: 0 auto; }
 .securityAlert h2 { margin: 20px auto 10px; }
 
@@ -2590,8 +2592,9 @@ form .table-header {
 				0 14px 28px rgba(0, 0, 0, 0.48);
   }
   .sweet-alert p { font-size: 17px; }
-  .securityAlert p { font-size: 16px; line-height:1.4; margin: 0 0 1em; }
-  .securityAlert ul { font-size: 16px; line-height:1.4; }
+  .securityAlert p { font-size: 16.5px; line-height:1.4; margin: 0 0 1em; }
+  .securityAlert ul ,
+  .upgradeNotice ul { font-size: 16px; line-height:1.4; }
   .sweet-alert ul > li { margin-top: .25em; }
 
   #body-depositNew { padding-top: 70px; }

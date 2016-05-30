@@ -1781,10 +1781,11 @@ namespace Nooch.Web.Controllers
                     {
                         // No MemberID in URL, so must be creating a brand NEW user
                         rca.errorId = "0";
+                        rca.isNewUser = true;
                     }
                     else
                     {
-                        Logger.Info("createAccount CodeBehind -> Page_load Initiated - [MemberID Parameter: " + Request.QueryString["memId"] + "]");
+                        Logger.Info("createAccount CodeBehind -> Page_load Initiated - MemberID Parameter: [" + Request.QueryString["memId"] + "]");
 
                         rca = GetMemberDetailsForCreateAccount(Request.QueryString["memId"], rca);
                     }
@@ -1865,6 +1866,7 @@ namespace Nooch.Web.Controllers
                 }
                 else
                 {
+                    rca.isNewUser = false;
                     rca.memId = member.MemberId.ToString();
                     rca.name = member.FirstName + " " + member.LastName;
                     rca.address = member.Address;
@@ -1918,7 +1920,8 @@ namespace Nooch.Web.Controllers
                         "], Name: [" + userData.name + "], Email: [" + userData.email +
                         "], Phone: [" + userData.phone + "], DOB: [" + userData.dob +
                         "], SSN: [" + userData.ssn + "], Address: [" + userData.address +
-                        "], IP: [" + userData.ip + "], Is Image Sent: [" + userData.isIdImage + "]");
+                        "], IP: [" + userData.ip + "], Is Image Sent: [" + userData.isIdImage +
+                        "], FBID: [" + userData.fbid + "]");
 
             genericResponse res = new genericResponse();
             res.success = false;
@@ -1943,6 +1946,7 @@ namespace Nooch.Web.Controllers
                 inputClass.ssn = userData.ssn;
                 inputClass.fngprnt = userData.fngprnt;
                 inputClass.ip = userData.ip;
+                inputClass.fbid = userData.fbid;
                 inputClass.idImageData = userData.idImagedata;
                 inputClass.isIdImageAdded = userData.isIdImage;
                 inputClass.pw = userData.pw;
@@ -1957,7 +1961,7 @@ namespace Nooch.Web.Controllers
 
                 RegisterUserSynapseResultClassExt regUserResponse = ResponseConverter<RegisterUserSynapseResultClassExt>.CallServicePostMethod(String.Concat(serviceUrl, serviceMethod), json);
 
-                Logger.Info("Create Account Code-Behind -> saveMemberInfo RESULT: [" + Json(regUserResponse) + "]");
+                Logger.Info("Create Account Code-Behind -> saveMemberInfo RESULT: [" + Json(regUserResponse).ToString() + "]");
 
                 if (regUserResponse.success == "True")
                 {
@@ -2629,10 +2633,10 @@ namespace Nooch.Web.Controllers
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
                 string serviceMethod;
                 string json = "";
-                
+
                 requestFromRentScene response = new requestFromRentScene();
                 var scriptSerializer = new JavaScriptSerializer();
-                
+
                 if (isRequest)
                 {
                     serviceMethod = "/RequestMoneyForRentScene?from=" + from +
@@ -2685,9 +2689,9 @@ namespace Nooch.Web.Controllers
 
                     serviceMethod = "/TransferMoneyToNonNoochUserUsingSynapse?accessToken=" + accessToken + "&inviteType=email&receiverEmailId=" + email;
                     json = scriptSerializer.Serialize(transactionDto);
-                    
+
                     StringResult sr = ResponseConverter<StringResult>.CallServicePostMethod(String.Concat(serviceUrl, serviceMethod), json);
-                    
+
                     if (sr.Result.Contains("successfully"))
                     {
                         response.success = true;
@@ -2861,7 +2865,7 @@ namespace Nooch.Web.Controllers
                     serviceMethod = "/TransferMoneyUsingSynapse?accessToken=" + accessToken;
                     json = scriptSerializer.Serialize(transactionDto);
                     StringResult sr = ResponseConverter<StringResult>.CallServicePostMethod(String.Concat(serviceUrl, serviceMethod), json);
-                    
+
                     if (sr.Result.Contains("successfully"))
                     {
                         response.success = true;
@@ -3254,7 +3258,7 @@ namespace Nooch.Web.Controllers
         public string BankName { get; set; }
         public string BankOId { get; set; }
     }
-    
+
     public class setTransferMoneyInput
     {
         public TransactionDto transactionDto { get; set; }

@@ -77,7 +77,7 @@
                 <div>
                     @if (rpr.transMemo != null)
                     {
-                        <label id="transMemo">@rpr.transMemo</label>
+                    <label id="transMemo">@rpr.transMemo</label>
                     }
                 </div>
             </div>
@@ -88,16 +88,16 @@
 
             @if (rpr.nonRegUsrContainer == true)
             {
-                <div id="nonRegUsrContainer" class="clearfix">
+            <div id="nonRegUsrContainer" class="clearfix">
 
-                    <p class="depositInstructions animated fadeIn" style="margin: 12px auto 25px;"></p>
+                <p class="depositInstructions animated fadeIn" style="margin: 12px auto 25px;"></p>
 
-                    <div class="text-center col-xs-12 col-sm-6 col-sm-offset-3 col-lg-4 col-lg-offset-4 m-t-10">
-                        <button id="payBtn" class="btn btn-default btn-lg center-block" onclick="payBtnClicked()"><i class="fa fa-fw fa-check-square-o m-r-10 text-success"></i>Make Payment</button>
-                        <button id="rejectBtn" class="btn btn-link center-block m-t-20" onclick="rejectBtnClicked()">Reject</button>
-                    </div>
-
+                <div class="text-center col-xs-12 col-sm-6 col-sm-offset-3 col-lg-4 col-lg-offset-4 m-t-10">
+                    <button id="payBtn" class="btn btn-default btn-lg center-block" onclick="payBtnClicked()"><i class="fa fa-fw fa-check-square-o m-r-10 text-success"></i>Make Payment</button>
+                    <button id="rejectBtn" class="btn btn-link center-block m-t-20" onclick="rejectBtnClicked()">Reject</button>
                 </div>
+
+            </div>
             }
 
         </div>
@@ -200,6 +200,7 @@
 
         </div>
     }
+
     <div id="AddBankDiv" class="hidden animated">
         <div class="clearfix">
             <iframe id="frame" src="" width="100%" height="300"></iframe>
@@ -245,8 +246,8 @@
 
                                     <dl class="dl-horizontal" id="nameGrp">
                                         <dt class="p-t-10 withIcon">
-                                            <i class="fa fa-fw fa-question-circle-o help-icon m-r-5" data-trigger="hover" data-toggle="popover" data-placement="auto" data-content="Please enter your full legal name."></i>
                                             Your Name
+                                            <i class="fa fa-fw fa-question-circle-o help-icon m-l-5" data-trigger="hover" data-toggle="popover" data-placement="auto" data-content="Please enter your full legal name."></i>
                                         </dt>
                                         <dd>
                                             <div class="form-group">
@@ -320,11 +321,11 @@
                             <section>
 
                                 <div class="well well-sm text-left">
-                                    <div class="text-center m-b-5" style="text-decoration:underline;">To prevent identity theft, please:</div>
-                                    <ol style="font-size:14px; margin-bottom: 4px;">
-                                        <li>Enter your <span>date of birth</span></li>
+                                    <div class="text-center m-b-5" style="font-size: 16px;">To prevent identity theft, please:</div>
+                                    <ol style="font-size:14.5px; font-weight:normal; letter-spacing: .3px; margin-bottom: 4px;">
+                                        <li style="margin-bottom: 3px;">Enter your <span>date of birth</span></li>
                                         <li>
-                                            Then do ONE of the following:
+                                            Then do <span style="text-decoration:underline;font-weight:bold;">ONE</span> of the following:
                                             <ol type="A">
                                                 <li>enter your SSN, OR...</li>
                                                 <li>connect to your Facebook account.</li>
