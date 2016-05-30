@@ -672,7 +672,7 @@ function createRecord() {
     var userPhVal = $('#idVer-phone').cleanVal();
     var userNameVal = $('#idVer-name').val().trim();
     var userPwVal = "";  // Still need to add the option for users to create a PW (not sure where in the flow to do it)
-    var ssnVal = $('#idVer-ssn').val().trim();
+    var ssnVal = $('#idVer-ssn').val().trim().replace(/ /g, "").replace(/-/g, "");
     var dobVal = $('#idVer-dob').val().trim();
     var addressVal = $('#idVer-address').val().trim();
     var zipVal = $('#idVer-zip').val().trim();
@@ -714,6 +714,7 @@ function createRecord() {
         "', 'fngprnt':'" + fngprntVal +
         "', 'ip':'" + ipVal +
         "', 'cip':'" + CIP +
+        "', 'fbid':'" + FBID +
         "', 'isIdImage':'" + isFileAdded +
         "', 'idImagedata':'" + FileData + "'}";
 
