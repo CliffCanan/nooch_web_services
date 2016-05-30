@@ -6325,5 +6325,29 @@ namespace Nooch.API.Controllers
             return res;
         }
 
+
+
+        [HttpGet]
+        [ActionName("GetStateNameByZipcode")]
+        public GoogleGeolocationOutput GetStateNameByZipcode(string zipCode)
+        {
+            GoogleGeolocationOutput res = new GoogleGeolocationOutput();
+            try
+            {
+
+                res = CommonHelper.GetStateNameByZipcode(zipCode);
+
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Layer -> GetStateNameByZipcode FAILED (Outer Exception) - zipCode: [" + zipCode + "], Exception: [" + ex + "]");
+                res.IsSuccess = false;
+                res.ErrorMessage = "Server Error.";
+
+            }
+            return res;
+        }
+
+
     }
 }
