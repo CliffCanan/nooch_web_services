@@ -3458,6 +3458,8 @@ namespace Nooch.API.Controllers
                                     Logger.Info("Service Controller -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber SUCCESS - Added record to synapseBankLoginResults Table - Got MFA from Synapse - [UserName: " + CommonHelper.GetDecryptedData(noochMember.UserName) + "]");
 
                                     res.Is_success = true;
+                                    res.errorMsg = "OK";
+                                    
                                     return res;
                                 }
 
