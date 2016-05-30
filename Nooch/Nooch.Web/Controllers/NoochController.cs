@@ -1126,7 +1126,7 @@ namespace Nooch.Web.Controllers
 
             string strUserAgent = Request.UserAgent.ToLower();
             resultResetPassword.requestExpiredorNotFound = false;
-            
+
             if (strUserAgent != null)
             {
 
@@ -1149,15 +1149,15 @@ namespace Nooch.Web.Controllers
         }
 
 
-        public string ResetPasswordButton_Click(string PWDText, string memberId,string newUser="")
+        public string ResetPasswordButton_Click(string PWDText, string memberId, string newUser = "")
         {
             var objAesAlgorithm = new AES();
             string encryptedPassword = objAesAlgorithm.Encrypt(PWDText.Trim(), string.Empty);
             string serviceMethod = string.Empty;
             string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
 
-           // serviceMethod = "/ResetPassword?memberId=" + memberId + "&newPassword=" + encryptedPassword + "&newUser=true";
-            serviceMethod = "/ResetPassword?memberId=" + memberId + "&newPassword=" + encryptedPassword + "&newUser="+newUser;
+            // serviceMethod = "/ResetPassword?memberId=" + memberId + "&newPassword=" + encryptedPassword + "&newUser=true";
+            serviceMethod = "/ResetPassword?memberId=" + memberId + "&newPassword=" + encryptedPassword + "&newUser=" + newUser;
 
             var isMemberPwdResetted = ResponseConverter<Nooch.Common.Entities.BoolResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
             if (isMemberPwdResetted.Result)
@@ -1221,14 +1221,14 @@ namespace Nooch.Web.Controllers
                 {
                     resultResetPass.invalidUser = "true";
                     rrp.pin = false;
-                    
+
                 }
             }
             else
             {
                 resultResetPass.invalidUser = "true";
                 rrp.pin = false;
-                 
+
             }
 
             return resultResetPass;
@@ -2595,28 +2595,85 @@ namespace Nooch.Web.Controllers
 
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
                 string serviceMethod;
+                string json="";
+                requestFromRentScene response = new requestFromRentScene() ;
+                var scriptSerializer = new JavaScriptSerializer();
                 if (isRequest)
                 {
-                      serviceMethod = "/RequestMoneyForRentScene?from=" + from +
-                                           "&name=" + name +
-                                           "&email=" + email + "&amount=" + amount +
-                                           "&memo=" + memo + "&pin=" + pin +
-                                           "&ip=" + ip + "&isRequest=" + isRequest;
+                    serviceMethod = "/RequestMoneyForRentScene?from=" + from +
+                                         "&name=" + name +
+                                         "&email=" + email + "&amount=" + amount +
+                                         "&memo=" + memo + "&pin=" + pin +
+                                         "&ip=" + ip + "&isRequest=" + isRequest;
+                    response = ResponseConverter<requestFromRentScene>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
                 }
                 else
                 {
-                    serviceMethod = "/TransferMoneyToNonNoochUserUsingSynapseForRentScene?from=" + from +
-                                           "&name=" + name +
-                                           "&email=" + email + "&amount=" + amount +
-                                           "&memo=" + memo + "&pin=" + pin +
-                                           "&ip=" + ip + "&isRequest=" + isRequest;
+                    
+                    string memIdToUse = "";
+                    string accessToken="";
+                 
+             
+                    if (from.ToLower() == "rentscene")
+                    {
+                        Member member = CommonHelper.GetMemberDetailsByUserName("payments@rentscene.com");
+
+                        memIdToUse = member.MemberId.ToString();
+                        accessToken = member.AccessToken.ToString();
+
+                    }
+                    else if (from.ToLower() == "nooch")
+                    {
+                        Member member = CommonHelper.GetMemberDetailsByUserName("team@nooch.com");
+                        memIdToUse = member.MemberId.ToString();
+                        accessToken = member.AccessToken.ToString();
+
+                    }
+                    else if (from.ToLower() == "appjaxx")
+                    {
+                        Member member = CommonHelper.GetMemberDetailsByUserName("josh@appjaxx.com");
+                        memIdToUse = member.MemberId.ToString();
+                        accessToken = member.AccessToken.ToString();
+
+                    }
+
+                    if (String.IsNullOrEmpty(memIdToUse))
+                    {
+                        Logger.Error("Service Cntlr -> RequestMoneyForRentScene FAILED - unable to get MemberID based on given username - ['from' param: " + from + "]");
+                        res.msg = "Unable to get MemberID based on given username";
+
+
+                    }
+                     
+                    
+
+                    TransactionDto transactionDto = new TransactionDto();
+                    transactionDto.MemberId = memIdToUse;
+                    transactionDto.RecepientName = name;
+                    transactionDto.PinNumber = pin;
+                    transactionDto.Amount = Convert.ToDecimal(amount);
+                    transactionDto.Memo = memo;
+
+                   
+                    serviceMethod = "/TransferMoneyToNonNoochUserUsingSynapse?accessToken=" + accessToken + "&inviteType=email&receiverEmailId=" + email;
+                    json = scriptSerializer.Serialize(transactionDto);
+                     StringResult sr = ResponseConverter<StringResult>.CallServicePostMethod(String.Concat(serviceUrl, serviceMethod), json);
+                     if (sr.Result.Contains("successfully")) {
+                         response.success = true;
+                         response.msg = sr.Result;
+                     }
+                    //serviceMethod = "/TransferMoneyToNonNoochUserUsingSynapseForRentScene?from=" + from +
+                    //                       "&name=" + name +
+                    //                       "&email=" + email + "&amount=" + amount +
+                    //                       "&memo=" + memo + "&pin=" + pin +
+                    //                       "&ip=" + ip + "&isRequest=" + isRequest;
                 }
 
                 string urlToUse = String.Concat(serviceUrl, serviceMethod);
 
+               
+               
                 Logger.Info("Make Payment Code-Behind -> submitPayment - URL To Query: [" + urlToUse + "]");
-
-                requestFromRentScene response = ResponseConverter<requestFromRentScene>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
 
                 if (response != null)
                 {
@@ -2692,7 +2749,9 @@ namespace Nooch.Web.Controllers
             res.msg = "Initial - code behind";
 
             #region Lookup PIN
-
+            string json = "";
+            requestFromRentScene response = new requestFromRentScene();
+            var scriptSerializer = new JavaScriptSerializer();
             pin = (String.IsNullOrEmpty(pin) || pin.Length != 4) ? "0000" : pin;
 
             if (from == "rentscene")
@@ -2727,21 +2786,77 @@ namespace Nooch.Web.Controllers
                                          "&memo=" + memo + "&pin=" + pin +
                                          "&ip=" + ip + "&isRequest=" + isRequest +
                                          "&memberId=" + memberId + "&nameFromServer=" + nameFromServer;
+                    response = ResponseConverter<requestFromRentScene>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
                 }
-                else {
+                else
+                {
 
-                    serviceMethod = "/TransferMoneyToExistingUserForRentScene?from=" + from + "&name=" + name +
-                                         "&email=" + email + "&amount=" + amount +
-                                         "&memo=" + memo + "&pin=" + pin +
-                                         "&ip=" + ip + "&isRequest=" + isRequest +
-                                         "&memberId=" + memberId + "&nameFromServer=" + nameFromServer;
+                    //serviceMethod = "/TransferMoneyToExistingUserForRentScene?from=" + from + "&name=" + name +
+                    //                     "&email=" + email + "&amount=" + amount +
+                    //                     "&memo=" + memo + "&pin=" + pin +
+                    //                     "&ip=" + ip + "&isRequest=" + isRequest +
+                    //                     "&memberId=" + memberId + "&nameFromServer=" + nameFromServer;
+
+                    string memIdToUse = "";
+                    string accessToken = "";
+
+
+                    if (from.ToLower() == "rentscene")
+                    {
+                        Member member = CommonHelper.GetMemberDetailsByUserName("payments@rentscene.com");
+
+                        memIdToUse = member.MemberId.ToString();
+                        accessToken = member.AccessToken.ToString();
+
+                    }
+                    else if (from.ToLower() == "nooch")
+                    {
+                        Member member = CommonHelper.GetMemberDetailsByUserName("team@nooch.com");
+                        memIdToUse = member.MemberId.ToString();
+                        accessToken = member.AccessToken.ToString();
+
+                    }
+                    else if (from.ToLower() == "appjaxx")
+                    {
+                        Member member = CommonHelper.GetMemberDetailsByUserName("josh@appjaxx.com");
+                        memIdToUse = member.MemberId.ToString();
+                        accessToken = member.AccessToken.ToString();
+
+                    }
+
+                    if (String.IsNullOrEmpty(memIdToUse))
+                    {
+                        Logger.Error("Service Cntlr -> RequestMoneyForRentScene FAILED - unable to get MemberID based on given username - ['from' param: " + from + "]");
+                        res.msg = "Unable to get MemberID based on given username";
+
+
+                    }
+                    string RecepientId= CommonHelper.GetMemberIdByUserName(email.ToString());
+                    
+
+
+                    TransactionDto transactionDto = new TransactionDto();
+                    transactionDto.MemberId = memIdToUse;
+                    transactionDto.RecepientName = name;
+                    transactionDto.PinNumber = pin;
+                    transactionDto.Amount = Convert.ToDecimal(amount);
+                    transactionDto.Memo = memo;
+                    transactionDto.RecepientId = RecepientId;
+
+                    serviceMethod = "/TransferMoneyUsingSynapse?accessToken=" + accessToken;
+                    json = scriptSerializer.Serialize(transactionDto);
+                    StringResult sr = ResponseConverter<StringResult>.CallServicePostMethod(String.Concat(serviceUrl, serviceMethod), json);
+                    if (sr.Result.Contains("successfully"))
+                    {
+                        response.success = true;
+                        response.msg = sr.Result;
+                    }
                 }
                 string urlToUse = String.Concat(serviceUrl, serviceMethod);
 
                 Logger.Info("Make Payment Code-Behind -> submitRequestToExistingUser - URL To Query: [" + urlToUse + "]");
 
-                requestFromRentScene response = ResponseConverter<requestFromRentScene>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
-
+                
                 Logger.Info("Make Payment Code-Behind -> submitRequestToExistingUser - Server Response for RequestMoneyToExistingUserForRentScene: " +
                             "RESULT.Success: [" + response.success + "], RESULT.Msg: [" + response.msg + "]");
 
@@ -2780,7 +2895,7 @@ namespace Nooch.Web.Controllers
             return Json(res);
         }
 
-        #endregion MakePayment Page
+                    #endregion MakePayment Page
 
 
         // Not complete code problem with JS file and GetPayeeDetails method
@@ -3126,5 +3241,12 @@ namespace Nooch.Web.Controllers
         public string MemberId { get; set; }
         public string BankName { get; set; }
         public string BankOId { get; set; }
+    }
+    public class setTransferMoneyInput {
+
+        public TransactionDto transactionDto { get; set; }
+        public string    accessToken{get;set;}
+        public string inviteType {get;set;}
+        public string receiverEmailId { get; set; }
     }
 }

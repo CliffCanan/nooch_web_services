@@ -1,6 +1,7 @@
 ﻿
 
 $(document).ready(function () {
+    $(document).ajaxStart($.blockUI).ajaxStop($.unblockUI);
     if($('#invalidUser').val()=="true")
     {
         swal({
@@ -22,6 +23,7 @@ $(document).ready(function () {
         var newUser = getParameterByName('newUser');
         
         if ($('#form1').parsley().validate() == true) {
+            
             $.ajax({
                 type: "POST",
                 url: "ResetPasswordButton_Click",
@@ -33,7 +35,7 @@ $(document).ready(function () {
                 success: function (msg) {
 
                     if (msg == true) {
-
+                        $.un
                         $('#resetPasswordDiv').css('display', 'none');
                         $('#chk').css('display', 'block');
                         $('#r').html("<div id=\"iconCircleFA\" class=\"floating light-green-text\"><span class=\"fa-stack fa-lg\"><i class=\"fa fa-circle fa-stack-1x\" style=\"display: none;\"></i><i class=\"fa fa-stack-1x fa-inverse fa-thumbs-o-up\"></i></span></div>");
