@@ -877,13 +877,13 @@ namespace Nooch.API.Controllers
         /// <returns></returns>
         [HttpGet]
         [ActionName("RequestMoneyForRentScene")]
-        public requestFromRentScene RequestMoneyForRentScene
-            (string from, string name, string email, string amount, string memo, string pin, string ip, bool isRequest)
+        public requestFromRentScene RequestMoneyForRentScene(string from, string name, string email, string amount, string memo, string pin, string ip, string cip, bool isRequest)
         {
-            Logger.Info("Service Controller - RequestMoneyForRentScene Initiated - [From: " + from + "], [Name: " + name +
-                        "], Email: [" + email + "], amount: [" + amount +
-                        "], memo: [" + memo + "], pin: [" + pin +
-                        "], ip: [" + ip + "], isRequest: [" + isRequest + "]");
+            Logger.Info("Service Controller - RequestMoneyForRentScene Initiated - [From: " + from +
+                        "], [Name: " + name + "], Email: [" + email +
+                        "], amount: [" + amount + "], memo: [" + memo +
+                        "], pin: [" + pin + "], ip: [" + ip +
+                        "], CIP Tag: [" + cip + "], isRequest: [" + isRequest + "]");
 
             requestFromRentScene res = new requestFromRentScene();
             res.success = false;
@@ -919,7 +919,11 @@ namespace Nooch.API.Controllers
                 res.msg = "Missing amount!";
                 isMissingData = true;
             }
-
+            if (String.IsNullOrEmpty(cip))
+            {
+                // Should never happen, but if it does just use "renter" as the default.
+                cip = "renter";
+            }
             if (isMissingData)
             {
                 Logger.Error("Service Controller -> RequestMoneyForRentScene FAILED - Missing required data - Msg is: [" + res.msg + "]");
@@ -927,44 +931,6 @@ namespace Nooch.API.Controllers
             }
 
             #endregion Check for Required Data
-
-            #region Check If Recipient Already Has A Nooch Account
-
-            // CLIFF (5/15/16): Moving this block to submitPayment() in NoochController. Since that can now access CommonHelper,
-            //                  no need to go an extra step to come here... that method can do everything in this block and save the trip to the server.
-            /*var memberObj = CommonHelper.GetMemberDetailsByUserName(email);
-
-            if (memberObj != null)
-            {
-                // This email address is already registered!
-                Logger.Info("Service Controller -> RequestMoneyForRentScene Attempted - Recipient email already exists: [" + email + "]");
-
-                res.isEmailAlreadyReg = true;
-                res.memberId = memberObj.MemberId.ToString();
-                res.name = (!String.IsNullOrEmpty(memberObj.FirstName)) ? CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName))
-                                                                        : "";
-                res.name = (!String.IsNullOrEmpty(memberObj.LastName)) ? res.name + " " + CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.LastName))
-                                                                       : res.name;
-                res.memberStatus = memberObj.Status;
-                res.dateCreated = Convert.ToDateTime(memberObj.DateCreated).ToString("MMM d, yyyy");
-
-                var userAndBankInfo = CommonHelper.GetSynapseBankAndUserDetailsforGivenMemberId(memberObj.MemberId.ToString());
-
-                if (userAndBankInfo != null &&
-                    userAndBankInfo.wereBankDetailsFound == true &&
-                    userAndBankInfo.BankDetails != null)
-                {
-                    res.isBankAttached = true;
-                    res.bankStatus = userAndBankInfo.BankDetails.Status;
-                }
-
-                res.msg = "Existing user found!";
-                res.note = "";
-                res.success = true;
-                return res;
-            }*/
-
-            #endregion Check If Recipient Already Has A Nooch Account
 
 
             #region Get MemberID of Sending User
@@ -1023,7 +989,9 @@ namespace Nooch.API.Controllers
                     SenderId = "",
                     State = "PA",
                     ZipCode = zipToUse,
-                    //isTesting = "true" // REMOVE FOR PRODUCTION!!
+                    cipTag = cip,
+                    from = from,
+                    //isTesting = "true"
                 };
 
                 var tda = new TransactionsDataAccess();
@@ -2982,12 +2950,16 @@ namespace Nooch.API.Controllers
             try
             {
                 Logger.Info("Service Cntrlr -> RegisterExistingUserWithSynapseV3 Initiated - MemberID: [" + input.memberId + "], " +
-                            "Name: [" + input.fullname + "], Email: [" + input.email + "]");
+                            "Name: [" + input.fullname + "], Email: [" + input.email +
+                            "Is ID Img Sent: [" + input.isIdImageAdded + "], CIP: [" + input.cip + "], FBID: [" + input.fbid + "]");
 
                 MembersDataAccess mda = new MembersDataAccess();
                 RegisterUserSynapseResultClassExt nc = new RegisterUserSynapseResultClassExt();
 
-                synapseCreateUserV3Result_int res = mda.RegisterExistingUserWithSynapseV3(input.transId, input.memberId, input.email, input.phone, input.fullname, input.pw, input.ssn, input.dob, input.address, input.zip, input.fngprnt, input.ip, input.isIdImageAdded, input.idImageData);
+                synapseCreateUserV3Result_int res = mda.RegisterExistingUserWithSynapseV3(input.transId, input.memberId, input.email,
+                                                                                          input.phone, input.fullname, input.pw, input.ssn,
+                                                                                          input.dob, input.address, input.zip, input.fngprnt,
+                                                                                          input.ip, input.cip, input.fbid, input.isIdImageAdded, input.idImageData);
 
                 if (res.success == true)
                 {
@@ -3010,7 +2982,7 @@ namespace Nooch.API.Controllers
             catch (Exception ex)
             {
                 Logger.Error("Service Cntrlr -> RegisterExistingUserWithSynapsev3 FAILED - [MemberID: " + input.memberId + "], [Name: " + input.fullname +
-                             ", [Email of New User: " + input.email + "], [Exception: " + ex.Message + "]");
+                             "], [Email of New User: " + input.email + "], [Exception: " + ex.Message + "]");
                 return null;
             }
         }
@@ -3022,40 +2994,44 @@ namespace Nooch.API.Controllers
         {
             try
             {
-                Logger.Info("Service Cntrlr -> RegisterNonNoochUserWithSynapse Initiated.");
+                Logger.Info("Service Cntrlr -> RegisterNonNoochUserWithSynapse Initiated - MemberID: [" + input.memberId + "], " +
+                            "Name: [" + input.fullname + "], Email: [" + input.email +
+                            "Is ID Img Sent: [" + input.isIdImageAdded + "], CIP: [" + input.cip + "], FBID: [" + input.fbid + "]");
 
                 MembersDataAccess mda = new MembersDataAccess();
 
-                synapseCreateUserV3Result_int res = mda.RegisterNonNoochUserWithSynapseV3(input.transId, input.email, input.phone, input.fullname, input.pw, input.ssn, input.dob, input.address, input.zip, input.fngprnt, input.ip, input.isIdImageAdded, input.idImageData);
+                synapseCreateUserV3Result_int mdaRes = mda.RegisterNonNoochUserWithSynapseV3(input.transId, input.email, input.phone, input.fullname,
+                                                                                          input.pw, input.ssn, input.dob, input.address,
+                                                                                          input.zip, input.fngprnt, input.ip, input.cip, input.fbid,
+                                                                                          input.isIdImageAdded, input.idImageData);
 
-                RegisterUserSynapseResultClassExt nc = new RegisterUserSynapseResultClassExt();
+                RegisterUserSynapseResultClassExt res = new RegisterUserSynapseResultClassExt();
 
-                if (res.success == true)
+                if (mdaRes.success == true)
                 {
-                    nc.access_token = res.oauth.oauth_key;
-                    nc.expires_in = res.oauth.expires_in;
-                    nc.reason = res.reason;
-                    nc.refresh_token = res.oauth.refresh_token;
-                    nc.success = res.success.ToString();
-                    nc.user_id = res.user_id;
-                    nc.username = res.user.logins[0].email;
-                    nc.memberIdGenerated = res.memberIdGenerated;
-                    nc.ssn_verify_status = res.ssn_verify_status;
+                    res.access_token = mdaRes.oauth.oauth_key;
+                    res.expires_in = mdaRes.oauth.expires_in;
+                    res.reason = mdaRes.reason;
+                    res.refresh_token = mdaRes.oauth.refresh_token;
+                    res.success = mdaRes.success.ToString();
+                    res.user_id = mdaRes.user_id;
+                    res.username = mdaRes.user.logins[0].email;
+                    res.memberIdGenerated = mdaRes.memberIdGenerated;
+                    res.ssn_verify_status = mdaRes.ssn_verify_status;
                 }
                 else
                 {
-                    nc.reason = res.reason;
-                    nc.success = res.success.ToString();
+                    res.reason = mdaRes.reason;
+                    res.success = mdaRes.success.ToString();
                 }
 
-                return nc;
+                return res;
             }
             catch (Exception ex)
             {
                 Logger.Error("Service Cntrlr -> RegisterNonNoochUserWithSynapse FAILED. [New Usr Name: " + input.fullname +
                              "], Email of New User: [" + input.email + "], TransactionID: [" + input.transId +
                              "], Exception: [" + ex.Message + "]");
-
                 return null;
             }
         }
@@ -5935,7 +5911,7 @@ namespace Nooch.API.Controllers
             }
         }
 
-       
+ 
 
         [HttpPost]
         [ActionName("TransferMoneyToNonNoochUserThroughPhoneUsingsynapse")]
@@ -6080,6 +6056,30 @@ namespace Nooch.API.Controllers
 
             return res;
         }
+
+
+
+        [HttpGet]
+        [ActionName("GetStateNameByZipcode")]
+        public GoogleGeolocationOutput GetStateNameByZipcode(string zipCode)
+        {
+            GoogleGeolocationOutput res = new GoogleGeolocationOutput();
+            try
+            {
+
+                res = CommonHelper.GetStateNameByZipcode(zipCode);
+
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Layer -> GetStateNameByZipcode FAILED (Outer Exception) - zipCode: [" + zipCode + "], Exception: [" + ex + "]");
+                res.IsSuccess = false;
+                res.ErrorMessage = "Server Error.";
+
+            }
+            return res;
+        }
+
 
     }
 }

@@ -13,7 +13,6 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.6.0/css/font-awesome.min.css" />
 
-
     <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,400italic,500,500italic,700,900" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.4/themes/cupertino/jquery-ui.css" />
     <link rel="stylesheet" href="@Url.Content("~/Assets/Css/sweetalert-override.min.css")" />
@@ -40,6 +39,7 @@
         <input type="hidden" id="bnkName" value="@rpr.bnkName" />
         <input type="hidden" id="bnkNickname" value="@rpr.bnkNickname" />
         <input type="hidden" id="rs" value="@rpr.rs" />
+        <input type="hidden" id="cip" value="@rpr.cip" />
     </form>
 
     <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -49,6 +49,7 @@
             </a>
         </div>
     </nav>
+
     @if (rpr.payreqInfo != false)
     {
         <div id="payreqInfo">
@@ -235,19 +236,17 @@
 
                         <div id="idVerWiz" class="col-sm-12">
 
-                            <h3><i class="fa fa-fw fa-user m-r-5"></i><br />Profile<span class="hide-sm"> Info</span></h3>
+                            <h3><i class="fa fa-fw fa-envelope"></i><br />Contact<span class="hide-sm"> Info</span></h3>
                             <section>
 
                                 <form id="idVerForm1" role="form">
-                                    <div class="well well-sm">
-                                        <div>Please help us prevent identity theft<span class="ast desk-only">*</span> by completing the following fields.</div>
-                                    </div>
 
+                                    <div class="well well-sm m-b-25">Please confirm your <span>email address</span> and phone number. &nbsp;We will only use this to contact you about this payment.</div>
 
                                     <dl class="dl-horizontal" id="nameGrp">
                                         <dt class="p-t-10 withIcon">
-                                            Your Name<br />
-                                            <i class="fa fa-fw fa-question-circle-o help-icon m-l-5" data-trigger="hover" data-toggle="popover" data-placement="auto" data-content="Please enter your full legal name."></i>
+                                            <i class="fa fa-fw fa-question-circle-o help-icon m-r-5" data-trigger="hover" data-toggle="popover" data-placement="auto" data-content="Please enter your full legal name."></i>
+                                            Your Name
                                         </dt>
                                         <dd>
                                             <div class="form-group">
@@ -258,28 +257,23 @@
                                         </dd>
                                     </dl>
 
-                                    <dl class="dl-horizontal" id="dobGrp">
-                                        <dt class="p-t-10 withIcon">
-                                            Date of Birth<br />
-                                            <i class="fa fa-fw fa-question-circle-o help-icon m-l-5" data-trigger="hover" data-toggle="popover" data-placement="auto" data-content="A date of birth is needed to verify a user's identity. Don't worry - nobody sees this!"></i>
-                                        </dt>
+                                    <dl class="dl-horizontal" id="emailGrp">
+                                        <dt class="p-t-10">Email Address</dt>
                                         <dd>
-                                            <div class="form-group withIcon datePickerGrp">
-                                                <i class="fa fa-fw fa-calendar-plus-o"></i>
+                                            <div class="form-group">
                                                 <div class="dtp-container dropdown fg-line">
-                                                    <input id="idVer-dob" type='text' class="form-control date-picker" data-toggle="dropdown" placeholder="eg. 08/05/1978" />
+                                                    <input id="idVer-email" type='text' class="form-control" value="" placeholder="" />
                                                 </div>
                                             </div>
                                         </dd>
                                     </dl>
 
-                                    <dl class="dl-horizontal" id="ssnGrp">
-                                        <dt class="p-t-10">SSN<small>Last 4 Digits Only</small></dt>
+                                    <dl class="dl-horizontal" id="phoneGrp">
+                                        <dt class="p-t-10">Phone Number</dt>
                                         <dd>
                                             <div class="form-group">
                                                 <div class="dtp-container dropdown fg-line">
-                                                    <span id="ssnPrefix">XXX - XX -</span>
-                                                    <input id="idVer-ssn" type='text' class="form-control" value="" placeholder="1234" />
+                                                    <input id="idVer-phone" type='tel' class="form-control" value="" />
                                                 </div>
                                             </div>
                                         </dd>
@@ -289,7 +283,7 @@
 
                             </section>
 
-                            <h3><i class="fa fa-fw fa-map-marker m-r-5"></i><br />Address</h3>
+                            <h3><i class="fa fa-fw fa-map-marker"></i><br />Address</h3>
                             <section>
 
                                 <div class="well well-sm">
@@ -322,36 +316,59 @@
 
                             </section>
 
-                            <h3><i class="fa fa-fw fa-envelope m-r-5"></i><br />Contact<span class="hide-sm"> Info</span></h3>
+                            <h3><i class="fa fa-fw fa-user"></i><br />Contact<span class="hide-sm"> Info</span></h3>
                             <section>
 
-                                <div class="well well-sm m-b-25">Please confirm your <span>email address</span> and phone number. &nbsp;We will only use this to contact you about this payment.</div>
+                                <div class="well well-sm text-left">
+                                    <div class="text-center m-b-5" style="text-decoration:underline;">To prevent identity theft, please:</div>
+                                    <ol style="font-size:14px; margin-bottom: 4px;">
+                                        <li>Enter your <span>date of birth</span></li>
+                                        <li>
+                                            Then do ONE of the following:
+                                            <ol type="A">
+                                                <li>enter your SSN, OR...</li>
+                                                <li>connect to your Facebook account.</li>
+                                            </ol>
+                                        </li>
+                                    </ol>
+                                </div>
 
-                                <dl class="dl-horizontal" id="emailGrp">
-                                    <dt class="p-t-10">Email Address</dt>
+                                <dl class="dl-horizontal" id="dobGrp">
+                                    <dt class="p-t-10 withIcon">
+                                        Date of Birth
+                                        <i class="fa fa-fw fa-question-circle-o help-icon m-l-5" data-trigger="hover" data-toggle="popover" data-placement="auto" data-content="A date of birth is needed to verify a user's identity. Don't worry - nobody sees this!"></i>
+                                    </dt>
                                     <dd>
-                                        <div class="form-group">
+                                        <div class="form-group withIcon datePickerGrp">
+                                            <i class="fa fa-fw fa-calendar-plus-o"></i>
                                             <div class="dtp-container dropdown fg-line">
-                                                <input id="idVer-email" type='text' class="form-control" value="" placeholder="" />
+                                                <input id="idVer-dob" type='text' class="form-control date-picker" data-toggle="dropdown" placeholder="eg. 08/05/1978" />
                                             </div>
                                         </div>
                                     </dd>
                                 </dl>
 
-                                <dl class="dl-horizontal" id="phoneGrp">
-                                    <dt class="p-t-10">Phone Number</dt>
-                                    <dd>
+                                <div class="row m-t-20">
+                                    <div class="col-xs-5 p-r-10" id="ssnGrp">
                                         <div class="form-group">
-                                            <div class="dtp-container dropdown fg-line">
-                                                <input id="idVer-phone" type='tel' class="form-control" value="" />
-                                            </div>
+                                            <label for="idVer-ssn">SSN</label>
+                                            <input id="idVer-ssn" type="text" class="form-control" value="" placeholder="XXX - XX - XXXX" />
                                         </div>
-                                    </dd>
-                                </dl>
+                                    </div>
+
+                                    <div class="col-xs-2 p-0">
+                                        <div class="orDiv">OR</div>
+                                    </div>
+
+                                    <div class="col-xs-5 p-l-10">
+                                        <button id="fbLoginBtn" class="btn btn-fb m-t-10" type="button" onclick="checkLoginState()"><i class="fa fa-facebook-square"></i><span>Connect with Facebook</span></button>
+                                        <div id="fbResult" class="animated text-center hidden m-t-5"></div>
+                                    </div>
+                                </div>
 
                             </section>
 
-                            <h3><i class="fa fa-fw fa-picture-o m-r-5"></i><br />ID Doc<span class="hide-sm">ument</span></h3>
+                            <h3><i class="fa fa-fw fa-picture-o"></i><br />ID Doc<span class="hide-sm">ument</span></h3>
                             <section>
 
                                 <div class="well well-sm m-b-15">

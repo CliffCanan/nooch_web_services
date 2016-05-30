@@ -1322,12 +1322,13 @@ div#pwFormShell #depositCreateAccount,
     text-shadow: 0 1px 5px rgba(0,0,0,.25)
 }
 
-#idVerForm1 .well .ast {
-    font-size: 86%;
+.well .ast {
+    font-size: 88%;
     position: relative;
-    top: -2px;
+    top: -3px;
     right: -1px;
     opacity: .85;
+	font-weight: normal;
 }
 
 .resultDiv {
@@ -1400,17 +1401,30 @@ div#pwFormShell #depositCreateAccount,
 #idVerWiz input#idVer-name { text-transform: capitalize; }
 #idVerWiz input#idVer-ssn {
     font-weight: bold;
-    padding-left: 93px;
-    letter-spacing: 2.5px;
+    font-size: 16.5px;
+    letter-spacing: 1.5px;
+	text-align: center;
 }
-#idVerWiz #ssnPrefix {
-  position: absolute;
-  left: 5px;
-  bottom: 7px;
+#ssnGrp label { font-size: 19px; }
+#idVerWiz .orDiv {
+    background-color: rgba(108,110,112,.1);
+    border-bottom: 1px solid #bbb;
+    border-top: 1px solid #bbb;
+    padding: 17px 0px;
+    font-weight: 700;
+    font-size: 20px;
+    margin: 0 15px;
+}
+.btn.btn-fb {
+  background-color: #39579B;
+  border-radius: 5px;
+  color: #fff;
+  height: 45px;
   font-size: 16px;
-  font-weight: 400;
-  letter-spacing: .75px;
+  padding: 0 12px !important;
 }
+.btn.btn-fb > i { margin: 0 8px 0 0;}
+
 #idVerWiz .file-preview-image { max-width: 100%; }
 #idVerWiz .fileinput .fileinput-preview {
   width: 180px;
@@ -1508,10 +1522,7 @@ div#pwFormShell #depositCreateAccount,
 }
 .dl-horizontal .help-icon {
     font-size: 14px;
-    position: absolute;
-    top: 32px;
-    right: 0;
-    opacity: .8;
+    opacity: .85;
 }
 
 /**********
@@ -2491,25 +2502,20 @@ form .table-header {
     margin-bottom: 0;
 }
 
-#idVerWiz .content > section:nth-child(2):after {
+/*#idVerWiz .content > section:nth-child(6):after {
   content: "* And comply with the USA Patriot Act. Imagine how bad we'd look if terrorists used us. So we take it pretty seriously.";
   color: rgb(88,90,92);
   display: block;
   position: absolute;
   bottom: -10px;
   font-size: 12.5px;
-  letter-spacing: .5px;
+  letter-spacing: .4px;
   font-weight: 300;
   width: 80%;
   left: 10%;
-}
+}*/
+#idVerWiz .well { font-weight: bold; }
 #idVerWiz .well .ast > span { font-size: 92%; font-weight: 300; position: relative; top: -1px; left: 1px; opacity: 0.85; }
-#idVerWiz #ssnPrefix {
-  left: 7px;
-  bottom: 8px;
-  font-size: 16px;
-  letter-spacing: 1px;
-}
 #idVerWiz .form-group { margin-bottom: 20px; }
 
 .sweet-alert.securityAlert { left: 54%; }
