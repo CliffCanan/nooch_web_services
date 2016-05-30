@@ -401,6 +401,7 @@
           <Property Name="type_bank" Type="varchar(max)" />
           <Property Name="type_synapse" Type="varchar(max)" />
           <Property Name="is_active" Type="bit" />
+          <Property Name="IsAddedUsingRoutingNumber" Type="bit" />
         </EntityType>
         <EntityType Name="SynapseCreateUserResults">
           <Key>
@@ -1242,6 +1243,7 @@
           <Property Name="type_bank" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
           <Property Name="type_synapse" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
           <Property Name="is_active" Type="Boolean" />
+          <Property Name="IsAddedUsingRoutingNumber" Type="Boolean" />
         </EntityType>
         <EntityType Name="SynapseCreateUserResult">
           <Key>
@@ -1885,6 +1887,7 @@
           <EntitySetMapping Name="SynapseBanksOfMembers">
             <EntityTypeMapping TypeName="NOOCHModel.SynapseBanksOfMember">
               <MappingFragment StoreEntitySet="SynapseBanksOfMembers">
+                <ScalarProperty Name="IsAddedUsingRoutingNumber" ColumnName="IsAddedUsingRoutingNumber" />
                 <ScalarProperty Name="is_active" ColumnName="is_active" />
                 <ScalarProperty Name="type_synapse" ColumnName="type_synapse" />
                 <ScalarProperty Name="type_bank" ColumnName="type_bank" />
