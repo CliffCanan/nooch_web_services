@@ -1557,6 +1557,8 @@ namespace Nooch.Web.Controllers
         #endregion PayRequest Page
 
 
+        #region PayRequestComplete Page
+
         public ActionResult PayRequestComplete()
         {
             ResultPayRequestComplete rpc = new ResultPayRequestComplete();
@@ -1742,6 +1744,8 @@ namespace Nooch.Web.Controllers
 
             return rpc;
         }
+
+        #endregion PayRequestComplete Page
 
 
         #region CreateAccount Page
@@ -2624,58 +2628,53 @@ namespace Nooch.Web.Controllers
 
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
                 string serviceMethod;
-                string json="";
-                requestFromRentScene response = new requestFromRentScene() ;
+                string json = "";
+                
+                requestFromRentScene response = new requestFromRentScene();
                 var scriptSerializer = new JavaScriptSerializer();
+                
                 if (isRequest)
                 {
                     serviceMethod = "/RequestMoneyForRentScene?from=" + from +
- 
-                                         "&name=" + name +
-                                         "&email=" + email + "&amount=" + amount +
-                                         "&memo=" + memo + "&pin=" + pin +
-                                         "&ip=" + ip + "&cip=0"  + "&isRequest=" + isRequest;
+                                                             "&name=" + name +
+                                                             "&email=" + email + "&amount=" + amount +
+                                                             "&memo=" + memo + "&pin=" + pin +
+                                                             "&ip=" + ip +
+                                                             "&cip=" + cip +
+                                                             "&isRequest=" + isRequest;
+
                     response = ResponseConverter<requestFromRentScene>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
                 }
                 else
                 {
-                    
                     string memIdToUse = "";
-                    string accessToken="";
-                 
-             
+                    string accessToken = "";
+
                     if (from.ToLower() == "rentscene")
                     {
                         Member member = CommonHelper.GetMemberDetailsByUserName("payments@rentscene.com");
 
                         memIdToUse = member.MemberId.ToString();
                         accessToken = member.AccessToken.ToString();
-
                     }
                     else if (from.ToLower() == "nooch")
                     {
                         Member member = CommonHelper.GetMemberDetailsByUserName("team@nooch.com");
                         memIdToUse = member.MemberId.ToString();
                         accessToken = member.AccessToken.ToString();
-
                     }
                     else if (from.ToLower() == "appjaxx")
                     {
                         Member member = CommonHelper.GetMemberDetailsByUserName("josh@appjaxx.com");
                         memIdToUse = member.MemberId.ToString();
                         accessToken = member.AccessToken.ToString();
-
                     }
 
                     if (String.IsNullOrEmpty(memIdToUse))
                     {
                         Logger.Error("Service Cntlr -> RequestMoneyForRentScene FAILED - unable to get MemberID based on given username - ['from' param: " + from + "]");
                         res.msg = "Unable to get MemberID based on given username";
-
-
                     }
-                     
-                    
 
                     TransactionDto transactionDto = new TransactionDto();
                     transactionDto.MemberId = memIdToUse;
@@ -2684,26 +2683,22 @@ namespace Nooch.Web.Controllers
                     transactionDto.Amount = Convert.ToDecimal(amount);
                     transactionDto.Memo = memo;
 
-                   
                     serviceMethod = "/TransferMoneyToNonNoochUserUsingSynapse?accessToken=" + accessToken + "&inviteType=email&receiverEmailId=" + email;
                     json = scriptSerializer.Serialize(transactionDto);
-                     StringResult sr = ResponseConverter<StringResult>.CallServicePostMethod(String.Concat(serviceUrl, serviceMethod), json);
-                     if (sr.Result.Contains("successfully")) {
-                         response.success = true;
-                         response.msg = sr.Result;
-                     }
-                    //serviceMethod = "/TransferMoneyToNonNoochUserUsingSynapseForRentScene?from=" + from +
-                    //                       "&name=" + name +
-                    //                       "&email=" + email + "&amount=" + amount +
-                    //                       "&memo=" + memo + "&pin=" + pin +
-                    //                       "&ip=" + ip + "&isRequest=" + isRequest;
- 
+                    
+                    StringResult sr = ResponseConverter<StringResult>.CallServicePostMethod(String.Concat(serviceUrl, serviceMethod), json);
+                    
+                    if (sr.Result.Contains("successfully"))
+                    {
+                        response.success = true;
+                        response.msg = sr.Result;
+                    }
                 }
 
                 string urlToUse = String.Concat(serviceUrl, serviceMethod);
 
-               
-               
+
+
                 Logger.Info("Make Payment Code-Behind -> submitPayment - URL To Query: [" + urlToUse + "]");
 
                 if (response != null)
@@ -2770,10 +2765,10 @@ namespace Nooch.Web.Controllers
         public ActionResult submitRequestToExistingUser(string from, bool isRequest, string amount, string name, string email, string memo, string pin, string ip, string memberId, string nameFromServer)
         {
             Logger.Info("Make Payment Code-Behind -> submitRequestToExistingUser Initiated - From: [" + from + "], isRequest: [" + isRequest +
-                                   "], Name: [" + name + "], Email: [" + email +
-                                   "], Amount: [" + amount + "], memo: [" + memo +
-                                   "], PIN: [" + pin + "], IP: [" + ip + "]" +
-                                   "], MemberID: [" + memberId + "], NameFromServer: [" + nameFromServer + "]");
+                        "], Name: [" + name + "], Email: [" + email +
+                        "], Amount: [" + amount + "], memo: [" + memo +
+                        "], PIN: [" + pin + "], IP: [" + ip + "]" +
+                        "], MemberID: [" + memberId + "], NameFromServer: [" + nameFromServer + "]");
 
             requestFromRentScene res = new requestFromRentScene();
             res.success = false;
@@ -2810,8 +2805,12 @@ namespace Nooch.Web.Controllers
             {
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
                 string serviceMethod;
+                string textLoggerHelper = "";
+
                 if (isRequest)
                 {
+                    textLoggerHelper = " Request";
+
                     serviceMethod = "/RequestMoneyToExistingUserForRentScene?from=" + from + "&name=" + name +
                                          "&email=" + email + "&amount=" + amount +
                                          "&memo=" + memo + "&pin=" + pin +
@@ -2821,50 +2820,35 @@ namespace Nooch.Web.Controllers
                 }
                 else
                 {
-
-                    //serviceMethod = "/TransferMoneyToExistingUserForRentScene?from=" + from + "&name=" + name +
-                    //                     "&email=" + email + "&amount=" + amount +
-                    //                     "&memo=" + memo + "&pin=" + pin +
-                    //                     "&ip=" + ip + "&isRequest=" + isRequest +
-                    //                     "&memberId=" + memberId + "&nameFromServer=" + nameFromServer;
-
                     string memIdToUse = "";
                     string accessToken = "";
-
 
                     if (from.ToLower() == "rentscene")
                     {
                         Member member = CommonHelper.GetMemberDetailsByUserName("payments@rentscene.com");
-
                         memIdToUse = member.MemberId.ToString();
                         accessToken = member.AccessToken.ToString();
-
                     }
                     else if (from.ToLower() == "nooch")
                     {
                         Member member = CommonHelper.GetMemberDetailsByUserName("team@nooch.com");
                         memIdToUse = member.MemberId.ToString();
                         accessToken = member.AccessToken.ToString();
-
                     }
                     else if (from.ToLower() == "appjaxx")
                     {
                         Member member = CommonHelper.GetMemberDetailsByUserName("josh@appjaxx.com");
                         memIdToUse = member.MemberId.ToString();
                         accessToken = member.AccessToken.ToString();
-
                     }
 
                     if (String.IsNullOrEmpty(memIdToUse))
                     {
-                        Logger.Error("Service Cntlr -> RequestMoneyForRentScene FAILED - unable to get MemberID based on given username - ['from' param: " + from + "]");
+                        Logger.Error("Make Payment Code Behind -> SubmitRequestToExistingUser FAILED - unable to get MemberID based on given username - ['from' param: " + from + "]");
                         res.msg = "Unable to get MemberID based on given username";
-
-
                     }
-                    string RecepientId= CommonHelper.GetMemberIdByUserName(email.ToString());
-                    
 
+                    string RecepientId = CommonHelper.GetMemberIdByUserName(email.ToString());
 
                     TransactionDto transactionDto = new TransactionDto();
                     transactionDto.MemberId = memIdToUse;
@@ -2877,6 +2861,7 @@ namespace Nooch.Web.Controllers
                     serviceMethod = "/TransferMoneyUsingSynapse?accessToken=" + accessToken;
                     json = scriptSerializer.Serialize(transactionDto);
                     StringResult sr = ResponseConverter<StringResult>.CallServicePostMethod(String.Concat(serviceUrl, serviceMethod), json);
+                    
                     if (sr.Result.Contains("successfully"))
                     {
                         response.success = true;
@@ -2885,9 +2870,8 @@ namespace Nooch.Web.Controllers
                 }
                 string urlToUse = String.Concat(serviceUrl, serviceMethod);
 
-                Logger.Info("Make Payment Code-Behind -> submitRequestToExistingUser - URL To Query: [" + urlToUse + "]");
+                Logger.Info("Make Payment Code-Behind -> submitRequestToExistingUser - URL To Query: [" + urlToUse + "], IsRequest: [" + isRequest + "]");
 
-                
                 Logger.Info("Make Payment Code-Behind -> submitRequestToExistingUser - Server Response for RequestMoneyToExistingUserForRentScene: " +
                             "RESULT.Success: [" + response.success + "], RESULT.Msg: [" + response.msg + "]");
 
@@ -2895,19 +2879,17 @@ namespace Nooch.Web.Controllers
                 {
                     res = response;
 
-                    Logger.Info("Make Payment Code-Behind -> submitPayment");
-
                     #region Logging For Debugging
 
                     if (response.success == true)
                     {
-                        Logger.Info("Make Payment Code-Behind -> submitRequestToExistingUser Success - Payment Request submitted to NEW user successfully - " +
-                                    "Recipient: [" + name + "], Email: [" + email + "], Amount: [" + amount + "], Memo: [" + memo + "]");
+                        Logger.Info("Make Payment Code-Behind -> submitRequestToExistingUser Success - Payment" + textLoggerHelper + " submitted successfully - " +
+                                    "ServiceMethod: [" + serviceMethod + "], Recipient: [" + name + "], Email: [" + email + "], Amount: [" + amount + "], Memo: [" + memo + "]");
                     }
                     else
                     {
-                        Logger.Error("Make Payment Code-Behind -> submitRequestToExistingUser FAILED - Server response for RequestMoneyForRentScene() was NOT successful - " +
-                                     "Recipient: [" + name + "], Email: [" + email + "], Amount: [" + amount + "], Memo: [" + memo + "]");
+                        Logger.Error("Make Payment Code-Behind -> submitRequestToExistingUser FAILED - Server response for ServiceMethod: [" + serviceMethod +
+                                     "] was NOT successful - Recipient: [" + name + "], Email: [" + email + "], Amount: [" + amount + "], Memo: [" + memo + "]");
                     }
 
                     #endregion Logging For Debugging
@@ -2926,7 +2908,7 @@ namespace Nooch.Web.Controllers
             return Json(res);
         }
 
-                    #endregion MakePayment Page
+        #endregion MakePayment Page
 
 
         // Not complete code problem with JS file and GetPayeeDetails method
@@ -3042,7 +3024,6 @@ namespace Nooch.Web.Controllers
         }
 
         #endregion PayAnyone Page
-
 
 
         /// <summary>
@@ -3273,11 +3254,12 @@ namespace Nooch.Web.Controllers
         public string BankName { get; set; }
         public string BankOId { get; set; }
     }
-    public class setTransferMoneyInput {
-
+    
+    public class setTransferMoneyInput
+    {
         public TransactionDto transactionDto { get; set; }
-        public string    accessToken{get;set;}
-        public string inviteType {get;set;}
+        public string accessToken { get; set; }
+        public string inviteType { get; set; }
         public string receiverEmailId { get; set; }
     }
 }

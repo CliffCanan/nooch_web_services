@@ -1849,7 +1849,7 @@ namespace Nooch.Common
                             usersSynapseDetails.permission = permission;
                             usersSynapseDetails.photos = ImageUrl;
                             usersSynapseDetails.physical_doc = resFromSynapse.user.doc_status != null ? resFromSynapse.user.doc_status.physical_doc : null;
-                            usersSynapseDetails.virtual_doc = resFromSynapse.user.doc_status != null ? resFromSynapse.user.doc_status.virtual_doc : null ;
+                            usersSynapseDetails.virtual_doc = resFromSynapse.user.doc_status != null ? resFromSynapse.user.doc_status.virtual_doc : null;
                             usersSynapseDetails.extra_security = resFromSynapse.user.extra.extra_security != null ? resFromSynapse.user.extra.extra_security.ToString() : null;
 
                             Logger.Info("Common Helper -> submitDocumentToSynapseV3 SUCCESSFUL - Permission: [" + permission +
@@ -3177,61 +3177,64 @@ namespace Nooch.Common
         public static GoogleGeolocationOutput GetStateNameByZipcode(string zipCode)
         {
             GoogleGeolocationOutput res = new GoogleGeolocationOutput();
-            try
+            res.IsSuccess = false;
+            res.Zip = zipCode;
+
+            if (!String.IsNullOrEmpty(zipCode))
             {
-
-                string googleUrlLink = "https://maps.googleapis.com/maps/api/geocode/json?address=" + zipCode + "&key=" +
-                                       Utility.GetValueFromConfig("GoogleGeolocationKey");
-                var http = (HttpWebRequest)WebRequest.Create(new Uri(googleUrlLink));
-                http.Method = "GET";
-                var response = http.GetResponse();
-                var stream = response.GetResponseStream();
-                var sr = new StreamReader(stream);
-                var content = sr.ReadToEnd();
-                JObject jsonFromSynapse = JObject.Parse(content);
-                if (jsonFromSynapse["status"].ToString() == "OK")
+                try
                 {
+                    string googleUrlLink = "https://maps.googleapis.com/maps/api/geocode/json?address=" + zipCode + "&key=" +
+                                           Utility.GetValueFromConfig("GoogleGeolocationKey");
 
+                    var http = (HttpWebRequest)WebRequest.Create(new Uri(googleUrlLink));
+                    http.Method = "GET";
 
+                    var response = http.GetResponse();
+                    var stream = response.GetResponseStream();
+                    var sr = new StreamReader(stream);
+                    var content = sr.ReadToEnd();
 
-                    JToken addCompsArray = jsonFromSynapse["results"][0]["address_components"];
-                    foreach (JToken jitem in addCompsArray)
+                    JObject jsonFromSynapse = JObject.Parse(content);
+
+                    if (jsonFromSynapse["status"].ToString() == "OK")
                     {
+                        JToken addressComponentsArray = jsonFromSynapse["results"][0]["address_components"];
 
-
-
-
-                        if (jitem["types"][0].ToString() == "administrative_area_level_1")
+                        foreach (JToken item in addressComponentsArray)
                         {
-                            res.IsSuccess = true;
-                            res.ErrorMessage = "OK";
-                            res.StateName = jitem["long_name"].ToString();
-
-                            res.GoogleStatus = jsonFromSynapse["status"].ToString();
-
+                            if (item["types"][0].ToString() == "administrative_area_level_1")
+                            {
+                                res.stateFull = item["long_name"].ToString();
+                                res.stateAbbrev = item["short_name"].ToString();
+                                res.GoogleStatus = jsonFromSynapse["status"].ToString();
+                                res.ErrorMessage = "OK";
+                                res.IsSuccess = true;
+                            }
                         }
 
+                        if (res.IsSuccess)
+                        {
+                            res.CompleteAddress = jsonFromSynapse["results"][0]["formatted_address"].ToString();
+                        }
                     }
-                    if (res.IsSuccess)
+                    else
                     {
-                        res.CompleteAddress = jsonFromSynapse["results"][0]["formatted_address"].ToString();
+                        res.ErrorMessage = "Error with Google Maps API.";
                     }
-
                 }
-                else
+                catch (Exception ex)
                 {
-                    res.IsSuccess = false;
-                    res.ErrorMessage = "Invalid pin or no record found.";
+                    Logger.Error("CommonHelper -> GetStateNameByZipcode FAILED (Google API Exception) - zipCode: [" + zipCode + "], Exception: [" + ex + "]");
+                    res.ErrorMessage = "Server Exception: [" + ex.Message + "]";
                 }
-
             }
-            catch (Exception ex)
+            else
             {
-                Logger.Error("CommonHelper -> GetStateNameByZipcode FAILED (Outer Exception) - zipCode: [" + zipCode + "], Exception: [" + ex + "]");
-                res.IsSuccess = false;
-                res.ErrorMessage = "Server Error.";
-
+                Logger.Error("CommonHelper -> GetStateNameByZipcode FAILED - No Zipcode passed - zipCode: [" + zipCode + "]");
+                res.ErrorMessage = "No zipcode passed";
             }
+
             return res;
         }
 

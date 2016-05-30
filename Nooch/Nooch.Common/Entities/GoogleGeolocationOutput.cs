@@ -12,9 +12,8 @@ namespace Nooch.Common.Entities
         public string ErrorMessage { get; set; }
         public string GoogleStatus { get; set; }
         public string CompleteAddress { get; set; }
-        public string StateName { get; set; }
-
+        public string stateFull { get; set; }
+        public string stateAbbrev { get; set; }
         public string Zip { get; set; }
-
     }
 }

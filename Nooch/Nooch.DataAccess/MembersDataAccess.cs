@@ -2989,9 +2989,8 @@ namespace Nooch.DataAccess
             #region Check To Make Sure All Data Was Passed
 
             // First check critical data necessary for just creating the user
-            if (String.IsNullOrEmpty(userName) ||
-                String.IsNullOrEmpty(userEmail) ||
-                String.IsNullOrEmpty(userPhone))
+            if (String.IsNullOrEmpty(userName) || String.IsNullOrEmpty(userEmail) ||
+                String.IsNullOrEmpty(userPhone) || String.IsNullOrEmpty(zip))
             {
                 string missingData = "";
 
@@ -3007,6 +3006,10 @@ namespace Nooch.DataAccess
                 {
                     missingData = missingData + " Phone";
                 }
+                if (String.IsNullOrEmpty(zip))
+                {
+                    missingData = missingData + " ZIP";
+                }
 
                 Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 FAILED - Missing Critical Data: [" + missingData.Trim() + "]");
 
@@ -3015,8 +3018,8 @@ namespace Nooch.DataAccess
             }
 
             if (String.IsNullOrEmpty(ssn) || String.IsNullOrEmpty(dob) ||
-                String.IsNullOrEmpty(address) || String.IsNullOrEmpty(zip) ||
-                String.IsNullOrEmpty(fngprnt) || String.IsNullOrEmpty(ip))
+                String.IsNullOrEmpty(address) || String.IsNullOrEmpty(fngprnt) ||
+                String.IsNullOrEmpty(ip))
             {
                 string missingData2 = "";
 
@@ -3031,10 +3034,6 @@ namespace Nooch.DataAccess
                 if (String.IsNullOrEmpty(address))
                 {
                     missingData2 = missingData2 + "Address";
-                }
-                if (String.IsNullOrEmpty(zip))
-                {
-                    missingData2 = missingData2 + " ZIP";
                 }
                 if (String.IsNullOrEmpty(fngprnt))
                 {
@@ -3104,6 +3103,11 @@ namespace Nooch.DataAccess
                 #region Create New Nooch Member Record in Members.dbo
 
                 #region Parse And Format Data To Save
+
+                // Get state from ZIP via Google Maps API
+                var stateResult = CommonHelper.GetStateNameByZipcode(zip.Trim());
+                var stateAbbrev = stateResult != null && stateResult.stateAbbrev != null ? stateResult.stateAbbrev : "";
+
 
                 if (userName.IndexOf('+') > -1)
                 {
@@ -3176,6 +3180,7 @@ namespace Nooch.DataAccess
                     RecoveryEmail = userNameLowerCaseEncr,
                     ContactNumber = userPhone,
                     Address = !String.IsNullOrEmpty(address) ? CommonHelper.GetEncryptedData(address) : null,
+                    State = !String.IsNullOrEmpty(stateAbbrev) ? CommonHelper.GetEncryptedData(stateAbbrev) : null,
                     Zipcode = !String.IsNullOrEmpty(zip) ? CommonHelper.GetEncryptedData(zip) : null,
                     SSN = !String.IsNullOrEmpty(ssn) ? CommonHelper.GetEncryptedData(ssn) : null,
                     DateOfBirth = dateofbirth,
@@ -6263,6 +6268,11 @@ namespace Nooch.DataAccess
                     if (!String.IsNullOrEmpty(zipCode))
                     {
                         member.Zipcode = CommonHelper.GetEncryptedData(zipCode);
+
+                        // Get state from ZIP via Google Maps API
+                        var stateResult = CommonHelper.GetStateNameByZipcode(zipCode.Trim());
+                        var stateAbbrev = stateResult != null && stateResult.stateAbbrev != null ? stateResult.stateAbbrev : "";
+                        member.State = CommonHelper.GetEncryptedData(stateAbbrev);
                     }
                     if (!String.IsNullOrEmpty(country))
                     {
@@ -6274,9 +6284,6 @@ namespace Nooch.DataAccess
                     }
 
                     #endregion Encrypt each piece of data
-
-                    //Logger.LogDebugMessage("MDA -> MySettings CHECKPOINT #23 - contactNumber (sent from app): [" + contactNumber + "]");
-                    //Logger.LogDebugMessage("MDA -> MySettings CHECKPOINT #23 - member.ContactNumber (from DB): [" + member.ContactNumber + "]");
 
                     if (!String.IsNullOrEmpty(contactNumber) &&
                         (String.IsNullOrEmpty(member.ContactNumber) ||
@@ -6355,10 +6362,9 @@ namespace Nooch.DataAccess
                     return ex.InnerException.Message;
                 }
             }
+
             return "Member not found.";
-
         }
-
 
 
         public string ResetPin(string memberId, string oldPin, string newPin)

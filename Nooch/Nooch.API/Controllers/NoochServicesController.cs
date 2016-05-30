@@ -1162,7 +1162,7 @@ namespace Nooch.API.Controllers
 
 
 
-     
+
 
         /// <summary>
         /// For an existing user to reject a request from another existing user.
@@ -2992,6 +2992,9 @@ namespace Nooch.API.Controllers
         [ActionName("RegisterNonNoochUserWithSynapse")]
         public RegisterUserSynapseResultClassExt RegisterNonNoochUserWithSynapse(RegisterUserWithSynapseV3_Input input)
         {
+            RegisterUserSynapseResultClassExt res = new RegisterUserSynapseResultClassExt();
+            res.success = "false";
+
             try
             {
                 Logger.Info("Service Cntrlr -> RegisterNonNoochUserWithSynapse Initiated - MemberID: [" + input.memberId + "], " +
@@ -3004,8 +3007,6 @@ namespace Nooch.API.Controllers
                                                                                           input.pw, input.ssn, input.dob, input.address,
                                                                                           input.zip, input.fngprnt, input.ip, input.cip, input.fbid,
                                                                                           input.isIdImageAdded, input.idImageData);
-
-                RegisterUserSynapseResultClassExt res = new RegisterUserSynapseResultClassExt();
 
                 if (mdaRes.success == true)
                 {
@@ -3024,16 +3025,15 @@ namespace Nooch.API.Controllers
                     res.reason = mdaRes.reason;
                     res.success = mdaRes.success.ToString();
                 }
-
-                return res;
             }
             catch (Exception ex)
             {
                 Logger.Error("Service Cntrlr -> RegisterNonNoochUserWithSynapse FAILED. [New Usr Name: " + input.fullname +
                              "], Email of New User: [" + input.email + "], TransactionID: [" + input.transId +
                              "], Exception: [" + ex.Message + "]");
-                return null;
             }
+
+            return res;
         }
 
 
@@ -3100,7 +3100,9 @@ namespace Nooch.API.Controllers
         [ActionName("SynapseV3AddNodeWithAccountNumberAndRoutingNumber")]
         public SynapseBankLoginV3_Response_Int SynapseV3AddNodeWithAccountNumberAndRoutingNumber(string MemberId, string bankNickName, string account_num, string routing_num, string accounttype, string accountclass)
         {
-            Logger.Info("Service Controller -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber Initiated - MemberId: [" + MemberId + "], bankNickName: [" + bankNickName + "], routing_num: [" + routing_num + "], accounttype: [" + accounttype + "], accountclass: [" + accountclass + "]");
+            Logger.Info("Service Cntrlr -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber Initiated - MemberId: [" + MemberId +
+                        "], bankNickName: [" + bankNickName + "], routing_num: [" + routing_num +
+                        "], accounttype: [" + accounttype + "], accountclass: [" + accountclass + "]");
 
             SynapseBankLoginV3_Response_Int res = new SynapseBankLoginV3_Response_Int();
             res.Is_success = false;
@@ -3108,7 +3110,8 @@ namespace Nooch.API.Controllers
             #region Check if all required data was passed
 
             if (String.IsNullOrEmpty(bankNickName) || String.IsNullOrEmpty(MemberId) ||
-                String.IsNullOrEmpty(account_num) || String.IsNullOrEmpty(routing_num) || String.IsNullOrEmpty(accounttype) || String.IsNullOrEmpty(accountclass))
+                String.IsNullOrEmpty(account_num) || String.IsNullOrEmpty(routing_num) ||
+                String.IsNullOrEmpty(accounttype) || String.IsNullOrEmpty(accountclass))
             {
                 if (String.IsNullOrEmpty(MemberId))
                 {
@@ -3148,18 +3151,15 @@ namespace Nooch.API.Controllers
 
             try
             {
-
                 #region Get the Member's Details
 
                 Guid id = Utility.ConvertToGuid(MemberId);
-
 
                 var noochMember = CommonHelper.GetMemberDetails(id.ToString());
 
                 if (noochMember == null)
                 {
-                    Logger.Info("Service Controller -> SynapseV3 ADD NODE ERROR, but Member NOT FOUND.");
-
+                    Logger.Error("Service Controller -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber FAILED - Member NOT FOUND.");
                     res.errorMsg = "Member not found.";
                     return res;
                 }
@@ -3169,13 +3169,11 @@ namespace Nooch.API.Controllers
                 #region Check Mermber's Status And Phone
 
                 // Checks on user account: is phone verified? Is user's status = 'Active'?
-
                 if (noochMember.Status != "Active" &&
                     noochMember.Status != "NonRegistered" &&
                     noochMember.Type != "Personal - Browser")
                 {
                     Logger.Info("Service Controller -> SynapseV3 ADD NODE Attempted, but Member is Not 'Active' but [" + noochMember.Status + "] for MemberId: [" + MemberId + "]");
-
                     res.errorMsg = "User status is not active but, " + noochMember.Status;
                     return res;
                 }
@@ -3184,7 +3182,6 @@ namespace Nooch.API.Controllers
                      noochMember.Status != "NonRegistered" && noochMember.Type != "Personal - Browser")
                 {
                     Logger.Info("Service Controller -> SynapseV3 ADD NODE Attempted, but Member's Phone is Not Verified. MemberId: [" + MemberId + "]");
-
                     res.errorMsg = "User phone is not verified";
                     return res;
                 }
@@ -3209,7 +3206,7 @@ namespace Nooch.API.Controllers
                     }
                     else
                     {
-                        Logger.Info("Service Controller -> SynapseV3 ADD NODE ERROR: Could not create Synapse User Record for: [" + MemberId + "].");
+                        Logger.Error("Service Controller -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber FAILED: Could not create Synapse User Record for: [" + MemberId + "].");
                     }
                 }
 
@@ -3217,7 +3214,6 @@ namespace Nooch.API.Controllers
                 if (createSynapseUserDetails == null)
                 {
                     Logger.Error("Service Controller -> SynapseV3 ADD NODE ERROR: No Synapse OAuth code found in Nooch DB for: [" + MemberId + "].");
-
                     res.errorMsg = "No Authentication code found for given user.";
                     return res;
                 }
@@ -3237,31 +3233,28 @@ namespace Nooch.API.Controllers
                 SynapseV3Input_user user = new SynapseV3Input_user();
                 user.fingerprint = noochMember.UDID1;
 
-                bankloginParameters.login = login;
-                bankloginParameters.user = user;
-
                 SynapseBankLoginUsingRoutingAndAccountNumberV3_Input_node node = new SynapseBankLoginUsingRoutingAndAccountNumberV3_Input_node();
-                node.type = "ACH-US";
-
                 SynapseBankLoginUsingRoutingAndAccountNumberV3_Input_bankInfo nodeInfo = new SynapseBankLoginUsingRoutingAndAccountNumberV3_Input_bankInfo();
+                SynapseBankLoginV3_Input_extra extra = new SynapseBankLoginV3_Input_extra();
+
                 nodeInfo._class = accountclass;
                 nodeInfo.routing_num = routing_num;
                 nodeInfo.type = accounttype;
                 nodeInfo.nickname = bankNickName;
                 nodeInfo.account_num = account_num;
 
-
-                node.info = nodeInfo;
-
-                SynapseBankLoginV3_Input_extra extra = new SynapseBankLoginV3_Input_extra();
                 extra.supp_id = "";
 
+                node.type = "ACH-US";
+                node.info = nodeInfo;
                 node.extra = extra;
+
+                bankloginParameters.login = login;
+                bankloginParameters.user = user;
                 bankloginParameters.node = node;
 
                 string UrlToHit = "";
                 UrlToHit = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/node/add" : "https://synapsepay.com/api/v3/node/add";
-
 
                 #endregion Setup Call To SynapseV3 /node/add
 
@@ -3294,22 +3287,10 @@ namespace Nooch.API.Controllers
                     if (bankLoginRespFromSynapse["success"].ToString().ToLower() == "true" &&
                         bankLoginRespFromSynapse["nodes"] != null)
                     {
-
                         // Malkit (30 May 2016) :- Commented out this code because, this service is meant to use routing and account number only and in this case result will go in SynapseBanksOfMembers table instead of synpaseBankLoginResult table
                         // along with bank account, routing and some other info..from now we will be storing IsAddedUsingRoutingNumber field as true in SynapseBanksOfMembers to keep track of who came through routing numbers.
                         //#region Marking Any Existing Synapse Bank Login Entries as Deleted
-
-
-                        //var memberLoginResultsCollection = CommonHelper.GetSynapseBankLoginResulList(id.ToString());
-
-                        //foreach (SynapseBankLoginResult v in memberLoginResultsCollection)
-                        //{
-                        //    v.IsDeleted = true;
-                        //    _dbContext.SaveChanges();
-                        //}
-
                         //#endregion Marking Any Existing Synapse Bank Login Entries as Deleted
-
 
                         RootBankObject rootBankObj = new RootBankObject();
                         rootBankObj.success = true;
@@ -3318,338 +3299,103 @@ namespace Nooch.API.Controllers
 
                         try
                         {
-                            // Preparing to save results in SynapseBankLoginResults DB table
-                            SynapseBankLoginResult sbr = new SynapseBankLoginResult();
+                            res.Is_MFA = false;
 
-                            sbr.MemberId = id;
-                            sbr.IsSuccess = true;
-                            sbr.dateCreated = DateTime.Now;
-                            sbr.IsDeleted = false;
-                            sbr.IsCodeBasedAuth = false;  // NO MORE CODE-BASED WITH SYNAPSE V3, EVERY MFA IS THE SAME NOW
-                            sbr.mfaMessage = null; // For Code-Based MFA - NOT USED ANYMORE, SHOULD REMOVE FROM DB
-                            sbr.BankAccessToken = CommonHelper.GetEncryptedData(bankLoginRespFromSynapse["nodes"][0]["_id"]["$oid"].ToString()); // CLIFF (8/21/15): Not sure if this syntax is correct
-
-                           
-                            if (bankLoginRespFromSynapse["nodes"][0]["extra"]["mfa"] != null ||
-                                bankLoginRespFromSynapse["nodes"][0]["allowed"] == null)
+                            if (bankLoginRespFromSynapse["nodes"][0]["info"] != null)
                             {
-                                #region MFA was returned
+                                JToken info = bankLoginRespFromSynapse["nodes"][0]["info"];
 
-                                // Set final values for storing in Nooch DB
-                                sbr.IsMfa = true;
-                                sbr.IsQuestionBasedAuth = true;
-                                sbr.mfaQuestion = bankLoginRespFromSynapse["nodes"][0]["extra"]["mfa"]["message"].ToString().Trim();
-                                sbr.AuthType = "questions";
-
-
-                                // Set final values for returning this function
-                                res.Is_MFA = true;
-                                res.errorMsg = "OK";
-                                res.mfaMessage = bankLoginRespFromSynapse["nodes"][0]["extra"]["mfa"]["message"].ToString().Trim();
-
-                                nodes[] nodesarray = new nodes[1];
-
-                                _id idd = new _id();
-                                idd.oid = bankLoginRespFromSynapse["nodes"][0]["_id"]["$oid"].ToString();
-                                // Cliff: Not sure this syntax is right.   --Malkit: me neither... will check this when I get any such response from web sevice.
-
-                                nodes nodenew = new nodes();
-                                nodenew._id = idd;
-                                nodenew.allowed = bankLoginRespFromSynapse["nodes"][0]["allowed"] != null ?
-                                                  bankLoginRespFromSynapse["nodes"][0]["allowed"].ToString() :
-                                                  null;
-                                nodenew.extra = new extra();
-                                nodenew.extra.mfa = new extra_mfa();
-                                nodenew.extra.mfa.message = bankLoginRespFromSynapse["nodes"][0]["extra"]["mfa"]["message"].ToString().Trim();
-
-                                rootBankObj.nodes = nodesarray;
-
-                                res.SynapseNodesList = rootBankObj;
-
-                                #endregion MFA was returned
-                            }
-                            else if (bankLoginRespFromSynapse["nodes"][0]["extra"]["supp_id"] != null &&
-                                     bankLoginRespFromSynapse["nodes"][0]["info"] != null)
-                            {
-                                // add bank using routing number and account number response
-                                // saving entriy in synapse banks of member table
+                                // Saving entry in SynapseBanksOfMember Table
                                 SynapseBanksOfMember sbom = new SynapseBanksOfMember();
-                                sbom.@class = bankLoginRespFromSynapse["nodes"][0]["info"]["class"].ToString();
-                                sbom.AddedOn = DateTime.Now;
-                                sbom.account_number_string =
-                                    CommonHelper.GetEncryptedData(
-                                        bankLoginRespFromSynapse["nodes"][0]["info"]["account_num"].ToString());
-                                sbom.bank_name = CommonHelper.GetEncryptedData(
-                                        bankLoginRespFromSynapse["nodes"][0]["info"]["bank_name"].ToString());
-                                sbom.name_on_account = CommonHelper.GetEncryptedData(
-                                        bankLoginRespFromSynapse["nodes"][0]["info"]["name_on_account"].ToString());
-                                sbom.nickname = CommonHelper.GetEncryptedData(
-                                        bankLoginRespFromSynapse["nodes"][0]["info"]["nickname"].ToString());
-
-                                sbom.routing_number_string = CommonHelper.GetEncryptedData(
-                                        bankLoginRespFromSynapse["nodes"][0]["info"]["routing_num"].ToString());
-
+                                sbom.IsAddedUsingRoutingNumber = true;
                                 sbom.MemberId = id;
-
-                                // not sure about these two fields  IsDefault and Status
-                                // should we consider this field as True, this will set his bank as confirmed and user can make transactions using field
-                                //but we haven't verified micro deposits yet
-                                //for now setting as below.... @cliff I am setting account as not Not Verified for now, from micro deposit verification landing pages
-                                //this status will be converted to Verified... let me know what you think?
-                                sbom.IsDefault = true;
-                                sbom.Status = "Not Verified";
-
-                                sbom.oid = CommonHelper.GetEncryptedData(
-                                        bankLoginRespFromSynapse["nodes"][0]["_id"]["$oid"].ToString());
-
+                                sbom.AddedOn = DateTime.Now;
+                                sbom.account_number_string = CommonHelper.GetEncryptedData(info["account_num"].ToString());
+                                sbom.bank_name = CommonHelper.GetEncryptedData(info.ToString());
+                                sbom.@class = info["class"].ToString();
+                                sbom.name_on_account = CommonHelper.GetEncryptedData(info["name_on_account"].ToString());
+                                sbom.nickname = CommonHelper.GetEncryptedData(info["nickname"].ToString());
+                                sbom.routing_number_string = CommonHelper.GetEncryptedData(info["routing_num"].ToString());
+                                sbom.type_bank = info["type"].ToString();
+                                sbom.oid = CommonHelper.GetEncryptedData(bankLoginRespFromSynapse["nodes"][0]["_id"]["$oid"].ToString());
                                 sbom.allowed = bankLoginRespFromSynapse["nodes"][0]["allowed"].ToString();
                                 sbom.supp_id = bankLoginRespFromSynapse["nodes"][0]["extra"]["supp_id"].ToString();
 
-                                sbom.type_bank = bankLoginRespFromSynapse["nodes"][0]["info"]["type"].ToString();
-
-                                sbom.IsAddedUsingRoutingNumber = true;
+                                // Not sure about these two fields: IsDefault and Status.
+                                // Should we consider this field as True, this will set his bank as confirmed and user can make transactions using field
+                                // but we haven't verified micro deposits yet
+                                // for now setting as below.... @cliff I am setting account as not Not Verified for now, from micro deposit verification landing pages
+                                // this status will be converted to Verified... let me know what you think?
+                                // @Malkit - yes this is right, the Status will update once the user submits the Micro Deposit amounts on the landing page.
+                                sbom.IsDefault = true;
+                                sbom.Status = "Not Verified";
 
                                 _dbContext.SynapseBanksOfMembers.Add(sbom);
 
                                 int i = _dbContext.SaveChanges();
 
-
                                 if (i > 0)
                                 {
-                                    _dbContext.Entry(sbr).Reload();
-
-
                                     Logger.Info("Service Controller -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber SUCCESS - Added record to SynapseBanksOfMembers Table - NO MFA found - [UserName: " + CommonHelper.GetDecryptedData(noochMember.UserName) + "]");
+
+                                    RootBankObject allNodesParsedResult = JsonConvert.DeserializeObject<RootBankObject>(content);
+                                    res.SynapseNodesList = allNodesParsedResult;
                                     res.Is_success = true;
-                                    return res;
-                                   
                                 }
                                 else
                                 {
-                                    Logger.Error("Service Controller -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber FAILURE - Could not save record in SynapseBankLoginResults Table - ABORTING - [MemberID: " + MemberId + "]");
-
+                                    Logger.Error("Service Controller -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber FAILED - Could not save record in SynapseBankLoginResults Table - ABORTING - [MemberID: " + MemberId + "]");
                                     res.errorMsg = "Failed to save entry in BankLoginResults table (inner)";
-                                    return res;
                                 }
-
-
-                            }
-                            else
-                            {
-                                sbr.IsMfa = false;
-                                sbr.IsQuestionBasedAuth = false;
-                                sbr.mfaQuestion = "None";
-                                sbr.AuthType = null;
-
-                                res.Is_MFA = false;
-                            }
-
-                            // Now Add object to Nooch DB (save whether if it's an MFA node or not)
-                            _dbContext.SynapseBankLoginResults.Add(sbr);
-                            int j = _dbContext.SaveChanges();
-
-                            if (j > 0)
-                            {
-                                _dbContext.Entry(sbr).Reload();
-
-                                // Return if MFA, otherwise continue on and parse the banks
-                                if (res.Is_MFA)
-                                {
-                                    Logger.Info("Service Controller -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber SUCCESS - Added record to synapseBankLoginResults Table - Got MFA from Synapse - [UserName: " + CommonHelper.GetDecryptedData(noochMember.UserName) + "]");
-
-                                    res.Is_success = true;
-                                    res.errorMsg = "OK";
-                                    
-                                    return res;
-                                }
-
-                                Logger.Info("Service Controller -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber SUCCESS - Added record to synapseBankLoginResults Table - NO MFA found - [UserName: " + CommonHelper.GetDecryptedData(noochMember.UserName) + "]");
-                            }
-                            else
-                            {
-                                Logger.Error("Service Controller -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber FAILURE - Could not save record in SynapseBankLoginResults Table - ABORTING - [MemberID: " + MemberId + "]");
-
-                                res.errorMsg = "Failed to save entry in BankLoginResults table (inner)";
-                                return res;
                             }
                         }
                         catch (Exception ex)
                         {
                             Logger.Error("Service Controller -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber EXCEPTION on attempting to save SynapseBankLogin response for MFA Bank in DB - [MemberID: " +
                                                    MemberId + "], [Exception: " + ex + "]");
-
                             res.errorMsg = "Got exception - Failed to save entry in BankLoginResults table";
-                            return res;
                         }
 
                         #endregion Save New Record In SynapseBankLoginResults
-
-
-                        #region No MFA response returned
-
-                        // MFA is NOT required this time
-
-                        // Array[] of banks ("nodes") expected here
-                        // this old sturcture is unable to parse synapse V3 response  add new AddNodeV3BanksListResult -- to parse
-                        // SynapseV3BanksListClassint allNodesParsedResult = JsonConvert.DeserializeObject<SynapseV3BanksListClassint>(content);
-
-                        RootBankObject allNodesParsedResult = JsonConvert.DeserializeObject<RootBankObject>(content);
-
-                        if (allNodesParsedResult != null)
-                        {
-                            res.Is_MFA = false;
-                            res.SynapseNodesList = allNodesParsedResult;
-
-                            Logger.Info("Service Controller -> SynapseV3AddNode - No MFA - SUCCESSFUL, Now saving all banks found in Bank Array (n = " +
-                                                   allNodesParsedResult.nodes.Length + ") for: [" + MemberId + "]");
-
-                            #region Save Each Bank In Nodes Array From Synapse
-
-                            short numOfBanksSavedSuccessfully = 0;
-
-                            // saving these banks ("nodes) in DB, later one of these banks will be set as default bank
-                            foreach (nodes n in allNodesParsedResult.nodes)
-                            {
-                                try
-                                {
-                                    SynapseBanksOfMember sbm = new SynapseBanksOfMember();
-
-                                    sbm.AddedOn = DateTime.Now;
-                                    sbm.IsDefault = false;
-                                    sbm.MemberId = Utility.ConvertToGuid(MemberId);
-
-                                    // Holdovers from v3
-                                    sbm.account_number_string = !String.IsNullOrEmpty(n.info.account_num) ? CommonHelper.GetEncryptedData(n.info.account_num) : null;
-                                    sbm.bank_name = !String.IsNullOrEmpty(n.info.bank_name) ? CommonHelper.GetEncryptedData(n.info.bank_name) : null;
-                                    sbm.name_on_account = !String.IsNullOrEmpty(n.info.name_on_account) ? CommonHelper.GetEncryptedData(n.info.name_on_account) : null;
-                                    sbm.nickname = !String.IsNullOrEmpty(n.info.nickname) ? CommonHelper.GetEncryptedData(n.info.nickname) : null;
-                                    sbm.routing_number_string = !String.IsNullOrEmpty(n.info.routing_num) ? CommonHelper.GetEncryptedData(n.info.routing_num) : null;
-                                    sbm.is_active = (n.is_active != null) ? n.is_active : false;
-                                    sbm.Status = "Not Verified";
-                                    // CLIFF (10/11/15): We were using this "bankid" to identify the bank in other places.  Now we need to use oid (below) instead.
-                                    // sbm.bankid = !String.IsNullOrEmpty(n._id.oid) ? n._id.oid : null;
-                                    // These 2 values were *int* IN v3, but now both are strings...
-                                    //sbm.account_class = v.account_class;
-                                    //sbm.account_type = v.type_synapse;
-
-                                    // Just For Nooch's Internal Use
-                                    sbm.mfa_verifed = false;
-
-                                    // New in V3
-                                    sbm.oid = !String.IsNullOrEmpty(n._id.oid) ? n._id.oid : null;
-                                    sbm.allowed = !String.IsNullOrEmpty(n.allowed) ? n.allowed : "UNKNOWN";
-                                    sbm.@class = !String.IsNullOrEmpty(n.info._class) ? n.info._class : "UNKNOWN";
-                                    sbm.supp_id = !String.IsNullOrEmpty(n.extra.supp_id) ? n.extra.supp_id : null;
-                                    sbm.type_bank = !String.IsNullOrEmpty(n.info.type) ? n.info.type : "UNKNOWN";
-                                    sbm.type_synapse = "ACH-US";
-
-
-                                    _dbContext.SynapseBanksOfMembers.Add(sbm);
-                                    int addBankToDB = _dbContext.SaveChanges();
-
-                                    if (addBankToDB == 1)
-                                    {
-                                        _dbContext.Entry(sbm).Reload();
-                                        Logger.Info("Service Controller -> SynapseV3AddNode -SUCCESSFULLY Added Bank to DB - [MemberID: " + MemberId + "]");
-
-                                        numOfBanksSavedSuccessfully += 1;
-                                    }
-                                    else
-                                    {
-                                        Logger.Error("Service Controller -> SynapseV3AddNode - Failed to save new BANK in SynapseBanksOfMembers Table in DB - [MemberID: " + MemberId + "]");
-
-                                        numOfBanksSavedSuccessfully -= 1;
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    res.errorMsg = "Error occured while saving banks from Synapse.";
-                                    Logger.Error("Service Controller -> SynapseV3AddNode EXCEPTION on attempting to save SynapseBankLogin response for MFA Bank in DB - [MemberID: " +
-                                                   MemberId + "], [Exception: " + ex + "]");
-                                }
-                            }
-
-                            if (numOfBanksSavedSuccessfully > 0)
-                            {
-                                res.errorMsg = "OK";
-                                res.Is_success = true;
-                            }
-                            else
-                            {
-                                Logger.Error("Service Controller -> SynapseV3AddNode - No banks were saved in DB - [MemberID: " + MemberId + "]");
-                                res.errorMsg = "No banks saved in DB";
-                            }
-
-                            #endregion Save Each Bank In Nodes Array From Synapse
-                        }
-                        else
-                        {
-                            Logger.Info("Service Controller -> SynapseV3 ADD NODE (No MFA) ERROR: allbanksParsedResult was NULL for: [" + MemberId + "]");
-
-                            res.Is_MFA = false;
-                            res.errorMsg = "Error occured while parsing banks list.";
-                        }
-
-                        return res;
-
-                        #endregion No MFA response returned
                     }
                     else
                     {
                         // Synapse response for 'success' was not true
-                        Logger.Error("Service Controller -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber ERROR - Synapse response for 'success' was not true - [MemberID: " + MemberId + "]");
+                        Logger.Error("Service Cntrlr -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber ERROR - Synapse response for 'success' was not true - [MemberID: " + MemberId + "]");
                         res.errorMsg = "Synapse response for success was not true";
                     }
+
+                    return res;
                 }
                 catch (WebException we)
                 {
                     #region Bank Login Catch
 
+                    res.Is_success = false;
+
                     var errorCode = ((HttpWebResponse)we.Response).StatusCode;
 
-                    Logger.Info("Service Controller -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber ADD NODE FAILED. WebException was: [" + we.ToString() + "], and errorCode: [" + errorCode.ToString() + "]");
+                    Logger.Error("Service Cntrlr -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber ADD NODE FAILED - errorCode: [" +
+                                 errorCode.ToString() + "] WebException was: [" + we.ToString() + "]");
 
-                    res.Is_success = false;
-                    res.Is_MFA = false;
 
-                    if (errorCode != null) //.ToString().ToLower() == "badrequest" || errorCode.ToString().ToLower() == "unauthorized")
+                    if (errorCode != null)
                     {
                         var resp = new StreamReader(we.Response.GetResponseStream()).ReadToEnd();
                         JObject jsonFromSynapse = JObject.Parse(resp);
-
-                        JToken reason = jsonFromSynapse["reason"];
-
-                        if (reason != null)
-                        {
-                            Logger.Info("Service Controller -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber FAILED. Synapse REASON was: [" + reason + "]");
-                            // CLIFF: This was jsonfromsynapse["message"] but I changed to "reason" based on Synapse docs... is that right?
-                            // Malkit: No, when I debugged I found response was "message" instead of "reason" I think they are sending 2 different things so instead of modifying this I am adding another case below
-                            res.errorMsg = jsonFromSynapse["reason"].ToString();
-                        }
-
-                        JToken message = jsonFromSynapse["message"];
-
-                        if (message != null)
-                        {
-                            Logger.Info("Service Controller -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber FAILED. Synapse MESSAGE was: [" + message + "]");
-                            res.errorMsg = jsonFromSynapse["message"].ToString();
-                        }
 
                         JToken error = jsonFromSynapse["error"];
 
                         if (error != null)
                         {
-
-
-                            Logger.Info("Service Controller -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber FAILED. Synapse MESSAGE was: [" + error + "]");
+                            Logger.Error("Service Cntrlr -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber FAILED. Synapse MESSAGE was: [" + jsonFromSynapse["error"]["en"] + "]");
                             res.errorMsg = jsonFromSynapse["error"]["en"].ToString();
                         }
-
                     }
                     else
                     {
-                        Logger.Info("Service Controller -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber FAILED. Synapse response did not include a 'reason' or 'message'.");
-                        res.errorMsg = "Error #6553 - Sorry this is not more helpful :-(";
+                        Logger.Error("Service Cntrlr -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber FAILED. No Error Msg found from Synapse response.");
+                        res.errorMsg = "Error #3398 - Sorry this is not more helpful :-(";
                     }
 
                     return res;
@@ -3658,11 +3404,10 @@ namespace Nooch.API.Controllers
                 }
 
                 #endregion Call SynapseV3 Add Node API
-
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Controller -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber FAILED - OUTER EXCEPTION - [MemberID: " + MemberId + "], [Exception: " + ex + "]");
+                Logger.Error("Service Cntrlr -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber FAILED - OUTER EXCEPTION - [MemberID: " + MemberId + "], [Exception: " + ex + "]");
                 res.errorMsg = "Service Controller Outer Exception";
             }
 
@@ -3982,7 +3727,6 @@ namespace Nooch.API.Controllers
                                 {
                                     Logger.Info("Service Cntrlr -> SynapseV3AddNode SUCCESS - Added record to synapseBankLoginResults Table - Got MFA from Synapse - [UserName: " +
                                                 CommonHelper.GetDecryptedData(noochMember.UserName) + "], [MFA Question: " + res.mfaQuestion + "]");
-
                                     res.Is_success = true;
                                     return res;
                                 }
@@ -3992,7 +3736,6 @@ namespace Nooch.API.Controllers
                             else
                             {
                                 Logger.Error("Service Cntrlr -> SynapseV3AddNode FAILURE - Could not save record in SynapseBankLoginResults Table - ABORTING - [MemberID: " + MemberId + "]");
-
                                 res.errorMsg = "Failed to save entry in BankLoginResults table (inner)";
                                 return res;
                             }
@@ -4001,7 +3744,6 @@ namespace Nooch.API.Controllers
                         {
                             Logger.Error("Service Cntrlr -> SynapseV3AddNode EXCEPTION on attempting to save SynapseBankLogin response for MFA Bank in DB - [MemberID: " +
                                           MemberId + "], [Exception: " + ex + "]");
-
                             res.errorMsg = "Got exception - Failed to save entry in BankLoginResults table";
                             return res;
                         }
@@ -4014,9 +3756,6 @@ namespace Nooch.API.Controllers
                         // MFA is NOT required this time
 
                         // Array[] of banks ("nodes") expected here
-                        // this old sturcture is unable to parse synapse V3 response  add new AddNodeV3BanksListResult -- to parse
-                        //SynapseV3BanksListClassint allNodesParsedResult = JsonConvert.DeserializeObject<SynapseV3BanksListClassint>(content);
-
                         RootBankObject allNodesParsedResult = JsonConvert.DeserializeObject<RootBankObject>(content);
 
                         if (allNodesParsedResult != null)
@@ -4072,13 +3811,6 @@ namespace Nooch.API.Controllers
                                     sbm.routing_number_string = !String.IsNullOrEmpty(n.info.routing_num) ? CommonHelper.GetEncryptedData(n.info.routing_num) : null;
                                     sbm.is_active = (n.is_active != null) ? n.is_active : false;
                                     sbm.Status = "Not Verified";
-                                    // CLIFF (10/11/15): We were using this "bankid" to identify the bank in other places.  Now we need to use oid (below) instead.
-                                    // sbm.bankid = !String.IsNullOrEmpty(n._id.oid) ? n._id.oid : null;
-                                    // These 2 values were *int* IN v3, but now both are strings...
-                                    //sbm.account_class = v.account_class;
-                                    //sbm.account_type = v.type_synapse;
-
-                                    // Just For Nooch's Internal Use
                                     sbm.mfa_verifed = false;
 
                                     // New in V3
@@ -4094,17 +3826,14 @@ namespace Nooch.API.Controllers
                                     int addBankToDB = _dbContext.SaveChanges();
                                     _dbContext.Entry(sbm).Reload();
 
-
                                     if (addBankToDB == 1)
                                     {
                                         Logger.Info("Service Controller -> SynapseV3AddNode -SUCCESSFULLY Added Bank to DB - [MemberID: " + MemberId + "]");
-
                                         numOfBanksSavedSuccessfully += 1;
                                     }
                                     else
                                     {
                                         Logger.Error("Service Controller -> SynapseV3AddNode - Failed to save new BANK in SynapseBanksOfMembers Table in DB - [MemberID: " + MemberId + "]");
-
                                         numOfBanksSavedSuccessfully -= 1;
                                     }
                                 }
@@ -5982,7 +5711,7 @@ namespace Nooch.API.Controllers
             }
         }
 
- 
+
 
         [HttpPost]
         [ActionName("TransferMoneyToNonNoochUserThroughPhoneUsingsynapse")]
@@ -6129,28 +5858,24 @@ namespace Nooch.API.Controllers
         }
 
 
-
         [HttpGet]
         [ActionName("GetStateNameByZipcode")]
         public GoogleGeolocationOutput GetStateNameByZipcode(string zipCode)
         {
             GoogleGeolocationOutput res = new GoogleGeolocationOutput();
+            res.IsSuccess = false;
+
             try
             {
-
                 res = CommonHelper.GetStateNameByZipcode(zipCode);
-
             }
             catch (Exception ex)
             {
                 Logger.Error("Service Layer -> GetStateNameByZipcode FAILED (Outer Exception) - zipCode: [" + zipCode + "], Exception: [" + ex + "]");
-                res.IsSuccess = false;
                 res.ErrorMessage = "Server Error.";
-
             }
             return res;
         }
-
 
     }
 }
