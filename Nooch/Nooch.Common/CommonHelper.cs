@@ -2907,6 +2907,8 @@ namespace Nooch.Common
 
         public static string UpdateMemberIPAddressAndDeviceId(string MemberId, string IP, string DeviceId)
         {
+            Logger.Info("Common Helper -> UpdateMemberIPAddressAndDeviceId Initiated - MemberID: [" + MemberId + "], IP: [" + IP + "], DeviceID: [" + DeviceId + "]");
+
             if (String.IsNullOrEmpty(MemberId))
             {
                 return "MemberId not supplied.";
