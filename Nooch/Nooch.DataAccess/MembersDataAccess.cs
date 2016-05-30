@@ -2472,14 +2472,15 @@ namespace Nooch.DataAccess
         }
 
 
-        public synapseCreateUserV3Result_int RegisterExistingUserWithSynapseV3(string transId, string memberId, string userEmail, string userPhone, string userName, string pw, string ssn, string dob, string address, string zip, string fngprnt, string ip, string cip, string isIdImageAdded = "0", string idImageData = "")
+        public synapseCreateUserV3Result_int RegisterExistingUserWithSynapseV3(string transId, string memberId, string userEmail, string userPhone, string userName, string pw, string ssn, string dob, string address, string zip, string fngprnt, string ip, string cip, string fbid, string isIdImageAdded = "0", string idImageData = "")
         {
             Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 Initiated - [Name: " + userName +
                         "], Email: [" + userEmail + "], Phone: [" + userPhone +
                         "], DOB: [" + dob + "], SSN: [" + ssn +
                         "], Address: [" + address + "], ZIP: [" + zip +
                         "], IP: [" + ip + "], Fngprnt: [" + fngprnt +
-                        "], TransId: [" + transId + "], CIP: [" + cip + "], isIdImageAdded: " + isIdImageAdded + "]");
+                        "], TransId: [" + transId + "], CIP: [" + cip +
+                        "], FBID: [" + fbid + "], isIdImageAdded: " + isIdImageAdded + "]");
 
             synapseCreateUserV3Result_int res = new synapseCreateUserV3Result_int();
             res.success = false;
@@ -2632,6 +2633,8 @@ namespace Nooch.DataAccess
                 memberObj.Status = "Active";
                 memberObj.UDID1 = !String.IsNullOrEmpty(fngprnt) ? fngprnt : memberObj.UDID1;
                 memberObj.DateModified = DateTime.Now;
+                memberObj.cipTag = !String.IsNullOrEmpty(cip) ? cip : memberObj.cipTag;
+                memberObj.FacebookUserId = !String.IsNullOrEmpty(fbid) ? fbid : memberObj.FacebookUserId;
                 if (!String.IsNullOrEmpty(pw))
                 {
                     memberObj.Password = CommonHelper.GetEncryptedData(pw);
@@ -2639,8 +2642,6 @@ namespace Nooch.DataAccess
 
                 int dbUpdatedSuccessfully = _dbContext.SaveChanges();
                 _dbContext.Entry(memberObj).Reload();
-
-                #endregion Update Member's Record in Members.dbo
 
                 // Now add the IP address record to the MembersIPAddress Table
                 try
@@ -2652,6 +2653,9 @@ namespace Nooch.DataAccess
                     Logger.Error("MDA -> RegisterExistingUserWithSynapseV3 EXCEPTION on trying to save new Member's IP Address - " +
                                  "[MemberID: " + memberId + "], [Exception: " + ex + "]");
                 }
+
+                #endregion Update Member's Record in Members.dbo
+
 
                 #region Update Tenant Record If For A Tenant
 
@@ -2746,6 +2750,7 @@ namespace Nooch.DataAccess
                 }
 
                 #endregion Update Tenant Record If For A Tenant
+
 
                 #region Member Updated In Nooch DB Successfully
 
@@ -2942,7 +2947,9 @@ namespace Nooch.DataAccess
         }
 
 
-        public synapseCreateUserV3Result_int RegisterNonNoochUserWithSynapseV3(string transId, string userEmail, string userPhone, string userName, string pw, string ssn, string dob, string address, string zip, string fngprnt, string ip, string cip, string isIdImageAdded, string idImageData)
+        public synapseCreateUserV3Result_int RegisterNonNoochUserWithSynapseV3(string transId, string userEmail, string userPhone, string userName, string pw,
+                                                                               string ssn, string dob, string address, string zip, string fngprnt, string ip,
+                                                                               string cip, string fbid, string isIdImageAdded, string idImageData)
         {
             // What's the plan? -- Store new Nooch member, then create Synpase user, then check if user supplied a (is password.Length > 0)
             // then store data in new added field in SynapseCreateUserResults table for later use
@@ -2952,7 +2959,8 @@ namespace Nooch.DataAccess
                         "], DOB: [" + dob + "], SSN: [" + ssn +
                         "], Address: [" + address + "], ZIP: [" + zip +
                         "], IP: [" + ip + "], Fngprnt: [" + fngprnt +
-                        "], TransId: [" + transId + "], CIP: [" + cip + "], isIdImageAdded: " + isIdImageAdded + "]");
+                        "], TransId: [" + transId + "], CIP: [" + cip +
+                        "], FBID: [" + fbid + "], isIdImageAdded: " + isIdImageAdded + "]");
 
             synapseCreateUserV3Result_int res = new synapseCreateUserV3Result_int();
             res.success = false;
@@ -3075,6 +3083,7 @@ namespace Nooch.DataAccess
 
                 #endregion Get Invite Code ID from transaction
 
+
                 #region Create New Nooch Member Record in Members.dbo
 
                 #region Parse And Format Data To Save
@@ -3162,7 +3171,8 @@ namespace Nooch.DataAccess
                     Photo = Utility.GetValueFromConfig("PhotoUrl") + "gv_no_photo.png",
                     UDID1 = !String.IsNullOrEmpty(fngprnt) ? fngprnt : null,
                     IsVerifiedWithSynapse = false,
-                    cipTag = cip
+                    cipTag = cip,
+                    FacebookUserId = !String.IsNullOrEmpty(fbid) ? fbid : null,
                 };
 
                 if (inviteCode.Length > 0)
@@ -3186,10 +3196,6 @@ namespace Nooch.DataAccess
                     throw ex;
                 }
 
-                #endregion Create New Nooch Member Record in Members.dbo
-
-                NewUsersNoochMemId = member.MemberId.ToString();
-
                 // LASTLY, ADD THE IP ADDRESS RECORD TO THE MembersIPAddress Table =
                 // (waited until after the member was actually added to the Members table above... shouldn't actually matter b/c 
                 // the UpdateIPAddress method will just create a new record if one doesn't exist, but just to be safe.)
@@ -3202,6 +3208,11 @@ namespace Nooch.DataAccess
                     Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 EXCEPTION on trying to save new Member's IP Address - " +
                                  "MemberID: [" + NewUsersNoochMemId + "], [Exception: " + ex + "]");
                 }
+
+                NewUsersNoochMemId = member.MemberId.ToString();
+
+                #endregion Create New Nooch Member Record in Members.dbo
+
 
                 #region Member Added to Nooch DB Successfully
 

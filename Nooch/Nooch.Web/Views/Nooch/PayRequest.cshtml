@@ -49,7 +49,6 @@
             </a>
         </div>
     </nav>
-    <div class="fb-like m-30" data-width="450"></div>
 
     @if (rpr.payreqInfo != false)
     {
@@ -320,12 +319,24 @@
                             <h3><i class="fa fa-fw fa-user"></i><br />Contact<span class="hide-sm"> Info</span></h3>
                             <section>
 
-                                <div class="well well-sm">Please help us prevent identity theft<span class="ast desk-only">*</span> by completing the following fields.</div>
+                                <div class="well well-sm text-left">
+                                    <div class="text-center m-b-5" style="text-decoration:underline;">To prevent identity theft, please:</div>
+                                    <ol style="font-size:14px; margin-bottom: 4px;">
+                                        <li>Enter your <span>date of birth</span></li>
+                                        <li>
+                                            Then do ONE of the following:
+                                            <ol type="A">
+                                                <li>enter your SSN, OR...</li>
+                                                <li>connect to your Facebook account.</li>
+                                            </ol>
+                                        </li>
+                                    </ol>
+                                </div>
 
                                 <dl class="dl-horizontal" id="dobGrp">
                                     <dt class="p-t-10 withIcon">
-                                        <i class="fa fa-fw fa-question-circle-o help-icon m-r-5" data-trigger="hover" data-toggle="popover" data-placement="auto" data-content="A date of birth is needed to verify a user's identity. Don't worry - nobody sees this!"></i>
                                         Date of Birth
+                                        <i class="fa fa-fw fa-question-circle-o help-icon m-l-5" data-trigger="hover" data-toggle="popover" data-placement="auto" data-content="A date of birth is needed to verify a user's identity. Don't worry - nobody sees this!"></i>
                                     </dt>
                                     <dd>
                                         <div class="form-group withIcon datePickerGrp">
@@ -337,17 +348,23 @@
                                     </dd>
                                 </dl>
 
-                                <dl class="dl-horizontal" id="ssnGrp">
-                                    <dt class="p-t-10">SSN<small>Last 4 Digits Only</small></dt>
-                                    <dd>
+                                <div class="row m-t-20">
+                                    <div class="col-xs-5 p-r-10" id="ssnGrp">
                                         <div class="form-group">
-                                            <div class="dtp-container dropdown fg-line">
-                                                <span id="ssnPrefix">XXX - XX -</span>
-                                                <input id="idVer-ssn" type='text' class="form-control" value="" placeholder="1234" />
-                                            </div>
+                                            <label for="idVer-ssn">SSN</label>
+                                            <input id="idVer-ssn" type="text" class="form-control" value="" placeholder="XXX - XX - XXXX" />
                                         </div>
-                                    </dd>
-                                </dl>
+                                    </div>
+
+                                    <div class="col-xs-2 p-0">
+                                        <div class="orDiv">OR</div>
+                                    </div>
+
+                                    <div class="col-xs-5 p-l-10">
+                                        <button id="fbLoginBtn" class="btn btn-fb m-t-10" type="button" onclick="checkLoginState()"><i class="fa fa-facebook-square"></i><span>Connect with Facebook</span></button>
+                                        <div id="fbResult" class="animated text-center hidden m-t-5"></div>
+                                    </div>
+                                </div>
 
                             </section>
 

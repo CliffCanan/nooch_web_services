@@ -873,9 +873,12 @@ namespace Nooch.Web.Controllers
         }
 
 
-        public ActionResult RegisterUserWithSynpForDepositMoney(string transId, string memberId, string userEm, string userPh, string userName, string userPw, string ssn, string dob, string address, string zip, string fngprnt, string ip, string isIdImage = "0", string idImagedata = "")
+        public ActionResult RegisterUserWithSynpForDepositMoney(string transId, string memberId, string userEm, string userPh, string userName,
+                                                                string userPw, string ssn, string dob, string address, string zip, string fngprnt,
+                                                                string ip, string cip, string fbid, string isIdImage = "0", string idImagedata = "")
         {
-            Logger.Info("DepositMoney Code Behind -> RegisterUserWithSynpForDepositMoney Initiated");
+            Logger.Info("DepositMoney Code Behind -> RegisterUserWithSynpForDepositMoney Initiated - Email: [" + userEm +
+                        "], TransID: [" + transId + "], memberId: [" + memberId + "], CIP: [" + cip + "], FBID: [" + fbid + "]");
 
             RegisterUserSynapseResultClassExt res = new RegisterUserSynapseResultClassExt();
             res.success = "false";
@@ -893,11 +896,10 @@ namespace Nooch.Web.Controllers
                             ", memberId (If existing user): " + memberId + ", userEm: " + userEm +
                             ", userPh: " + userPh + ", userPw: " + userPw +
                             ", ssn: " + ssn + ", dob: " + dob +
-                            ", address: " + address + ", zip: " + zip);
-
+                            ", address: " + address + ", zip: " + zip +
+                            ", CIP: [" + cip + "], FBID: [" + fbid + "]");
 
                 RegisterUserWithSynapseV3_Input inputclass = new RegisterUserWithSynapseV3_Input();
-                // Member DOES NOT already exist, so use RegisterNONNOOCHUserWithSynapse()
                 inputclass.address = address;
                 inputclass.dob = dob;
                 inputclass.email = userEm;
@@ -915,7 +917,7 @@ namespace Nooch.Web.Controllers
                 var scriptSerializer = new JavaScriptSerializer();
                 string json = scriptSerializer.Serialize(inputclass);
 
-                Logger.Info("DepositMoney Code-Behind -> RegisterUserWithSynp - Full Query String: [ " + String.Concat(serviceUrl, serviceMethod) + " ]");
+                Logger.Info("DepositMoney Code-Behind -> RegisterUserWithSynpForDepositMoney - Full Query String: [ " + String.Concat(serviceUrl, serviceMethod) + " ]");
 
                 RegisterUserSynapseResultClassExt regUserResponse = ResponseConverter<RegisterUserSynapseResultClassExt>.CallServicePostMethod(String.Concat(serviceUrl, serviceMethod), json);
 
@@ -927,12 +929,12 @@ namespace Nooch.Web.Controllers
                 }
                 else if (regUserResponse.success == "False")
                 {
-                    Logger.Error("DepositMoney Code-Behind -> RegisterUserWithSynp FAILED - SERVER RETURNED 'success' = 'false' - [TransID: " + transId + "]");
+                    Logger.Error("DepositMoney Code-Behind -> RegisterUserWithSynpForDepositMoney FAILED - SERVER RETURNED 'success' = 'false' - [TransID: " + transId + "]");
                     res.reason = regUserResponse.reason;
                 }
                 else
                 {
-                    Logger.Error("DepositMoney Code-Behind -> RegisterUserWithSynp FAILED - UNKNOWN ERROR FROM SERVER - [TransID: " + transId + "]");
+                    Logger.Error("DepositMoney Code-Behind -> RegisterUserWithSynpForDepositMoney FAILED - UNKNOWN ERROR FROM SERVER - [TransID: " + transId + "]");
                 }
 
                 res.ssn_verify_status = regUserResponse.ssn_verify_status;
@@ -941,7 +943,7 @@ namespace Nooch.Web.Controllers
             }
             catch (Exception ex)
             {
-                Logger.Error("DepositMoney Code-Behind -> RegisterUserWithSynp attempt FAILED Failed, Reason: [" + res.reason + "], " +
+                Logger.Error("DepositMoney Code-Behind -> RegisterUserWithSynpForDepositMoney attempt FAILED Failed, Reason: [" + res.reason + "], " +
                              "TransId: [" + transId + "], [Exception: " + ex + "]");
                 return Json(res);
             }
@@ -1429,10 +1431,12 @@ namespace Nooch.Web.Controllers
         }
 
 
-        public ActionResult RegisterUserWithSynpForPayRequest(string transId, string memberId, string userEm, string userPh, string userName, string userPw, string ssn, string dob, string address, string zip, string fngprnt, string ip, string cip, string isIdImage = "0", string idImagedata = "")
+        public ActionResult RegisterUserWithSynpForPayRequest(string transId, string memberId, string userEm, string userPh, string userName,
+                                                              string userPw, string ssn, string dob, string address, string zip, string fngprnt,
+                                                              string ip, string cip, string fbid, string isIdImage = "0", string idImagedata = "")
         {
             Logger.Info("PayRequest Code Behind -> RegisterUserWithSynpForPayRequest Initiated - Email: [" + userEm +
-                        "], TransID: [" + transId + "], memberId: [" + memberId + "], CIP: [" + cip + "]");
+                        "], TransID: [" + transId + "], memberId: [" + memberId + "], CIP: [" + cip + "], FBID: [" + fbid + "]");
 
             RegisterUserSynapseResultClassExt res = new RegisterUserSynapseResultClassExt();
             res.success = "false";
@@ -1449,7 +1453,7 @@ namespace Nooch.Web.Controllers
                             ", userPh: " + userPh + ", userPw: " + userPw +
                             ", ssn: " + ssn + ", dob: " + dob +
                             ", address: " + address + ", zip: " + zip +
-                            ", Has ID Img: [" + isIdImage + "], CIP: [" + cip + "]");
+                            ", Has ID Img: [" + isIdImage + "], CIP: [" + cip + "], FBID: [" + fbid + "]");
 
 
                 #region Initial Checks
@@ -1501,6 +1505,7 @@ namespace Nooch.Web.Controllers
                 inputClass.transId = transId;
                 inputClass.zip = zip;
                 inputClass.cip = !String.IsNullOrEmpty(cip) ? cip : "renter";
+                inputClass.fbid = fbid;
                 
                 if (!String.IsNullOrEmpty(memberId) && memberId.Length > 30)
                 {

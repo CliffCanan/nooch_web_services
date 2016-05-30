@@ -5,11 +5,13 @@ var USERTYPE = $('#usrTyp').val();
 var MemID_EXISTING = $('#memidexst').val();
 var FOR_RENTSCENE = $('#rs').val();
 var CIP = $('#cip').val();
+var FBID = "not connected";
 
 var usrPhn, usrEm;
 var resultReason = "";
 var fingprint = "";
 var memIdGen = "";
+
 var completedFirstWizard = false;
 var sendToXtraVer = false;
 
@@ -310,7 +312,7 @@ function runIdWizard() {
                                 $('#idVer-dob').data("DateTimePicker").show();
                             }, 150);
                         });
-            $('#idVer-ssn').mask("0000");
+            $('#idVer-ssn').mask("000 - 00 - 0000");
             $('#idVer-zip').mask("00000");
             $('#idVer-phone').val(usrPhn);
             $('#idVer-email').val(usrEm);
@@ -396,7 +398,8 @@ function runIdWizard() {
                         updateValidationUi("zip", true);
 
                         // Great, go to the next step of the wizard :-]
-                        $('#idVerWiz > .content').animate({ height: "24em" }, 500)
+
+                        $('#idVerWiz > .content').animate({ height: "25em" }, 500)
                         return true;
                     }
                     else {
@@ -416,11 +419,12 @@ function runIdWizard() {
                 {
                     updateValidationUi("dob", true);
 
+					var ssnVal = $('#idVer-ssn').val().trim();
+					ssnVal = ssnVal.replace(/ /g,"").replace(/-/g,"");
                     // Check SSN field
-                    if ($('#idVer-ssn').val().length == 4)
+                    if (ssnVal.length == 9 || FBID != "not connected")
                     {
                         updateValidationUi("ssn", true);
-
 
                         // Great, go to the next step of the wizard :-]
                         // FILE INPUT DOCUMENTATION: http://plugins.krajee.com/file-input#options
@@ -438,8 +442,8 @@ function runIdWizard() {
                                 indicatorNew: '',
                             },
                             maxFileCount: 1,
-                            maxFileSize: 500,
-                            msgSizeTooLarge: "File '{name}' ({size} KB) is a bit too large! Max allowed file size is {maxSize} KB. Please try a slightly smaller picture!",
+                            maxFileSize: 750,
+                            msgSizeTooLarge: "<strong>'{name}' ({size} KB)</strong> is a bit too large! Max allowed file size is <strong>{maxSize} KB</strong>. &nbsp;Please try a smaller picture!",
                             showCaption: false,
                             showUpload: false,
                             showPreview: true,
@@ -476,13 +480,11 @@ function runIdWizard() {
                         $('#idVer_idDoc').on('fileclear', function (event) {
                             isFileAdded = "0";
                             FileData = null;
-                            console.log("fileclear");
                         });
 
                         $('#idVer_idDoc').on('filecleared', function (event) {
                             isFileAdded = "0";
                             FileData = null;
-                            console.log("filecleareD");
                         });
 
                         $('#idVerWiz > .content').animate({ height: "26em" }, 800)
@@ -557,12 +559,12 @@ function updateValidationUi(field, success) {
             helpBlockTxt = "Please enter your date of birth. &nbsp;Only needed to verify your ID!"
         }
         else if (field == "ssn") {
-            helpBlockTxt = isSmScrn ? "Please enter just the <strong>last 4</strong> digits of your SSN."
-                                    : "Please enter just the <strong>LAST 4 digits</strong> of your SSN. This is used solely to protect your account."
+            helpBlockTxt = isSmScrn ? "Please enter your SSN."
+                                    : "Please enter your SSN or connect with FB."
 
             if (isSmScrn)
             {
-                $('#idVerWiz > .content').animate({ height: "24em" }, 300)
+                $('#idVerWiz > .content').animate({ height: "26em" }, 300)
             }
         }
         else if (field == "address") {
@@ -676,12 +678,15 @@ function createRecord() {
     var zipVal = $('#idVer-zip').val().trim();
     var fngprntVal = fingprint;
     var ipVal = ipusr;
-    var isImageAdded = isFileAdded;
+	var isImageAdded = isFileAdded;
     var imageData = FileData;
 
-    console.log("{transId: " + TRANSID + ", userEm: " + userEmVal + ", userPh: " + userPhVal + ", userName: " + userNameVal +
-                ", userPw: " + userPwVal + ", ssn: " + ssnVal + ", dob: " + dobVal + ", fngprnt: " + fngprntVal + ", ip: " + ipVal +
-				", isIdImage: " + isImageAdded + ", CIP: " + CIP + "}");//", idImagedata: " + imageData + "}");
+    console.log("{transId: " + TRANSID + ", userEm: " + userEmVal +
+				", userPh: " + userPhVal + ", userName: " + userNameVal +
+                ", userPw: " + userPwVal + ", ssn: " + ssnVal +
+				", dob: " + dobVal + ", fngprnt: " + fngprntVal +
+				", ip: " + ipVal + ", isIdImage: " + isImageAdded +
+				", CIP: " + CIP + "}");//", idImagedata: " + imageData + "}");
 
     var urlToUse = "";
     if (transType == "send")
@@ -824,8 +829,7 @@ function createRecord() {
 }
 
 
-function idVerifiedSuccess()
-{
+function idVerifiedSuccess() {
     isIdVerified = true;
 
     // HIDE THE MODAL CONTAINING THE WIZARD
@@ -1244,7 +1248,7 @@ function payBtnClicked()
 				message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Attempting Payment...</span>',
 				css: {
 					border: 'none',
-					padding: '25px 8px 20px',
+					padding: '26px 8px 20px',
 					backgroundColor: '#000',
 					'-webkit-border-radius': '14px',
 					'-moz-border-radius': '14px',
@@ -1329,14 +1333,49 @@ window.fbAsyncInit = function ()
     });
 };
 
-(function (d, s, id)
-{
+(function (d, s, id) {
     var js, fjs = d.getElementsByTagName(s)[0];
     if (d.getElementById(id)) { return; }
     js = d.createElement(s); js.id = id;
     js.src = "//connect.facebook.net/en_US/sdk.js";
     fjs.parentNode.insertBefore(js, fjs);
 }(document, 'script', 'facebook-jssdk'));
+
+var fbStatus = "";
+// The response object is returned with a status field that lets the app know the current login status of the person.
+function checkLoginState() {
+    FB.getLoginStatus(function (response) {
+        console.log(response);
+        fbStatus = response.status;
+
+        if (response.status === 'connected') {
+            // Logged into your app and FB
+            FBID = response.authResponse.userID;
+            $('#fbLoginBtn span').text('Facebook Connected');
+            $('#fbResult').html('<strong>Facebook Connected Successfully! <i class="fa fa-smile-o m-l-5"></i></strong>')
+						  .addClass('bounceIn text-success').removeClass('hidden');
+        }
+        else {
+            // Not logged in, so attempt to Login to FB
+            fbLogin();
+        }
+    });
+}
+
+function fbLogin() {
+    FB.login(function (response) {
+        if (response.status === 'connected') {
+            FBID = response.authResponse.userID;
+
+            $('#fbLoginBtn span').text('Facebook Connected');
+            $('#fbResult').html('<strong>Facebook Connected Successfully! <i class="fa fa-smile-o m-l-5"></i></strong>')
+						  .addClass('bounceIn text-success').removeClass('hidden');
+        }
+        else {
+            FBID = "not connected";
+        }
+    });
+}
 
 
 // -----------------

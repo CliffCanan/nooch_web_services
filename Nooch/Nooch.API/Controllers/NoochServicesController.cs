@@ -3080,7 +3080,7 @@ namespace Nooch.API.Controllers
             {
                 Logger.Info("Service Cntrlr -> RegisterExistingUserWithSynapseV3 Initiated - MemberID: [" + input.memberId + "], " +
                             "Name: [" + input.fullname + "], Email: [" + input.email +
-                            "Is ID Img Sent: [" + input.isIdImageAdded + "], CIP: [" + input.cip + "]");
+                            "Is ID Img Sent: [" + input.isIdImageAdded + "], CIP: [" + input.cip + "], FBID: [" + input.fbid + "]");
 
                 MembersDataAccess mda = new MembersDataAccess();
                 RegisterUserSynapseResultClassExt nc = new RegisterUserSynapseResultClassExt();
@@ -3088,7 +3088,7 @@ namespace Nooch.API.Controllers
                 synapseCreateUserV3Result_int res = mda.RegisterExistingUserWithSynapseV3(input.transId, input.memberId, input.email,
                                                                                           input.phone, input.fullname, input.pw, input.ssn,
                                                                                           input.dob, input.address, input.zip, input.fngprnt,
-                                                                                          input.ip, input.cip, input.isIdImageAdded, input.idImageData);
+                                                                                          input.ip, input.cip, input.fbid, input.isIdImageAdded, input.idImageData);
 
                 if (res.success == true)
                 {
@@ -3125,43 +3125,42 @@ namespace Nooch.API.Controllers
             {
                 Logger.Info("Service Cntrlr -> RegisterNonNoochUserWithSynapse Initiated - MemberID: [" + input.memberId + "], " +
                             "Name: [" + input.fullname + "], Email: [" + input.email +
-                            "Is ID Img Sent: [" + input.isIdImageAdded + "], CIP: [" + input.cip + "]");
+                            "Is ID Img Sent: [" + input.isIdImageAdded + "], CIP: [" + input.cip + "], FBID: [" + input.fbid + "]");
 
                 MembersDataAccess mda = new MembersDataAccess();
 
-                synapseCreateUserV3Result_int res = mda.RegisterNonNoochUserWithSynapseV3(input.transId, input.email, input.phone, input.fullname,
+                synapseCreateUserV3Result_int mdaRes = mda.RegisterNonNoochUserWithSynapseV3(input.transId, input.email, input.phone, input.fullname,
                                                                                           input.pw, input.ssn, input.dob, input.address,
-                                                                                          input.zip, input.fngprnt, input.ip, input.cip,
+                                                                                          input.zip, input.fngprnt, input.ip, input.cip, input.fbid,
                                                                                           input.isIdImageAdded, input.idImageData);
 
-                RegisterUserSynapseResultClassExt nc = new RegisterUserSynapseResultClassExt();
+                RegisterUserSynapseResultClassExt res = new RegisterUserSynapseResultClassExt();
 
-                if (res.success == true)
+                if (mdaRes.success == true)
                 {
-                    nc.access_token = res.oauth.oauth_key;
-                    nc.expires_in = res.oauth.expires_in;
-                    nc.reason = res.reason;
-                    nc.refresh_token = res.oauth.refresh_token;
-                    nc.success = res.success.ToString();
-                    nc.user_id = res.user_id;
-                    nc.username = res.user.logins[0].email;
-                    nc.memberIdGenerated = res.memberIdGenerated;
-                    nc.ssn_verify_status = res.ssn_verify_status;
+                    res.access_token = mdaRes.oauth.oauth_key;
+                    res.expires_in = mdaRes.oauth.expires_in;
+                    res.reason = mdaRes.reason;
+                    res.refresh_token = mdaRes.oauth.refresh_token;
+                    res.success = mdaRes.success.ToString();
+                    res.user_id = mdaRes.user_id;
+                    res.username = mdaRes.user.logins[0].email;
+                    res.memberIdGenerated = mdaRes.memberIdGenerated;
+                    res.ssn_verify_status = mdaRes.ssn_verify_status;
                 }
                 else
                 {
-                    nc.reason = res.reason;
-                    nc.success = res.success.ToString();
+                    res.reason = mdaRes.reason;
+                    res.success = mdaRes.success.ToString();
                 }
 
-                return nc;
+                return res;
             }
             catch (Exception ex)
             {
                 Logger.Error("Service Cntrlr -> RegisterNonNoochUserWithSynapse FAILED. [New Usr Name: " + input.fullname +
                              "], Email of New User: [" + input.email + "], TransactionID: [" + input.transId +
                              "], Exception: [" + ex.Message + "]");
-
                 return null;
             }
         }
