@@ -3294,18 +3294,21 @@ namespace Nooch.API.Controllers
                     if (bankLoginRespFromSynapse["success"].ToString().ToLower() == "true" &&
                         bankLoginRespFromSynapse["nodes"] != null)
                     {
-                        #region Marking Any Existing Synapse Bank Login Entries as Deleted
+
+                        // Malkit (30 May 2016) :- Commented out this code because, this service is meant to use routing and account number only and in this case result will go in SynapseBanksOfMembers table instead of synpaseBankLoginResult table
+                        // along with bank account, routing and some other info..from now we will be storing IsAddedUsingRoutingNumber field as true in SynapseBanksOfMembers to keep track of who came through routing numbers.
+                        //#region Marking Any Existing Synapse Bank Login Entries as Deleted
 
 
-                        var memberLoginResultsCollection = CommonHelper.GetSynapseBankLoginResulList(id.ToString());
+                        //var memberLoginResultsCollection = CommonHelper.GetSynapseBankLoginResulList(id.ToString());
 
-                        foreach (SynapseBankLoginResult v in memberLoginResultsCollection)
-                        {
-                            v.IsDeleted = true;
-                            _dbContext.SaveChanges();
-                        }
+                        //foreach (SynapseBankLoginResult v in memberLoginResultsCollection)
+                        //{
+                        //    v.IsDeleted = true;
+                        //    _dbContext.SaveChanges();
+                        //}
 
-                        #endregion Marking Any Existing Synapse Bank Login Entries as Deleted
+                        //#endregion Marking Any Existing Synapse Bank Login Entries as Deleted
 
 
                         RootBankObject rootBankObj = new RootBankObject();
@@ -3326,7 +3329,7 @@ namespace Nooch.API.Controllers
                             sbr.mfaMessage = null; // For Code-Based MFA - NOT USED ANYMORE, SHOULD REMOVE FROM DB
                             sbr.BankAccessToken = CommonHelper.GetEncryptedData(bankLoginRespFromSynapse["nodes"][0]["_id"]["$oid"].ToString()); // CLIFF (8/21/15): Not sure if this syntax is correct
 
-
+                           
                             if (bankLoginRespFromSynapse["nodes"][0]["extra"]["mfa"] != null ||
                                 bankLoginRespFromSynapse["nodes"][0]["allowed"] == null)
                             {
@@ -3365,6 +3368,72 @@ namespace Nooch.API.Controllers
 
                                 #endregion MFA was returned
                             }
+                            else if (bankLoginRespFromSynapse["nodes"][0]["extra"]["supp_id"] != null &&
+                                     bankLoginRespFromSynapse["nodes"][0]["info"] != null)
+                            {
+                                // add bank using routing number and account number response
+                                // saving entriy in synapse banks of member table
+                                SynapseBanksOfMember sbom = new SynapseBanksOfMember();
+                                sbom.@class = bankLoginRespFromSynapse["nodes"][0]["info"]["class"].ToString();
+                                sbom.AddedOn = DateTime.Now;
+                                sbom.account_number_string =
+                                    CommonHelper.GetEncryptedData(
+                                        bankLoginRespFromSynapse["nodes"][0]["info"]["account_num"].ToString());
+                                sbom.bank_name = CommonHelper.GetEncryptedData(
+                                        bankLoginRespFromSynapse["nodes"][0]["info"]["bank_name"].ToString());
+                                sbom.name_on_account = CommonHelper.GetEncryptedData(
+                                        bankLoginRespFromSynapse["nodes"][0]["info"]["name_on_account"].ToString());
+                                sbom.nickname = CommonHelper.GetEncryptedData(
+                                        bankLoginRespFromSynapse["nodes"][0]["info"]["nickname"].ToString());
+
+                                sbom.routing_number_string = CommonHelper.GetEncryptedData(
+                                        bankLoginRespFromSynapse["nodes"][0]["info"]["routing_num"].ToString());
+
+                                sbom.MemberId = id;
+
+                                // not sure about these two fields  IsDefault and Status
+                                // should we consider this field as True, this will set his bank as confirmed and user can make transactions using field
+                                //but we haven't verified micro deposits yet
+                                //for now setting as below.... @cliff I am setting account as not Not Verified for now, from micro deposit verification landing pages
+                                //this status will be converted to Verified... let me know what you think?
+                                sbom.IsDefault = true;
+                                sbom.Status = "Not Verified";
+
+                                sbom.oid = CommonHelper.GetEncryptedData(
+                                        bankLoginRespFromSynapse["nodes"][0]["_id"]["$oid"].ToString());
+
+                                sbom.allowed = bankLoginRespFromSynapse["nodes"][0]["allowed"].ToString();
+                                sbom.supp_id = bankLoginRespFromSynapse["nodes"][0]["extra"]["supp_id"].ToString();
+
+                                sbom.type_bank = bankLoginRespFromSynapse["nodes"][0]["info"]["type"].ToString();
+
+                                sbom.IsAddedUsingRoutingNumber = true;
+
+                                _dbContext.SynapseBanksOfMembers.Add(sbom);
+
+                                int i = _dbContext.SaveChanges();
+
+
+                                if (i > 0)
+                                {
+                                    _dbContext.Entry(sbr).Reload();
+
+
+                                    Logger.Info("Service Controller -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber SUCCESS - Added record to SynapseBanksOfMembers Table - NO MFA found - [UserName: " + CommonHelper.GetDecryptedData(noochMember.UserName) + "]");
+                                    res.Is_success = true;
+                                    return res;
+                                   
+                                }
+                                else
+                                {
+                                    Logger.Error("Service Controller -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber FAILURE - Could not save record in SynapseBankLoginResults Table - ABORTING - [MemberID: " + MemberId + "]");
+
+                                    res.errorMsg = "Failed to save entry in BankLoginResults table (inner)";
+                                    return res;
+                                }
+
+
+                            }
                             else
                             {
                                 sbr.IsMfa = false;
@@ -3377,9 +3446,9 @@ namespace Nooch.API.Controllers
 
                             // Now Add object to Nooch DB (save whether if it's an MFA node or not)
                             _dbContext.SynapseBankLoginResults.Add(sbr);
-                            int i = _dbContext.SaveChanges();
+                            int j = _dbContext.SaveChanges();
 
-                            if (i > 0)
+                            if (j > 0)
                             {
                                 _dbContext.Entry(sbr).Reload();
 
