@@ -1090,7 +1090,10 @@ namespace Nooch.Web.Controllers
                 {
                     serviceMethod = serviceMethod + "&recipMemId=" + rdmc.payeeMemId;
                 }
-
+                else
+                {
+                    serviceMethod = serviceMethod + "&recipMemId=";
+                }
                 Logger.Info("DepositMoneyComplete CodeBehind -> finishTransaction - About to Query Nooch Service to move money - URL: ["
                                       + String.Concat(serviceUrl, serviceMethod) + "]");
 
