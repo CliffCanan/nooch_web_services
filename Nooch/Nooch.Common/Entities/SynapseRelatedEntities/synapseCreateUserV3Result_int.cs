@@ -34,7 +34,11 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
     {
         public synapseV3Result_user_id _id { get; set; }
         public synapseV3Result_user_client client { get; set; }
+        public synapseV3Result_user_docStatus doc_status { get; set; }
         public synapseV3Result_user_extra extra { get; set; }
+
+        public string documents { get; set; }
+
         public string[] legal_names { get; set; }
         public synapseV3Result_user_logins[] logins { get; set; }
         public bool is_hidden { get; set; }
@@ -43,7 +47,6 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
         public string[] photos { get; set; }
         public string[] phone_numbers { get; set; }
 
-        public synapseV3Result_user_docStatus doc_status { get; set; }
     }
 
     public class synapseV3Result_user_id
@@ -89,4 +92,6 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
         public string message { get; set; }
     }
 
+
+    //public string
 }

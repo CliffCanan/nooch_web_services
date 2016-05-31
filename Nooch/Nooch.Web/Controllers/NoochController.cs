@@ -1764,13 +1764,13 @@ namespace Nooch.Web.Controllers
 
             try
             {
-                rca.memId = memId; // memberid is required in all cases and also need at bank login page- Surya
+                rca.memId = memId;
 
                 if (!String.IsNullOrEmpty(Request.QueryString["rs"]))
                 {
                     Logger.Info("createAccount CodeBehind -> Page_load Initiated - Is a RentScene Payment: [" + Request.QueryString["rs"] + "]");
 
-                    rca.rs = Request.QueryString["rs"].ToLower() == "true" ? "true" : "false";
+                    rca.rs = Request.QueryString["rs"].ToLower() == "true" || Request.QueryString["rs"].ToLower() == "yes" ? "true" : "false";
                 }
 
                 if (!String.IsNullOrEmpty(Request.QueryString["TransId"]))
@@ -1966,13 +1966,13 @@ namespace Nooch.Web.Controllers
                 string json = scriptSerializer.Serialize(inputClass);
 
 
-                Logger.Info("Create Account Code-Behind -> saveMemberInfo CHECKPOINT #1 - Is a New User: [" + newUser + "], URL To Use: [" + urlToUse + "]");
+                Logger.Info("Create Account Code-Behind -> saveMemberInfo CHECKPOINT #1 - New User?: [" + newUser + "], URL To Use: [" + urlToUse + "]");
 
                 RegisterUserSynapseResultClassExt regUserResponse = ResponseConverter<RegisterUserSynapseResultClassExt>.CallServicePostMethod(String.Concat(serviceUrl, serviceMethod), json);
 
-                Logger.Info("Create Account Code-Behind -> saveMemberInfo RESULT: [" + Json(regUserResponse).ToString() + "]");
+                Logger.Info("Create Account Code-Behind -> saveMemberInfo RESULT: [" + scriptSerializer.Serialize(regUserResponse) + "]");
 
-                if (regUserResponse.success == "True")
+                if (regUserResponse.success.ToLower() == "true")
                 {
                     res.success = true;
                     res.msg = "Successfully updated member record on server!";

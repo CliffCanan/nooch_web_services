@@ -1907,100 +1907,110 @@ namespace Nooch.DataAccess
                 {
                     try
                     {
+                        Logger.Info("MDA -> RegisterUserWithSynapseV3 - User already has a Synapse account - About to query refreshSynapseV3OautKey()");
+
                         var refreshTokenResult = CommonHelper.refreshSynapseV3OautKey((synapseCreateUserObjIfExists.access_token));
                         synapseCreateUserObjIfExists = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == guid && m.IsDeleted == false);
 
                         if (refreshTokenResult != null && refreshTokenResult.success)
                         {
-                            res.oauth = new createUserV3Result_oauth()
+                            if (refreshTokenResult.is2FA)
                             {
-                                expires_at = synapseCreateUserObjIfExists.expires_at,
-                                oauth_key = CommonHelper.GetDecryptedData(synapseCreateUserObjIfExists.access_token),
-                                refresh_token = CommonHelper.GetDecryptedData(synapseCreateUserObjIfExists.refresh_token),
-                                expires_in = synapseCreateUserObjIfExists.expires_in
-                            };
-
-
-                            res.user = new synapseV3Result_user()
-                            {
-                                _id = new synapseV3Result_user_id() { id = synapseCreateUserObjIfExists.user_id },
-                                extra = new synapseV3Result_user_extra()
-                                {
-                                    is_business = synapseCreateUserObjIfExists.is_business != null && Convert.ToBoolean(synapseCreateUserObjIfExists.is_business)
-                                },
-
-                                legal_names = new[] { synapseCreateUserObjIfExists.legal_name },
-                                phone_numbers = new[] { synapseCreateUserObjIfExists.Phone_number },
-                                photos = new[] { synapseCreateUserObjIfExists.photos },
-                                permission = synapseCreateUserObjIfExists.permission
-                            };
-                            res.user_id = synapseCreateUserObjIfExists.user_id;
-
-                            res.success = true;
-
-                            if (noochMember.IsVerifiedWithSynapse == true)
-                            {
-                                Logger.Info("MDA -> RegisterUserWithSynapseV3 - ** ID Already Verified ** - [MemberID: " + memberId + "]");
-                                res.ssn_verify_status = "id already verified";
-                            }
-                            else if (res.user.permission == "SEND-AND-RECEIVE")
-                            {
-                                #region Update IsVerifiedWithSynapse Value In Member Table
-                                try
-                                {
-                                    Logger.Info("MDA -> RegisterUserWithSynapseV3 - ** ID Already Verified  - Got SEND-AND-RECEIVE in SynapseCreateUser Table (Case 2) ** - [MemberID: " + memberId + "]");
-
-                                    noochMember.IsVerifiedWithSynapse = true;
-                                    _dbContext.SaveChanges();
-
-                                    res.ssn_verify_status = "id already verified";
-                                }
-                                catch (Exception ex)
-                                {
-                                    Logger.Error("MDA -> RegisterUserWithSynapseV3 - IsVerifiedWithSynapse is false, but Synapse returned Permission of \"SEND-AND-RECEIVE\" - " +
-                                                 "[Exception: " + ex + "]");
-                                }
-                                #endregion Update IsVerifiedWithSynapse Value In Member Table
+                                // 2FA was triggered during /user/signin (Refresh Service), probably b/c the user's Fingerprint has changed since the Synapse user was created.
+                                res.success = false;
+                                res.reason = refreshTokenResult.msg;
                             }
                             else
                             {
-                                Logger.Error("MDA -> RegisterUserWithSynapseV3 - ID NOT Already Verified, attempting to send SSN info to SynapseV3 - [MemberID: " + memberId + "]");
-
-                                try
+                                // Refresh was successful - No 2FA
+                                res.oauth = new createUserV3Result_oauth()
                                 {
-                                    // Now: SEND USER'S SSN INFO TO SYNAPSE
-                                    submitIdVerificationInt submitSsn = CommonHelper.sendUserSsnInfoToSynapseV3(memberId);
-                                    res.ssn_verify_status = submitSsn.message;
-                                    res.errorMsg = submitSsn.message;
+                                    expires_at = synapseCreateUserObjIfExists.expires_at,
+                                    oauth_key = CommonHelper.GetDecryptedData(synapseCreateUserObjIfExists.access_token),
+                                    refresh_token = CommonHelper.GetDecryptedData(synapseCreateUserObjIfExists.refresh_token),
+                                    expires_in = synapseCreateUserObjIfExists.expires_in
+                                };
 
-                                    #region Logging
-
-                                    if (submitSsn.success == true)
+                                res.user = new synapseV3Result_user()
+                                {
+                                    _id = new synapseV3Result_user_id() { id = synapseCreateUserObjIfExists.user_id },
+                                    extra = new synapseV3Result_user_extra()
                                     {
-                                        if (!String.IsNullOrEmpty(submitSsn.message) &&
-                                            submitSsn.message.IndexOf("additional") > -1)
+                                        is_business = synapseCreateUserObjIfExists.is_business != null && Convert.ToBoolean(synapseCreateUserObjIfExists.is_business)
+                                    },
+
+                                    legal_names = new[] { synapseCreateUserObjIfExists.legal_name },
+                                    phone_numbers = new[] { synapseCreateUserObjIfExists.Phone_number },
+                                    photos = new[] { synapseCreateUserObjIfExists.photos },
+                                    permission = synapseCreateUserObjIfExists.permission
+                                };
+                                res.user_id = synapseCreateUserObjIfExists.user_id;
+
+                                res.success = true;
+
+                                if (noochMember.IsVerifiedWithSynapse == true)
+                                {
+                                    Logger.Info("MDA -> RegisterUserWithSynapseV3 - ** ID Already Verified ** - [MemberID: " + memberId + "]");
+                                    res.ssn_verify_status = "id already verified";
+                                }
+                                else if (res.user.permission == "SEND-AND-RECEIVE")
+                                {
+                                    #region Update IsVerifiedWithSynapse Value In Member Table
+                                    try
+                                    {
+                                        Logger.Info("MDA -> RegisterUserWithSynapseV3 - ** ID Already Verified  - Got SEND-AND-RECEIVE in SynapseCreateUser Table (Case 2) ** - [MemberID: " + memberId + "]");
+
+                                        noochMember.IsVerifiedWithSynapse = true;
+                                        _dbContext.SaveChanges();
+
+                                        res.ssn_verify_status = "id already verified";
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Logger.Error("MDA -> RegisterUserWithSynapseV3 - IsVerifiedWithSynapse is false, but Synapse returned Permission of \"SEND-AND-RECEIVE\" - " +
+                                                     "[Exception: " + ex + "]");
+                                    }
+                                    #endregion Update IsVerifiedWithSynapse Value In Member Table
+                                }
+                                else
+                                {
+                                    Logger.Info("MDA -> RegisterUserWithSynapseV3 - ID NOT Already Verified, attempting to send SSN info to SynapseV3 - [MemberID: " + memberId + "]");
+
+                                    try
+                                    {
+                                        // Now: SEND USER'S SSN INFO TO SYNAPSE
+                                        submitIdVerificationInt submitSsn = CommonHelper.sendUserSsnInfoToSynapseV3(memberId);
+                                        res.ssn_verify_status = submitSsn.message;
+                                        res.errorMsg = submitSsn.message;
+
+                                        #region Logging
+
+                                        if (submitSsn.success == true)
                                         {
-                                            Logger.Info("MDA -> RegisterUserWithSynapseV3 - SSN Info Verified, but have additional questions - [Email: " + CommonHelper.GetDecryptedData(noochMember.UserName) + "], [submitSsn.message: " + submitSsn.message + "]");
+                                            if (!String.IsNullOrEmpty(submitSsn.message) &&
+                                                submitSsn.message.IndexOf("additional") > -1)
+                                            {
+                                                Logger.Info("MDA -> RegisterUserWithSynapseV3 - SSN Info Verified, but have additional questions - [Email: " + CommonHelper.GetDecryptedData(noochMember.UserName) + "], [submitSsn.message: " + submitSsn.message + "]");
+                                            }
+                                            else
+                                            {
+                                                Logger.Info("MDA -> RegisterUserWithSynapseV3 - SSN Info Verified completely :-) - [Email: " + CommonHelper.GetDecryptedData(noochMember.UserName) + "], [submitSsn.message: " + submitSsn.message + "]");
+                                            }
                                         }
                                         else
                                         {
-                                            Logger.Info("MDA -> RegisterUserWithSynapseV3 - SSN Info Verified completely :-) - [Email: " + CommonHelper.GetDecryptedData(noochMember.UserName) + "], [submitSsn.message: " + submitSsn.message + "]");
+                                            Logger.Info("MDA -> RegisterUserWithSynapseV3 - SSN Info Verified FAILED :-(  [Email: " + CommonHelper.GetDecryptedData(noochMember.UserName) + "], [submitSsn.message: " + submitSsn.message + "]");
+                                            res.ssn_verify_status = "Not Verified";
                                         }
-                                    }
-                                    else
-                                    {
-                                        Logger.Info("MDA -> RegisterUserWithSynapseV3 - SSN Info Verified FAILED :-(  [Email: " + CommonHelper.GetDecryptedData(noochMember.UserName) + "], [submitSsn.message: " + submitSsn.message + "]");
-                                        res.ssn_verify_status = "Not Verified";
-                                    }
 
-                                    #endregion Logging
-                                }
-                                catch (Exception ex)
-                                {
-                                    Logger.Error("MDA -> RegisterUserWithSynapseV3 - Attempted sendUserSsnInfoToSynapseV3 but got Exception: [" + ex.Message + "]");
+                                        #endregion Logging
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Logger.Error("MDA -> RegisterUserWithSynapseV3 - Attempted sendUserSsnInfoToSynapseV3 but got Exception: [" + ex.Message + "]");
+                                    }
                                 }
                             }
-
                             // Cliff (5/17/16): This returns true even if the SSN was unable to be verified above, as long as an Access_Token was found in Nooch's DB to send back/
                             //                  The user may be adding a bank and might still need to answer the ID Verification questions afterwards,
                             //                  or it could be a Rent Scene user who don't use the iOS app, so we can deal with fixing their Permissions after they connect a bank.
@@ -2359,11 +2369,13 @@ namespace Nooch.DataAccess
                         else if (res.user.permission == "SEND-AND-RECEIVE") // Probobly wouldn't ever be this b/c I don't think Synapse ever returns this for brand new users
                         {
                             #region User Not Previously Verified But Got Send-Receive Permissions This Time
+
                             try
                             {
                                 Logger.Info("MDA -> RegisterUserWithSynapseV3 - ** ID Already Verified (Case 2) ** - [MemberID: " + memberId + "]");
 
                                 noochMember.IsVerifiedWithSynapse = true;
+                                noochMember.TransferLimit = "5000";
                                 _dbContext.SaveChanges();
 
                                 res.ssn_verify_status = "id already verified";
@@ -2373,6 +2385,7 @@ namespace Nooch.DataAccess
                                 Logger.Error("MDA -> RegisterUserWithSynapseV3 - IsVerifiedWithSynapse is false, but Synapse returned Permission of \"SEND-AND-RECEIVE\" - " +
                                              "[Exception: " + ex + "]");
                             }
+
                             #endregion User Not Previously Verified But Got Send-Receive Permissions This Time
                         }
                         else
@@ -2508,7 +2521,6 @@ namespace Nooch.DataAccess
             res.success = false;
             res.reason = "Initial";
 
-
             #region Check To Make Sure All Data Was Passed
 
             // First check critical data necessary for just creating the user
@@ -2573,18 +2585,6 @@ namespace Nooch.DataAccess
 
             #endregion Check To Make Sure All Data Was Passed
 
-
-            #region Check If Given Phone Already Exists
-
-            string memberIdFromPhone = CommonHelper.GetMemberIdByContactNumber(userPhone);
-            if (!String.IsNullOrEmpty(memberIdFromPhone))
-            {
-                res.reason = "Given phone number already registered.";
-                return res;
-            }
-
-            #endregion Check if given email or phone already exists
-
             Guid memGuid = Utility.ConvertToGuid(memberId);
 
             var memberObj = _dbContext.Members.FirstOrDefault(memberTemp => memberTemp.MemberId.Equals(memGuid) &&
@@ -2593,6 +2593,23 @@ namespace Nooch.DataAccess
             if (memberObj != null)
             {
                 _dbContext.Entry(memberObj).Reload();
+
+                #region Check If Given Phone Already Exists
+
+                string memberIdFromPhone = CommonHelper.GetMemberIdByContactNumber(userPhone);
+                if (!String.IsNullOrEmpty(memberIdFromPhone))
+                {
+                    // Now check if the member found for that Phone # is this user or another user,
+                    // If another user, abort.
+                    if (memberIdFromPhone.ToLower() != memberId.ToLower())
+                    {
+                        res.reason = "Given phone number already registered to another user.";
+                        return res;
+                    }
+                }
+
+                #endregion Check if given email or phone already exists
+
 
                 #region Update Member's Record in Members.dbo
 
@@ -2642,9 +2659,9 @@ namespace Nooch.DataAccess
 
                 string pinNumber = Utility.GetRandomPinNumber();
                 pinNumber = CommonHelper.GetEncryptedData(pinNumber);
+                memberObj.SecondaryEmail = memberObj.UserName; // In case the supplied email is different than what the Landlord used to invite, saving the original email here as secondary, and updating UserName in next line
                 memberObj.UserName = CommonHelper.GetEncryptedData(userEmail.Trim()); // Username might be different if user changes the email on the payRequest page
                 memberObj.UserNameLowerCase = CommonHelper.GetEncryptedData(userEmail.Trim().ToLower());
-                memberObj.SecondaryEmail = memberObj.UserName; // In case the supplied email is different than what the Landlord used to invite, saving the original email here as secondary, and updating UserName in next line
                 memberObj.FirstName = FirstName;
                 memberObj.LastName = LastName;
                 memberObj.ContactNumber = userPhone;
@@ -2849,13 +2866,11 @@ namespace Nooch.DataAccess
                     // NEXT, ATTEMPT TO CREATE A SYNAPSE ACCOUNT FOR THIS USER
                     #region Create User with Synapse
 
-
-                    // RegisterUserSynapseResultClassint createSynapseUserResult = new RegisterUserSynapseResultClassint();
                     synapseCreateUserV3Result_int createSynapseUserResult = new synapseCreateUserV3Result_int();
                     try
                     {
                         // Now call Synapse create user service
-                        Logger.Info(" MDA -> RegisterExistingUserWithSynapseV3 ABOUT TO CALL CREATE SYNAPSE USER METHOD");
+                        Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 ABOUT TO CALL CREATE SYNAPSE USER METHOD");
                         createSynapseUserResult = RegisterUserWithSynapseV3(memberObj.MemberId.ToString());
                     }
                     catch (Exception ex)

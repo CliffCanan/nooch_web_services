@@ -2965,19 +2965,19 @@ namespace Nooch.API.Controllers
 
                 if (res.success == true)
                 {
+                    nc.success = "true";
                     nc.access_token = res.oauth.oauth_key;
                     nc.expires_in = res.oauth.expires_in;
                     nc.reason = res.reason;
                     nc.refresh_token = res.oauth.refresh_token;
-                    nc.success = res.success.ToString();
                     nc.user_id = res.user_id;
                     nc.memberIdGenerated = res.memberIdGenerated;
                     nc.ssn_verify_status = res.ssn_verify_status;
                 }
                 else
                 {
+                    nc.success = "false";
                     nc.reason = res.reason;
-                    nc.success = res.success.ToString();
                 }
                 return nc;
             }
@@ -3013,11 +3013,11 @@ namespace Nooch.API.Controllers
 
                 if (mdaRes.success == true)
                 {
+                    res.success = "true";
                     res.access_token = mdaRes.oauth.oauth_key;
                     res.expires_in = mdaRes.oauth.expires_in;
                     res.reason = mdaRes.reason;
                     res.refresh_token = mdaRes.oauth.refresh_token;
-                    res.success = mdaRes.success.ToString();
                     res.user_id = mdaRes.user_id;
                     res.username = mdaRes.user.logins[0].email;
                     res.memberIdGenerated = mdaRes.memberIdGenerated;
@@ -3025,8 +3025,8 @@ namespace Nooch.API.Controllers
                 }
                 else
                 {
+                    res.success = "false";
                     res.reason = mdaRes.reason;
-                    res.success = mdaRes.success.ToString();
                 }
             }
             catch (Exception ex)
@@ -4322,9 +4322,6 @@ namespace Nooch.API.Controllers
             }
         }
 
-        #endregion Synapse-Related Services
-
-
         // Web related Services
 
         /// <summary>
@@ -4468,6 +4465,9 @@ namespace Nooch.API.Controllers
                 throw new Exception("Invalid OAuth 2 Access");
             }
         }
+
+
+        #endregion Synapse-Related Services
 
 
         [HttpGet]
@@ -4637,9 +4637,6 @@ namespace Nooch.API.Controllers
             }
             return new StringResult();
         }
-
-
-
 
 
         [HttpGet]
@@ -4878,6 +4875,7 @@ namespace Nooch.API.Controllers
             return new StringResult();
         }
 
+
         [HttpGet]
         [ActionName("sendLandlordLeadEmailTemplate")]
         public StringResult sendLandlordLeadEmailTemplate(string template, string email, string firstName,
@@ -5040,6 +5038,7 @@ namespace Nooch.API.Controllers
             return new StringResult();
         }
 
+
         [HttpGet]
         [ActionName("LogOutRequest")]
         public StringResult LogOutRequest(string accessToken, string memberId)
@@ -5073,6 +5072,7 @@ namespace Nooch.API.Controllers
                 throw new Exception("Invalid OAuth 2 Access");
             }
         }
+
 
         [HttpGet]
         [ActionName("MemberRegistrationGet")]
@@ -5177,7 +5177,6 @@ namespace Nooch.API.Controllers
         }
 
 
-
         [HttpPost]
         [ActionName("MemberPrivacySettings")]
         public StringResult MemberPrivacySettings(PrivacySettings privacySettings, string accessToken)
@@ -5205,6 +5204,7 @@ namespace Nooch.API.Controllers
                 throw new Exception("Invalid OAuth 2 Access");
             }
         }
+
 
         [HttpGet]
         [ActionName("GetMemberPrivacySettings")]
@@ -5244,6 +5244,7 @@ namespace Nooch.API.Controllers
 
         }
 
+
         [HttpGet]
         [ActionName("SetAllowSharing")]
         public StringResult SetAllowSharing(string memberId, bool allow, string accessToken)
@@ -5260,6 +5261,7 @@ namespace Nooch.API.Controllers
             }
             return new StringResult();
         }
+
 
         [HttpGet]
         [ActionName("SaveImmediateRequire")]
@@ -5293,6 +5295,7 @@ namespace Nooch.API.Controllers
                 throw new Exception("Invalid OAuth 2 Access");
             }
         }
+
 
         [HttpGet]
         [ActionName("UpDateLatLongOfUser")]
@@ -5328,6 +5331,7 @@ namespace Nooch.API.Controllers
             }
         }
 
+
         [HttpGet]
         [ActionName("ResendVerificationLink")]
         public StringResult ResendVerificationLink(string UserName)
@@ -5346,6 +5350,7 @@ namespace Nooch.API.Controllers
             }
             return new StringResult();
         }
+
 
         [HttpGet]
         [ActionName("ResendVerificationSMS")]
@@ -5366,6 +5371,7 @@ namespace Nooch.API.Controllers
             return new StringResult();
         }
 
+
         [HttpGet]
         [ActionName("ResetPassword")]
         public BoolResult ResetPassword(string memberId, string newPassword, string newUser)
@@ -5384,6 +5390,7 @@ namespace Nooch.API.Controllers
             return new BoolResult();
         }
 
+
         [HttpGet]
         [ActionName("resetlinkvalidationcheck")]
         public BoolResult resetlinkvalidationcheck(string memberId)
@@ -5401,6 +5408,7 @@ namespace Nooch.API.Controllers
             }
             return new BoolResult();
         }
+
 
         [HttpGet]
         [ActionName("GetRecentMembers")]
@@ -5509,6 +5517,7 @@ namespace Nooch.API.Controllers
             }
         }
 
+
         [HttpPost]
         [ActionName("HandleRequestMoney")]
         public StringResult HandleRequestMoney(RequestDto handleRequestInput, string accessToken)
@@ -5560,6 +5569,7 @@ namespace Nooch.API.Controllers
                 throw new Exception("Invalid OAuth 2 Access");
             }
         }
+
 
         [HttpGet]
         [ActionName("CreateNonNoochUserPassword")]
@@ -5684,6 +5694,7 @@ namespace Nooch.API.Controllers
             return transactionEntity;
         }
 
+
         [HttpPost]
         [ActionName("TransferMoneyToNonNoochUserUsingSynapse")]
         public StringResult TransferMoneyToNonNoochUserUsingSynapse(TransactionDto transactionInput,
@@ -5713,7 +5724,6 @@ namespace Nooch.API.Controllers
                 throw new Exception("Invalid OAuth 2 Access");
             }
         }
-
 
 
         [HttpPost]
@@ -5746,6 +5756,7 @@ namespace Nooch.API.Controllers
                 throw new Exception("Invalid OAuth 2 Access");
             }
         }
+
 
         [HttpPost]
         [ActionName("addRowToSynapseCreateUsersTable")]

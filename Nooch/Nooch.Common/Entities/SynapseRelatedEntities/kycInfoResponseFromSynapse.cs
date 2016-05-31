@@ -9,8 +9,8 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
     // RESPONSE CLASS for  **/user/doc/add**  AND  **/user/doc/verify**  AND ** /user/doc/attachment/add **
     public class kycInfoResponseFromSynapse
     {
-        public synapseV3Response_message message { get; set; }
         public bool success { get; set; }
+        public synapseV3Response_message message { get; set; }
         public synapseV3Result_user user { get; set; }
 
         public synapseV3Response_error error { get; set; }
@@ -79,4 +79,16 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
         public int answer_id { get; set; }
     }
 
+
+
+    // CC (5/31/16): New RESPONSE CLASS for /user/docs/add
+    public class addDocsResponseFromSynapse
+    {
+        public bool success { get; set; }
+        public string error_code { get; set; }
+        public string http_code { get; set; }
+        public synapseV3Result_user user { get; set; }
+
+        public synapseV3Response_error error { get; set; }
+    }
 }

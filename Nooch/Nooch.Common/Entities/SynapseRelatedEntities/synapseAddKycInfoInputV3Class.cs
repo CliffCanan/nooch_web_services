@@ -39,4 +39,47 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
         public string document_value { get; set; }
         public string document_type { get; set; }
     }
+
+
+    // Cliff (5/31/16): Adding classes for new Synapse Service for v3/user/docs/add
+    public class synapseAddDocsV3InputClass
+    {
+        public SynapseV3Input_login login { get; set; }
+        public synapseAddDocsV3InputClass_user user { get; set; }
+    }
+
+    public class synapseAddDocsV3InputClass_user
+    {
+        public synapseAddDocsV3InputClass_user_docs documents { get; set; }
+        public string fingerprint { get; set; }
+    }
+
+    public class synapseAddDocsV3InputClass_user_docs
+    {
+        public string email { get; set; }
+        public string phone_number { get; set; }
+        public string ip { get; set; }
+        public string name { get; set; }
+        public string alias { get; set; }
+        public string entity_type { get; set; }
+        public string entity_scope { get; set; }
+        public string day { get; set; }
+        public string month { get; set; }
+        public string year { get; set; }
+        public string address_street { get; set; }
+        public string address_city { get; set; }
+        public string address_subdivision { get; set; } // State
+        public string address_postal_code { get; set; }
+        public string address_country_code { get; set; }
+
+        public synapseAddDocsV3InputClass_user_docs_doc[] virtual_docs { get; set; }
+        public synapseAddDocsV3InputClass_user_docs_doc[] physical_docs { get; set; }
+        public synapseAddDocsV3InputClass_user_docs_doc[] social_docs { get; set; }
+    }
+
+    public class synapseAddDocsV3InputClass_user_docs_doc
+    {
+        public string document_value { get; set; }
+        public string document_type { get; set; }
+    }
 }
