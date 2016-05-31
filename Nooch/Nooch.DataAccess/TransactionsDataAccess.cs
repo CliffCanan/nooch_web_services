@@ -4891,7 +4891,7 @@ namespace Nooch.DataAccess
 
                     try
                     {
-                        Utility.SendEmail("requestSent", fromAddress, RequesterEmail, null,
+                        Utility.SendEmail(templateToUse_Sender, fromAddress, RequesterEmail, null,
                                           "Your payment request to " + recipientsEmail + " is pending",
                                           null, tokens, null, null, null);
 
@@ -4989,8 +4989,6 @@ namespace Nooch.DataAccess
                 #endregion Forward to Regular RequestMoney Method
             }
         }
-
-
 
 
         /// <summary>

@@ -2491,7 +2491,10 @@ namespace Nooch.DataAccess
         }
 
 
-        public synapseCreateUserV3Result_int RegisterExistingUserWithSynapseV3(string transId, string memberId, string userEmail, string userPhone, string userName, string pw, string ssn, string dob, string address, string zip, string fngprnt, string ip, string cip, string fbid, string isIdImageAdded = "0", string idImageData = "")
+        public synapseCreateUserV3Result_int RegisterExistingUserWithSynapseV3(string transId, string memberId, string userEmail, string userPhone,
+                                                                               string userName, string pw, string ssn, string dob, string address,
+                                                                               string zip, string fngprnt, string ip, string cip, string fbid,
+                                                                               bool isRentScene, string isIdImageAdded = "0", string idImageData = "")
         {
             Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 Initiated - [Name: " + userName +
                         "], Email: [" + userEmail + "], Phone: [" + userPhone +
@@ -2654,6 +2657,7 @@ namespace Nooch.DataAccess
                 memberObj.DateModified = DateTime.Now;
                 memberObj.cipTag = !String.IsNullOrEmpty(cip) ? cip : memberObj.cipTag;
                 memberObj.FacebookUserId = !String.IsNullOrEmpty(fbid) ? fbid : memberObj.FacebookUserId;
+                memberObj.isRentScene = isRentScene == true ? isRentScene : false;
                 if (!String.IsNullOrEmpty(pw))
                 {
                     memberObj.Password = CommonHelper.GetEncryptedData(pw);
@@ -2967,7 +2971,7 @@ namespace Nooch.DataAccess
 
         public synapseCreateUserV3Result_int RegisterNonNoochUserWithSynapseV3(string transId, string userEmail, string userPhone, string userName, string pw,
                                                                                string ssn, string dob, string address, string zip, string fngprnt, string ip,
-                                                                               string cip, string fbid, string isIdImageAdded, string idImageData)
+                                                                               string cip, string fbid, bool isRentScene, string isIdImageAdded, string idImageData)
         {
             // What's the plan? -- Store new Nooch member, then create Synpase user, then check if user supplied a (is password.Length > 0)
             // then store data in new added field in SynapseCreateUserResults table for later use
@@ -2978,7 +2982,8 @@ namespace Nooch.DataAccess
                         "], Address: [" + address + "], ZIP: [" + zip +
                         "], IP: [" + ip + "], Fngprnt: [" + fngprnt +
                         "], TransId: [" + transId + "], CIP: [" + cip +
-                        "], FBID: [" + fbid + "], isIdImageAdded: " + isIdImageAdded + "]");
+                        "], FBID: [" + fbid + "], isRentScene: [" + isRentScene +
+                        "], isIdImageAdded: " + isIdImageAdded + "]");
 
             synapseCreateUserV3Result_int res = new synapseCreateUserV3Result_int();
             res.success = false;
@@ -3195,6 +3200,7 @@ namespace Nooch.DataAccess
                     IsVerifiedWithSynapse = false,
                     cipTag = !String.IsNullOrEmpty(cip) ? cip : "renter",
                     FacebookUserId = !String.IsNullOrEmpty(fbid) ? fbid : null,
+                    isRentScene = isRentScene == true ? true : false,
                 };
 
                 if (inviteCode.Length > 0)
