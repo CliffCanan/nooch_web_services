@@ -2657,7 +2657,7 @@ namespace Nooch.DataAccess
                 memberObj.DateModified = DateTime.Now;
                 memberObj.cipTag = !String.IsNullOrEmpty(cip) ? cip : memberObj.cipTag;
                 memberObj.FacebookUserId = !String.IsNullOrEmpty(fbid) ? fbid : memberObj.FacebookUserId;
-                memberObj.isRentScene = isRentScene == true ? isRentScene : false;
+                memberObj.isRentScene = isRentScene == true ? true : false;
                 if (!String.IsNullOrEmpty(pw))
                 {
                     memberObj.Password = CommonHelper.GetEncryptedData(pw);

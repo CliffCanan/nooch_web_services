@@ -1081,13 +1081,15 @@ namespace Nooch.Web.Controllers
         private ResultDepositMoneyComplete finishTransaction(string MemberIdAfterSynapseAccountCreation, string TransactionId, ResultDepositMoneyComplete resultDepositMoneyComplete)
         {
             ResultDepositMoneyComplete rdmc = resultDepositMoneyComplete;
+            rdmc.paymentSuccess = false;
 
             try
             {
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
                 string serviceMethod = "/GetTransactionDetailByIdAndMoveMoneyForNewUserDeposit?TransactionId=" + TransactionId +
                                        "&MemberIdAfterSynapseAccountCreation=" + MemberIdAfterSynapseAccountCreation +
-                                       "&TransactionType=SentToNewUser"; ;
+                                       "&TransactionType=SentToNewUser";
+
                 if ((rdmc.usrTyp == "Existing" || rdmc.usrTyp == "Tenant") &&
                      rdmc.payeeMemId.Length > 5)
                 {
@@ -1108,8 +1110,6 @@ namespace Nooch.Web.Controllers
                     else
                     {
                         Logger.Error("DepositMoneyComplete CodeBehind -> completeTrans FAILED - TransId: [" + TransactionId + "]");
-
-                        rdmc.paymentSuccess = false;
                         Response.Write("<script>errorFromCodeBehind = 'failed';</script>");
                     }
                 }
@@ -1117,7 +1117,7 @@ namespace Nooch.Web.Controllers
             catch (Exception ex)
             {
                 Logger.Error("depositMoneyComplete CodeBehind -> completeTrans FAILED - TransId: [" + TransactionId +
-                                       "], Exception: [" + ex + "]");
+                             "], Exception: [" + ex + "]");
             }
 
             return rdmc;
