@@ -1042,19 +1042,19 @@ namespace Nooch.Web.Controllers
                 rdmc.transMemo = transaction.Memo;
 
                 // Check if this was a Rent request from a Landlord
-                if (!String.IsNullOrEmpty(transaction.TransactionType) &&
-                    transaction.TransactionType == "Rent")
-                {
-                    rdmc.usrTyp = "Tenant";
-                    rdmc.payeeMemId = !String.IsNullOrEmpty(transaction.MemberId) ? transaction.MemberId : "none";
-                }
+                //if (!String.IsNullOrEmpty(transaction.TransactionType) &&
+                //    transaction.TransactionType == "Rent")
+                //{
+                //    rdmc.usrTyp = "Tenant";
+                //    rdmc.payeeMemId = !String.IsNullOrEmpty(transaction.MemberId) ? transaction.MemberId : "none";
+                //}
 
-                // Check if this was a request to an existing, but 'NonRegistered' User
-                else if (transaction.IsExistingButNonRegUser == true)
-                {
-                    rdmc.usrTyp = "Existing";
-                    rdmc.payeeMemId = !String.IsNullOrEmpty(transaction.MemberId) ? transaction.MemberId : "none";
-                }
+                //// Check if this was a request to an existing, but 'NonRegistered' User
+                //else if (transaction.IsExistingButNonRegUser == true)
+                //{
+                //    rdmc.usrTyp = "Existing";
+                //    rdmc.payeeMemId = !String.IsNullOrEmpty(transaction.MemberId) ? transaction.MemberId : "none";
+                //}
 
                 #region Check If Still Pending
 
