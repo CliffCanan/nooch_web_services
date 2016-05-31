@@ -159,7 +159,7 @@ namespace Nooch.DataAccess
         #region Transaction and money matters
         /// <summary>
         /// For cancelling a REQUEST sent to a NON-NOOCH USER.
-        /// Called from the cancel request landing page code-behind: CancelRequest.aspx.cs
+        /// Called from the cancel request landing page code-behind: CancelRequest
         /// </summary>
         /// <param name="TransactionId"></param>
         /// <param name="MemberId"></param>
@@ -171,7 +171,7 @@ namespace Nooch.DataAccess
                 Guid transid = Utility.ConvertToGuid(TransactionId);
 
                 Logger.Info("TDA -> CancelMoneyRequestForNonNoochUser Initiated - " +
-                                       "TransactionID: [" + TransactionId + "], MemberId: [" + MemberId + "]");
+                            "TransactionID: [" + TransactionId + "], MemberId: [" + MemberId + "]");
 
                 var res = _dbContext.Transactions.FirstOrDefault(m => m.Member.MemberId == memGuid && m.TransactionId == transid
                     && m.TransactionStatus == "Pending" && (m.TransactionType == "T3EMY1WWZ9IscHIj3dbcNw==" || m.TransactionType == "DrRr1tU1usk7nNibjtcZkA=="));
@@ -185,7 +185,7 @@ namespace Nooch.DataAccess
                     if (i > 0)
                     {
                         Logger.Info("TDA -> CancelMoneyRequestForNonNoochUser - Transaction Cancelled SUCCESSFULLY - " +
-                                               "TransactionID: [" + TransactionId + "], Member that Cancelled: [" + MemberId + "]");
+                                    "TransactionID: [" + TransactionId + "], Member that Cancelled: [" + MemberId + "]");
 
                         try
                         {
@@ -232,15 +232,15 @@ namespace Nooch.DataAccess
                             try
                             {
                                 Utility.SendEmail("requestCancelledToSender", fromAddress,
-                                    toAddress, null, "Your Nooch request was cancelled", null, tokens, null, null, null);
+                                                    toAddress, null, "Your Nooch request was cancelled", null, tokens, null, null, null);
 
                                 Logger.Info("TDA -> CancelMoneyRequestForNonNoochUser - requestCancelledToSender email sent " +
-                                                       "to Requester: [" + toAddress + "] successfully.");
+                                            "to Requester: [" + toAddress + "] successfully.");
                             }
                             catch (Exception ex)
                             {
                                 Logger.Error("TDA -> CancelMoneyRequestForNonNoochUser - requestCancelledToSender email NOT sent " +
-                                                       "to Requester: [" + toAddress + "], Exception: [" + ex + "]");
+                                             "to Requester: [" + toAddress + "], Exception: [" + ex + "]");
                             }
 
                             // Now send SMS to request recipient (the non-user)
@@ -253,14 +253,13 @@ namespace Nooch.DataAccess
                                 try
                                 {
                                     Utility.SendSMS(phoneNumStripped, MessageText);
-
                                     Logger.Info("TDA -> CancelMoneyRequestForNonNoochUser - requestCancelledToRecipient SMS sent to [" +
-                                                           recipientUserPhoneOrEmail + "] successfully");
+                                                recipientUserPhoneOrEmail + "] successfully");
                                 }
                                 catch (Exception ex)
                                 {
                                     Logger.Error("TDA -> CancelMoneyRequestForNonNoochUser - requestCancelledToRecipient SMS NOT sent " +
-                                                           "to Request Recipient: [" + recipientUserPhoneOrEmail + "], Exception: [" + ex + "]");
+                                                 "to Request Recipient: [" + recipientUserPhoneOrEmail + "], Exception: [" + ex + "]");
                                 }
                             }
                             else
@@ -278,23 +277,23 @@ namespace Nooch.DataAccess
                                 try
                                 {
                                     Utility.SendEmail("requestCancelledToRecipient", fromAddress,
-                                                                toAddress2, null, requesterFirstName + " " + requesterLastName +
-                                                                " cancelled a payment request to you", null, tokens2, null, null, null);
+                                                      toAddress2, null, requesterFirstName + " " + requesterLastName +
+                                                      " cancelled a payment request to you", null, tokens2, null, null, null);
 
                                     Logger.Info("TDA -> CancelMoneyRequestForNonNoochUser - requestCancelledToRecipient email sent to [" +
-                                                           toAddress + "] successfully.");
+                                                toAddress + "] successfully.");
                                 }
                                 catch (Exception ex)
                                 {
                                     Logger.Error("TDA -> CancelMoneyRequestForNonNoochUser - requestCancelledToRecipient email NOT sent to [" +
-                                                           toAddress + "], Exception: [" + ex + "]");
+                                                 toAddress + "], Exception: [" + ex + "]");
                                 }
                             }
                         }
                         catch (Exception ex)
                         {
                             Logger.Error("TDA -> CancelMoneyRequestForNonNoochUser EXCEPTION - Failure while sending notifications - [" +
-                                                   "TransactionID: [" + TransactionId + "], Exception: [" + ex + "]");
+                                         "TransactionID: [" + TransactionId + "], Exception: [" + ex + "]");
                         }
 
                         return "Transaction Cancelled Successfully";
@@ -302,24 +301,21 @@ namespace Nooch.DataAccess
                     else
                     {
                         Logger.Error("TDA -> CancelMoneyRequestForNonNoochUser FAILED - Failed to save updates to DB - " +
-                                               "TransactionID: [" + TransactionId + "]");
-
+                                     "TransactionID: [" + TransactionId + "]");
                         return "Something went wrong while updating transaction, please retry.";
                     }
                 }
                 else
                 {
                     Logger.Error("TDA -> CancelMoneyRequestForNonNoochUser FAILED - Transaction Not Found - TransactionID: [" +
-                                           TransactionId + "]");
-
+                                 TransactionId + "]");
                     return "No Such Transaction Found.";
                 }
             }
             catch (Exception ex)
             {
                 Logger.Error("TDA -> CancelMoneyRequestForNonNoochUser FAILED - Outer Exception - TransactionID: [" +
-                                       TransactionId + "], Exception: [" + ex + "]");
-
+                             TransactionId + "], Exception: [" + ex + "]");
                 return "Exception: " + ex.Message.ToString();
             }
         }
@@ -691,6 +687,7 @@ namespace Nooch.DataAccess
                     if (trans != null)
                     {
                         _dbContext.Entry(trans).Reload();
+
                         #region Setup Common Variables
 
                         string fromAddress = Utility.GetValueFromConfig("transfersMail");
@@ -698,10 +695,7 @@ namespace Nooch.DataAccess
                         string senderFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member.FirstName));
                         string senderLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member.LastName));
 
-                        //string payLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
-                        //                               "trans/payRequest.aspx?TransactionId=" + trans.TransactionId);
                         string payLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
-
                                                        "Nooch/payRequest?TransactionId=" + trans.TransactionId);
 
                         string s22 = trans.Amount.ToString("n2");
@@ -752,11 +746,6 @@ namespace Nooch.DataAccess
                         {
                             #region If invited by email
 
-                            //string rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
-                            //                                  "trans/rejectMoney.aspx?TransactionId=" + trans.TransactionId +
-                            //                                  "&UserType=U6De3haw2r4mSgweNpdgXQ==" +
-                            //                                  "&LinkSource=75U7bZRpVVxLNbQuoMQEGQ==" +
-                            //                                  "&TransType=T3EMY1WWZ9IscHIj3dbcNw==");
                             string rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
 
                                                               "Nooch/rejectMoney?TransactionId=" + trans.TransactionId +
@@ -807,19 +796,11 @@ namespace Nooch.DataAccess
                             string RejectShortLink = "";
                             string AcceptShortLink = "";
 
-                            //string rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
-                            //                                  "trans/rejectMoney.aspx?TransactionId=" + trans.TransactionId +
-                            //                                  "&UserType=U6De3haw2r4mSgweNpdgXQ==" +
-                            //                                  "&LinkSource=Um3I3RNHEGWqKM9MLsQ1lg==" +
-                            //                                  "&TransType=T3EMY1WWZ9IscHIj3dbcNw==");
                             string rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
-
                                                               "Nooch/rejectMoney?TransactionId=" + trans.TransactionId +
-
                                                               "&UserType=U6De3haw2r4mSgweNpdgXQ==" +
                                                               "&LinkSource=Um3I3RNHEGWqKM9MLsQ1lg==" +
                                                               "&TransType=T3EMY1WWZ9IscHIj3dbcNw==");
-
 
                             #region Shortening URLs for SMS
 
@@ -2691,7 +2672,7 @@ namespace Nooch.DataAccess
 
 
         // CREATED: JULY 2015
-        // NOTE: Created specifically for the new combined landing page (/trans/RejectMoney.aspx) for rejecting all types of transfers.
+        // NOTE: Created specifically for the new combined landing page (/trans/RejectMoney) for rejecting all types of transfers.
         public string RejectMoneyCommon(string TransactionId, string UserType, string LinkSource, string TransType)
         {
             Logger.Info("TDA -> RejectMoneyCommon Initiated - [TransactionId: " + TransactionId +
@@ -4186,7 +4167,7 @@ namespace Nooch.DataAccess
                         {
                             TransactionId = Guid.NewGuid(),
                             RecipientId = Utility.ConvertToGuid(receivers[i]),
-                            SenderId  = Utility.ConvertToGuid(requestDto.MemberId),
+                            SenderId = Utility.ConvertToGuid(requestDto.MemberId),
                             Picture = (requestDto.Picture != null) ? requestDto.Picture : null,
                             Amount = requestDto.Amount - 0,
                             TransactionDate = DateTime.Now,
@@ -4221,7 +4202,7 @@ namespace Nooch.DataAccess
                             _dbContext.Entry(transaction).Reload();
                             requestId = transaction.TransactionId.ToString();
 
-                           //  BELOW CODE ADDED BY CLIFF (11/26/14) FOR SENDING EMAILS FOR WHEN THERE ARE MULTIPLE RECIPIENTS
+                            //  BELOW CODE ADDED BY CLIFF (11/26/14) FOR SENDING EMAILS FOR WHEN THERE ARE MULTIPLE RECIPIENTS
                             #region Cliffs Additions
 
                             var recipientOfRequest = CommonHelper.GetMemberDetails(receivers[i]);
@@ -4401,7 +4382,7 @@ namespace Nooch.DataAccess
                         TransactionId = Guid.NewGuid(),
 
                         RecipientId = receiver.MemberId,
-                        SenderId   = requester.MemberId,
+                        SenderId = requester.MemberId,
                         Amount = requestDto.Amount,
                         TransactionDate = DateTime.Now,
                         Picture = (requestDto.Picture != null) ? requestDto.Picture : null,
@@ -4934,7 +4915,7 @@ namespace Nooch.DataAccess
                                                "TransType=T3EMY1WWZ9IscHIj3dbcNw==");
 
                     string paylink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
-                                                   "trans/payRequest.aspx?TransactionId=" + requestId +
+                                                   "Nooch/PayRequest?TransactionId=" + requestId +
                                                    "&UserType=U6De3haw2r4mSgweNpdgXQ=="); // UserType = "New"
 
                     if (isForRentScene)
@@ -5010,7 +4991,7 @@ namespace Nooch.DataAccess
         }
 
 
-       
+
 
         /// <summary>
         /// This method is for making a request from a regular existing user (or Landlord) to a user who previously accepted/paid an
@@ -5480,7 +5461,7 @@ namespace Nooch.DataAccess
             }
         }
 
-     
+
 
 
         /// <summary>
@@ -6587,7 +6568,7 @@ namespace Nooch.DataAccess
                     //    Logger.Info("TDA -> TransferMoneyUsingSynapse - ABORTED: Recipient's Synapse bank is NOT VERIFIED. " + "[TransactionId: " + transactionEntity.TransactionId + "]");
                     //    return "Recepient does not have any verified bank account.";
                     //}
-                      if (recipientSynapseDetails.BankDetails.allowed == "LOCKED")
+                    if (recipientSynapseDetails.BankDetails.allowed == "LOCKED")
                     {
                         Logger.Error("TDA -> TransferMoneyUsingSynapse - ABORTED: Recipient's Synapse bank is LOCKED. " + "[TransactionId: " + transactionEntity.TransactionId + "]");
                         return "Sender's bank account is locked pending review.";
@@ -7234,7 +7215,7 @@ namespace Nooch.DataAccess
                 // Save transaction details along with device and location details...
                 using (var noochConnection = new NOOCHEntities())
                 {
-                  
+
                     var memid = Utility.ConvertToGuid(transactionEntity.MemberId);
 
                     transactionEntity.RecipientId = transactionEntity.MemberId;
@@ -7262,7 +7243,7 @@ namespace Nooch.DataAccess
 
 
                     noochConnection.Transactions.Add(transactionDetail);
-                   
+
                     trnsactionId = transactionDetail.TransactionId.ToString();
                     int value = 0;
 
@@ -7283,8 +7264,8 @@ namespace Nooch.DataAccess
                         // Update Sender in DB
                         sender.DateModified = DateTime.Now;
 
-                        value= updateSenderInDB = noochConnection.SaveChanges();
-                        
+                        value = updateSenderInDB = noochConnection.SaveChanges();
+
                     }
                     catch (Exception ex)
                     {
@@ -7425,7 +7406,7 @@ namespace Nooch.DataAccess
                                                           "&TransType=DrRr1tU1usk7nNibjtcZkA==");
 
                         string acceptLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
-                                                          "trans/depositMoney.aspx?TransactionId=" + transactionDetail.TransactionId);
+                                                          "Nooch/DepositMoney?TransactionId=" + transactionDetail.TransactionId);
 
                         if (isForRentScene)
                         {
@@ -7744,7 +7725,7 @@ namespace Nooch.DataAccess
 
                                 if (friendDetails != null && (friendDetails.EmailTransferSent ?? false))
                                 {
-                                    string otherlink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"), "trans/CancelRequest.aspx?TransactionId=" + transactionDetail.TransactionId +
+                                    string otherlink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"), "Nooch/CancelRequest?TransactionId=" + transactionDetail.TransactionId +
                                                                                                                    "&MemberId=" + transactionEntity.MemberId +
                                                                                                                    "&UserType=mx5bTcAYyiOf9I5Py9TiLw==");
 
@@ -7802,7 +7783,7 @@ namespace Nooch.DataAccess
                                                                   "&TransType=DrRr1tU1usk7nNibjtcZkA==");
 
                                 string acceptLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
-                                                                  "trans/DepositMoney?TransactionId=" + transactionDetail.TransactionId);
+                                                                  "Nooch/DepositMoney?TransactionId=" + transactionDetail.TransactionId);
 
                                 string googleUrlAPIKey = Utility.GetValueFromConfig("GoogleURLAPI");
 
