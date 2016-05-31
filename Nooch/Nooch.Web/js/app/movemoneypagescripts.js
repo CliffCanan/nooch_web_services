@@ -698,13 +698,15 @@ function createRecord() {
     var ipVal = ipusr;
 	var isImageAdded = isFileAdded;
     var imageData = FileData;
+    var isRentScene = FOR_RENTSCENE == "true" ? true : false;
 
     console.log("{transId: " + TRANSID + ", userEm: " + userEmVal +
 				", userPh: " + userPhVal + ", userName: " + userNameVal +
                 ", userPw: " + userPwVal + ", ssn: " + ssnVal +
 				", dob: " + dobVal + ", fngprnt: " + fngprntVal +
 				", ip: " + ipVal + ", isIdImage: " + isImageAdded +
-				", CIP: " + CIP + ", FBID: " + FBID + "}");//", idImagedata: " + imageData + "}");
+				", CIP: " + CIP + ", FBID: " + FBID +
+                ", isRentScene: " + isRentScene + "}");//", idImagedata: " + imageData + "}");
 
     var urlToUse = "";
     if (transType == "send")
@@ -733,6 +735,7 @@ function createRecord() {
         "', 'ip':'" + ipVal +
         "', 'cip':'" + CIP +
         "', 'fbid':'" + FBID +
+        "', 'isRentScene':'" + isRentScene +
         "', 'isIdImage':'" + isFileAdded +
         "', 'idImagedata':'" + FileData + "'}";
     

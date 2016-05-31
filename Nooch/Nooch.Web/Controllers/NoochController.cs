@@ -875,10 +875,12 @@ namespace Nooch.Web.Controllers
 
         public ActionResult RegisterUserWithSynpForDepositMoney(string transId, string memberId, string userEm, string userPh, string userName,
                                                                 string userPw, string ssn, string dob, string address, string zip, string fngprnt,
-                                                                string ip, string cip, string fbid, string isIdImage = "0", string idImagedata = "")
+                                                                string ip, string cip, string fbid, bool isRentScene, string isIdImage = "0", string idImagedata = "")
         {
             Logger.Info("DepositMoney Code Behind -> RegisterUserWithSynpForDepositMoney Initiated - Email: [" + userEm +
-                        "], TransID: [" + transId + "], memberId: [" + memberId + "], CIP: [" + cip + "], FBID: [" + fbid + "]");
+                        "], TransID: [" + transId + "], memberId: [" + memberId +
+                        "], CIP: [" + cip + "], FBID: [" + fbid +
+                        "], isRentScene: [" + isRentScene + "]");
 
             RegisterUserSynapseResultClassExt res = new RegisterUserSynapseResultClassExt();
             res.success = "false";
@@ -899,23 +901,24 @@ namespace Nooch.Web.Controllers
                             ", address: " + address + ", zip: " + zip +
                             ", CIP: [" + cip + "], FBID: [" + fbid + "]");
 
-                RegisterUserWithSynapseV3_Input inputclass = new RegisterUserWithSynapseV3_Input();
-                inputclass.address = address;
-                inputclass.dob = dob;
-                inputclass.email = userEm;
-                inputclass.fngprnt = fngprnt;
-                inputclass.fullname = userName;
-                inputclass.idImageData = idImagedata;
-                inputclass.ip = ip;
-                inputclass.isIdImageAdded = isIdImage;
-                inputclass.phone = userPh;
-                inputclass.pw = userPw;
-                inputclass.ssn = ssn;
-                inputclass.transId = transId;
-                inputclass.zip = zip;
+                RegisterUserWithSynapseV3_Input inputClass = new RegisterUserWithSynapseV3_Input();
+                inputClass.address = address;
+                inputClass.dob = dob;
+                inputClass.email = userEm;
+                inputClass.fngprnt = fngprnt;
+                inputClass.fullname = userName;
+                inputClass.idImageData = idImagedata;
+                inputClass.ip = ip;
+                inputClass.isIdImageAdded = isIdImage;
+                inputClass.phone = userPh;
+                inputClass.pw = userPw;
+                inputClass.ssn = ssn;
+                inputClass.transId = transId;
+                inputClass.zip = zip;
+                inputClass.isRentScene = isRentScene != null ? isRentScene : false;
 
                 var scriptSerializer = new JavaScriptSerializer();
-                string json = scriptSerializer.Serialize(inputclass);
+                string json = scriptSerializer.Serialize(inputClass);
 
                 Logger.Info("DepositMoney Code-Behind -> RegisterUserWithSynpForDepositMoney - Full Query String: [ " + String.Concat(serviceUrl, serviceMethod) + " ]");
 
@@ -1078,13 +1081,15 @@ namespace Nooch.Web.Controllers
         private ResultDepositMoneyComplete finishTransaction(string MemberIdAfterSynapseAccountCreation, string TransactionId, ResultDepositMoneyComplete resultDepositMoneyComplete)
         {
             ResultDepositMoneyComplete rdmc = resultDepositMoneyComplete;
+            rdmc.paymentSuccess = false;
 
             try
             {
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
                 string serviceMethod = "/GetTransactionDetailByIdAndMoveMoneyForNewUserDeposit?TransactionId=" + TransactionId +
                                        "&MemberIdAfterSynapseAccountCreation=" + MemberIdAfterSynapseAccountCreation +
-                                       "&TransactionType=SentToNewUser"; ;
+                                       "&TransactionType=SentToNewUser";
+
                 if ((rdmc.usrTyp == "Existing" || rdmc.usrTyp == "Tenant") &&
                      rdmc.payeeMemId.Length > 5)
                 {
@@ -1108,8 +1113,6 @@ namespace Nooch.Web.Controllers
                     else
                     {
                         Logger.Error("DepositMoneyComplete CodeBehind -> completeTrans FAILED - TransId: [" + TransactionId + "]");
-
-                        rdmc.paymentSuccess = false;
                         Response.Write("<script>errorFromCodeBehind = 'failed';</script>");
                     }
                 }
@@ -1117,7 +1120,7 @@ namespace Nooch.Web.Controllers
             catch (Exception ex)
             {
                 Logger.Error("depositMoneyComplete CodeBehind -> completeTrans FAILED - TransId: [" + TransactionId +
-                                       "], Exception: [" + ex + "]");
+                             "], Exception: [" + ex + "]");
             }
 
             return rdmc;
@@ -1436,7 +1439,7 @@ namespace Nooch.Web.Controllers
 
         public ActionResult RegisterUserWithSynpForPayRequest(string transId, string memberId, string userEm, string userPh, string userName,
                                                               string userPw, string ssn, string dob, string address, string zip, string fngprnt,
-                                                              string ip, string cip, string fbid, string isIdImage = "0", string idImagedata = "")
+                                                              string ip, string cip, string fbid, bool isRentScene, string isIdImage = "0", string idImagedata = "")
         {
             Logger.Info("PayRequest Code Behind -> RegisterUserWithSynpForPayRequest Initiated - Email: [" + userEm +
                         "], TransID: [" + transId + "], memberId: [" + memberId + "], CIP: [" + cip + "], FBID: [" + fbid + "]");
@@ -1456,7 +1459,8 @@ namespace Nooch.Web.Controllers
                             ", userPh: " + userPh + ", userPw: " + userPw +
                             ", ssn: " + ssn + ", dob: " + dob +
                             ", address: " + address + ", zip: " + zip +
-                            ", Has ID Img: [" + isIdImage + "], CIP: [" + cip + "], FBID: [" + fbid + "]");
+                            ", Has ID Img: [" + isIdImage + "], CIP: [" + cip +
+                            "], FBID: [" + fbid + "], isRentScene: [" + isRentScene + "]");
 
 
                 #region Initial Checks
@@ -1509,6 +1513,7 @@ namespace Nooch.Web.Controllers
                 inputClass.zip = zip;
                 inputClass.cip = !String.IsNullOrEmpty(cip) ? cip : "renter";
                 inputClass.fbid = fbid;
+                inputClass.isRentScene = isRentScene != null ? isRentScene : false;
 
                 if (!String.IsNullOrEmpty(memberId) && memberId.Length > 30)
                 {
@@ -1765,7 +1770,7 @@ namespace Nooch.Web.Controllers
                 {
                     Logger.Info("createAccount CodeBehind -> Page_load Initiated - Is a RentScene Payment: [" + Request.QueryString["rs"] + "]");
 
-                    rca.rs = Request.QueryString["rs"].ToLower();
+                    rca.rs = Request.QueryString["rs"].ToLower() == "true" ? "true" : "false";
                 }
 
                 if (!String.IsNullOrEmpty(Request.QueryString["TransId"]))
@@ -1924,7 +1929,7 @@ namespace Nooch.Web.Controllers
                         "], Phone: [" + userData.phone + "], DOB: [" + userData.dob +
                         "], SSN: [" + userData.ssn + "], Address: [" + userData.address +
                         "], IP: [" + userData.ip + "], Is Image Sent: [" + userData.isIdImage +
-                        "], FBID: [" + userData.fbid + "]");
+                        "], FBID: [" + userData.fbid + "], isRentScene: [" + userData.rs + "]");
 
             genericResponse res = new genericResponse();
             res.success = false;
@@ -1955,6 +1960,7 @@ namespace Nooch.Web.Controllers
                 inputClass.pw = userData.pw;
                 inputClass.memberId = userData.memId;
                 inputClass.transId = userData.transId;
+                inputClass.isRentScene = userData.rs == "true" ? true : false;
 
                 var scriptSerializer = new JavaScriptSerializer();
                 string json = scriptSerializer.Serialize(inputClass);

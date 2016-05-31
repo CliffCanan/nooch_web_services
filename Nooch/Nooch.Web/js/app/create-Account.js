@@ -36,7 +36,7 @@ $(document).ready(function () {
 
     console.log("isUpgradeToV3 is: [" + isUpgradeToV3 + "]");
 
-    if (RENTSCENE == "yes") {
+    if (RENTSCENE == "true") {
         COMPANY = "Rent Scene";
 
         $('.landingHeaderLogo').attr('href', 'http://www.rentscene.com');
@@ -629,6 +629,7 @@ function createRecord() {
              "', 'ip':'" + ipVal +
              "', 'pw':'" + '' +
              "', 'fbid':'" + FBID +
+             "', 'rs':'" + RENTSCENE +
              "', 'isIdImage':'" + isFileAdded +
              "', 'idImagedata':'" + FileData + "'}",
         contentType: "application/json; charset=utf-8",

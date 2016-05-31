@@ -2951,7 +2951,8 @@ namespace Nooch.API.Controllers
             {
                 Logger.Info("Service Cntrlr -> RegisterExistingUserWithSynapseV3 Initiated - MemberID: [" + input.memberId + "], " +
                             "Name: [" + input.fullname + "], Email: [" + input.email +
-                            "Is ID Img Sent: [" + input.isIdImageAdded + "], CIP: [" + input.cip + "], FBID: [" + input.fbid + "]");
+                            "Is ID Img Sent: [" + input.isIdImageAdded + "], CIP: [" + input.cip +
+                            "], FBID: [" + input.fbid + "], isRentScene: [" + input.isRentScene + "]");
 
                 MembersDataAccess mda = new MembersDataAccess();
                 RegisterUserSynapseResultClassExt nc = new RegisterUserSynapseResultClassExt();
@@ -2959,7 +2960,8 @@ namespace Nooch.API.Controllers
                 synapseCreateUserV3Result_int res = mda.RegisterExistingUserWithSynapseV3(input.transId, input.memberId, input.email,
                                                                                           input.phone, input.fullname, input.pw, input.ssn,
                                                                                           input.dob, input.address, input.zip, input.fngprnt,
-                                                                                          input.ip, input.cip, input.fbid, input.isIdImageAdded, input.idImageData);
+                                                                                          input.ip, input.cip, input.fbid, input.isRentScene,
+                                                                                          input.isIdImageAdded, input.idImageData);
 
                 if (res.success == true)
                 {
@@ -2999,14 +3001,15 @@ namespace Nooch.API.Controllers
             {
                 Logger.Info("Service Cntrlr -> RegisterNonNoochUserWithSynapse Initiated - MemberID: [" + input.memberId + "], " +
                             "Name: [" + input.fullname + "], Email: [" + input.email +
-                            "Is ID Img Sent: [" + input.isIdImageAdded + "], CIP: [" + input.cip + "], FBID: [" + input.fbid + "]");
+                            "Is ID Img Sent: [" + input.isIdImageAdded + "], CIP: [" + input.cip +
+                            "], FBID: [" + input.fbid + "], isRentScene: [" + input.isRentScene + "]");
 
                 MembersDataAccess mda = new MembersDataAccess();
 
                 synapseCreateUserV3Result_int mdaRes = mda.RegisterNonNoochUserWithSynapseV3(input.transId, input.email, input.phone, input.fullname,
                                                                                           input.pw, input.ssn, input.dob, input.address,
                                                                                           input.zip, input.fngprnt, input.ip, input.cip, input.fbid,
-                                                                                          input.isIdImageAdded, input.idImageData);
+                                                                                          input.isRentScene, input.isIdImageAdded, input.idImageData);
 
                 if (mdaRes.success == true)
                 {
