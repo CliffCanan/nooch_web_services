@@ -4140,10 +4140,11 @@ namespace Nooch.Common
         {
             GoogleGeolocationOutput res = new GoogleGeolocationOutput();
             res.IsSuccess = false;
-            res.Zip = zipCode;
 
             if (!String.IsNullOrEmpty(zipCode))
             {
+                res.Zip = zipCode;
+
                 try
                 {
                     string googleUrlLink = "https://maps.googleapis.com/maps/api/geocode/json?address=" + zipCode + "&key=" +
@@ -4172,6 +4173,12 @@ namespace Nooch.Common
                                 res.GoogleStatus = jsonFromSynapse["status"].ToString();
                                 res.ErrorMessage = "OK";
                                 res.IsSuccess = true;
+                            }
+
+                            // Also get the CITY
+                            if (item["types"][0].ToString() == "locality")
+                            {
+                                res.city = item["short_name"].ToString();
                             }
                         }
 

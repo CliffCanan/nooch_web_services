@@ -5962,9 +5962,10 @@ namespace Nooch.API.Controllers
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Layer -> GetStateNameByZipcode FAILED (Outer Exception) - zipCode: [" + zipCode + "], Exception: [" + ex + "]");
+                Logger.Error("Service Cntrlr -> GetStateNameByZipcode FAILED - ZipCode: [" + zipCode + "], Exception: [" + ex + "]");
                 res.ErrorMessage = "Server Error.";
             }
+
             return res;
         }
 

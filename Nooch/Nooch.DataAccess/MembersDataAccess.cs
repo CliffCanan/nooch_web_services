@@ -2615,6 +2615,11 @@ namespace Nooch.DataAccess
 
                 #region Update Member's Record in Members.dbo
 
+                // Get state from ZIP via Google Maps API
+                var googleMapsResult = CommonHelper.GetStateNameByZipcode(zip.Trim());
+                var stateAbbrev = googleMapsResult != null && googleMapsResult.stateAbbrev != null ? googleMapsResult.stateAbbrev : "";
+                var cityFromGoogle = googleMapsResult != null && !String.IsNullOrEmpty(googleMapsResult.city) ? googleMapsResult.city : "";
+
                 // Add member details based on given name, email, phone, & other parameters
                 if (userName.IndexOf('+') > -1)
                 {
@@ -2668,6 +2673,8 @@ namespace Nooch.DataAccess
                 memberObj.LastName = LastName;
                 memberObj.ContactNumber = userPhone;
                 memberObj.Address = !String.IsNullOrEmpty(address) ? CommonHelper.GetEncryptedData(address) : null;
+                memberObj.City = !String.IsNullOrEmpty(cityFromGoogle) ? CommonHelper.GetEncryptedData(cityFromGoogle) : null;
+                memberObj.State = !String.IsNullOrEmpty(stateAbbrev) ? CommonHelper.GetEncryptedData(stateAbbrev) : null;
                 memberObj.Zipcode = !String.IsNullOrEmpty(zip) ? CommonHelper.GetEncryptedData(zip) : null;
                 memberObj.SSN = !String.IsNullOrEmpty(ssn) ? CommonHelper.GetEncryptedData(ssn) : null;
                 memberObj.DateOfBirth = dateofbirth;
@@ -3129,9 +3136,9 @@ namespace Nooch.DataAccess
                 #region Parse And Format Data To Save
 
                 // Get state from ZIP via Google Maps API
-                var stateResult = CommonHelper.GetStateNameByZipcode(zip.Trim());
-                var stateAbbrev = stateResult != null && stateResult.stateAbbrev != null ? stateResult.stateAbbrev : "";
-
+                var googleMapsResult = CommonHelper.GetStateNameByZipcode(zip.Trim());
+                var stateAbbrev = googleMapsResult != null && googleMapsResult.stateAbbrev != null ? googleMapsResult.stateAbbrev : "";
+                var cityFromGoogle = googleMapsResult != null && !String.IsNullOrEmpty(googleMapsResult.city) ? googleMapsResult.city : "";
 
                 if (userName.IndexOf('+') > -1)
                 {
@@ -3203,6 +3210,7 @@ namespace Nooch.DataAccess
                     RecoveryEmail = userNameLowerCaseEncr,
                     ContactNumber = userPhone,
                     Address = !String.IsNullOrEmpty(address) ? CommonHelper.GetEncryptedData(address) : null,
+                    City = !String.IsNullOrEmpty(cityFromGoogle) ? CommonHelper.GetEncryptedData(cityFromGoogle) : null,
                     State = !String.IsNullOrEmpty(stateAbbrev) ? CommonHelper.GetEncryptedData(stateAbbrev) : null,
                     Zipcode = !String.IsNullOrEmpty(zip) ? CommonHelper.GetEncryptedData(zip) : null,
                     SSN = !String.IsNullOrEmpty(ssn) ? CommonHelper.GetEncryptedData(ssn) : null,
@@ -6284,7 +6292,10 @@ namespace Nooch.DataAccess
                         // Get state from ZIP via Google Maps API
                         var stateResult = CommonHelper.GetStateNameByZipcode(zipCode.Trim());
                         var stateAbbrev = stateResult != null && stateResult.stateAbbrev != null ? stateResult.stateAbbrev : "";
-                        member.State = CommonHelper.GetEncryptedData(stateAbbrev);
+                        var cityFromGoogle = stateResult != null && !String.IsNullOrEmpty(stateResult.city) ? stateResult.city : "";
+
+                        if (!String.IsNullOrEmpty(stateAbbrev)) member.State = CommonHelper.GetEncryptedData(stateAbbrev);
+                        if (!String.IsNullOrEmpty(stateAbbrev)) member.City = CommonHelper.GetEncryptedData(cityFromGoogle);
                     }
                     if (!String.IsNullOrEmpty(country))
                     {
