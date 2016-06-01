@@ -37,7 +37,7 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
         public synapseV3Result_user_docStatus doc_status { get; set; }
         public synapseV3Result_user_extra extra { get; set; }
 
-        public string documents { get; set; }
+        //public string[] documents { get; set; }
 
         public string[] legal_names { get; set; }
         public synapseV3Result_user_logins[] logins { get; set; }

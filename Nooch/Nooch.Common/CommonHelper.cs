@@ -1403,15 +1403,10 @@ namespace Nooch.Common
 
                         #region For Testing & Logging
 
-                        if (Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) || GetDecryptedData(memberEntity.UserName).IndexOf("jones00") > -1)
-                        {
-                            Logger.Info("****  sendUserSSNInfoToSynapseV3 -> JUST A TEST BLOCK REACHED! [" + userNameDecrypted + "] ****");
-                            baseAddress = "https://sandbox.synapsepay.com/api/v3/user/doc/add";
-                        }
-                        else if (memberEntity.MemberId.ToString().ToLower() == "b3a6cf7b-561f-4105-99e4-406a215ccf60")
+                        if (Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) && memberEntity.MemberId.ToString().ToLower() == "b3a6cf7b-561f-4105-99e4-406a215ccf60")
                         {
                             doc.name_last = "Satell";
-                            doc.document_value = "7562";
+                            doc.document_value = "195707562";
                         }
 
                         try
@@ -1672,8 +1667,9 @@ namespace Nooch.Common
                                 {
                                     Logger.Info("CommonHelper -> sendUserSsnInfoToSynapseV3 - ID Document Path found, so attempting submitDocumentToSynapseV3()");
 
-                                    // CLIFF (10/10/15): I guess we will have to add more code depending on what the response for this next line is...
-                                    submitDocumentToSynapseV3(memberEntity.MemberId.ToString(), memberEntity.VerificationDocumentPath);
+                                    // CC (5/31/16): submitDocumentToSynapseV3 is in MDA... but for some strange reason there is a duplicate in Common Helper
+                                    //               It should really be only in Common Helper, but the one in MDA is the one actually used right now.
+                                    //submitDocumentToSynapseV3(memberEntity.MemberId.ToString(), memberEntity.VerificationDocumentPath);
                                 }
                             }
                         }
@@ -2239,8 +2235,9 @@ namespace Nooch.Common
                                 {
                                     Logger.Info("CommonHelper -> sendUserSsnInfoToSynapseV3 - ID Document Path found, so attempting submitDocumentToSynapseV3()");
 
-                                    // CLIFF (10/10/15): I guess we will have to add more code depending on what the response for this next line is...
-                                    submitDocumentToSynapseV3(memberEntity.MemberId.ToString(), memberEntity.VerificationDocumentPath);
+                                    // CC (5/31/16): submitDocumentToSynapseV3 is in MDA... but for some strange reason there is a duplicate in Common Helper
+                                    //               It should really be only in Common Helper, but the one in MDA is the one actually used right now.
+                                    //submitDocumentToSynapseV3(memberEntity.MemberId.ToString(), memberEntity.VerificationDocumentPath);
                                 }
                             }
                         }
@@ -2307,6 +2304,12 @@ namespace Nooch.Common
         }*/
 
 
+        /************************************************************************************************************************/
+        //
+        // CC (5/31/16): submitDocumentToSynapseV3 is in MDA... but for some strange reason there is a duplicate in Common Helper
+        //               It should really be only in Common Helper, but the one in MDA is the one actually used right now.
+        //
+        /************************************************************************************************************************/
         public static GenericInternalResponseForSynapseMethods submitDocumentToSynapseV3(string MemberId, string ImageUrl)
         {
             Logger.Info("Common Helper -> submitDocumentToSynapseV3 Initialized - [MemberId: " + MemberId + "]");
@@ -2424,7 +2427,7 @@ namespace Nooch.Common
                             usersSynapseDetails.photos = ImageUrl;
                             usersSynapseDetails.physical_doc = resFromSynapse.user.doc_status != null ? resFromSynapse.user.doc_status.physical_doc : null;
                             usersSynapseDetails.virtual_doc = resFromSynapse.user.doc_status != null ? resFromSynapse.user.doc_status.virtual_doc : null;
-                            usersSynapseDetails.extra_security = resFromSynapse.user.extra.extra_security != null ? resFromSynapse.user.extra.extra_security.ToString() : null;
+                            usersSynapseDetails.extra_security = resFromSynapse.user.extra != null ? resFromSynapse.user.extra.extra_security.ToString() : null;
 
                             Logger.Info("Common Helper -> submitDocumentToSynapseV3 SUCCESSFUL - Permission: [" + permission +
                                         "], Virtual_Doc: [" + usersSynapseDetails.virtual_doc + "], Physical_Doc: [" + usersSynapseDetails.physical_doc +
@@ -2432,6 +2435,19 @@ namespace Nooch.Common
 
                             int save = _dbContext.SaveChanges();
                             _dbContext.Entry(usersSynapseDetails).Reload();
+
+                            // Now update users IsVerifiedWithSynapse value if response's permission = "SEND-AND-RECEIVE"
+                            if (member.IsVerifiedWithSynapse != true && permission == "SEND-AND-RECEIVE")
+                            {
+                                Logger.Info("Common Helper-> SubmitDocumentToSynapseV3 - User's IsVerifiedWithSynapse was not true, " +
+                                            "but Permission from was 'SEND-AND-RECEIVE', so updating Member's record in DB - [MemberID: " + MemberId + "]");
+
+                                var memberObj = _dbContext.Members.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
+
+                                memberObj.IsVerifiedWithSynapse = true;
+                                memberObj.TransferLimit = "5000";
+                                _dbContext.SaveChanges();
+                            }
                         }
                     }
                     else
@@ -2841,14 +2857,10 @@ namespace Nooch.Common
                     user.fingerprint = noochMemberObject.UDID1;
 
                     user.ip = GetRecentOrDefaultIPOfMember(noochMemberObject.MemberId);
+
                     input.user = user;
 
                     string UrlToHit = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/signin" : "https://synapsepay.com/api/v3/user/signin";
-
-                    if (Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")))
-                    {
-                        Logger.Info("Common Helper -> refreshSynapseV3OautKey - TEST USER DETECTED - About to ping Synapse V3 Sandbox /user/signin...");
-                    }
 
                     Logger.Info("Common Helper -> refreshSynapseV3OautKey - Payload to send to Synapse /v3/user/signin: [" + JsonConvert.SerializeObject(input) + "]");
 
@@ -2969,7 +2981,7 @@ namespace Nooch.Common
                                         {
                                             // Good, phone #'s matched - proceed with 2FA process
                                             Logger.Info("Common Helper -> refreshSynapseV3OautKey - About to attempt 2FA process by querying SynapseV3SignIn()");
-                                            
+
                                             // Return response from 2nd Signin attempt w/ phone number (should trigger Synapse to send a PIN to the user)
                                             return SynapseV3SignIn(oauthKey, noochMemberObject, null);
                                         }
@@ -3116,7 +3128,7 @@ namespace Nooch.Common
 
                     Logger.Info("Common Helper -> SynapseV3SignIn - Found Member By Original OAuth Key");
 
-                    SynapseV3RefreshOauthKeyAndSign_Input input = new SynapseV3RefreshOauthKeyAndSign_Input();
+                    SynapseV3Signin_Input input = new SynapseV3Signin_Input();
 
                     string SynapseClientId = Utility.GetValueFromConfig("SynapseClientId");
                     string SynapseClientSecret = Utility.GetValueFromConfig("SynapseClientSecret");
@@ -3133,7 +3145,7 @@ namespace Nooch.Common
                         refresh_token = GetDecryptedData(synCreateUserObject.refresh_token)
                     };
 
-                    SynapseV3RefreshOAuthToken_User_Input user = new SynapseV3RefreshOAuthToken_User_Input();
+                    SynapseV3Signin_Input_User user = new SynapseV3Signin_Input_User();
 
                     user._id = new synapseSearchUserResponse_Id1()
                     {

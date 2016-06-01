@@ -1406,7 +1406,7 @@ div#pwFormShell #depositCreateAccount,
 	text-align: center;
 }
 #idVerWiz-p-2 label,
-#idVerWiz-p-2 dt { font-size: 17.5px; }
+#idVerWiz-p-2 dt { font-size: 16px; }
 #idVerWiz .orDiv {
     background-color: rgba(188,190,192,.1);
     border-bottom: 1px solid #ccc;

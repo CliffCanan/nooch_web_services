@@ -2156,9 +2156,10 @@ namespace Nooch.DataAccess
 
                 if (!String.IsNullOrEmpty(noochMember.cipTag))
                 {
-                    if (noochMember.cipTag == "renter") { extra.cip_tag = 1; }
-                    if (noochMember.cipTag == "landlord") { extra.cip_tag = 2; }
-                    if (noochMember.cipTag == "vendor") { extra.cip_tag = 3; }
+                    if (noochMember.cipTag.ToLower() == "renter") { extra.cip_tag = 1; }
+                    else if (noochMember.cipTag.ToLower() == "landlord") { extra.cip_tag = 2; }
+                    else if (noochMember.cipTag.ToLower() == "vendor") { extra.cip_tag = 3; }
+                    else extra.cip_tag = 1;
                 }
                 else
                 {
@@ -2172,13 +2173,8 @@ namespace Nooch.DataAccess
 
                 try
                 {
-                    Logger.Info("MDA -> RegisterUserWithSynapseV3 - Payload to send to Synapse /v3/user/create... Email: [" + logins.email +
-                                "], Phone: [" + payload.phone_numbers[0] +
-                                "], Legal Name: [" + payload.legal_names[0] +
-                                "], Fngprnt: [" + payload.fingerprints[0].fingerprint +
-                                "], IP: [" + payload.ips[0] +
-                                "], Is_Business: [" + payload.extra.is_business +
-                                "], CIP_Tag: [" + payload.extra.cip_tag + "]");
+                    Logger.Info("MDA -> RegisterUserWithSynapseV3 - Payload to send to Synapse /v3/user/create: [" +
+                                JsonConvert.SerializeObject(payload) + "]");
 
                     var http = (HttpWebRequest)WebRequest.Create(new Uri(baseAddress));
                     http.Accept = "application/json";
@@ -2355,7 +2351,6 @@ namespace Nooch.DataAccess
                     }
 
                     #endregion Add New Entry To SynapseCreateUserResults DB Table
-
 
                     if (addRecordToSynapseCreateUserTable > 0)
                     {
@@ -2887,7 +2882,7 @@ namespace Nooch.DataAccess
                         if (createSynapseUserResult.success == true &&
                             !String.IsNullOrEmpty(createSynapseUserResult.oauth.oauth_key))
                         {
-                            Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 - Synapse User created SUCCESSFULLY (LN: 6796) - " +
+                            Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 - Synapse User created SUCCESSFULLY (LN: 2885) - " +
                                         "[oauth_consumer_key: " + createSynapseUserResult.oauth.oauth_key + "]. Now attempting to save in Nooch DB.");
 
                             #region Send ID Doc To Synapse
@@ -2897,7 +2892,8 @@ namespace Nooch.DataAccess
                                 // We have ID Doc image... Now call submitDocumentToSynapseV3()
                                 try
                                 {
-                                    Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 -> Going in to submit id doc to synapse ->  [Email: " + userEmail + "], [Member_Id: " + res.memberIdGenerated + "]");
+                                    Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 -> Image Was Passed, About to Query SaveBase64AsImage() then submitDocumentToSynapseV3() -> " +
+                                                "[Email: " + userEmail + "], [Member_Id: " + memberObj.MemberId.ToString() + "]");
 
                                     var saveImageOnServer = SaveBase64AsImage(memberObj.MemberId.ToString(), idImageData);
 
@@ -3769,7 +3765,7 @@ namespace Nooch.DataAccess
                 }
                 else
                 {
-                    _dbContext.Entry(usersSynapseDetails).Reload();
+                    //_dbContext.Entry(usersSynapseDetails).Reload();
                     usersSynapseOauthKey = CommonHelper.GetDecryptedData(usersSynapseDetails.access_token);
                 }
 
@@ -3818,7 +3814,6 @@ namespace Nooch.DataAccess
                     submitDocToSynapse_user user = new submitDocToSynapse_user();
                     submitDocToSynapse_user_doc doc = new submitDocToSynapse_user_doc();
                     doc.attachment = "data:text/csv;base64," + CommonHelper.ConvertImageURLToBase64(ImageUrl).Replace("\\", "");
-                    //doc.attachment = "data:text/csv;base64,SUQsTmFtZSxUb3RhbCAoaW4gJCksRmVlIChpbiAkKSxOb3RlLFRyYW5zYWN0aW9uIFR5cGUsRGF0ZSxTdGF0dXMNCjUxMTksW0RlbW9dIEJlbHogRW50ZXJwcmlzZXMsLTAuMTAsMC4wMCwsQmFuayBBY2NvdW50LDE0MzMxNjMwNTEsU2V0dGxlZA0KNTExOCxbRGVtb10gQmVseiBFbnRlcnByaXNlcywtMS4wMCwwLjAwLCxCYW5rIEFjY291bnQsMTQzMzE2MjkxOSxTZXR0bGVkDQo1MTE3LFtEZW1vXSBCZWx6IEVudGVycHJpc2VzLC0xLjAwLDAuMDAsLEJhbmsgQWNjb3VudCwxNDMzMTYyODI4LFNldHRsZWQNCjUxMTYsW0RlbW9dIEJlbHogRW50ZXJwcmlzZXMsLTEuMDAsMC4wMCwsQmFuayBBY2NvdW50LDE0MzMxNjI2MzQsU2V0dGxlZA0KNTExNSxbRGVtb10gQmVseiBFbnRlcnByaXNlcywtMS4wMCwwLjAwLCxCYW5rIEFjY291bnQsMTQzMzE2MjQ5OCxTZXR0bGVkDQo0ODk1LFtEZW1vXSBMRURJQyBBY2NvdW50LC03LjAwLDAuMDAsLEJhbmsgQWNjb3VudCwxNDMyMjUwNTYyLFNldHRsZWQNCjQ4MTIsS2FyZW4gUGF1bCwtMC4xMCwwLjAwLCxCYW5rIEFjY291bnQsMTQzMTk5NDAzNixTZXR0bGVkDQo0NzgwLFNhbmthZXQgUGF0aGFrLC0wLjEwLDAuMDAsLEJhbmsgQWNjb3VudCwxNDMxODQ5NDgxLFNldHRsZWQNCjQzMTUsU2Fua2FldCBQYXRoYWssLTAuMTAsMC4wMCwsQmFuayBBY2NvdW50LDE0Mjk3NzU5MzcsU2V0dGxlZA0KNDMxNCxTYW5rYWV0IFBhdGhhaywtMC4xMCwwLjAwLCxCYW5rIEFjY291bnQsMTQyOTc3NTQzNCxTZXR0bGVkDQo0MzEzLFNhbmthZXQgUGF0aGFrLC0wLjEwLDAuMDAsLEJhbmsgQWNjb3VudCwxNDI5Nzc1MzY0LFNldHRsZWQNCjQzMTIsU2Fua2FldCBQYXRoYWssLTAuMTAsMC4wMCwsQmFuayBBY2NvdW50LDE0Mjk3NzUyNTAsU2V0dGxlZA0KNDMxMSxTYW5rYWV0IFBhdGhhaywtMC4xMCwwLjAwLCxCYW5rIEFjY291bnQsMTQyOTc3NTAxMyxTZXR0bGVkDQo0MjM1LFtEZW1vXSBCZWx6IEVudGVycHJpc2VzLC0wLjEwLDAuMDAsLEJhbmsgQWNjb3VudCwxNDI5MzMxODA2LFNldHRsZWQNCjQxMzYsU2Fua2FldCBQYXRoYWssLTAuMTAsMC4wMCwsQmFuayBBY2NvdW50LDE0Mjg4OTA4NjMsU2V0dGxlZA0KNDAzMCxTYW5rYWV0IFBhdGhhaywtMC4xMCwwLjAwLCxCYW5rIEFjY291bnQsMTQyODIxNTM5NixTZXR0bGVkDQo0MDE0LFtEZW1vXSBCZWx6IEVudGVycHJpc2VzLC0wLjEwLDAuMDAsLEJhbmsgQWNjb3VudCwxNDI4MTI1MzgwLENhbmNsZWQNCjM4MzIsU2Fua2FldCBQYXRoYWssLTAuMTAsMC4wMCwsQmFuayBBY2NvdW50LDE0MjcxMDc0NzAsU2V0dGxlZA0KMzgyNixTYW5rYWV0IFBhdGhhaywtMC4xMCwwLjAwLCxCYW5rIEFjY291bnQsMTQyNzAzNTM5MixTZXR0bGVkDQozODI1LFNhbmthZXQgUGF0aGFrLC0wLjEwLDAuMDAsLEJhbmsgQWNjb3VudCwxNDI3MDMyOTM3LFNldHRsZWQNCg==";
 
                     user.fingerprint = usersFingerprint;
                     user.doc = doc;
@@ -3845,14 +3840,14 @@ namespace Nooch.DataAccess
                     var sr = new StreamReader(stream);
                     var content = sr.ReadToEnd();
 
-                    kycInfoResponseFromSynapse resFromSynapse = new kycInfoResponseFromSynapse();
-
-                    resFromSynapse = JsonConvert.DeserializeObject<kycInfoResponseFromSynapse>(content);
+                    kycInfoResponseFromSynapse resFromSynapse = JsonConvert.DeserializeObject<kycInfoResponseFromSynapse>(content);
 
                     if (resFromSynapse != null)
                     {
                         if (resFromSynapse.success == true || resFromSynapse.success.ToString().ToLower() == "true")
                         {
+                            _dbContext.Entry(usersSynapseDetails).Reload();
+
                             var permission = resFromSynapse.user.permission != null ? resFromSynapse.user.permission : "NOT FOUND";
 
                             if (resFromSynapse.user.doc_status != null)
@@ -3861,17 +3856,14 @@ namespace Nooch.DataAccess
                                 usersSynapseDetails.virtual_doc = resFromSynapse.user.doc_status.virtual_doc;
                             }
 
-
                             // Update Permission in SynapseCreateUserResults Table using value returned by Synapse
                             // If any problem and 'permission' is 'NOT FOUND', leave the DB value as is.
-                            _dbContext.Entry(usersSynapseDetails).Reload();
                             usersSynapseDetails.permission = permission != "NOT FOUND" ? permission : usersSynapseDetails.permission;
                             usersSynapseDetails.photos = ImageUrl;
 
-                            // Cliff (5/24/16): ALSO NEED TO SAVE "virtual_doc" and "physical_doc" VALUES IN NOOCH DB, BUT FIELDS DON'T EXIST YET
-
                             int save = _dbContext.SaveChanges();
 
+                            // Cliff (5/31/16): THIS IS FAILING TO SAVE FOR SOME REASON ACCORDING TO THE LOGS... CAN'T FIGURE OUT WHY :-(
                             if (save > 0)
                             {
                                 Logger.Info("MDA -> submitDocumentToSynapseV3 - SUCCESSFULLY updated user's Synapse Permission in SynapseCreateUserResult Table" +
@@ -4445,7 +4437,6 @@ namespace Nooch.DataAccess
                                 {
                                     v.IsDeleted = true;
                                     _dbContext.SaveChanges();
-
                                 }
 
                                 #endregion Marking Any Existing Synapse Bank Login Entries as Deleted
