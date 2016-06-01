@@ -1704,7 +1704,12 @@ namespace Nooch.Common
         }
 
 
-
+        /// <summary>
+        /// For sending all user 'Documents' (Virtual, Physical, Social) to Synapse.
+        /// Added 5/31/16 by CC.
+        /// </summary>
+        /// <param name="MemberId"></param>
+        /// <returns></returns>
         public static submitIdVerificationInt sendDocsToSynapseV3(string MemberId)
         {
             Logger.Info("CommonHelper -> sendDocsToSynapseV3 Initialized - [MemberId: " + MemberId + "]");
@@ -1722,7 +1727,6 @@ namespace Nooch.Common
 
                 if (memberEntity.IsVerifiedWithSynapse != true)
                 {
-
                     string usersFirstName = UppercaseFirst(GetDecryptedData(memberEntity.FirstName));
                     string usersLastName = UppercaseFirst(GetDecryptedData(memberEntity.LastName));
 
@@ -1755,7 +1759,7 @@ namespace Nooch.Common
                         // • full Address (including city, zip),
                         // • SSN  *OR*  FB User ID
                         // • DOB
-                        // • Fingerprint
+                        // • Fingerprint (UDID1)
 
                         // Check for Fingerprint (UDID1 in the database)
                         if (String.IsNullOrEmpty(memberEntity.UDID1))
@@ -1812,7 +1816,7 @@ namespace Nooch.Common
                             usersDobYear = usersDob.Year.ToString();
                         }
 
-                        // Check for SSN & FBID
+                        // Check for SSN & FBID - need at least 1
                         if (string.IsNullOrEmpty(memberEntity.SSN) && string.IsNullOrEmpty(memberEntity.FacebookUserId))
                         {
                             isMissingSomething = true;
