@@ -2519,11 +2519,17 @@ namespace Nooch.Common
 
             try
             {
+
+                String memberId= CommonHelper.GetMemberIdByUserName(userEmail);
+                List<string> clientIds = CommonHelper.getClientSecretId(memberId);
+
+                string SynapseClientId = clientIds[0];
+                string SynapseClientSecret = clientIds[1];
                 synapseSearchUserInputClass input = new synapseSearchUserInputClass();
 
                 synapseSearchUser_Client client = new synapseSearchUser_Client();
-                client.client_id = Utility.GetValueFromConfig("SynapseClientId");
-                client.client_secret = Utility.GetValueFromConfig("SynapseClientSecret");
+                client.client_id = SynapseClientId;
+                client.client_secret = SynapseClientSecret;
 
                 synapseSearchUser_Filter filter = new synapseSearchUser_Filter();
                 filter.page = SEARCHUSER_CURRENT_PAGE;
@@ -2833,8 +2839,12 @@ namespace Nooch.Common
 
                     SynapseV3RefreshOauthKeyAndSign_Input input = new SynapseV3RefreshOauthKeyAndSign_Input();
 
-                    string SynapseClientId = Utility.GetValueFromConfig("SynapseClientId");
-                    string SynapseClientSecret = Utility.GetValueFromConfig("SynapseClientSecret");
+
+                    List<string> clientIds = CommonHelper.getClientSecretId(noochMemberObject.MemberId.ToString());
+
+                    string SynapseClientId = clientIds[0];
+                    string SynapseClientSecret = clientIds[1];
+
 
                     input.login = new createUser_login2()
                     {
@@ -3133,9 +3143,11 @@ namespace Nooch.Common
 
                     Logger.Info("Common Helper -> SynapseV3SignIn - Found Member By Original OAuth Key");
 
-                    string SynapseClientId = Utility.GetValueFromConfig("SynapseClientId");
-                    string SynapseClientSecret = Utility.GetValueFromConfig("SynapseClientSecret");
 
+                    List<string> clientIds = CommonHelper.getClientSecretId(memberObj.MemberId.ToString());
+
+                    string SynapseClientId = clientIds[0];
+                    string SynapseClientSecret = clientIds[1];
 
                     var client = new createUser_client()
                     {
@@ -4182,6 +4194,27 @@ namespace Nooch.Common
 
             return res;
         }
+        public static List<string> getClientSecretId(string memId)
+        {
+            List<string> clientIds = new List<string>();
+            Member member = GetMemberDetails(memId);
+            if (member.isRentScene == true)
+            {
 
+                string SynapseClientId = Utility.GetValueFromConfig("SynapseClientIdRentScene ");
+                string SynapseClientSecret = Utility.GetValueFromConfig("SynapseClientSecretRentScene  ");
+                clientIds.Add(SynapseClientId);
+                clientIds.Add(SynapseClientSecret);
+
+            }
+            else
+            {
+                string SynapseClientId = Utility.GetValueFromConfig("SynapseClientId");
+                string SynapseClientSecret = Utility.GetValueFromConfig("SynapseClientSecret");
+                clientIds.Add(SynapseClientId);
+                clientIds.Add(SynapseClientSecret);
+            }
+            return clientIds;
+        }
     }
 }

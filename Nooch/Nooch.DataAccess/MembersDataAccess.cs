@@ -2089,13 +2089,18 @@ namespace Nooch.DataAccess
 
                 #region Call Synapse V3 API: /v3/user/create
 
-                string SynapseClientId = Utility.GetValueFromConfig("SynapseClientId");
-                string SynapseClientSecret = Utility.GetValueFromConfig("SynapseClientSecret");
+                List<string> clientIds = CommonHelper.getClientSecretId(memberId);
+
+                string SynapseClientId = clientIds[0];
+                string SynapseClientSecret = clientIds[1];
 
                 string fullname = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(noochMember.FirstName)) + " " +
                                   CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(noochMember.LastName));
 
                 synapseCreateUserInput_int payload = new synapseCreateUserInput_int();
+
+
+               
 
                 createUser_client client = new createUser_client();
                 client.client_id = SynapseClientId;
