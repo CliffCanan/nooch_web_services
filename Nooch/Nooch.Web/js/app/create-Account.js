@@ -89,6 +89,7 @@ $(document).ready(function () {
                 confirmButtonText: "Let's Go!",
                 customClass: "upgradeNotice",
                 allowEscapeKey: false,
+                animation: 'slide-from-top',
                 html: true
             }, function (isConfirm)
             {
@@ -434,23 +435,6 @@ function runIdWizard() {
         },
         onFinished: function (event, currentIndex) {
 
-            // ADD THE LOADING BOX
-            $('#idWizContainer').block({
-                message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Validating Your Info...</span>',
-                css: {
-                    border: 'none',
-                    padding: '26px 8px 20px',
-                    backgroundColor: '#000',
-                    '-webkit-border-radius': '15px',
-                    '-moz-border-radius': '15px',
-                    'border-radius': '15px',
-                    opacity: '.75',
-                    width: '270px',
-                    margin: '0 auto',
-                    color: '#fff'
-                }
-            });
-
             // SUBMIT DATA TO NOOCH SERVER
             console.log("New user, so calling createRecord()")
             createRecord();
@@ -587,6 +571,23 @@ function ValidateEmail(str) {
 function createRecord() {
     console.log('createRecord fired');
 
+    // ADD THE LOADING BOX
+    $('#idWizContainer').block({
+        message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Validating Your Info...</span>',
+        css: {
+            border: 'none',
+            padding: '26px 8px 20px',
+            backgroundColor: '#000',
+            '-webkit-border-radius': '15px',
+            '-moz-border-radius': '15px',
+            'border-radius': '15px',
+            opacity: '.75',
+            width: '270px',
+            margin: '0 auto',
+            color: '#fff'
+        }
+    });
+
     var transId = $('#transId').val();
     var memId = $('#memId').val();
     var userNameVal = $('#idVer-name').val().trim();
@@ -695,12 +696,32 @@ function createRecord() {
 							text: "To verify your phone number, we just sent a text message to your phone.  Please enter the <strong>PIN</strong> to continue.</span>" +
 								  "<i class='show fa fa-mobile' style='font-size:40px; margin: 10px 0 0;'></i>",
 							type: "input",
+						    inputPlaceholder: "ENTER PIN",
 							showCancelButton: true,
 							confirmButtonColor: "#3fabe1",
 							confirmButtonText: "Ok",
+							customClass: "pinInput",
+                            closeOnConfirm: false,
 							html: true
 						}, function (inputTxt) {
-							console.log("Entered Text: [" + inputTxt + "]");
+						    console.log("Entered Text: [" + inputTxt + "]");
+
+						    if (inputTxt === false) return false;
+
+						    if (inputTxt === "")
+						    {
+						        swal.showInputError("Please enter the PIN sent to your phone.");
+						        return false
+						    }
+						    if (inputTxt.length < 4)
+						    {
+						        swal.showInputError("Double check you entered the entire PIN!");
+						        return false
+						    }
+
+						    swal.close();
+
+						    submitPin(inputTxt.trim())
 						});
 					}
                     else if (resultReason.indexOf("email already registered") > -1)
@@ -735,6 +756,134 @@ function createRecord() {
             $('#idWizContainer').unblock();
 
             console.log("ERROR --> 'x', then 'e' is... ");
+            console.log(x);
+            console.log(e);
+
+            showErrorAlert('3');
+        }
+    });
+}
+
+
+
+function submitPin(pin)
+{
+    console.log("submitPin fired - PIN [" + pin + "]");
+
+    var memId = $('#memId').val();
+
+    console.log("SubmitPIN Payload -> {memId: " + memId + ", PIN: " + pin + "}");
+
+    // ADD THE LOADING BOX
+    $('#idWizContainer').block({
+        message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Submitting PIN...</span>',
+        css: {
+            border: 'none',
+            padding: '26px 8px 20px',
+            backgroundColor: '#000',
+            '-webkit-border-radius': '15px',
+            '-moz-border-radius': '15px',
+            'border-radius': '15px',
+            opacity: '.75',
+            'z-index': '99999',
+            margin: '0 auto',
+            color: '#fff'
+        }
+    });
+
+    $.ajax({
+        type: "POST",
+        url: "submit2FAPin",
+        data: "{ 'memberId':'" + memId +
+             "', 'pin':'" + pin+ "'}",
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        async: "true",
+        cache: "false",
+        success: function (result)
+        {
+            console.log("SUCCESS -> SubmitPIN result is... [next line]");
+            console.log(result);
+
+            resultReason = result.msg;
+
+            // Hide the Loading Block
+            $('#idWizContainer').unblock();
+
+            if (result.success == true)
+            {
+                console.log("SubmitPIN: Success!");
+
+                // THEN DISPLAY SUCCESS ALERT...
+                swal({
+                    title: "Great Success",
+                    text: "Your phone number has been confirmed.",
+                    type: "success",
+                    showCancelButton: false,
+                    confirmButtonColor: "#3fabe1",
+                    confirmButtonText: "Continue",
+                    closeOnConfirm: true,
+                    html: true,
+                    customClass: "idVerSuccessAlert",
+                }, function (isConfirm)
+                {
+                    // SUBMIT ID WIZARD DATA TO SERVER AGAIN...
+                    console.log("Calling createRecord() again...")
+                    createRecord();
+                });
+            }
+            else
+            {
+                console.log("Success != true");
+
+                if (resultReason != null)
+                {
+                    console.log(resultReason);
+
+                    if (resultReason.indexOf('Validation PIN sent') > -1)
+                    {
+                        swal({
+                            title: "Check Your Phone",
+                            text: "To verify your phone number, we just sent a text message to your phone.  Please enter the <strong>PIN</strong> to continue.</span>" +
+								  "<i class='show fa fa-mobile' style='font-size:40px; margin: 10px 0 0;'></i>",
+                            type: "input",
+                            showCancelButton: true,
+                            confirmButtonColor: "#3fabe1",
+                            confirmButtonText: "Ok",
+                            html: true
+                        }, function (inputTxt)
+                        {
+                            console.log("Entered Text: [" + inputTxt + "]");
+                        });
+                    }
+                    else if (resultReason.indexOf("email already registered") > -1) {
+                        console.log("Error: email already registered");
+                        showErrorAlert('20');
+                    }
+                    else if (resultReason.indexOf("phone number already registered") > -1) {
+                        console.log("Error: phone number already registered");
+                        showErrorAlert('30');
+                    }
+                    else if (resultReason.indexOf("Missing critical data") > -1) {
+                        console.log("Error: missing critical data");
+                        showErrorAlert('2');
+                    }
+                    else {
+                        showErrorAlert('2');
+                    }
+                }
+                else {
+                    console.log("Error checkpoint [#834]");
+                    showErrorAlert('2');
+                }
+            }
+        },
+        Error: function (x, e)
+        {
+            // Hide the Loading Block
+            $('#idWizContainer').unblock();
+
+            console.log("Submit PIN ERROR --> 'x', then 'e' is... ");
             console.log(x);
             console.log(e);
 

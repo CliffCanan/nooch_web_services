@@ -43,4 +43,9 @@ namespace Nooch.Common.Entities
         public string TransId { get; set; }
     }
 
+    public class submitValidationPin
+    {
+        public string pin { get; set; }
+        public string memberId { get; set; }
+    }
 }

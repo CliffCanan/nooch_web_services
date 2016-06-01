@@ -651,6 +651,7 @@ element.style {
 }
 
 
+
 @media (min-width: 768px) {
   .modal-content {
     -webkit-box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
@@ -1729,6 +1730,15 @@ div#carousel ~ a:hover {
   letter-spacing: .5px;
   line-height: 20px;
 }
+
+.sweet-alert.pinInput input {
+  text-align: center;
+  letter-spacing: 4px;
+  font-size: 24px;
+  font-weight: bold;
+  margin-top: 0;
+}
+.sweet-alert.pinInput .sa-input-error { top: 15px; }
 
 .sweet-alert fieldset { padding: 0; }
 .sweet-alert fieldset .sa-input-error { display: none; }

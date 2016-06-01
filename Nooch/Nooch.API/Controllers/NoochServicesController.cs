@@ -4138,6 +4138,7 @@ namespace Nooch.API.Controllers
             return res;
         }
 
+
         [HttpGet]
         [ActionName("SetSynapseDefaultBank")]
         public SynapseBankSetDefaultResult SetSynapseDefaultBank(string MemberId, string BankName, string BankId)
@@ -4324,6 +4325,79 @@ namespace Nooch.API.Controllers
                 return new StringResult() { Result = "Invalid Access Token." };
             }
         }
+
+
+        [HttpGet]
+        [ActionName("Submit2FAPin")]
+        public synapseV3GenericResponse Submit2FAPin(string memberId, string pin)
+        {
+            synapseV3GenericResponse res = new synapseV3GenericResponse();
+            res.isSuccess = false;
+
+            try
+            {
+                Logger.Info("Service Cntrlr -> Submit2FAPin Initiated - [MemberID: " + memberId + "], [PIN: " + pin + "]");
+
+                #region Initial Data Checks
+
+                if (String.IsNullOrEmpty(memberId))
+                {
+                    res.msg = "Missing MemberID!";
+                    return res;
+                }
+                else if (String.IsNullOrEmpty(pin.Trim()))
+                {
+                    res.msg = "Missing PIN to submit!";
+                    return res;
+                }
+                memberId = memberId.Trim();
+                pin = pin.Trim();
+
+                #endregion Initial Data Checks
+
+                Member memberObj = CommonHelper.GetMemberDetails(memberId);
+
+                if (memberObj != null)
+                {
+                    // Now get the user's Oauth Key
+                    var synapseCreateUserObj = _dbContext.SynapseCreateUserResults.FirstOrDefault(m =>
+                                                                  m.MemberId == memberObj.MemberId && m.IsDeleted == false);
+
+                    if (synapseCreateUserObj != null)
+                    {
+                        _dbContext.Entry(synapseCreateUserObj).Reload();
+
+                        var oauthKey = synapseCreateUserObj.access_token;
+
+                        // Now we have everything to send to SynapseV3SignIn in CommonHelper...
+                        synapseV3checkUsersOauthKey signInResult = CommonHelper.SynapseV3SignIn(oauthKey, memberObj, pin);
+
+                        if (signInResult.success && !signInResult.is2FA && signInResult.msg == "Oauth key refreshed successfully")
+                        {
+                            res.isSuccess = true;
+                            res.msg = "PIN validated successfully";
+                        }
+                    }
+                    else
+                    {
+                        res.msg = "Users Synapse record not found in DB";
+                    }
+                }
+                else
+                {
+                    res.msg = "Member not found in DB";
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Info("Service Cntrlr -> Submit2FAPin FAILED - Exception - [MemberID: " + memberId +
+                            "], [PIN: " + pin + "], Exception: [" + ex.Message + "]");
+                res.msg = ex.Message;
+            }
+
+            return res;
+        }
+
 
         // Web related Services
 

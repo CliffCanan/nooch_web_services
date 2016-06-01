@@ -2523,8 +2523,7 @@ namespace Nooch.Common
 
             try
             {
-
-                String memberId= CommonHelper.GetMemberIdByUserName(userEmail);
+                String memberId = CommonHelper.GetMemberIdByUserName(userEmail);
                 List<string> clientIds = CommonHelper.getClientSecretId(memberId);
 
                 string SynapseClientId = clientIds[0];
@@ -3111,6 +3110,7 @@ namespace Nooch.Common
 
             synapseV3checkUsersOauthKey res = new synapseV3checkUsersOauthKey();
             res.success = false;
+            res.is2FA = false;
 
             #region Initial Data Checks
 
@@ -3146,7 +3146,6 @@ namespace Nooch.Common
                     _dbContext.Entry(synCreateUserObject).Reload();
 
                     Logger.Info("Common Helper -> SynapseV3SignIn - Found Member By Original OAuth Key");
-
 
                     List<string> clientIds = CommonHelper.getClientSecretId(memberObj.MemberId.ToString());
 
@@ -3233,7 +3232,8 @@ namespace Nooch.Common
 
                         JObject refreshResponse = JObject.Parse(content);
 
-                        Logger.Info("Common Helper -> SynapseV3SignIn - Synapse Response: [" + refreshResponse + "]");
+                        Logger.Info("Common Helper -> SynapseV3SignIn - Synapse Response: HTTP_CODE: [" + refreshResponse["http_code"] +
+                                    "], Success: [" + refreshResponse["success"] + "]");
 
                         if ((refreshResponse["success"] != null && Convert.ToBoolean(refreshResponse["success"])) ||
                              refreshResultFromSyn.success.ToString() == "true")
@@ -3272,7 +3272,7 @@ namespace Nooch.Common
                             }
                             else // New Access Token...
                             {
-                                Logger.Info("Common Helper -> SynapseV3SignIn - Access_Token from Synapse MATCHES what we already had in DB.");
+                                Logger.Info("Common Helper -> SynapseV3SignIn - Access_Token from Synapse DOES NOT MATCH what we already had in DB, updating with New value.");
                             }
 
                             // Update all values no matter what, even if access_token hasn't changed - possible one of the other values did
@@ -4135,6 +4135,7 @@ namespace Nooch.Common
         }
 
 
+        // CC (6/1/16): Need to update this to also grab the CITY
         public static GoogleGeolocationOutput GetStateNameByZipcode(string zipCode)
         {
             GoogleGeolocationOutput res = new GoogleGeolocationOutput();
@@ -4198,18 +4199,19 @@ namespace Nooch.Common
 
             return res;
         }
+
+
         public static List<string> getClientSecretId(string memId)
         {
             List<string> clientIds = new List<string>();
             Member member = GetMemberDetails(memId);
+
             if (member.isRentScene == true)
             {
-
-                string SynapseClientId = Utility.GetValueFromConfig("SynapseClientIdRentScene ");
-                string SynapseClientSecret = Utility.GetValueFromConfig("SynapseClientSecretRentScene  ");
+                string SynapseClientId = Utility.GetValueFromConfig("SynapseClientIdRentScene");
+                string SynapseClientSecret = Utility.GetValueFromConfig("SynapseClientSecretRentScene");
                 clientIds.Add(SynapseClientId);
                 clientIds.Add(SynapseClientSecret);
-
             }
             else
             {
@@ -4218,6 +4220,7 @@ namespace Nooch.Common
                 clientIds.Add(SynapseClientId);
                 clientIds.Add(SynapseClientSecret);
             }
+
             return clientIds;
         }
     }

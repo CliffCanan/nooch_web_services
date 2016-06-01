@@ -1973,13 +1973,13 @@ namespace Nooch.Web.Controllers
 
                 if (regUserResponse.success.ToLower() == "true")
                 {
-                    Logger.Info("Create Account Code-Behind -> saveMemberInfo SUCCESS! - Message: [" + regUserResponse.reason + "]"); 
+                    Logger.Info("Create Account Code-Behind -> saveMemberInfo SUCCESS! - Message: [" + regUserResponse.reason + "]");
                     res.success = true;
                     res.msg = "Successfully updated member record on server!";
                 }
                 else
                 {
-                    Logger.Info("Create Account Code-Behind -> saveMemberInfo FAILED! - Message: [" + regUserResponse.reason + "]"); 
+                    Logger.Info("Create Account Code-Behind -> saveMemberInfo FAILED! - Message: [" + regUserResponse.reason + "]");
                     res.msg = regUserResponse.reason;
                 }
             }
@@ -2067,6 +2067,52 @@ namespace Nooch.Web.Controllers
             //    checkEmailMsg.Visible = true;
             // }
         }*/
+
+
+
+        [HttpPost]
+        [ActionName("submit2FAPin")]
+        public ActionResult submit2FAPin(submitValidationPin userData)
+        {
+            Logger.Info("Create Account Code-Behind -> submit2FAPin Initiated - MemberID: [" + userData.memberId +
+                        "], Validation PIN: [" + userData.pin + "]");
+
+            genericResponse res = new genericResponse();
+            res.success = false;
+            res.msg = "Initial - code behind";
+
+            try
+            {
+                string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+                string serviceMethod = "/Submit2FAPin?memberId=" + userData.memberId + "&pin=" + userData.pin;
+                string urlToUse = String.Concat(serviceUrl, serviceMethod);
+
+                Logger.Info("Create Account Code-Behind -> submit2FAPin CHECKPOINT #1 - URL To Use: [" + urlToUse + "]");
+
+                synapseV3GenericResponse response = ResponseConverter<synapseV3GenericResponse>.ConvertToCustomEntity(urlToUse);
+
+                //Logger.Info("Create Account Code-Behind -> saveMemberInfo RESULT: [" + scriptSerializer.Serialize(regUserResponse) + "]");
+
+                if (response.isSuccess)
+                {
+                    Logger.Info("Create Account Code-Behind -> submit2FAPin SUCCESS! - Message: [" + response.msg + "]");
+                    res.success = true;
+                    res.msg = response.msg;
+                }
+                else
+                {
+                    Logger.Info("Create Account Code-Behind -> submit2FAPin FAILED! - Message: [" + response.msg + "]");
+                    res.msg = response.msg;
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Create Account Code-Behind -> submit2FAPin FAILED - MemberID: [" + userData.memberId + "], Exception: [" + ex.Message + "]");
+                res.msg = "Code-behind exception during submit2FAPin";
+            }
+
+            return Json(res);
+        }
 
         #endregion CreateAccount Page
 
@@ -2645,7 +2691,6 @@ namespace Nooch.Web.Controllers
                 string json = "";
 
                 requestFromRentScene response = new requestFromRentScene();
-                var scriptSerializer = new JavaScriptSerializer();
 
                 if (isRequest)
                 {
@@ -2696,6 +2741,8 @@ namespace Nooch.Web.Controllers
                     transactionDto.PinNumber = pin;
                     transactionDto.Amount = Convert.ToDecimal(amount);
                     transactionDto.Memo = memo;
+
+                    var scriptSerializer = new JavaScriptSerializer();
 
                     serviceMethod = "/TransferMoneyToNonNoochUserUsingSynapse?accessToken=" + accessToken + "&inviteType=email&receiverEmailId=" + email;
                     json = scriptSerializer.Serialize(transactionDto);
