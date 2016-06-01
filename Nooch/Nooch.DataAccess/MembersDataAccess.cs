@@ -1917,6 +1917,7 @@ namespace Nooch.DataAccess
                             if (refreshTokenResult.is2FA)
                             {
                                 // 2FA was triggered during /user/signin (Refresh Service), probably b/c the user's Fingerprint has changed since the Synapse user was created.
+                                Logger.Info("MDA -> RegisterUserWithSynapseV3 - Got 2FA from Refresh Service - Msg: [" + refreshTokenResult.msg + "]");
                                 res.success = false;
                                 res.reason = refreshTokenResult.msg;
                             }
@@ -2010,11 +2011,12 @@ namespace Nooch.DataAccess
                                         Logger.Error("MDA -> RegisterUserWithSynapseV3 - Attempted sendUserSsnInfoToSynapseV3 but got Exception: [" + ex.Message + "]");
                                     }
                                 }
+
+                                // Cliff (5/17/16): This returns true even if the SSN was unable to be verified above, as long as an Access_Token was found in Nooch's DB to send back/
+                                //                  The user may be adding a bank and might still need to answer the ID Verification questions afterwards,
+                                //                  or it could be a Rent Scene user who don't use the iOS app, so we can deal with fixing their Permissions after they connect a bank.
+                                res.success = true;
                             }
-                            // Cliff (5/17/16): This returns true even if the SSN was unable to be verified above, as long as an Access_Token was found in Nooch's DB to send back/
-                            //                  The user may be adding a bank and might still need to answer the ID Verification questions afterwards,
-                            //                  or it could be a Rent Scene user who don't use the iOS app, so we can deal with fixing their Permissions after they connect a bank.
-                            res.success = true;
                         }
                         else
                         {
@@ -3765,7 +3767,6 @@ namespace Nooch.DataAccess
                 }
                 else
                 {
-                    //_dbContext.Entry(usersSynapseDetails).Reload();
                     usersSynapseOauthKey = CommonHelper.GetDecryptedData(usersSynapseDetails.access_token);
                 }
 

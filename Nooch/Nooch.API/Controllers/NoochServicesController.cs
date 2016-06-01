@@ -2979,12 +2979,15 @@ namespace Nooch.API.Controllers
                     nc.success = "false";
                     nc.reason = res.reason;
                 }
+
+                Logger.Info("Service Cntrlr -> RegisterExistingUserWithSynapseV3 - Returning Payload - Reason: [" + (nc.reason) + "]");
+
                 return nc;
             }
             catch (Exception ex)
             {
                 Logger.Error("Service Cntrlr -> RegisterExistingUserWithSynapsev3 FAILED - [MemberID: " + input.memberId + "], [Name: " + input.fullname +
-                             "], [Email of New User: " + input.email + "], [Exception: " + ex.Message + "]");
+                             "], Email of New User: [" + input.email + "], Exception: [" + ex + "]");
                 return null;
             }
         }
@@ -4483,8 +4486,8 @@ namespace Nooch.API.Controllers
             catch (Exception ex)
             {
                 Logger.Error("Service Controller -> SaveMembersFBId Error - MemberId: [" + MemberId + "] Error -> " + ex);
+                return new StringResult { Result = ex.Message };
             }
-            return new StringResult();
         }
 
 

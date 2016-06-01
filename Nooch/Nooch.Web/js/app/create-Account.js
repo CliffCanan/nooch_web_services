@@ -688,7 +688,22 @@ function createRecord() {
                 {
                     console.log(resultReason);
 
-                    if (resultReason.indexOf("email already registered") > -1)
+					if (resultReason.indexOf('Validation PIN sent') > -1)
+					{
+						swal({
+							title: "Check Your Phone",
+							text: "To verify your phone number, we just sent a text message to your phone.  Please enter the <strong>PIN</strong> to continue.</span>" +
+								  "<i class='show fa fa-mobile' style='font-size:40px; margin: 10px 0 0;'></i>",
+							type: "input",
+							showCancelButton: true,
+							confirmButtonColor: "#3fabe1",
+							confirmButtonText: "Ok",
+							html: true
+						}, function (inputTxt) {
+							console.log("Entered Text: [" + inputTxt + "]");
+						});
+					}
+                    else if (resultReason.indexOf("email already registered") > -1)
                     {
                         console.log("Error: email already registered");
                         showErrorAlert('20');

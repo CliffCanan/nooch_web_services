@@ -20,7 +20,6 @@ using System.Web.UI;
 using Nooch.Common.Cryptography.Algorithms;
 using Nooch.Common.Entities.MobileAppInputEntities;
 
-
 namespace Nooch.Web.Controllers
 {
     public class NoochController : Controller
@@ -1970,15 +1969,17 @@ namespace Nooch.Web.Controllers
 
                 RegisterUserSynapseResultClassExt regUserResponse = ResponseConverter<RegisterUserSynapseResultClassExt>.CallServicePostMethod(String.Concat(serviceUrl, serviceMethod), json);
 
-                Logger.Info("Create Account Code-Behind -> saveMemberInfo RESULT: [" + scriptSerializer.Serialize(regUserResponse) + "]");
+                //Logger.Info("Create Account Code-Behind -> saveMemberInfo RESULT: [" + scriptSerializer.Serialize(regUserResponse) + "]");
 
                 if (regUserResponse.success.ToLower() == "true")
                 {
+                    Logger.Info("Create Account Code-Behind -> saveMemberInfo SUCCESS! - Message: [" + regUserResponse.reason + "]"); 
                     res.success = true;
                     res.msg = "Successfully updated member record on server!";
                 }
                 else
                 {
+                    Logger.Info("Create Account Code-Behind -> saveMemberInfo FAILED! - Message: [" + regUserResponse.reason + "]"); 
                     res.msg = regUserResponse.reason;
                 }
             }

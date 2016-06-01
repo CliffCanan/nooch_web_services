@@ -2889,7 +2889,7 @@ namespace Nooch.Common
 
                         JObject refreshResponse = JObject.Parse(content);
 
-                        Logger.Info("Common Helper -> synapseV3checkUsersOauthKey - Just Parsed Synapse Response: [" + refreshResponse + "]");
+                        //Logger.Info("Common Helper -> synapseV3checkUsersOauthKey - Just Parsed Synapse Response: [" + refreshResponse + "]");
 
                         #region Signed Into Synapse Successfully
 
@@ -3084,10 +3084,15 @@ namespace Nooch.Common
         // oAuth token needs to be in encrypted format
         public static synapseV3checkUsersOauthKey SynapseV3SignIn(string oauthKey, Member memberObj, string validationPin)
         {
-            Logger.Info("Common Helper -> SynapseV3SignIn Initiated - Oauth Key (enc): [" + oauthKey + "]");
-            if (!String.IsNullOrEmpty(validationPin))
+            bool isPinIncluded = false;
+            if (String.IsNullOrEmpty(validationPin))
             {
-                Logger.Info("Common Helper -> SynapseV3SignIn Initiated - Submitting Validation PIN: [" + validationPin + "]");
+                Logger.Info("Common Helper -> SynapseV3SignIn Initiated - Oauth Key (enc): [" + oauthKey + "] - No ValidationPIN Passed.");
+            }
+            else
+            {
+                isPinIncluded = true;
+                Logger.Info("Common Helper -> SynapseV3SignIn Initiated - Submitting Validation PIN: [" + validationPin + "], Oauth Key (enc): [" + oauthKey + "]");
             }
 
             synapseV3checkUsersOauthKey res = new synapseV3checkUsersOauthKey();
@@ -3107,7 +3112,7 @@ namespace Nooch.Common
                 res.msg = "Missing Member to Signin";
                 return res;
             }
-            else if (!String.IsNullOrEmpty(memberObj.ContactNumber))
+            else if (String.IsNullOrEmpty(memberObj.ContactNumber))
             {
                 Logger.Error("Common Helper -> SynapseV3SignIn FAILED - No Phone Number Found for this User - MemberID: [" + memberObj.MemberId.ToString() + "]");
                 res.msg = "User is Missing a Phone Number";
@@ -3128,50 +3133,71 @@ namespace Nooch.Common
 
                     Logger.Info("Common Helper -> SynapseV3SignIn - Found Member By Original OAuth Key");
 
-                    SynapseV3Signin_Input input = new SynapseV3Signin_Input();
-
                     string SynapseClientId = Utility.GetValueFromConfig("SynapseClientId");
                     string SynapseClientSecret = Utility.GetValueFromConfig("SynapseClientSecret");
 
-                    input.client = new createUser_client()
+
+                    var client = new createUser_client()
                     {
                         client_id = SynapseClientId,
                         client_secret = SynapseClientSecret
                     };
 
-                    input.login = new createUser_login2()
+                    var login = new createUser_login2()
                     {
                         email = GetDecryptedData(memberObj.UserName),
                         refresh_token = GetDecryptedData(synCreateUserObject.refresh_token)
                     };
 
-                    SynapseV3Signin_Input_User user = new SynapseV3Signin_Input_User();
+                    // Cliff (5/31/16): Have to do it this way because using 1 class causes a problem with Synapse because
+                    //                  it doesn't like a NULL value for Validation_PIN if it's not there.  Maybe I'm doing it wrong though...
+                    var inputNoPin = new SynapseV3Signin_InputNoPin();
+                    var inputWithPin = new SynapseV3Signin_InputWithPin();
 
-                    user._id = new synapseSearchUserResponse_Id1()
+                    if (isPinIncluded)
                     {
-                        oid = synCreateUserObject.user_id
-                    };
-                    user.fingerprint = memberObj.UDID1; // This would be the "new" fingerprint for the user - it's already been saved in the DB for this user
-                    user.ip = GetRecentOrDefaultIPOfMember(memberObj.MemberId);
-                    user.phone_number = RemovePhoneNumberFormatting(memberObj.ContactNumber); // Inluding the user's Phone #
+                        SynapseV3Signin_Input_UserWithPin user = new SynapseV3Signin_Input_UserWithPin();
 
-                    if (!String.IsNullOrEmpty(validationPin))
-                    {
+                        user._id = new synapseSearchUserResponse_Id1()
+                        {
+                            oid = synCreateUserObject.user_id
+                        };
+                        user.fingerprint = memberObj.UDID1; // This would be the "new" fingerprint for the user - it's already been saved in the DB for this user
+                        user.ip = GetRecentOrDefaultIPOfMember(memberObj.MemberId);
+                        user.phone_number = RemovePhoneNumberFormatting(memberObj.ContactNumber); // Inluding the user's Phone #
                         user.validation_pin = validationPin;
+
+                        inputWithPin.client = client;
+                        inputWithPin.login = login;
+                        inputWithPin.user = user;
+                    }
+                    else
+                    {
+                        SynapseV3Signin_Input_UserNoPin user = new SynapseV3Signin_Input_UserNoPin();
+
+                        user._id = new synapseSearchUserResponse_Id1()
+                        {
+                            oid = synCreateUserObject.user_id
+                        };
+                        user.fingerprint = memberObj.UDID1; // This would be the "new" fingerprint for the user - it's already been saved in the DB for this user
+                        user.ip = GetRecentOrDefaultIPOfMember(memberObj.MemberId);
+                        user.phone_number = RemovePhoneNumberFormatting(memberObj.ContactNumber); // Inluding the user's Phone #
+
+                        inputNoPin.user = user;
+                        inputNoPin.client = client;
+                        inputNoPin.login = login;
                     }
 
-                    input.user = user;
-
                     string UrlToHit = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/signin" : "https://synapsepay.com/api/v3/user/signin";
+                    string parsedContent = isPinIncluded ? JsonConvert.SerializeObject(inputWithPin) : JsonConvert.SerializeObject(inputNoPin);
 
-                    Logger.Info("Common Helper -> SynapseV3SignIn - Payload to send to Synapse /v3/user/signin: [" + JsonConvert.SerializeObject(input) + "]");
+                    Logger.Info("Common Helper -> SynapseV3SignIn - isPinIncluded: [" + isPinIncluded + "] - Payload to send to Synapse /v3/user/signin: [" + parsedContent + "]");
 
                     var http = (HttpWebRequest)WebRequest.Create(new Uri(UrlToHit));
                     http.Accept = "application/json";
                     http.ContentType = "application/json";
                     http.Method = "POST";
 
-                    string parsedContent = JsonConvert.SerializeObject(input);
                     ASCIIEncoding encoding = new ASCIIEncoding();
                     Byte[] bytes = encoding.GetBytes(parsedContent);
 
@@ -3191,7 +3217,7 @@ namespace Nooch.Common
 
                         JObject refreshResponse = JObject.Parse(content);
 
-                        Logger.Info("Common Helper -> SynapseV3SignIn - Just Parsed Synapse Response: [" + refreshResponse + "]");
+                        Logger.Info("Common Helper -> SynapseV3SignIn - Synapse Response: [" + refreshResponse + "]");
 
                         if ((refreshResponse["success"] != null && Convert.ToBoolean(refreshResponse["success"])) ||
                              refreshResultFromSyn.success.ToString() == "true")
@@ -3199,24 +3225,25 @@ namespace Nooch.Common
                             Logger.Info("Common Helper -> SynapseV3SignIn - Signed User In With Synapse Successfully - Oauth Key: [" +
                                         oauthKey + "] - Checking Synapse Message...");
 
-                            #region Response That PIN Was Sent
+                            #region Response That PIN Was Sent To User's Phone
 
                             if (refreshResponse["message"] != null && refreshResponse["message"]["en"] != null)
                             {
-                                // ValidationPIN sent to this method should be null if we get here.
-
                                 res.msg = refreshResponse["message"]["en"].ToString();
                                 res.is2FA = true;
 
                                 Logger.Info("Common Helper -> SynapseV3SignIn - Synapse Message: [" + res.msg + "]");
 
                                 if (res.msg.ToLower().IndexOf("validation pin sent") > -1)
+                                {
+                                    res.msg = "Validation PIN sent to: " + FormatPhoneNumber(memberObj.ContactNumber);
                                     res.success = true;
+                                }
 
                                 return res;
                             }
 
-                            #endregion Response That PIN Was Sent
+                            #endregion Response That PIN Was Sent To User's Phone
 
 
                             #region Response With Full Signin Information
@@ -3271,17 +3298,6 @@ namespace Nooch.Common
                         }
                         else if (refreshResponse["success"] != null && Convert.ToBoolean(refreshResponse["success"]) == false)
                         {
-                            // Error returned from Synapse, but not a 400 HTTP Code error (probably will be a 202 Code). Example:
-                            /* {"error": {
-                                  "en": "Fingerprint not verified. Please verify fingerprint via 2FA."
-                                },
-                                "error_code": "10",
-                                "http_code": "202",
-                                "phone_numbers": [
-                                  "3133339465"
-                                ],
-                                "success": false
-                              }*/
                             if (refreshResponse["error"] != null && refreshResponse["error"]["en"] != null)
                             {
                                 res.msg = refreshResponse["error"]["en"].ToString();
@@ -3340,15 +3356,13 @@ namespace Nooch.Common
                 else
                 {
                     // No record found for given oAuth token in SynapseCreateUserResults table
-                    Logger.Error("Common Helper -> SynapseV3SignIn FAILED - no record found for given oAuth key found - " +
-                                 "Orig. Oauth Key: (enc) [" + oauthKey + "]");
+                    Logger.Error("Common Helper -> SynapseV3SignIn FAILED - no record found for given oAuth key found - Orig. Oauth Key: (enc) [" + oauthKey + "]");
                     res.msg = "Service error - no record found for give OAuth Key.";
                 }
             }
             catch (Exception ex)
             {
-                Logger.Error("Common Helper -> SynapseV3SignIn FAILED: Outer Catch Error - Orig. OAuth Key (enc): [" + oauthKey +
-                             "], [Exception: " + ex + "]");
+                Logger.Error("Common Helper -> SynapseV3SignIn FAILED: Outer Catch Error - Orig. OAuth Key (enc): [" + oauthKey + "], [Exception: " + ex + "]");
                 res.msg = "Nooch Server Error: Outer Exception #3330.";
             }
 
@@ -3837,7 +3851,7 @@ namespace Nooch.Common
 
         public static string UpdateMemberIPAddressAndDeviceId(string MemberId, string IP, string DeviceId)
         {
-            Logger.Info("Common Helper -> UpdateMemberIPAddressAndDeviceId Initiated - MemberID: [" + MemberId + "], IP: [" + IP + "], DeviceID: [" + DeviceId + "]");
+            //Logger.Info("Common Helper -> UpdateMemberIPAddressAndDeviceId Initiated - MemberID: [" + MemberId + "], IP: [" + IP + "], DeviceID: [" + DeviceId + "]");
 
             if (String.IsNullOrEmpty(MemberId))
             {

@@ -23,15 +23,32 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
 
     // Adding these as separate classes b/c Synapse is retuning an error when I tried
     // using the above after adding 'phone_number' and 'validation_pin'... Synapse doesn't seem to like
-    // those being null, so have to make new classes here for the 2FA flow when those values are used
-    public class SynapseV3Signin_Input
+    // those being null, so have to make new classes here for the 2FA flow when those values are used.
+    // Next two classes are for submitting to /user/signin WITHOUT the validation_pin
+    public class SynapseV3Signin_InputNoPin
     {
         public createUser_client client { get; set; }
         public createUser_login2 login { get; set; }
-        public SynapseV3Signin_Input_User user { get; set; }
+        public SynapseV3Signin_Input_UserNoPin user { get; set; }
     }
 
-    public class SynapseV3Signin_Input_User
+    public class SynapseV3Signin_Input_UserNoPin
+    {
+        public synapseSearchUserResponse_Id1 _id { get; set; }
+        public string fingerprint { get; set; }
+        public string ip { get; set; }
+        public string phone_number { get; set; }
+    }
+
+    // Next two classes are for submitting to /user/signin WITH the validation_pin
+    public class SynapseV3Signin_InputWithPin
+    {
+        public createUser_client client { get; set; }
+        public createUser_login2 login { get; set; }
+        public SynapseV3Signin_Input_UserWithPin user { get; set; }
+    }
+
+    public class SynapseV3Signin_Input_UserWithPin
     {
         public synapseSearchUserResponse_Id1 _id { get; set; }
         public string fingerprint { get; set; }
