@@ -1907,7 +1907,7 @@ namespace Nooch.DataAccess
                 {
                     try
                     {
-                        Logger.Info("MDA -> RegisterUserWithSynapseV3 - User already has a Synapse account - About to query refreshSynapseV3OautKey()");
+                        Logger.Info("MDA -> RegisterUserWithSynapseV3 - User ALREADY has a Synapse account - About to query refreshSynapseV3OautKey()");
 
                         var refreshTokenResult = CommonHelper.refreshSynapseV3OautKey((synapseCreateUserObjIfExists.access_token));
                         synapseCreateUserObjIfExists = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == guid && m.IsDeleted == false);
@@ -1947,19 +1947,19 @@ namespace Nooch.DataAccess
                                 };
                                 res.user_id = synapseCreateUserObjIfExists.user_id;
 
-                                res.success = true;
-
                                 if (noochMember.IsVerifiedWithSynapse == true)
                                 {
-                                    Logger.Info("MDA -> RegisterUserWithSynapseV3 - ** ID Already Verified ** - [MemberID: " + memberId + "]");
+                                    Logger.Info("MDA -> RegisterUserWithSynapseV3 - ** ID Already Verified ** - Continuing on... - [MemberID: " + memberId + "]");
                                     res.ssn_verify_status = "id already verified";
                                 }
                                 else if (res.user.permission == "SEND-AND-RECEIVE")
                                 {
                                     #region Update IsVerifiedWithSynapse Value In Member Table
+
                                     try
                                     {
-                                        Logger.Info("MDA -> RegisterUserWithSynapseV3 - ** ID Already Verified  - Got SEND-AND-RECEIVE in SynapseCreateUser Table (Case 2) ** - [MemberID: " + memberId + "]");
+                                        Logger.Info("MDA -> RegisterUserWithSynapseV3 - IsVerifiedWithSynapse was false, but found 'SEND-AND-RECEIVE' " +
+                                                    "permission already in SynapseCreateUser Table - [MemberID: " + memberId + "]");
 
                                         noochMember.IsVerifiedWithSynapse = true;
                                         _dbContext.SaveChanges();
@@ -1971,36 +1971,47 @@ namespace Nooch.DataAccess
                                         Logger.Error("MDA -> RegisterUserWithSynapseV3 - IsVerifiedWithSynapse is false, but Synapse returned Permission of \"SEND-AND-RECEIVE\" - " +
                                                      "[Exception: " + ex + "]");
                                     }
+
                                     #endregion Update IsVerifiedWithSynapse Value In Member Table
                                 }
-                                else
+
+                                // Now check if the user has provided an SSN or FBID or Photo ID.  If yes, call sendDocsToSynapseV3()
+                                if (!String.IsNullOrEmpty(noochMember.SSN) ||
+                                    !String.IsNullOrEmpty(noochMember.FacebookUserId) ||
+                                    !String.IsNullOrEmpty(noochMember.VerificationDocumentPath))
                                 {
-                                    Logger.Info("MDA -> RegisterUserWithSynapseV3 - ID NOT Already Verified, attempting to send SSN info to SynapseV3 - [MemberID: " + memberId + "]");
+                                    Logger.Info("MDA -> RegisterUserWithSynapseV3 - Found at least one document for Synapse (SSN, FBID, or ID img in Members Table), " +
+                                                "attempting to send SSN info to SynapseV3 - [MemberID: " + memberId + "]");
 
                                     try
                                     {
+                                        // (CC - 6/1/16): UPDATED TO USE NEW METHOD FOR SENDING *ALL* DOCS AT THE SAME TIME
                                         // Now: SEND USER'S SSN INFO TO SYNAPSE
-                                        submitIdVerificationInt submitSsn = CommonHelper.sendUserSsnInfoToSynapseV3(memberId);
-                                        res.ssn_verify_status = submitSsn.message;
-                                        res.errorMsg = submitSsn.message;
+                                        //submitIdVerificationInt submitSsn = CommonHelper.sendUserSsnInfoToSynapseV3(memberId);
+                                        submitIdVerificationInt submitAllDocs = CommonHelper.sendDocsToSynapseV3(memberId);
+                                        res.ssn_verify_status = submitAllDocs.message;
+                                        res.errorMsg = submitAllDocs.message;
 
                                         #region Logging
 
-                                        if (submitSsn.success == true)
+                                        if (submitAllDocs.success == true)
                                         {
-                                            if (!String.IsNullOrEmpty(submitSsn.message) &&
-                                                submitSsn.message.IndexOf("additional") > -1)
+                                            if (!String.IsNullOrEmpty(submitAllDocs.message) &&
+                                                submitAllDocs.message.IndexOf("additional") > -1)
                                             {
-                                                Logger.Info("MDA -> RegisterUserWithSynapseV3 - SSN Info Verified, but have additional questions - [Email: " + CommonHelper.GetDecryptedData(noochMember.UserName) + "], [submitSsn.message: " + submitSsn.message + "]");
+                                                Logger.Info("MDA -> RegisterUserWithSynapseV3 - KYC Doc Info Verified Partially - Additional Questions Required - [Email: " +
+                                                            CommonHelper.GetDecryptedData(noochMember.UserName) + "], [submitSsn.message: " + submitAllDocs.message + "]");
                                             }
                                             else
                                             {
-                                                Logger.Info("MDA -> RegisterUserWithSynapseV3 - SSN Info Verified completely :-) - [Email: " + CommonHelper.GetDecryptedData(noochMember.UserName) + "], [submitSsn.message: " + submitSsn.message + "]");
+                                                Logger.Info("MDA -> RegisterUserWithSynapseV3 - KYC Doc Info Verified completely :-) - [Email: " +
+                                                            CommonHelper.GetDecryptedData(noochMember.UserName) + "], [submitSsn.message: " + submitAllDocs.message + "]");
                                             }
                                         }
                                         else
                                         {
-                                            Logger.Info("MDA -> RegisterUserWithSynapseV3 - SSN Info Verified FAILED :-(  [Email: " + CommonHelper.GetDecryptedData(noochMember.UserName) + "], [submitSsn.message: " + submitSsn.message + "]");
+                                            Logger.Info("MDA -> RegisterUserWithSynapseV3 - SSN Info Verified FAILED :-(  [Email: " +
+                                                        CommonHelper.GetDecryptedData(noochMember.UserName) + "], [submitSsn.message: " + submitAllDocs.message + "]");
                                             res.ssn_verify_status = "Not Verified";
                                         }
 
@@ -2098,9 +2109,6 @@ namespace Nooch.DataAccess
                                   CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(noochMember.LastName));
 
                 synapseCreateUserInput_int payload = new synapseCreateUserInput_int();
-
-
-               
 
                 createUser_client client = new createUser_client();
                 client.client_id = SynapseClientId;
@@ -2397,43 +2405,41 @@ namespace Nooch.DataAccess
                                 Logger.Info("MDA -> RegisterUserWithSynapseV3 - ID NOT Already Verified - Checking if user submitted SSN or FB Login - [MemberID: " + memberId + "]");
 
                                 // Check whether the user provided an SSN or Facebook Login
-                                if (!String.IsNullOrEmpty(noochMember.SSN) && noochMember.SSN.Length > 4)
+                                if ((!String.IsNullOrEmpty(noochMember.SSN) && noochMember.SSN.Length > 4) ||
+                                    (!String.IsNullOrEmpty(noochMember.FacebookUserId) && noochMember.FacebookUserId.Length > 5))
                                 {
-                                    Logger.Info("MDA -> RegisterUserWithSynapseV3 - About to attempt SSN verification with SynapseV3 - [SSN to Submit: " + noochMember.SSN + "]");
+                                    Logger.Info("MDA -> RegisterUserWithSynapseV3 - About to attempt Sending Docs to SynapseV3 - [SSN: " + noochMember.SSN +
+                                                "], FBID: [" + noochMember.FacebookUserId + "]");
 
-                                    // Now: SEND USER'S SSN INFO TO SYNAPSE
-                                    submitIdVerificationInt submitSsn = CommonHelper.sendUserSsnInfoToSynapseV3(memberId);
-                                    res.ssn_verify_status = submitSsn.message;
-                                    res.errorMsg = submitSsn.message;
+                                    // (CC - 6/1/16): UPDATED TO USE NEW METHOD FOR SENDING *ALL* DOCS AT THE SAME TIME
+                                    //submitIdVerificationInt submitSsn = CommonHelper.sendUserSsnInfoToSynapseV3(memberId);
+                                    submitIdVerificationInt submitAllDocs = CommonHelper.sendDocsToSynapseV3(memberId);
+                                    res.ssn_verify_status = submitAllDocs.message;
+                                    res.errorMsg = submitAllDocs.message;
 
                                     #region Logging
 
-                                    if (submitSsn.success == true)
+                                    if (submitAllDocs.success == true)
                                     {
-                                        if (!String.IsNullOrEmpty(submitSsn.message) &&
-                                            submitSsn.message.IndexOf("additional") > -1)
+                                        if (!String.IsNullOrEmpty(submitAllDocs.message) &&
+                                            submitAllDocs.message.IndexOf("additional") > -1)
                                         {
-                                            Logger.Info("MDA -> RegisterUserWithSynapseV3 - SSN Info Verified, but have additional questions - [Email: " + logins.email + "], [submitSsn.message: " + submitSsn.message + "]");
+                                            Logger.Info("MDA -> RegisterUserWithSynapseV3 - SSN Info Verified, but have additional questions - [Email: " + logins.email +
+                                                        "], [submitSsn.message: " + submitAllDocs.message + "]");
                                         }
                                         else
                                         {
-                                            Logger.Info("MDA -> RegisterUserWithSynapseV3 - SSN Info Verified completely :-) - [Email: " + logins.email + "], [submitSsn.message: " + submitSsn.message + "]");
+                                            Logger.Info("MDA -> RegisterUserWithSynapseV3 - SSN Info Verified completely :-) - [Email: " + logins.email +
+                                                        "], [submitSsn.message: " + submitAllDocs.message + "]");
                                         }
                                     }
                                     else
                                     {
-                                        Logger.Error("MDA -> RegisterUserWithSynapseV3 - SSN Info Verified FAILED :-(  [Email: " + logins.email + "], [submitSsn.message: " + submitSsn.message + "]");
+                                        Logger.Error("MDA -> RegisterUserWithSynapseV3 - SSN Info Verified FAILED :-(  [Email: " + logins.email +
+                                                     "], [submitSsn.message: " + submitAllDocs.message + "]");
                                     }
 
                                     #endregion Logging
-                                }
-                                else if (!String.IsNullOrEmpty(noochMember.FacebookUserId) && noochMember.FacebookUserId.Length > 5)
-                                {
-                                    // User opted not to provide SSN and provided FB Login instead
-                                    Logger.Info("MDA -> RegisterUserWithSynapseV3 - About to attempt SSN verification with SynapseV3 - SSN to Submit: [" + noochMember.SSN + "]");
-
-                                    // Now SEND USER'S FB INFO TO SYNAPSE
-                                    // CLIFF (5/29/16): WAITING ON SYNAPSE TO PROVIDE FORMAT OF THIS API CALL.
                                 }
                                 else
                                 {

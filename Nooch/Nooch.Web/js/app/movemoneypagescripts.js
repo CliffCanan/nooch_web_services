@@ -735,8 +735,8 @@ function createRecord() {
         "', 'ip':'" + ipVal +
         "', 'cip':'" + CIP +
         "', 'fbid':'" + FBID +
-        "', 'isRentScene':'" + isRentScene +
-        "', 'isIdImage':'" + isFileAdded +
+        "', 'isRentScene':" + isRentScene +
+        ", 'isIdImage':'" + isFileAdded +
         "', 'idImagedata':'" + FileData + "'}";
     
     $.ajax({

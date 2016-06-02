@@ -46,7 +46,6 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
         public string permission { get; set; }
         public string[] photos { get; set; }
         public string[] phone_numbers { get; set; }
-
     }
 
     public class synapseV3Result_user_id
@@ -64,6 +63,7 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
     public class synapseV3Result_user_extra
     {
         public synapseV3Result_user_extra_dateJoined date_joined { get; set; }
+        public string cip_tag { get; set; }
         public bool is_business { get; set; }
         public string supp_id { get; set; }
         public bool extra_security { get; set; }
@@ -77,12 +77,13 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
     public class synapseV3Result_user_logins
     {
         public string email { get; set; }
+        public string scope { get; set; }
         public bool read_only { get; set; }
     }
 
     public class synapseV3Result_user_docStatus
     {
-        public string physical_doc { get; set; } // This is an integer ID
+        public string physical_doc { get; set; }
         public string virtual_doc { get; set; }
     }
 

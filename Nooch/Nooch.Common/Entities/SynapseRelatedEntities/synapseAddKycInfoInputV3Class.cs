@@ -50,7 +50,7 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
 
     public class synapseAddDocsV3InputClass_user
     {
-        public synapseAddDocsV3InputClass_user_docs documents { get; set; }
+        public synapseAddDocsV3InputClass_user_docs[] documents { get; set; }
         public string fingerprint { get; set; }
     }
 
@@ -63,9 +63,9 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
         public string alias { get; set; }
         public string entity_type { get; set; }
         public string entity_scope { get; set; }
-        public string day { get; set; }
-        public string month { get; set; }
-        public string year { get; set; }
+        public int day { get; set; }
+        public int month { get; set; }
+        public int year { get; set; }
         public string address_street { get; set; }
         public string address_city { get; set; }
         public string address_subdivision { get; set; } // State
