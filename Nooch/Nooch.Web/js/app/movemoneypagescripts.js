@@ -352,16 +352,32 @@ function runIdWizard() {
                             // Finally, check the phone number's length
                             console.log($('#idVer-phone').cleanVal());
 
-                            if ($('#idVer-phone').cleanVal().length == 10)
-                            {
-                                updateValidationUi("phone", true);
+                            if (window.location.href.indexOf('payrequest') > 1) {
 
-                                // Great, we can finally go to the next step of the wizard :-D
-                                $('#idVerWiz > .content').animate({ height: "19em" }, 600)
-                                return true;
+                                if ($('#idVer-phone').cleanVal().length == 10) {
+                                    updateValidationUi("phone", true);
+
+                                    // Great, we can finally go to the next step of the wizard :-D
+                                    $('#idVerWiz > .content').animate({ height: "19em" }, 600)
+                                    return true;
+                                }
+                                else {
+                                    updateValidationUi("phone", false);
+                                }
                             }
                             else {
-                                updateValidationUi("phone", false);
+
+                                
+                                if ($('#idVer-ssn').cleanVal().length == 9 || FBID != "not connected") {
+                                    updateValidationUi("ssn", true);
+                                    return true;
+                                    
+
+                                }
+                                else {
+                                    updateValidationUi("ssn", false);
+                                }
+                                 
                             }
                         }
                         else {
@@ -428,6 +444,22 @@ function runIdWizard() {
                         // Check SSN field
                         if (ssnVal.length == 9 || FBID != "not connected") {
                             updateValidationUi("ssn", true);
+
+                            if (window.location.href.indexOf('depositmoney') > 0) {
+
+                                if ($('#idVer-phone').cleanVal().length == 10) {
+                                    updateValidationUi("phone", true);
+
+                                    // Great, we can finally go to the next step of the wizard :-D
+                                    $('#idVerWiz > .content').animate({ height: "19em" }, 600)
+                                    return true;
+                                }
+                                else {
+                                    updateValidationUi("phone", false);
+                                    return false;
+                                }
+                            }
+
 
                             // Great, go to the next step of the wizard :-]
                             // FILE INPUT DOCUMENTATION: http://plugins.krajee.com/file-input#options
