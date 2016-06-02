@@ -4020,11 +4020,12 @@ namespace Nooch.API.Controllers
             MembersDataAccess mda = new MembersDataAccess();
 
             SynapseBankLoginV3_Response_Int mdaResult = new SynapseBankLoginV3_Response_Int();
-            mdaResult = mda.SynapseV3MFABankVerifyWithMicroDeposits(input.MemberId, input.BankName, input.microDespositOne, input.microDespositTwo, input.bankId);
+            mdaResult = mda.SynapseV3MFABankVerifyWithMicroDeposits(input.MemberId,  input.microDespositOne, input.microDespositTwo, input.bankId);
 
             res.Is_success = mdaResult.Is_success;
             res.Is_MFA = mdaResult.Is_MFA;
             res.errorMsg = mdaResult.errorMsg;
+            res.mfaMessage = mdaResult.mfaMessage;
 
             #region Bank List Returned
 

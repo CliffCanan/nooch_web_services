@@ -4273,25 +4273,30 @@ namespace Nooch.DataAccess
         }
 
 
-        public SynapseBankLoginV3_Response_Int SynapseV3MFABankVerifyWithMicroDeposits(string MemberId, string BankName, string microDepositOne, string microDepositTwo, string BankId)
+        public SynapseBankLoginV3_Response_Int SynapseV3MFABankVerifyWithMicroDeposits(string MemberId,  string microDepositOne, string microDepositTwo, string BankId)
         {
-            Logger.Info("MDA -> SynapseV3MFABankVerifyWithMicroDeposits Initiated. [MemberId: " + MemberId + "], [BankName: " + BankName + "]");
+            Logger.Info("MDA -> SynapseV3MFABankVerifyWithMicroDeposits Initiated. [MemberId: " + MemberId + "], [BankId: " + BankId + "]");
 
             SynapseBankLoginV3_Response_Int res = new SynapseBankLoginV3_Response_Int();
 
             #region Check If All Data Passed
 
-            if (String.IsNullOrEmpty(BankName) ||
+            //if (String.IsNullOrEmpty(BankName) ||
+            //    String.IsNullOrEmpty(MemberId) ||
+            //    String.IsNullOrEmpty(microDepositOne) ||
+            //    String.IsNullOrEmpty(microDepositTwo) ||
+            //    String.IsNullOrEmpty(BankId))
+            if (
                 String.IsNullOrEmpty(MemberId) ||
                 String.IsNullOrEmpty(microDepositOne) ||
                 String.IsNullOrEmpty(microDepositTwo) ||
                 String.IsNullOrEmpty(BankId))
             {
-                if (String.IsNullOrEmpty(BankName))
-                {
-                    res.errorMsg = "Invalid data - need Bank Name";
-                }
-                else if (String.IsNullOrEmpty(MemberId))
+                //if (String.IsNullOrEmpty(BankName))
+                //{
+                //    res.errorMsg = "Invalid data - need Bank Name";
+                //}
+                if (String.IsNullOrEmpty(MemberId))
                 {
                     res.errorMsg = "Invalid data - need MemberId";
                 }
@@ -4370,10 +4375,25 @@ namespace Nooch.DataAccess
 
                     #endregion CHECKING FOR SYNAPSE AUTH TOKEN
 
-                    #region GOT USERS SYNAPSE AUTH TOKEN
 
-                    else
+                    #region checking fro synapse bank account to be verified
+
+
+                    int bnkIdPass = Convert.ToInt16(BankId);
+
+                    var bankAccountDetails =
+                        _dbContext.SynapseBanksOfMembers.FirstOrDefault(
+                            b => b.Id == bnkIdPass && b.MemberId == id && b.IsAddedUsingRoutingNumber == true);
+                    if (bankAccountDetails != null)
                     {
+                        
+                        #region GOT USERS SYNAPSE AUTH TOKEN
+
+
+                        // setting node id to be verified
+                        BankId = CommonHelper.GetDecryptedData(bankAccountDetails.oid);
+
+
                         // we have authentication token
                         SynapseBankVerifyWithMicroDepositsV3_Input bankLoginPars = new SynapseBankVerifyWithMicroDepositsV3_Input();
 
@@ -4533,6 +4553,7 @@ namespace Nooch.DataAccess
                                         res.Is_MFA = false;
                                         res.errorMsg = "OK";
                                         res.SynapseNodesList = allNodesParsedResult;
+                                        res.mfaMessage = "Bank account verified successfully with micro deposits";
 
                                         Logger.Info("MDA -> SynapseV3MFABankVerify (No MFA Again): SUCCESSFUL, returning Bank Array for: [" + MemberId + "]");
 
@@ -4542,7 +4563,7 @@ namespace Nooch.DataAccess
                                             SynapseBanksOfMember sbm = new SynapseBanksOfMember();
 
                                             sbm.AddedOn = DateTime.Now;
-                                            sbm.IsDefault = false;
+                                            sbm.IsDefault = true; // setting it to true because in this case we will have just one bank account
                                             Guid memId = Utility.ConvertToGuid(MemberId);
                                             sbm.MemberId = memId;
                                             //sbm.account_class = v.account_class;
@@ -4557,6 +4578,8 @@ namespace Nooch.DataAccess
                                             sbm.name_on_account = CommonHelper.GetEncryptedData(v.info.name_on_account);
                                             sbm.nickname = CommonHelper.GetEncryptedData(v.info.nickname);
                                             sbm.routing_number_string = CommonHelper.GetEncryptedData(v.info.routing_num);
+
+                                            sbm.IsAddedUsingRoutingNumber = true;
 
                                             _dbContext.SynapseBanksOfMembers.Add(sbm);
                                             _dbContext.SaveChanges();
@@ -4601,23 +4624,41 @@ namespace Nooch.DataAccess
                             {
                                 var resp = new StreamReader(we.Response.GetResponseStream()).ReadToEnd();
                                 JObject jsonfromsynapse = JObject.Parse(resp);
-                                JToken token = jsonfromsynapse["reason"];
+                                JToken token = jsonfromsynapse["error"]["en"];
 
                                 if (token != null)
                                 {
-                                    res.errorMsg = jsonfromsynapse["reason"].ToString();
+                                    res.errorMsg = jsonfromsynapse["error"]["en"].ToString();
                                 }
                             }
                             else
                             {
-                                res.errorMsg = "Error #140 returned from Synapse";
+                                res.errorMsg = "Error #140 returned from Synapse";  // @Cliff please modify this error code as per your need.
                             }
 
                             return res;
                         }
-                    }
+                    
 
                     #endregion GOT USERS SYNAPSE AUTH TOKEN
+
+                    }
+                    else
+                    {
+                        // no bank account details found error
+                        Logger.Info("MDA -> SynapseV3MFABankVerify ERROR: Member's Bank not found MemberId: [" + MemberId + "]"+" And BankId - Id of synpasebanks of members table: [" + BankId + "]" );
+
+                        res.Is_success = false;
+                        res.errorMsg = "Bank not found.";
+                        return res;
+
+                    }
+
+
+                    #endregion
+
+
+                    
                 }
                 else
                 {

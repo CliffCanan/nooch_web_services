@@ -3279,6 +3279,9 @@ namespace Nooch.Web.Controllers
         }
 
 
+
+        // MemberId here is plane memberId =- non encrypted
+        // NodeId is Id from SynapseBanksOfMembers table - non encrypted
         public ActionResult MicroDepositsVerification(string MemberId, string NodeId, bool? IsRs)
         {
 

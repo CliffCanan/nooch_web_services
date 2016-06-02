@@ -14,6 +14,7 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
         public string errorMsg { get; set; }
         public string mfaQuestion { get; set; }
         public string bankMFA { get; set; }
+        public string mfaMessage { get; set; }
         public SynapseNodesListClass SynapseNodesList { get; set; }
     }
 
