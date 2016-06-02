@@ -266,6 +266,7 @@
     <Content Include="js\app\deposit-newuser-phone.js" />
     <Content Include="js\app\idverification.js" />
     <Content Include="js\app\makePayment.js" />
+    <Content Include="js\app\microDepositsVerification.js" />
     <Content Include="js\app\movemoney-complete-pages.js" />
     <Content Include="js\app\movemoneypagescripts.js" />
     <Content Include="js\app\payAnyone.js" />
@@ -344,6 +345,7 @@
     <Content Include="Views\Nooch\Activation.cshtml" />
     <Content Include="Views\Nooch\ResetPassword.cshtml" />
     <Content Include="Views\Nooch\history.cshtml" />
+    <Content Include="Views\Nooch\MicroDepositsVerification.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

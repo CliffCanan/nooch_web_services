@@ -3277,6 +3277,15 @@ namespace Nooch.Web.Controllers
 
             return View(res);
         }
+
+
+        public ActionResult MicroDepositsVerification(string MemberId, string NodeId, bool? IsRs)
+        {
+
+            return View();
+        }
+
+
     }
 
 
