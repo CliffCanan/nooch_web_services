@@ -4556,7 +4556,7 @@ namespace Nooch.DataAccess
                                         res.mfaMessage = "Bank account verified successfully with micro deposits";
 
                                         Logger.Info("MDA -> SynapseV3MFABankVerify (No MFA Again): SUCCESSFUL, returning Bank Array for: [" + MemberId + "]");
-
+                                                                                
                                         // saving these banks ("nodes) in DB, later one of these banks will be set as default bank
                                         foreach (nodes v in allNodesParsedResult.nodes)
                                         {
@@ -4566,12 +4566,16 @@ namespace Nooch.DataAccess
                                             sbm.IsDefault = true; // setting it to true because in this case we will have just one bank account
                                             Guid memId = Utility.ConvertToGuid(MemberId);
                                             sbm.MemberId = memId;
-                                            //sbm.account_class = v.account_class;
-
+                                           
+                                            sbm.@class = v.info._class;
+                                            sbm.bank_name = CommonHelper.GetEncryptedData(v.info.bank_long_name);
+                                            sbm.allowed = v.allowed.ToString();                                          
+                                            sbm.type_bank = v.info.type.ToString();
+                                            sbm.oid = CommonHelper.GetEncryptedData(v._id.oid);
+                                           
                                             sbm.account_number_string = CommonHelper.GetEncryptedData(v.info.account_num);
                                             //sbm.account_type = v.type_synapse;
-
-                                            sbm.bank_name = CommonHelper.GetEncryptedData(v.info.bank_name);
+                                            //sbm.bank_name = CommonHelper.GetEncryptedData(v.info.bank_name);
                                             //sbm.bankAdddate = v.date;
                                             //sbm.bankid = v.bankOid.ToString();
                                             sbm.mfa_verifed = true;

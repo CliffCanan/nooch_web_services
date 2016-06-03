@@ -641,7 +641,8 @@ namespace Nooch.Web.Controllers
         /// <returns></returns>
         [HttpPost]
         [ActionName("MFALoginWithRoutingAndAccountNumber")]
-        public SynapseBankLoginRequestResult MFALoginWithRoutingAndAccountNumber(string bank, string memberid, string MicroDepositOne, string MicroDepositTwo, string ba)
+        //public SynapseBankLoginRequestResult MFALoginWithRoutingAndAccountNumber(string bank, string memberid, string MicroDepositOne, string MicroDepositTwo, string bankId)
+        public ActionResult MFALoginWithRoutingAndAccountNumber(string bank, string memberid, string MicroDepositOne, string MicroDepositTwo, string bankId)
         {
             SynapseBankLoginRequestResult res = new SynapseBankLoginRequestResult();
 
@@ -659,16 +660,16 @@ namespace Nooch.Web.Controllers
                 inpu.MemberId = memberid;
                 inpu.microDespositOne = MicroDepositOne;
                 inpu.microDespositTwo = MicroDepositTwo;
-                inpu.bankId = ba;   // this is bank_node_id..... must...need to pass this thing in earlier step
+                inpu.bankId = bankId;   // this is bank_node_id..... must...need to pass this thing in earlier step
+                
                 try
                 {
-                    json = "{\"input\":" + scriptSerializer.Serialize(inpu) + "}";
+                    json =  scriptSerializer.Serialize(inpu);
 
                     string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
                     string serviceMethod = "/SynapseV3MFABankVerifyWithMicroDeposits";
                     SynapseBankLoginRequestResult bnkloginresult = ResponseConverter<SynapseBankLoginRequestResult>.CallServicePostMethod(String.Concat(serviceUrl, serviceMethod), json);
-
-
+                    
                     if (bnkloginresult.Is_success == true)
                     {
                         res.Is_success = true;
@@ -699,7 +700,7 @@ namespace Nooch.Web.Controllers
                                    "], [Exception: " + we + "]");
             }
 
-            return res;
+            return Json(res);
         }
 
 
@@ -3284,7 +3285,11 @@ namespace Nooch.Web.Controllers
         // NodeId is Id from SynapseBanksOfMembers table - non encrypted
         public ActionResult MicroDepositsVerification(string MemberId, string NodeId, bool? IsRs)
         {
-
+            SynapseV3VerifyNodeWithMicroDeposits_ServiceInput MicroDeposit = new SynapseV3VerifyNodeWithMicroDeposits_ServiceInput();
+            MicroDeposit.MemberId = MemberId;
+            MicroDeposit.bankId = NodeId;
+            MicroDeposit.IsRs = Convert.ToBoolean(IsRs);
+            ViewData["OnLoaddata"] = MicroDeposit;
             return View();
         }
 

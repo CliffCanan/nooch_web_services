@@ -58,6 +58,7 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
         public string account_num { get; set; }
         public balance balance { get; set; } // Only returned for Synapse Node Type (not ACH nodes)
         public string bank_name { get; set; }
+        public string bank_long_name { get; set; }
 
         [JsonProperty(PropertyName = "class")]
         public string _class { get; set; }

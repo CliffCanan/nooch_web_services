@@ -3317,7 +3317,7 @@ namespace Nooch.API.Controllers
                                 sbom.MemberId = id;
                                 sbom.AddedOn = DateTime.Now;
                                 sbom.account_number_string = CommonHelper.GetEncryptedData(info["account_num"].ToString());
-                                sbom.bank_name = CommonHelper.GetEncryptedData(info.ToString());
+                                sbom.bank_name = CommonHelper.GetEncryptedData(info["bank_long_name"].ToString());
                                 sbom.@class = info["class"].ToString();
                                 sbom.name_on_account = CommonHelper.GetEncryptedData(info["name_on_account"].ToString());
                                 sbom.nickname = CommonHelper.GetEncryptedData(info["nickname"].ToString());
