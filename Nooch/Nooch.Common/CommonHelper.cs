@@ -1944,7 +1944,7 @@ namespace Nooch.Common
                     #region Call Synapse V3 /user/doc/add API
 
                     synapseAddDocsV3InputClass synapseAddDocsV3Input = new synapseAddDocsV3InputClass();
-
+                    synapseAddDocsV3InputClass_NoPhysicalDoc synapseAddDocsV3Input_NoPhysicalDoc = new synapseAddDocsV3InputClass_NoPhysicalDoc();
                     SynapseV3Input_login login = new SynapseV3Input_login();
                     login.oauth_key = usersSynapseOauthKey;
 
@@ -1955,7 +1955,7 @@ namespace Nooch.Common
                     documents.name = usersFirstName + " " + usersLastName;
                     documents.alias = usersFirstName + " " + usersLastName;
                     documents.entity_type = "NOT_KNOWN";
-                    documents.entity_scope = memberEntity.isRentScene == true ? "Real Estate" : "Personal";
+                    documents.entity_scope = memberEntity.isRentScene == true ? "Real Estate" : "Not Known";
                     documents.day = usersDobDay;
                     documents.month = usersDobMonth;
                     documents.year = usersDobYear;
@@ -1965,6 +1965,24 @@ namespace Nooch.Common
                     documents.address_postal_code = usersZip;
                     documents.address_country_code = "US";
 
+
+                    synapseAddDocsV3InputClass_user_docs_NoPhysicalDoc documents_withNoPhysicalDoc = new synapseAddDocsV3InputClass_user_docs_NoPhysicalDoc();
+                    documents_withNoPhysicalDoc.email = userNameDecrypted;
+                    documents_withNoPhysicalDoc.phone_number = memberEntity.ContactNumber;
+                    documents_withNoPhysicalDoc.ip = ipAddress;
+                    documents_withNoPhysicalDoc.name = usersFirstName + " " + usersLastName;
+                    documents_withNoPhysicalDoc.alias = usersFirstName + " " + usersLastName;
+                    documents_withNoPhysicalDoc.entity_type = "NOT_KNOWN";
+                    documents_withNoPhysicalDoc.entity_scope = memberEntity.isRentScene == true ? "Real Estate" : "Not Known";
+                    documents_withNoPhysicalDoc.day = usersDobDay;
+                    documents_withNoPhysicalDoc.month = usersDobMonth;
+                    documents_withNoPhysicalDoc.year = usersDobYear;
+                    documents_withNoPhysicalDoc.address_street = usersAddress;
+                    documents_withNoPhysicalDoc.address_city = usersCity;
+                    documents_withNoPhysicalDoc.address_subdivision = usersState; // State
+                    documents_withNoPhysicalDoc.address_postal_code = usersZip;
+                    documents_withNoPhysicalDoc.address_country_code = "US";
+                    documents_withNoPhysicalDoc.physical_docs=new string[0];
                     #region Set All Document Values
 
                     try
@@ -1983,6 +2001,10 @@ namespace Nooch.Common
 
                             documents.virtual_docs = new synapseAddDocsV3InputClass_user_docs_doc[1];
                             documents.virtual_docs[0] = virtualDocObj;
+
+                            documents_withNoPhysicalDoc.virtual_docs = new synapseAddDocsV3InputClass_user_docs_doc[1];
+                            documents_withNoPhysicalDoc.virtual_docs[0] = virtualDocObj;
+
                         }
 
                         // SOCIAL DOCS: Send Facebook Profile URL by appending user's FBID to base FB URL
@@ -1994,6 +2016,9 @@ namespace Nooch.Common
 
                             documents.social_docs = new synapseAddDocsV3InputClass_user_docs_doc[1];
                             documents.social_docs[0] = socialDocObj;
+
+                            documents_withNoPhysicalDoc.social_docs = new synapseAddDocsV3InputClass_user_docs_doc[1];
+                            documents_withNoPhysicalDoc.social_docs[0] = socialDocObj;
                         }
 
                         // PHYSICAL DOCS: Send User's Photo ID if available
@@ -2006,6 +2031,7 @@ namespace Nooch.Common
                             documents.physical_docs = new synapseAddDocsV3InputClass_user_docs_doc[1];
                             documents.physical_docs[0] = physicalDocObj;
                         }
+                       
                     }
                     catch (Exception ex)
                     {
@@ -2024,6 +2050,17 @@ namespace Nooch.Common
 
                     synapseAddDocsV3Input.login = login;
                     synapseAddDocsV3Input.user = user;
+
+                    synapseAddDocsV3InputClass_user_NoPhysicalDoc user_withNoPhysicalDoc = new synapseAddDocsV3InputClass_user_NoPhysicalDoc();
+                    user_withNoPhysicalDoc.fingerprint = usersFingerprint;
+
+                    user_withNoPhysicalDoc.documents = new synapseAddDocsV3InputClass_user_docs_NoPhysicalDoc[1];
+                    user_withNoPhysicalDoc.documents[0] = documents_withNoPhysicalDoc;
+                   
+                    synapseAddDocsV3Input_NoPhysicalDoc.login = login;
+                    synapseAddDocsV3Input_NoPhysicalDoc.user = user_withNoPhysicalDoc;
+
+                     
 
                     string baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox"))
                                          ? "https://sandbox.synapsepay.com/api/v3/user/docs/add"
@@ -2059,9 +2096,16 @@ namespace Nooch.Common
                     http.Accept = "application/json";
                     http.ContentType = "application/json";
                     http.Method = "POST";
-
-                    string parsedContent = JsonConvert.SerializeObject(synapseAddDocsV3Input);
-                    ASCIIEncoding encoding = new ASCIIEncoding();
+                  
+                    string parsedContent;
+                    
+                    if(hasPhotoID)
+                        parsedContent = JsonConvert.SerializeObject(synapseAddDocsV3Input);
+                    else
+                        parsedContent = JsonConvert.SerializeObject(synapseAddDocsV3Input_NoPhysicalDoc);
+                     
+                    
+                        ASCIIEncoding encoding = new ASCIIEncoding();
                     Byte[] bytes = encoding.GetBytes(parsedContent);
 
                     Stream newStream = http.GetRequestStream();
