@@ -30,7 +30,8 @@ $(document).ready(function () {
 
 function SubmitInfo() {
     console.log('SubmitInfo fired');
-
+    $("#Submit").text('Submitting...');
+    $('#Submit').attr('disabled', 'disabled');
   
     var dot = ".";
     var IsRs = $('#IsRs').val();
@@ -71,6 +72,8 @@ function SubmitInfo() {
             console.log(result);
             resultReason = result.msg;
 
+            $("#Submit").text('Submit');
+            $('#Submit').removeAttr("disabled");
 
             if (result.Is_success == true) {
                 console.log("Success == true");
