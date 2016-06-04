@@ -3361,7 +3361,7 @@ namespace Nooch.Web.Controllers
             return rpr;
         }
 
-
+        [HttpPost]
         public ActionResult GetTransactionStatusFromSynapse(string transId)
         {
             Stream req = Request.InputStream;
