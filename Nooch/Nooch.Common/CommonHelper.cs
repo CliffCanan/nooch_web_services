@@ -2189,6 +2189,7 @@ namespace Nooch.Common
 
                             if (synapseResponse.user.documents != null &&
                                 synapseResponse.user.documents[0].virtual_docs != null &&
+                                synapseResponse.user.documents[0].virtual_docs.Length>0 &&
                                 synapseResponse.user.documents[0].virtual_docs[0].meta != null)
                             {
                                 // Further Verification is needed...
@@ -2254,7 +2255,7 @@ namespace Nooch.Common
                             {
                                 // User is verified completely. In this case response is same as Register User With Synapse...
 
-                                // Update Member's DB record
+                                // Update Member's DB record 
                                 memberEntity.IsVerifiedWithSynapse = true;
                                 memberEntity.ValidatedDate = DateTime.Now;
                                 memberEntity.DateModified = DateTime.Now;
