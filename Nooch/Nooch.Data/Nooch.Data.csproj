@@ -153,6 +153,9 @@
     <Compile Include="Transaction.cs">
       <DependentUpon>NoochDbModel.tt</DependentUpon>
     </Compile>
+    <Compile Include="TransactionsStatusAtSynapse.cs">
+      <DependentUpon>NoochDbModel.tt</DependentUpon>
+    </Compile>
     <Compile Include="UnitsOccupiedByTenant.cs">
       <DependentUpon>NoochDbModel.tt</DependentUpon>
     </Compile>
