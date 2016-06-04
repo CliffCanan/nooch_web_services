@@ -39,6 +39,7 @@
         <AssociationConnector Association="NOOCHModel.FK_Transactions_GeoLocations" />
         <AssociationConnector Association="NOOCHModel.FK_Transactions_Members2" />
         <AssociationConnector Association="NOOCHModel.FK_Transactions_Members3" />
+        <EntityTypeShape EntityType="NOOCHModel.TransactionsStatusAtSynapse" Width="1.5" PointX="17.375" PointY="15.75" />
       </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>

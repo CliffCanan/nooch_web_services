@@ -54,6 +54,7 @@ namespace Nooch.Data
         public virtual DbSet<PasswordResetRequest> PasswordResetRequests { get; set; }
         public virtual DbSet<SynapseAddTransactionResult> SynapseAddTransactionResults { get; set; }
         public virtual DbSet<Transaction> Transactions { get; set; }
+        public virtual DbSet<TransactionsStatusAtSynapse> TransactionsStatusAtSynapses { get; set; }
     
         public virtual ObjectResult<GetMostFrequentFriends_Result> GetMostFrequentFriends(string memberId)
         {
