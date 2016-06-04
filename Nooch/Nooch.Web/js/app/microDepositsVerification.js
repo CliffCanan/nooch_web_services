@@ -68,7 +68,7 @@ function SubmitInfo()
         var MicroDepositTwo = dot + $('#MicroDepositTwo').val().trim();
         //var MicroDepositOne = $('#MicroDepositOne').val();
         //var MicroDepositTwo = $('#MicroDepositTwo').val();
-        var bankId = $('#bankId').val();
+        var NodeId1 = $('#NodeId1').val();
         var BankName = $('#BankName').val();
 
 
@@ -77,7 +77,7 @@ function SubmitInfo()
                                        ", MicroDepositOne: " + MicroDepositOne +
                                         ", MicroDepositTwo: " + MicroDepositTwo +
                                          ", BankName: " + BankName +
-                                       ", bankId " + bankId + "}");
+                                       ", NodeId1 " + NodeId1 + "}");
 
 
         $.ajax({
@@ -88,7 +88,7 @@ function SubmitInfo()
                  "', 'MemberId':'" + MemberId +
                  "', 'MicroDepositOne':'" + MicroDepositOne +
                  "', 'MicroDepositTwo':'" + MicroDepositTwo +
-                 "', 'bankId':'" + bankId +
+                 "', 'NodeId1':'" + NodeId1 +
                  "', 'IsRs':'" + IsRs + "'}",
 
             contentType: "application/json; charset=utf-8",

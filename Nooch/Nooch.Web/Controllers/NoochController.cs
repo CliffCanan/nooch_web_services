@@ -642,7 +642,7 @@ namespace Nooch.Web.Controllers
         [HttpPost]
         [ActionName("MFALoginWithRoutingAndAccountNumber")]
         //public SynapseBankLoginRequestResult MFALoginWithRoutingAndAccountNumber(string bank, string memberid, string MicroDepositOne, string MicroDepositTwo, string bankId)
-        public ActionResult MFALoginWithRoutingAndAccountNumber(string bank, string memberid, string MicroDepositOne, string MicroDepositTwo, string bankId)
+        public ActionResult MFALoginWithRoutingAndAccountNumber(string bank, string memberid, string MicroDepositOne, string MicroDepositTwo, string NodeId1)
         {
             SynapseBankLoginRequestResult res = new SynapseBankLoginRequestResult();
 
@@ -660,7 +660,7 @@ namespace Nooch.Web.Controllers
                 inpu.MemberId = memberid;
                 inpu.microDespositOne = MicroDepositOne;
                 inpu.microDespositTwo = MicroDepositTwo;
-                inpu.bankId = bankId;
+                inpu.bankId = NodeId1;
 
                 try
                 {
@@ -3305,13 +3305,14 @@ namespace Nooch.Web.Controllers
                 }
                 else
                 {
-                    MicroDeposit.bankId = NodeId;
+                    MicroDeposit.NodeId1 = NodeId;
                 }
 
                 if (String.IsNullOrEmpty(MicroDeposit.errorMsg))
                 {
                     // Get Bank Info from server
                     MicroDeposit = GetBankDetailsForMicroDepositVerification(mid.Trim());
+                    MicroDeposit.NodeId1 = NodeId;
                 }
 
                 if (IsRs == true) // if this flag is in the URL, then force RS branding, regardless of server response

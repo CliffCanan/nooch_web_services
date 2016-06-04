@@ -4576,6 +4576,8 @@ namespace Nooch.API.Controllers
                         res.bankName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(synapseBankDetails.bank_name));
                         res.bankNickName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(synapseBankDetails.nickname));
                         res.bankId = synapseBankDetails.oid;
+                        res.NodeId1 =Convert.ToString(synapseBankDetails.Id);
+
 
                         if (synapseBankDetails.Status == "Verified")
                         {
