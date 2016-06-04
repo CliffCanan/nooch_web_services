@@ -45,7 +45,6 @@ namespace Nooch.Common.Entities.LandingPagesRelatedEntities
         public string InvitationSentTo { get; set; }
         public string FirstName { get; set; }
         public string Memo { get; set; }
-
         public bool IsInvitation { get; set; }
     }
 }
