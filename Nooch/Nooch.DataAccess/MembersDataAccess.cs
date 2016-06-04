@@ -2919,7 +2919,39 @@ namespace Nooch.DataAccess
 
                                     if (saveImageOnServer.success && !String.IsNullOrEmpty(saveImageOnServer.msg))
                                     {
-                                        submitDocumentToSynapseV3(memberObj.MemberId.ToString(), saveImageOnServer.msg);
+
+
+                                        // Malkit (04 June 2016) : We won't use this method, from now on we will be using Cliff's method from Common helper sendDocsToSynapseV3
+                                        //submitDocumentToSynapseV3(memberObj.MemberId.ToString(), saveImageOnServer.msg);
+                                        memberObj.VerificationDocumentPath = saveImageOnServer.msg;
+                                        _dbContext.SaveChanges();
+                                        submitIdVerificationInt submitDocResult = CommonHelper.sendDocsToSynapseV3(memberId);
+                                        #region Logging
+
+                                        if (submitDocResult.success == true)
+                                        {
+                                            if (!String.IsNullOrEmpty(submitDocResult.message) &&
+                                                submitDocResult.message.IndexOf("additional") > -1)
+                                            {
+                                                Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 - KYC Doc Info Verified Partially - Additional Questions Required - [Email: " +
+                                                            CommonHelper.GetDecryptedData(memberObj.UserName) + "], [submitSsn.message: " + submitDocResult.message + "]");
+                                            }
+                                            else
+                                            {
+                                                Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 - KYC Doc Info Verified completely :-) - [Email: " +
+                                                            CommonHelper.GetDecryptedData(memberObj.UserName) + "], [submitSsn.message: " + submitDocResult.message + "]");
+                                            }
+                                        }
+                                        else
+                                        {
+                                            Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 - SSN Info Verified FAILED :-(  [Email: " +
+                                                        CommonHelper.GetDecryptedData(memberObj.UserName) + "], [submitSsn.message: " + submitDocResult.message + "]");
+                                            res.ssn_verify_status = "Not Verified";
+                                        }
+
+                                        #endregion Logging
+
+
                                     }
                                     else
                                     {
@@ -3468,7 +3500,35 @@ namespace Nooch.DataAccess
 
                                     if (saveImageOnServer.success && !String.IsNullOrEmpty(saveImageOnServer.msg))
                                     {
-                                        submitDocumentToSynapseV3(member.MemberId.ToString(), saveImageOnServer.msg);
+                                        // Malkit (04 June 2016) : We won't use this method, from now on we will be using Cliff's method from Common helper sendDocsToSynapseV3
+                                        //submitDocumentToSynapseV3(memberObj.MemberId.ToString(), saveImageOnServer.msg);
+                                        member.VerificationDocumentPath = saveImageOnServer.msg;
+                                        _dbContext.SaveChanges();
+                                        submitIdVerificationInt submitDocResult = CommonHelper.sendDocsToSynapseV3(member.MemberId.ToString());
+                                        #region Logging
+
+                                        if (submitDocResult.success == true)
+                                        {
+                                            if (!String.IsNullOrEmpty(submitDocResult.message) &&
+                                                submitDocResult.message.IndexOf("additional") > -1)
+                                            {
+                                                Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - KYC Doc Info Verified Partially - Additional Questions Required - [Email: " +
+                                                            CommonHelper.GetDecryptedData(member.UserName) + "], [submitSsn.message: " + submitDocResult.message + "]");
+                                            }
+                                            else
+                                            {
+                                                Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - KYC Doc Info Verified completely :-) - [Email: " +
+                                                            CommonHelper.GetDecryptedData(member.UserName) + "], [submitSsn.message: " + submitDocResult.message + "]");
+                                            }
+                                        }
+                                        else
+                                        {
+                                            Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - SSN Info Verified FAILED :-(  [Email: " +
+                                                        CommonHelper.GetDecryptedData(member.UserName) + "], [submitSsn.message: " + submitDocResult.message + "]");
+                                            res.ssn_verify_status = "Not Verified";
+                                        }
+
+                                        #endregion Logging
                                     }
                                     else
                                     {
@@ -3881,9 +3941,23 @@ namespace Nooch.DataAccess
                             usersSynapseDetails.permission = permission != "NOT FOUND" ? permission : usersSynapseDetails.permission;
                             usersSynapseDetails.photos = ImageUrl;
 
-                            int save = _dbContext.SaveChanges();
+                            //int 
+                            int save = 0;
+
+                            try
+                            {
+                                _dbContext.SaveChanges();
+                                save ++;
+                            }
+                            catch (Exception)
+                            {
+
+                                save = 0;
+                                
+                            }
 
                             // Cliff (5/31/16): THIS IS FAILING TO SAVE FOR SOME REASON ACCORDING TO THE LOGS... CAN'T FIGURE OUT WHY :-(
+                            // Malkit (10 June 2016) : This should work now.
                             if (save > 0)
                             {
                                 Logger.Info("MDA -> submitDocumentToSynapseV3 - SUCCESSFULLY updated user's Synapse Permission in SynapseCreateUserResult Table" +
