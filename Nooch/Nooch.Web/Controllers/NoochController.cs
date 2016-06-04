@@ -3362,18 +3362,7 @@ namespace Nooch.Web.Controllers
             return rpr;
         }
 
-        [HttpPost]
-        public ActionResult GetTransactionStatusFromSynapse(string transId)
-        {
-            Stream req = Request.InputStream;
-            req.Seek(0, SeekOrigin.Begin);
-            string json = new StreamReader(req).ReadToEnd();
-            Logger.Info("GetTransactionStatusFromSynapse [ WebHook ] loaded for TransactionId : [ " + transId + " ]. At [ " + DateTime.Now + " ]. With Request Body [ " + json + " ].");
-            
-
-            return View();
-        }
-
+       
 
     }
 
