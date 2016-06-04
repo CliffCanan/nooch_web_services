@@ -1944,7 +1944,7 @@ namespace Nooch.Common
                     #region Call Synapse V3 /user/doc/add API
 
                     synapseAddDocsV3InputClass synapseAddDocsV3Input = new synapseAddDocsV3InputClass();
-                    synapseAddDocsV3InputClass_NoPhysicalDoc synapseAddDocsV3Input_NoPhysicalDoc = new synapseAddDocsV3InputClass_NoPhysicalDoc();
+                   
                     SynapseV3Input_login login = new SynapseV3Input_login();
                     login.oauth_key = usersSynapseOauthKey;
 
@@ -1965,24 +1965,7 @@ namespace Nooch.Common
                     documents.address_postal_code = usersZip;
                     documents.address_country_code = "US";
 
-
-                    synapseAddDocsV3InputClass_user_docs_NoPhysicalDoc documents_withNoPhysicalDoc = new synapseAddDocsV3InputClass_user_docs_NoPhysicalDoc();
-                    documents_withNoPhysicalDoc.email = userNameDecrypted;
-                    documents_withNoPhysicalDoc.phone_number = memberEntity.ContactNumber;
-                    documents_withNoPhysicalDoc.ip = ipAddress;
-                    documents_withNoPhysicalDoc.name = usersFirstName + " " + usersLastName;
-                    documents_withNoPhysicalDoc.alias = usersFirstName + " " + usersLastName;
-                    documents_withNoPhysicalDoc.entity_type = "NOT_KNOWN";
-                    documents_withNoPhysicalDoc.entity_scope = memberEntity.isRentScene == true ? "Real Estate" : "Not Known";
-                    documents_withNoPhysicalDoc.day = usersDobDay;
-                    documents_withNoPhysicalDoc.month = usersDobMonth;
-                    documents_withNoPhysicalDoc.year = usersDobYear;
-                    documents_withNoPhysicalDoc.address_street = usersAddress;
-                    documents_withNoPhysicalDoc.address_city = usersCity;
-                    documents_withNoPhysicalDoc.address_subdivision = usersState; // State
-                    documents_withNoPhysicalDoc.address_postal_code = usersZip;
-                    documents_withNoPhysicalDoc.address_country_code = "US";
-                    documents_withNoPhysicalDoc.physical_docs=new string[0];
+ 
                     #region Set All Document Values
 
                     try
@@ -2002,10 +1985,22 @@ namespace Nooch.Common
                             documents.virtual_docs = new synapseAddDocsV3InputClass_user_docs_doc[1];
                             documents.virtual_docs[0] = virtualDocObj;
 
-                            documents_withNoPhysicalDoc.virtual_docs = new synapseAddDocsV3InputClass_user_docs_doc[1];
-                            documents_withNoPhysicalDoc.virtual_docs[0] = virtualDocObj;
+                          
 
                         }
+                        else
+                        {
+                            synapseAddDocsV3InputClass_user_docs_doc virtualDocObj = new synapseAddDocsV3InputClass_user_docs_doc();
+                            virtualDocObj.document_type = "SSN"; // This can also be "PASSPORT" or "DRIVERS_LICENSE"... we need to eventually support all 3 options (Rent Scene has international clients that don't have SSN but do have a Passport)
+                            virtualDocObj.document_value = (memberEntity.MemberId.ToString().ToLower() == "b3a6cf7b-561f-4105-99e4-406a215ccf60") ? "195-70-7562" : usersSsn; // Can also be the user's Passport # or DL #
+
+                            documents.virtual_docs = new synapseAddDocsV3InputClass_user_docs_doc[1];
+                            documents.virtual_docs[0] = virtualDocObj;
+                            documents.virtual_docs = documents.virtual_docs.Where(val => val.document_value != virtualDocObj.document_value).ToArray();
+                            
+                        }
+
+
 
                         // SOCIAL DOCS: Send Facebook Profile URL by appending user's FBID to base FB URL
                         if (hasFBID)
@@ -2017,8 +2012,20 @@ namespace Nooch.Common
                             documents.social_docs = new synapseAddDocsV3InputClass_user_docs_doc[1];
                             documents.social_docs[0] = socialDocObj;
 
-                            documents_withNoPhysicalDoc.social_docs = new synapseAddDocsV3InputClass_user_docs_doc[1];
-                            documents_withNoPhysicalDoc.social_docs[0] = socialDocObj;
+                       
+                        }
+
+                        else
+                        {
+                            synapseAddDocsV3InputClass_user_docs_doc socialDocObj = new synapseAddDocsV3InputClass_user_docs_doc();
+                            socialDocObj.document_type = "FACEBOOK";
+                            socialDocObj.document_value = "https://www.facebook.com/" + usersFBID;
+
+                            documents.social_docs = new synapseAddDocsV3InputClass_user_docs_doc[1];
+                            documents.social_docs[0] = socialDocObj;
+
+                            documents.social_docs = documents.social_docs.Where(val => val.document_value != socialDocObj.document_value).ToArray();
+
                         }
 
                         // PHYSICAL DOCS: Send User's Photo ID if available
@@ -2030,6 +2037,18 @@ namespace Nooch.Common
 
                             documents.physical_docs = new synapseAddDocsV3InputClass_user_docs_doc[1];
                             documents.physical_docs[0] = physicalDocObj;
+                        }
+                        else
+                        {
+                            synapseAddDocsV3InputClass_user_docs_doc physicalDocObj = new synapseAddDocsV3InputClass_user_docs_doc();
+                            physicalDocObj.document_type = "GOVT_ID";
+                            physicalDocObj.document_value = "data:text/csv;base64," + ConvertImageURLToBase64(usersPhotoIDurl).Replace("\\", "");
+
+                            documents.physical_docs = new synapseAddDocsV3InputClass_user_docs_doc[1];
+                            documents.physical_docs[0] = physicalDocObj;
+
+                            documents.physical_docs = documents.physical_docs.Where(val => val.document_value != physicalDocObj.document_value).ToArray();
+
                         }
                        
                     }
@@ -2051,14 +2070,7 @@ namespace Nooch.Common
                     synapseAddDocsV3Input.login = login;
                     synapseAddDocsV3Input.user = user;
 
-                    synapseAddDocsV3InputClass_user_NoPhysicalDoc user_withNoPhysicalDoc = new synapseAddDocsV3InputClass_user_NoPhysicalDoc();
-                    user_withNoPhysicalDoc.fingerprint = usersFingerprint;
-
-                    user_withNoPhysicalDoc.documents = new synapseAddDocsV3InputClass_user_docs_NoPhysicalDoc[1];
-                    user_withNoPhysicalDoc.documents[0] = documents_withNoPhysicalDoc;
-                   
-                    synapseAddDocsV3Input_NoPhysicalDoc.login = login;
-                    synapseAddDocsV3Input_NoPhysicalDoc.user = user_withNoPhysicalDoc;
+                     
 
                      
 
@@ -2099,10 +2111,10 @@ namespace Nooch.Common
                   
                     string parsedContent;
                     
-                    if(hasPhotoID)
+                   // if(hasPhotoID)
                         parsedContent = JsonConvert.SerializeObject(synapseAddDocsV3Input);
-                    else
-                        parsedContent = JsonConvert.SerializeObject(synapseAddDocsV3Input_NoPhysicalDoc);
+                    //else
+                    //    parsedContent = JsonConvert.SerializeObject(synapseAddDocsV3Input_NoPhysicalDoc);
                      
                     
                         ASCIIEncoding encoding = new ASCIIEncoding();

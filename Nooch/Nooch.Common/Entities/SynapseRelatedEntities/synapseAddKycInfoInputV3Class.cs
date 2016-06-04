@@ -84,43 +84,7 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
     }
 
 
-    // Adding classes for v3/user/docs/add but with no physical doc
-    public class synapseAddDocsV3InputClass_NoPhysicalDoc
-    {
-        public SynapseV3Input_login login { get; set; }
-        public synapseAddDocsV3InputClass_user_NoPhysicalDoc user { get; set; }
-    }
-
-    public class synapseAddDocsV3InputClass_user_NoPhysicalDoc
-    {
-        public synapseAddDocsV3InputClass_user_docs_NoPhysicalDoc[] documents { get; set; }
-        public string fingerprint { get; set; }
-    }
-
-    public class synapseAddDocsV3InputClass_user_docs_NoPhysicalDoc
-    {
-        public string email { get; set; }
-        public string phone_number { get; set; }
-        public string ip { get; set; }
-        public string name { get; set; }
-        public string alias { get; set; }
-        public string entity_type { get; set; }
-        public string entity_scope { get; set; }
-        public int day { get; set; }
-        public int month { get; set; }
-        public int year { get; set; }
-        public string address_street { get; set; }
-        public string address_city { get; set; }
-        public string address_subdivision { get; set; } // State
-        public string address_postal_code { get; set; }
-        public string address_country_code { get; set; }
-
-        public synapseAddDocsV3InputClass_user_docs_doc[] virtual_docs { get; set; }
-        public string[] physical_docs { get; set; }
-        public synapseAddDocsV3InputClass_user_docs_doc[] social_docs { get; set; }
-
-
-    }
+    
 
     
 }

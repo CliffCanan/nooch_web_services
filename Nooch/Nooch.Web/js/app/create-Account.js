@@ -1176,8 +1176,9 @@ window.fbAsyncInit = function ()
 var fbStatus = "";
 // The response object is returned with a status field that lets the app know the current login status of the person.
 function checkLoginState() {
+    
     FB.getLoginStatus(function (response) {
-         
+       
         console.log(response);
         fbStatus = response.status;
 
@@ -1196,6 +1197,7 @@ function checkLoginState() {
 }
 
 function fbLogin() {
+    
     FB.login(function (response) {
         if (response.status === 'connected') {
             FBID = response.authResponse.userID;
