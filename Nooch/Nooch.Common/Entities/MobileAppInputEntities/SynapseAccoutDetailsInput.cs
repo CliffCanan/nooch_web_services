@@ -9,20 +9,10 @@ namespace Nooch.Common.Entities.MobileAppInputEntities
     public class SynapseAccoutDetailsInput
     {
         public string MemberId { get; set; }
-
-        
         public string BankName { get; set; }
-
-        
         public string BankNickName { get; set; }
-
-        
         public string AccountName { get; set; }
-
-        
         public string BankImageURL { get; set; }
-
-        
         public string AccountStatus { get; set; }
     }
 }

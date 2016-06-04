@@ -522,7 +522,7 @@ namespace Nooch.Web.Controllers
                 verifyNodeObj.BankName = inp.bank; // not required..keeping it for just in case we need something to do with it.
                 verifyNodeObj.MemberId = inp.memberid;
                 verifyNodeObj.mfaResponse = inp.MFA;
-                verifyNodeObj.bankId = inp.ba;   // this is bank_node_id...grabbed during earlier step
+                verifyNodeObj.bankId = inp.ba; // this is bank_node_id...grabbed during earlier step
 
                 try
                 {
@@ -656,20 +656,20 @@ namespace Nooch.Web.Controllers
                 string json;
 
                 SynapseV3VerifyNodeWithMicroDeposits_ServiceInput inpu = new SynapseV3VerifyNodeWithMicroDeposits_ServiceInput();
-                inpu.BankName = bank; // not required..keeping it for just in case we need something to do with it.
+                inpu.bankName = bank; // not required..keeping it for just in case we need something to do with it.
                 inpu.MemberId = memberid;
                 inpu.microDespositOne = MicroDepositOne;
                 inpu.microDespositTwo = MicroDepositTwo;
-                inpu.bankId = bankId;   // this is bank_node_id..... must...need to pass this thing in earlier step
-                
+                inpu.bankId = bankId;
+
                 try
                 {
-                    json =  scriptSerializer.Serialize(inpu);
+                    json = scriptSerializer.Serialize(inpu);
 
                     string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
                     string serviceMethod = "/SynapseV3MFABankVerifyWithMicroDeposits";
                     SynapseBankLoginRequestResult bnkloginresult = ResponseConverter<SynapseBankLoginRequestResult>.CallServicePostMethod(String.Concat(serviceUrl, serviceMethod), json);
-                    
+
                     if (bnkloginresult.Is_success == true)
                     {
                         res.Is_success = true;
@@ -3280,19 +3280,86 @@ namespace Nooch.Web.Controllers
         }
 
 
-
         // MemberId here is plane memberId =- non encrypted
         // NodeId is Id from SynapseBanksOfMembers table - non encrypted
-        public ActionResult MicroDepositsVerification(string MemberId, string NodeId, bool? IsRs)
+        public ActionResult MicroDepositsVerification(string mid, string NodeId, bool? IsRs)
         {
+            Logger.Info("MicroDepositsVerification CodeBehind -> Page Loaded - MemberID: [" + mid +
+                        "], NodeID: [" + NodeId + "], IsRentScene: [" + IsRs + "]");
+
             SynapseV3VerifyNodeWithMicroDeposits_ServiceInput MicroDeposit = new SynapseV3VerifyNodeWithMicroDeposits_ServiceInput();
-            MicroDeposit.MemberId = MemberId;
-            MicroDeposit.bankId = NodeId;
-            MicroDeposit.IsRs = Convert.ToBoolean(IsRs);
-            ViewData["OnLoaddata"] = MicroDeposit;
+            MicroDeposit.errorMsg = string.Empty;
+
+            try
+            {
+                if (String.IsNullOrEmpty(mid))
+                {
+                    Logger.Error("MicroDepositsVerification CodeBehind  -> Page_load - MemberID is: [" + mid + "]");
+                    MicroDeposit.errorMsg = "Missing MemberID";
+                }
+
+                if (String.IsNullOrEmpty(NodeId))
+                {
+                    Logger.Error("MicroDepositsVerification CodeBehind -> Page_load - CIP is: [" + NodeId + "]");
+                    MicroDeposit.errorMsg = "Missing node ID";
+                }
+                else
+                {
+                    MicroDeposit.bankId = NodeId;
+                }
+
+                if (String.IsNullOrEmpty(MicroDeposit.errorMsg))
+                {
+                    // Get Bank Info from server
+                    MicroDeposit = GetBankDetailsForMicroDepositVerification(mid.Trim());
+                }
+
+                if (IsRs == true) // if this flag is in the URL, then force RS branding, regardless of server response
+                {
+                    MicroDeposit.IsRs = "true";
+                    Logger.Info("MicroDepositsVerification CodeBehind -> Page_load - RENT SCENE USER Detected");
+                }
+            }
+            catch (Exception ex)
+            {
+                Response.Write("<script>var errorFromCodeBehind = '1';</script>");
+
+                Logger.Error("MicroDepositsVerification CodeBehind -> page_load OUTER EXCEPTION - [Exception: " + ex.Message + "]");
+            }
+
+
+            ViewData["OnLoadData"] = MicroDeposit;
             return View();
         }
 
+
+        public SynapseV3VerifyNodeWithMicroDeposits_ServiceInput GetBankDetailsForMicroDepositVerification(string memberId)//, string nodeId)
+        {
+            Logger.Info("MicroDepositsVerification CodeBehind -> GetBankDetailsForMicroDepositVerification Initiated - MemberID: [" + memberId + "]");
+
+            SynapseV3VerifyNodeWithMicroDeposits_ServiceInput rpr = new SynapseV3VerifyNodeWithMicroDeposits_ServiceInput();
+            rpr.success = false;
+
+            string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+            string serviceMethod = "/GetMemberInfoForMicroDepositPage?memberId=" + memberId;
+
+            //Logger.Info("payRequest CodeBehind -> GetTransDetails - URL to query: [" + String.Concat(serviceUrl, serviceMethod) + "]");
+
+            SynapseV3VerifyNodeWithMicroDeposits_ServiceInput details = ResponseConverter<SynapseV3VerifyNodeWithMicroDeposits_ServiceInput>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+
+            if (details == null)
+            {
+                Logger.Error("payRequest CodeBehind -> GetTransDetails FAILED - Transaction Not Found - TransactionId: [" + memberId + "]");
+
+                rpr.errorMsg = "Unable to find bank record";
+            }
+            else
+            {
+                rpr = details;
+            }
+
+            return rpr;
+        }
 
     }
 

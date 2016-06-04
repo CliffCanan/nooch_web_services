@@ -4020,7 +4020,7 @@ namespace Nooch.API.Controllers
             MembersDataAccess mda = new MembersDataAccess();
 
             SynapseBankLoginV3_Response_Int mdaResult = new SynapseBankLoginV3_Response_Int();
-            mdaResult = mda.SynapseV3MFABankVerifyWithMicroDeposits(input.MemberId,  input.microDespositOne, input.microDespositTwo, input.bankId);
+            mdaResult = mda.SynapseV3MFABankVerifyWithMicroDeposits(input.MemberId, input.microDespositOne, input.microDespositTwo, input.bankId);
 
             res.Is_success = mdaResult.Is_success;
             res.Is_MFA = mdaResult.Is_MFA;
@@ -4434,6 +4434,7 @@ namespace Nooch.API.Controllers
             return new BoolResult();
         }
 
+
         [HttpGet]
         [ActionName("GetSynapseBankAccountDetails")]
         public SynapseAccoutDetailsInput GetSynapseBankAccountDetails(string memberId, string accessToken)
@@ -4546,6 +4547,64 @@ namespace Nooch.API.Controllers
 
 
         #endregion Synapse-Related Services
+
+
+        [HttpGet]
+        [ActionName("GetMemberInfoForMicroDepositPage")]
+        public SynapseV3VerifyNodeWithMicroDeposits_ServiceInput GetMemberInfoForMicroDepositPage(string memberId)
+        {
+            SynapseV3VerifyNodeWithMicroDeposits_ServiceInput res = new SynapseV3VerifyNodeWithMicroDeposits_ServiceInput();
+            res.success = false;
+            res.MemberId = memberId;
+
+            try
+            {
+                Logger.Info("Service Cntrlr - GetMemberInfoForMicroDepositPage Initiated - MemberId: [" + memberId + "]");
+
+                var memberObj = CommonHelper.GetMemberDetails(memberId);
+
+                if (memberObj != null)
+                {
+                    res.userFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName));
+                    res.userLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.LastName));
+                    res.IsRs = memberObj.isRentScene.ToString() ?? "false";
+
+                    var synapseBankDetails = CommonHelper.GetSynapseBankAccountDetails(memberId);
+
+                    if (synapseBankDetails != null) // No Synapse user details were found, so need to create a new Synapse User
+                    {
+                        res.bankName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(synapseBankDetails.bank_name));
+                        res.bankNickName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(synapseBankDetails.nickname));
+                        res.bankId = synapseBankDetails.oid;
+
+                        if (synapseBankDetails.Status == "Verified")
+                        {
+                            res.errorMsg = "Bank already verified on [" + Convert.ToDateTime(synapseBankDetails.VerifiedOn).ToString("MM/dd/yyyy") + "]";
+                        }
+                        else
+                        {
+                            res.success = true;
+                        }
+                    }
+                    else
+                    {
+                        res.errorMsg = "Synapse bank details not found";
+                    }
+                }
+                else
+                {
+                    res.errorMsg = "Member not found";
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Cntrlr - GetMemberInfoForMicroDepositPage FAILED - MemberId: [" + memberId +
+                             "], Exception: [" + ex + "]");
+                res.errorMsg = "Server exception: [" + ex.Message + "]";
+            }
+
+            return res;
+        }
 
 
         [HttpGet]
@@ -4697,6 +4756,7 @@ namespace Nooch.API.Controllers
                 throw new Exception("Invalid OAuth 2 Access");
             }
         }
+
 
         [HttpGet]
         [ActionName("ValidatePinNumberForPasswordForgotPage")]
@@ -5852,9 +5912,7 @@ namespace Nooch.API.Controllers
                 {
                     var id = Utility.ConvertToGuid(input.memberId);
 
-
                     var member = noochConnection.Members.FirstOrDefault(m => m.MemberId == id);
-
 
                     if (member != null)
                     {
@@ -5865,11 +5923,7 @@ namespace Nooch.API.Controllers
                             // Marking any existing Synapse 'Create User' results for this user as Deleted
 
 
-                            var synapseRes =
-                                noochConnection.SynapseCreateUserResults.FirstOrDefault(
-                                    m => m.MemberId == id && m.IsDeleted == false);
-
-
+                            var synapseRes = noochConnection.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
 
                             if (synapseRes != null)
                             {
@@ -5879,7 +5933,6 @@ namespace Nooch.API.Controllers
                                 synapseRes.IsDeleted = true;
                                 synapseRes.ModifiedOn = DateTime.Now;
                                 noochConnection.SaveChanges();
-
                             }
 
                             try

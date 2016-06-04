@@ -1,7 +1,7 @@
 ﻿@using Nooch.Common.Entities.SynapseRelatedEntities;
 @{
     Layout = null;
-    SynapseV3VerifyNodeWithMicroDeposits_ServiceInput MicroDeposit = (SynapseV3VerifyNodeWithMicroDeposits_ServiceInput)ViewData["OnLoaddata"];
+    SynapseV3VerifyNodeWithMicroDeposits_ServiceInput MicroDeposit = (SynapseV3VerifyNodeWithMicroDeposits_ServiceInput)ViewData["OnLoadData"];
 }
 
 <!DOCTYPE html>
@@ -14,95 +14,169 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.0/css/font-awesome.min.css" />
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
     <link rel="stylesheet" href="@Url.Content("~/Assets/Css/animate.css")" />
-    <link rel="stylesheet" href="@Url.Content("~/Assets/Css/tweaks.css")"/>
+    <link rel="stylesheet" href="@Url.Content("~/Assets/Css/tweaks.css")" />
     <link rel="stylesheet" href="@Url.Content("~/Assets/Css/sweetalert-override.min.css")" />
+
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
-    
 
     <link rel="icon" href="@Url.Content("~/Assets/favicon.ico")" />
     <meta name="apple-itunes-app" content="app-id=917955306" />
+
+    <style>
+        .well {
+            background: rgb(252,252,252);
+            font-weight: bold;
+        }
+
+        #microVerForm {
+            font-size: 18px;
+        }
+
+        .input-group-addon, input.form-control {
+            font-size: 22px;
+            font-weight: 600;
+            letter-spacing: 2px;
+        }
+
+        .form-control {
+            padding: 25px 14px;
+            font-weight: 700;
+        }
+
+        .form-group {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            width: 120px;
+            margin: 0 auto;
+        }
+
+        .input-group-addon {
+            border: 0;
+            padding: 10px 6px 10px 12px;
+            color: #888;
+        }
+
+        .parsley-errors-list {
+            width: 260px;
+            margin: 0 auto;
+            font-size: 15px;
+            letter-spacing: 0;
+            font-weight: bold;
+            text-align: left;
+        }
+
+        #nameInNavContainer .bankName {
+            margin-top: 7px;
+        }
+    </style>
 </head>
 
-<body style="background-color: rgba(230, 231, 232, 0.8);" id="body-depositNew">
+<body id="body-depositNew">
 
-    <nav class="navbar navbar-default navbar-fixed-top" role="navigation" id="msb">
-        <div style="background: none;">
-            <a class="landingHeaderLogo center-block" href="https://www.nooch.com">
-                <img src="@Url.Content("~/assets/Images/nooch-logo2.svg")" class="center-block" alt="Nooch">
-            </a>          
+    <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+        <div class="clearfix">
+            <div class="m-l-15">
+                <a class="landingHeaderLogo" href="https://www.nooch.com/" style="float:left;">
+                    <img src="../Assets/Images/nooch-logo2.svg" class="center-block" alt="Nooch Logo" />
+                </a>
+                <div id="nameInNavContainer" class="text-center" style="position:absolute; left:10%; width:80%; top: 8px;">
+                    <label id="nameInNav" class="m-t-5 m-b-0 center-block f-600 h4">@MicroDeposit.userFirstName @MicroDeposit.userLastName</label>
+                    <h4 class="f-16 bankName">@MicroDeposit.bankName | @MicroDeposit.bankNickName</h4>
+                </div>
+            </div>
         </div>
     </nav>
 
     <form id="form1">
         <input type="hidden" id="IsRs" value="@MicroDeposit.IsRs" />
         <input type="hidden" id="MemberId" value="@MicroDeposit.MemberId" />
-        <input type="hidden" id="bankId" value="@MicroDeposit.bankId" />    
+        <input type="hidden" id="bankId" value="@MicroDeposit.bankId" />
     </form>
 
-   
-    <div class="row" style="padding-top:50px;">
+    <div class="resultDiv col-md-6 col-md-offset-3 col-lg-4 col-lg-offset-4 hidden">
+        <i class="fa fa-check"></i>
+        <h2>Thanks, You're All Set</h2>
+        <p>Thanks for submitting your ID information. &nbsp;That helps us keep Rent Scene safe for everyone. &nbsp;We only use this information to prevent ID fraud and never share it without your permission.</p>
+    </div>
 
-        <div class="col-sm-4">
+    <div class="row m-0">
+        <div id="idWizContainer" class="" style="width:96%; max-width:530px; margin: 25px auto;">
+            <div class="row animated bounceIn">
+
+                <div>
+
+                    <div class="well text-center f-15">
+                        <span class="show f-19 m-b-5 text-primary">Hi @MicroDeposit.userFirstName,</span>Please enter the amounts of the two (2) deposits from <em>"Rent Scene, Co"</em> on your bank statement:<br /><span style="font-weight:normal;">(both should be between $0.01-$0.99)</span>
+                    </div>
+
+                    <form id="microVerForm" class="form-horizontal" role="form">
+
+                        <div class="form-group" id="micro1Grp">
+                            <div>
+                                <div class="input-group">
+                                    <span class="input-group-addon">$0.</span>
+                                    <div class="fg-line">
+                                        <input type="text" id="MicroDepositOne" class="form-control two-digits p-l-10" placeholder="00" maxlength="2" required data-parsley-trigger="keyup" data-parsley-minlength="2" data-parsley-minlength-message="Please enter a 2-digit number." data-parsley-validation-threshold="1" data-parsley-errors-container="#errorMsg1" />
+                                    </div>
+                                </div>
+                                <span class="glyphicon glyphicon-ok form-control-feedback hidden" aria-hidden="true"></span>
+                                <div id="errorMsg1"></div>
+                            </div>
+                        </div>
+
+                        <div class="form-group" id="micro2Grp">
+                            <div>
+                                <div class="input-group">
+                                    <span class="input-group-addon">$0.</span>
+                                    <div class="fg-line">
+                                        <input type="text" id="MicroDepositTwo" class="form-control two-digits" placeholder="00" maxlength="2" required data-parsley-trigger="keyup" data-parsley-minlength="2" maxlength="2" data-parsley-minlength-message="Please enter a 2-digit number." data-parsley-validation-threshold="1" data-parsley-errors-container="#errorMsg2" />
+                                    </div>
+                                </div>
+                                <span class="glyphicon glyphicon-ok form-control-feedback hidden" aria-hidden="true"></span>
+                                <div id="errorMsg2"></div>
+                            </div>
+                        </div>
+
+                        <div class="form-group m-t-30">
+                            <div class="col-sm-offset-2 col-sm-10">
+                                <button type="button" class="btn btn-primary btn-lg btn-block" id="Submit" onclick="SubmitInfo()">Submit</button>
+                            </div>
+                        </div>
+                        <!--@*<input type="hidden" id="SynapseV3MFABankVerifyWithMicroDepositsUrl" value="@Url.Action("MFALoginWithRoutingAndAccountNumber", "Nooch")" />*@-->
+                    </form>
+
+                </div>
+            </div>
         </div>
+    </div>
 
-        <div class="col-sm-4">
+    <div class="footer footer-landing" style="position:fixed; bottom:1%;">
+        <div>
+            <ul class="list-inline">
+                <li><a href="https://www.nooch.com/overview"></a></li>
+                <li><a href="https://www.nooch.com/safe">Security</a></li>
+                <li><a href="http://support.nooch.com/">Support Center</a></li>
+                <li><a href="https://www.nooch.com/privacy">Privacy Policy</a></li>
+                <li><a href="https://www.nooch.com/blog/">Blog</a></li>
+            </ul>
+        </div>
+    </div>
 
-            <form class="form-horizontal" role="form">
-                <div class="form-group">
-                    <label class="control-label col-sm-2" for="Money"><b>$ 0.</b></label>
-                    <div class="col-sm-10">
-                        <input type="text" maxlength="2" id="MicroDepositOne" class="form-control two-digits" placeholder="10 Cents" required/>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="control-label col-sm-2" for="Money1"><b>$ 0.</b></label>
-                    <div class="col-sm-10">
-                        <input type="text" maxlength="2" id="MicroDepositTwo" class="form-control two-digits" placeholder="11 Cents" required/>
-                    </div>
-                </div>
+    <script src="//code.jquery.com/jquery-1.12.4.min.js"></script>
+    <script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <script src="@Url.Content("~/js/jquery.blockUI.min.js")"></script>
+    <script src="@Url.Content("~/js/sweetalert.min.js")"></script>
+    <script src="@Url.Content("~/js/parsley.min.js")"></script>
+    <script src="@Url.Content("~/js/app/microDepositsVerification.js")"></script>
 
-                <div class="form-group">
-                    <div class="col-sm-offset-2 col-sm-10">
-                        <a class="btn btn-default" id="Submit" onclick="SubmitInfo()" style="width:100%;">Submit</a>
-                    </div>
-                </div>
-                @*<input type="hidden" id="SynapseV3MFABankVerifyWithMicroDepositsUrl" value="@Url.Action("MFALoginWithRoutingAndAccountNumber", "Nooch")" />*@
-            </form>
-                    </div>
-
-                    <div class="col-sm-4">
-                    </div>
-                </div>
-
-
-                <div class="footer col-xs-12 col-sm-12">
-                    <div>
-                        <ul class="list-inline">
-                            <li><a href="https://www.nooch.com/overview">About</a></li>
-                            <li><a href="https://www.nooch.com/safe">Security</a></li>
-                            <li><a href="http://support.nooch.com/">Support Center</a></li>
-                            <li><a href="https://www.nooch.com/privacy">Privacy Policy</a></li>
-                            <li><a href="https://www.nooch.com/blog/">Blog</a></li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- jQuery -->
-                <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
-                <script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
-                <script src="@Url.Content("~/js/jquery.blockUI.min.js")"></script>
-                <script src="@Url.Content("~/js/sweetalert.min.js")"></script>                
-                <script src="~/js/app/microDepositsVerification.js"></script>
-                 <script src="~/js/parsley.min.js"></script>
-                <!-- Bootstrap Plugins -->
-                <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
-
-                <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
-                <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-                <!--[if lt IE 9]>
-                  <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-                  <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
-                <![endif]-->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+    <![endif]-->
 
 </body>
 </html>

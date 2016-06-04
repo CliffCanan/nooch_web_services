@@ -63,10 +63,10 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
     public class synapseV3Result_user_extra
     {
         public synapseV3Result_user_extra_dateJoined date_joined { get; set; }
-        public string cip_tag { get; set; }
         public bool is_business { get; set; }
-        public string supp_id { get; set; }
         public bool extra_security { get; set; }
+        public string supp_id { get; set; }
+        public string cip_tag { get; set; }
     }
 
     public class synapseV3Result_user_extra_dateJoined

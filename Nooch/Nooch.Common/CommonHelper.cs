@@ -872,6 +872,7 @@ namespace Nooch.Common
             }
         }
 
+
         public static string ValidatePinNumber(string memberId, string pinNumber)
         {
             var id = Utility.ConvertToGuid(memberId);
@@ -1726,7 +1727,7 @@ namespace Nooch.Common
                 var userNameDecrypted = GetDecryptedData(memberEntity.UserName);
 
                 // Cliff (6/2/16): commenting out the check for if the user already has isVerifiedWithSynapse = true.
-                //                 Even verifies users might need to send another document, so we might as well run this methond fully for
+                //                 Even verified users might need to send another document, so we might as well run this methond fully for
                 //                 any user - unless there is missing data.
                 //if (memberEntity.IsVerifiedWithSynapse != true)
                 //{
@@ -2383,36 +2384,6 @@ namespace Nooch.Common
         }
 
 
-
-        /*public isReadyForSyanpse isUserReadyForSynapse(string MemberId)
-        {
-            isReadyForSyanpse res = new isReadyForSyanpse();
-
-            var id = Utility.ConvertToGuid(MemberId);
-
-            var memberEntity = GetMemberDetails(MemberId);
-
-            if (memberEntity != null)
-            {
-                res.hasName = !String.IsNullOrEmpty(memberEntity.FirstName) && !String.IsNullOrEmpty(memberEntity.LastName) ? true : false;
-                res.hasAddress = !String.IsNullOrEmpty(memberEntity.Address) ? true : false;
-                res.hasZip = !String.IsNullOrEmpty(memberEntity.Zipcode) ? true : false;
-                res.hasDOB = memberEntity.DateOfBirth != null ? true : false;
-                res.hasSSN = !String.IsNullOrEmpty(memberEntity.SSN) ? true : false;
-                res.hasFngrprnt = !String.IsNullOrEmpty(memberEntity.UDID1) ? true : false;
-            }
-
-            bool isMissingSomething = false;
-
-            if (isMissingSomething)
-            {
-                //Logger.Error("Common Helper -> sendUserSsnInfoToSynapseV3 ABORTED: Member has no DoB. [Username: " + userNameDecrypted + "], [Message: " + res.message + "]");
-            }
-
-            return res;
-        }*/
-
-
         /************************************************************************************************************************/
         //
         // CC (5/31/16): submitDocumentToSynapseV3 is in MDA... but for some strange reason there is a duplicate in Common Helper
@@ -2943,16 +2914,14 @@ namespace Nooch.Common
 
                     #region Found Refresh Token
 
-                    Logger.Info("Common Helper -> refreshSynapseV3OautKey - Found Member By Original OAuth Key");
+                    //Logger.Info("Common Helper -> refreshSynapseV3OautKey - Found Member By Original OAuth Key");
 
                     SynapseV3RefreshOauthKeyAndSign_Input input = new SynapseV3RefreshOauthKeyAndSign_Input();
-
 
                     List<string> clientIds = CommonHelper.getClientSecretId(noochMemberObject.MemberId.ToString());
 
                     string SynapseClientId = clientIds[0];
                     string SynapseClientSecret = clientIds[1];
-
 
                     input.login = new createUser_login2()
                     {
@@ -3012,7 +2981,7 @@ namespace Nooch.Common
                         #region Signed Into Synapse Successfully
 
                         if ((refreshResponse["success"] != null && Convert.ToBoolean(refreshResponse["success"])) ||
-                             refreshResultFromSyn.success.ToString() == "true")
+                             refreshResultFromSyn.success == true)
                         {
                             //Logger.Info("Common Helper -> synapseV3checkUsersOauthKey - Signed User In With Synapse Successfully!");
 
