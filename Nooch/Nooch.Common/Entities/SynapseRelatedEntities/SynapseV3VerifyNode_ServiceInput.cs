@@ -27,5 +27,6 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
         public string errorMsg { get; set; }
         public string IsRs { get; set; }
         public bool success { get; set; }
+        public string NodeId1 { get; set; }
     }
 }
