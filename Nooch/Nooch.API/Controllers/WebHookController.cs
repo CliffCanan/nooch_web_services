@@ -15,39 +15,63 @@ namespace Nooch.API.Controllers
         {
             HttpContent requestContent = Request.Content;
             string jsonContent = requestContent.ReadAsStringAsync().Result;
-            Logger.Info("GetTransactionStatusFromSynapse [ WebHook ] loaded for TransactionId : [ " + transId + " ]. At [ " + DateTime.Now + " ]. With Request Body [ " + jsonContent + " ].");
+            try
+            {
 
 
-            // code to store transaction timeline info in db 
-            //JObject jsonfromsynapse = JObject.Parse(jsonContent);
-            //JToken token = jsonfromsynapse["jsonContent"];
-            //string transIdFromSyanpse = jsonfromsynapse["trans"]["_id"]["$oid"].ToString();
-            //if (jsonfromsynapse != null)
-            //{
-            //    foreach (JToken jT in jsonfromsynapse)
-            //    {
-            //        string dateFromSynase =
-            //         jT["date"]["$date"].ToString();
-
-            //        string note = jT["note"].ToString();
-            //        string status = jT["status"].ToString();
-            //        string status_id = jT["status_id"].ToString();
-
-            //        string transaction_id_from_synapse = jT["status_id"].ToString();
-
-            //        using (NOOCHEntities obj = new NOOCHEntities())
-            //        {
-            //            TransactionsStatusAtSynapse tas = new TransactionsStatusAtSynapse();
-            //            tas.Nooch_Transaction_Id = transId;
-            //            tas.Transaction_oid
-
-            //            obj.TransactionsStatusAtSynapses
-            //        }
 
 
-            //    }
-            //}
+                Logger.Info("GetTransactionStatusFromSynapse [ WebHook ] loaded for TransactionId : [ " + transId + " ]. At [ " + DateTime.Now + " ]. With Request Body [ " + jsonContent + " ].");
 
+
+                // code to store transaction timeline info in db 
+                JObject jsonfromsynapse = JObject.Parse(jsonContent);
+
+                JToken transIdFromSyanpse = jsonfromsynapse["trans"]["_id"]["$oid"];
+
+                if (transIdFromSyanpse != null)
+                {
+                    JToken allTimeLineItems = jsonfromsynapse["trans"]["timeline"];
+
+                    if (allTimeLineItems != null)
+                    {
+                        foreach (JToken currentItem in allTimeLineItems)
+                        {
+
+
+                            string note = currentItem["note"].ToString();
+                            string status = currentItem["status"].ToString();
+                            string status_id = currentItem["status_id"].ToString();
+                            string status_date = currentItem["date"]["$date"].ToString();
+
+
+
+                            using (NOOCHEntities obj = new NOOCHEntities())
+                            {
+                                TransactionsStatusAtSynapse tas = new TransactionsStatusAtSynapse();
+                                tas.Nooch_Transaction_Id = transId;
+                                tas.Transaction_oid = transIdFromSyanpse.ToString();
+                                tas.status = status;
+                                tas.status_date = status_date;
+                                tas.status_id = status_id;
+                                tas.status_note = note;
+
+
+                                obj.TransactionsStatusAtSynapses.Add(tas);
+                                obj.SaveChanges();
+
+                            }
+
+                        }
+                    }
+
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Info("GetTransactionStatusFromSynapse [ WebHook ] saved to save in db for TransactionId : [ " + transId + " ]. At [ " + DateTime.Now + " ]. With Request Body [ " + jsonContent + " ]. Exception -> [ " + ex + " ].");
+
+            }
 
 
 
