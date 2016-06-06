@@ -2627,7 +2627,7 @@ namespace Nooch.DataAccess
                 memberObj.SSN = !String.IsNullOrEmpty(ssn) ? CommonHelper.GetEncryptedData(ssn) : null;
                 memberObj.DateOfBirth = dateofbirth;
                 memberObj.Status = "Active";
-                memberObj.UDID1 =   !String.IsNullOrEmpty(fngprnt) ? fngprnt : memberObj.UDID1;
+                memberObj.UDID1 = !String.IsNullOrEmpty(fngprnt) ? fngprnt : memberObj.UDID1; // if this has changed since what it originally was, then the user will eventually have to complete the 2FA for Synapse
                 memberObj.DateModified = DateTime.Now;
                 memberObj.cipTag = !String.IsNullOrEmpty(cip) ? cip : memberObj.cipTag;
                 memberObj.FacebookUserId = !String.IsNullOrEmpty(fbid) ? fbid : memberObj.FacebookUserId;
