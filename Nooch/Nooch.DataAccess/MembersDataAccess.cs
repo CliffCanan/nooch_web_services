@@ -2834,6 +2834,47 @@ namespace Nooch.DataAccess
 
                 #endregion Check If PW Was Supplied To Create Full Account
 
+
+                #region saving user image if provided
+
+
+                if (isIdImageAdded == "1" && !String.IsNullOrEmpty(idImageData))
+                {
+                    // We have ID Doc image... saving it on Nooch's Server and making entry in Members table.
+                    try
+                    {
+                        Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 -> About to save ID Doc to Noch server ->  [Email: " + userEmail + "], [Member_Id: " + memberObj.MemberId + "]");
+
+                        var saveImageOnServer = SaveBase64AsImage(memberObj.MemberId.ToString(), idImageData);
+
+                        if (saveImageOnServer.success && !String.IsNullOrEmpty(saveImageOnServer.msg))
+                        {
+
+                            memberObj.VerificationDocumentPath = saveImageOnServer.msg;
+                            _dbContext.SaveChanges();
+                        }
+                        else
+                        {
+                            Logger.Error("MDA -> RegisterExistingUserWithSynapseV3 -> Attempted to Save ID Doc on server but failed - " +
+                                         "SaveBase64AsImage Msg: [" + saveImageOnServer.msg + "]");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error("MDA -> RegisterExistingUserWithSynapseV3 -> Attempted to Save ID Doc on server but failed -> [Exception: " + ex.Message +
+                                     "], [Email: " + userEmail + "], [Member_Id: " + memberObj.MemberId + "]");
+                    }
+                }
+                else
+                {
+                    Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 - NO IMAGE SENT");
+                }
+
+                #endregion
+
+
+
+
                 // NOW WE HAVE CREATED A NEW NOOCH USER RECORD AND SENT THE REGISTRATION EMAIL (IF THE USER
                 // PROVIDED A PW TO CREATE AN ACCOUNT) NEXT, ATTEMPT TO CREATE A SYNAPSE ACCOUNT FOR THIS USER.
                 #region Create User with Synapse
@@ -2862,37 +2903,6 @@ namespace Nooch.DataAccess
                         Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 - Synapse User created SUCCESSFULLY (LN: 2885) - " +
                                     "[oauth_consumer_key: " + createSynapseUserResult.oauth.oauth_key + "]. Now attempting to save in Nooch DB.");
 
-                        #region Send ID Doc To Synapse
-
-                        submitIdVerificationInt submitDocResult = CommonHelper.sendDocsToSynapseV3(memberId);
-
-                        #region Logging
-
-                        if (submitDocResult.success == true)
-                        {
-                            if (!String.IsNullOrEmpty(submitDocResult.message) &&
-                                submitDocResult.message.IndexOf("additional") > -1)
-                            {
-                                Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 - KYC Doc Info Verified Partially - Additional Questions Required - [Email: " +
-                                            CommonHelper.GetDecryptedData(memberObj.UserName) + "], [submitSsn.message: " + submitDocResult.message + "]");
-                            }
-                            else
-                            {
-                                Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 - KYC Doc Info Verified completely :-) - [Email: " +
-                                            CommonHelper.GetDecryptedData(memberObj.UserName) + "], [submitSsn.message: " + submitDocResult.message + "]");
-                            }
-                        }
-                        else
-                        {
-                            Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 - SSN Info Verified FAILED :-(  [Email: " +
-                                        CommonHelper.GetDecryptedData(memberObj.UserName) + "], [submitSsn.message: " + submitDocResult.message + "]");
-                            res.ssn_verify_status = "Not Verified";
-                        }
-
-                        #endregion Logging
-
-
-                        #endregion Send ID Doc To Synapse
 
                         if (!String.IsNullOrEmpty(res.reason) &&
                             res.reason.IndexOf("Email already registered") > -1)
@@ -3381,6 +3391,46 @@ namespace Nooch.DataAccess
                     // NOW WE HAVE CREATED A NEW NOOCH USER RECORD AND SENT THE REGISTRATION EMAIL (IF THE USER PROVIDED A PW TO CREATE AN ACCOUNT)
                     // NEXT, ATTEMPT TO CREATE A SYNAPSE ACCOUNT FOR THIS USER
 
+
+                    #region saving user image if provided
+
+
+                    if (isIdImageAdded == "1" && !String.IsNullOrEmpty(idImageData))
+                    {
+                        // We have ID Doc image... saving it on Nooch's Server and making entry in Members table.
+                        try
+                        {
+                            Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 -> About to save ID Doc to Noch server ->  [Email: " + userEmail + "], [Member_Id: " + member.MemberId+ "]");
+
+                            var saveImageOnServer = SaveBase64AsImage(member.MemberId.ToString(), idImageData);
+
+                            if (saveImageOnServer.success && !String.IsNullOrEmpty(saveImageOnServer.msg))
+                            {
+                            
+                                member.VerificationDocumentPath = saveImageOnServer.msg;
+                                _dbContext.SaveChanges();
+                            }
+                            else
+                            {
+                                Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 -> Attempted to Save ID Doc on server but failed - " +
+                                             "SaveBase64AsImage Msg: [" + saveImageOnServer.msg + "]");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 -> Attempted to Save ID Doc on server but failed -> [Exception: " + ex.Message +
+                                         "], [Email: " + userEmail + "], [Member_Id: " + member.MemberId + "]");
+                        }
+                    }
+                    else
+                    {
+                        Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - NO IMAGE SENT");
+                    }
+
+                    #endregion
+
+
+
                     #region Create User with Synapse
 
                     synapseCreateUserV3Result_int createSynapseUserResult = new synapseCreateUserV3Result_int();
@@ -3407,67 +3457,7 @@ namespace Nooch.DataAccess
                             Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - Synapse User created SUCCESSFULLY (LN: 3418) - " +
                                         "[oauth_consumer_key: " + createSynapseUserResult.oauth.oauth_key + "]. Now attempting to save in Nooch DB.");
 
-                            #region Send ID Doc To Synapse
-
-                            if (isIdImageAdded == "1" && !String.IsNullOrEmpty(idImageData))
-                            {
-                                // We have ID Doc image... Now call submitDocumentToSynapseV3()
-                                try
-                                {
-                                    Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 -> About to submit ID Doc to Synapse ->  [Email: " + userEmail + "], [Member_Id: " + member.MemberId.ToString() + "]");
-
-                                    var saveImageOnServer = SaveBase64AsImage(member.MemberId.ToString(), idImageData);
-
-                                    if (saveImageOnServer.success && !String.IsNullOrEmpty(saveImageOnServer.msg))
-                                    {
-                                        // Malkit (04 June 2016) : We won't use this method, from now on we will be using Cliff's method from Common helper sendDocsToSynapseV3
-                                        //submitDocumentToSynapseV3(memberObj.MemberId.ToString(), saveImageOnServer.msg);
-                                        member.VerificationDocumentPath = saveImageOnServer.msg;
-                                        _dbContext.SaveChanges();
-                                    }
-                                    else
-                                    {
-                                        Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 -> Attempted to Save ID Doc on server but failed - " +
-                                                     "SaveBase64AsImage Msg: [" + saveImageOnServer.msg + "]");
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 -> Attempted to Save ID Doc on server but failed -> [Exception: " + ex.Message +
-                                                 "], [Email: " + userEmail + "], [Member_Id: " + member.MemberId.ToString() + "]");
-                                }
-                            }
-                            else
-                            {
-                                Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - NO IMAGE SENT");
-                            }
-
-                            submitIdVerificationInt submitDocResult = CommonHelper.sendDocsToSynapseV3(member.MemberId.ToString());
-                            #region Logging
-
-                            if (submitDocResult.success == true)
-                            {
-                                if (!String.IsNullOrEmpty(submitDocResult.message) &&
-                                    submitDocResult.message.IndexOf("additional") > -1)
-                                {
-                                    Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - KYC Doc Info Verified Partially - Additional Questions Required - [Email: " +
-                                                CommonHelper.GetDecryptedData(member.UserName) + "], [submitSsn.message: " + submitDocResult.message + "]");
-                                }
-                                else
-                                {
-                                    Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - KYC Doc Info Verified completely :-) - [Email: " +
-                                                CommonHelper.GetDecryptedData(member.UserName) + "], [submitSsn.message: " + submitDocResult.message + "]");
-                                }
-                            }
-                            else
-                            {
-                                Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - SSN Info Verified FAILED :-(  [Email: " +
-                                            CommonHelper.GetDecryptedData(member.UserName) + "], [submitSsn.message: " + submitDocResult.message + "]");
-                                res.ssn_verify_status = "Not Verified";
-                            }
-
-                            #endregion Logging
-                            #endregion Send ID Doc To Synapse
+                 
 
                             if (!String.IsNullOrEmpty(res.reason) &&
                                 res.reason.IndexOf("Email already registered") > -1)
