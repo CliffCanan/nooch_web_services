@@ -5995,7 +5995,32 @@ namespace Nooch.API.Controllers
 
             try
             {
-                CancelTransaction = CommonHelper.CancelTransactionAtSynapse(IsRentScene, TransationId, Id, MemberId);
+                if ((IsRentScene != true) || (IsRentScene == null))
+                {
+                    Logger.Error("CancelTransactionAtSynapse CodeBehind  -> Page_load - IsRentScene is: [" + IsRentScene + "]");
+                    CancelTransaction.errorMsg = "Missing IsRentScene or its false";
+                }
+
+                if (String.IsNullOrEmpty(TransationId))
+                {
+                    Logger.Error("CancelTransactionAtSynapse CodeBehind -> Page_load - TransationId is: [" + TransationId + "]");
+                    CancelTransaction.errorMsg = "Missing TransationId";
+                }
+                if (Id == null)
+                {
+                    Logger.Error("CancelTransactionAtSynapse CodeBehind -> Page_load - Id is: [" + Id + "]");
+                    CancelTransaction.errorMsg = "Missing Id";
+                }
+                if (string.IsNullOrEmpty(MemberId))
+                {
+                    Logger.Error("CancelTransactionAtSynapse CodeBehind -> Page_load - Id is: [" + MemberId + "]");
+                    CancelTransaction.errorMsg = "Missing Id";
+                }
+
+                if (String.IsNullOrEmpty(CancelTransaction.errorMsg))
+                {
+                    CancelTransaction = CommonHelper.CancelTransactionAtSynapse(TransationId, Id, MemberId);
+                }
             }
             catch (Exception ex)
             {

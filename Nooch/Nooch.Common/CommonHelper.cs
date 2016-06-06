@@ -4317,38 +4317,18 @@ namespace Nooch.Common
             return clientIds;
         }
 
-        public static CancelTransactionAtSynapseResult CancelTransactionAtSynapse(bool IsRentScene, string TransationId, int Id, string MemberId)
+        public static CancelTransactionAtSynapseResult CancelTransactionAtSynapse(string TransationId, int Id, string MemberId)
         {           
-            Logger.Info("CancelTransactionAtSynapse -> - TransationId: [" + TransationId + "], IsRentScene: [" + IsRentScene + "]");
+            Logger.Info("CancelTransactionAtSynapse -> - TransationId: [" + TransationId + "]");
 
             TransactionsStatusAtSynapse transactionsStatusAtSynapse = new TransactionsStatusAtSynapse();
 
             CancelTransactionAtSynapseResult CancelTransaction = new CancelTransactionAtSynapseResult();
           
             try
-            {
-                if ((IsRentScene != true) || (IsRentScene == null))
-                {
-                    Logger.Error("CancelTransactionAtSynapse CodeBehind  -> Page_load - IsRentScene is: [" + IsRentScene + "]");
-                    CancelTransaction.errorMsg = "Missing IsRentScene or its false";
-                }
-
-                if (String.IsNullOrEmpty(TransationId))
-                {
-                    Logger.Error("CancelTransactionAtSynapse CodeBehind -> Page_load - TransationId is: [" + TransationId + "]");
-                    CancelTransaction.errorMsg = "Missing TransationId";
-                }
-                if (Id == null)
-                {
-                    Logger.Error("CancelTransactionAtSynapse CodeBehind -> Page_load - Id is: [" + Id + "]");
-                    CancelTransaction.errorMsg = "Missing Id";
-                }             
-
-                if (String.IsNullOrEmpty(CancelTransaction.errorMsg))
-                {
-                    transactionsStatusAtSynapse = getTransationDetailsAtSynapse(TransationId, Id);             
+            {       
+                transactionsStatusAtSynapse = getTransationDetailsAtSynapse(TransationId, Id);        
                                         
-                }
                 if (transactionsStatusAtSynapse == null )
                 {
                     CancelTransaction.errorMsg = "Transation Not Found";
@@ -4436,7 +4416,7 @@ namespace Nooch.Common
              {
             try
             {
-               transactionsStatusAtSynapse = _dbContext.TransactionsStatusAtSynapses.FirstOrDefault(m => m.Nooch_Transaction_Id == TransationId && m.Id == Id);
+                transactionsStatusAtSynapse = _dbContext.TransactionsStatusAtSynapses.FirstOrDefault(m => m.Nooch_Transaction_Id == TransationId && m.Id == Id);
 
                 if (transactionsStatusAtSynapse != null)
                 {
