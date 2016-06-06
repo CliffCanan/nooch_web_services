@@ -2964,7 +2964,7 @@ namespace Nooch.DataAccess
 
         public synapseCreateUserV3Result_int RegisterNonNoochUserWithSynapseV3(string transId, string userEmail, string userPhone, string userName, string pw,
                                                                                string ssn, string dob, string address, string zip, string fngprnt, string ip,
-                                                                               string cip, string fbid, bool isRentScene, string isIdImageAdded, string idImageData)
+                                                                               string cip, string fbid, bool isRentScene, string isIdImageAdded="0", string idImageData="")
         {
             // What's the plan? -- Store new Nooch member, then create Synpase user, then check if user supplied a (is password.Length > 0)
             // then store data in new added field in SynapseCreateUserResults table for later use
