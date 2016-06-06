@@ -4014,7 +4014,13 @@ namespace Nooch.API.Controllers
                 Logger.Info("Service Cntrlr - SynapseV3MFABankVerifyWithMicroDeposits Initiated - MemberId: [" + input.MemberId + "]");
 
                 MembersDataAccess mda = new MembersDataAccess();
+                #region Checkn Oauthkey is Still valid
+                //var OauthObj = CommonHelper.GetSynapseCreateaUserDetails(input.MemberId);
+                //synapseV3checkUsersOauthKey checkTokenResult = CommonHelper.refreshSynapseV3OautKey(OauthObj.access_token);
+                #endregion
 
+                //if (checkTokenResult != null)
+                //{
                 SynapseBankLoginV3_Response_Int mdaResult = new SynapseBankLoginV3_Response_Int();
                 mdaResult = mda.SynapseV3MFABankVerifyWithMicroDeposits(input.MemberId, input.microDespositOne, input.microDespositTwo, input.bankId);
 
@@ -4022,6 +4028,7 @@ namespace Nooch.API.Controllers
                 res.Is_MFA = mdaResult.Is_MFA;
                 res.errorMsg = mdaResult.errorMsg;
                 res.mfaMessage = mdaResult.mfaMessage;
+                //}
             }
             catch (Exception ex)
             {
@@ -4531,7 +4538,7 @@ namespace Nooch.API.Controllers
                         res.bankName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(synapseBankDetails.bank_name));
                         res.bankNickName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(synapseBankDetails.nickname));
                         res.bankId = synapseBankDetails.oid;
-                        res.NodeId1 = Convert.ToString(synapseBankDetails.Id);
+                        // res.NodeId1 = Convert.ToString(synapseBankDetails.Id); 
 
                         if (synapseBankDetails.Status == "Verified")
                         {
@@ -5972,11 +5979,30 @@ namespace Nooch.API.Controllers
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Cntrlr -> GetStateNameByZipcode FAILED - ZipCode: [" + zipCode + "], Exception: [" + ex + "]");
+                Logger.Error("Service Controller -> GetStateNameByZipcode FAILED - ZipCode: [" + zipCode + "], Exception: [" + ex + "]");
                 res.ErrorMessage = "Server Error.";
             }
 
             return res;
+        }
+
+        [HttpGet]
+        [ActionName("CancelTransactionAtSynapse")]
+        public CancelTransactionAtSynapseResult CancelTransactionAtSynapse(bool IsRentScene, string TransationId, int Id, string MemberId)
+        {
+            CancelTransactionAtSynapseResult CancelTransaction = new CancelTransactionAtSynapseResult();
+            CancelTransaction.IsSuccess = false;
+
+            try
+            {
+                CancelTransaction = CommonHelper.CancelTransactionAtSynapse(IsRentScene, TransationId, Id, MemberId);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Controller -> CancelTransactionAtSynapse FAILED - TransationId: [" + TransationId + "], Exception: [" + ex + "]");
+                CancelTransaction.errorMsg = "Server Error.";
+            }
+            return CancelTransaction;
         }
 
     }
