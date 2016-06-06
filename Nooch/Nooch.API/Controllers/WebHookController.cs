@@ -19,7 +19,7 @@ namespace Nooch.API.Controllers
             {
 
 
-
+                 
 
                 Logger.Info("GetTransactionStatusFromSynapse [ WebHook ] loaded for TransactionId : [ " + transId + " ]. At [ " + DateTime.Now + " ]. With Request Body [ " + jsonContent + " ].");
 
@@ -27,45 +27,100 @@ namespace Nooch.API.Controllers
                 // code to store transaction timeline info in db 
                 JObject jsonfromsynapse = JObject.Parse(jsonContent);
 
-                JToken transIdFromSyanpse = jsonfromsynapse["trans"]["_id"]["$oid"];
+                JToken isTransExists = jsonfromsynapse["trans"];
 
-                if (transIdFromSyanpse != null)
+                if (isTransExists != null)
                 {
-                    JToken allTimeLineItems = jsonfromsynapse["trans"]["timeline"];
+                    JToken transIdFromSyanpse = jsonfromsynapse["trans"]["_id"]["$oid"];
 
-                    if (allTimeLineItems != null)
+                    if (transIdFromSyanpse != null)
                     {
-                        foreach (JToken currentItem in allTimeLineItems)
+                        JToken allTimeLineItems = jsonfromsynapse["trans"]["timeline"];
+
+                        if (allTimeLineItems != null)
                         {
-
-
-                            string note = currentItem["note"].ToString();
-                            string status = currentItem["status"].ToString();
-                            string status_id = currentItem["status_id"].ToString();
-                            string status_date = currentItem["date"]["$date"].ToString();
-
-
-
-                            using (NOOCHEntities obj = new NOOCHEntities())
+                            foreach (JToken currentItem in allTimeLineItems)
                             {
-                                TransactionsStatusAtSynapse tas = new TransactionsStatusAtSynapse();
-                                tas.Nooch_Transaction_Id = transId;
-                                tas.Transaction_oid = transIdFromSyanpse==null ? "" : transIdFromSyanpse.ToString();
-                                tas.status = status;
-                                tas.status_date = status_date;
-                                tas.status_id = status_id;
-                                tas.status_note = note;
 
 
-                                obj.TransactionsStatusAtSynapses.Add(tas);
-                                obj.SaveChanges();
+                                string note = currentItem["note"].ToString();
+                                string status = currentItem["status"].ToString();
+                                string status_id = currentItem["status_id"].ToString();
+                                string status_date = currentItem["date"]["$date"].ToString();
+
+
+
+                                using (NOOCHEntities obj = new NOOCHEntities())
+                                {
+                                    TransactionsStatusAtSynapse tas = new TransactionsStatusAtSynapse();
+                                    tas.Nooch_Transaction_Id = transId;
+                                    tas.Transaction_oid = transIdFromSyanpse == null
+                                        ? ""
+                                        : transIdFromSyanpse.ToString();
+                                    tas.status = status;
+                                    tas.status_date = status_date;
+                                    tas.status_id = status_id;
+                                    tas.status_note = note;
+
+
+                                    obj.TransactionsStatusAtSynapses.Add(tas);
+                                    obj.SaveChanges();
+
+                                }
 
                             }
-
                         }
+
                     }
 
                 }
+                else
+                {
+                    // this time object is without trans key around --- don't know why, synapse is returning data in two different formats now.
+                    JToken transIdFromSyanpse = jsonfromsynapse["_id"]["$oid"];
+
+                    if (transIdFromSyanpse != null)
+                    {
+                        JToken allTimeLineItems = jsonfromsynapse["timeline"];
+
+                        if (allTimeLineItems != null)
+                        {
+                            foreach (JToken currentItem in allTimeLineItems)
+                            {
+
+
+                                string note = currentItem["note"].ToString();
+                                string status = currentItem["status"].ToString();
+                                string status_id = currentItem["status_id"].ToString();
+                                string status_date = currentItem["date"]["$date"].ToString();
+
+
+
+                                using (NOOCHEntities obj = new NOOCHEntities())
+                                {
+                                    TransactionsStatusAtSynapse tas = new TransactionsStatusAtSynapse();
+                                    tas.Nooch_Transaction_Id = transId;
+                                    tas.Transaction_oid = transIdFromSyanpse == null
+                                        ? ""
+                                        : transIdFromSyanpse.ToString();
+                                    tas.status = status;
+                                    tas.status_date = status_date;
+                                    tas.status_id = status_id;
+                                    tas.status_note = note;
+
+
+                                    obj.TransactionsStatusAtSynapses.Add(tas);
+                                    obj.SaveChanges();
+
+                                }
+
+                            }
+                        }
+
+                    }
+                }
+
+
             }
             catch (Exception ex)
             {
