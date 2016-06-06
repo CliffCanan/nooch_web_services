@@ -587,7 +587,7 @@ namespace Nooch.Common
 
         public static List<SynapseBankLoginResult> GetSynapseBankLoginResulList(string memberId)
         {
-            Logger.Info("Common Helper -> GetSynapseBankAccountDetails - MemberId: [" + memberId + "]");
+            Logger.Info("Common Helper -> GetSynapseBankLoginResulList - MemberId: [" + memberId + "]");
 
             var id = Utility.ConvertToGuid(memberId);
 
@@ -596,16 +596,17 @@ namespace Nooch.Common
             return memberAccountDetails;
         }
 
+
         public static bool RemoveSynapseBankLoginResultsForGivenMemberId(string memberId)
         {
-            Logger.Info("Common Helper -> GetSynapseBankAccountDetails Initiated - MemberId: [" + memberId + "]");
-
-            var id = Utility.ConvertToGuid(memberId);
-
-            var memberAccountDetails = _dbContext.SynapseBankLoginResults.Where(m => m.MemberId == id && m.IsDeleted == false).ToList();
+            Logger.Info("Common Helper -> RemoveSynapseBankLoginResultsForGivenMemberId Initiated - MemberId: [" + memberId + "]");
 
             try
             {
+                var id = Utility.ConvertToGuid(memberId);
+
+                var memberAccountDetails = _dbContext.SynapseBankLoginResults.Where(m => m.MemberId == id && m.IsDeleted == false).ToList();
+
                 foreach (SynapseBankLoginResult v in memberAccountDetails)
                 {
                     v.IsDeleted = true;
@@ -615,11 +616,13 @@ namespace Nooch.Common
 
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                Logger.Error("Common Helper -> RemoveSynapseBankLoginResultsForGivenMemberId FAILED - Exception: [" + ex + "]");
                 return false;
             }
         }
+
 
         /// <summary>
         /// Gets the user's Bank account details from SynapseBanksOfMembers Table in Nooch's DB.
@@ -1996,7 +1999,7 @@ namespace Nooch.Common
 
                         documents.social_docs = new synapseAddDocsV3InputClass_user_docs_doc[1];
                         documents.social_docs[0] = socialDocObj;
-                        
+
                         if (!hasFBID)
                         {
                             // If user has no FBID, still need to send an empty array to Synapse or else we get an error
@@ -4286,21 +4289,28 @@ namespace Nooch.Common
         public static List<string> getClientSecretId(string memId)
         {
             List<string> clientIds = new List<string>();
-            Member member = GetMemberDetails(memId);
+            try
+            {
+                Member member = GetMemberDetails(memId);
 
-            if (member.isRentScene == true)
-            {
-                string SynapseClientId = Utility.GetValueFromConfig("SynapseClientIdRentScene");
-                string SynapseClientSecret = Utility.GetValueFromConfig("SynapseClientSecretRentScene");
-                clientIds.Add(SynapseClientId);
-                clientIds.Add(SynapseClientSecret);
+                if (member.isRentScene == true)
+                {
+                    string SynapseClientId = Utility.GetValueFromConfig("SynapseClientIdRentScene");
+                    string SynapseClientSecret = Utility.GetValueFromConfig("SynapseClientSecretRentScene");
+                    clientIds.Add(SynapseClientId);
+                    clientIds.Add(SynapseClientSecret);
+                }
+                else
+                {
+                    string SynapseClientId = Utility.GetValueFromConfig("SynapseClientId");
+                    string SynapseClientSecret = Utility.GetValueFromConfig("SynapseClientSecret");
+                    clientIds.Add(SynapseClientId);
+                    clientIds.Add(SynapseClientSecret);
+                }
             }
-            else
+            catch (Exception ex)
             {
-                string SynapseClientId = Utility.GetValueFromConfig("SynapseClientId");
-                string SynapseClientSecret = Utility.GetValueFromConfig("SynapseClientSecret");
-                clientIds.Add(SynapseClientId);
-                clientIds.Add(SynapseClientSecret);
+                Logger.Error("Common Helper -> getClientSecretId FAILED - MemberID: [" + memId + "], Exception: [" + ex + "]");
             }
 
             return clientIds;

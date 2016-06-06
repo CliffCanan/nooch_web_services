@@ -630,80 +630,6 @@ namespace Nooch.Web.Controllers
         }
 
 
-        /// <summary>
-        /// Method for verifying bank MFA microdeposits - used only for a bank added with routing and account numbers.
-        /// </summary>
-        /// <param name="bank"></param>
-        /// <param name="memberid"></param>
-        /// <param name="MicroDepositOne"></param>
-        /// <param name="MicroDepositTwo"></param>
-        /// <param name="ba"></param>
-        /// <returns></returns>
-        [HttpPost]
-        [ActionName("MFALoginWithRoutingAndAccountNumber")]
-        //public SynapseBankLoginRequestResult MFALoginWithRoutingAndAccountNumber(string bank, string memberid, string MicroDepositOne, string MicroDepositTwo, string bankId)
-        public ActionResult MFALoginWithRoutingAndAccountNumber(string bank, string memberid, string MicroDepositOne, string MicroDepositTwo, string NodeId1)
-        {
-            SynapseBankLoginRequestResult res = new SynapseBankLoginRequestResult();
-
-            try
-            {
-                Logger.Info("NoochController -> MFALoginWithRoutingAndAccountNumber Initiated -> [MemberID: " + memberid + "], [Bank: " + bank + "]");
-
-                // preparing data for POST type request
-
-                var scriptSerializer = new JavaScriptSerializer();
-                string json;
-
-                SynapseV3VerifyNodeWithMicroDeposits_ServiceInput inpu = new SynapseV3VerifyNodeWithMicroDeposits_ServiceInput();
-                inpu.bankName = bank; // not required..keeping it for just in case we need something to do with it.
-                inpu.MemberId = memberid;
-                inpu.microDespositOne = MicroDepositOne;
-                inpu.microDespositTwo = MicroDepositTwo;
-                inpu.bankId = NodeId1;
-
-                try
-                {
-                    json = scriptSerializer.Serialize(inpu);
-
-                    string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-                    string serviceMethod = "/SynapseV3MFABankVerifyWithMicroDeposits";
-                    SynapseBankLoginRequestResult bnkloginresult = ResponseConverter<SynapseBankLoginRequestResult>.CallServicePostMethod(String.Concat(serviceUrl, serviceMethod), json);
-
-                    if (bnkloginresult.Is_success == true)
-                    {
-                        res.Is_success = true;
-                        res.Is_MFA = bnkloginresult.Is_MFA;
-                        res.SynapseBanksList = bnkloginresult.SynapseBanksList;
-                        res.SynapseQuestionBasedResponse = bnkloginresult.SynapseQuestionBasedResponse;
-                        res.ERROR_MSG = "OK";
-                    }
-                    else
-                    {
-                        Logger.Error("NoochController -> MFALoginWithRoutingAndAccountNumber FAILED -> [Error Msg: " + bnkloginresult.ERROR_MSG +
-                                               "], [MemberID: " + memberid + "], [Bank: " + bank + "]");
-                        res.Is_success = false;
-                        res.ERROR_MSG = bnkloginresult.ERROR_MSG;
-                    }
-                }
-                catch (Exception ec)
-                {
-                    res.Is_success = false;
-                    res.ERROR_MSG = "";
-                    Logger.Error("NoochController -> MFALoginWithRoutingAndAccountNumber FAILED - [MemberID: " + memberid +
-                                  "], [Exception: " + ec + "]");
-                }
-            }
-            catch (Exception we)
-            {
-                Logger.Error("NoochController -> MFALoginWithRoutingAndAccountNumber FAILED - [MemberID: " + memberid +
-                                   "], [Exception: " + we + "]");
-            }
-
-            return Json(res);
-        }
-
-
         [HttpPost]
         [ActionName("SetDefaultBank")]
         public ActionResult SetDefaultBank(setDefaultBankInput input)
@@ -2016,83 +1942,6 @@ namespace Nooch.Web.Controllers
         }
 
 
-        // CLIFF (5/25/16): Commenting out this method because it is almost a duplicate of SaveMemberInfo() above
-        //                  Couple minor differences I still need to account for above, but once finished I will delete this block.
-        /*[HttpPost]
-        [ActionName("CreateAccountInDB")]
-        public ActionResult CreateAccountInDB(ResultcreateAccount userData)
-        {
-            Logger.Info("Create Account Code-Behind -> CreateAccountInDB Initiated - MemberID: [" + userData.memId +
-                        "], Name: [" + userData.name + "], Email: [" + userData.email +
-                        "], Phone: [" + userData.phone + "], DOB: [" + userData.dob +
-                        "], SSN: [" + userData.ssn + "], Address: [" + userData.address +
-                        "], IP: [" + userData.ip + "], Is Image Sent: [" + userData.isIdImage + "]");
-
-            genericResponse res = new genericResponse();
-            res.success = false;
-            res.msg = "Initial - code behind";
-
-            try
-            {
-                string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-                string serviceMethod = "/RegisterNonNoochUserWithSynapse";
-                string urlToUse = String.Concat(serviceUrl, serviceMethod);
-
-                // Member DOES NOT already exist, so use RegisterNONNOOCHUserWithSynapse()
-                RegisterUserWithSynapseV3_InputClass inputClass = new RegisterUserWithSynapseV3_InputClass();
-                inputClass.fullname = userData.name;
-                inputClass.email = userData.email;
-                inputClass.phone = userData.phone;
-                inputClass.address = userData.address;
-                inputClass.zip = userData.zip;
-                inputClass.dob = userData.dob;
-                inputClass.ssn = userData.ssn;
-                inputClass.fngprnt = userData.fngprnt;
-                inputClass.ip = userData.ip;
-                inputClass.idImageData = userData.idImagedata;
-                inputClass.isIdImageAdded = userData.isIdImage;
-                inputClass.pw = userData.pw;
-                inputClass.transId = userData.transId;
-
-                var scriptSerializer = new JavaScriptSerializer();
-                string json = scriptSerializer.Serialize(inputClass);
-
-                RegisterUserSynapseResultClassExt regUserResponse = ResponseConverter<RegisterUserSynapseResultClassExt>.CallServicePostMethod(String.Concat(serviceUrl, serviceMethod), json);
-
-                Logger.Info("Create Account Code-Behind -> CreateAccountInDB RESULT: [" + Json(regUserResponse) + "]");
-
-                if (regUserResponse.success == "True")
-                {
-                    res.success = true;
-                    res.msg = "Successfully updated member record on server!";
-                }
-                else
-                {
-                    res.msg = regUserResponse.reason;
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.Error("Create Account Code-Behind -> CreateAccountInDB FAILED - MemberID: [" + userData.memId + "], Exception: [" + ex.Message + "]");
-                res.msg = "Code-behind exception during saveMemberInfo";
-            }
-
-            return Json(res);
-
-            // checkEmailMsg.Visible = true;
-            // if (serviceResult.Result == "Thanks for registering! Check your email to complete activation.")
-            // {
-            //    transResult.Text = serviceResult.Result;
-            // } 
-            // else {
-            //    transResult.Visible = true;
-            //    transResult.Text = serviceResult.Result;
-            //    checkEmailMsg.Visible = true;
-            // }
-        }*/
-
-
-
         [HttpPost]
         [ActionName("submit2FAPin")]
         public ActionResult submit2FAPin(submitValidationPin userData)
@@ -3302,6 +3151,8 @@ namespace Nooch.Web.Controllers
         }
 
 
+        #region Micro-Deposit Verification Page
+
         // MemberId here is plane memberId =- non encrypted
         // NodeId is Id from SynapseBanksOfMembers table - non encrypted
         public ActionResult MicroDepositsVerification(string mid, string NodeId, bool? IsRs)
@@ -3334,7 +3185,6 @@ namespace Nooch.Web.Controllers
                 {
                     // Get Bank Info from server
                     MicroDeposit = GetBankDetailsForMicroDepositVerification(mid.Trim());
-                    MicroDeposit.NodeId1 = NodeId;
                 }
 
                 if (IsRs == true) // if this flag is in the URL, then force RS branding, regardless of server response
@@ -3346,10 +3196,8 @@ namespace Nooch.Web.Controllers
             catch (Exception ex)
             {
                 Response.Write("<script>var errorFromCodeBehind = '1';</script>");
-
                 Logger.Error("MicroDepositsVerification CodeBehind -> page_load OUTER EXCEPTION - [Exception: " + ex.Message + "]");
             }
-
 
             ViewData["OnLoadData"] = MicroDeposit;
             return View();
@@ -3366,14 +3214,11 @@ namespace Nooch.Web.Controllers
             string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
             string serviceMethod = "/GetMemberInfoForMicroDepositPage?memberId=" + memberId;
 
-            //Logger.Info("payRequest CodeBehind -> GetTransDetails - URL to query: [" + String.Concat(serviceUrl, serviceMethod) + "]");
-
             SynapseV3VerifyNodeWithMicroDeposits_ServiceInput details = ResponseConverter<SynapseV3VerifyNodeWithMicroDeposits_ServiceInput>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
 
             if (details == null)
             {
                 Logger.Error("payRequest CodeBehind -> GetTransDetails FAILED - Transaction Not Found - TransactionId: [" + memberId + "]");
-
                 rpr.errorMsg = "Unable to find bank record";
             }
             else
@@ -3385,7 +3230,59 @@ namespace Nooch.Web.Controllers
         }
 
 
+        /// <summary>
+        /// For verifying bank MFA microdeposits - used only for a bank added with routing and account numbers.
+        /// </summary>
+        /// <param name="bank"></param>
+        /// <param name="memberid"></param>
+        /// <param name="MicroDepositOne"></param>
+        /// <param name="MicroDepositTwo"></param>
+        /// <param name="NodeId1"></param>
+        /// <returns></returns>
+        [HttpPost]
+        [ActionName("MFALoginWithRoutingAndAccountNumber")]
+        //public SynapseBankLoginRequestResult MFALoginWithRoutingAndAccountNumber(string bank, string memberid, string MicroDepositOne, string MicroDepositTwo, string bankId)
+        public ActionResult MFALoginWithRoutingAndAccountNumber(string bank, string memberid, string MicroDepositOne, string MicroDepositTwo, string NodeId1)
+        {
+            SynapseBankLoginRequestResult res = new SynapseBankLoginRequestResult();
+            res.Is_success = false;
 
+            try
+            {
+                Logger.Info("NoochController -> MFALoginWithRoutingAndAccountNumber Initiated -> [MemberID: " + memberid + "], [Bank: " + bank + "]");
+
+                SynapseV3VerifyNodeWithMicroDeposits_ServiceInput inpu = new SynapseV3VerifyNodeWithMicroDeposits_ServiceInput();
+                inpu.bankName = bank; // not required..keeping it for just in case we need something to do with it.
+                inpu.MemberId = memberid;
+                inpu.microDespositOne = MicroDepositOne;
+                inpu.microDespositTwo = MicroDepositTwo;
+                inpu.bankId = NodeId1;
+
+                // preparing data for POST type request
+                var scriptSerializer = new JavaScriptSerializer();
+                string json = scriptSerializer.Serialize(inpu);
+
+                string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+                string serviceMethod = "/SynapseV3MFABankVerifyWithMicroDeposits";
+
+                res = ResponseConverter<SynapseBankLoginRequestResult>.CallServicePostMethod(String.Concat(serviceUrl, serviceMethod), json);
+
+                if (res.Is_success != true)
+                {
+                    Logger.Error("NoochController -> MFALoginWithRoutingAndAccountNumber FAILED -> [Error Msg: " + res.ERROR_MSG +
+                                 "], [MemberID: " + memberid + "], [Bank: " + bank + "]");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("NoochController -> MFALoginWithRoutingAndAccountNumber FAILED - [MemberID: " + memberid +
+                             "], [Exception: " + ex + "]");
+            }
+
+            return Json(res);
+        }
+
+        #endregion Micro-Deposit Verification Page
     }
 
 

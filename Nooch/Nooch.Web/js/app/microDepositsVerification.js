@@ -56,8 +56,8 @@ function SubmitInfo()
 {
     console.log('SubmitInfo fired');
 
-    if ($('#MicroDepositOne').val().length == 2) {
-
+    if ($('#MicroDepositOne').val().length == 2)
+    {
         $("#Submit").text('Submitting...');
         $('#Submit').attr('disabled', 'disabled');
 
@@ -66,24 +66,21 @@ function SubmitInfo()
         var MemberId = $('#MemberId').val().trim();
         var MicroDepositOne = dot + $('#MicroDepositOne').val().trim();
         var MicroDepositTwo = dot + $('#MicroDepositTwo').val().trim();
-        //var MicroDepositOne = $('#MicroDepositOne').val();
-        //var MicroDepositTwo = $('#MicroDepositTwo').val();
         var NodeId1 = $('#NodeId1').val();
         var BankName = $('#BankName').val();
 
 
         console.log("SAVE MEMBER INFO -> {IsRs: " + IsRs +
-                                       ", MemberId: " + MemberId +
-                                       ", MicroDepositOne: " + MicroDepositOne +
-                                        ", MicroDepositTwo: " + MicroDepositTwo +
+                                         ", MemberId: " + MemberId +
+                                         ", MicroDepositOne: " + MicroDepositOne +
+                                         ", MicroDepositTwo: " + MicroDepositTwo +
                                          ", BankName: " + BankName +
-                                       ", NodeId1 " + NodeId1 + "}");
+                                         ", NodeId1 " + NodeId1 + "}");
 
 
         $.ajax({
             type: "POST",
             url: "MFALoginWithRoutingAndAccountNumber",
-            //url: $('#SynapseV3MFABankVerifyWithMicroDepositsUrl').val(),
             data: "{  'Bank':'" + BankName +
                  "', 'MemberId':'" + MemberId +
                  "', 'MicroDepositOne':'" + MicroDepositOne +
@@ -97,16 +94,16 @@ function SubmitInfo()
             cache: "false",
             success: function (result)
             {
-                console.log("SUCCESS -> Save Member Info result is... [next line]");
+                console.log("SUCCESS -> MFALoginWithRoutingAndAccountNumber result is... [next line]");
                 console.log(result);
                 resultReason = result.msg;
 
                 $("#Submit").text('Submit');
                 $('#Submit').removeAttr("disabled");
 
-                if (result.Is_success == true) {
+                if (result.Is_success == true)
+                {
                     console.log("Success == true");
-
 
                     // THEN DISPLAY SUCCESS ALERT...
                     swal({
