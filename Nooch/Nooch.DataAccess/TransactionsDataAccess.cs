@@ -3332,7 +3332,7 @@ namespace Nooch.DataAccess
                     {
                         iPForTransaction = "54.148.37.21"; // Nooch's Server IP as default
                     }
-
+                    string webhooklink = Utility.GetValueFromConfig("NoochWebHookURL")+suppID_or_transID;
                     SynapseV3AddTransInput_trans_extra extraMain = new SynapseV3AddTransInput_trans_extra()
                     {
                         // This is where we put the ACH memo (customized for Landlords, but just the same template for regular P2P transfers: "Nooch Payment {LNAME SENDER} / {LNAME RECIPIENT})
@@ -3341,8 +3341,8 @@ namespace Nooch.DataAccess
                         note = "NOOCH PAYMENT // " + senderLastName + " / " + recipientLastName,
                         supp_id = suppID_or_transID,
                         process_on = 0, // this should be > than 0 I guess... CLIFF: I don't think so, it's an optional parameter, but we always want it to process immediately, so I guess it should always be 0
-                        ip = iPForTransaction // CLIFF:  This is actually required. It should be the most recent IP address of the SENDER, or if none found, then '54.148.37.21'
-                        //webhook = "",
+                        ip = iPForTransaction, // CLIFF:  This is actually required. It should be the most recent IP address of the SENDER, or if none found, then '54.148.37.21'
+                        webhook = webhooklink
                     };
                     transMain.extra = extraMain;
 
