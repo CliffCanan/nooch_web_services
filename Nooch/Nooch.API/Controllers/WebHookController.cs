@@ -50,7 +50,7 @@ namespace Nooch.API.Controllers
                             {
                                 TransactionsStatusAtSynapse tas = new TransactionsStatusAtSynapse();
                                 tas.Nooch_Transaction_Id = transId;
-                                tas.Transaction_oid = transIdFromSyanpse.ToString();
+                                tas.Transaction_oid = transIdFromSyanpse==null ? "" : transIdFromSyanpse.ToString();
                                 tas.status = status;
                                 tas.status_date = status_date;
                                 tas.status_id = status_id;
@@ -69,7 +69,7 @@ namespace Nooch.API.Controllers
             }
             catch (Exception ex)
             {
-                Logger.Info("GetTransactionStatusFromSynapse [ WebHook ] saved to save in db for TransactionId : [ " + transId + " ]. At [ " + DateTime.Now + " ]. With Request Body [ " + jsonContent + " ]. Exception -> [ " + ex + " ].");
+                Logger.Error("GetTransactionStatusFromSynapse [ WebHook ] failed to save in db for TransactionId : [ " + transId + " ]. At [ " + DateTime.Now + " ]. Exception -> [ " + ex + " ].");
 
             }
 

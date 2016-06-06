@@ -44,7 +44,7 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
     {
         public string supp_id { get; set; }
         public string note { get; set; }
-        //public string webhook { get; set; }  -- synapse throwing errors with it.
+        public string webhook { get; set; }
         public int process_on { get; set; }
         public string ip { get; set; }
     }
