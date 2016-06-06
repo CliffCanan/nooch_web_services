@@ -3185,6 +3185,7 @@ namespace Nooch.Web.Controllers
                 {
                     // Get Bank Info from server
                     MicroDeposit = GetBankDetailsForMicroDepositVerification(mid.Trim());
+                    MicroDeposit.NodeId1 = NodeId; //Node Id get replaced with database nodeId thats wht I have put this code again
                 }
 
                 if (IsRs == true) // if this flag is in the URL, then force RS branding, regardless of server response

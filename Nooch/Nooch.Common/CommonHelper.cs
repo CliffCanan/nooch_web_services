@@ -21,6 +21,7 @@ using Nooch.Common.Resources;
 using Nooch.Common.Rules;
 using Nooch.Data;
 using Nooch.Common.Entities.LandingPagesRelatedEntities;
+using System.Web.Mvc;
 using synapseIdVerificationQuestionAnswerSet = Nooch.Common.Entities.SynapseRelatedEntities.synapseIdVerificationQuestionAnswerSet;
 
 
@@ -4314,6 +4315,143 @@ namespace Nooch.Common
             }
 
             return clientIds;
+        }
+
+        public static CancelTransactionAtSynapseResult CancelTransactionAtSynapse(bool IsRentScene, string TransationId, int Id, string MemberId)
+        {           
+            Logger.Info("CancelTransactionAtSynapse -> - TransationId: [" + TransationId + "], IsRentScene: [" + IsRentScene + "]");
+
+            TransactionsStatusAtSynapse transactionsStatusAtSynapse = new TransactionsStatusAtSynapse();
+
+            CancelTransactionAtSynapseResult CancelTransaction = new CancelTransactionAtSynapseResult();
+          
+            try
+            {
+                if ((IsRentScene != true) || (IsRentScene == null))
+                {
+                    Logger.Error("CancelTransactionAtSynapse CodeBehind  -> Page_load - IsRentScene is: [" + IsRentScene + "]");
+                    CancelTransaction.errorMsg = "Missing IsRentScene or its false";
+                }
+
+                if (String.IsNullOrEmpty(TransationId))
+                {
+                    Logger.Error("CancelTransactionAtSynapse CodeBehind -> Page_load - TransationId is: [" + TransationId + "]");
+                    CancelTransaction.errorMsg = "Missing TransationId";
+                }
+                if (Id == null)
+                {
+                    Logger.Error("CancelTransactionAtSynapse CodeBehind -> Page_load - Id is: [" + Id + "]");
+                    CancelTransaction.errorMsg = "Missing Id";
+                }             
+
+                if (String.IsNullOrEmpty(CancelTransaction.errorMsg))
+                {
+                    transactionsStatusAtSynapse = getTransationDetailsAtSynapse(TransationId, Id);             
+                                        
+                }
+                if (transactionsStatusAtSynapse == null )
+                {
+                    CancelTransaction.errorMsg = "Transation Not Found";
+                    return CancelTransaction;
+                }
+                if ((transactionsStatusAtSynapse.status == "QUEUED-BY-SYNAPSE") ||(transactionsStatusAtSynapse.status == "QUEUED-BY-RECEIVER") ||(transactionsStatusAtSynapse.status ==  "CREATED" ))
+                {
+                    var MemberObj = GetMemberDetails(MemberId);
+                    var OauthObj = GetSynapseCreateaUserDetails(MemberId);
+
+                     string baseAddress = "";
+                     baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/trans/cancel" : "https://synapsepay.com/api/v3/trans/cancel";
+                 
+
+              CancelTransactionClass rootObject = new CancelTransactionClass
+                {
+                    login = new Login1 { oauth_key = GetDecryptedData(OauthObj.access_token) },
+                    trans = new Trans { _id = new _ID { oid = OauthObj.user_id } },
+                    user = new User1 { fingerprint = MemberObj.UDID1 }                    
+                };                                     
+
+                var http = (HttpWebRequest)WebRequest.Create(new Uri(baseAddress));
+                http.Accept = "application/json";
+                http.ContentType = "application/json";
+                http.Method = "POST";
+
+                string parsedContent = JsonConvert.SerializeObject(rootObject);
+                ASCIIEncoding encoding = new ASCIIEncoding();
+                Byte[] bytes = encoding.GetBytes(parsedContent);
+
+                Stream newStream = http.GetRequestStream();
+                newStream.Write(bytes, 0, bytes.Length);
+                newStream.Close();
+
+                try
+                {
+                    var response = http.GetResponse();
+                    var stream = response.GetResponseStream();
+                    var sr = new StreamReader(stream);
+                    var content = sr.ReadToEnd();
+
+                    JObject checkPermissionResponse = JObject.Parse(content);
+
+                    if (checkPermissionResponse["success"] != null &&
+                        Convert.ToBoolean(checkPermissionResponse["success"]) == true)
+                    {
+                        CancelTransaction.IsSuccess = true;
+                        CancelTransaction.Message = "Transation cancelled successfully.";
+                    }
+                    else
+                    {
+                        CancelTransaction.IsSuccess = false;
+                        CancelTransaction.Message = "Error while cancelling transations";
+                    }
+                }
+                catch (WebException we)
+                {
+                    Logger.Error("Common Helper -> CancelTransactionAtSynapse - TransationId: [" + TransationId + "] - Id: [" + Id + "] - Error: [" + we + "]");
+                    CancelTransaction.IsSuccess = false;
+                    CancelTransaction.Message = "Error cancelling Transation.";
+                }
+                }
+                else
+                {
+                   CancelTransaction.errorMsg = "Transation can't be cancelled, its already done";
+                   return CancelTransaction;
+                }
+                
+               
+            }
+            catch (Exception ex)
+            {
+               // Response.Write("<script>var errorFromCodeBehind = '1';</script>");
+                Logger.Error("CancelTransactionAtSynapse CodeBehind -> page_load OUTER EXCEPTION - [Exception: " + ex.Message + "]");
+            }
+
+            return CancelTransaction;
+            
+        }
+
+        public static TransactionsStatusAtSynapse getTransationDetailsAtSynapse(string TransationId, int Id)
+        {
+            TransactionsStatusAtSynapse transactionsStatusAtSynapse = new TransactionsStatusAtSynapse();
+            
+             {
+            try
+            {
+               transactionsStatusAtSynapse = _dbContext.TransactionsStatusAtSynapses.FirstOrDefault(m => m.Nooch_Transaction_Id == TransationId && m.Id == Id);
+
+                if (transactionsStatusAtSynapse != null)
+                {
+                    _dbContext.Entry(transactionsStatusAtSynapse).Reload();
+                    return transactionsStatusAtSynapse;
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Common Helper -> getTransationDetailsAtSynapse FAILED - Exception: [" + ex.Message + "]");
+            }
+            return null;
+        }
+
+
         }
     }
 }
