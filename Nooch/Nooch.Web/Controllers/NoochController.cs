@@ -873,6 +873,29 @@ namespace Nooch.Web.Controllers
         }
 
 
+        /// <summary>
+        /// We can assume that only Non-Nooch users will be triggering this method b/c if they were an existing user,
+        /// the payment would have just gone to Synapse and this user wouldn't need to take any action like an existing
+        /// user who receives a Request, who has to decide whether to Pay or Reject the Request.
+        /// </summary>
+        /// <param name="transId"></param>
+        /// <param name="memberId"></param>
+        /// <param name="userEm"></param>
+        /// <param name="userPh"></param>
+        /// <param name="userName"></param>
+        /// <param name="userPw"></param>
+        /// <param name="ssn"></param>
+        /// <param name="dob"></param>
+        /// <param name="address"></param>
+        /// <param name="zip"></param>
+        /// <param name="fngprnt"></param>
+        /// <param name="ip"></param>
+        /// <param name="cip"></param>
+        /// <param name="fbid"></param>
+        /// <param name="isRentScene"></param>
+        /// <param name="isIdImage"></param>
+        /// <param name="idImagedata"></param>
+        /// <returns></returns>
         public ActionResult RegisterUserWithSynpForDepositMoney(string transId, string memberId, string userEm, string userPh, string userName,
                                                                 string userPw, string ssn, string dob, string address, string zip, string fngprnt,
                                                                 string ip, string cip, string fbid, bool isRentScene, string isIdImage = "0", string idImagedata = "")
@@ -1495,7 +1518,6 @@ namespace Nooch.Web.Controllers
 
                 string serviceMethod = "";
                 var scriptSerializer = new JavaScriptSerializer();
-                string json = "";
 
                 RegisterUserWithSynapseV3_Input inputClass = new RegisterUserWithSynapseV3_Input();
                 inputClass.address = address;
@@ -1528,7 +1550,7 @@ namespace Nooch.Web.Controllers
                     serviceMethod = "/RegisterNonNoochUserWithSynapse";
                 }
 
-                json = scriptSerializer.Serialize(inputClass);
+                string json = scriptSerializer.Serialize(inputClass);
 
                 Logger.Info("PayRequest Code-Behind -> RegisterUserWithSynpForPayRequest - Full Query String: [ " + String.Concat(serviceUrl, serviceMethod) + " ]");
 
@@ -1770,7 +1792,7 @@ namespace Nooch.Web.Controllers
                 {
                     Logger.Info("createAccount CodeBehind -> Page_load Initiated - Is a RentScene Payment: [" + Request.QueryString["rs"] + "]");
 
-                    rca.rs = Request.QueryString["rs"].ToLower() == "true" || Request.QueryString["rs"].ToLower() == "yes" ? "true" : "false";
+                    rca.rs = (Request.QueryString["rs"].ToLower() == "true" || Request.QueryString["rs"].ToLower() == "yes") ? "true" : "false";
                 }
 
                 if (!String.IsNullOrEmpty(Request.QueryString["TransId"]))
@@ -3362,7 +3384,7 @@ namespace Nooch.Web.Controllers
             return rpr;
         }
 
-       
+
 
     }
 

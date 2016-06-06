@@ -1713,7 +1713,7 @@ namespace Nooch.Common
         /// <returns></returns>
         public static submitIdVerificationInt sendDocsToSynapseV3(string MemberId)
         {
-            Logger.Info("Common Helper -> sendDocsToSynapseV3 Initialized - [MemberId: " + MemberId + "]");
+            Logger.Info("Common Helper -> sendDocsToSynapseV3 Initiated - [MemberId: " + MemberId + "]");
 
             submitIdVerificationInt res = new submitIdVerificationInt();
             res.success = false;
@@ -1726,9 +1726,9 @@ namespace Nooch.Common
             {
                 var userNameDecrypted = GetDecryptedData(memberEntity.UserName);
 
-                // Cliff (6/2/16): commenting out the check for if the user already has isVerifiedWithSynapse = true.
-                //                 Even verified users might need to send another document, so we might as well run this methond fully for
-                //                 any user - unless there is missing data.
+                // Cliff (6/2/16): commenting out the check if the user already has isVerifiedWithSynapse = true.
+                //                 Even verified users might need to send another document, so we might as well
+                //                 run this methond fully for any user - unless there is missing data.
                 //if (memberEntity.IsVerifiedWithSynapse != true)
                 //{
                 #region Check User For All Required Data
@@ -1776,7 +1776,7 @@ namespace Nooch.Common
                     }
                     else
                     {
-                        usersFingerprint = memberEntity.UDID1;
+                        usersFingerprint = memberEntity.UDID1; // (Not Encrypted)
                     }
                     // Check for Address
                     if (String.IsNullOrEmpty(memberEntity.Address))
@@ -1786,7 +1786,7 @@ namespace Nooch.Common
                     }
                     else
                     {
-                        usersAddress = GetDecryptedData(memberEntity.Address);
+                        usersAddress = GetDecryptedData(memberEntity.Address); // (Encrypted)
                     }
                     // Check for ZIP
                     if (String.IsNullOrEmpty(memberEntity.Zipcode))
@@ -1796,12 +1796,12 @@ namespace Nooch.Common
                     }
                     else
                     {
-                        usersZip = GetDecryptedData(memberEntity.Zipcode);
+                        usersZip = GetDecryptedData(memberEntity.Zipcode); // (Encrypted)
                     }
                     // Check for City
                     if (String.IsNullOrEmpty(memberEntity.City))
                     {
-                        // Missing City, so if use does have a ZIP, try getting the City & States from Google
+                        // Missing City, so if user has a ZIP, try getting the City & States from Google
                         if (!String.IsNullOrEmpty(usersZip))
                         {
                             var googleMapsRes = GetStateNameByZipcode(usersZip);
@@ -1824,7 +1824,7 @@ namespace Nooch.Common
                     }
                     else
                     {
-                        usersCity = GetDecryptedData(memberEntity.City);
+                        usersCity = GetDecryptedData(memberEntity.City); // (Encrypted)
                     }
                     if (String.IsNullOrEmpty(memberEntity.State) && String.IsNullOrEmpty(usersState))
                     {
@@ -1849,9 +1849,9 @@ namespace Nooch.Common
                     }
                     else
                     {
-                        usersPhone = memberEntity.ContactNumber;
+                        usersPhone = memberEntity.ContactNumber; // (Not Encrypted)
                     }
-                    // Check for Date Of Birth (Not encrypted)
+                    // Check for Date Of Birth
                     if (memberEntity.DateOfBirth == null)
                     {
                         isMissingSomething = true;
@@ -1859,7 +1859,7 @@ namespace Nooch.Common
                     }
                     else
                     {
-                        usersDob = Convert.ToDateTime(memberEntity.DateOfBirth);
+                        usersDob = Convert.ToDateTime(memberEntity.DateOfBirth); // (Not Encrypted)
                         // We have DOB, now we must parse it into day, month, & year
                         usersDobDay = usersDob.Day;
                         usersDobMonth = usersDob.Month;
@@ -1874,12 +1874,12 @@ namespace Nooch.Common
                     }
                     if (!String.IsNullOrEmpty(memberEntity.SSN))
                     {
-                        usersSsn = GetDecryptedData(memberEntity.SSN);
+                        usersSsn = GetDecryptedData(memberEntity.SSN); // (Encrypted)
                         hasSSN = true;
                     }
                     if (!String.IsNullOrEmpty(memberEntity.FacebookUserId))
                     {
-                        usersFBID = memberEntity.FacebookUserId;
+                        usersFBID = memberEntity.FacebookUserId; // (Not Encrypted)
                         hasFBID = true;
                     }
                     // Now check for ID verification document (Checking the one in the Members Table here -
@@ -1945,7 +1945,7 @@ namespace Nooch.Common
                     #region Call Synapse V3 /user/doc/add API
 
                     synapseAddDocsV3InputClass synapseAddDocsV3Input = new synapseAddDocsV3InputClass();
-                   
+
                     SynapseV3Input_login login = new SynapseV3Input_login();
                     login.oauth_key = usersSynapseOauthKey;
 
@@ -1966,7 +1966,7 @@ namespace Nooch.Common
                     documents.address_postal_code = usersZip;
                     documents.address_country_code = "US";
 
- 
+
                     #region Set All Document Values
 
                     try
@@ -1976,57 +1976,31 @@ namespace Nooch.Common
 
                         // VIRTUAL DOCS: Synapse lists 6 acceptable "virtual_docs" types: SSN, PASSPORT #, DRIVERS_LICENSE #, PERSONAL_IDENTIFICATION # (not sure what this is), TIN #, DUNS #
                         //               But we are only going to use SSN. For any business users, we will also need to use TIN (Tax ID) #.
-                        // Check if user has SSN
-                        if (hasSSN)
+                        synapseAddDocsV3InputClass_user_docs_doc virtualDocObj = new synapseAddDocsV3InputClass_user_docs_doc();
+                        virtualDocObj.document_type = "SSN"; // This can also be "PASSPORT" or "DRIVERS_LICENSE"... we need to eventually support all 3 options (Rent Scene has international clients that don't have SSN but do have a Passport)
+                        virtualDocObj.document_value = usersSsn; // Can also be the user's Passport # or DL #
+
+                        documents.virtual_docs = new synapseAddDocsV3InputClass_user_docs_doc[1];
+                        documents.virtual_docs[0] = virtualDocObj;
+
+                        if (!hasSSN)
                         {
-                            synapseAddDocsV3InputClass_user_docs_doc virtualDocObj = new synapseAddDocsV3InputClass_user_docs_doc();
-                            virtualDocObj.document_type = "SSN"; // This can also be "PASSPORT" or "DRIVERS_LICENSE"... we need to eventually support all 3 options (Rent Scene has international clients that don't have SSN but do have a Passport)
-                            virtualDocObj.document_value = (memberEntity.MemberId.ToString().ToLower() == "b3a6cf7b-561f-4105-99e4-406a215ccf60") ? "195-70-7562" : usersSsn; // Can also be the user's Passport # or DL #
-
-                            documents.virtual_docs = new synapseAddDocsV3InputClass_user_docs_doc[1];
-                            documents.virtual_docs[0] = virtualDocObj;
-
-                          
-
-                        }
-                        else
-                        {
-                            synapseAddDocsV3InputClass_user_docs_doc virtualDocObj = new synapseAddDocsV3InputClass_user_docs_doc();
-                            virtualDocObj.document_type = "SSN"; // This can also be "PASSPORT" or "DRIVERS_LICENSE"... we need to eventually support all 3 options (Rent Scene has international clients that don't have SSN but do have a Passport)
-                            virtualDocObj.document_value = (memberEntity.MemberId.ToString().ToLower() == "b3a6cf7b-561f-4105-99e4-406a215ccf60") ? "195-70-7562" : usersSsn; // Can also be the user's Passport # or DL #
-
-                            documents.virtual_docs = new synapseAddDocsV3InputClass_user_docs_doc[1];
-                            documents.virtual_docs[0] = virtualDocObj;
+                            // If user has no SSN, still need to send an empty array to Synapse or else we get an error
                             documents.virtual_docs = documents.virtual_docs.Where(val => val.document_value != virtualDocObj.document_value).ToArray();
-                            
                         }
-
-
 
                         // SOCIAL DOCS: Send Facebook Profile URL by appending user's FBID to base FB URL
-                        if (hasFBID)
+                        synapseAddDocsV3InputClass_user_docs_doc socialDocObj = new synapseAddDocsV3InputClass_user_docs_doc();
+                        socialDocObj.document_type = "FACEBOOK";
+                        socialDocObj.document_value = "https://www.facebook.com/" + usersFBID;
+
+                        documents.social_docs = new synapseAddDocsV3InputClass_user_docs_doc[1];
+                        documents.social_docs[0] = socialDocObj;
+                        
+                        if (!hasFBID)
                         {
-                            synapseAddDocsV3InputClass_user_docs_doc socialDocObj = new synapseAddDocsV3InputClass_user_docs_doc();
-                            socialDocObj.document_type = "FACEBOOK";
-                            socialDocObj.document_value = "https://www.facebook.com/" + usersFBID;
-
-                            documents.social_docs = new synapseAddDocsV3InputClass_user_docs_doc[1];
-                            documents.social_docs[0] = socialDocObj;
-
-                       
-                        }
-
-                        else
-                        {
-                            synapseAddDocsV3InputClass_user_docs_doc socialDocObj = new synapseAddDocsV3InputClass_user_docs_doc();
-                            socialDocObj.document_type = "FACEBOOK";
-                            socialDocObj.document_value = "https://www.facebook.com/" + usersFBID;
-
-                            documents.social_docs = new synapseAddDocsV3InputClass_user_docs_doc[1];
-                            documents.social_docs[0] = socialDocObj;
-
+                            // If user has no FBID, still need to send an empty array to Synapse or else we get an error
                             documents.social_docs = documents.social_docs.Where(val => val.document_value != socialDocObj.document_value).ToArray();
-
                         }
 
                         // PHYSICAL DOCS: Send User's Photo ID if available
@@ -2049,9 +2023,8 @@ namespace Nooch.Common
                             documents.physical_docs[0] = physicalDocObj;
 
                             documents.physical_docs = documents.physical_docs.Where(val => val.document_value != physicalDocObj.document_value).ToArray();
-
                         }
-                       
+
                     }
                     catch (Exception ex)
                     {
@@ -2071,9 +2044,6 @@ namespace Nooch.Common
                     synapseAddDocsV3Input.login = login;
                     synapseAddDocsV3Input.user = user;
 
-                     
-
-                     
 
                     string baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox"))
                                          ? "https://sandbox.synapsepay.com/api/v3/user/docs/add"
@@ -2109,16 +2079,10 @@ namespace Nooch.Common
                     http.Accept = "application/json";
                     http.ContentType = "application/json";
                     http.Method = "POST";
-                  
-                    string parsedContent;
-                    
-                   // if(hasPhotoID)
-                        parsedContent = JsonConvert.SerializeObject(synapseAddDocsV3Input);
-                    //else
-                    //    parsedContent = JsonConvert.SerializeObject(synapseAddDocsV3Input_NoPhysicalDoc);
-                     
-                    
-                        ASCIIEncoding encoding = new ASCIIEncoding();
+
+                    string parsedContent = JsonConvert.SerializeObject(synapseAddDocsV3Input);
+
+                    ASCIIEncoding encoding = new ASCIIEncoding();
                     Byte[] bytes = encoding.GetBytes(parsedContent);
 
                     Stream newStream = http.GetRequestStream();
@@ -2154,8 +2118,7 @@ namespace Nooch.Common
 
                         if (synapseResponse.success == true)
                         {
-                            // Great, we have at least partial success. Now check if further verification is needed by checking if Synapse returned a 'question_set' object.
-                            Logger.Info("Common Helper -> sendDocsToSynapseV3 - Synapse returned SUCCESS = TRUE. Now checking if additional Verification questions are required...");
+                            // Great, we have at least partial success
 
                             #region Update Permission in SynapseCreateUserResults Table
 
@@ -2173,8 +2136,17 @@ namespace Nooch.Common
                                     synapseRes.virtual_doc = synapseResponse.user.doc_status != null ? synapseResponse.user.doc_status.virtual_doc : null;
                                     synapseRes.extra_security = synapseResponse.user.extra.extra_security != null ? synapseResponse.user.extra.extra_security.ToString() : null;
 
-                                    _dbContext.SaveChanges();
+                                    int save = _dbContext.SaveChanges();
                                     _dbContext.Entry(synapseRes).Reload();
+
+                                    if (save > 0)
+                                    {
+                                        Logger.Info("Common Helper -> sendDocsToSynapseV3 - SUCCESS response form Synapse - And Successfully updated user's record in SynapseCreateUserRes Table");
+                                    }
+                                    else
+                                    {
+                                        Logger.Error("Common Helper -> sendDocsToSynapseV3 - SUCCESS response form Synapse - But FAILED to update user's record in SynapseCreateUserRes Table");
+                                    }
                                 }
                             }
                             catch (Exception ex)
@@ -2185,11 +2157,14 @@ namespace Nooch.Common
 
                             #endregion Update Permission in CreateSynapseUserResults Table
 
+                            // Now check if further verification is needed by checking if Synapse returned a 'question_set' object.
+                            Logger.Info("Common Helper -> sendDocsToSynapseV3 - Synapse returned SUCCESS = TRUE. Now checking if additional Verification questions are required...");
+
                             res.success = true;
 
                             if (synapseResponse.user.documents != null &&
                                 synapseResponse.user.documents[0].virtual_docs != null &&
-                                synapseResponse.user.documents[0].virtual_docs.Length>0 &&
+                                synapseResponse.user.documents[0].virtual_docs.Length > 0 &&
                                 synapseResponse.user.documents[0].virtual_docs[0].meta != null)
                             {
                                 // Further Verification is needed...
@@ -2253,7 +2228,7 @@ namespace Nooch.Common
                             }
                             else if (synapseResponse.user != null)
                             {
-                                // User is verified completely. In this case response is same as Register User With Synapse...
+                                // No KBA Questions returned. Response will be the same as Register User With Synapse...
 
                                 // Update Member's DB record 
                                 memberEntity.IsVerifiedWithSynapse = true;
@@ -2373,7 +2348,16 @@ namespace Nooch.Common
 
                 // Save changes to Members DB
                 memberEntity.DateModified = DateTime.Now;
-                _dbContext.SaveChanges();
+                int saveMember = _dbContext.SaveChanges();
+
+                if (saveMember > 0)
+                {
+                    Logger.Info("Common Helper -> sendDocsToSynapseV3 - Successfully updated user's record in Members Table");
+                }
+                else
+                {
+                    Logger.Error("Common Helper -> sendDocsToSynapseV3 - FAILED to update user's record in Members Table");
+                }
 
                 #endregion Send All Docs To Synapse
                 //}
@@ -4266,6 +4250,10 @@ namespace Nooch.Common
                             if (item["types"][0].ToString() == "locality")
                             {
                                 res.city = item["short_name"].ToString();
+                            }
+                            else
+                            {
+                                res.city = "";
                             }
                         }
 

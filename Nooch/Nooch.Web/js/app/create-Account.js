@@ -612,6 +612,7 @@ function createRecord() {
                                    ", fngprnt: " + fngprntVal +
 								   ", isIdImage: " + isFileAdded +
                                    ", IP: " + ipVal +
+                                   ", isRS: " + RENTSCENE +
 								   ", FBID: " + FBID + "}");
 
     $.ajax({
