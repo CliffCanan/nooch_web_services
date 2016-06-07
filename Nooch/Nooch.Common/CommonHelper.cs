@@ -4292,7 +4292,7 @@ namespace Nooch.Common
             return clientIds;
         }
 
-        public static CancelTransactionAtSynapseResult CancelTransactionAtSynapse(string TransationId, int Id, string MemberId)
+        public static CancelTransactionAtSynapseResult CancelTransactionAtSynapse(string TransationId,  string MemberId)
         {           
             Logger.Info("CancelTransactionAtSynapse -> - TransationId: [" + TransationId + "]");
 
@@ -4302,7 +4302,7 @@ namespace Nooch.Common
           
             try
             {       
-                transactionsStatusAtSynapse = getTransationDetailsAtSynapse(TransationId, Id);        
+                transactionsStatusAtSynapse = getTransationDetailsAtSynapse(TransationId);        
                                         
                 if (transactionsStatusAtSynapse == null )
                 {
@@ -4356,19 +4356,19 @@ namespace Nooch.Common
                     else
                     {
                         CancelTransaction.IsSuccess = false;
-                        CancelTransaction.Message = "Error while cancelling transations";
+                        CancelTransaction.Message = checkPermissionResponse["success"]["error"]["en"].ToString();
                     }
                 }
                 catch (WebException we)
                 {
-                    Logger.Error("Common Helper -> CancelTransactionAtSynapse - TransationId: [" + TransationId + "] - Id: [" + Id + "] - Error: [" + we + "]");
+                    Logger.Error("Common Helper -> CancelTransactionAtSynapse - TransationId: [" + TransationId + "] - Error: [" + we + "]");
                     CancelTransaction.IsSuccess = false;
                     CancelTransaction.Message = "Error cancelling Transation.";
                 }
                 }
                 else
                 {
-                   CancelTransaction.errorMsg = "Transation can't be cancelled, its already done";
+                   CancelTransaction.errorMsg = "Transation can't be cancelled, its no more in cancellable state.";
                    return CancelTransaction;
                 }
                 
@@ -4376,23 +4376,22 @@ namespace Nooch.Common
             }
             catch (Exception ex)
             {
-               // Response.Write("<script>var errorFromCodeBehind = '1';</script>");
-                Logger.Error("CancelTransactionAtSynapse CodeBehind -> page_load OUTER EXCEPTION - [Exception: " + ex.Message + "]");
+               
+                Logger.Error("CancelTransactionAtSynapse CodeBehind -> OUTER EXCEPTION - [Exception: " + ex.Message + "]");
             }
 
             return CancelTransaction;
             
         }
 
-        public static TransactionsStatusAtSynapse getTransationDetailsAtSynapse(string TransationId, int Id)
+        public static TransactionsStatusAtSynapse getTransationDetailsAtSynapse(string TransationId)
         {
             TransactionsStatusAtSynapse transactionsStatusAtSynapse = new TransactionsStatusAtSynapse();
             
              {
             try
-            {
-                transactionsStatusAtSynapse = _dbContext.TransactionsStatusAtSynapses.FirstOrDefault(m => m.Nooch_Transaction_Id == TransationId && m.Id == Id);
-
+            {                
+                transactionsStatusAtSynapse = _dbContext.TransactionsStatusAtSynapses.OrderByDescending(m=>m.Id).FirstOrDefault(m => m.Nooch_Transaction_Id == TransationId);
                 if (transactionsStatusAtSynapse != null)
                 {
                     _dbContext.Entry(transactionsStatusAtSynapse).Reload();

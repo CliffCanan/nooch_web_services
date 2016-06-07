@@ -3182,16 +3182,16 @@ namespace Nooch.Web.Controllers
                     Logger.Error("MicroDepositsVerification CodeBehind -> Page_load - CIP is: [" + NodeId + "]");
                     MicroDeposit.errorMsg = "Missing node ID";
                 }
-                else
-                {
-                    MicroDeposit.NodeId1 = NodeId;
-                }
+                //else
+                //{
+                //    MicroDeposit.NodeId1 = NodeId;
+                //}
 
                 if (String.IsNullOrEmpty(MicroDeposit.errorMsg))
                 {
                     // Get Bank Info from server
                     MicroDeposit = GetBankDetailsForMicroDepositVerification(mid.Trim());
-                    MicroDeposit.NodeId1 = NodeId; //Node Id get replaced with database nodeId thats wht I have put this code again
+                    MicroDeposit.NodeId1 = NodeId; 
                 }
 
                 if (IsRs == true) // if this flag is in the URL, then force RS branding, regardless of server response
