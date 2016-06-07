@@ -804,30 +804,22 @@ function createRecord() {
 			        // Will need to send user to answer ID verification questions after selecting bank account
 			        console.log("Need to answer ID verification questions");
 
-			        var g = true;
-			        if (g == true)
-			        {
-			            sendToXtraVer = true;
-			            completedFirstWizard = true;
+			        sendToXtraVer = true;
+			        completedFirstWizard = true;
 
-			            $("#idVerWiz").addClass("animated bounceOut");
+			        $("#idVerWiz").addClass("animated bounceOut");
 
-			            //$("#idVerContainer iframe").attr("src", "https://www.noochme.com/noochweb/trans/idverification.aspx?memid=" + memIdGen + "&from=lndngpg");
-			            $("#idVerContainer iframe").attr("src", "http://54.201.43.89/noochweb/Nooch/idVerification?memid=" + memIdGen + "&from=lndngpg");
+			        //$("#idVerContainer iframe").attr("src", "https://www.noochme.com/noochweb/trans/idverification.aspx?memid=" + memIdGen + "&from=lndngpg");
+			        $("#idVerContainer iframe").attr("src", "http://54.201.43.89/noochweb/Nooch/idVerification?memid=" + memIdGen + "&from=lndngpg");
 
-			            setTimeout(function () {
-			                $("#idVerWiz").css({
-			                    "height": "0",
-			                    "padding": "0"
-			                });
-			                $("#idVer .modal-body").css("padding-top", "0");
-			                $("#idVerContainer").addClass("bounceIn").removeClass("hidden");
-			            }, 1000);
-			        }
-			        else
-			        {
-			            idVerifiedSuccess();
-			        }
+			        setTimeout(function () {
+			            $("#idVerWiz").css({
+			                "height": "0",
+			                "padding": "0"
+			            });
+			            $("#idVer .modal-body").css("padding-top", "0");
+			            $("#idVerContainer").addClass("bounceIn").removeClass("hidden");
+			        }, 1000);
 			    }
 
 			    else // No ID questions needed
@@ -916,6 +908,8 @@ function createRecord() {
         }
     });
 }
+
+
 function submitPin(pin) {
     console.log("submitPin fired - PIN [" + pin + "]");
 
@@ -1033,6 +1027,7 @@ function submitPin(pin) {
     });
 }
 
+
 function idVerifiedSuccess() {
     isIdVerified = true;
 
@@ -1052,7 +1047,7 @@ function idVerifiedSuccess() {
     setTimeout(function () {
         swal({
             title: "Great Job!",
-            text: "<i class=\"mdi mdi-account-check text-success\"></i><br/>Thanks for submitting your ID information. That helps us keep Nooch safe for everyone." +
+            text: "<i class=\"fa fa-check text-success\"></i><br/>Thanks for submitting your ID information. That helps us keep Nooch safe for everyone." +
                    "<span>Next, link any checking account to complete this payment:</span>" +
                    "<span class=\"spanlist\"><span>1. &nbsp;Select your bank</span><span>2. &nbsp;Login with your regular online banking credentials</span><span>3. &nbsp;Choose which account to use</span></span>",
             type: "success",
@@ -1137,13 +1132,13 @@ function showLoadingBox(n) {
         message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">' + msg + '</span>',
         css: {
             border: 'none',
-            padding: '20px 8px 14px',
+            padding: '26px 8px 20px',
             backgroundColor: '#000',
-            '-webkit-border-radius': '12px',
-            '-moz-border-radius': '12px',
-            'border-radius': '12px',
+            '-webkit-border-radius': '15px',
+            '-moz-border-radius': '15px',
+            'border-radius': '15px',
             opacity: '.75',
-            width: '260px',
+            width: '270px',
             margin: '0 auto',
             color: '#fff'
         }

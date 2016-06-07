@@ -1879,9 +1879,10 @@ namespace Nooch.Web.Controllers
                         "], IP: [" + userData.ip + "], Is Image Sent: [" + userData.isIdImage +
                         "], FBID: [" + userData.fbid + "], isRentScene: [" + userData.rs + "]");
 
-            genericResponse res = new genericResponse();
-            res.success = false;
-            res.msg = "Initial - code behind";
+            RegisterUserSynapseResultClassExt res = new RegisterUserSynapseResultClassExt();
+            res.success = "false";
+            res.memberIdGenerated = "";
+            res.reason = "Initial - code behind";
 
             try
             {
@@ -1920,22 +1921,25 @@ namespace Nooch.Web.Controllers
 
                 //Logger.Info("Create Account Code-Behind -> saveMemberInfo RESULT: [" + scriptSerializer.Serialize(regUserResponse) + "]");
 
+                res.ssn_verify_status = regUserResponse.ssn_verify_status;
+
                 if (regUserResponse.success.ToLower() == "true")
                 {
                     Logger.Info("Create Account Code-Behind -> saveMemberInfo SUCCESS! - Message: [" + regUserResponse.reason + "]");
-                    res.success = true;
-                    res.msg = "Successfully updated member record on server!";
+                    res.success = "true";
+                    res.reason = "OK";
+                    res.memberIdGenerated = regUserResponse.memberIdGenerated;
                 }
                 else
                 {
-                    Logger.Info("Create Account Code-Behind -> saveMemberInfo FAILED! - Message: [" + regUserResponse.reason + "]");
-                    res.msg = regUserResponse.reason;
+                    Logger.Error("Create Account Code-Behind -> saveMemberInfo FAILED! - Message: [" + regUserResponse.reason + "]");
+                    res.reason = regUserResponse.reason;
                 }
             }
             catch (Exception ex)
             {
                 Logger.Error("Create Account Code-Behind -> saveMemberInfo FAILED - MemberID: [" + userData.memId + "], Exception: [" + ex.Message + "]");
-                res.msg = "Code-behind exception during saveMemberInfo";
+                res.reason = "Code-behind exception during saveMemberInfo";
             }
 
             return Json(res);

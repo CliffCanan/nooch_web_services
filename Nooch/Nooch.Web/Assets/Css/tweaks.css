@@ -1337,7 +1337,7 @@ div#pwFormShell #depositCreateAccount,
     margin-top: 10px;
     margin-bottom: 10px;
     color: #fff;
-    text-shadow: 0 1px 0 rgba(0,0,0,.3);
+    text-shadow: 0 1px 0 rgba(0,0,0,.4);
 }
 
 .resultDiv h2,
@@ -1483,6 +1483,12 @@ div#pwFormShell #depositCreateAccount,
   left: 0;
   z-index: 99;
   font-size: 18px;
+}
+.dl-horizontal .form-group.withIcon > i:nth-child(3) {
+  right: 30px;
+  left: initial;
+  font-size: 17px;
+  color: #666;
 }
 .dl-horizontal .form-group.withIcon .form-control {
   padding-left: 29px;
@@ -2675,8 +2681,7 @@ form .table-header {
 
     #idWizContainer { padding: 0 3.5%; }
 
-	#idVerWiz-p-0 .well,
-	#idVerWiz-p-3 .well { padding: 9px 65px;}
+	#idVerWiz-p-0 .well { padding: 9px 58px;}
 
     .addBank-instructions {
         font-size: 16px;
@@ -2693,7 +2698,7 @@ form .table-header {
 table.dataTable {background:#fff;}
 #history .form-control {
   border: 1px solid #ddd;
-  border-radius: 5px;
+  border-radius: 5px; 
   font-size: 14px;
   height: 36px;
   padding: 6px 14px;

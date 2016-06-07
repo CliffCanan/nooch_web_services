@@ -21,7 +21,7 @@ using Nooch.Common.Resources;
 using Nooch.Common.Rules;
 using Nooch.Data;
 using Nooch.Common.Entities.LandingPagesRelatedEntities;
-using System.Web.Mvc;
+//using System.Web.Mvc;
 using synapseIdVerificationQuestionAnswerSet = Nooch.Common.Entities.SynapseRelatedEntities.synapseIdVerificationQuestionAnswerSet;
 
 
@@ -1227,6 +1227,7 @@ namespace Nooch.Common
 
         /// <summary>
         /// For sending a user's SSN & DOB to Synapse using V3 API.
+        /// UPDATE (JUNE 2016): WILL BE DEPRECATED THIS MONTH ONCE SYNAPSE FINSIHSES ADDING NEW /USER/DOCS/ADD SERVICE TO V3.0.
         /// </summary>
         /// <param name="MemberId"></param>
         /// <returns></returns>
@@ -1245,8 +1246,8 @@ namespace Nooch.Common
             {
                 var userNameDecrypted = GetDecryptedData(memberEntity.UserName);
 
-                if (memberEntity.IsVerifiedWithSynapse != true)
-                {
+                //if (memberEntity.IsVerifiedWithSynapse != true)
+                //{
                     string usersFirstName = UppercaseFirst(GetDecryptedData(memberEntity.FirstName));
                     string usersLastName = UppercaseFirst(GetDecryptedData(memberEntity.LastName));
 
@@ -1400,15 +1401,14 @@ namespace Nooch.Common
 
                         synapseKycInput.user = user;
 
-                        string baseAddress = "";
-                        baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox"))
-                                      ? "https://sandbox.synapsepay.com/api/v3/user/doc/add"
-                                      : "https://synapsepay.com/api/v3/user/doc/add";
+                        string baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox"))
+                                             ? "https://sandbox.synapsepay.com/api/v3/user/doc/add"
+                                             : "https://synapsepay.com/api/v3/user/doc/add";
 
 
                         #region For Testing & Logging
 
-                        if (Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) && memberEntity.MemberId.ToString().ToLower() == "b3a6cf7b-561f-4105-99e4-406a215ccf60")
+                        if (memberEntity.MemberId.ToString().ToLower() == "b3a6cf7b-561f-4105-99e4-406a215ccf60")
                         {
                             doc.name_last = "Satell";
                             doc.document_value = "195707562";
@@ -1680,7 +1680,7 @@ namespace Nooch.Common
                         }
                         else
                         {
-                            res.message = "CommonHelper Exception #1660";
+                            res.message = "CommonHelper Exception #1683";
                         }
                     }
 
@@ -1689,14 +1689,14 @@ namespace Nooch.Common
                     _dbContext.SaveChanges();
 
                     #endregion Send SSN Info To Synapse
-                }
-                else
-                {
-                    Logger.Info("Common Helper -> sendUserSsnInfoToSynapseV3 - User Already Verified With Synapse - [Username: " + userNameDecrypted +
-                                "], [Validated On: " + Convert.ToDateTime(memberEntity.ValidatedDate).ToString("MMM dd yyyy") + "]");
-                    res.message = "Already Verified";
-                    res.success = true;
-                }
+                //}
+                //else
+                //{
+                //    Logger.Info("Common Helper -> sendUserSsnInfoToSynapseV3 - User Already Verified With Synapse - [Username: " + userNameDecrypted +
+                //                "], [Validated On: " + Convert.ToDateTime(memberEntity.ValidatedDate).ToString("MMM dd yyyy") + "]");
+                //    res.message = "Already Verified";
+                //    res.success = true;
+                //}
             }
             else
             {
@@ -4219,6 +4219,7 @@ namespace Nooch.Common
             if (!String.IsNullOrEmpty(zipCode))
             {
                 res.Zip = zipCode;
+                res.city = "";
 
                 try
                 {
@@ -4254,10 +4255,6 @@ namespace Nooch.Common
                             if (item["types"][0].ToString() == "locality")
                             {
                                 res.city = item["short_name"].ToString();
-                            }
-                            else
-                            {
-                                res.city = "";
                             }
                         }
 

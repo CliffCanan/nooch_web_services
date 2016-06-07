@@ -511,7 +511,7 @@ function updateValidationUi(field, success) {
             helpBlockTxt = "Please enter a valid email address that you own."
         }
         else if (field == "phone") {
-            helpBlockTxt = "Please make sure you enter a valid 10-digit phone nuber."
+            helpBlockTxt = "<strong>Please enter a valid 10-digit phone number.</strong>"
         }
 
         if (!$('#' + field + 'Grp .help-block').length) {
@@ -648,39 +648,42 @@ function createRecord() {
             // Hide the Loading Block
             $('#idWizContainer').unblock();
 
-            if (result.success == true)
+            if (result.success == "true")
             {
                 console.log("Success == true");
 
-                $(".errorMessage").addClass('hidden');
+                memIdGen = result.memberIdGenerated;
 
-                // THEN DISPLAY SUCCESS ALERT...
-                swal({
-                    title: "Submitted Successfully",
-                    text: "Thanks for submitting your ID information. That helps us keep " + COMPANY + " safe for everyone. &nbsp;We only use this information to prevent ID fraud and never share it without your permission.",
-                    //"<span>Next, link any checking account to complete this payment:</span>" +
-                    //"<span class=\"spanlist\"><span>1. &nbsp;Select your bank</span><span>2. &nbsp;Login with your regular online banking credentials</span><span>3. &nbsp;Choose which account to use</span></span>",
-                    type: "success",
-                    showCancelButton: false,
-                    confirmButtonColor: "#3fabe1",
-                    confirmButtonText: "Great!",
-                    closeOnConfirm: true,
-                    html: true,
-                    customClass: "idVerSuccessAlert",
-                });
+                if (result.memberIdGenerated.length > 5)
+                {
+                    // Check if user's SSN verification was successful
+                    if (result.ssn_verify_status != null &&
+                        result.ssn_verify_status.indexOf("additional") > -1)
+                    {
+                        // Will need to send user to answer ID verification questions after selecting bank account
+                        console.log("Need to answer ID verification questions");
 
-                $('#idWizContainer').fadeOut(600);
+                        $('#idWizContainer').addClass("animated bounceOut");
 
-                if (ISNEW == true) {
-                    $('#checkEmailMsg').removeClass('hidden');
+                        //$("#idVerContainer iframe").attr("src", "https://www.noochme.com/noochweb/trans/idverification.aspx?memid=" + memIdGen + "&from=lndngpg");
+                        $("#idVerContainer iframe").attr("src", "http://nooch.info/noochweb/Nooch/idVerification?memid=" + memIdGen + "&from=lndngpg");
+
+                        // Show iFrame w/ ID Verification KBA Questions
+                        setTimeout(function ()
+                        {
+                            $("#idVerContainer").addClass("bounceIn").removeClass("hidden");
+                        }, 750);
+                    }
+                    else
+                    {
+                        // No KBA Questions returned, go straight to AddBank iFrame
+                        idVerifiedSuccess();
+                    }
                 }
-                else {
-                    $('.resultDiv').removeClass('hidden');
+                else
+                {
+                    idVerifiedSuccess();
                 }
-
-                //$('#AddBankDiv').removeClass('hidden');
-
-                //$("#frame").attr("src", "https://www.noochme.com/noochweb/trans/Add-Bank.aspx?MemberId=" + RegisterUserWithSynpResult.memberIdGenerated + "&redUrl=https://www.noochme.com/noochweb/trans/payRequestComplete.aspx?mem_id=" + RegisterUserWithSynpResult.memberIdGenerated + "," + transIdVal);
             }
             else
             {
@@ -765,6 +768,53 @@ function createRecord() {
     });
 }
 
+
+function idVerifiedSuccess()
+{
+    $(".errorMessage").addClass('hidden');
+
+    if (!$("#idWizContainer").hasClass("bounceOut"))
+    {
+        $('#idWizContainer').addClass("animated bounceOut");
+    }
+
+    // Hide iFrame w/ ID Verification KBA Questions
+    if (!$("#idVerContainer").hasClass("bounceOut"))
+    {
+        $("#idVerContainer").addClass("bounceOut");
+    }
+
+
+    setTimeout(function ()
+    {
+        // THEN DISPLAY SUCCESS ALERT...
+        swal({
+            title: "Submitted Successfully",
+            text: "Thanks for submitting your ID information. That helps us keep " + COMPANY + " safe for everyone. &nbsp;We only use this information to prevent ID fraud and never share it without your permission." +
+            "<span class='show m-t-10'>To finish, link any checking account:</span>" +
+            "<span class=\"spanlist\"><span>1. &nbsp;Select your bank</span><span>2. &nbsp;Login with your regular online banking credentials</span><span>3. &nbsp;Choose which account to use</span></span>",
+            type: "success",
+            showCancelButton: false,
+            confirmButtonColor: "#3fabe1",
+            confirmButtonText: "Great!",
+            closeOnConfirm: true,
+            html: true,
+            customClass: "idVerSuccessAlert",
+        }, function () {
+
+            console.log("memIDGen is: [" + memIdGen + "]");
+
+            $("#AddBankDiv iframe").attr("src", $('#addBank_Url').val() + "?memberid=" + memIdGen + "&redUrl=createaccnt");
+
+            $('#AddBankDiv').removeClass('hidden').addClass('bounceIn');
+
+            setTimeout(function ()
+            {
+                scrollToAddBank();
+            }, 800);
+        });
+    }, 500);
+}
 
 
 function submitPin(pin)
@@ -894,13 +944,85 @@ function submitPin(pin)
 }
 
 
+// To handle success from extra verification iFrame
+$('body').bind('complete', function ()
+{
+    var result = $('#iframeIdVer').get(0).contentWindow.isCompleted;
+
+    // Hide the Loading Block
+    $('#idVerContainer').unblock();
+
+    console.log("Callback from ID Quest - success was: [" + result + "]");
+
+    if (result == true)
+    {
+        idVerifiedSuccess();
+    }
+    else
+    {
+        // Hide the ID Questions iFrame
+        $("#idVerContainer").addClass("hidden");
+
+        // Show error msg
+        {
+            showErrorAlert('25');
+        }
+    }
+});
+
+$('body').bind('addblockLdg', function ()
+{
+    // Show the Loading Block
+    $('#idVerContainer').block({
+        message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Submitting responses...</span>',
+        css: {
+            border: 'none',
+            padding: '26px 8px 20px',
+            backgroundColor: '#000',
+            '-webkit-border-radius': '15px',
+            '-moz-border-radius': '15px',
+            'border-radius': '15px',
+            opacity: '.75',
+            width: '270px',
+            margin: '0 auto',
+            color: '#fff'
+        }
+    });
+});
+
 // To handle success from Add-Bank page (CC: 1/20/16)
 // CC (5/24/16): NEED TO UPDATE FOR NEW ARCHITECTURE
 $('body').bind('addBankComplete', function ()
 {
     $('#AddBankDiv').slideUp();
 
-    swal({
+    setTimeout(function ()
+    {
+        // THEN DISPLAY SUCCESS ALERT...
+        swal({
+            title: "Bank Linked Successfully",
+            text: "<i class=\"fa fa-bank text-success\"></i>" +
+                  "<span class='show m-t-10'>Thanks for completing this <strong>one-time</strong> process. &nbsp;Now you can make secure payments with anyone and never share your bank details!</span>",
+            type: "success",
+            confirmButtonColor: "#3fabe1",
+            confirmButtonText: "Done",
+            customClass: "largeText",
+            html: true
+        });
+
+        if (ISNEW == true) {
+            $('#checkEmailMsg').removeClass('hidden');
+        }
+        else {
+            $('.resultDiv').removeClass('hidden');
+        }
+
+    }, 500);
+
+
+    // OLD CODE FOR LETTING USER ADD A PW - NEED TO UPDATE FOR V3.0
+
+  /*swal({
         title: "Bank Linked Successfully",
         text: "<i class=\"fa fa-bank text-success\"></i>" +
               "<span class='m-t-10'>Your bank account is now linked!" +
@@ -1013,7 +1135,7 @@ $('body').bind('addBankComplete', function ()
                 showErrorAlert('2');
             }
         });
-    });
+    });*/
 });
 
 
@@ -1153,6 +1275,18 @@ $('body').on('blur', '.form-control', function () {
         $(this).closest('.fg-line').removeClass('fg-toggled');
     }
 });
+
+// -------------------
+//	Scroll To Section
+// -------------------
+function scrollToAddBank()
+{
+    var scroll_to = $('#frame').offset().top - 75;
+
+    if ($(window).scrollTop() != scroll_to) {
+        $('html, body').stop().animate({ scrollTop: scroll_to }, 1000, null);
+    }
+}
 
 // -------------------
 //	FACEBOOK
