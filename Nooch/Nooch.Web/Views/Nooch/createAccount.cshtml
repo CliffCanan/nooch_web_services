@@ -73,6 +73,20 @@
         <p>Thanks for submitting your ID information. &nbsp;That helps us keep Rent Scene safe for everyone. &nbsp;We only use this information to prevent ID fraud and never share it without your permission.</p>
     </div>
 
+
+    <div id="idVerContainer" class="animated hidden">
+        <div class="clearfix">
+            <iframe id="iframeIdVer" src="" width="100%" height="300"></iframe>
+        </div>
+    </div>
+
+    <div id="AddBankDiv" class="hidden">
+        <div class="clearfix">
+            <iframe id="frame" src="" width="100%" height="300"></iframe>
+        </div>
+    </div>
+
+
     <div class="row m-0">
         <div id="idWizContainer" class="hidden" style="width:96%; max-width:690px; margin: 15px auto;">
             <div class="row animated fadeInDown">
@@ -84,7 +98,7 @@
 
                         <form id="idVerForm1" role="form">
 
-                            <div class="well well-sm m-b-25">Please confirm your <span>email address</span> and phone number. &nbsp;We will only use this to contact you about this payment.</div>
+                            <div class="well well-sm m-b-25">Please confirm your <span>email address</span> and phone number. &nbsp;We will only use this to contact you about your payments.</div>
 
                             <dl class="dl-horizontal" id="nameGrp">
                                 <dt class="p-t-10 withIcon">
@@ -166,12 +180,17 @@
                             <div class="text-center m-b-5" style="font-size:16px;">To prevent identity theft, please:</div>
                             <ol style="font-size:14.5px; font-weight:normal; letter-spacing: .3px; margin-bottom: 4px;">
                                 <li style="margin-bottom:3px;">Enter your <span>date of birth</span></li>
+                                <!--
                                 <li>
                                     Then do <span style="text-decoration:underline;font-weight:bold;">ONE</span> of the following:
                                     <ol type="A">
-                                        <li>enter your SSN, OR...</li>
-                                        <li>connect to your Facebook account.</li>
-                                    </ol>
+                                     -->
+                                <li>
+                                    enter your SSN
+                                    <!--, OR...</li>
+                                            <li>connect to your Facebook account.</li>
+                                        </ol>
+                                    -->
                                 </li>
                             </ol>
                         </div>
@@ -179,7 +198,6 @@
                         <dl class="dl-horizontal" id="dobGrp">
                             <dt class="p-t-10 withIcon">
                                 Date of Birth
-                                <i class="fa fa-fw fa-question-circle-o help-icon m-l-5" data-trigger="hover" data-toggle="popover" data-placement="auto" data-content="A date of birth is needed to verify a user's identity. Don't worry - nobody sees this!"></i>
                             </dt>
                             <dd>
                                 <div class="form-group withIcon datePickerGrp">
@@ -187,26 +205,28 @@
                                     <div class="dtp-container dropdown fg-line">
                                         <input id="idVer-dob" type='text' class="form-control date-picker" data-toggle="dropdown" placeholder="eg. 08/05/1978" />
                                     </div>
+                                    <i class="fa fa-fw fa-question-circle-o help-icon m-l-5" data-trigger="hover" data-toggle="popover" data-placement="auto" data-content="A date of birth is needed to verify a user's identity. Don't worry - nobody sees this!"></i>
                                 </div>
                             </dd>
                         </dl>
 
                         <div class="row m-t-20">
-                            <div class="col-xs-5 p-r-10" id="ssnGrp">
+                            <!--<div class="col-xs-5 p-r-10" id="ssnGrp">-->
+                            <div class="col-xs-10 col-sm-8 col-xs-push-1 col-sm-push-2 col-md-6 col-md-push-3" id="ssnGrp">
                                 <div class="form-group">
                                     <label for="idVer-ssn">SSN</label>
                                     <input id="idVer-ssn" type="text" class="form-control" value="@rca.ssn" placeholder="XXX - XX - XXXX" />
                                 </div>
                             </div>
 
-                            <div class="col-xs-2 p-0">
+                            <!--<div class="col-xs-2 p-0">
                                 <div class="orDiv">OR</div>
                             </div>
 
                             <div class="col-xs-5 p-l-10">
                                 <button id="fbLoginBtn" class="btn btn-fb m-t-10" type="button" onclick="checkLoginState()"><i class="fa fa-facebook-square"></i><span>Connect with Facebook</span></button>
                                 <div id="fbResult" class="animated text-center hidden m-t-5"></div>
-                            </div>
+                            </div>-->
                         </div>
 
                     </section>
@@ -215,7 +235,7 @@
                     <section>
 
                         <div class="well well-sm m-b-15">
-                            <div>Please upload a picture of any government-issued <strong>photo ID</strong> with your name<span class="hide-sm"> on it</span>.</div>
+                            <div>Please upload a picture of any <strong>photo ID</strong> with your name on it.</div>
                         </div>
 
                         <div id="idDocWrap">
@@ -230,14 +250,6 @@
     </div>
 
     <div class="errorMessage hidden"></div>
-
-
-    <div id="AddBankDiv" class="hidden">
-        <div class="clearfix">
-            <iframe id="frame" src="" width="100%" height="300"></iframe>
-        </div>
-    </div>
-
 
     <div class="footer footer-login">
         <div>

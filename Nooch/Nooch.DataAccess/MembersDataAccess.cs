@@ -2012,6 +2012,7 @@ namespace Nooch.DataAccess
                 payload.legal_names = new string[] { fullname }; // REQUIRED BY SYNAPSE
 
                 #region Fingerprint
+
                 createUser_fingerprints fingerprints = new createUser_fingerprints();
                 if (!String.IsNullOrEmpty(noochMember.UDID1))
                 {
@@ -2042,6 +2043,7 @@ namespace Nooch.DataAccess
                 }
                 payload.fingerprints = new createUser_fingerprints[1];
                 payload.fingerprints[0] = fingerprints;
+
                 #endregion Fingerprint
 
                 payload.ips = new string[] { CommonHelper.GetRecentOrDefaultIPOfMember(guid) };
@@ -2077,10 +2079,10 @@ namespace Nooch.DataAccess
 
                 payload.extra = extra;
 
-                var baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/create" : "https://synapsepay.com/api/v3/user/create";
-
                 try
                 {
+                    var baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/create" : "https://synapsepay.com/api/v3/user/create";
+
                     Logger.Info("MDA -> RegisterUserWithSynapseV3 - Payload to send to Synapse /v3/user/create: [" + JsonConvert.SerializeObject(payload) + "]");
 
                     var http = (HttpWebRequest)WebRequest.Create(new Uri(baseAddress));
@@ -2299,12 +2301,12 @@ namespace Nooch.DataAccess
                                 Logger.Info("MDA -> RegisterUserWithSynapseV3 - ID NOT Already Verified - Checking if user submitted SSN or FB Login - [MemberID: " + memberId + "]");
 
                                 // Check whether the user provided an SSN or Facebook Login
-                                if ((!String.IsNullOrEmpty(noochMember.SSN) && noochMember.SSN.Length > 4) ||
+                                if ((!String.IsNullOrEmpty(noochMember.SSN) && CommonHelper.GetDecryptedData(noochMember.SSN).Length > 4) ||
                                     //(!String.IsNullOrEmpty(noochMember.FacebookUserId) && noochMember.FacebookUserId.Length > 5) ||
                                      !String.IsNullOrEmpty(noochMember.VerificationDocumentPath))
                                 {
-                                    Logger.Info("MDA -> RegisterUserWithSynapseV3 - About to attempt Sending Docs to SynapseV3 - [SSN: " + noochMember.SSN +
-                                                "], FBID: [" + noochMember.FacebookUserId + "]");
+                                    Logger.Info("MDA -> RegisterUserWithSynapseV3 - About to send Docs (SSN, FBID, and/or ID Img) to SynapseV3 - [SSN: " + noochMember.SSN +
+                                                "], FBID: [" + noochMember.FacebookUserId + "], VerificationDocPath: [" + noochMember.VerificationDocumentPath + "]");
 
                                     // (CC - 6/1/16): UPDATED TO USE NEW METHOD FOR SENDING *ALL* DOCS AT THE SAME TIME
                                     // (CC - 6/5/16): Synapse hasn't finished adding the new /user/docs/add service onto their Production environment,
@@ -2843,7 +2845,7 @@ namespace Nooch.DataAccess
                     // We have ID Doc image... saving it on Nooch's Server and making entry in Members table.
                     try
                     {
-                        Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 -> About to save ID Doc to Noch server ->  [Email: " + userEmail + "], [Member_Id: " + memberObj.MemberId + "]");
+                        Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 -> About to save ID Doc on Nooch's server ->  [Email: " + userEmail + "], [Member_Id: " + memberObj.MemberId + "]");
 
                         var saveImageOnServer = SaveBase64AsImage(memberObj.MemberId.ToString(), idImageData);
 
@@ -2852,6 +2854,10 @@ namespace Nooch.DataAccess
 
                             memberObj.VerificationDocumentPath = saveImageOnServer.msg;
                             _dbContext.SaveChanges();
+                            _dbContext.Entry(memberObj).Reload();
+
+                            Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 -> Successfully saved ID Doc in Members.VerificationDocumentPath: [" +
+                                        memberObj.VerificationDocumentPath + "]");
                         }
                         else
                         {
@@ -2871,8 +2877,6 @@ namespace Nooch.DataAccess
                 }
 
                 #endregion
-
-
 
 
                 // NOW WE HAVE CREATED A NEW NOOCH USER RECORD AND SENT THE REGISTRATION EMAIL (IF THE USER
@@ -2964,7 +2968,7 @@ namespace Nooch.DataAccess
 
         public synapseCreateUserV3Result_int RegisterNonNoochUserWithSynapseV3(string transId, string userEmail, string userPhone, string userName, string pw,
                                                                                string ssn, string dob, string address, string zip, string fngprnt, string ip,
-                                                                               string cip, string fbid, bool isRentScene, string isIdImageAdded="0", string idImageData="")
+                                                                               string cip, string fbid, bool isRentScene, string isIdImageAdded = "0", string idImageData = "")
         {
             // What's the plan? -- Store new Nooch member, then create Synpase user, then check if user supplied a (is password.Length > 0)
             // then store data in new added field in SynapseCreateUserResults table for later use
@@ -3243,61 +3247,62 @@ namespace Nooch.DataAccess
                                      "MemberID: [" + NewUsersNoochMemId + "], [Exception: " + ex + "]");
                     }
 
-                    #region Set Up & Save Nooch Notification Settings
+                    #region Save Notification & Privacy Settings
 
-                    var memberNotificationSettings = new MemberNotification
+                    try
                     {
-                        NotificationId = Guid.NewGuid(),
-                        MemberId = member.MemberId,
-                        FriendRequest = true,
-                        InviteRequestAccept = true,
-                        TransferSent = true,
-                        TransferReceived = true,
-                        TransferAttemptFailure = true,
-                        NoochToBank = true,
-                        BankToNooch = true,
-                        EmailFriendRequest = true,
-                        EmailInviteRequestAccept = true,
-                        EmailTransferSent = true,
-                        EmailTransferReceived = true,
-                        EmailTransferAttemptFailure = true,
-                        TransferUnclaimed = true,
-                        BankToNoochRequested = true,
-                        BankToNoochCompleted = true,
-                        NoochToBankRequested = true,
-                        NoochToBankCompleted = true,
-                        InviteReminder = true,
-                        LowBalance = true,
-                        ValidationRemainder = true,
-                        ProductUpdates = true,
-                        NewAndUpdate = true,
-                        DateCreated = DateTime.Now
-                    };
+                        var memberNotificationSettings = new MemberNotification
+                        {
+                            NotificationId = Guid.NewGuid(),
+                            MemberId = member.MemberId,
+                            FriendRequest = true,
+                            InviteRequestAccept = true,
+                            TransferSent = true,
+                            TransferReceived = true,
+                            TransferAttemptFailure = true,
+                            NoochToBank = true,
+                            BankToNooch = true,
+                            EmailFriendRequest = true,
+                            EmailInviteRequestAccept = true,
+                            EmailTransferSent = true,
+                            EmailTransferReceived = true,
+                            EmailTransferAttemptFailure = true,
+                            TransferUnclaimed = true,
+                            BankToNoochRequested = true,
+                            BankToNoochCompleted = true,
+                            NoochToBankRequested = true,
+                            NoochToBankCompleted = true,
+                            InviteReminder = true,
+                            LowBalance = true,
+                            ValidationRemainder = true,
+                            ProductUpdates = true,
+                            NewAndUpdate = true,
+                            DateCreated = DateTime.Now
+                        };
 
-                    _dbContext.MemberNotifications.Add(memberNotificationSettings);
-                    _dbContext.SaveChanges();
-                    _dbContext.Entry(memberNotificationSettings).Reload();
+                        _dbContext.MemberNotifications.Add(memberNotificationSettings);
+                        _dbContext.SaveChanges();
+                        _dbContext.Entry(memberNotificationSettings).Reload();
 
+                        var memberPrivacySettings = new MemberPrivacySetting
+                        {
+                            MemberId = member.MemberId,
+                            AllowSharing = true,
+                            ShowInSearch = true,
+                            DateCreated = DateTime.Now
+                        };
 
-                    #endregion Set Up & Save Nooch Notification Settings
-
-                    #region Set up & Save Privacy Settings
-
-
-                    var memberPrivacySettings = new MemberPrivacySetting
+                        _dbContext.MemberPrivacySettings.Add(memberPrivacySettings);
+                        _dbContext.SaveChanges();
+                        _dbContext.Entry(memberPrivacySettings).Reload();
+                    }
+                    catch (Exception ex)
                     {
+                        Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 ERROR -> Attempted to Create / Save Notification & Privacy " +
+                                     "Settings for new Member but failed - Exception: [" + ex.Message + "]");
+                    }
 
-                        MemberId = member.MemberId,
-
-                        AllowSharing = true,
-                        ShowInSearch = true,
-                        DateCreated = DateTime.Now
-                    };
-                    _dbContext.MemberPrivacySettings.Add(memberPrivacySettings);
-                    _dbContext.SaveChanges();
-                    _dbContext.Entry(memberPrivacySettings).Reload();
-
-                    #endregion Set up & Save Privacy Settings
+                    #endregion Save Notification & Privacy Settings
 
                     // WE ARE ADDING EVERY PERSON TO DB IN ORDER TO HAVE THE INFO TO CREATE A SYNAPSE USER
                     // ...EVEN IF THE NON-NOOCH USER DOES NOT PROVIDE A PW TO 'CREATE' A NOOCH ACCOUNT.
@@ -3388,27 +3393,26 @@ namespace Nooch.DataAccess
 
                     #endregion Check If PW Was Supplied To Create Full Account
 
-                    // NOW WE HAVE CREATED A NEW NOOCH USER RECORD AND SENT THE REGISTRATION EMAIL (IF THE USER PROVIDED A PW TO CREATE AN ACCOUNT)
-                    // NEXT, ATTEMPT TO CREATE A SYNAPSE ACCOUNT FOR THIS USER
 
-
-                    #region saving user image if provided
-
+                    #region Save User ID Image If Provided
 
                     if (isIdImageAdded == "1" && !String.IsNullOrEmpty(idImageData))
                     {
                         // We have ID Doc image... saving it on Nooch's Server and making entry in Members table.
                         try
                         {
-                            Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 -> About to save ID Doc to Noch server ->  [Email: " + userEmail + "], [Member_Id: " + member.MemberId+ "]");
+                            Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 -> About to save ID Doc on Nooch's server - [Email: " + userEmail + "], [Member_Id: " + member.MemberId + "]");
 
                             var saveImageOnServer = SaveBase64AsImage(member.MemberId.ToString(), idImageData);
 
                             if (saveImageOnServer.success && !String.IsNullOrEmpty(saveImageOnServer.msg))
                             {
-                            
                                 member.VerificationDocumentPath = saveImageOnServer.msg;
                                 _dbContext.SaveChanges();
+                                _dbContext.Entry(member).Reload();
+
+                                Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 -> Successfully saved ID Doc in Members.VerificationDocumentPath: [" +
+                                            member.VerificationDocumentPath + "]");
                             }
                             else
                             {
@@ -3427,9 +3431,11 @@ namespace Nooch.DataAccess
                         Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - NO IMAGE SENT");
                     }
 
-                    #endregion
+                    #endregion Save User ID Image If Provided
 
 
+                    // NOW WE HAVE CREATED A NEW NOOCH USER RECORD AND SENT THE REGISTRATION EMAIL (IF THE USER PROVIDED A PW TO CREATE AN ACCOUNT)
+                    // NEXT, ATTEMPT TO CREATE A SYNAPSE ACCOUNT FOR THIS USER
 
                     #region Create User with Synapse
 
@@ -3437,7 +3443,7 @@ namespace Nooch.DataAccess
                     try
                     {
                         // Now call Synapse create user service
-                        Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 ABOUT TO CALL CREATE SYNAPSE USER METHOD...");
+                        Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - ABOUT TO CALL UTILITY RegisterUserWithSynapseV3() METHOD...");
                         createSynapseUserResult = RegisterUserWithSynapseV3(member.MemberId.ToString());
                     }
                     catch (Exception ex)
@@ -3451,25 +3457,21 @@ namespace Nooch.DataAccess
 
                         #region Created Synapse User Successfully
 
-                        if (createSynapseUserResult.success == true &&
-                            !String.IsNullOrEmpty(createSynapseUserResult.oauth.oauth_key))
+                        if (createSynapseUserResult.success == true && !String.IsNullOrEmpty(createSynapseUserResult.oauth.oauth_key))
                         {
-                            Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - Synapse User created SUCCESSFULLY (LN: 3418) - " +
+                            Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - Synapse User created SUCCESSFULLY (LN: 3462) - " +
                                         "[oauth_consumer_key: " + createSynapseUserResult.oauth.oauth_key + "]. Now attempting to save in Nooch DB.");
 
-                 
+                            res = createSynapseUserResult;
 
-                            if (!String.IsNullOrEmpty(res.reason) &&
-                                res.reason.IndexOf("Email already registered") > -1)
+                            if (!String.IsNullOrEmpty(res.reason) && res.reason.IndexOf("Email already registered") > -1)
                             {
                                 res.reason = "User already existed, successfully received consumer_key.";
                                 Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 SUCCESS -> [Reason: " + res.reason + "], [Email: " + userEmail + "], [user_id: " + res.user_id + "]");
                             }
-
-                            // EXPECTED OUTCOME for most users creating a new Synapse Account.
-                            // Synapse doesn't always return a "reason" anymore (they used to but stopped sending it for newly created users apparently)
                             else
                             {
+                                // EXPECTED OUTCOME for most users creating a new Synapse Account.
                                 Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 SUCCESS - [Email: " + userEmail + "], [user_id: " + createSynapseUserResult.user_id +
                                             "]. Now about to attempt to send SSN info to Synapse.");
 
@@ -3481,7 +3483,6 @@ namespace Nooch.DataAccess
                             oath.oauth_key = createSynapseUserResult.oauth.oauth_key; // Already know it's not NULL, so don't need to re-check
                             oath.expires_in = !String.IsNullOrEmpty(createSynapseUserResult.oauth.expires_in) ? createSynapseUserResult.oauth.expires_in : "";
 
-                            res = createSynapseUserResult;
                             res.success = true;
                             res.user_id = !String.IsNullOrEmpty(createSynapseUserResult.user._id.id) ? createSynapseUserResult.user._id.id : "";
                             res.oauth = oath;
@@ -3509,11 +3510,10 @@ namespace Nooch.DataAccess
                                 {
                                     Guid memGuid = Utility.ConvertToGuid(MemberIdFromtransId);
 
-
-
                                     var synapseRes = _dbContext.SynapseCreateUserResults.Where(memberTemp =>
                                                         memberTemp.MemberId.Value == memGuid &&
                                                         memberTemp.IsDeleted == false).FirstOrDefault();
+
                                     if (synapseRes != null)
                                     {
                                         _dbContext.Entry(synapseRes).Reload();
@@ -3560,7 +3560,7 @@ namespace Nooch.DataAccess
 
                     #region Send Email To Referrer (If Applicable)
 
-                    if (!String.IsNullOrEmpty(inviteCode))
+                    if (!String.IsNullOrEmpty(inviteCode) && inviteCode.ToLower() != "b43a36a6-1da5-47ce-a56c-6210f9ddbd22")
                     {
                         try
                         {
