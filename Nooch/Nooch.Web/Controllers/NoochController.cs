@@ -1234,6 +1234,8 @@ namespace Nooch.Web.Controllers
                         string n = Request.QueryString["UserType"].ToString();
                         rpr.usrTyp = CommonHelper.GetDecryptedData(n);
                         Logger.Info("payRequest CodeBehind -> Page_load - UserType is: [" + rpr.usrTyp + "]");
+                        if (rpr.usrTyp == "NonRegistered")
+                            rpr.nonRegUsrContainer = true;
                     }
 
                     // CIP is new for Synapse V3 and tells the page what type of ID verification the new user will need.
@@ -2489,7 +2491,7 @@ namespace Nooch.Web.Controllers
         /// <returns></returns>
         public ActionResult submitPayment(string from, bool isRequest, string amount, string name, string email, string memo, string pin, string ip, string cip)
         {
-            Logger.Info("Make Payment Code-Behind -> submitPayment Initiated - From: [" + from + "], isRequest: [" + isRequest +
+            Logger.Info("Make Payment Code Behind -> submitPayment Initiated - From: [" + from + "], isRequest: [" + isRequest +
                         "], Name: [" + name + "], Email: [" + email +
                         "], Amount: [" + amount + "], memo: [" + memo +
                         "], PIN: [" + pin + "], IP: [" + ip + "], CIP: [" + cip + "]");
@@ -2504,7 +2506,7 @@ namespace Nooch.Web.Controllers
 
             if (memberObj != null) // This email address is already registered!
             {
-                Logger.Info("Make Payment Conde Behind -> submitPayment Attempted - Recipient email already exists: [" + email + "]");
+                Logger.Info("Make Payment Code Behind -> submitPayment Attempted - Recipient email already exists: [" + email + "]");
 
                 res.isEmailAlreadyReg = true;
                 res.memberId = memberObj.MemberId.ToString();
@@ -2634,8 +2636,6 @@ namespace Nooch.Web.Controllers
 
                 string urlToUse = String.Concat(serviceUrl, serviceMethod);
 
-
-
                 Logger.Info("Make Payment Code-Behind -> submitPayment - URL To Query: [" + urlToUse + "]");
 
                 if (response != null)
@@ -2712,9 +2712,11 @@ namespace Nooch.Web.Controllers
             res.msg = "Initial - code behind";
 
             #region Lookup PIN
+
             string json = "";
             requestFromRentScene response = new requestFromRentScene();
             var scriptSerializer = new JavaScriptSerializer();
+
             pin = (String.IsNullOrEmpty(pin) || pin.Length != 4) ? "0000" : pin;
 
             if (from == "rentscene")
@@ -2749,10 +2751,10 @@ namespace Nooch.Web.Controllers
                     textLoggerHelper = " Request";
 
                     serviceMethod = "/RequestMoneyToExistingUserForRentScene?from=" + from + "&name=" + name +
-                                         "&email=" + email + "&amount=" + amount +
-                                         "&memo=" + memo + "&pin=" + pin +
-                                         "&ip=" + ip + "&isRequest=" + isRequest +
-                                         "&memberId=" + memberId + "&nameFromServer=" + nameFromServer;
+                                    "&email=" + email + "&amount=" + amount +
+                                    "&memo=" + memo + "&pin=" + pin +
+                                    "&ip=" + ip + "&isRequest=" + isRequest +
+                                    "&memberId=" + memberId + "&nameFromServer=" + nameFromServer;
                     response = ResponseConverter<requestFromRentScene>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
                 }
                 else
@@ -2810,7 +2812,7 @@ namespace Nooch.Web.Controllers
                 Logger.Info("Make Payment Code-Behind -> submitRequestToExistingUser - URL To Query: [" + urlToUse + "], IsRequest: [" + isRequest + "]");
 
                 Logger.Info("Make Payment Code-Behind -> submitRequestToExistingUser - Server Response for RequestMoneyToExistingUserForRentScene: " +
-                            "RESULT.Success: [" + response.success + "], RESULT.Msg: [" + response.msg + "]");
+                            "Success: [" + response.success + "], Msg: [" + response.msg + "]");
 
                 if (response != null)
                 {

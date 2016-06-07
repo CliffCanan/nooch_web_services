@@ -148,8 +148,8 @@ $(document).ready(function () {
                     //redUrlForAddBank = (transType == "send") ? "https://www.noochme.com/noochweb/nooch/depositMoneycomplete?mem_id="
                     //                                         : "https://www.noochme.com/noochweb/nooch/payRequestComplete?mem_id=";
 
-                    redUrlForAddBank = (transType == "send") ? "http://localhost:2061/Nooch/DepositMoneyComplete?mem_id="
-                                                            : "http://localhost:2061/Nooch/PayRequestComplete?mem_id=";
+                    redUrlForAddBank = (transType == "send") ? "http://nooch.info/noochweb/Nooch/DepositMoneyComplete?mem_id="
+                                                            : "http://nooch.info/noochweb/Nooch/PayRequestComplete?mem_id=";
 
 
                     redUrlForAddBank = redUrlForAddBank + MemID_EXISTING + "," + TRANSID;
@@ -159,17 +159,14 @@ $(document).ready(function () {
 
                     console.log("redUrlForAddBank IS: [" + redUrlForAddBank + "]");
 
-                     //$("#frame").attr("src", "https://www.noochme.com/noochweb/trans/Add-Bank.aspx?MemberId=" + MemID_EXISTING +
-                     //                      "&redUrl=" + redUrlForAddBank);
 
-                    $("#frame").attr("src",$('#addBank_Url').val()+  "?memberid=" + MemID_EXISTING +
-                                          "&redUrl=" + redUrlForAddBank);
+                    $("#frame").attr("src", $('#addBank_Url').val() + "?memberid=" + MemID_EXISTING + "&redUrl=" + redUrlForAddBank);
 
                     $('#AddBankDiv').removeClass('hidden').addClass('bounceIn');
 
-					setTimeout(function() {
-						scrollToAddBank();
-					}, 1000);
+                    setTimeout(function () {
+                        scrollToAddBank();
+                    }, 1000);
                 });
             }
 

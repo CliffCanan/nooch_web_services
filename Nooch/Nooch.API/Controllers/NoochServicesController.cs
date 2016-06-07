@@ -1085,12 +1085,10 @@ namespace Nooch.API.Controllers
 
                 #endregion Check for Required Data
 
-
                 var address = "";
                 var city = "Philadelphia";
                 var zip = "";
                 var memIdOfRequester = "";
-
 
                 if (from == "appjaxx")
                 {
@@ -1115,7 +1113,7 @@ namespace Nooch.API.Controllers
                 }
 
                 Logger.Info("Service Controller - RequestMoneyToExistingUserForRentScene - Checkpoint - address: [" + address +
-                            "], city: [" + city + "], zip + [" + zip + "], memIdOfRequest: [" + memIdOfRequester + "]");
+                            "], city: [" + city + "], ZIP: [" + zip + "], memIdOfRequest: [" + memIdOfRequester + "]");
 
                 string requestId = string.Empty;
 
@@ -2572,7 +2570,7 @@ namespace Nooch.API.Controllers
         {
             try
             {
-                Logger.Info("Service Controller -> GetTransactionDetailByIdForRequestPayPage - [Trans ID: " + TransactionId + "]");
+                Logger.Info("Service Cntrlr -> GetTransactionDetailByIdForRequestPayPage Initiated - [Trans ID: " + TransactionId + "]");
 
                 var tda = new TransactionsDataAccess();
                 Transaction tr = tda.GetTransactionById(TransactionId);
@@ -2591,7 +2589,7 @@ namespace Nooch.API.Controllers
                 trans.RecepientName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(tr.Member1.FirstName)) + " " +
                                       CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(tr.Member1.LastName));
 
-                Logger.Info("Service Controller -> GetTransactionDetailByIdForRequestPayPage - [trans.Name is: " + trans.Name +
+                Logger.Info("Service Cntrlr -> GetTransactionDetailByIdForRequestPayPage - [trans.Name is: " + trans.Name +
                             "], [trans.RecepientName is: " + trans.RecepientName + "]");
 
                 trans.SenderPhoto = tr.Member.Photo ?? "https://www.noochme.com/noochweb/Assets/Images/userpic-default.png";
@@ -2623,7 +2621,7 @@ namespace Nooch.API.Controllers
                 }
 
 
-                // CLIFF (10/20/15): For requests sent to existing but'NonRegistered' users, adding this block to include that user's
+                // CLIFF (10/20/15): For requests sent to existing but 'NonRegistered' users, adding this block to include that user's
                 //                   Synapse bank name for displaying the confirmation prompt.
                 #region Transactions to Existing But NonRegistered Users
 
@@ -2632,7 +2630,7 @@ namespace Nooch.API.Controllers
                     //(trans.TransactionType == "Rent" || tr.TransactionType != "EnOIzpmFFTEaAP16hm9Wsw==")) // "EnOIzpmFFTEaAP16hm9Wsw==" = "Rent"
                      ))
                 {
-                    Logger.Info("Service Controller -> GetTransactionDetailByIdForRequestPayPage - This request is to an EXISTING user - " +
+                    Logger.Info("Service Cntrlr -> GetTransactionDetailByIdForRequestPayPage - This request is to an EXISTING user - " +
                                 "About to get Synapse Bank info for Payer -> [trans.RecepientName is: " + trans.RecepientName + "]");
 
                     trans.IsExistingButNonRegUser = true;
@@ -2674,8 +2672,7 @@ namespace Nooch.API.Controllers
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Controller -> GetTransactionDetailByIdForRequestPayPage EXCEPTION - [Trans ID: " + TransactionId + "], [Exception: " + ex + "]");
-
+                Logger.Error("Service Cntrlr -> GetTransactionDetailByIdForRequestPayPage EXCEPTION - [Trans ID: " + TransactionId + "], [Exception: " + ex + "]");
                 return null;
             }
         }

@@ -32,12 +32,12 @@ $(document).ready(function ()
             if (TRANS_TYPE == "request") {
                 alertTitle = "Request Paid Successfully";
                 alertBody = "<span>Your payment has been submitted successfully and is now being processed. &nbsp;You should see this payment appear on your bank statement within 1-3 business days.</span>" +
-                            "<span style=\"display:block; margin-top: 14px;\">Please contact <a href=\"mailto:support@nooch.com\">Nooch Support</a> if you have any questions.</span>";
+                            "<span style=\"display:block; margin-top: 14px;\">Please contact <a href='mailto:" + SUPPORTEMAIL + "'>" + COMPANY + " Support</a> if you have any questions.</span>";
             }
             else {
                 alertTitle = "Payment Accepted Successfully";
                 alertBody = "<span>This payment has been submitted successfully and is now being processed. &nbsp;You should see this money appear on your bank statement within 2-4 business days.</span>" +
-                            "<span style=\"display:block; margin-top: 14px;\">If you have any questions, please contact <a href=\"mailto:support@nooch.com\">Nooch Support</a> anytime.</span>";
+                            "<span style=\"display:block; margin-top: 14px;\">If you have any questions, please contact <a href='mailto:" + SUPPORTEMAIL + "'>" + COMPANY + " Support</a> anytime.</span>";
             }
 
             swal({

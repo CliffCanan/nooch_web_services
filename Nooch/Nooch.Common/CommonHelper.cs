@@ -559,7 +559,7 @@ namespace Nooch.Common
         }
 
         /// <summary>
-        /// Looks up a member by an email address. Will find any member based on Username OR SecondaryEmail fields.
+        /// Looks up a member by an UNENCRYPTED email address. Will find any member based on Username OR SecondaryEmail fields.
         /// </summary>
         /// <param name="userName"></param>
         /// <returns>Returns a User's Full details.</returns>
@@ -2619,9 +2619,8 @@ namespace Nooch.Common
                 input.client = client;
                 input.filter = filter;
 
-                string UrlToHit = "";
-                UrlToHit = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/search"
-                                                                                               : "https://synapsepay.com/api/v3/user/search";
+                string UrlToHit = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/search"
+                                                                                                      : "https://synapsepay.com/api/v3/user/search";
 
                 Logger.Info("CommonHelper -> getUserPermissionsForSynapseV3 - About to query Synapse's /user/search API - [UrlToHit: " + UrlToHit + "]");
 
@@ -2780,34 +2779,13 @@ namespace Nooch.Common
                 // Check Synapse USER details from Nooch's DB
                 var createSynapseUserObj = GetSynapseCreateaUserDetails(id.ToString());
 
-                if (createSynapseUserObj != null &&
-                    !String.IsNullOrEmpty(createSynapseUserObj.access_token))
+                if (createSynapseUserObj != null && !String.IsNullOrEmpty(createSynapseUserObj.access_token))
                 {
                     // This MemberId was found in the SynapseCreateUserResults DB
                     res.wereUserDetailsFound = true;
 
                     Logger.Info("Common Helper -> GetSynapseBankAndUserDetailsforGivenMemberId - Checkpoint #1 - " +
                                 "SynapseCreateUserResults Record Found! - Now about to check if Synapse OAuth Key is expired or still valid.");
-
-                    #region Check If Testing
-
-                    // CLIFF (10/22/15): If testing then this method will use the Synapse (v3) SANDBOX.  Leaving this here in case we
-                    //                   want to test in the future the same way.
-                    bool shouldUseSynapseSandbox = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox"));
-                    string memberUsername = GetMemberUsernameByMemberId(memberId);
-
-                    if (shouldUseSynapseSandbox)
-                    {
-                        shouldUseSynapseSandbox = true;
-                        Logger.Info("Common Helper -> GetSynapseBankAndUserDetailsforGivenMemberId -> TESTING USER DETECTED - [" +
-                                     memberUsername + "], WILL USE SYNAPSE SANDBOX URL FOR CHECKING OAUTH TOKEN STATUS");
-                    }
-                    else
-                    {
-                        Logger.Info("Common Helper -> GetSynapseBankAndUserDetailsforGivenMemberId - NOT TESTING (Checkpoint #3)");
-                    }
-
-                    #endregion Check If Testing
 
                     #region Check If OAuth Key Still Valid
                     // CLIFF (10/3/15): ADDING CALL TO NEW METHOD TO CHECK USER'S STATUS WITH SYNAPSE, AND REFRESHING OAUTH KEY IF NECESSARY
@@ -2906,11 +2884,11 @@ namespace Nooch.Common
             {
                 SynapseCreateUserResult synCreateUserObject = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.access_token == oauthKey && m.IsDeleted == false);
 
-                // check for this is not needed.
                 // Will be calling login/refresh access token service to confirm if saved oAtuh token matches with token coming in response, if not then will update the token.
                 if (synCreateUserObject != null)
                 {
                     _dbContext.Entry(synCreateUserObject).Reload();
+
                     var noochMemberObject = GetMemberDetails(synCreateUserObject.MemberId.ToString());
 
                     #region Found Refresh Token

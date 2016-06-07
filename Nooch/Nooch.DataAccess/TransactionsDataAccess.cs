@@ -3290,6 +3290,9 @@ namespace Nooch.DataAccess
                 {
                     #region Setup Synapse V3 Order Details
 
+                    var senderMemberDetails = CommonHelper.GetMemberDetailsByUserName(senderUserName);
+                    var companyName = senderMemberDetails.isRentScene == true ? "RENT SCENE" : "NOOCH";
+
                     SynapseV3AddTransInput transParamsForSynapse = new SynapseV3AddTransInput();
 
                     SynapseV3Input_login login = new SynapseV3Input_login() { oauth_key = sender_oauth };
@@ -3332,15 +3335,15 @@ namespace Nooch.DataAccess
                     {
                         iPForTransaction = "54.148.37.21"; // Nooch's Server IP as default
                     }
-                    string webhooklink = Utility.GetValueFromConfig("NoochWebHookURL")+suppID_or_transID;
+                    string webhooklink = Utility.GetValueFromConfig("NoochWebHookURL") + suppID_or_transID;
                     SynapseV3AddTransInput_trans_extra extraMain = new SynapseV3AddTransInput_trans_extra()
                     {
                         // This is where we put the ACH memo (customized for Landlords, but just the same template for regular P2P transfers: "Nooch Payment {LNAME SENDER} / {LNAME RECIPIENT})
                         // maybe we should set this in whichever function calls this function because we don't have the names here...
                         // yes modifying this method to add 3 new parameters....sender IP, sender last name, recepient last name... this would be helpfull in keeping this method clean.
-                        note = "NOOCH PAYMENT // " + senderLastName + " / " + recipientLastName,
+                        note = companyName + " PAYMENT // " + senderLastName + " / " + recipientLastName,
                         supp_id = suppID_or_transID,
-                        process_on = 0, // this should be > than 0 I guess... CLIFF: I don't think so, it's an optional parameter, but we always want it to process immediately, so I guess it should always be 0
+                        process_on = 0, // CLIFF: This is an optional parameter, but we always want it to process immediately, so it should always be 0
                         ip = iPForTransaction, // CLIFF:  This is actually required. It should be the most recent IP address of the SENDER, or if none found, then '54.148.37.21'
                         webhook = webhooklink
                     };
@@ -3348,11 +3351,12 @@ namespace Nooch.DataAccess
 
                     SynapseV3AddTransInput_trans_fees feeMain = new SynapseV3AddTransInput_trans_fees();
                     feeMain.note = "Negative Nooch Fee";
-                    feeMain.fee = Convert.ToDouble(amount) > 10 ? "0.20" : "0.10"; // to offset the Synapse fee so the user doesn't pay it
+                    feeMain.fee = "0.10"; // to offset the Synapse fee so the user doesn't pay it
 
                     SynapseV3AddTransInput_trans_fees_to tomain = new SynapseV3AddTransInput_trans_fees_to()
                     {
-                        id = "5618028c86c27347a1b3aa0f" // Temporary: ID of Nooch's SYNAPSE account (NOT an ACH (bank) account)!!... using temp Sandbox account until we get Production credentials
+                        //id = "5618028c86c27347a1b3aa0f" // Temporary: ID of Nooch's SYNAPSE account (NOT an ACH (bank) account)!!... using temp Sandbox account until we get Production credentials
+                        id = "57436f4395062947f21bbcb6" // CC (6/7/16): THIS IS THE LIVE, PRODUCTION SYNAPSE ACCOUNT FOR RENT SCENE - USE ONCE WE GO LIVE WITH SYNAPSE 3.0
                     };
                     feeMain.to = tomain;
 
@@ -3379,7 +3383,7 @@ namespace Nooch.DataAccess
 
                         string parsedContent = JsonConvert.SerializeObject(transParamsForSynapse);
 
-                        Logger.Info("TDA -> AddTransSynapseV3Reusable - Payload for Synapse V3 /trans/add API: " + JObject.Parse(parsedContent));
+                        Logger.Info("TDA -> AddTransSynapseV3Reusable - Payload to send to /v3/trans/add API: " + JObject.Parse(parsedContent));
 
                         ASCIIEncoding encoding = new ASCIIEncoding();
                         Byte[] bytes = encoding.GetBytes(parsedContent);
@@ -5014,7 +5018,6 @@ namespace Nooch.DataAccess
                     return "Not allowed to request money from yourself.";
                 }
 
-
                 var requester = CommonHelper.GetMemberDetails(requestDto.MemberId);
                 var requestRecipient = CommonHelper.GetMemberDetails(requestDto.SenderId);
 
@@ -5128,7 +5131,6 @@ namespace Nooch.DataAccess
                 {
                     TransactionId = Guid.NewGuid(),
                     SenderId = requestRecipient.MemberId,
-
                     RecipientId = requester.MemberId,
                     Amount = requestDto.Amount,
                     TransactionDate = DateTime.Now,
@@ -5141,9 +5143,9 @@ namespace Nooch.DataAccess
                     TransactionTrackingId = CommonHelper.GetRandomTransactionTrackingId(),
                     TransactionFee = 0,
                     IsPhoneInvitation = false,
-                    InvitationSentTo = !String.IsNullOrEmpty(requestDto.MoneySenderEmailId)
-                                       ? CommonHelper.GetEncryptedData(requestDto.MoneySenderEmailId)
-                                       : null,
+                    //InvitationSentTo = !String.IsNullOrEmpty(requestDto.MoneySenderEmailId)
+                    //                   ? CommonHelper.GetEncryptedData(requestDto.MoneySenderEmailId)
+                    //                   : null,
                     GeoLocation = new GeoLocation
                     {
                         LocationId = Guid.NewGuid(),
@@ -5160,26 +5162,34 @@ namespace Nooch.DataAccess
                     }
                 };
 
-                int dbResult = 0;
+                int save = 0;
                 bool isTesting = false;
 
                 if (requestDto.isTesting == "true")
                 {
                     Logger.Info("TDA -> RequestMoneyToExistingButNonregisteredUser - JUST A TEST!! - isTesting FLAG WAS TRUE... continuing on");
                     isTesting = true;
-                    dbResult = 1;
+                    save = 1;
                 }
                 else
                 {
-                    _dbContext.Transactions.Add(transaction);
-                    dbResult = _dbContext.SaveChanges();
-                    _dbContext.Entry(transaction).Reload();
-
+                    try
+                    {
+                        _dbContext.Transactions.Add(transaction);
+                        _dbContext.SaveChanges();
+                        _dbContext.Entry(transaction).Reload();
+                        save++;
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error("TDA -> RequestMoneyToExistingButNonregisteredUser FAILED - Unable to save Transaction in DB - Exception: [" + ex + "]");
+                        save = 0;
+                    }
                 }
 
                 #endregion Create New Transaction Record In DB
 
-                if (dbResult > 0)
+                if (save > 0)
                 {
                     requestId = transaction.TransactionId.ToString();
 
