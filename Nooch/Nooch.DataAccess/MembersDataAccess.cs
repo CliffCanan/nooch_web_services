@@ -1843,7 +1843,7 @@ namespace Nooch.DataAccess
                                 }
 
                                 // Now check if the user has provided an SSN or FBID or Photo ID.  If yes, call sendDocsToSynapseV3()
-                                if ((!String.IsNullOrEmpty(noochMember.SSN) && noochMember.SSN.Length > 4) ||
+                                else if ((!String.IsNullOrEmpty(noochMember.SSN) && noochMember.SSN.Length > 4) ||
                                     //(!String.IsNullOrEmpty(noochMember.FacebookUserId) && noochMember.FacebookUserId.Length > 5) ||
                                      !String.IsNullOrEmpty(noochMember.VerificationDocumentPath))
                                 {

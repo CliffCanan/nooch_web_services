@@ -38,6 +38,7 @@
         <input type="hidden" id="dob" value="@rca.dob" />
         <input type="hidden" id="phone" value="@rca.phone" />
         <input type="hidden" id="rs" value="@rca.rs" />
+        <input type="hidden" id="addBank_Url" value="@Url.Action("AddBank","Nooch")" />
     </form>
 
     <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -74,13 +75,13 @@
     </div>
 
 
-    <div id="idVerContainer" class="animated hidden">
+    <div id="idVerContainer" class="animated hidden" style="margin:0 auto;max-width:900px;">
         <div class="clearfix">
             <iframe id="iframeIdVer" src="" width="100%" height="300"></iframe>
         </div>
     </div>
 
-    <div id="AddBankDiv" class="hidden">
+    <div id="AddBankDiv" class="hidden" style="margin:0 auto;max-width:900px;">
         <div class="clearfix">
             <iframe id="frame" src="" width="100%" height="300"></iframe>
         </div>

@@ -1047,7 +1047,7 @@ function idVerifiedSuccess() {
     setTimeout(function () {
         swal({
             title: "Great Job!",
-            text: "<i class=\"mdi mdi-account-check text-success\"></i><br/>Thanks for submitting your ID information. That helps us keep Nooch safe for everyone." +
+            text: "<i class=\"fa fa-check text-success\"></i><br/>Thanks for submitting your ID information. That helps us keep Nooch safe for everyone." +
                    "<span>Next, link any checking account to complete this payment:</span>" +
                    "<span class=\"spanlist\"><span>1. &nbsp;Select your bank</span><span>2. &nbsp;Login with your regular online banking credentials</span><span>3. &nbsp;Choose which account to use</span></span>",
             type: "success",

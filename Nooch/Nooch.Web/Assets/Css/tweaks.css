@@ -1517,10 +1517,6 @@ div#pwFormShell #depositCreateAccount,
     background-color: rgba(250,251,254,.95);
 }
 
-.createAccountPg iframe html {
-	overflow-y: auto;
-}
-
 #idWizContainer > div {
   background-color: #fff;
   padding: 15px 25px;
