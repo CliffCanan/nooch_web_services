@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Data.Entity;
+using System.Linq;
 using System.Net.Http;
 using System.Web.Http;
 using Newtonsoft.Json.Linq;
@@ -19,39 +21,40 @@ namespace Nooch.API.Controllers
             {
 
 
-                 
-
-                Logger.Info("GetTransactionStatusFromSynapse [ WebHook ] loaded for TransactionId : [ " + transId + " ]. At [ " + DateTime.Now + " ]. With Request Body [ " + jsonContent + " ].");
-
-
-                // code to store transaction timeline info in db 
-                JObject jsonfromsynapse = JObject.Parse(jsonContent);
-
-                JToken isTransExists = jsonfromsynapse["trans"];
-
-                if (isTransExists != null)
+                using (NOOCHEntities obj = new NOOCHEntities())
                 {
-                    JToken transIdFromSyanpse = jsonfromsynapse["trans"]["_id"]["$oid"];
 
-                    if (transIdFromSyanpse != null)
+                    Logger.Info("GetTransactionStatusFromSynapse [ WebHook ] loaded for TransactionId : [ " + transId +
+                                " ]. At [ " + DateTime.Now + " ]. With Request Body [ " + jsonContent + " ].");
+
+
+                    // code to store transaction timeline info in db 
+                    JObject jsonfromsynapse = JObject.Parse(jsonContent);
+
+                    JToken isTransExists = jsonfromsynapse["trans"];
+
+                    if (isTransExists != null)
                     {
-                        JToken allTimeLineItems = jsonfromsynapse["trans"]["timeline"];
+                        JToken transIdFromSyanpse = jsonfromsynapse["trans"]["_id"]["$oid"];
 
-                        if (allTimeLineItems != null)
+                        if (transIdFromSyanpse != null)
                         {
-                            foreach (JToken currentItem in allTimeLineItems)
+                            JToken allTimeLineItems = jsonfromsynapse["trans"]["timeline"];
+
+                            if (allTimeLineItems != null)
                             {
-
-
-                                string note = currentItem["note"].ToString();
-                                string status = currentItem["status"].ToString();
-                                string status_id = currentItem["status_id"].ToString();
-                                string status_date = currentItem["date"]["$date"].ToString();
-
-
-
-                                using (NOOCHEntities obj = new NOOCHEntities())
+                                foreach (JToken currentItem in allTimeLineItems)
                                 {
+
+
+                                    string note = currentItem["note"].ToString();
+                                    string status = currentItem["status"].ToString();
+                                    string status_id = currentItem["status_id"].ToString();
+                                    string status_date = currentItem["date"]["$date"].ToString();
+
+
+
+
                                     TransactionsStatusAtSynapse tas = new TransactionsStatusAtSynapse();
                                     tas.Nooch_Transaction_Id = transId;
                                     tas.Transaction_oid = transIdFromSyanpse == null
@@ -66,38 +69,61 @@ namespace Nooch.API.Controllers
                                     obj.TransactionsStatusAtSynapses.Add(tas);
                                     obj.SaveChanges();
 
-                                }
 
+
+
+                                }
                             }
+
+                            // checking most recent status for updating in transactions table because timeline array may have multiple statuses and that may make confussion to update to most recent status
+
+                            JToken mostRecentToken = jsonfromsynapse["trans"]["recent_status"];
+
+                            if (mostRecentToken.Contains("status"))
+                            {
+                                // updating transcaction status in transactions table
+                                if (!String.IsNullOrEmpty(mostRecentToken["status"].ToString()) &&
+                                    !String.IsNullOrEmpty(transId))
+                                {
+                                    Guid transGuid = Utility.ConvertToGuid(transId);
+                                    Transaction t =
+                                        obj.Transactions.FirstOrDefault(t2 => t2.TransactionId == transGuid);
+                                    if (t != null)
+                                    {
+                                        t.SynapseStatus = mostRecentToken["status"].ToString();
+                                        obj.SaveChanges();
+                                    }
+                                }
+                            }
+
+
+
+
                         }
 
                     }
-
-                }
-                else
-                {
-                    // this time object is without trans key around --- don't know why, synapse is returning data in two different formats now.
-                    JToken transIdFromSyanpse = jsonfromsynapse["_id"]["$oid"];
-
-                    if (transIdFromSyanpse != null)
+                    else
                     {
-                        JToken allTimeLineItems = jsonfromsynapse["timeline"];
+                        // this time object is without trans key around --- don't know why, synapse is returning data in two different formats now.
+                        JToken transIdFromSyanpse = jsonfromsynapse["_id"]["$oid"];
 
-                        if (allTimeLineItems != null)
+                        if (transIdFromSyanpse != null)
                         {
-                            foreach (JToken currentItem in allTimeLineItems)
+                            JToken allTimeLineItems = jsonfromsynapse["timeline"];
+
+                            if (allTimeLineItems != null)
                             {
-
-
-                                string note = currentItem["note"].ToString();
-                                string status = currentItem["status"].ToString();
-                                string status_id = currentItem["status_id"].ToString();
-                                string status_date = currentItem["date"]["$date"].ToString();
-
-
-
-                                using (NOOCHEntities obj = new NOOCHEntities())
+                                foreach (JToken currentItem in allTimeLineItems)
                                 {
+
+
+                                    string note = currentItem["note"].ToString();
+                                    string status = currentItem["status"].ToString();
+                                    string status_id = currentItem["status_id"].ToString();
+                                    string status_date = currentItem["date"]["$date"].ToString();
+
+
+
                                     TransactionsStatusAtSynapse tas = new TransactionsStatusAtSynapse();
                                     tas.Nooch_Transaction_Id = transId;
                                     tas.Transaction_oid = transIdFromSyanpse == null
@@ -112,14 +138,38 @@ namespace Nooch.API.Controllers
                                     obj.TransactionsStatusAtSynapses.Add(tas);
                                     obj.SaveChanges();
 
+
+
+
+
                                 }
-
                             }
-                        }
 
+
+                            // checking most recent status for updating in transactions table because timeline array may have multiple statuses and that may make confussion to update to most recent status
+
+                            JToken mostRecentToken = jsonfromsynapse["recent_status"];
+
+                            if (mostRecentToken.Contains("status"))
+                            {
+                                // updating transcaction status in transactions table
+                                if (!String.IsNullOrEmpty(mostRecentToken["status"].ToString()) &&
+                                    !String.IsNullOrEmpty(transId))
+                                {
+                                    Guid transGuid = Utility.ConvertToGuid(transId);
+                                    Transaction t =
+                                        obj.Transactions.FirstOrDefault(t2 => t2.TransactionId == transGuid);
+                                    if (t != null)
+                                    {
+                                        t.SynapseStatus = mostRecentToken["status"].ToString();
+                                        obj.SaveChanges();
+                                    }
+                                }
+                            }
+
+                        }
                     }
                 }
-
 
             }
             catch (Exception ex)
