@@ -296,7 +296,7 @@ namespace Nooch.DataAccess
                                          "TransactionID: [" + TransactionId + "], Exception: [" + ex + "]");
                         }
 
-                        return "Transaction Cancelled Successfully";
+                        return "Transaction Cancelled Successfully.";
                     }
                     else
                     {
