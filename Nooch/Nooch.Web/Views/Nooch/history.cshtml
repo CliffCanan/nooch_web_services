@@ -109,34 +109,30 @@
                                             <td>@ad.TransactionDate1</td>
 
                                             @*<td><a href='@Url.Action("Detail", "Member", new { NoochId=@ad.SenderNoochId} )'>@ad.SenderName</a></td>*@
-                                            <td>
-                                                <a href='#'>
-                                                    @ad.SenderName
-                                                </a>
-                                            </td>
+                                            <td>@ad.SenderName</td>
 
                                             @*<td><a href='@Url.Action("Detail", "Member", new { NoochId=@ad.RecepientNoochId} )'>@ad.RecipienName</a></td>*@
-                                            <td><a href='#'>@ad.RecipienName</a></td>
+                                            <td>@ad.RecipienName</td>
 
                                             <td><b>$@ad.Amount</b></td>
 
                                             <td><em style="font-weight:normal">"@ad.Memo"</em></td>
 
                                             <td>
-                                                <button type="button" id="btnLocation" class="btn btn-link btn-xs " onclick="showLocationModal('@ad.TransLati','@ad.TransLongi','@ad.state')">@ad.city @ad.state</button>
+                                                <button type="button" id="btnLocation" class="btn-link" onclick="showLocationModal('@ad.TransLati','@ad.TransLongi','@ad.state')">@ad.city @ad.state</button>
                                             </td>
 
                                             <td>
                                                 @if (ad.TransactionStatus == "Pending")
                                                 {
-                                                    <button type="button" data-val="@ad.TransactionId" class="btn btn-icon btn-xs btnCancel" onclick="statusCancel(@ad.TransactionId)" data-toggle="tooltip" data-placement="auto" title="Cancel this transaction">
+                                                    <button type="button" data-val="@ad.TransactionId" class="btn btn-icon btn-xs btnCancel p-0" onclick="statusCancel(@ad.TransactionId)" data-toggle="tooltip" data-placement="auto" title="Cancel this transaction">
                                                         <span class="fa-stack fa-lg">
                                                             <i class="fa fa-circle fa-stack-2x text-danger"></i>
                                                             <i class="fa fa-ban fa-stack-1x fa-inverse"></i>
                                                         </span>
                                                     </button>
 
-                                                    <button type="button" data-val="@ad.TransactionId" class="btn btn-icon btn-xs btnRemind" data-toggle="tooltip" data-placement="auto" title="Send a reminder">
+                                                    <button type="button" data-val="@ad.TransactionId" class="btn btn-icon btn-xs btnRemind p-0" data-toggle="tooltip" data-placement="auto" title="Send a reminder">
                                                         <span class="fa-stack fa-lg">
                                                             <i class="fa fa-circle fa-stack-2x text-primary"></i>
                                                             <i class="fa fa-bell fa-stack-1x fa-inverse"></i>
