@@ -346,6 +346,7 @@
     <Content Include="Views\Nooch\ResetPassword.cshtml" />
     <Content Include="Views\Nooch\history.cshtml" />
     <Content Include="Views\Nooch\MicroDepositsVerification.cshtml" />
+    <Content Include="Views\Nooch\EncryptDecrypt.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
