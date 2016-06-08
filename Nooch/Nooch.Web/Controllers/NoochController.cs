@@ -3046,14 +3046,14 @@ namespace Nooch.Web.Controllers
                     string memberId = Request.QueryString["memId"];
                     string listType = "ALL";
 
-                    TransactionsDataAccess tda = new TransactionsDataAccess();
-
                     int totalRecordsCount = 0;
-                    var transactionListEntities = tda.GetTransactionsList(memberId, listType, 50, 1, "", out totalRecordsCount);
 
-                    if (transactionListEntities != null && transactionListEntities.Count > 0)
+                    TransactionsDataAccess tda = new TransactionsDataAccess();
+                    var transactionList = tda.GetTransactionsList(memberId, listType, 50, 1, "", out totalRecordsCount);
+
+                    if (transactionList != null && transactionList.Count > 0)
                     {
-                        foreach (var trans in transactionListEntities)
+                        foreach (var trans in transactionList)
                         {
                             try
                             {
@@ -3077,7 +3077,9 @@ namespace Nooch.Web.Controllers
 
                                 #region Transaction Type Transfer
 
-                                if (obj.TransactionType == "Transfer" || obj.TransactionType == "Disputed" || obj.TransactionType == "Reward" || obj.TransactionType == "Invite" || obj.TransactionType == "Rent" || obj.TransactionType == "Request")
+                                if (obj.TransactionType == "Transfer" || obj.TransactionType == "Disputed" ||
+                                    obj.TransactionType == "Reward" || obj.TransactionType == "Invite" ||
+                                    obj.TransactionType == "Rent" || obj.TransactionType == "Request")
                                 {
                                     if (String.IsNullOrEmpty(trans.InvitationSentTo) &&
                                         (trans.IsPhoneInvitation == null || trans.IsPhoneInvitation == false))
@@ -3296,6 +3298,7 @@ namespace Nooch.Web.Controllers
         {
             return View();
         }
+
         [HttpPost]
         public ActionResult EncryptDecryptData(EncDecInput input)
         {

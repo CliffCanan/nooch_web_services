@@ -78,7 +78,7 @@ $(document).ready(function () {
                 text: "<p>" + COMPANY + " offers a quick, secure way to pay anyone without giving them your sensitive bank or credit card information. &nbsp;Just select your bank and login to your online banking<span class='desk-only'> as you normally do</span>.</p>" +
                       "<h4><strong class='text-success'>Benefits</strong></h4>" +
                       "<ul class='fa-ul'><li><i class='fa-li fa fa-check'></i><strong>Faster Payments.</strong>&nbsp; Funds available by the 2nd day.</li>" +
-                      "<li><i class='fa-li fa fa-check'></i><strong>More Secure.</strong>&nbsp; This upgrade includes major under-the-hood updates to keep your money safe.</li>" +
+                      "<li><i class='fa-li fa fa-check'></i><strong>Enhanced Security.</strong>&nbsp; This upgrade includes major under-the-hood updates to keep your money safe.</li>" +
                       "<li><i class='fa-li fa fa-check'></i><strong>Clearer Statements.</strong>&nbsp; Now the memo on your bank statement will include transaction info.</li></ul>",
                 imageUrl: "../Assets/Images/secure.svg",
                 imageSize: "194x80",
@@ -663,8 +663,8 @@ function createRecord() {
 
                         $('#idWizContainer').addClass("animated bounceOut");
 
-                        //$("#idVerContainer iframe").attr("src", "https://www.noochme.com/noochweb/trans/idverification.aspx?memid=" + memIdGen + "&from=lndngpg");
-                        $("#idVerContainer iframe").attr("src", "http://nooch.info/noochweb/Nooch/idVerification?memid=" + memIdGen + "&from=lndngpg");
+                        $("#idVerContainer iframe").attr("src", "https://www.noochme.com/noochweb/Nooch/idVerification?memid=" + memIdGen + "&from=lndngpg");
+                        //$("#idVerContainer iframe").attr("src", "http://nooch.info/noochweb/Nooch/idVerification?memid=" + memIdGen + "&from=lndngpg");
 
                         // Show iFrame w/ ID Verification KBA Questions
                         setTimeout(function ()
@@ -1162,7 +1162,6 @@ function showErrorAlert(errorNum) {
     var shouldFocusOnPhone = false;
     var shouldShowErrorDiv = true;
 
-    var companyName = "Nooch";
     var supportEmail = "support@nooch.com";
     if (COMPANY == "Rent Scene") {
         supportEmail = "payments@rentscene.com"
@@ -1173,32 +1172,32 @@ function showErrorAlert(errorNum) {
     if (errorNum == '1') // Codebehind errors
     {
         alertTitle = "Errors Are The Worst!";
-        alertBodyText = "We had trouble finding that transaction.  Please try again and if you continue to see this message, contact <span style='font-weight:600;'>Nooch Support</span>:" +
-                        "<br/><a href='mailto:" + supportEmail + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + supportEmail + "</a>";
+        alertBodyText = "We had trouble finding that transaction.  Please try again and if you continue to see this message, contact <span style='font-weight:600;'>" +
+						COMPANY + " Support</span>:<br/><a href='mailto:" + supportEmail + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + supportEmail + "</a>";
     }
     else if (errorNum == '2') // Errors after submitting ID verification AJAX
     {
         alertTitle = "Errors Are The Worst!";
         alertBodyText = "Terrible sorry, but it looks like we had trouble processing your info.  Please refresh this page to try again and if you continue to see this message, contact <span style='font-weight:600;'>" +
-                        companyName + " Support</span>:<br/><a href='mailto:" + supportEmail + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + supportEmail + "</a>";
+                        COMPANY + " Support</span>:<br/><a href='mailto:" + supportEmail + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + supportEmail + "</a>";
     }
     else if (errorNum == '25') // Errors from the iFrame with the multiple choice verification questions
     {
         alertTitle = "Errors Are The Worst!";
         alertBodyText = "Terrible sorry, but it looks like we had trouble processing your info.  Please refresh this page to try again and if you continue to see this message, contact <span style='font-weight:600;'>" +
-                        companyName + " Support</span>:<br/><a href='mailto:" + supportEmail + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + supportEmail + "</a>";
+                        COMPANY + " Support</span>:<br/><a href='mailto:" + supportEmail + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + supportEmail + "</a>";
     }
     else if (errorNum == '20') // Submitted ID Verification info, but EMAIL came back as already registered with Nooch.
     {
         alertTitle = "Email Already Registered";
-        alertBodyText = "Looks like <strong>" + $('#idVer-email').val() + "</strong> is already registered to a " + companyName + " account.  Please try a different email address.";
+        alertBodyText = "Looks like <strong>" + $('#idVer-email').val() + "</strong> is already registered to a " + COMPANY + " account.  Please try a different email address.";
         shouldFocusOnEmail = true;
         shouldShowErrorDiv = false;
     }
     else if (errorNum == '30') // Submitted ID Verification info, but PHONE came back as already registered with Nooch.
     {
         alertTitle = "Phone Number Already Registered";
-        alertBodyText = "Looks like <strong>" + $('#idVer-phone').val() + "</strong> is already registered to a " + companyName + " account.  Please try a different number.";
+        alertBodyText = "Looks like <strong>" + $('#idVer-phone').val() + "</strong> is already registered to a " + COMPANY + " account.  Please try a different number.";
         shouldFocusOnPhone = true;
         shouldShowErrorDiv = false;
     }
@@ -1206,7 +1205,7 @@ function showErrorAlert(errorNum) {
     {
         alertTitle = "Errors Are The Worst!";
         alertBodyText = "Terrible sorry, but it looks like we had trouble processing your request.  Please refresh this page to try again and if you continue to see this message, contact <span style='font-weight:600;'>" +
-                        companyName + " Support</span>:<br/><a href='mailto:" + supportEmail + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + supportEmail + "</a>";
+                        COMPANY + " Support</span>:<br/><a href='mailto:" + supportEmail + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + supportEmail + "</a>";
     }
 
     if (shouldShowErrorDiv == true) {

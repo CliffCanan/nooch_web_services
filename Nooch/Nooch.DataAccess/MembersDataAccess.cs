@@ -2055,15 +2055,15 @@ namespace Nooch.DataAccess
 
                 if (!String.IsNullOrEmpty(noochMember.cipTag))
                 {
-                    if (noochMember.cipTag.ToLower() == "renter") { extra.cip_tag = 1; }
-                    else if (noochMember.cipTag.ToLower() == "landlord") { extra.cip_tag = 2; }
-                    else if (noochMember.cipTag.ToLower() == "vendor") { extra.cip_tag = 3; }
-                    else extra.cip_tag = 1;
+                    //if (noochMember.cipTag.ToLower() == "renter") { extra.cip_tag = 1; }
+                    //else if (noochMember.cipTag.ToLower() == "landlord") { extra.cip_tag = 2; }
+                    //else if (noochMember.cipTag.ToLower() == "vendor") { extra.cip_tag = 3; }
+                    //else extra.cip_tag = 1;
                 }
                 else
                 {
                     Logger.Info("MDA -> RegisterUserWithSynapseV3 - No CIP Tag found in DB for this user - Setting to 'RENTER' as default and continuing on - MemberID: [" + memberId + "]");
-                    extra.cip_tag = 1;
+                    //extra.cip_tag = 1;
 
                     // Update Members Table too
                     try
