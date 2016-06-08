@@ -1,0 +1,48 @@
+﻿
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>EncryptDecrypt</title>
+    <script src="~/Scripts/jquery-1.10.2.min.js"></script>
+
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $('#textToEncDec').val('');
+            $('#res').html('');
+        });
+
+
+        function enc() {
+            $('#res').html('');
+            $.post($('#tohit').val(), { OpType: "E", DataToWorkOn: $('#textToEncDec').val() }, function (d) {
+                $('#res').html(d.DataToWorkOn);
+            });
+        }
+
+        function dec() {
+            $('#res').html('');
+            $.post($('#tohit').val(), { OpType: "D", DataToWorkOn: $('#textToEncDec').val() }, function (d) {
+                $('#res').html(d.DataToWorkOn);
+            });
+        }
+    </script>
+</head>
+<body>
+<div>
+    <input id="tohit" value="@Url.Action("EncryptDecryptData")" type="hidden"/>
+    Text Here To Encrypt or Decrypt : <input type="text" id="textToEncDec"/> <br/>
+    <input type="button" id="btnEncrypt" value="Encrypt" onclick="enc();"/>
+    <br/>
+    <input type="button" id="btnDecrypt" value="Decrypt" onclick=" dec(); "/>
+    <br/>
+    <div id="res"></div>
+</div>
+</body>
+</html>

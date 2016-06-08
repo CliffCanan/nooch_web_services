@@ -3191,7 +3191,7 @@ namespace Nooch.Web.Controllers
                 {
                     // Get Bank Info from server
                     MicroDeposit = GetBankDetailsForMicroDepositVerification(mid.Trim());
-                    MicroDeposit.NodeId1 = NodeId; 
+                    MicroDeposit.NodeId1 = NodeId;
                 }
 
                 if (IsRs == true) // if this flag is in the URL, then force RS branding, regardless of server response
@@ -3290,8 +3290,45 @@ namespace Nooch.Web.Controllers
         }
 
         #endregion Micro-Deposit Verification Page
+
+
+        public ActionResult EncryptDecrypt()
+        {
+            return View();
+        }
+        [HttpPost]
+        public ActionResult EncryptDecryptData(EncDecInput input)
+        {
+            EncDecInput res = new EncDecInput();
+            try
+            {
+                if (!String.IsNullOrEmpty(input.DataToWorkOn))
+                {
+                    if (input.OpType == "D")
+                    {
+                        res.DataToWorkOn = CommonHelper.GetDecryptedData(input.DataToWorkOn);
+                    }
+                    if (input.OpType == "E")
+                    {
+                        res.DataToWorkOn = CommonHelper.GetEncryptedData(input.DataToWorkOn);
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                res.DataToWorkOn = "";
+
+            }
+            return Json(res);
+        }
     }
 
+
+    public class EncDecInput
+    {
+        public string OpType { get; set; }
+        public string DataToWorkOn { get; set; }
+    }
 
     public class bankLoginInputFormClass
     {
