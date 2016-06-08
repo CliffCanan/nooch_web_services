@@ -79,7 +79,7 @@ namespace Nooch.API.Controllers
 
                             JToken mostRecentToken = jsonfromsynapse["trans"]["recent_status"];
 
-                            if (mostRecentToken.Contains("status"))
+                            if (mostRecentToken["status"]!=null)
                             {
                                 // updating transcaction status in transactions table
                                 if (!String.IsNullOrEmpty(mostRecentToken["status"].ToString()) &&
@@ -150,7 +150,7 @@ namespace Nooch.API.Controllers
 
                             JToken mostRecentToken = jsonfromsynapse["recent_status"];
 
-                            if (mostRecentToken.Contains("status"))
+                            if (mostRecentToken["status"] != null)
                             {
                                 // updating transcaction status in transactions table
                                 if (!String.IsNullOrEmpty(mostRecentToken["status"].ToString()) &&
