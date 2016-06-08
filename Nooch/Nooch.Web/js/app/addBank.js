@@ -467,38 +467,39 @@ function submitBnkLgn() {
 
 			if (bnkLoginResult.Is_success == false) // ERROR CAME BACK FROM SERVER LOGIN ATTEMPT
 			{
-				console.log("submit bnk login error is: " + bnkLoginResult.ERROR_MSG);
+				console.log("submit bnk login error is: [" + bnkLoginResult.ERROR_MSG + "]");
 
 				$('#bankLogin').velocity("callout.shake");
 
-				if (bnkLoginResult.ERROR_MSG.indexOf('username provided was not correct') >= 0 ||
-					bnkLoginResult.ERROR_MSG.indexOf('Please Enter the Correct Username and Password') >= 0 ||
-					bnkLoginResult.ERROR_MSG.indexOf('username or password provided were not correct') >= 0)
+				if (bnkLoginResult.ERROR_MSG.indexOf('Incorrect username or password') > -1 ||
+				    bnkLoginResult.ERROR_MSG.indexOf('username provided was not correct') > -1 ||
+					bnkLoginResult.ERROR_MSG.indexOf('Please Enter the Correct Username and Password') > -1 ||
+					bnkLoginResult.ERROR_MSG.indexOf('username or password provided were not correct') > -1)
 				{
 					$('#bankLogin_errorMsg').append("<div><p class='parsley-errors-list filled'>Invalid Credentials: Incorrect username or password.</p></div>");
 					$('#bankUsername').focus();
 				}
-				else if (bnkLoginResult.ERROR_MSG.indexOf('password provided was not correct') >= 0)
+				else if (bnkLoginResult.ERROR_MSG.indexOf('password provided was not correct') > -1)
 				{
 					$('#bankLogin_errorMsg').append("<div><p class='parsley-errors-list filled'>The password provided was not correct.</p></div>");
 					$('#bankUsername').focus();
 				}
-				else if (bnkLoginResult.ERROR_MSG.indexOf('user phone not verified') >= 0)
+				else if (bnkLoginResult.ERROR_MSG.indexOf('user phone not verified') > -1)
 				{
 				    $('#bankLogin_errorMsg').append("<div><p class='parsley-errors-list filled'>For security, your phone number must be verified before you can link your bank. Go to your profile to verify.</p></div>");
 				    $('#bankUsername').val('');
 				    $('#bankUsername').focus();
 				}
-				else if (bnkLoginResult.ERROR_MSG.indexOf('Currently we are unable to login to') >= 0 ||
-				         bnkLoginResult.ERROR_MSG.indexOf('Please try again later') >= 0)
+				else if (bnkLoginResult.ERROR_MSG.indexOf('Currently we are unable to login to') > -1 ||
+				         bnkLoginResult.ERROR_MSG.indexOf('Please try again later') > -1)
 				{
 				    // ADD PROMPT FOR MANUAL ROUNTING/ACCOUNT #
 				    bankLoginErrorAlert();
 
 					$('#bankLogin_errorMsg').append("<div><p class='parsley-errors-list filled'>Oh no! Looks like we are experiencing some temporary trouble with " + BANK_NAME + ". :-( Please try again or contact " + COMPANY + " Support.</p></div>");
 				}
-				else if (bnkLoginResult.ERROR_MSG.indexOf("account has not been fully set up") >= 0 ||
-				         bnkLoginResult.ERROR_MSG.indexOf("Prompt the user to visit the issuing institution's site and finish the setup process") >= 0)
+				else if (bnkLoginResult.ERROR_MSG.indexOf("account has not been fully set up") > -1 ||
+				         bnkLoginResult.ERROR_MSG.indexOf("Prompt the user to visit the issuing institution's site and finish the setup process") > -1)
 				{
 					$('#modal-OtherError #par1').html("Looks like that " + BANK_NAME + " account is not fully set up for online banking yet.  Please visit " + BANK_NAME + "'s website to complete the setup process.");
 					$('#modal-OtherError #par2').html("After setting up your online banking, then try connecting it to Nooch again.  If you continue to see this error we'd appreciate hearing about it at <a href='" + SUPPORTLINK + "' target='_blank' style='font-weight: 500;'>" + SUPPORTLINK + "</a>.");
@@ -506,29 +507,29 @@ function submitBnkLgn() {
 						backdrop:'static'
 					});
 				}
-				else if (bnkLoginResult.ERROR_MSG.indexOf('Missing ') >= -1)
+				else if (bnkLoginResult.ERROR_MSG.indexOf('Missing ') > -1)
 				{
-					$('#bankLogin_errorMsg').append("<div><p class='parsley-errors-list filled'>" + bnkLoginResult.ERROR_MSG + "</p></div>");
+				    $('#bankLogin_errorMsg').append("<div><p class='parsley-errors-list filled'>" + bnkLoginResult.ERROR_MSG + "</p></div>");
 
-					swal({
-						title: "Error #511: Incomplete Profile",
-						text: "Very sorry about this, but it looks like your account is missing some information needed to verify your ID." +
+				    swal({
+				        title: "Error #511: Incomplete Profile",
+				        text: "Very sorry about this, but it looks like your account is missing some information needed to verify your ID." +
 						      "<span class='show' style='margin-top:14px'>This can happen for a variety of reasons - our #1 priority is keeping your money safe, " +
 						      "so sometimes our system is overly conservative.<span class='show' style='margin-top:14px;'><a href='" + SUPPORTLINK + "' target='_blank'>Contact our support team</a> and we'll be glad to help. Please mention:<br/><strong>Error #511</strong></span>",
-						type: "error",
-						showCancelButton: true,
-						confirmButtonColor: "#3fabe1",
-						confirmButtonText: "Ok",
-						cancelButtonText: "Contact Support",
-						closeOnCancel: false,
-						html: true
-					}, function (isConfirm) {
-						if (!isConfirm) {
-							window.open("mailto:support@nooch.com");
-						}
-					});
+				        type: "error",
+				        showCancelButton: true,
+				        confirmButtonColor: "#3fabe1",
+				        confirmButtonText: "Ok",
+				        cancelButtonText: "Contact Support",
+				        closeOnCancel: false,
+				        html: true
+				    }, function (isConfirm) {
+				        if (!isConfirm) {
+				            window.open("mailto:support@nooch.com");
+				        }
+				    });
 				}
-				else if (bnkLoginResult.ERROR_MSG.indexOf('error occured at server') >= 0)
+				else if (bnkLoginResult.ERROR_MSG.indexOf('error occured at server') > -1)
 				{
 					$('#bankLogin_errorMsg').append("<div><p class='parsley-errors-list filled'>Oh no! We experienced some trouble connecting to " + BANK_NAME + ". Please try again!</p></div>");
 					$('#bankUsername').val('');

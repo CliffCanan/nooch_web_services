@@ -598,8 +598,8 @@ function updateValidationUi(field, success) {
             helpBlockTxt = "Please enter your date of birth. &nbsp;Only needed to verify your ID!"
         }
         else if (field == "ssn") {
-            helpBlockTxt = isSmScrn ? "Please enter your SSN."
-                                    : "Please enter your SSN or connect with FB."
+            helpBlockTxt = isSmScrn ? "Please enter your <strong>SSN</strong>."
+                                    : "<strong>Please enter your SSN.</strong>"// or connect with FB." // CC (6/7/16): Un-comment once Synapse finishes adding /user/docs/add to V3.0
 
             if (isSmScrn)
             {
@@ -1475,6 +1475,22 @@ function rejectBtnClicked() {
                       "&UserType=" + userTypeEncr +
                       "&LinkSource=75U7bZRpVVxLNbQuoMQEGQ==" +
                       "&TransType=T3EMY1WWZ9IscHIj3dbcNw==";
+}
+
+
+function ssnWhy()
+{
+    swal({
+        title: "Why Do We Collect SSN?",
+        text: "We hate identify fraud.  With a passion.<span class='show m-t-15'>" +
+              "In order to keep " + COMPANY + " safe for all users, and to comply with federal and state measures against identity theft, we use your SSN for one purpose only: verifying your ID. &nbsp;Your SSN is never displayed anywhere and is only transmitted with bank-grade encryption.</span>" +
+              "<span class='show'><a href='https://en.wikipedia.org/wiki/Know_your_customer' class='btn btn-link p-5 f-16' target='_blank'>Learn More<i class='fa fa-external-link m-l-10 f-15'></i></a></span>",
+        type: "info",
+        showCancelButton: false,
+        confirmButtonColor: "#3fabe1",
+        confirmButtonText: "Ok",
+        html: true
+    });
 }
 
 
