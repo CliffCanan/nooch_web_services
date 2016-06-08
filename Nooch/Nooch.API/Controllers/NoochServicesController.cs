@@ -4012,15 +4012,15 @@ namespace Nooch.API.Controllers
 
                 MembersDataAccess mda = new MembersDataAccess();
 
-                //#region Check Oauthkey is Still valid
+                #region Check Oauthkey is Still valid
 
-                //var OauthObj = CommonHelper.GetSynapseCreateaUserDetails(input.MemberId);
-                //synapseV3checkUsersOauthKey checkTokenResult = CommonHelper.refreshSynapseV3OautKey(OauthObj.access_token);
+                var OauthObj = CommonHelper.GetSynapseCreateaUserDetails(input.MemberId);
+                synapseV3checkUsersOauthKey checkTokenResult = CommonHelper.refreshSynapseV3OautKey(OauthObj.access_token);
 
-                //#endregion
+                #endregion
 
-                //if (checkTokenResult.success == true)
-                //{
+                if (checkTokenResult.success == true)
+                {
                 SynapseBankLoginV3_Response_Int mdaResult = new SynapseBankLoginV3_Response_Int();
                 mdaResult = mda.SynapseV3MFABankVerifyWithMicroDeposits(input.MemberId, input.microDespositOne, input.microDespositTwo, input.bankId);
 
@@ -4028,15 +4028,14 @@ namespace Nooch.API.Controllers
                 res.Is_MFA = mdaResult.Is_MFA;
                 res.errorMsg = mdaResult.errorMsg;
                 res.mfaMessage = mdaResult.mfaMessage;
-                //}
-                //else
-                //{
-                //    Logger.Error("Service Controller - SynapseV3MFABankVerifyWithMicroDeposits FAILED on Checking User's Synapse OAuth Token - " +
-                //                 "CheckTokenResult.msg: [" + checkTokenResult.msg + "], MemberID: [" + input.MemberId + "]");
-
-                //    res.errorMsg = checkTokenResult.msg;
-                //    return res;
-                //}
+                }
+                else
+                {
+                    Logger.Error("service controller - synapsev3mfabankverifywithmicrodeposits failed on checking user's synapse oauth token - " +
+                                 "checktokenresult.msg: [" + checkTokenResult.msg + "], memberid: [" + input.MemberId + "]");
+                    res.errorMsg = checkTokenResult.msg;
+                    return res;
+                }
             }
             catch (Exception ex)
             {
@@ -5994,7 +5993,7 @@ namespace Nooch.API.Controllers
             return res;
         }
 
-        [HttpGet]
+        [HttpPost]
         [ActionName("CancelTransactionAtSynapse")]
         public CancelTransactionAtSynapseResult CancelTransactionAtSynapse(bool IsRentScene, string TransationId,  string MemberId)
         {
@@ -6032,7 +6031,6 @@ namespace Nooch.API.Controllers
                 CancelTransaction.errorMsg = "Server Error.";
             }
             return CancelTransaction;
-        }
-
+        }                       
     }
 }
