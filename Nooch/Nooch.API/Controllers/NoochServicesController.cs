@@ -3183,7 +3183,7 @@ namespace Nooch.API.Controllers
                 #region Check Member's Status And Phone
 
                 // Checks on user account: is phone verified? Is user's status = 'Active'?
-                if (noochMember.Status != "Active" &&
+                /*if (noochMember.Status != "Active" &&
                     noochMember.Status != "NonRegistered" &&
                     noochMember.Type != "Personal - Browser")
                 {
@@ -3198,7 +3198,7 @@ namespace Nooch.API.Controllers
                     Logger.Info("Service Controller -> SynapseV3 ADD NODE w/ Account/Routing # Attempted, but Member's Phone is Not Verified. MemberId: [" + MemberId + "]");
                     res.errorMsg = "User phone is not verified";
                     return res;
-                }
+                }*/
 
                 #endregion Check Member's Status And Phone
 
@@ -3310,8 +3310,28 @@ namespace Nooch.API.Controllers
 
                         try
                         {
+                            //Logger.Info("Service Cntrlr -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber -> Synapse RESPONSE: [" + addBankRespFromSynapse.ToString() + "]");
+                            
                             if (addBankRespFromSynapse["nodes"][0]["info"] != null)
                             {
+                                // First mark all existing banks for this user as inactive
+                                try
+                                {
+                                    var existingBanks = _dbContext.SynapseBanksOfMembers.Where(bank => bank.MemberId.Value.Equals(id) &&
+                                                                                                       bank.IsDefault != false).ToList();
+
+                                    foreach (SynapseBanksOfMember sbank in existingBanks)
+                                    {
+                                        sbank.IsDefault = false;
+                                        _dbContext.SaveChanges();
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.Error("Service Cntrlr -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber - ERROR marking existing banks as not default - " +
+                                                 "Exception: [" + ex.Message + "]");
+                                }
+
                                 JToken info = addBankRespFromSynapse["nodes"][0]["info"];
 
                                 // Saving entry in SynapseBanksOfMember Table
@@ -3321,7 +3341,7 @@ namespace Nooch.API.Controllers
                                 sbom.AddedOn = DateTime.Now;
                                 sbom.mfa_verifed = false;
                                 sbom.account_number_string = CommonHelper.GetEncryptedData(info["account_num"].ToString());
-                                sbom.bank_name = CommonHelper.GetEncryptedData(info["bank_name"].ToString());
+                                sbom.bank_name = CommonHelper.GetEncryptedData(info["bank_long_name"].ToString());
                                 sbom.@class = info["class"].ToString();
                                 sbom.name_on_account = CommonHelper.GetEncryptedData(info["name_on_account"].ToString());
                                 sbom.nickname = CommonHelper.GetEncryptedData(info["nickname"].ToString());
@@ -3331,12 +3351,7 @@ namespace Nooch.API.Controllers
                                 sbom.allowed = addBankRespFromSynapse["nodes"][0]["allowed"].ToString();
                                 sbom.supp_id = addBankRespFromSynapse["nodes"][0]["extra"]["supp_id"].ToString();
 
-                                // Not sure about these two fields: IsDefault and Status.
-                                // Should we consider this field as True, this will set his bank as confirmed and user can make transactions using field
-                                // but we haven't verified micro deposits yet
-                                // for now setting as below.... @cliff I am setting account as not Not Verified for now, from micro deposit verification landing pages
-                                // this status will be converted to Verified... let me know what you think?
-                                // @Malkit - yes this is right, the Status will update once the user submits the Micro Deposit amounts on the landing page.
+                                // Setting as default.... and 'Not Verified' for now, user must complete micro deposit verification
                                 sbom.IsDefault = true;
                                 sbom.Status = "Not Verified";
 
@@ -3352,7 +3367,7 @@ namespace Nooch.API.Controllers
                                     res.errorMsg = "Failed to save entry in BankLoginResults table: [" + ex.Message + "]";
                                 }
 
-                                Logger.Info("Service Controller -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber SUCCESS - Added record to SynapseBanksOfMembers Table - NO MFA found - [UserName: " + CommonHelper.GetDecryptedData(noochMember.UserName) + "]");
+                                Logger.Info("Service Controller -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber SUCCESS - Added record to SynapseBanksOfMembers Table - [UserName: " + CommonHelper.GetDecryptedData(noochMember.UserName) + "]");
 
                                 res.Is_success = true;
                             }
@@ -4021,13 +4036,13 @@ namespace Nooch.API.Controllers
 
                 if (checkTokenResult.success == true)
                 {
-                SynapseBankLoginV3_Response_Int mdaResult = new SynapseBankLoginV3_Response_Int();
-                mdaResult = mda.SynapseV3MFABankVerifyWithMicroDeposits(input.MemberId, input.microDespositOne, input.microDespositTwo, input.bankId);
+                    SynapseBankLoginV3_Response_Int mdaResult = new SynapseBankLoginV3_Response_Int();
+                    mdaResult = mda.SynapseV3MFABankVerifyWithMicroDeposits(input.MemberId, input.microDespositOne, input.microDespositTwo, input.bankId);
 
-                res.Is_success = mdaResult.Is_success;
-                res.Is_MFA = mdaResult.Is_MFA;
-                res.errorMsg = mdaResult.errorMsg;
-                res.mfaMessage = mdaResult.mfaMessage;
+                    res.Is_success = mdaResult.Is_success;
+                    res.Is_MFA = mdaResult.Is_MFA;
+                    res.errorMsg = mdaResult.errorMsg;
+                    res.mfaMessage = mdaResult.mfaMessage;
                 }
                 else
                 {
@@ -5995,7 +6010,7 @@ namespace Nooch.API.Controllers
 
         [HttpPost]
         [ActionName("CancelTransactionAtSynapse")]
-        public CancelTransactionAtSynapseResult CancelTransactionAtSynapse(bool IsRentScene, string TransationId,  string MemberId)
+        public CancelTransactionAtSynapseResult CancelTransactionAtSynapse(bool IsRentScene, string TransationId, string MemberId)
         {
             CancelTransactionAtSynapseResult CancelTransaction = new CancelTransactionAtSynapseResult();
             CancelTransaction.IsSuccess = false;
@@ -6013,7 +6028,7 @@ namespace Nooch.API.Controllers
                     Logger.Error("CancelTransactionAtSynapse CodeBehind -> Page_load - TransationId is: [" + TransationId + "]");
                     CancelTransaction.errorMsg = "Missing TransationId";
                 }
-               
+
                 if (string.IsNullOrEmpty(MemberId))
                 {
                     Logger.Error("CancelTransactionAtSynapse CodeBehind -> Page_load - Id is: [" + MemberId + "]");
@@ -6031,6 +6046,6 @@ namespace Nooch.API.Controllers
                 CancelTransaction.errorMsg = "Server Error.";
             }
             return CancelTransaction;
-        }                       
+        }
     }
 }

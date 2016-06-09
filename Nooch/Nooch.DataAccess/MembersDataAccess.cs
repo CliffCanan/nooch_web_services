@@ -2051,7 +2051,7 @@ namespace Nooch.DataAccess
                 createUser_extra extra = new createUser_extra();
                 extra.note = "";
                 extra.supp_id = noochMember.Nooch_ID;
-                extra.is_business = false; // CLIFF (10/10/12): For Landlords, this could potentially be true... but we'll figure that out later
+                extra.is_business = noochMember.Nooch_ID == "ykDjbVj5" ? true : false; // CLIFF (10/10/12): For Landlords, this could potentially be true... but we'll figure that out later
 
                 if (!String.IsNullOrEmpty(noochMember.cipTag))
                 {
