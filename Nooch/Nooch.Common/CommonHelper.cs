@@ -4320,8 +4320,8 @@ namespace Nooch.Common
 
               CancelTransactionClass rootObject = new CancelTransactionClass
                 {
-                    login = new Login1 { oauth_key = GetDecryptedData(OauthObj.access_token) },
-                    trans = new Trans { _id = new _ID { oid = OauthObj.user_id } },
+                    login = new Login1 { oauth_key = GetDecryptedData(OauthObj.access_token) },                  
+                    trans = new Trans { _id = new _ID { oid = transactionsStatusAtSynapse.Transaction_oid } },
                     user = new User1 { fingerprint = MemberObj.UDID1 }                    
                 };                                     
 
