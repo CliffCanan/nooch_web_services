@@ -4307,13 +4307,12 @@ namespace Nooch.Common
                     string baseAddress = "";
                     baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/trans/cancel" : "https://synapsepay.com/api/v3/trans/cancel";
 
-
                     CancelTransactionClass rootObject = new CancelTransactionClass
-                      {
+                    {
                           login = new Login1 { oauth_key = GetDecryptedData(OauthObj.access_token) },
-                          trans = new Trans { _id = new _ID { oid = OauthObj.user_id } },
+                          trans = new Trans { _id = new _ID { oid = transactionsStatusAtSynapse.Transaction_oid } },
                           user = new User1 { fingerprint = MemberObj.UDID1 }
-                      };
+                    };
 
                     var http = (HttpWebRequest)WebRequest.Create(new Uri(baseAddress));
                     http.Accept = "application/json";
