@@ -299,6 +299,7 @@ namespace Nooch.Common
 
                 smtpClient.Host = GetValueFromConfig("SMTPAddress");
                 smtpClient.UseDefaultCredentials = false;
+                smtpClient.Port = 587;
 
                 smtpClient.Credentials = new NetworkCredential(GetValueFromConfig("SMTPLogOn"), GetValueFromConfig("SMTPPassword"));
                 smtpClient.Send(mailMessage);
