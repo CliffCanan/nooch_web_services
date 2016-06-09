@@ -31,6 +31,7 @@ namespace Nooch.Common.Entities
         public string isIdImage { get; set; }
         public string idImagedata { get; set; }
         public string fbid { get; set; }
+        public string cip { get; set; }
         public bool isNewUser { get; set; }
     }
 

@@ -598,6 +598,7 @@ function createRecord() {
     var zipVal = $('#idVer-zip').val().trim();
     var fngprntVal = fingprint;
     var ipVal = ipusr;
+    var cip = TYPE.length > 0 ? TYPE : "1";
 
     console.log("SAVE MEMBER INFO -> {memId: " + memId +
                                    ", Name: " + userNameVal +
@@ -611,6 +612,7 @@ function createRecord() {
 								   ", isIdImage: " + isFileAdded +
                                    ", IP: " + ipVal +
                                    ", isRS: " + RENTSCENE +
+                                   ", Type: " + cip +
 								   ", FBID: " + FBID + "}");
 
     $.ajax({
@@ -630,6 +632,7 @@ function createRecord() {
              "', 'pw':'" + '' +
              "', 'fbid':'" + FBID +
              "', 'rs':'" + RENTSCENE +
+             "', 'cip':'" + cip +
              "', 'isIdImage':'" + isFileAdded +
              "', 'idImagedata':'" + FileData + "'}",
         contentType: "application/json; charset=utf-8",

@@ -1900,7 +1900,8 @@ namespace Nooch.Web.Controllers
                         "], Phone: [" + userData.phone + "], DOB: [" + userData.dob +
                         "], SSN: [" + userData.ssn + "], Address: [" + userData.address +
                         "], IP: [" + userData.ip + "], Is Image Sent: [" + userData.isIdImage +
-                        "], FBID: [" + userData.fbid + "], isRentScene: [" + userData.rs + "]");
+                        "], FBID: [" + userData.fbid + "], isRentScene: [" + userData.rs +
+                        "], CIP: [" + userData.cip + "]");
 
             RegisterUserSynapseResultClassExt res = new RegisterUserSynapseResultClassExt();
             res.success = "false";
@@ -1933,6 +1934,7 @@ namespace Nooch.Web.Controllers
                 inputClass.memberId = userData.memId;
                 inputClass.transId = userData.transId;
                 inputClass.isRentScene = userData.rs == "true" ? true : false;
+                inputClass.cip = userData.cip.Length == 1 ? userData.cip : "renter";
 
                 var scriptSerializer = new JavaScriptSerializer();
                 string json = scriptSerializer.Serialize(inputClass);

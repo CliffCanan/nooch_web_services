@@ -35,7 +35,7 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
         public string address_street1 { get; set; }
         public string address_postal_code { get; set; }
         public string address_country_code { get; set; }
-        //public string oauth_consumer_key { get; set; }   /// not required  --- 
+        //public string oauth_consumer_key { get; set; } // not required
         public string document_value { get; set; }
         public string document_type { get; set; }
     }

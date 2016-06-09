@@ -3168,6 +3168,13 @@ namespace Nooch.DataAccess
                 string pinNumber = Utility.GetRandomPinNumber();
                 pinNumber = CommonHelper.GetEncryptedData(pinNumber);
 
+                if (!String.IsNullOrEmpty(cip))
+                {
+                    if (cip == "1") cip = "renter";
+                    else if (cip == "2") cip = "landlord";
+                    else if (cip == "3") cip = "vendor";
+                }
+
                 #endregion Parse And Format Data To Save
 
                 var member = new Member

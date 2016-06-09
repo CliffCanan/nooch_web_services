@@ -26,6 +26,10 @@ $(document).ready(function ()
 		
 		changeFavicon('../Assets/favicon2.ico')
     }
+    if (FROM == "appjaxx" || FROM == "josh")
+    {
+		$('.navbar img').attr('src', '../Assets/Images/appjaxx-nav.png');
+	}
     else
     {
         $('.navbar img').attr('src', '../Assets/Images/nooch-logo2.svg');
