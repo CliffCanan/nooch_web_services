@@ -307,8 +307,8 @@ namespace Nooch.Common
             }
             catch (Exception ex)
             {
-                Logger.Error("UtilityDataAccess -> SendEmail ERROR -> [Template: " + templateName + "], " +
-                                       "[ToAddress: " + toAddress + "],  [Exception: " + ex.Message + "]");
+                Logger.Error("UtilityDataAccess -> SendEmail ERROR -> Template: [" + templateName + "], " +
+                             "ToAddress: [" + toAddress + "], FromAddress: [" + fromAddress + "], Exception: [" + ex.Message + "]");
                 return false;
             }
         }

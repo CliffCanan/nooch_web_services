@@ -3192,7 +3192,7 @@ namespace Nooch.Web.Controllers
                 }
 
                 // Now get the user's Name
-                var memberObj = CommonHelper.GetMemberDetails(memId);
+                var memberObj = CommonHelper.GetMemberDetails(memberId);
                 if (memberObj != null && !String.IsNullOrEmpty(memberObj.FirstName))
                 {
                     res.usersName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName));

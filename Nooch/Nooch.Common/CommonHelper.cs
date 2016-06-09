@@ -657,13 +657,13 @@ namespace Nooch.Common
 
             var id = Utility.ConvertToGuid(memberId);
 
-            var memberAccountDetails = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
-            if (memberAccountDetails != null)
+            var memberObj = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
+            if (memberObj != null)
             {
-                _dbContext.Entry(memberAccountDetails).Reload();
+                _dbContext.Entry(memberObj).Reload();
             }
 
-            return memberAccountDetails;
+            return memberObj;
         }
 
         public static MemberNotification GetMemberNotificationSettingsByUserName(string userName)
@@ -1259,7 +1259,7 @@ namespace Nooch.Common
                     string usersDobMonth = "";
                     string usersDobYear = "";
 
-                    string usersSsnLast4 = "";
+                    string usersSsn = "";
 
                     string usersSynapseOauthKey = "";
                     string usersFingerprint = "";
@@ -1312,7 +1312,8 @@ namespace Nooch.Common
                         }
                         else
                         {
-                            usersSsnLast4 = GetDecryptedData(memberEntity.SSN);
+                            usersSsn = GetDecryptedData(memberEntity.SSN);
+                            usersSsn = usersSsn.Replace(" ","").Replace("-","");
                         }
 
                         // Check for Date Of Birth (Not encrypted)
@@ -1393,7 +1394,7 @@ namespace Nooch.Common
                         doc.address_country_code = "US";
 
                         doc.document_type = "SSN"; // This can also be "PASSPORT" or "DRIVERS_LICENSE"... we need to eventually support all 3 options (Rent Scene has international clients that don't have SSN but do have a Passport)
-                        doc.document_value = usersSsnLast4; // Can also be the user's Passport # or DL #
+                        doc.document_value = usersSsn; // Can also be the user's Passport # or DL #
 
                         addKycInfoInput_user user = new addKycInfoInput_user();
                         user.fingerprint = usersFingerprint;
@@ -1641,7 +1642,7 @@ namespace Nooch.Common
                                     st.Append("<tr><td><strong>Nooch_ID</strong></td><td><a href=\"https://noochme.com/noochnewadmin/Member/Detail?NoochId=" + memberEntity.Nooch_ID + "\" target='_blank'>" + memberEntity.Nooch_ID + "</a></td></tr>");
                                     st.Append("<tr><td><strong>Status</strong></td><td><strong>" + memberEntity.Status + "</strong></td></tr>");
                                     st.Append("<tr><td><strong>DOB</strong></td><td>" + Convert.ToDateTime(memberEntity.DateOfBirth).ToString("MMMM dd, yyyy") + "</td></tr>");
-                                    st.Append("<tr><td><strong>SSN</strong></td><td>" + usersSsnLast4 + "</td></tr>");
+                                    st.Append("<tr><td><strong>SSN</strong></td><td>" + usersSsn + "</td></tr>");
                                     st.Append("<tr><td><strong>Address</strong></td><td>" + usersAddress + "</td></tr>");
                                     st.Append("<tr><td><strong>City</strong></td><td>" + city + "</td></tr>");
                                     st.Append("<tr><td><strong>ZIP</strong></td><td>" + usersZip + "</td></tr>");
@@ -3880,11 +3881,10 @@ namespace Nooch.Common
 
         private static void SetOtherBanksInactiveForGivenMemberId(Guid memId)
         {
-            var selectedBank =
-                _dbContext.SynapseBanksOfMembers.Where(memberTemp =>
-                        memberTemp.MemberId.Value.Equals(memId) && memberTemp.IsDefault != false).ToList();
+            var existingBanks = _dbContext.SynapseBanksOfMembers.Where(bank => bank.MemberId.Value.Equals(memId) &&
+                                                                               bank.IsDefault != false).ToList();
 
-            foreach (SynapseBanksOfMember sbank in selectedBank)
+            foreach (SynapseBanksOfMember sbank in existingBanks)
             {
                 sbank.IsDefault = false;
                 _dbContext.SaveChanges();
