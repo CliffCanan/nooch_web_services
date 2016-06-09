@@ -2712,7 +2712,8 @@ table.dataTable {background:#fff;}
 }
 #history table td.actions {
   text-align: center;
-  min-width: 90px;
+  min-width: 84px;
+  padding: 5px 0;
 }
 
 #history table td.actions button.btn {

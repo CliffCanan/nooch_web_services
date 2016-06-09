@@ -6,8 +6,6 @@
     Layout = null;
     TransactionsPageData pData = Model;
     List<TransactionClass> allTransactions = pData.allTransactionsData;
-
-    //ResultcreateAccount rca = (ResultcreateAccount)ViewData["OnLoaddata"];
 }
 
 <!DOCTYPE html>
@@ -16,19 +14,20 @@
     <title>Nooch | Payment History</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.6.0/css/font-awesome.min.css" />
-    <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,400italic,500,500italic,700,900" rel="stylesheet" type="text/css" />
-    <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.4/themes/cupertino/jquery-ui.css" />
+    <link href="@Url.Content("https://fonts.googleapis.com/css?family=Roboto:400,300,400italic,500,500italic,700,900")" rel="stylesheet" type="text/css" />
+    <link href="@Url.Content("https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css")" rel="stylesheet" />
+    <link href="@Url.Content("//maxcdn.bootstrapcdn.com/font-awesome/4.6.0/css/font-awesome.min.css")" rel="stylesheet" />
+    <link href="@Url.Content("https://code.jquery.com/ui/1.11.4/themes/cupertino/jquery-ui.css")" rel="stylesheet" />
 
     <!-- Data Tables CSS -->
     <link href="@Url.Content("~/Assets/Css/dataTables/dataTables.bootstrap.css")" rel="stylesheet" />
     <link href="@Url.Content("~/Assets/Css/dataTables/dataTables.responsive.css")" rel="stylesheet" />
     <link href="@Url.Content("~/Assets/Css/dataTables/dataTables.tableTools.min.css")" rel="stylesheet" />
+    <link href="@Url.Content("//cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css")" rel="stylesheet" />
 
-    <link rel="stylesheet" href="@Url.Content("~/Assets/Css/sweetalert-override.min.css")" />
+    <link href="@Url.Content("~/Assets/Css/sweetalert-override.min.css")" rel="stylesheet" />
     <link href="@Url.Content("~/Assets/Css/tweaks.css")" rel="stylesheet" />
-    <link rel="icon" href="@Url.Content("~/Assets/favicon.ico")" />
+    <link href="@Url.Content("~/Assets/favicon.ico")" rel="icon" />
 </head>
 
 <body id="history" class="no-border">
@@ -108,10 +107,8 @@
 
                                             <td>@ad.TransactionDate1</td>
 
-                                            @*<td><a href='@Url.Action("Detail", "Member", new { NoochId=@ad.SenderNoochId} )'>@ad.SenderName</a></td>*@
                                             <td>@ad.SenderName</td>
 
-                                            @*<td><a href='@Url.Action("Detail", "Member", new { NoochId=@ad.RecepientNoochId} )'>@ad.RecipienName</a></td>*@
                                             <td>@ad.RecipienName</td>
 
                                             <td><b>$@ad.Amount</b></td>
@@ -125,14 +122,14 @@
                                             <td>
                                                 @if (ad.TransactionStatus == "Pending")
                                                 {
-                                                    <button type="button" data-val="@ad.TransactionId" class="btn btn-icon btn-xs btnCancel p-0"  data-toggle="tooltip" data-placement="auto" title="Cancel this transaction">
+                                                    <button type="button" data-val="@ad.TransactionId" data-typ="@ad.InvitationSentTo" class="btn btn-icon btn-xs btnCancel p-0" data-toggle="tooltip" data-placement="auto" title="Cancel this transaction">
                                                         <span class="fa-stack fa-lg">
                                                             <i class="fa fa-circle fa-stack-2x text-danger"></i>
                                                             <i class="fa fa-ban fa-stack-1x fa-inverse"></i>
                                                         </span>
                                                     </button>
 
-                                                    <button type="button" data-val="@ad.TransactionId" class="btn btn-icon btn-xs btnRemind p-0" data-toggle="tooltip" data-placement="auto" title="Send a reminder">
+                                                    <button type="button" data-val="@ad.TransactionId" data-typ="@ad.InvitationSentTo" class="btn btn-icon btn-xs btnRemind p-0" data-toggle="tooltip" data-placement="auto" title="Send a reminder">
                                                         <span class="fa-stack fa-lg">
                                                             <i class="fa fa-circle fa-stack-2x text-primary"></i>
                                                             <i class="fa fa-bell fa-stack-1x fa-inverse"></i>
@@ -166,6 +163,8 @@
         </div>
     </div>
 
+    <input type="hidden" id="memid" value="@pData.memId" />
+
     <div class="modal fade" id="modal-transferLocation" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -187,104 +186,20 @@
         </div>
     </div>
 
-    <script src="//code.jquery.com/jquery-1.12.0.min.js"></script>
-    <script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
-
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <script src='@Url.Content("//code.jquery.com/jquery-1.12.4.min.js")'></script>
+    <script src='@Url.Content("//code.jquery.com/ui/1.11.4/jquery-ui.min.js")'></script>
+    <script src='@Url.Content("//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js")'></script>
 
     <script src='@Url.Content("~/js/sweetalert.min.js")'></script>
-    <script src="../js/jquery.blockUI.min.js"></script>
+    <script src='@Url.Content("~/js/jquery.blockUI.min.js")'></script>
 
-    <script src="~/js/dataTables/jquery.dataTables.js"></script>
-    <script src="~/js/dataTables/dataTables.bootstrap.js"></script>
-    <script src="~/js/dataTables/dataTables.responsive.js"></script>
-    <script src="~/js/dataTables/dataTables.tableTools.min.js"></script>
+    <script src='@Url.Content("~/js/dataTables/jquery.dataTables.js")'></script>
+    <script src='@Url.Content("~/js/dataTables/dataTables.bootstrap.js")'></script>
+    <script src='@Url.Content("~/js/dataTables/dataTables.responsive.js")'></script>
+    <script src='@Url.Content("~/js/dataTables/dataTables.tableTools.min.js")'></script>
+    <script src='@Url.Content("//cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js")'></script>
 
-    <script type="text/javascript">
-        $(document).ready(function (e)
-        {
-            $(".btnCancel").click(function (e)
-            {
-                var data_val = $(this).attr('data-val');
-
-                swal({
-                    title: "Are you sure?",
-                    text: "Do you want to cancel this transaction?",
-                    type: "warning",
-                    showCancelButton: true,
-                    confirmButtonColor: "#DD6B55",
-                    confirmButtonText: "Yes - Cancel",
-                    closeOnConfirm: false
-                }, function (isConfirm)
-                {
-                    if (isConfirm) {
-                        var url = "../Admin/CancelTransaction";
-                        var data = {};
-                        data.transactionId = data_val;
-
-                        $.post(url, data, function (result)
-                        {
-                            if (result.IsSuccess == true) {
-                                toastr.success(result.Message, 'Transaction cancelled successfully ')
-                                swal("Done!", "Transaction cancelled successfully ", "success");
-
-                                $("#" + data_val).html("<span class='text-danger'><strong>Cancelled</strong></span>");
-                            }
-                            else {
-                                tostr.error(result.Message, 'Error');
-                            }
-                        });
-                    }
-                });
-            });
-        });
-    </script>
-
-    <script type="text/javascript">
-        $(document).ready(function ()
-        {
-            $("#TransactionMaster").trigger("click");
-
-            $('#transMenuItem').addClass('active');
-
-            $('#AllMembers')//.on( 'init.dt', function () {
-                //console.log('Table initialisation complete. #1');
-                //$('[data-toggle="tooltip"]').tooltip()
-            //})
-            .dataTable({
-                responsive: true,
-                "order": [3, "desc"],
-                "initComplete": function (settings, json)
-                {
-                    //console.log('Table initialisation complete. #2');
-                    $('[data-toggle="tooltip"]').tooltip()
-                },
-                "columnDefs": [
-                    { className: "actions", "targets": [-1] },
-                    { "orderable": false, "targets": [0, -1] },
-                    { "width": "70px", "targets": -1 },
-                    //{"type": "date", "targets": 3},
-                ],
-                "language": {
-                    "info": "Showing _START_ to _END_ of _TOTAL_ Total Transactions"
-                },
-                "tableTools": {
-                    "sSwfPath": "../js/plugins/dataTables/swf/copy_csv_xls_pdf.swf"
-                }
-            });
-        });
-
-        function showLocationModal(lati, longi, stte)
-        {
-            var v = 'https://www.google.com/maps/embed/v1/place?q=' + lati + ',' + longi + '&center=' + lati + ',' + longi + '&key=AIzaSyDrUnX1gGpPL9fWmsWfhOxIDIy3t7YjcEY&zoom=13';
-            $('#googleFrame').attr('src', v);
-
-            $("#citystate").text(stte);
-
-            $('#modal-transferLocation').modal();
-            return false;
-        }
-    </script>
+    <script src='@Url.Content("~/js/app/history.js")'></script>
 
     <script>
         window.paceOptions = {

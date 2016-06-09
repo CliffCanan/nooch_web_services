@@ -105,7 +105,7 @@ namespace Nooch.Web.Controllers
 
 
         /// <summary>
-        /// Just for CANELLING a payment - called by the CancelRequest() method when the CancelRequest page first loads.
+        /// Just for CANCELING a payment - called by the CancelRequest() method when the CancelRequest page first loads.
         /// </summary>
         /// <param name="TransactionId"></param>
         /// <returns></returns>
@@ -133,13 +133,13 @@ namespace Nooch.Web.Controllers
                 }
                 else if (transaction.TransactionStatus == "Rejected")
                 {
-                    Logger.Info("CancelRequest Code Behind -> GetTransDetails - This payment has already been Rejected - [TransID: " + TransactionId + "]");
+                    Logger.Info("CancelRequest Code Behind -> GetTransDetails - Payment already Rejected - [TransID: " + TransactionId + "]");
                     rcr.resultMsg = "Looks like this payment has already been rejected.";
                     rcr.initStatus = "rejected";
                 }
                 else if (transaction.TransactionStatus == "Cancelled")
                 {
-                    Logger.Info("CancelRequest Code Behind -> GetTransDetails - This payment has already been Cancelled - [TransID: " + TransactionId + "]");
+                    Logger.Info("CancelRequest Code Behind -> GetTransDetails - Payment already Cancelled - [TransID: " + TransactionId + "]");
                     rcr.resultMsg = "This payment has already been cancelled.";
                     rcr.initStatus = "cancelled";
                 }
@@ -147,7 +147,6 @@ namespace Nooch.Web.Controllers
             else
             {
                 Logger.Error("CancelRequest Code Behind -> GetTransDetails FAILED - [TransID: " + TransactionId + "]");
-
                 rcr.resultMsg = "We were not able to find this transaction. Please try again by reloading this page, or contact Nooch support for further assistance.";
             }
 
@@ -184,10 +183,30 @@ namespace Nooch.Web.Controllers
         }
 
 
-        protected ResultCancelRequest CancelMoneyRequest(string TransactionId, string MemberId, string userType)
+        public ResultCancelRequest CancelMoneyRequest(string TransactionId, string MemberId, string userType)
         {
             ResultCancelRequest res = new ResultCancelRequest();
             res.success = false;
+
+            #region Inititial Data Checks
+
+            if (String.IsNullOrEmpty(TransactionId))
+            {
+                res.resultMsg = "Missing TransactionID";
+                return res;
+            }
+            if (String.IsNullOrEmpty(MemberId))
+            {
+                res.resultMsg = "Missing MemberId";
+                return res;
+            }
+            if (String.IsNullOrEmpty(userType))
+            {
+                res.resultMsg = "Missing userType";
+                return res;
+            }
+
+            #endregion Inititial Data Checks
 
             string serviceMethod = string.Empty;
             string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
@@ -206,6 +225,8 @@ namespace Nooch.Web.Controllers
             }
 
             var serviceResult = ResponseConverter<Nooch.Common.Entities.StringResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+
+            Logger.Info(Json(serviceResult));
 
             if (serviceResult.Result == "Transaction Cancelled Successfully.")
             {
@@ -3020,30 +3041,48 @@ namespace Nooch.Web.Controllers
         }
 
 
+        #region History Page
+
         /// <summary>
         /// For getting a user's transaction history (Added by Cliff on 5/10/16).
         /// </summary>
         /// <param name="memId"></param>
         /// <param name="rs"></param>
         /// <returns></returns>
-        public ActionResult history(string memId, string rs)
+        public ActionResult history(string memId, string rs, string user)
         {
             TransactionsPageData res = new TransactionsPageData();
             res.isSuccess = false;
+            string memberId = string.Empty;
 
-            if (Request.QueryString["memId"] == null)
+            if (Request.QueryString["memId"] == null && Request.QueryString["user"] == null)
             {
                 res.msg = "No MemberId found in query URL.";
             }
             else
             {
+                if (Request.QueryString["memId"] != null)
+                {
+                    memberId = Request.QueryString["memId"];
+                }
+                else if (Request.QueryString["user"] != null)
+                {
+                    if (Request.QueryString["user"].ToLower() == "appjaxx")
+                        memberId = "8b4b4983-f022-4289-ba6e-48d5affb5484";
+                    else if (Request.QueryString["user"].ToLower() == "rentscene")
+                        memberId = "852987e8-d5fe-47e7-a00b-58a80dd15b49";
+                    else if (Request.QueryString["user"] == "cliff")
+                        memberId = "b3a6cf7b-561f-4105-99e4-406a215ccf60";
+                }
+
+                res.memId = memberId;
+
                 Logger.Info("History CodeBehind -> Page_load Initiated - [MemberID: " + memId + "]");
 
                 List<TransactionClass> Transactions = new List<TransactionClass>();
 
                 try
                 {
-                    string memberId = Request.QueryString["memId"];
                     string listType = "ALL";
 
                     int totalRecordsCount = 0;
@@ -3085,6 +3124,7 @@ namespace Nooch.Web.Controllers
                                         (trans.IsPhoneInvitation == null || trans.IsPhoneInvitation == false))
                                     {
                                         // Transfer type request to existing Nooch user..straight forward
+                                        obj.IsInvitation = false;
                                         obj.SenderId = trans.SenderId;
                                         obj.SenderName = CommonHelper.GetDecryptedData(trans.Member.FirstName) + " " + CommonHelper.GetDecryptedData(trans.Member.LastName);
                                         obj.SenderNoochId = trans.Member.Nooch_ID;
@@ -3092,7 +3132,6 @@ namespace Nooch.Web.Controllers
                                         obj.RecipientId = trans.RecipientId;
                                         obj.RecipienName = CommonHelper.GetDecryptedData(trans.Member1.FirstName) + " " + CommonHelper.GetDecryptedData(trans.Member1.LastName);
                                         obj.RecepientNoochId = trans.Member1.Nooch_ID;
-                                        obj.IsInvitation = false;
                                     }
                                     else
                                     {
@@ -3103,9 +3142,21 @@ namespace Nooch.Web.Controllers
 
                                         if (!String.IsNullOrEmpty(trans.InvitationSentTo))
                                         {
-                                            // invite through email case
+                                            // Request/Invite via Email
+                                            if (trans.TransactionStatus == "Success")
+                                            {
+                                                Member invitedMemberObj = CommonHelper.GetMemberDetailsByUserName(CommonHelper.GetDecryptedData(trans.InvitationSentTo));
 
-                                            obj.RecipienName = CommonHelper.GetDecryptedData(trans.InvitationSentTo);
+                                                if (invitedMemberObj != null)
+                                                {
+                                                    obj.RecipienName = CommonHelper.GetDecryptedData(invitedMemberObj.FirstName) + " " +
+                                                                       CommonHelper.GetDecryptedData(invitedMemberObj.LastName);
+                                                }
+                                                else
+                                                    obj.RecipienName = CommonHelper.GetDecryptedData(trans.InvitationSentTo);
+                                            }
+                                            else
+                                                obj.RecipienName = CommonHelper.GetDecryptedData(trans.InvitationSentTo);
                                         }
                                         if (trans.IsPhoneInvitation == true &&
                                             !String.IsNullOrEmpty(trans.PhoneNumberInvited))
@@ -3157,6 +3208,33 @@ namespace Nooch.Web.Controllers
 
             return View(res);
         }
+
+
+        [HttpPost]
+        [ActionName("cancelPayment")]
+        public ActionResult cancelPayment(ResultCancelRequest input)
+        {
+            Logger.Info("History Code Behind -> cancelPayment Fired - TransID: [" + input.TransId +
+                        "], UserType: [" + input.UserType + "]");
+
+            ResultCancelRequest res = new ResultCancelRequest();
+            res.success = false;
+
+            try
+            {
+                var userType = input.UserType == "new" ? "U6De3haw2r4mSgweNpdgXQ==" : "mx5bTcAYyiOf9I5Py9TiLw==";
+                ResultCancelRequest cancelResult = CancelMoneyRequest(input.TransId, input.memberId, userType);
+                res = cancelResult;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("History Code Behind -> cancelPayment FAILED - TransID: [" + input.TransId + "], Exception: [" + ex.Message + "]");
+            }
+
+            return Json(res);
+        }
+
+        #endregion History Page
 
 
         #region Micro-Deposit Verification Page

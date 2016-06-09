@@ -262,6 +262,7 @@
     <Content Include="Global.asax" />
     <Content Include="Content\Site.css" />
     <Content Include="js\app\addBank.js" />
+    <Content Include="js\app\history.js" />
     <Content Include="js\app\create-Account.js" />
     <Content Include="js\app\deposit-newuser-phone.js" />
     <Content Include="js\app\idverification.js" />
