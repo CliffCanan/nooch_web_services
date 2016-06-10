@@ -79,7 +79,7 @@ namespace Nooch.API.Controllers
 
                             JToken mostRecentToken = jsonfromsynapse["trans"]["recent_status"];
 
-                            if (mostRecentToken["status"]!=null)
+                            if (mostRecentToken["status"] != null)
                             {
                                 // updating transcaction status in transactions table
                                 if (!String.IsNullOrEmpty(mostRecentToken["status"].ToString()) &&
@@ -179,6 +179,163 @@ namespace Nooch.API.Controllers
             }
 
 
+
+        }
+
+
+        [HttpPost]
+        [ActionName("VerifyPhoneNumber")]
+        public void VerifyPhoneNumber()
+        {
+            HttpContent requestContent = Request.Content;
+            string jsonContent = requestContent.ReadAsStringAsync().Result;
+
+
+            Logger.Info("VerifyPhoneNumber [ WebHook ] loaded. With Request Body [ " + jsonContent + " ].");
+
+            JObject jsonfromsynapse = JObject.Parse(jsonContent);
+
+            JToken FromNumber = jsonfromsynapse["From"];
+            JToken MessageBody = jsonfromsynapse["Body"];
+            if (FromNumber != null && MessageBody != null)
+            {
+                string From = FromNumber.ToString();
+                string To = "";
+                string Body = MessageBody.ToString();
+
+                bool isOk = false;
+
+                string memberId = "Not Set";
+                string firstName = "";
+                string lastName = "";
+                var memberPhone = "Not Set";
+
+                if (Body.Trim().ToLower() == "go" &&
+              !string.IsNullOrEmpty(From))
+                {
+                    try
+                    {
+                        using (var noochConnection = new NOOCHEntities())
+                        {
+                            string toMatch = From.Trim().Substring(2, From.Length - 2);
+                            string toMatch2 = From.Trim();
+
+                            var noochMember = noochConnection.Members.FirstOrDefault(m => m.IsDeleted == false && (m.ContactNumber == toMatch2 || m.ContactNumber == toMatch));
+
+                            if (noochMember != null)
+                            {
+                                // Update user's DB record
+                                noochMember.IsVerifiedPhone = true;
+                                noochMember.PhoneVerifiedOn = DateTime.Now;
+                                noochMember.DateModified = DateTime.Now;
+                                int value = noochConnection.SaveChanges();
+                                memberId = Convert.ToString(noochMember.MemberId);
+                                firstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(noochMember.FirstName));
+                                lastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(noochMember.LastName));
+                                memberPhone = CommonHelper.FormatPhoneNumber(noochMember.ContactNumber);
+
+                                if (value > 0)
+                                {
+                                    isOk = true;
+
+                                    #region Update Tenant Record If For A Tenant
+
+                                    if (noochMember.Type == "Tenant")
+                                    {
+                                        try
+                                        {
+
+                                            var tenantdObj = noochConnection.Tenants.FirstOrDefault(t => t.MemberId == noochMember.MemberId && t.IsDeleted == false);
+
+                                            if (tenantdObj != null)
+                                            {
+                                                Logger.Info("SMSResponse -> This is a TENANT - About to update Tenants Table " +
+                                                                      "MemberID: [" + memberId + "]");
+
+                                                tenantdObj.IsPhoneVerfied = true;
+                                                tenantdObj.DateModified = DateTime.Now;
+
+                                                int saveChangesToTenant = noochConnection.SaveChanges();
+
+                                                if (saveChangesToTenant > 0)
+                                                {
+                                                    Logger.Info("SMSResponse -> Saved changes to TENANT table successfully - " +
+                                                                           "MemberID: [" + memberId + "]");
+                                                }
+                                                else
+                                                {
+                                                    Logger.Error("SMSResponse -> FAILED to save changes to TENANT table - " +
+                                                                           "MemberID: [" + memberId + "]");
+                                                }
+                                            }
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            Logger.Error("SMSResponse -> EXCEPTION on checking if this user is a TENANT - " +
+                                                                   "MemberID: [" + memberId + "], [Exception: " + ex + "]");
+                                        }
+                                    }
+
+                                    #endregion Update Tenant Record If For A Tenant
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error("SMSResponse -> EXCEPTION on checking if this user is a TENANT - " +
+                                               "MemberID: [" + memberId + "], [Exception: " + ex + "]");
+
+                        isOk = false;
+                    }
+
+                    if (isOk &&
+                        !string.IsNullOrEmpty(From) &&
+
+                        !string.IsNullOrEmpty(Body))
+                    {
+                        //string AccountSid = Utility.GetValueFromConfig("AccountSid");
+                        //string AuthToken = Utility.GetValueFromConfig("AuthToken");
+                        //string from = Utility.GetValueFromConfig("AccountPhone");
+                        string to = "";
+
+                        if (to.Contains('+'))
+                            to = From.Trim();
+                        else
+                            to = "+" + From.Trim();
+
+                        Utility.SendSMS(to, "Thanks, " + firstName + "! Your phone number has been verified - have a great day!");
+
+                        Logger.Info("SMSResponse -> Success: Response received from user successfully & Phone is now Verified - " +
+                                               "Phone #: [" + memberPhone + "], " +
+                                               "Name: " + firstName + " " + lastName + "], " +
+                                               "MemberID: [" + memberId + "]");
+                    }
+                    else if (!string.IsNullOrEmpty(From) &&
+
+                        !string.IsNullOrEmpty(Body))
+                    {
+                        Logger.Error("SMSResponse -> FAILED - Error #96. [Phone #: " + memberPhone + "], " +
+                                               "[Name: " + firstName + " " + lastName + "],  [MemberId: " + memberId + "]");
+
+                        string to = "";
+
+                        if (to.Contains('+'))
+                            to = From.Trim();
+                        else
+                            to = "+" + From.Trim();
+
+                        Utility.SendSMS(to, "Whoops, something went wrong. Please try again or contact Nooch for help.");
+
+
+                    }
+                }
+
+                else
+                {
+                    Logger.Error("SMSResponse -> FAILED --> Empty message or invalid format data received.");
+                }
+            }
 
         }
     }
