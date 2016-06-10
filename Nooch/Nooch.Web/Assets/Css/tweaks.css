@@ -2696,6 +2696,12 @@ form .table-header {
 }
 
 table.dataTable {background:#fff;}
+
+#history #profilePic {
+  float: left;
+  width: 50px;
+  margin: -6px 0 0 15px;
+}
 #history .form-control {
   border: 1px solid #ddd;
   border-radius: 5px; 

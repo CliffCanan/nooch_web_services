@@ -644,7 +644,7 @@ function createRecord() {
             console.log("SUCCESS -> Save Member Info result is... [next line]");
             console.log(result);
 
-            resultReason = result.msg;
+            resultReason = result.reason;
 
             // Hide the Loading Block
             $('#idWizContainer').unblock();

@@ -13,6 +13,7 @@ namespace Nooch.Common.Entities.LandingPagesRelatedEntities
         public string msg { get; set; }
         public string usersName { get; set; }
         public string usersEmail { get; set; }
+        public string usersPhoto { get; set; }
         public string memId { get; set; }
     }
 

@@ -1914,6 +1914,7 @@ namespace Nooch.Web.Controllers
                 bool newUser = String.IsNullOrEmpty(userData.memId);
 
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+
                 string serviceMethod = newUser ? "/RegisterNonNoochUserWithSynapse" : "/RegisterExistingUserWithSynapseV3";
                 string urlToUse = String.Concat(serviceUrl, serviceMethod);
 
@@ -1935,10 +1936,8 @@ namespace Nooch.Web.Controllers
                 inputClass.transId = userData.transId;
                 inputClass.isRentScene = userData.rs == "true" ? true : false;
                 inputClass.cip = userData.cip.Length == 1 ? userData.cip : "renter";
-
                 var scriptSerializer = new JavaScriptSerializer();
                 string json = scriptSerializer.Serialize(inputClass);
-
 
                 Logger.Info("Create Account Code-Behind -> saveMemberInfo CHECKPOINT #1 - New User?: [" + newUser + "], URL To Use: [" + urlToUse + "]");
 
@@ -3090,7 +3089,7 @@ namespace Nooch.Web.Controllers
                     int totalRecordsCount = 0;
 
                     TransactionsDataAccess tda = new TransactionsDataAccess();
-                    var transactionList = tda.GetTransactionsList(memberId, listType, 50, 1, "", out totalRecordsCount);
+                    var transactionList = tda.GetTransactionsList(memberId, listType, 100, 1, "", out totalRecordsCount);
 
                     if (transactionList != null && transactionList.Count > 0)
                     {
@@ -3198,6 +3197,7 @@ namespace Nooch.Web.Controllers
                 if (memberObj != null && !String.IsNullOrEmpty(memberObj.FirstName))
                 {
                     res.usersName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName));
+                    res.usersPhoto = !String.IsNullOrEmpty(memberObj.Photo) ? memberObj.Photo : "https://www.noochme.com/noochweb/Assets/Images/userpic-default.png";
 
                     if (!String.IsNullOrEmpty(memberObj.LastName))
                     {
