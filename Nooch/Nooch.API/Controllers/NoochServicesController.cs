@@ -62,12 +62,12 @@ namespace Nooch.API.Controllers
         {
             try
             {
-                Logger.Info("Service Controller - ForgotPassword - [userName: " + userName + "]");
-
+                Logger.Info("Service Cntrlr -> ForgotPassword - [userName: " + userName + "]");
                 return new StringResult { Result = CommonHelper.ForgotPassword(userName.Input) };
             }
             catch (Exception ex)
             {
+                Logger.Info("Service Cntrlr -> ForgotPassword FAILED - UserName: [" + userName + "], Exception: [" + ex + "]");
                 return new StringResult() { Result = "" };
             }
         }
@@ -138,7 +138,7 @@ namespace Nooch.API.Controllers
                     PendingTransCoutResult trans = transactionDataAccess.GetMemberPendingTransCount(MemberId);
                     return trans;
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     //throw new Exception("Server Error");
                     return new PendingTransCoutResult { pendingRequestsSent = "0", pendingRequestsReceived = "0", pendingInvitationsSent = "0", pendingDisputesNotSolved = "0" };
@@ -231,6 +231,7 @@ namespace Nooch.API.Controllers
             }
             catch (Exception ex)
             {
+                Logger.Error("Service Cntrlr - GetMemberIds - FAILED - [Exception: " + ex + "]");
                 return new PhoneEmailListDto();
             }
         }
@@ -246,7 +247,7 @@ namespace Nooch.API.Controllers
             catch (Exception ex)
             {
                 Logger.Error("Service Controller - GetMemberUsernameByMemberId FAILED - [GetMemberNameByUserName : " + userName +
-                                       "], Exception: [" + ex + "]");
+                             "], Exception: [" + ex + "]");
             }
             return new StringResult();
         }
@@ -376,6 +377,7 @@ namespace Nooch.API.Controllers
             }
             catch (Exception ex)
             {
+                Logger.Error("Service Cntrlr - GetServerCurrentTime FAILED - Exception: [" + ex + "]");
                 return new StringResult { Result = "" };
             }
         }
@@ -697,6 +699,40 @@ namespace Nooch.API.Controllers
                 return new StringResult { Result = Utility.SendSMS(phoneto, msg) };
             }
             throw new Exception("Invalid OAuth 2 Access");
+        }
+
+
+
+        [HttpGet]
+        [ActionName("sendSMS")]
+        public StringResult ApiSMS(string to, string msg)
+        {
+            StringResult res = new StringResult();
+            
+            try
+            {
+                Logger.Info("Service Cntrlr - sendSMS Fired - memberId: [" + to + "]. Exception: [" + msg + "]");
+
+                if (String.IsNullOrEmpty(to))
+                {
+                    res.Result = "Missing phone number to send to.";
+                    return res;
+                }
+                if (String.IsNullOrEmpty(msg))
+                {
+                    res.Result = "Missing message to send.";
+                    return res;
+                }
+                
+                res.Result = Utility.SendSMS(to, msg);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Cntrlr - sendSMS FAILED - memberId: [" + to + "]. Exception: [" + ex + "]");
+                res.Result = ex.Message;
+            }
+
+            return res;
         }
 
 
@@ -1301,12 +1337,13 @@ namespace Nooch.API.Controllers
             {
                 try
                 {
-                    Logger.Info("Service Controller - SaveSocialMediaPost - [MemberId: " + MemberId + "],  [Posted To: " + PostTo + "]");
+                    Logger.Info("Service Cntrlr - SaveSocialMediaPost - [MemberId: " + MemberId + "],  [Posted To: " + PostTo + "]");
                     var memberDataAccess = new MembersDataAccess();
                     return new StringResult { Result = memberDataAccess.SaveMediaPosts(MemberId, PostTo, PostContent) };
                 }
                 catch (Exception ex)
                 {
+                    Logger.Error("Service Cntrlr - SaveSocialMediaPost FAILED - MemberID: [" + MemberId + "], Exception: [" + ex.Message + "]");
                     throw new Exception("Server Error");
                 }
             }
@@ -2365,206 +2402,6 @@ namespace Nooch.API.Controllers
 
             return null;
         }
-
-
-        // CLIFF (5/25/16): Commenting out this method b/c this isn't used anymore - it was for the CreateAccount page for existing users,
-        //                  but those are now being sent to RegisterExistingUserWithSynapseV3().
-        /*
-        [HttpGet]
-        [ActionName("UpdateMemberProfile")]
-        public genericResponse UpdateMemberProfile(string memId, string fname, string lname, string email, string phone, string address, string zip, string dob, string ssn, string fngprnt, string ip, string pw)
-        {
-            genericResponse res = new genericResponse();
-            res.success = false;
-            res.msg = "Initial";
-
-            try
-            {
-                Logger.Info("Service Controller -> UpdateMemberProfile Initiated - [MemberId: " + memId + "]");
-
-                Member member = null;
-
-                var id = Utility.ConvertToGuid(memId);
-
-                var mda = new MembersDataAccess();
-                member = mda.GetMemberByGuid(id);
-
-                if (member != null)
-                {
-                    try
-                    {
-                        #region Encrypt each piece of data
-
-                        member.FirstName = CommonHelper.GetEncryptedData(fname.Split(' ')[0]);
-
-                        if (fname.IndexOf(' ') > 0)
-                        {
-                            member.LastName = CommonHelper.GetEncryptedData(fname.Split(' ')[1]);
-                        }
-                        if (!String.IsNullOrEmpty(pw) &&
-                            member.Password != null && member.Password == "")
-                        {
-                            member.Password = CommonHelper.GetEncryptedData(CommonHelper.GetDecryptedData(pw)
-                                                          .Replace(" ", "+"));
-                        }
-                        //if (!String.IsNullOrEmpty())
-                        //{
-                        //    member.SecondaryEmail = CommonHelper.GetEncryptedData(profileInput.SecondaryMail);
-                        //}
-                        //if (!String.IsNullOrEmpty(profileInput.RecoveryMail))
-                        //{
-                        //    member.RecoveryEmail = CommonHelper.GetEncryptedData(profileInput.RecoveryMail);
-                        //}
-                        //if (!String.IsNullOrEmpty(profileInput.FacebookAcctLogin))
-                        //{
-                        //    member.FacebookAccountLogin = profileInput.FacebookAcctLogin;
-                        //}
-                        if (!String.IsNullOrEmpty(address))
-                        {
-                            member.Address = CommonHelper.GetEncryptedData(address);
-                        }
-                        //if (!String.IsNullOrEmpty(profileInput.City))
-                        //{
-                        //    member.City = CommonHelper.GetEncryptedData(profileInput.City);
-                        //}
-                        //if (!String.IsNullOrEmpty(profileInput.State))
-                        //{
-                        //    member.State = CommonHelper.GetEncryptedData(profileInput.State);
-                        //}
-                        if (!String.IsNullOrEmpty(zip))
-                        {
-                            member.Zipcode = CommonHelper.GetEncryptedData(zip);
-                        }
-                        //if (!String.IsNullOrEmpty(profileInput.Country))
-                        //{
-                        //    member.Country = profileInput.Country;
-                        //}
-                        //if (!string.IsNullOrEmpty(profileInput.TimeZoneKey))
-                        //{
-                        //    member.TimeZoneKey = CommonHelper.GetEncryptedData(profileInput.TimeZoneKey);
-                        //}
-                        if (!String.IsNullOrEmpty(dob))
-                        {
-                            DateTime dobDateTime;
-
-                            if (DateTime.TryParse(dob, out dobDateTime))
-                            {
-                                member.DateOfBirth = dobDateTime;
-                            }
-                            else
-                            {
-                                res.note = res.note + "[Invalid DOB passed.]";
-                            }
-                        }
-                        if (!String.IsNullOrEmpty(ssn))
-                        {
-                            member.SSN = CommonHelper.GetEncryptedData(ssn);
-                        }
-                        if (!String.IsNullOrEmpty(fngprnt))
-                        {
-                            member.UDID1 = fngprnt;
-                        }
-
-                        #endregion Encrypt each piece of data
-
-                        //Logger.LogDebugMessage("Service Layer -> UpdateMemberProfile - contactNumber (sent from app): [" + contactNumber + "]");
-                        //Logger.LogDebugMessage("Service Layer -> UpdateMemberProfile - member.ContactNumber (from DB): [" + member.ContactNumber + "]");
-
-                        phone = CommonHelper.RemovePhoneNumberFormatting(phone);
-
-                        if (!String.IsNullOrEmpty(phone) &&
-                            (String.IsNullOrEmpty(member.ContactNumber) ||
-                             CommonHelper.RemovePhoneNumberFormatting(member.ContactNumber) != phone))
-                        {
-                            if (!mda.IsPhoneNumberAlreadyRegistered(phone))
-                            {
-                                member.ContactNumber = phone;
-                                member.IsVerifiedPhone = false;
-
-                                #region Sending SMS Verificaion
-
-                                try
-                                {
-                                    fname = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(member.FirstName));
-                                    string MessageBody = "Hi " + fname + ", This is Nooch - just need to verify this is your phone number. Please reply 'Go' to confirm your phone number.";
-                                    string SMSresult = Utility.SendSMS(phone, MessageBody);
-
-                                    Logger.Info("Service Controller -> UpdateMemberProfile -> SMS Verification sent to [" + phone + "] successfully.");
-                                }
-                                catch (Exception ex)
-                                {
-                                    Logger.Error("Service Controller -> UpdateMemberProfile -> SMS Verification NOT sent to [" +
-                                        phone + "], Exception: [" + ex.Message + "]");
-                                }
-
-                                #endregion Sending SMS Verificaion
-                            }
-                            else
-                            {
-                                res.note = "Phone number was already registered with Nooch: " + CommonHelper.FormatPhoneNumber(phone);
-                            }
-                        }
-
-                        if (!String.IsNullOrEmpty(ip))
-                        {
-                            try
-                            {
-                                CommonHelper.UpdateMemberIPAddressAndDeviceId(memId, ip, "");
-                            }
-                            catch (Exception ex)
-                            {
-                                Logger.Error("Service Controller -> UpdateMemberProfile - FAILED to save IP Address - MemberID: [" + memId +
-                                                       "], IP: [" + ip + "], Exception: [" + ex.Message + "]");
-                            }
-                        }
-
-                        member.DateModified = DateTime.Now;
-                        // CLIFF (7/30/15): We used to set the Validated Date here automatically when the user completed their profile.
-                        //                  But now we also need users to send SSN and DoB, so will set the Validated Date in SaveMemberSSN()
-                        // member.ValidatedDate = DateTime.Now;
-
-                        Logger.Info("Servie Controller -> UpdateMemberProfile - About to save to DB...");
-
-                        int saveToDb = mda.UpdateMember(member);
-
-
-                        Logger.Info("Servie Controller -> UpdateMemberProfile - Just saved to DB - 'saveToDb': [" + saveToDb + "]");
-
-                        if (saveToDb > 0)
-                        {
-                            Logger.Info("Servie Controller -> UpdateMemberProfile - Updated Successfully! - MemberID: [" + memId + "]");
-
-                            res.success = true;
-                            res.msg = "Your details have been updated successfully.";
-                        }
-                        else
-                        {
-                            Logger.Error("Service Controller -> UpdateMemberProfile FAILED - Error on updating record in DB - [MemberID: " + memId + "]");
-                            res.msg = "Error on updating member's record in DB.";
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.Error("Service Controller -> UpdateMemberProfile FAILED - [MemberID: " + memId + "], [Exception: " + ex.Message + "]");
-
-                        res.msg = ex.InnerException.Message;
-                    }
-                }
-                else
-                {
-                    Logger.Error("Service Controller -> UpdateMemberProfile FAILED - MemberID Not Found - [MemberID: " + memId + "]");
-                    res.msg = "Member not found.";
-                }
-
-            }
-            catch (Exception ex)
-            {
-                res.msg = "Service Controller exception -> " + ex.Message.ToString();
-                Logger.Error("Service Controller -> UpdateMemberProfile FAILED - MemberId: [" + memId + "], Exception: [" + ex + "]");
-            }
-
-            return res;
-        }*/
 
 
         [HttpGet]
@@ -4676,6 +4513,7 @@ namespace Nooch.API.Controllers
                 }
                 catch (Exception ex)
                 {
+                    Logger.Error("Service Cntrlr - GetMyDetails FAILED - MemberID: [" + memberId + "], Exception: [" + ex.Message + "]");
                     throw new Exception("Server Error.");
                 }
             }
@@ -4809,13 +4647,13 @@ namespace Nooch.API.Controllers
             {
                 try
                 {
-                    Logger.Info("Service Controller - ResetPin - MemberId: [" + memberId + "]");
+                    Logger.Info("Service Cntrlr - ResetPin - MemberId: [" + memberId + "]");
                     var mda = new MembersDataAccess();
                     return new StringResult { Result = mda.ResetPin(memberId, oldPin, newPin) };
                 }
                 catch (Exception ex)
                 {
-                    Logger.Info("Service Controller - ResetPin - MemberId: [" + memberId + "]");
+                    Logger.Error("Service Cntrlr - ResetPin - MemberId: [" + memberId + "], Exception: [" + ex.Message + "]");
                     return new StringResult() { Result = "Server Error." };
                 }
             }
@@ -5733,7 +5571,7 @@ namespace Nooch.API.Controllers
         {
             try
             {
-                Logger.Info("Service Layer -> SetAutoPayStatusForTenant Initiated - [ tenantId:" + tenantId + "]");
+                Logger.Info("Service Cntrlr -> SetAutoPayStatusForTenant Initiated - [ tenantId:" + tenantId + "]");
 
                 var mda = new MembersDataAccess();
                 return new StringResult
@@ -5743,7 +5581,7 @@ namespace Nooch.API.Controllers
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Layer -> SetAutoPayStatusForTenant EXCEPTION - [tenantId:" + tenantId + "]");
+                Logger.Error("Service Cntrlr -> SetAutoPayStatusForTenant EXCEPTION - [tenantId:" + tenantId + "], Exception: [" + ex.Message + "]");
 
             }
 

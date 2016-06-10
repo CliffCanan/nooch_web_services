@@ -691,6 +691,7 @@ namespace Nooch.DataAccess
             }
             catch (Exception ex)
             {
+                Logger.Info("MDA -> GetMostFrequentFriends FAILED - MemberID: [" + MemberId + "], Exception: [" + ex + "]");
                 return null;
             }
         }
@@ -702,8 +703,9 @@ namespace Nooch.DataAccess
             {
                 return _dbContext.GetReportsForMember(MemberId, query).SingleOrDefault();
             }
-            catch
+            catch (Exception ex)
             {
+                Logger.Info("MDA -> GetMemberStats FAILED - MemberID: [" + MemberId + "], Exception: [" + ex + "]");
             }
             return "";
         }
@@ -988,7 +990,7 @@ namespace Nooch.DataAccess
                                 }
                                 catch (Exception ex)
                                 {
-                                    Logger.Error("MDA -> LoginRequest - Automatic Log Out email NOT sent to [" + toAddress + "]. Problem occured in sending email.");
+                                    Logger.Error("MDA -> LoginRequest - Automatic Log Out email NOT sent to [" + toAddress + "] - Exception: [" + ex.Message + "]");
                                 }
 
                             }
@@ -2773,13 +2775,13 @@ namespace Nooch.DataAccess
                 Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 - Nooch Member UPDATED SUCCESSFULLY IN DB (via Browser Landing Page) - " +
                             "[UserName: " + userEmail + "], [MemberId: " + memberId + "]");
 
-                bool didUserAddPw = false;
+                //bool didUserAddPw = false;
 
                 #region Check If PW Was Supplied To Create Full Account
 
                 if (!String.IsNullOrEmpty(pw))
                 {
-                    didUserAddPw = true;
+                    //didUserAddPw = true;
 
                     #region Send New Account Email To New User
 
@@ -3316,13 +3318,13 @@ namespace Nooch.DataAccess
                     // SO NOW THAT THE USER HAS JUST BEEN CREATED, CHECK IF THEY WANTED A FULL NOOCH ACCOUNT
                     // BY CHECKING IF A PW WAS PROVIDED & THEN SEND NEW USER EMAILS
 
-                    bool didUserAddPw = false;
+                    //bool didUserAddPw = false;
 
                     #region Check If PW Was Supplied To Create Full Account
 
                     if (!String.IsNullOrEmpty(pw))
                     {
-                        didUserAddPw = true;
+                        //didUserAddPw = true;
                         #region Generate & Save Nooch Authentication Token
 
                         var tokenId = Guid.NewGuid();
@@ -4447,20 +4449,13 @@ namespace Nooch.DataAccess
 
                             res.Is_success = false;
 
-                            if (errorCode != null)
-                            {
-                                var resp = new StreamReader(we.Response.GetResponseStream()).ReadToEnd();
-                                JObject jsonfromsynapse = JObject.Parse(resp);
-                                JToken token = jsonfromsynapse["error"]["en"];
+                            var resp = new StreamReader(we.Response.GetResponseStream()).ReadToEnd();
+                            JObject jsonfromsynapse = JObject.Parse(resp);
+                            JToken token = jsonfromsynapse["error"]["en"];
 
-                                if (token != null)
-                                {
-                                    res.errorMsg = jsonfromsynapse["error"]["en"].ToString();
-                                }
-                            }
-                            else
+                            if (token != null)
                             {
-                                res.errorMsg = "Error #4701 returned from Synapse";
+                                res.errorMsg = jsonfromsynapse["error"]["en"].ToString();
                             }
                         }
 

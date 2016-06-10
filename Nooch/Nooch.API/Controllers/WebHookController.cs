@@ -17,16 +17,14 @@ namespace Nooch.API.Controllers
         {
             HttpContent requestContent = Request.Content;
             string jsonContent = requestContent.ReadAsStringAsync().Result;
+
             try
             {
-
-
                 using (NOOCHEntities obj = new NOOCHEntities())
                 {
 
                     Logger.Info("GetTransactionStatusFromSynapse [ WebHook ] loaded for TransactionId : [ " + transId +
                                 " ]. At [ " + DateTime.Now + " ]. With Request Body [ " + jsonContent + " ].");
-
 
                     // code to store transaction timeline info in db 
                     JObject jsonfromsynapse = JObject.Parse(jsonContent);
@@ -45,15 +43,10 @@ namespace Nooch.API.Controllers
                             {
                                 foreach (JToken currentItem in allTimeLineItems)
                                 {
-
-
                                     string note = currentItem["note"].ToString();
                                     string status = currentItem["status"].ToString();
                                     string status_id = currentItem["status_id"].ToString();
                                     string status_date = currentItem["date"]["$date"].ToString();
-
-
-
 
                                     TransactionsStatusAtSynapse tas = new TransactionsStatusAtSynapse();
                                     tas.Nooch_Transaction_Id = transId;
@@ -65,13 +58,8 @@ namespace Nooch.API.Controllers
                                     tas.status_id = status_id;
                                     tas.status_note = note;
 
-
                                     obj.TransactionsStatusAtSynapses.Add(tas);
                                     obj.SaveChanges();
-
-
-
-
                                 }
                             }
 
@@ -95,12 +83,7 @@ namespace Nooch.API.Controllers
                                     }
                                 }
                             }
-
-
-
-
                         }
-
                     }
                     else
                     {
@@ -115,14 +98,10 @@ namespace Nooch.API.Controllers
                             {
                                 foreach (JToken currentItem in allTimeLineItems)
                                 {
-
-
                                     string note = currentItem["note"].ToString();
                                     string status = currentItem["status"].ToString();
                                     string status_id = currentItem["status_id"].ToString();
                                     string status_date = currentItem["date"]["$date"].ToString();
-
-
 
                                     TransactionsStatusAtSynapse tas = new TransactionsStatusAtSynapse();
                                     tas.Nooch_Transaction_Id = transId;
@@ -134,14 +113,8 @@ namespace Nooch.API.Controllers
                                     tas.status_id = status_id;
                                     tas.status_note = note;
 
-
                                     obj.TransactionsStatusAtSynapses.Add(tas);
                                     obj.SaveChanges();
-
-
-
-
-
                                 }
                             }
 
@@ -170,16 +143,11 @@ namespace Nooch.API.Controllers
                         }
                     }
                 }
-
             }
             catch (Exception ex)
             {
                 Logger.Error("GetTransactionStatusFromSynapse [ WebHook ] failed to save in db for TransactionId : [ " + transId + " ]. At [ " + DateTime.Now + " ]. Exception -> [ " + ex + " ].");
-
             }
-
-
-
         }
 
 
@@ -190,17 +158,16 @@ namespace Nooch.API.Controllers
             HttpContent requestContent = Request.Content;
             string jsonContent = requestContent.ReadAsStringAsync().Result;
 
-
-            Logger.Info("VerifyPhoneNumber [ WebHook ] loaded. With Request Body [ " + jsonContent + " ].");
+            Logger.Info("WebHook Cntrlr -> VerifyPhoneNumber Fired - Request Body: [ " + jsonContent + " ]");
 
             JObject jsonfromsynapse = JObject.Parse(jsonContent);
 
             JToken FromNumber = jsonfromsynapse["From"];
             JToken MessageBody = jsonfromsynapse["Body"];
+
             if (FromNumber != null && MessageBody != null)
             {
                 string From = FromNumber.ToString();
-                string To = "";
                 string Body = MessageBody.ToString();
 
                 bool isOk = false;
@@ -210,8 +177,7 @@ namespace Nooch.API.Controllers
                 string lastName = "";
                 var memberPhone = "Not Set";
 
-                if (Body.Trim().ToLower() == "go" &&
-              !string.IsNullOrEmpty(From))
+                if (Body.Trim().ToLower() == "go" && !String.IsNullOrEmpty(From))
                 {
                     try
                     {
@@ -220,7 +186,9 @@ namespace Nooch.API.Controllers
                             string toMatch = From.Trim().Substring(2, From.Length - 2);
                             string toMatch2 = From.Trim();
 
-                            var noochMember = noochConnection.Members.FirstOrDefault(m => m.IsDeleted == false && (m.ContactNumber == toMatch2 || m.ContactNumber == toMatch));
+                            var noochMember = noochConnection.Members.FirstOrDefault(m => m.IsDeleted == false &&
+                                                                                    (m.ContactNumber == toMatch2 ||
+                                                                                    m.ContactNumber == toMatch));
 
                             if (noochMember != null)
                             {
@@ -228,7 +196,9 @@ namespace Nooch.API.Controllers
                                 noochMember.IsVerifiedPhone = true;
                                 noochMember.PhoneVerifiedOn = DateTime.Now;
                                 noochMember.DateModified = DateTime.Now;
+
                                 int value = noochConnection.SaveChanges();
+
                                 memberId = Convert.ToString(noochMember.MemberId);
                                 firstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(noochMember.FirstName));
                                 lastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(noochMember.LastName));
@@ -244,13 +214,12 @@ namespace Nooch.API.Controllers
                                     {
                                         try
                                         {
-
                                             var tenantdObj = noochConnection.Tenants.FirstOrDefault(t => t.MemberId == noochMember.MemberId && t.IsDeleted == false);
 
                                             if (tenantdObj != null)
                                             {
-                                                Logger.Info("SMSResponse -> This is a TENANT - About to update Tenants Table " +
-                                                                      "MemberID: [" + memberId + "]");
+                                                Logger.Info("WebHook Cntrlr -> VerifyPhoneNumber -> This is a TENANT - About to update Tenants Table " +
+                                                            "MemberID: [" + memberId + "]");
 
                                                 tenantdObj.IsPhoneVerfied = true;
                                                 tenantdObj.DateModified = DateTime.Now;
@@ -259,20 +228,20 @@ namespace Nooch.API.Controllers
 
                                                 if (saveChangesToTenant > 0)
                                                 {
-                                                    Logger.Info("SMSResponse -> Saved changes to TENANT table successfully - " +
-                                                                           "MemberID: [" + memberId + "]");
+                                                    Logger.Info("WebHook Cntrlr -> VerifyPhoneNumber -> Saved changes to TENANT table successfully - " +
+                                                                "MemberID: [" + memberId + "]");
                                                 }
                                                 else
                                                 {
-                                                    Logger.Error("SMSResponse -> FAILED to save changes to TENANT table - " +
-                                                                           "MemberID: [" + memberId + "]");
+                                                    Logger.Error("WebHook Cntrlr -> VerifyPhoneNumber -> FAILED to save changes to TENANT table - " +
+                                                                 "MemberID: [" + memberId + "]");
                                                 }
                                             }
                                         }
                                         catch (Exception ex)
                                         {
-                                            Logger.Error("SMSResponse -> EXCEPTION on checking if this user is a TENANT - " +
-                                                                   "MemberID: [" + memberId + "], [Exception: " + ex + "]");
+                                            Logger.Error("WebHook Cntrlr -> VerifyPhoneNumber -> EXCEPTION on checking if this user is a TENANT - " +
+                                                         "MemberID: [" + memberId + "], [Exception: " + ex + "]");
                                         }
                                     }
 
@@ -283,54 +252,30 @@ namespace Nooch.API.Controllers
                     }
                     catch (Exception ex)
                     {
-                        Logger.Error("SMSResponse -> EXCEPTION on checking if this user is a TENANT - " +
-                                               "MemberID: [" + memberId + "], [Exception: " + ex + "]");
-
+                        Logger.Error("WebHook Cntrlr -> VerifyPhoneNumber FAILED -> EXCEPTION on checking if this user is a TENANT - " +
+                                     "MemberID: [" + memberId + "], [Exception: " + ex + "]");
                         isOk = false;
                     }
 
-                    if (isOk &&
-                        !string.IsNullOrEmpty(From) &&
+                    string to = (From.Contains('+')) ? From.Trim() : "+" + From.Trim();
 
-                        !string.IsNullOrEmpty(Body))
+                    if (isOk)
                     {
-                        //string AccountSid = Utility.GetValueFromConfig("AccountSid");
-                        //string AuthToken = Utility.GetValueFromConfig("AuthToken");
-                        //string from = Utility.GetValueFromConfig("AccountPhone");
-                        string to = "";
-
-                        if (to.Contains('+'))
-                            to = From.Trim();
-                        else
-                            to = "+" + From.Trim();
-
                         Utility.SendSMS(to, "Thanks, " + firstName + "! Your phone number has been verified - have a great day!");
 
-                        Logger.Info("SMSResponse -> Success: Response received from user successfully & Phone is now Verified - " +
-                                               "Phone #: [" + memberPhone + "], " +
-                                               "Name: " + firstName + " " + lastName + "], " +
-                                               "MemberID: [" + memberId + "]");
+                        Logger.Info("WebHook Cntrlr -> VerifyPhoneNumber -> Success: Response received from user successfully & Phone is now Verified - " +
+                                    "Phone #: [" + memberPhone + "], " +
+                                    "Name: " + firstName + " " + lastName + "], " +
+                                    "MemberID: [" + memberId + "]");
                     }
-                    else if (!string.IsNullOrEmpty(From) &&
-
-                        !string.IsNullOrEmpty(Body))
+                    else
                     {
-                        Logger.Error("SMSResponse -> FAILED - Error #96. [Phone #: " + memberPhone + "], " +
-                                               "[Name: " + firstName + " " + lastName + "],  [MemberId: " + memberId + "]");
+                        Logger.Error("WebHook Cntrlr -> VerifyPhoneNumber FAILED - Error #277. [Phone #: " + memberPhone + "], " +
+                                     "[Name: " + firstName + " " + lastName + "],  [MemberId: " + memberId + "]");
 
-                        string to = "";
-
-                        if (to.Contains('+'))
-                            to = From.Trim();
-                        else
-                            to = "+" + From.Trim();
-
-                        Utility.SendSMS(to, "Whoops, something went wrong. Please try again or contact Nooch for help.");
-
-
+                        Utility.SendSMS(to, "Whoops, something went wrong. Please try again or contact support@nooch.com for help.");
                     }
                 }
-
                 else
                 {
                     Logger.Error("SMSResponse -> FAILED --> Empty message or invalid format data received.");

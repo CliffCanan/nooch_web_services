@@ -163,9 +163,9 @@ namespace Nooch.Common
                     id = new Guid(value);
                 }
             }
-            catch (Exception exception)
+            catch (Exception ex)
             {
-                //Logger.LogErrorMessage(exception.Message + "Unable to format string :" + value);
+                Logger.Error("Utility - ConvertToGuid FAILED - [Exception: " + ex + "]");
                 throw;
             }
             return id;
@@ -314,21 +314,32 @@ namespace Nooch.Common
             }
         }
 
+
         public static string SendSMS(string phoneto, string msg)
         {
-            string AccountSid = GetValueFromConfig("AccountSid");
-            string AuthToken = GetValueFromConfig("AuthToken");
-            string from = GetValueFromConfig("AccountPhone");
-            string to = "";
+            try
+            {
+                string AccountSid = GetValueFromConfig("AccountSid");
+                string AuthToken = GetValueFromConfig("AuthToken");
+                string from = GetValueFromConfig("AccountPhone");
+                string to = "";
 
-            if (!phoneto.Trim().Contains('+'))
-                to = GetValueFromConfig("SMSInternationalCode") + phoneto.Trim();
-            else
-                to = phoneto.Trim();
+                if (!phoneto.Trim().Contains('+'))
+                    to = GetValueFromConfig("SMSInternationalCode") + phoneto.Trim();
+                else
+                    to = phoneto.Trim();
 
-            var client = new Twilio.TwilioRestClient(AccountSid, AuthToken);
-            var sms = client.SendSmsMessage(from, to, msg);
-            return sms.Status;
+                var client = new Twilio.TwilioRestClient(AccountSid, AuthToken);
+                //var sms = client.SendSmsMessage(from, to, msg);
+                var sms = client.SendMessage(from, to, msg);
+                return sms.Status;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Utility Cntrlr -> SendSMS Failed -> Phone #: [" + phoneto + "], " +
+                             "Msg: [" + msg + "], Exception: [" + ex.Message + "]");
+                return ex.Message;
+            }
         }
 
 
@@ -384,7 +395,6 @@ namespace Nooch.Common
                 mailMessage.To.Add(new MailAddress(toAddress));
                 mailMessage.From = (new MailAddress("reports@nooch.com"));
 
-
                 using (MemoryStream stream = new MemoryStream(Encoding.ASCII.GetBytes(attachmentCSVString)))
                 {
                     Attachment attachment = new Attachment(stream, new ContentType("text/csv"));
@@ -396,7 +406,6 @@ namespace Nooch.Common
                     smtpClient.Credentials = new NetworkCredential(GetValueFromConfig("SMTPLogOnForCSVAttachment"), GetValueFromConfig("SMTPPasswordForCSVAttachment"));
                     smtpClient.Send(mailMessage);
                     return true;
-
                 }
 
             }
@@ -436,12 +445,13 @@ namespace Nooch.Common
                 throw new WebException(exception.Message);
             }
         }
+
+
         /// <summary>
         /// Used to log and throw exception with user message
         /// </summary>
         /// <param name="exception">Exception raised at runtime</param>
         /// <param name="errorMessage">User specified error message thrown to Web Project</param>
-
         public static void ThrowFaultException(Exception exception, string errorMessage)
         {
             Logger.Error(String.Format(Utility.GetFormatProvider, "Exception:{0} :{1} StackTrace:{2}", exception.GetType().FullName, exception.Message, exception.StackTrace.Replace(Environment.NewLine, string.Empty)));
@@ -455,11 +465,6 @@ namespace Nooch.Common
                 throw new WebException(errorMessage);
             }
         }
-
-
-      
-
-
 
     }
 }

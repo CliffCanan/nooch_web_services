@@ -80,11 +80,11 @@ namespace Nooch.Common
         {
             Logger.Info("Common Helper -> ForgotPassword - [userName: " + userName + "]");
 
-            var getMember = GetMemberDetailsByUserName(userName);
+            var memberObj = GetMemberDetailsByUserName(userName);
 
             try
             {
-                if (getMember != null)
+                if (memberObj != null)
                 {
                     bool status = false;
 
@@ -94,21 +94,19 @@ namespace Nooch.Common
                     {
                         {
                             Constants.PLACEHOLDER_FIRST_NAME,
-                            UppercaseFirst(GetDecryptedData(getMember.FirstName)) + " " +
-                            UppercaseFirst(GetDecryptedData(getMember.LastName))
+                            UppercaseFirst(GetDecryptedData(memberObj.FirstName)) + " " +
+                            UppercaseFirst(GetDecryptedData(memberObj.LastName))
                         },
-                        {Constants.PLACEHOLDER_LAST_NAME, GetDecryptedData(getMember.LastName)},
+                        {Constants.PLACEHOLDER_LAST_NAME, GetDecryptedData(memberObj.LastName)},
                         {
                             Constants.PLACEHOLDER_PASSWORDLINK,
-                            String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
-                                //"/ForgotPassword/ResetPassword.aspx?memberId=" + getMember.MemberId)
-                                "/ResetPassword?memberId=" + getMember.MemberId)
+                            String.Concat(Utility.GetValueFromConfig("ApplicationURL"), "/ResetPassword?memberId=" + memberObj.MemberId)
                         }
                     };
 
                     PasswordResetRequest prr = new PasswordResetRequest();
                     prr.RequestedOn = DateTime.Now;
-                    prr.MemberId = getMember.MemberId;
+                    prr.MemberId = memberObj.MemberId;
                     _dbContext.PasswordResetRequests.Add(prr);
                     int i = _dbContext.SaveChanges();
 
@@ -116,7 +114,7 @@ namespace Nooch.Common
                     {
                         _dbContext.Entry(prr).Reload();
                         status = true;
-                        Utility.SendEmail(Constants.TEMPLATE_FORGOT_PASSWORD, fromAddress, GetDecryptedData(getMember.UserName),
+                        Utility.SendEmail(Constants.TEMPLATE_FORGOT_PASSWORD, fromAddress, GetDecryptedData(memberObj.UserName),
                                           null, "Reset your Nooch password", null, tokens, null, null, null);
                     }
 
@@ -132,6 +130,7 @@ namespace Nooch.Common
                 return "Problem occured while sending mail.";
             }
         }
+
 
         public static string FormatPhoneNumber(string sourcePhone)
         {
@@ -1561,7 +1560,7 @@ namespace Nooch.Common
                                         synapseRes.permission = synapseResponse.user.permission;
                                         synapseRes.physical_doc = synapseResponse.user.doc_status != null ? synapseResponse.user.doc_status.physical_doc : null;
                                         synapseRes.virtual_doc = synapseResponse.user.doc_status != null ? synapseResponse.user.doc_status.virtual_doc : null;
-                                        synapseRes.extra_security = synapseResponse.user.extra.extra_security != null ? synapseResponse.user.extra.extra_security.ToString() : null;
+                                        synapseRes.extra_security = synapseResponse.user.extra != null ? synapseResponse.user.extra.extra_security.ToString() : null;
 
                                         _dbContext.SaveChanges();
                                         _dbContext.Entry(synapseRes).Reload();
@@ -4286,6 +4285,7 @@ namespace Nooch.Common
             return clientIds;
         }
 
+ 
         public static CancelTransactionAtSynapseResult CancelTransactionAtSynapse(string TransationId, string MemberId)
         {
             Logger.Info("CancelTransactionAtSynapse -> - TransationId: [" + TransationId + "]");
@@ -4313,9 +4313,9 @@ namespace Nooch.Common
 
                     CancelTransactionClass rootObject = new CancelTransactionClass
                     {
-                          login = new Login1 { oauth_key = GetDecryptedData(OauthObj.access_token) },
-                          trans = new Trans { _id = new _ID { oid = transactionsStatusAtSynapse.Transaction_oid } },
-                          user = new User1 { fingerprint = MemberObj.UDID1 }
+                        login = new Login1 { oauth_key = GetDecryptedData(OauthObj.access_token) },
+                        trans = new Trans { _id = new _ID { oid = transactionsStatusAtSynapse.Transaction_oid } },
+                        user = new User1 { fingerprint = MemberObj.UDID1 }
                     };
 
                     var http = (HttpWebRequest)WebRequest.Create(new Uri(baseAddress));
@@ -4377,6 +4377,7 @@ namespace Nooch.Common
 
         }
 
+ 
         public static TransactionsStatusAtSynapse getTransationDetailsAtSynapse(string TransationId)
         {
             TransactionsStatusAtSynapse transactionsStatusAtSynapse = new TransactionsStatusAtSynapse();

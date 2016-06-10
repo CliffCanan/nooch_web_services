@@ -1367,7 +1367,7 @@ namespace Nooch.DataAccess
                 var id = Utility.ConvertToGuid(memberId);
 
                 var member = _dbContext.Members.FirstOrDefault(u => u.MemberId == id);
-                
+
                 if (member != null)
                 {
                     _dbContext.Entry(member).Reload();
@@ -1378,7 +1378,6 @@ namespace Nooch.DataAccess
                     var transactionTypeDonation = CommonHelper.GetEncryptedData(Constants.TRANSACTION_TYPE_DONATION);
                     var transactionTypeRequest = CommonHelper.GetEncryptedData(Constants.TRANSACTION_TYPE_REQUEST);
                     var transactionTypeDisputed = "+C1+zhVafHdXQXCIqjU/Zg==";
-                    var transactionPredicate = "";
 
                     var userNameDecrypted = CommonHelper.GetDecryptedData(member.UserName);
                     var userNameDecryptedLowerCase = CommonHelper.GetDecryptedData(member.UserNameLowerCase);
@@ -1389,14 +1388,14 @@ namespace Nooch.DataAccess
 
                         if (listType.ToUpper().Equals("SENT"))
                         {
-                            transactions = _dbContext.Transactions.Where(entity => entity.Member.MemberId == id || entity.InvitationSentTo==member.UserName &&
+                            transactions = _dbContext.Transactions.Where(entity => entity.Member.MemberId == id || entity.InvitationSentTo == member.UserName &&
                                         (entity.TransactionType == transactionTypeTransfer || entity.TransactionType == transactionTypeDonation) &&
                                          entity.TransactionStatus == SubListType).ToList();
                         }
                         else if (listType.ToUpper().Equals("RECEIVED"))
                         {
                             transactions = _dbContext.Transactions.Where(entity =>
-                                        entity.Member1.MemberId == id || entity.InvitationSentTo==member.UserName &&
+                                        entity.Member1.MemberId == id || entity.InvitationSentTo == member.UserName &&
                                         entity.TransactionType == transactionTypeTransfer &&
                                         entity.TransactionStatus == SubListType).ToList();
                         }
@@ -1476,7 +1475,7 @@ namespace Nooch.DataAccess
                                                                          trans.RecipientId == id ||
                                                                          trans.InvitationSentTo == member.UserName ||
                                                                          trans.InvitationSentTo == member.UserNameLowerCase)
-                                                                         .OrderByDescending(r =>r.TransactionDate).Take(50).ToList();
+                                                                         .OrderByDescending(r => r.TransactionDate).Take(50).ToList();
                         }
                         else if (listType.ToUpper().Equals("REQUEST"))
                         {
