@@ -20,9 +20,12 @@ using Nooch.Common.Entities.SynapseRelatedEntities;
 using Nooch.Common.Resources;
 using Nooch.Common.Rules;
 using Nooch.Data;
+
 using Nooch.Common.Entities.LandingPagesRelatedEntities;
 //using System.Web.Mvc;
 using synapseIdVerificationQuestionAnswerSet = Nooch.Common.Entities.SynapseRelatedEntities.synapseIdVerificationQuestionAnswerSet;
+using System.Drawing.Imaging;
+using System.Drawing;
 
 
 namespace Nooch.Common
@@ -4396,5 +4399,6 @@ namespace Nooch.Common
 
 
         }
+
     }
 }

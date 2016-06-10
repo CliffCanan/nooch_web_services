@@ -22,6 +22,9 @@ using Newtonsoft.Json.Linq;
 using Nooch.Common.Entities.SynapseRelatedEntities;
 using Nooch.Common.Resources;
 using Nooch.Common.Entities.LandingPagesRelatedEntities;
+using System.Drawing;
+using ImageProcessor;
+using System.IO.Compression;
 
 
 namespace Nooch.API.Controllers
@@ -3040,6 +3043,7 @@ namespace Nooch.API.Controllers
         }
 
 
+
         [HttpPost]
         [ActionName("submitDocumentToSynapseV3")]
         public synapseV3GenericResponse submitDocumentToSynapseV3(SaveVerificationIdDocument DocumentDetails)
@@ -3055,17 +3059,26 @@ namespace Nooch.API.Controllers
 
                 // Make URL from byte array b/c submitDocumentToSynapseV3 expects url of image.
                 string ImageUrlMade = "";
-
+                string filename = "";
                 if (DocumentDetails.Picture != null)
                 {
                     // Make  image from bytes
-                    string filename = HttpContext.Current.Server.MapPath("../../UploadedPhotos") + "/Photos/" +
+                    filename = HttpContext.Current.Server.MapPath("../../UploadedPhotos") + "/Photos/" +
                                       DocumentDetails.MemberId + ".png";
-                    using (FileStream fs = new FileStream(filename, FileMode.Create, FileAccess.ReadWrite))
+                    using (MemoryStream inStream = new MemoryStream(DocumentDetails.Picture))
                     {
-                        fs.Write(DocumentDetails.Picture, 0, (int)DocumentDetails.Picture.Length);
+                        using (ImageFactory imageFactory = new ImageFactory())
+                        {
+                            imageFactory.Load(inStream)
+                                .Quality(25)
+                                .Save(filename);
+                        }
+
                     }
+                    //fs.Write(DocumentDetails.Picture, 0, (int)DocumentDetails.Picture.Length);
+
                     ImageUrlMade = Utility.GetValueFromConfig("PhotoUrl") + DocumentDetails.MemberId + ".png";
+
                 }
                 else
                 {
@@ -3311,7 +3324,7 @@ namespace Nooch.API.Controllers
                         try
                         {
                             //Logger.Info("Service Cntrlr -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber -> Synapse RESPONSE: [" + addBankRespFromSynapse.ToString() + "]");
-                            
+
                             if (addBankRespFromSynapse["nodes"][0]["info"] != null)
                             {
                                 // First mark all existing banks for this user as inactive
