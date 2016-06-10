@@ -10,6 +10,7 @@ namespace Nooch.Common.Entities
     {
         public bool success { get; set; }
         public bool showPaymentInfo { get; set; }
+        public bool isRentScene { get; set; }
         public string initStatus { get; set; }
         public string resultMsg { get; set; }
         public string senderImage { get; set; }

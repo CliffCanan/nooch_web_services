@@ -7,8 +7,8 @@
 
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
-<head runat="server">
-    <title>Nooch | Reject Request</title>
+<head>
+    <title>Reject Payment Request | Nooch</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
@@ -27,6 +27,8 @@
         <input type="hidden" id="LinkSource" />
         <input type="hidden" id="UserType" />
         <input type="hidden" id="TransId" />
+        <input type="hidden" id="isRs" value="@mod.isRentScene">
+        <input type="hidden" id="rejectMoneyLink" value="@Url.Action("RejectMoneyBtnClick","Nooch")" />
 
         <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
             <div class="clearfix">
@@ -109,7 +111,6 @@
         </div>
 
     </form>
-    <input type="hidden" id="rejectMoneyLink" value="@Url.Action("RejectMoneyBtnClick","Nooch")" />
 
     <script src="//code.jquery.com/jquery-1.12.4.min.js"></script>
     <script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>

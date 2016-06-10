@@ -1,8 +1,23 @@
 var transType = $('#TransType').val();
+var ISRS = $('#isRs').val();
+var COMPANY = ISRS == "true" ? "Rent Scene" : "Nooch";
+var SUPPORTEMAIL = ISRS == "true" ? "team@rentscene.com" : "support@nooch.com";
+var isLrgScrn = $(window).width() > 1000 ? true : false;
 
 $(document).ready(function () {
 
     console.log("errorFromCodeBehind is: " + errorFromCodeBehind);
+
+    if (ISRS == "true")
+    {
+        $('.landingHeaderLogo').attr('href', 'http://www.rentscene.com');
+        $('.landingHeaderLogo img').attr('src', '../Assets/Images/rentscene.png');
+        $('.landingHeaderLogo img').attr('alt', 'Rent Scene Logo');
+        if (isLrgScrn)
+            $('.landingHeaderLogo img').css('width', '211px');
+
+        changeFavicon('../Assets/favicon2.ico')
+    }
 
     if (areThereErrors() == false)
     {
@@ -58,6 +73,7 @@ function areThereErrors() {
 	return false;
 }
 
+
 function checkIfStillPending() 
 {
     if (typeof transStatus != 'undefined' &&
@@ -90,8 +106,8 @@ function checkIfStillPending()
             alertBodyText = "Looks like this payment request is no longer pending.&nbsp; You're off the hook!";
         }
 
-        alertBodyText += "<div class=\"m-15\">Please contact <span style='font-weight:600;'>Nooch Support</span> if you believe this is an error.<br/>" +
-                         "<a href='mailto:support@nooch.com' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>support@nooch.com</a></div>";
+        alertBodyText += "<div class=\"m-15\">Please contact <span style='font-weight:600;'>" + COMPANY + " Support</span> if you believe this is an error.<br/>" +
+                         "<a href='mailto:" + SUPPORTEMAIL + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + SUPPORTEMAIL + "</a></div>";
 
         $("#fromText").html(alertBodyText).addClass('errorMessage');
         $(".errorMessage a").addClass("btn btn-default m-t-20 animated bounceIn");
@@ -110,7 +126,7 @@ function checkIfStillPending()
             html: true
         }, function (isConfirm) {
             if (!isConfirm) {
-                window.open("mailto:support@nooch.com");
+                window.open("mailto:" + SUPPORTEMAIL);
             }
         });
 
@@ -144,12 +160,11 @@ function rejectBtnClicked(){
 
     var transId = getParameterByName('TransactionId');
     var userType = getParameterByName('UserType');
-    var linkSource = getParameterByName('LinkSource');
     var transType = getParameterByName('TransType');
   
     $.ajax({
         type: "POST",
-        url: $('#rejectMoneyLink').val()+"?TransactionId="+transId+"&UserType="+userType+"&LinkSource="+userType+"&TransType="+transType,
+        url: $('#rejectMoneyLink').val() + "?TransactionId=" + transId + "&UserType=" + userType + "&TransType=" + transType,
 
         success: function (msg) {
             console.log("SUCCESS -> RejectMoneyResult is... ");
@@ -203,6 +218,7 @@ function rejectBtnClicked(){
     });
 }
 
+
 function showErrorAlert(errorNum) {
     var alertTitle = "";
     var alertBodyText = "";
@@ -212,8 +228,8 @@ function showErrorAlert(errorNum) {
     if (errorNum == '1')
     {
         alertTitle = "Errors Are The Worst!";
-        alertBodyText = "We had trouble finding that transaction.  Please try again and if you continue to see this message, contact <span style='font-weight:600;'>Nooch Support</span>:" +
-                        "<br/><a href='mailto:support@nooch.com' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>support@nooch.com</a>";
+        alertBodyText = "We had trouble finding that transaction.  Please try again and if you continue to see this message, contact <span style='font-weight:600;'>" + COMPANY + " Support</span>:" +
+                        "<br/><a href='mailto:" + SUPPORTEMAIL + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + SUPPORTEMAIL + "</a>";
 
         $('#SenderAndTransInfodiv').hide();
         $('#clickToReject').hide();
@@ -222,8 +238,8 @@ function showErrorAlert(errorNum) {
     else if (errorNum == '2')
     {
         alertTitle = "Errors Are Annoying";
-        alertBodyText = "Terrible sorry, but it looks like we had trouble processing your data.  Please refresh this page and try again and if you continue to see this message, contact <span style='font-weight:600;'>Nooch Support</span>:" +
-                        "<br/><a href='mailto:support@nooch.com' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>support@nooch.com</a>";
+        alertBodyText = "Terrible sorry, but it looks like we had trouble processing your data.  Please refresh this page and try again and if you continue to see this message, contact <span style='font-weight:600;'>" + COMPANY + " Support</span>:" +
+                        "<br/><a href='mailto:" + SUPPORTEMAIL + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + SUPPORTEMAIL + "</a>";
         $('#SenderAndTransInfodiv').hide();
         $('#clickToReject').hide();
         $('#createAccountPrompt').hide();
@@ -235,15 +251,15 @@ function showErrorAlert(errorNum) {
         $('#createAccountPrompt').hide();
 
         alertTitle = "Errors Are Annoying";
-        alertBodyText = "Our apologies, but we were not able to reject that request.  Please try again or contact <span style='font-weight:600;'>Nooch Support</span>:" +
-                        "<br/><a href='mailto:support@nooch.com' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>support@nooch.com</a>";
+        alertBodyText = "Our apologies, but we were not able to reject that request.  Please try again or contact <span style='font-weight:600;'>" + COMPANY + " Support</span>:" +
+                        "<br/><a href='mailto:" + SUPPORTEMAIL + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + SUPPORTEMAIL + "</a>";
     }
     // Generic Error
     else
     {
         alertTitle = "Errors Are The Worst!";
-        alertBodyText = "Terrible sorry, but it looks like we had trouble processing your request.  Please refresh this page to try again and if you continue to see this message, contact <span style='font-weight:600;'>Nooch Support</span>:" +
-                        "<br/><a href='mailto:support@nooch.com' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>support@nooch.com</a>";
+        alertBodyText = "Terrible sorry, but it looks like we had trouble processing your request.  Please refresh this page to try again and if you continue to see this message, contact <span style='font-weight:600;'>" + COMPANY + " Support</span>:" +
+                        "<br/><a href='mailto:" + SUPPORTEMAIL + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + SUPPORTEMAIL + "</a>";
     }
 
     $("#fromText").html(alertBodyText).addClass('errorMessage');
@@ -263,10 +279,25 @@ function showErrorAlert(errorNum) {
         html: true
     }, function (isConfirm) {
         if (!isConfirm) {
-            window.open("mailto:support@nooch.com");
+            window.open("mailto:" + SUPPORTEMAIL);
         }
     });
 }
+
+
+function changeFavicon(src)
+{
+    var link = document.createElement('link'),
+     oldLink = document.getElementById('dynamic-favicon');
+    link.id = 'dynamic-favicon';
+    link.rel = 'shortcut icon';
+    link.href = src;
+    if (oldLink) {
+        document.head.removeChild(oldLink);
+    }
+    document.head.appendChild(link);
+}
+
 
 function getParameterByName(name) {
     name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");

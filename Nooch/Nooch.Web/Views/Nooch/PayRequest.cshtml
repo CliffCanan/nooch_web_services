@@ -86,7 +86,7 @@
                 <button type="button" class="btn btn-lg btn-default"><i class="fa fa-fw fa-check-square-o m-r-15"></i>Complete This Payment</button>
             </div>
 
-            @if (rpr.nonRegUsrContainer == true && @rpr.bnkName != "no bank found")
+            @if (rpr.nonRegUsrContainer == true && @rpr.pymnt_status == "pending" && @rpr.bnkName != "no bank found")
             {
                 <div id="nonRegUsrContainer" class="clearfix">
 
@@ -403,6 +403,7 @@
         </div>
     </div>
 
+    <input type="hidden" id="rejectMoneyLink" value="@Url.Action("RejectMoneyBtnClick","Nooch")" />
 
     <script src="@Url.Content("//code.jquery.com/jquery-1.12.4.min.js")"></script>
     <script src="@Url.Content("//code.jquery.com/ui/1.11.4/jquery-ui.min.js")"></script>

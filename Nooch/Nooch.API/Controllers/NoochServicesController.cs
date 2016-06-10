@@ -708,7 +708,7 @@ namespace Nooch.API.Controllers
         public StringResult ApiSMS(string to, string msg)
         {
             StringResult res = new StringResult();
-            
+
             try
             {
                 Logger.Info("Service Cntrlr - sendSMS Fired - memberId: [" + to + "]. Exception: [" + msg + "]");
@@ -723,7 +723,7 @@ namespace Nooch.API.Controllers
                     res.Result = "Missing message to send.";
                     return res;
                 }
-                
+
                 res.Result = Utility.SendSMS(to, msg);
             }
             catch (Exception ex)
@@ -1212,7 +1212,7 @@ namespace Nooch.API.Controllers
         {
             try
             {
-                Logger.Info("Service Controller - RejectMoneyRequestForExistingNoochUser - [TransactionId: " + transactionId + "]");
+                Logger.Info("Service Cntrlr - RejectMoneyRequestForExistingNoochUser - [TransactionId: " + transactionId + "]");
 
                 var tda = new TransactionsDataAccess();
                 string result = tda.RejectMoneyRequestForExistingNoochUser(transactionId);
@@ -1220,7 +1220,7 @@ namespace Nooch.API.Controllers
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Controller - RejectMoneyRequestForExistingNoochUser FAILED - [TransactionId: " + transactionId +
+                Logger.Error("Service Cntrlr - RejectMoneyRequestForExistingNoochUser FAILED - [TransactionId: " + transactionId +
                              "], [Exception: " + ex.Message + "]");
 
                 throw new Exception("Server Error");
@@ -2560,68 +2560,48 @@ namespace Nooch.API.Controllers
         }
 
 
-        [HttpGet]
-        [ActionName("RejectMoneyforNonNoochUser")]
-        public StringResult RejectMoneyforNonNoochUser(string transactionId)
-        {
-            try
-            {
-                Logger.Info("Service Controller - RejectMoneyforNonNoochUser - [TransactionId: " + transactionId + "]");
+        /*[HttpGet]
+          [ActionName("RejectMoneyRequestForNonNoochUser")]
+          public StringResult RejectMoneyRequestForNonNoochUser(string transactionId)
+          {
+              try
+              {
+                  Logger.Info("Service Controller - RejectMoneyRequestForNonNoochUser - [TransactionID: " + transactionId + "]");
 
-                var tda = new TransactionsDataAccess();
-                string result = tda.RejectMoneyforNonNoochUser(transactionId);
-                return new StringResult { Result = result };
-            }
-            catch (Exception ex)
-            {
-                Utility.ThrowFaultException(ex);
-            }
-            return new StringResult { Result = "Error in Service Layer!" };
-        }
+                  var tda = new TransactionsDataAccess();
+                  string result = tda.RejectMoneyRequestForNonNoochUser(transactionId);
 
-
-        [HttpGet]
-        [ActionName("RejectMoneyRequestForNonNoochUser")]
-        public StringResult RejectMoneyRequestForNonNoochUser(string transactionId)
-        {
-            try
-            {
-                Logger.Info("Service Controller - RejectMoneyforNonNoochUser - [TransactionID: " + transactionId + "]");
-
-                var tda = new TransactionsDataAccess();
-                string result = tda.RejectMoneyRequestForNonNoochUser(transactionId);
-
-                return new StringResult { Result = result };
-            }
-            catch (Exception ex)
-            {
-                Utility.ThrowFaultException(ex);
-            }
-            return new StringResult { Result = "Error in Service Layer (RejectMoneyRequestForNonNoochUser)" };
-        }
+                  return new StringResult { Result = result };
+              }
+              catch (Exception ex)
+              {
+                  Utility.ThrowFaultException(ex);
+              }
+              return new StringResult { Result = "Error in Service Layer (RejectMoneyRequestForNonNoochUser)" };
+          }*/
 
 
         [HttpGet]
         [ActionName("RejectMoneyCommon")]
-        public StringResult RejectMoneyCommon(string TransactionId, string UserType, string LinkSource, string TransType)
+        public StringResult RejectMoneyCommon(string TransactionId, string UserType, string TransType)
         {
+            StringResult res = new StringResult();
+
             try
             {
                 Logger.Info("Service Controller -> RejectMoneyCommon Initiated - Transaction ID: [" + TransactionId + "], " +
                             "TransType: [" + TransType + "], UserType: [" + UserType + "]");
 
                 var tda = new TransactionsDataAccess();
-                StringResult Re = new StringResult();
-                Re.Result = tda.RejectMoneyCommon(TransactionId, UserType, LinkSource, TransType); ;
-
-                return Re;
+                res.Result = tda.RejectMoneyCommon(TransactionId, UserType, TransType); ;
             }
             catch (Exception ex)
             {
+                res.Result = "Error in Service Layer (RejectMoneyCommon)";
                 Utility.ThrowFaultException(ex);
             }
 
-            return new StringResult { Result = "Error in Service Layer (RejectMoneyCommon)" };
+            return res;
         }
 
 
@@ -2674,13 +2654,13 @@ namespace Nooch.API.Controllers
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Controller - SaveDOBForMember FAILED - [MemberId: " + input.memberId + "]. [Exception: " + ex + "]");
+                    Logger.Error("Service Cntrlr - SaveDOBForMember FAILED - MemberId: [" + input.memberId + "]. [Exception: " + ex + "]");
                     throw new Exception("Server Error.");
                 }
             }
             else
             {
-                Logger.Error("Service Controller - Operation FAILED: SaveDOBForMember - memberId: [" + input.memberId + "]. INVALID OAUTH 2 ACCESS.");
+                Logger.Error("Service Cntrlr - SaveDOBForMember FAILED - MemberId: [" + input.memberId + "]. INVALID OAUTH 2 ACCESS.");
                 throw new Exception("Invalid OAuth 2 Access");
             }
         }
@@ -2692,12 +2672,14 @@ namespace Nooch.API.Controllers
         {
             try
             {
-                Logger.Info("Service Controller -> GetTransactionDetailById - [TransactionId: " + TransactionId + "]");
+                Logger.Info("Service Cntrlr -> GetTransactionDetailById - [TransactionId: " + TransactionId + "]");
 
                 var tda = new TransactionsDataAccess();
                 Transaction tr = tda.GetTransactionById(TransactionId);
+
                 TransactionDto trans = new TransactionDto();
                 trans.AdminNotes = tr.AdminName;
+                trans.Amount = tr.Amount;
                 trans.IsPrePaidTransaction = tr.IsPrepaidTransaction;
                 trans.FirstName = tr.Member.FirstName;
                 trans.LastName = tr.Member.LastName;
@@ -2718,6 +2700,7 @@ namespace Nooch.API.Controllers
                 trans.TransactionFee = tr.TransactionFee.Value;
                 trans.InvitationSentTo = (tr.InvitationSentTo != null) ? CommonHelper.GetDecryptedData(tr.InvitationSentTo) : "";
                 trans.IsPhoneInvitation = tr.IsPhoneInvitation != null && Convert.ToBoolean(tr.IsPhoneInvitation);
+                trans.isRentScene = (tr.Member.isRentScene == true || tr.Member1.isRentScene == true) ? true : false;
 
                 if (tr.IsPhoneInvitation == true)
                 {
@@ -2736,7 +2719,6 @@ namespace Nooch.API.Controllers
                     trans.PhoneNumberInvited = "";
                 }
 
-                trans.Amount = tr.Amount;
                 return trans;
             }
             catch (Exception ex)

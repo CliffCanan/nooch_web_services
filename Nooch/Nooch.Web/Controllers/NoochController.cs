@@ -1350,6 +1350,8 @@ namespace Nooch.Web.Controllers
                                      transaction.RecepientName :
                                      transaction.Name;
 
+                if (rpr.senderName1 == "Marvis Burns") rpr.senderName1 = "Rent Scene";
+
                 string s = transaction.Amount.ToString("n2");
                 string[] s1 = s.Split('.');
                 if (s1.Length == 2)
@@ -2019,7 +2021,7 @@ namespace Nooch.Web.Controllers
 
         #region RejectMoney Page
 
-        public ActionResult RejectMoney(string TransactionId, string UserType, string LinkSource, string TransType)
+        public ActionResult RejectMoney(string TransactionId, string UserType, string TransType)
         {
             PageLoadDataRejectMoney res = new PageLoadDataRejectMoney();
 
@@ -2029,16 +2031,13 @@ namespace Nooch.Web.Controllers
             {
                 // TransId - transaction id from query string
                 // UserType - tells us if user opening link is existing, nonregistered, or completelty brand new user -- need this to show hide create account form later
-                // LinkSource - tells us if user is coming from email link or SMS -- need this later to pre-fill create account form
 
                 if (!String.IsNullOrEmpty(Request.QueryString["TransactionId"]) &&
                     !String.IsNullOrEmpty(Request.QueryString["UserType"]) &&
-                    !String.IsNullOrEmpty(Request.QueryString["LinkSource"]) &&
                     !String.IsNullOrEmpty(Request.QueryString["TransType"]))
                 {
                     Session["TransactionId"] = Request.QueryString["TransactionId"];
                     Session["UserType"] = Request.QueryString["UserType"];
-                    Session["LinkSource"] = Request.QueryString["LinkSource"];
                     Session["TransType"] = Request.QueryString["TransType"];
 
                     res.errorFromCodeBehind = "0";
@@ -2049,27 +2048,13 @@ namespace Nooch.Web.Controllers
                     {
                         res.transType = TransDetails.UserType;
                         res.TransId = TransDetails.TransId;
-                        res.LinkSource = Request.QueryString["LinkSource"];
                         res.UserType = Request.QueryString["UserType"];
                         res.transStatus = TransDetails.TransStatus;
                         res.transAmout = TransDetails.AmountLabel;
                         res.transMemo = TransDetails.transMemo;
-
-                        if (CommonHelper.GetDecryptedData(res.UserType) == "NonRegistered" || CommonHelper.GetDecryptedData(res.UserType) == "Existing")
-                        {
-                            res.nameLabel = TransDetails.nameLabel;
-                            res.senderImage = TransDetails.senderImage;
-                        }
-                        else
-                        {
-                            res.nameLabel = TransDetails.RecepientName;
-                            res.senderImage = TransDetails.RecepientPhoto;
-                        }
-
-                        if (TransDetails.TransStatus == "pending")
-                        {
-                            res.clickToReject = true;
-                        }
+                        res.senderImage = TransDetails.senderImage;
+                        res.nameLabel = TransDetails.nameLabel;
+                        res.isRentScene = TransDetails.isRentScene.ToString().ToLower();
                     }
                     else
                     {
@@ -2079,7 +2064,6 @@ namespace Nooch.Web.Controllers
                 else
                 {
                     res.SenderAndTransInfodiv = false;
-                    res.clickToReject = false;
                     res.createAccountPrompt = false;
 
                     // Use TransResult (inside TransactionResult DIV) to display error message (in addition to .swal() alert)
@@ -2089,7 +2073,6 @@ namespace Nooch.Web.Controllers
                     Logger.Error("rejectMoney CodeBehind -> page_load ERROR - One of the required fields in query string was NULL or empty - " +
                                  "TransactionId Parameter: [" + Request.QueryString["TransactionId"] + "], " +
                                  "UserType Parameter: [" + Request.QueryString["UserType"] + "], " +
-                                 "LinkSource Parameter: [" + Request.QueryString["LinkSource"] + "], " +
                                  "TransType Parameter: [" + Request.QueryString["TransType"] + "]");
                 }
             }
@@ -2104,16 +2087,15 @@ namespace Nooch.Web.Controllers
 
 
         [HttpPost]
-        public ActionResult RejectMoneyBtnClick(string TransactionId, string UserType, string LinkSource, string TransType)
+        public ActionResult RejectMoneyBtnClick(string TransactionId, string UserType, string TransType)
         {
             PageLoadDataRejectMoney res = new PageLoadDataRejectMoney();
             res.errorFromCodeBehind = "initial";
 
             string serviceMethod = string.Empty;
             string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-            serviceMethod = "/RejectMoneyCommon?TransactionId=" + TransactionId +
+            serviceMethod = "RejectMoneyCommon?TransactionId=" + TransactionId +
                             "&UserType=" + UserType +
-                            "&LinkSource=" + LinkSource +
                             "&TransType=" + TransType;
 
             Logger.Info("rejectMoney CodeBehind -> RejectRequest - Full Service URL To Query: [" + String.Concat(serviceUrl, serviceMethod) + "]");
@@ -2154,12 +2136,17 @@ namespace Nooch.Web.Controllers
         {
             ResultCancelRequest rcr = new ResultCancelRequest();
             string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-            string serviceMethod = "/GetTransactionDetailById?TransactionId=" + TransactionId;
+            string serviceMethod = "GetTransactionDetailById?TransactionId=" + TransactionId;
 
             TransactionDto transaction = ResponseConverter<TransactionDto>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
 
             rcr.IsTransFound = transaction != null;
             rcr.TransStatus = transaction.TransactionStatus;
+            rcr.AmountLabel = transaction.Amount.ToString("n2");
+            rcr.transMemo = transaction.Memo.Trim();
+            rcr.TransType = transaction.TransactionType;
+            rcr.TransId = transaction.TransactionId;
+            rcr.isRentScene = transaction.isRentScene;
 
             if (transaction.IsPhoneInvitation && transaction.PhoneNumberInvited.Length > 0)
             {
@@ -2176,19 +2163,6 @@ namespace Nooch.Web.Controllers
                 rcr.senderImage = transaction.SenderPhoto;
                 rcr.nameLabel = transaction.Name;
             }
-
-            rcr.AmountLabel = transaction.Amount.ToString("n2");
-            rcr.transMemo = transaction.Memo.Trim();
-
-            // Reject money page related stuff
-            rcr.RecepientName = transaction.RecepientName;
-            rcr.senderImage = transaction.RecepientPhoto;
-
-            if (!String.IsNullOrEmpty(transaction.TransactionType))
-                rcr.TransType = transaction.TransactionType;
-
-            if (!String.IsNullOrEmpty(transaction.TransactionId))
-                rcr.TransId = transaction.TransactionId;
 
             return rcr;
         }
@@ -2467,7 +2441,7 @@ namespace Nooch.Web.Controllers
                 {
                     if (Request.QueryString["from"] == "rentscene")
                     {
-                        Logger.Info("Make Payment CodeBehind -> Page Initiated - Is for RENTSCENE");
+                        //Logger.Info("Make Payment CodeBehind -> Page Initiated - Is for RENTSCENE");
                         hkf.from = "rentscene";
                     }
                     else if (Request.QueryString["from"] == "appjaxx")
@@ -3307,7 +3281,7 @@ namespace Nooch.Web.Controllers
 
             if (details == null)
             {
-                Logger.Error("payRequest CodeBehind -> GetTransDetails FAILED - Transaction Not Found - TransactionId: [" + memberId + "]");
+                Logger.Error("MicroDepositsVerification CodeBehind -> GetTransDetails FAILED - Transaction Not Found - TransactionId: [" + memberId + "]");
                 rpr.errorMsg = "Unable to find bank record";
             }
             else

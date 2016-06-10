@@ -747,11 +747,8 @@ namespace Nooch.DataAccess
                             #region If invited by email
 
                             string rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
-
                                                               "Nooch/rejectMoney?TransactionId=" + trans.TransactionId +
-
                                                               "&UserType=U6De3haw2r4mSgweNpdgXQ==" +
-                                                              "&LinkSource=75U7bZRpVVxLNbQuoMQEGQ==" +
                                                               "&TransType=T3EMY1WWZ9IscHIj3dbcNw==");
 
                             var tokens2 = new Dictionary<string, string>
@@ -799,7 +796,6 @@ namespace Nooch.DataAccess
                             string rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
                                                               "Nooch/rejectMoney?TransactionId=" + trans.TransactionId +
                                                               "&UserType=U6De3haw2r4mSgweNpdgXQ==" +
-                                                              "&LinkSource=Um3I3RNHEGWqKM9MLsQ1lg==" +
                                                               "&TransType=T3EMY1WWZ9IscHIj3dbcNw==");
 
                             #region Shortening URLs for SMS
@@ -884,7 +880,7 @@ namespace Nooch.DataAccess
 
                         else if (trans.Member.MemberId != null)
                         {
-                            string rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"), "Nooch/RejectMoney?TransactionId=" + TransId + "&UserType=mx5bTcAYyiOf9I5Py9TiLw==&LinkSource=75U7bZRpVVxLNbQuoMQEGQ==&TransType=T3EMY1WWZ9IscHIj3dbcNw==");
+                            string rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"), "Nooch/RejectMoney?TransactionId=" + TransId + "&UserType=mx5bTcAYyiOf9I5Py9TiLw==&TransType=T3EMY1WWZ9IscHIj3dbcNw==");
                             string paylink = "nooch://";
 
                             senderFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member1.FirstName));
@@ -988,13 +984,9 @@ namespace Nooch.DataAccess
                         string senderFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member.FirstName));
                         string senderLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member.LastName));
 
-                        string linkSource = !String.IsNullOrEmpty(trans.PhoneNumberInvited) ? "Um3I3RNHEGWqKM9MLsQ1lg=="  // "Phone"
-                                                                                            : "75U7bZRpVVxLNbQuoMQEGQ=="; // "Email"
-
                         string rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
                                                           "Nooch/RejectMoney?TransactionId=" + trans.TransactionId +
                                                           "&UserType=U6De3haw2r4mSgweNpdgXQ==" +
-                                                          "&LinkSource=" + linkSource +
                                                           "&TransType=DrRr1tU1usk7nNibjtcZkA==");
 
                         string acceptLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
@@ -2229,223 +2221,10 @@ namespace Nooch.DataAccess
 
         #region Reject Transaction (All Types) Methods
 
-        // For Non-Nooch users who Reject a Transfer/Invite sent to them.  NOTE: Not for Requests, that's the next method: RejectMoneyRequestForNonNoochUser()
-        // CLIFF (JULY 10, 2015) IS THIS METHOD STILL USED NOW THAT WE HAVE THE 'COMMON' METHOD FOR REJECTING??  IF NOT, LET'S DELETE...
-        public string RejectMoneyforNonNoochUser(string transactionId)
-        {
-            Logger.Info("TDA -> RejectMoneyforNonNoochUser Initiated - [transactionId: " + transactionId + "]");
-
-            try
-            {
-                var transId = Utility.ConvertToGuid(transactionId);
-
-                var transactionDetail = new Transaction();
-
-                transactionDetail = _dbContext.Transactions.FirstOrDefault(memberTemp => memberTemp.TransactionId == transId && memberTemp.TransactionStatus == "Pending"
-                    && (memberTemp.TransactionType == "DrRr1tU1usk7nNibjtcZkA==" || memberTemp.TransactionType == "T3EMY1WWZ9IscHIj3dbcNw==")); // "Invite" or "Request";
-
-
-                if (transactionDetail != null)
-                {
-                    #region IfSomethingFound
-
-                    transactionDetail.TransactionStatus = "Rejected";
-
-                    _dbContext.SaveChanges();
-                    _dbContext.Entry(transactionDetail).Reload();
-                    string TransRecipientEmail = "";
-                    string TransRecipientPhone = "";
-                    string receiverPhoneNumFormatted = "";
-                    string TransMakerFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member1.FirstName));
-                    string TransMakerLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member1.LastName));
-
-                    #region Push Notification to Sender
-
-                    string pushBodyText = "";
-                    if (transactionDetail.IsPhoneInvitation == true &&
-                        transactionDetail.PhoneNumberInvited != null)
-                    {
-                        receiverPhoneNumFormatted = CommonHelper.GetDecryptedData(transactionDetail.PhoneNumberInvited);
-                        if (receiverPhoneNumFormatted.Length == 10)
-                        {
-                            receiverPhoneNumFormatted = "(" + receiverPhoneNumFormatted;
-                            receiverPhoneNumFormatted = receiverPhoneNumFormatted.Insert(4, ")");
-                            receiverPhoneNumFormatted = receiverPhoneNumFormatted.Insert(5, " ");
-                            receiverPhoneNumFormatted = receiverPhoneNumFormatted.Insert(9, "-");
-                        }
-
-                        TransRecipientPhone = CommonHelper.GetDecryptedData(transactionDetail.PhoneNumberInvited);
-                        pushBodyText = receiverPhoneNumFormatted + " declined your Nooch payment.";
-                    }
-                    else if (transactionDetail.InvitationSentTo != null)
-                    {
-                        TransRecipientEmail = CommonHelper.GetDecryptedData(transactionDetail.InvitationSentTo);
-                        pushBodyText = CommonHelper.GetDecryptedData(transactionDetail.InvitationSentTo) +
-                                       " declined your Nooch payment.";
-                    }
-
-                    // sending push notification to money sender
-                    Guid RecId = Utility.ConvertToGuid(transactionDetail.Member.MemberId.ToString());
-
-                    var noochMemberfornotification = new Member();
-
-                    noochMemberfornotification = _dbContext.Members.FirstOrDefault(memberTemp =>
-                            memberTemp.MemberId.Equals(transactionDetail.Member1.MemberId) &&
-                            memberTemp.IsDeleted == false && memberTemp.ContactNumber != null &&
-                            memberTemp.IsVerifiedPhone == true);
-
-                    if (noochMemberfornotification != null &&
-                        !String.IsNullOrEmpty(noochMemberfornotification.DeviceToken) &&
-                        noochMemberfornotification.DeviceToken.Length > 6)
-                    {
-                        try
-                        {
-                            _dbContext.Entry(noochMemberfornotification).Reload();
-
-                            Utility.SendNotificationMessage(pushBodyText, 1, null,
-                                                            noochMemberfornotification.DeviceToken,
-                                                            Utility.GetValueFromConfig("AppKey"),
-                                                            Utility.GetValueFromConfig("MasterSecret"));
-
-                            Logger.Info("TDA -> RejectMoneyforNonNoochUser - Push notification sent to [" + noochMemberfornotification.UDID1 + "] successfully.");
-                        }
-                        catch (Exception)
-                        {
-                            Logger.Info("TDA -> RejectMoneyforNonNoochUser - Push notification NOT sent to [" + noochMemberfornotification.UDID1 + "].");
-                        }
-                    }
-
-                    #endregion
-
-                    // Send email to Sender about rejection
-
-                    #region memo
-                    string memo = "";
-                    if (transactionDetail.Memo != null && transactionDetail.Memo != "")
-                    {
-                        if (transactionDetail.Memo.Length > 3)
-                        {
-                            string firstThreeChars = transactionDetail.Memo.Substring(0, 3).ToLower();
-                            bool startWithFor = firstThreeChars.Equals("for");
-
-                            if (startWithFor)
-                            {
-                                memo = transactionDetail.Memo.ToString();
-                            }
-                            else
-                            {
-                                memo = "For " + transactionDetail.Memo.ToString();
-                            }
-                        }
-                        else
-                        {
-                            memo = "For " + transactionDetail.Memo.ToString();
-                        }
-                    }
-                    #endregion
-
-                    string wholeAmount = transactionDetail.Amount.ToString("n2");
-                    string[] s3 = wholeAmount.Split('.');
-
-                    var tokens = new Dictionary<string, string>
-							{
-								{Constants.PLACEHOLDER_FIRST_NAME, TransMakerFirstName},
-								{Constants.PLACEHLODER_CENTS, s3[1].ToString()},
-								{Constants.PLACEHOLDER_TRANSFER_AMOUNT, s3[0].ToString()},
-								{Constants.PLACEHOLDER_RECIPIENT_FULL_NAME, receiverPhoneNumFormatted},
-								{Constants.MEMO, memo}
-							};
-
-                    var fromAddress = Utility.GetValueFromConfig("transfersMail");
-                    var toAddress = CommonHelper.GetDecryptedData(transactionDetail.Member1.UserName);
-
-                    try
-                    {
-                        Utility.SendEmail("transferToNewUserRejected_ToSender", fromAddress, toAddress, null, receiverPhoneNumFormatted + " denied your payment request", null,
-                            tokens, null, null, null);
-                        Logger.Info("transferDeniedToSender - transferToNewUserRejected_ToSender E-mail sent to [" + toAddress + "].");
-                    }
-                    catch (Exception)
-                    {
-                        Logger.Info(
-                            "requestDeniedToSender - transferToNewUserRejected_ToSender E-mail NOT sent to [" + toAddress + "].");
-                    }
-
-
-                    #region Notification to request denier either through email or sms
-
-                    if (transactionDetail.IsPhoneInvitation != null && transactionDetail.IsPhoneInvitation == true &&
-                                       transactionDetail.PhoneNumberInvited != null)
-                    {
-                        // Send SMS to request denier
-
-                        string MessageToRecepient = "This is just confirmation that you denied a $" +
-                            wholeAmount.ToString() + " payment from " + TransMakerFirstName + " " + TransMakerLastName + ".";
-
-                        // Removing extra stuff from phone number
-
-                        TransRecipientPhone = TransRecipientPhone.Replace("(", "");
-                        TransRecipientPhone = TransRecipientPhone.Replace(")", "");
-                        TransRecipientPhone = TransRecipientPhone.Replace(" ", "");
-                        TransRecipientPhone = TransRecipientPhone.Replace("-", "");
-
-                        string s = Utility.SendSMS(TransRecipientPhone, MessageToRecepient);
-                    }
-                    else
-                    {
-                        // sending email to user who Rejected this Transfer in case invitation was using email
-                        #region If Email Invitation
-                        var tokens2 = new Dictionary<string, string>
-							{
-								{Constants.PLACEHOLDER_FIRST_NAME, TransRecipientEmail},
-								{Constants.PLACEHOLDER_SENDER_FULL_NAME, TransMakerFirstName + " " + TransMakerLastName},
-								{Constants.PLACEHLODER_CENTS, s3[1].ToString()},
-								{Constants.PLACEHOLDER_TRANSFER_AMOUNT, s3[0].ToString()},
-								{Constants.MEMO, memo}
-							};
-
-                        toAddress = CommonHelper.GetDecryptedData(transactionDetail.InvitationSentTo);
-
-                        try
-                        {
-                            Utility.SendEmail("transferToNewUserRejected_ToRecipient", fromAddress, toAddress, null,
-                                "You rejected a Nooch request from " + TransMakerFirstName + " " + TransMakerLastName,
-                                null, tokens2, null, null, null);
-
-                            Logger.Info(
-                                "TDA -> transferToNewUserRejected_ToRecipient E-mail sent to [" +
-                                toAddress + "].");
-                        }
-                        catch (Exception)
-                        {
-                            Logger.Info(
-                                "TDA -> transferToNewUserRejected_ToRecipient E-mail not sent to [" +
-                                toAddress + "]. Problem occurred in sending mail.");
-                        }
-                        #endregion
-                    }
-                    #endregion
-
-                    return "success";
-
-                    #endregion
-                }
-                else
-                {
-                    return "";
-                }
-            }
-            catch (Exception)
-            {
-                return "";
-            }
-
-        }
-
         // REQUEST REJECTED by NON-NOOCH user.... emails to be sent to both requester and request receiver
         // request sender = who requested for money and will get money transferred into his account
         // request receiver = who will get this request and pay the requester......
-        public string RejectMoneyRequestForNonNoochUser(string TrannsactionId)
+      /*public string RejectMoneyRequestForNonNoochUser(string TrannsactionId)
         {
             Logger.Info("TDA -> RejectMoneyRequestForNonNoochUser Initiated - [transactionId: " + TrannsactionId + "]");
 
@@ -2645,12 +2424,12 @@ namespace Nooch.DataAccess
                 Logger.Error("TDA -> RejectMoneyRequestForNonNoochUser OUTER EXCEPTION - Exception: [" + ex + "]");
                 return "";
             }
-        }
+        }*/
 
 
         // CREATED: JULY 2015
         // NOTE: Created specifically for the new combined landing page (/trans/RejectMoney) for rejecting all types of transfers.
-        public string RejectMoneyCommon(string TransactionId, string UserType, string LinkSource, string TransType)
+        public string RejectMoneyCommon(string TransactionId, string UserType, string TransType)
         {
             Logger.Info("TDA -> RejectMoneyCommon Initiated - [TransactionId: " + TransactionId +
                         "], TransType: [" + TransType + "], UserType: [" + UserType + "]");
@@ -2659,8 +2438,7 @@ namespace Nooch.DataAccess
             {
                 var transId = Utility.ConvertToGuid(TransactionId);
                 var transactionDetail = new Transaction();
-                transactionDetail = _dbContext.Transactions.FirstOrDefault(entity => entity.TransactionId == transId // && entity.TransactionStatus == "Pending" //&& (memberTemp.TransactionType == "DrRr1tU1usk7nNibjtcZkA==" || memberTemp.TransactionType == "T3EMY1WWZ9IscHIj3dbcNw==")   -- need to discuss with Cliff
-                    );
+                transactionDetail = _dbContext.Transactions.FirstOrDefault(entity => entity.TransactionId == transId); // && entity.TransactionStatus == "Pending" //&& (memberTemp.TransactionType == "DrRr1tU1usk7nNibjtcZkA==" || memberTemp.TransactionType == "T3EMY1WWZ9IscHIj3dbcNw==");
 
                 if (transactionDetail != null)
                 {
@@ -2730,8 +2508,15 @@ namespace Nooch.DataAccess
                         {
                             Logger.Info("TDA -> RejectMoneyCommon - CHECKPOINT 1 REACHED - User Type = Existing, TransType = Requst");
                             // Request sent to existing user -- 'Rejector' is SenderId in transactionDetail
-                            SenderFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member1.FirstName));
-                            SenderLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member1.LastName));
+                            if (transactionDetail.Member1.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49")
+                            {
+                                SenderFirstName = "Rent Scene";
+                            }
+                            else
+                            {
+                                SenderFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member1.FirstName));
+                                SenderLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member1.LastName));
+                            }
                             RejectorFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member.FirstName));
                             RejectorLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member.LastName));
                             RejectorFullName = RejectorFirstName + " " + RejectorLastName;
@@ -2741,27 +2526,34 @@ namespace Nooch.DataAccess
                         else if (userTypeDecr == "New" &&
                                  (transTypeDecr == "Request" || transTypeDecr == "Invite"))
                         {
-                            Logger.Info("TDA -> RejectMoneyCommon - CHECKPOINT 2 REACHED - User Type = New, TransType = Requst or Invite, Link Source = Email");
+                            Logger.Info("TDA -> RejectMoneyCommon - CHECKPOINT 2 REACHED - User Type = New, TransType = Requst or Invite");
                             // Request sent to Non-Nooch user -- 'Rejector' is email address InvitationSentTo in transactionDetail
-                            SenderFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member.FirstName));
-                            SenderLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member.LastName));
+
+                            if (transactionDetail.Member.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49")
+                            {
+                                SenderFirstName = "Rent Scene";
+                            }
+                            else
+                            {
+                                SenderFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member.FirstName));
+                                SenderLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member.LastName));
+                            }
+
                             RejectorFirstName = "";
                             RejectorLastName = "";
 
                             // LinkSource = EMAIL
-                            if (LinkSource == "75U7bZRpVVxLNbQuoMQEGQ==" ||
-                                (!String.IsNullOrEmpty(transactionDetail.InvitationSentTo) &&
+                            if (!String.IsNullOrEmpty(transactionDetail.InvitationSentTo) &&
                                 (transactionDetail.IsPhoneInvitation == false ||
-                                 transactionDetail.IsPhoneInvitation == null)))
+                                 transactionDetail.IsPhoneInvitation == null))
                             {
                                 RejectorEmail = CommonHelper.GetDecryptedData(transactionDetail.InvitationSentTo);
                             }
 
                             //LinkSource = PHONE
-                            if (LinkSource == "Um3I3RNHEGWqKM9MLsQ1lg==" ||
-                                (String.IsNullOrEmpty(transactionDetail.InvitationSentTo) &&
+                            if (String.IsNullOrEmpty(transactionDetail.InvitationSentTo) &&
                                 (transactionDetail.IsPhoneInvitation != false ||
-                                 transactionDetail.IsPhoneInvitation != null)))
+                                 transactionDetail.IsPhoneInvitation != null))
                             {
                                 RejectorPhone = CommonHelper.GetDecryptedData(transactionDetail.PhoneNumberInvited);
                             }
@@ -2870,10 +2662,9 @@ namespace Nooch.DataAccess
 
                         #region Notifications when trans is b/t EXISTING user and NON-NOOCH user
 
-                        // UserType = NEW,  TransType = REQUEST or INVITE,  LinkSource = EMAIL or PHONE
+                        // UserType = NEW,  TransType = REQUEST or INVITE
                         if (userTypeDecr == "New" &&
-                            (transTypeDecr == "Request" || transTypeDecr == "Invite") &&
-                            (LinkSource == "75U7bZRpVVxLNbQuoMQEGQ==" || LinkSource == "Um3I3RNHEGWqKM9MLsQ1lg=="))
+                            (transTypeDecr == "Request" || transTypeDecr == "Invite"))
                         {
                             string TransRecipId = "";
 
@@ -3029,7 +2820,6 @@ namespace Nooch.DataAccess
 
                             #endregion
                         }
-
 
                         #endregion Notifications when trans is b/t EXISTING user and NON-NOOCH user
 
@@ -3670,7 +3460,7 @@ namespace Nooch.DataAccess
                             }
 
                             // Send 1 email to EACH Recipient
-                            string otherlink2 = String.Concat(Utility.GetValueFromConfig("ApplicationURL"), "/Nooch/RejectMoney?TransactionId=" + transaction.TransactionId + "&UserType=mx5bTcAYyiOf9I5Py9TiLw==&LinkSource=75U7bZRpVVxLNbQuoMQEGQ==&TransType=T3EMY1WWZ9IscHIj3dbcNw==");
+                            string otherlink2 = String.Concat(Utility.GetValueFromConfig("ApplicationURL"), "/Nooch/RejectMoney?TransactionId=" + transaction.TransactionId + "&UserType=mx5bTcAYyiOf9I5Py9TiLw==&TransType=T3EMY1WWZ9IscHIj3dbcNw==");
                             var toAddress2 = CommonHelper.GetDecryptedData(transaction.Member.UserName);
 
                             var tokensRequestMultipleRecipients = new Dictionary<string, string>
@@ -3905,17 +3695,15 @@ namespace Nooch.DataAccess
                                 Logger.Info("TDA -> RequestMoney - Request to a NON-REGISTERED USER - Sending requestReceivedToExistingNonRegUser Email Template...");
 
                                 // Send email to REQUEST RECIPIENT (person who will pay/reject this request)
-                                // Include 'UserType', 'LinkSource', and 'TransType' as encrypted along with request
+                                // Include 'UserType', and 'TransType' as encrypted along with request
                                 // In this case UserType would = 'Nonregistered'  ->  6KX3VJv3YvoyK+cemdsvMA==
                                 //              TransType would = 'Request'
-                                //              LinkSource would = 'Email'
 
                                 string userType = "6KX3VJv3YvoyK+cemdsvMA=="; // "NonRegistered"
 
                                 string rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
                                                                   "Nooch/RejectMoney?TransactionId=" + requestId +
                                                                   "&UserType=" + userType +
-                                                                  "&LinkSource=75U7bZRpVVxLNbQuoMQEGQ==" +
                                                                   "&TransType=T3EMY1WWZ9IscHIj3dbcNw==");
 
                                 string paylink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
@@ -3949,15 +3737,13 @@ namespace Nooch.DataAccess
                             }
                             else
                             {
-                                // Send email to Request Receiver -- sending UserType LinkSource TransType as encrypted along with request
+                                // Send email to Request Receiver -- sending UserType, TransType as encrypted along with request
                                 // In this case UserType would = 'Existing'
                                 // TransType would be 'Request'
-                                // and link source would be 'Email'
 
                                 string rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
                                                                   "Nooch/RejectMoney?TransactionId=" + transaction.TransactionId +
                                                                   "&UserType=mx5bTcAYyiOf9I5Py9TiLw==" +
-                                                                  "&LinkSource=75U7bZRpVVxLNbQuoMQEGQ==" +
                                                                   "&TransType=T3EMY1WWZ9IscHIj3dbcNw==");
 
                                 if (isForRentScene)
@@ -4281,7 +4067,7 @@ namespace Nooch.DataAccess
                             }
 
                             // Send 1 email to EACH Recipient
-                            string otherlink2 = String.Concat(Utility.GetValueFromConfig("ApplicationURL"), "/Nooch/RejectMoney?TransactionId=" + transaction.TransactionId + "&UserType=mx5bTcAYyiOf9I5Py9TiLw==&LinkSource=75U7bZRpVVxLNbQuoMQEGQ==&TransType=T3EMY1WWZ9IscHIj3dbcNw==");
+                            string otherlink2 = String.Concat(Utility.GetValueFromConfig("ApplicationURL"), "/Nooch/RejectMoney?TransactionId=" + transaction.TransactionId + "&UserType=mx5bTcAYyiOf9I5Py9TiLw==&TransType=T3EMY1WWZ9IscHIj3dbcNw==");
                             var toAddress2 = CommonHelper.GetDecryptedData(transaction.Member.UserName);
 
                             var tokensRequestMultipleRecipients = new Dictionary<string, string>
@@ -4515,17 +4301,15 @@ namespace Nooch.DataAccess
                                 Logger.Info("TDA -> RequestMoney - Request to a NON-REGISTERED USER - Sending requestReceivedToExistingNonRegUser Email Template...");
 
                                 // Send email to REQUEST RECIPIENT (person who will pay/reject this request)
-                                // Include 'UserType', 'LinkSource', and 'TransType' as encrypted along with request
+                                // Include 'UserType', and 'TransType' as encrypted along with request
                                 // In this case UserType would = 'Nonregistered'  ->  6KX3VJv3YvoyK+cemdsvMA==
                                 //              TransType would = 'Request'
-                                //              LinkSource would = 'Email'
 
                                 string userType = "6KX3VJv3YvoyK+cemdsvMA=="; // "NonRegistered"
 
                                 string rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
                                                                   "Nooch/RejectMoney?TransactionId=" + requestId +
                                                                   "&UserType=" + userType +
-                                                                  "&LinkSource=75U7bZRpVVxLNbQuoMQEGQ==" +
                                                                   "&TransType=T3EMY1WWZ9IscHIj3dbcNw==");
 
                                 string paylink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
@@ -4559,7 +4343,7 @@ namespace Nooch.DataAccess
                             }
                             else
                             {
-                                // Send email to Request Receiver -- sending UserType LinkSource TransType as encrypted along with request
+                                // Send email to Request Receiver -- sending UserType, TransType as encrypted along with request
                                 // In this case UserType would = 'Existing'
                                 // TransType would be 'Request'
                                 // and link source would be 'Email'
@@ -4567,7 +4351,6 @@ namespace Nooch.DataAccess
                                 string rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
                                                                   "Nooch/RejectMoney?TransactionId=" + transaction.TransactionId +
                                                                   "&UserType=mx5bTcAYyiOf9I5Py9TiLw==" +
-                                                                  "&LinkSource=75U7bZRpVVxLNbQuoMQEGQ==" +
                                                                   "&TransType=T3EMY1WWZ9IscHIj3dbcNw==");
 
                                 if (isForRentScene)
@@ -4887,15 +4670,14 @@ namespace Nooch.DataAccess
                     }
 
 
-                    // Send email to Request Receiver -- sending UserType LinkSource TransType as encrypted along with request
+                    // Send email to Request Receiver -- sending UserType, TransType as encrypted along with request
                     // In this case UserType would = 'New'
                     // TransType would = 'Request'
                     // and link source would = 'Email'
                     cancelLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
                                                "Nooch/RejectMoney?TransactionId=" + requestId +
                                                "&UserType=U6De3haw2r4mSgweNpdgXQ==" +
-                                               "&LinkSource=75U7bZRpVVxLNbQuoMQEGQ==&" +
-                                               "TransType=T3EMY1WWZ9IscHIj3dbcNw==");
+                                               "&TransType=T3EMY1WWZ9IscHIj3dbcNw==");
 
                     string paylink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
                                                    "Nooch/PayRequest?TransactionId=" + requestId +
@@ -5273,10 +5055,9 @@ namespace Nooch.DataAccess
                     #region Email To Request Recipient
 
                     // Send email to REQUEST RECIPIENT (person who will pay/reject this request)
-                    // Include 'UserType', 'LinkSource', and 'TransType' as encrypted along with request
+                    // Include 'UserType' and 'TransType' as encrypted along with request
                     // In this case UserType would = 'Nonregistered'  ->  6KX3VJv3YvoyK+cemdsvMA==
                     //              TransType would = 'Request'
-                    //              LinkSource would = 'Email'
 
                     // Check if both user's are actually "Active" and not NonRegistered...
                     string userType = "6KX3VJv3YvoyK+cemdsvMA=="; // "NonRegistered"
@@ -5288,7 +5069,6 @@ namespace Nooch.DataAccess
                     string rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
                                                       "Nooch/rejectMoney?TransactionId=" + requestId +
                                                       "&UserType=" + userType +
-                                                      "&LinkSource=75U7bZRpVVxLNbQuoMQEGQ==" +
                                                       "&TransType=T3EMY1WWZ9IscHIj3dbcNw==");
 
                     string paylink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
@@ -5686,14 +5466,12 @@ namespace Nooch.DataAccess
                                 "], [Exception: " + ex + "]");
                         }
 
-                        // Send SMS to Request Receiver -- sending UserType LinkSource TransType as encrypted along with request
+                        // Send SMS to Request Receiver -- sending UserType, TransType as encrypted along with request
                         // In this case UserType would = 'New'
                         // TransType would = 'Request'
-                        // and link source would = 'Phone'
                         string rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
                                                           "Nooch/RejectMoney?TransactionId=" + requestId +
                                                           "&UserType=U6De3haw2r4mSgweNpdgXQ==" +
-                                                          "&LinkSource=Um3I3RNHEGWqKM9MLsQ1lg==" +
                                                           "&TransType=T3EMY1WWZ9IscHIj3dbcNw==");
 
                         string paylink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
@@ -7384,12 +7162,10 @@ namespace Nooch.DataAccess
 
                         // In this case UserType would = 'New'
                         // TransType would = 'Invite'
-                        // LinkSource would = 'Email'
 
                         string rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
                                                           "Nooch/RejectMoney?TransactionId=" + transactionDetail.TransactionId +
                                                           "&UserType=U6De3haw2r4mSgweNpdgXQ==" +
-                                                          "&LinkSource=75U7bZRpVVxLNbQuoMQEGQ==" +
                                                           "&TransType=DrRr1tU1usk7nNibjtcZkA==");
 
                         string acceptLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
@@ -7754,7 +7530,7 @@ namespace Nooch.DataAccess
                                 catch (Exception ex)
                                 {
                                     Logger.Error("TDA -> TransferMoneyToNonNoochUserThroughPhoneUsingsynapse - EXCEPTION on trying to update Sender in DB, but continuing on to send notifications. " +
-                                                           "[Exception: " + ex + "]");
+                                                 "[Exception: " + ex + "]");
                                 }
 
                                 #region Send SMS To Non-Nooch Transfer Recipient
@@ -7766,7 +7542,6 @@ namespace Nooch.DataAccess
                                 string rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
                                                                   "trans/RejectMoney?TransactionId=" + transactionDetail.TransactionId +
                                                                   "&UserType=U6De3haw2r4mSgweNpdgXQ==" +
-                                                                  "&LinkSource=Um3I3RNHEGWqKM9MLsQ1lg==" +
                                                                   "&TransType=DrRr1tU1usk7nNibjtcZkA==");
 
                                 string acceptLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),

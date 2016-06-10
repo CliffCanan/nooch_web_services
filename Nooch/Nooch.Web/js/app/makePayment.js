@@ -26,7 +26,7 @@ $(document).ready(function ()
 		
 		changeFavicon('../Assets/favicon2.ico')
     }
-    if (FROM == "appjaxx" || FROM == "josh")
+    else if (FROM == "appjaxx" || FROM == "josh")
     {
 		$('.navbar img').attr('src', '../Assets/Images/appjaxx-nav.png');
 	}
@@ -52,16 +52,28 @@ $(document).ready(function ()
         return false;
     });
 
+    $('input[name="userType"]').change(function ()
+    {
+        if ($('input[name="userType"]:checked').val() == 'vendor') {
+            if ($('input[name="type"]:checked').val() == 'send') {
+                return false;
+            }
+        }
+    });
+
+
 	$( "input[name='type']" ).change(function() {
 		if ($('input[name="type"]:checked').val() == 'request')
 		{
 			$('#typeGrp .btn').removeClass('btn-success').addClass('btn-primary');
 			$('#submitPayment').removeClass('btn-success').addClass('btn-primary');
+			$('#vendor').closest('label').removeClass('disabled');
 		}
 		else // Send has been clicked
 		{
 			$('#typeGrp .btn').removeClass('btn-primary').addClass('btn-success');
 			$('#submitPayment').removeClass('btn-primary').addClass('btn-success');
+			$('#vendor').closest('label').addClass('disabled');
 		}
 	});
 });
@@ -302,7 +314,8 @@ function submitPayment()
                                   "<tr><td>Amount</td><td>$" + amount + "</td></tr>" +
                                   "<tr><td>Name</td><td>" + name + "</td></tr>" +
                                   "<tr><td>Email</td><td>" + email + "</td></tr>" +
-                                  "<tr><td>Memo</td><td>" + memo + "</td></tr></tbody></table>",
+                                  "<tr><td>Memo</td><td>" + memo + "</td></tr></tbody></table>" +
+                                  "<span class='show m-t-10'><strong>" + name + "</strong> has been notified via email.</span>",
                             type: "success",
                             showCancelButton: false,
                             confirmButtonColor: "#3fabe1",
@@ -366,8 +379,8 @@ function submitPayment()
                                 sendRequestToExistingUser();
                             }
                         });
-                        }
-                        else
+                    }
+                    else
                     {
                         $('.alert.alert-success #resultAmount').text('$' + amount);
                         $('.alert.alert-success #resultName').text(name);
@@ -506,7 +519,8 @@ function sendRequestToExistingUser()
                               "<tr><td>Amount</td><td>$" + amount + "</td></tr>" +
                               "<tr><td>Name</td><td>" + existNAME + "</td></tr>" +
                               "<tr><td>Email</td><td>" + email + "</td></tr>" +
-                              "<tr><td>Memo</td><td>" + memo + "</td></tr></tbody></table>",
+                              "<tr><td>Memo</td><td>" + memo + "</td></tr></tbody></table>" +
+                              "<span class='show m-t-10'><strong>" + existNAME + "</strong> has been notified via email.</span>",
                         type: "success",
                         showCancelButton: false,
                         confirmButtonColor: "#3fabe1",
@@ -518,12 +532,13 @@ function sendRequestToExistingUser()
                 }
                 else {
                     swal({
-                        title: "Money Transferred Successfully",
+                        title: "Payment Scheduled Successfully",
                         text: "<table border='0' width='95%' cellpadding='8'><tbody>" +
                               "<tr><td>Amount</td><td>$" + amount + "</td></tr>" +
                               "<tr><td>Name</td><td>" + existNAME + "</td></tr>" +
                               "<tr><td>Email</td><td>" + email + "</td></tr>" +
-                              "<tr><td>Memo</td><td>" + memo + "</td></tr></tbody></table>",
+                              "<tr><td>Memo</td><td>" + memo + "</td></tr></tbody></table>" +
+                              "<span class='show m-t-10'><strong>" + existNAME + "</strong> has been notified via email.</span>",
                         type: "success",
                         showCancelButton: false,
                         confirmButtonColor: "#3fabe1",

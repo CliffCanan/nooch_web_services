@@ -1156,6 +1156,12 @@ function showErrorAlert(errorNum) {
 	    alertBodyText = "Terrible sorry, but it looks like we had trouble processing your info.  Please refresh this page to try again and if you continue to see this message, contact <span style='font-weight:600;'>" +
                         COMPANY + " Support</span>:<br/><a href='mailto:" + supportEmail + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + supportEmail + "</a>";
 	}
+	else if (errorNum == '3') // Error rejecting a payment
+	{
+	    alertTitle = "Errors Are Annoying";
+	    alertBodyText = "Our apologies, but we were not able to reject that request.  Please try again or contact <span style='font-weight:600;'>" + COMPANY + " Support</span>:" +
+                        "<br/><a href='" + supportEmail + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + supportEmail + "</a>";
+	}
 	else if (errorNum == '25') // Errors from the iFrame with the multiple choice verification questions
 	{
 	    alertTitle = "Errors Are The Worst!";
@@ -1459,6 +1465,7 @@ function payBtnClicked()
     });
 }
 
+
 function rejectBtnClicked() {
     var userTypeEncr = "";
 
@@ -1471,10 +1478,80 @@ function rejectBtnClicked() {
         userTypeEncr = "mx5bTcAYyiOf9I5Py9TiLw==";
     }
 
-    window.location = "https://www.noochme.com/noochweb/trans/rejectMoney.aspx?TransactionId=" + TRANSID +
-                      "&UserType=" + userTypeEncr +
-                      "&LinkSource=75U7bZRpVVxLNbQuoMQEGQ==" +
-                      "&TransType=T3EMY1WWZ9IscHIj3dbcNw==";
+    //window.location = "https://www.noochme.com/noochweb/Nooch/rejectMoney?TransactionId=" + TRANSID +
+    //                  "&UserType=" + userTypeEncr +
+    //                  "&TransType=T3EMY1WWZ9IscHIj3dbcNw==";
+
+    //ADD THE LOADING BOX
+    $.blockUI({
+        message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Rejecting This Request...</span>',
+        css: {
+            border: 'none',
+            padding: '26px 8px 20px',
+            backgroundColor: '#000',
+            '-webkit-border-radius': '15px',
+            '-moz-border-radius': '15px',
+            'border-radius': '15px',
+            opacity: '.8',
+            margin: '0 auto',
+            color: '#fff'
+        }
+    });
+
+    $.ajax({
+        type: "POST",
+        url: $('#rejectMoneyLink').val() + "?TransactionId=" + TRANSID + "&UserType=" + userTypeEncr + "&TransType=T3EMY1WWZ9IscHIj3dbcNw==",
+        success: function (msg)
+        {
+            console.log("SUCCESS -> RejectMoneyResult is... ");
+            console.log(msg);
+
+            // Hide the Loading Block
+            $.unblockUI()
+
+            if (typeof msg.errorFromCodeBehind != 'undefined' &&
+			    (msg.errorFromCodeBehind.indexOf("no longer pending") > -1 || msg.transStatus.indexOf("no longer pending") > -1))
+            {
+                console.log("This payment was no longer pending.");
+                transStatus = "not pending";
+                checkIfStillPending();
+            }
+            else if (msg.errorFromCodeBehind = "0")
+            {
+                $("#transResult").text("Request Rejected Successfully");
+                $("#nonRegUsrContainer").fadeOut('fast');
+
+                var firstName = $('#senderName1').text().trim().split(" ");
+
+                swal({
+                    title: "Payment Rejected",
+                    text: "You just rejected that payment request successfully.<br/><br/>Hope " + firstName[0] + " won't mind!",
+                    type: "success",
+                    showCancelButton: false,
+                    confirmButtonColor: "#3fabe1",
+                    confirmButtonText: "OK",
+                    closeOnConfirm: true,
+                    customClass: "largeText",
+                    html: true
+                });
+            }
+            else {
+                console.log("Response was not successful :-(");
+                showErrorAlert('3');
+            }
+        },
+        Error: function (x, e)
+        {
+            //   Hide the Loading Block
+            $.unblockUI()
+
+            console.log("ERROR --> 'x', then 'e' is... ");
+            console.log(x);
+            console.log(e);
+
+            showErrorAlert('3');
+        }
+    });
 }
 
 
