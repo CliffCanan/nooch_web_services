@@ -98,7 +98,8 @@ namespace Nooch.Common
                         {
                             Constants.PLACEHOLDER_PASSWORDLINK,
                             String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
-                                "/ForgotPassword/ResetPassword.aspx?memberId=" + getMember.MemberId)
+                                //"/ForgotPassword/ResetPassword.aspx?memberId=" + getMember.MemberId)
+                                "/ResetPassword?memberId=" + getMember.MemberId)
                         }
                     };
 
