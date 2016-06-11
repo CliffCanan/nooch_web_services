@@ -2042,7 +2042,7 @@ namespace Nooch.Web.Controllers
 
                     res.errorFromCodeBehind = "0";
 
-                    ResultCancelRequest TransDetails = GetTransDetailsGenericMethod(Request.QueryString["TransactionId"]);
+                    ResultCancelRequest TransDetails = GetTransToReject(Request.QueryString["TransactionId"]);
 
                     if (TransDetails.IsTransFound)
                     {
@@ -2132,7 +2132,7 @@ namespace Nooch.Web.Controllers
         /// </summary>
         /// <param name="TransactionId"></param>
         /// <returns></returns>
-        public ResultCancelRequest GetTransDetailsGenericMethod(string TransactionId)
+        public ResultCancelRequest GetTransToReject(string TransactionId)
         {
             ResultCancelRequest rcr = new ResultCancelRequest();
             string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
@@ -2148,21 +2148,21 @@ namespace Nooch.Web.Controllers
             rcr.TransId = transaction.TransactionId;
             rcr.isRentScene = transaction.isRentScene;
 
-            if (transaction.IsPhoneInvitation && transaction.PhoneNumberInvited.Length > 0)
-            {
-                rcr.senderImage = "https://www.noochme.com/noochweb/Assets/Images/" + "userpic-default.png";
-                rcr.nameLabel = transaction.PhoneNumberInvited;
-            }
-            else if (!String.IsNullOrEmpty(transaction.InvitationSentTo))
-            {
-                rcr.senderImage = "https://www.noochme.com/noochweb/Assets/Images/" + "userpic-default.png";
-                rcr.nameLabel = transaction.InvitationSentTo;
-            }
-            else
-            {
+            //if (transaction.IsPhoneInvitation && transaction.PhoneNumberInvited.Length > 0)
+            //{
+            //    rcr.senderImage = "https://www.noochme.com/noochweb/Assets/Images/" + "userpic-default.png";
+            //    rcr.nameLabel = transaction.PhoneNumberInvited;
+            //}
+            //else if (!String.IsNullOrEmpty(transaction.InvitationSentTo))
+            //{
+            //    rcr.senderImage = "https://www.noochme.com/noochweb/Assets/Images/" + "userpic-default.png";
+            //    rcr.nameLabel = transaction.InvitationSentTo;
+            //}
+            //else
+            //{
                 rcr.senderImage = transaction.SenderPhoto;
                 rcr.nameLabel = transaction.Name;
-            }
+            //}
 
             return rcr;
         }
@@ -3353,6 +3353,7 @@ namespace Nooch.Web.Controllers
             return View();
         }
 
+
         [HttpPost]
         public ActionResult EncryptDecryptData(EncDecInput input)
         {
@@ -3378,7 +3379,6 @@ namespace Nooch.Web.Controllers
             }
             return Json(res);
         }
-
 
     }
 

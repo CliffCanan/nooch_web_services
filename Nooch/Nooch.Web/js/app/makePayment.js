@@ -55,7 +55,7 @@ $(document).ready(function ()
     $('input[name="userType"]').change(function ()
     {
         if ($('input[name="userType"]:checked').val() == 'vendor') {
-            if ($('input[name="type"]:checked').val() == 'send') {
+            if ($('input[name="type"]:checked').val() == 'request') {
                 return false;
             }
         }
@@ -67,13 +67,13 @@ $(document).ready(function ()
 		{
 			$('#typeGrp .btn').removeClass('btn-success').addClass('btn-primary');
 			$('#submitPayment').removeClass('btn-success').addClass('btn-primary');
-			$('#vendor').closest('label').removeClass('disabled');
-		}
+			$('#vendor').closest('label').addClass('disabled');
+        }
 		else // Send has been clicked
 		{
 			$('#typeGrp .btn').removeClass('btn-primary').addClass('btn-success');
 			$('#submitPayment').removeClass('btn-primary').addClass('btn-success');
-			$('#vendor').closest('label').addClass('disabled');
+			$('#vendor').closest('label').removeClass('disabled');
 		}
 	});
 });

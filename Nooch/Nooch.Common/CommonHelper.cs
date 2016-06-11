@@ -4402,5 +4402,29 @@ namespace Nooch.Common
 
         }
 
+
+        public static string notifyCliffAboutError(string bodyTxt)
+        {
+            try
+            {
+                StringBuilder completeEmailTxt = new StringBuilder();
+                string s = "<html><body><h2>Error Occurred</h2><p>The following error just occurred (at [" + DateTime.Now.ToString("MMMM dd, yyyy MM/dd/yy H:mm:ss") +
+                            "]:<br/><br>" + bodyTxt +
+                           "<br/><br/><small>This email was generated automatically in [Common Helper -> notifyCliffAboutError</small></body></html>";
+
+                completeEmailTxt.Append(s);
+
+                Utility.SendEmail(null, "admin-autonotify@nooch.com", "errors@nooch.com", null,
+                                  "Nooch Admin Alert: Error",
+                                  null, null, null, null, completeEmailTxt.ToString());
+
+                return "Notification sent";
+            }
+            catch (Exception ex)
+            {
+                Logger.Info("Common Helper -> notifyCliffAboutError FAILED - Exception: [" + ex + "]");
+                return ex.Message;
+            }
+        }
     }
 }
