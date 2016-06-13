@@ -1191,8 +1191,8 @@ function sendToRedUrl() {
         if (sendToIdVerQuestions == true)
         {
             console.log("sending to ID Verification page...");
-            //window.top.location.href = "https://www.noochme.com/noochweb/Nooch/idVerification?memid=" + MEMBER_ID + "&from=addbnk&redUrl=" + RED_URL;
-            window.top.location.href = "http://54.201.43.89/noochweb/Nooch/idVerification?memid=" + MEMBER_ID + "&from=addbnk&redUrl=" + RED_URL;
+            window.top.location.href = "https://www.noochme.com/noochweb/Nooch/idVerification?memid=" + MEMBER_ID + "&from=addbnk&redUrl=" + RED_URL;
+            //window.top.location.href = "http://nooch.info/noochweb/Nooch/idVerification?memid=" + MEMBER_ID + "&from=addbnk&redUrl=" + RED_URL;
         }
         else if (RED_URL.indexOf("rentscene") > -1) // For RentScene
         {
@@ -1259,7 +1259,7 @@ function sendToRedUrl() {
             }, function (isConfirm)
             {*/
                 $('.addBankContainer-body').block({
-                    message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Finishing...</span>',
+                    message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Submitting...</span>',
                     css: {
                         border: 'none',
                         padding: '26px 8px 20px',
@@ -1267,7 +1267,7 @@ function sendToRedUrl() {
                         '-webkit-border-radius': '15px',
                         '-moz-border-radius': '15px',
                         'border-radius': '15px',
-                        opacity: '.8',
+                        opacity: '.75',
                         width: '70%',
                         left: '15%',
                         top: '25px',

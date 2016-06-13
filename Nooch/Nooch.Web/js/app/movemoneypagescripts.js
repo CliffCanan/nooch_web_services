@@ -149,11 +149,10 @@ $(document).ready(function () {
                     html: true,
                     customClass: "securityAlert confirmBtnFullWidth"
                 }, function () {
-                    //redUrlForAddBank = (transType == "send") ? "https://www.noochme.com/noochweb/nooch/depositMoneycomplete?mem_id="
-                    //                                         : "https://www.noochme.com/noochweb/nooch/payRequestComplete?mem_id=";
-
-                    redUrlForAddBank = (transType == "send") ? "http://nooch.info/Nooch/DepositMoneyComplete?mem_id="
-                                                            : "http://nooch.info/Nooch/PayRequestComplete?mem_id=";
+                    redUrlForAddBank = (transType == "send") ? "https://www.noochme.com/noochweb/Nooch/PayRequestComplete?mem_id="
+                                                             : "https://www.noochme.com/noochweb/Nooch/PayRequestComplete?mem_id=";
+                    //redUrlForAddBank = (transType == "send") ? "http://nooch.info/Nooch/DepositMoneyComplete?mem_id="
+                    //                                        : "http://nooch.info/Nooch/PayRequestComplete?mem_id=";
 
 
                     redUrlForAddBank = redUrlForAddBank + MemID_EXISTING + "," + TRANSID;
@@ -162,9 +161,6 @@ $(document).ready(function () {
                                                                  : redUrlForAddBank + ",false";
 
                     console.log("redUrlForAddBank IS: [" + redUrlForAddBank + "]");
-
-                    //$("#frame").attr("src", "https://www.noochme.com/noochweb/trans/Add-Bank.aspx?MemberId=" + MemID_EXISTING +
-                    //                      "&redUrl=" + redUrlForAddBank);
 
                     $("#frame").attr("src", $('#addBank_Url').val() + "?memberid=" + MemID_EXISTING +
                                           "&redUrl=" + redUrlForAddBank);
@@ -177,16 +173,6 @@ $(document).ready(function () {
                 });
             }
 
-            // 3. Existing Users WITH A Bank - Send to ___Complete Page
-            // CC (5/9/16): I noticed this was added but really don't think it is necessary b/c there is payBtnClicked()
-            //              to handle existing users with a bank already linked. B/c this would automatically forward people to the Complete page...
-            else if ((USERTYPE == "Registered" || USERTYPE == "Existing") &&
-                     $('#bnkName').val() != "no bank found")
-            {
-            }
-            else {
-                console.log("181. There was an error! :-(");
-            }
 
             $('#idVer .modalclose').click(function () {
                 cancelIdVer();
@@ -798,8 +784,8 @@ function createRecord() {
 
 			        $("#idVerWiz").addClass("animated bounceOut");
 
-			        //$("#idVerContainer iframe").attr("src", "https://www.noochme.com/noochweb/trans/idverification.aspx?memid=" + memIdGen + "&from=lndngpg");
-			        $("#idVerContainer iframe").attr("src", "http://nooch.info/noochweb/Nooch/idVerification?memid=" + memIdGen + "&from=lndngpg");
+			        $("#idVerContainer iframe").attr("src", "https://www.noochme.com/noochweb/Nooch/idVerification?memid=" + memIdGen + "&from=lndngpg");
+			        //$("#idVerContainer iframe").attr("src", "http://nooch.info/noochweb/Nooch/idVerification?memid=" + memIdGen + "&from=lndngpg");
 
 			        setTimeout(function () {
 			            $("#idVerWiz").css({
@@ -1048,20 +1034,17 @@ function idVerifiedSuccess() {
             customClass: "idVerSuccessAlert"
         }, function () {
             
-            //redUrlForAddBank = (transType == "send") ? "https://www.noochme.com/noochweb/nooch/depositMoneycomplete?mem_id="
-            //                                         : "https://www.noochme.com/noochweb/nooch/payRequestComplete?mem_id=";
-            redUrlForAddBank = (transType == "send") ? "http://nooch.info/noochweb/Nooch/DepositMoneyComplete?mem_id="
-                                                     : "http://nooch.info/noochweb/Nooch/PayRequestComplete?mem_id=";
+            redUrlForAddBank = (transType == "send") ? "https://www.noochme.com/noochweb/Nooch/DepositMoneyComplete?mem_id="
+                                                     : "https://www.noochme.com/noochweb/Nooch/PayRequestComplete?mem_id=";
+            //redUrlForAddBank = (transType == "send") ? "http://nooch.info/noochweb/Nooch/DepositMoneyComplete?mem_id="
+            //                                         : "http://nooch.info/noochweb/Nooch/PayRequestComplete?mem_id=";
 
-            
             redUrlForAddBank = redUrlForAddBank + memIdGen + "," + TRANSID;
 
             redUrlForAddBank = (FOR_RENTSCENE == "true") ? redUrlForAddBank + ",true"
                                                          : redUrlForAddBank + ",false";
 
-
-            console.log("redUrlForAddBank IS: [" + redUrlForAddBank + "]");
- 
+            console.log("redUrlForAddBank IS: [" + redUrlForAddBank + "]"); 
 
             //$("#frame").attr("src", "Nooch/Add-Bank.aspx?MemberId=" + memIdGen +
             //                        "&redUrl=" + redUrlForAddBank);
@@ -1448,10 +1431,10 @@ function payBtnClicked()
 
             var redUrlToSendTo = "";
 
-            //redUrlToSendTo = (transType == "send") ? "https://www.noochme.com/noochweb/trans/depositMoneycomplete.aspx?mem_id="
-            //                                         : "https://www.noochme.com/noochweb/trans/payRequestComplete.aspx?mem_id=";
-            redUrlToSendTo = (transType == "send") ? "http://nooch.info/noochweb/Nooch/DepositMoneyComplete?mem_id="
-                                                   : "http://nooch.info/noochweb/Nooch/PayRequestComplete?mem_id=";
+            redUrlToSendTo = (transType == "send") ? "https://www.noochme.com/noochweb/Nooch/DepositMoneyComplete?mem_id="
+                                                   : "https://www.noochme.com/noochweb/Nooch/PayRequestComplete?mem_id=";
+            //redUrlToSendTo = (transType == "send") ? "http://nooch.info/noochweb/Nooch/DepositMoneyComplete?mem_id="
+            //                                       : "http://nooch.info/noochweb/Nooch/PayRequestComplete?mem_id=";
 
             redUrlToSendTo = redUrlToSendTo + MemID_EXISTING + "," + TRANSID;
 
