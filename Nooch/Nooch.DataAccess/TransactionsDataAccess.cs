@@ -1351,6 +1351,11 @@ namespace Nooch.DataAccess
             Logger.Info("TDA -> GetTransactionsList Initiated - MemberId: [" + memberId + "] - ListType: [" + listType +
                         "], SubListType: [" + SubListType + "]");
 
+            if (pageSize == null || pageSize < 100)
+            {
+                pageSize = 50;
+            }
+
             totalRecordsCount = 0;
             _dbContext = new NOOCHEntities();
 
@@ -1439,7 +1444,7 @@ namespace Nooch.DataAccess
                                                                          trans.InvitationSentTo == member.UserName ||
                                                                          trans.InvitationSentTo == member.UserNameLowerCase) &&
                                                                          trans.TransactionType == transactionTypeTransfer)
-                                                                         .OrderByDescending(r => r.TransactionDate).Take(50).ToList();
+                                                                         .OrderByDescending(r => r.TransactionDate).Take(pageSize).ToList();
                         }
                         else if (listType.ToUpper().Equals("RECEIVED"))
                         {
@@ -1448,7 +1453,7 @@ namespace Nooch.DataAccess
                                                                          trans.InvitationSentTo == member.UserName ||
                                                                          trans.PhoneNumberInvited == member.ContactNumber) &&
                                                                          trans.TransactionType == transactionTypeTransfer)
-                                                                         .OrderByDescending(r => r.TransactionDate).Take(50).ToList();
+                                                                         .OrderByDescending(r => r.TransactionDate).Take(pageSize).ToList();
                         }
                         else if (listType.ToUpper().Equals("DISPUTED"))
                         {
@@ -1458,7 +1463,7 @@ namespace Nooch.DataAccess
                                                                          trans.InvitationSentTo == member.UserName) &&
                                                                          trans.DisputeStatus != null &&
                                                                          trans.TransactionType == transactionTypeDisputed)
-                                                                         .OrderByDescending(r => r.TransactionDate).Take(50).ToList();
+                                                                         .OrderByDescending(r => r.TransactionDate).Take(pageSize).ToList();
                         }
                         else if (listType.ToUpper().Equals("ALL"))
                         {
@@ -1467,7 +1472,7 @@ namespace Nooch.DataAccess
                                                                          trans.RecipientId == id ||
                                                                          trans.InvitationSentTo == member.UserName ||
                                                                          trans.InvitationSentTo == member.UserNameLowerCase)
-                                                                         .OrderByDescending(r => r.TransactionDate).Take(50).ToList();
+                                                                         .OrderByDescending(r => r.TransactionDate).Take(pageSize).ToList();
                         }
                         else if (listType.ToUpper().Equals("REQUEST"))
                         {

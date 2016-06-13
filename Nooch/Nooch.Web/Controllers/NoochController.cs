@@ -3036,17 +3036,17 @@ namespace Nooch.Web.Controllers
             }
             else
             {
-                if (Request.QueryString["memId"] != null)
+                if (!String.IsNullOrEmpty(memId))
                 {
                     memberId = Request.QueryString["memId"];
                 }
-                else if (Request.QueryString["user"] != null)
+                else if (!String.IsNullOrEmpty(user))
                 {
-                    if (Request.QueryString["user"].ToLower() == "appjaxx")
+                    if (user.ToLower() == "appjaxx")
                         memberId = "8b4b4983-f022-4289-ba6e-48d5affb5484";
-                    else if (Request.QueryString["user"].ToLower() == "rentscene")
+                    else if (user.ToLower() == "rentscene")
                         memberId = "852987e8-d5fe-47e7-a00b-58a80dd15b49";
-                    else if (Request.QueryString["user"] == "cliff")
+                    else if (user == "cliff")
                         memberId = "b3a6cf7b-561f-4105-99e4-406a215ccf60";
                 }
 
@@ -3170,10 +3170,10 @@ namespace Nooch.Web.Controllers
                 var memberObj = CommonHelper.GetMemberDetails(memberId);
                 if (memberObj != null && !String.IsNullOrEmpty(memberObj.FirstName))
                 {
-                    res.usersName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName));
+                    res.usersName = user == "rentscene" ? "Rent Scene" : CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName));
                     res.usersPhoto = !String.IsNullOrEmpty(memberObj.Photo) ? memberObj.Photo : "https://www.noochme.com/noochweb/Assets/Images/userpic-default.png";
 
-                    if (!String.IsNullOrEmpty(memberObj.LastName))
+                    if (user != "rentscene" && !String.IsNullOrEmpty(memberObj.LastName))
                     {
                         res.usersName += " " + CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.LastName));
                     }

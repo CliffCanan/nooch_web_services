@@ -3447,35 +3447,37 @@ namespace Nooch.DataAccess
                     // NEXT, ATTEMPT TO CREATE A SYNAPSE ACCOUNT FOR THIS USER
 
                     #region Notify Cliff About New User
+                    try
+                    {
+                        StringBuilder st = new StringBuilder("<br/><p><strong>This user's Nooch Account information is:</strong></p>" +
+                                              "<table border='1' style='border-collapse:collapse;'>" +
+                                              "<tr><td><strong>MemberID:</strong></td><td>" + member.MemberId + "</td></tr>" +
+                                              "<tr><td><strongNooch_ID:</strong></td><td>" + member.Nooch_ID + "</td></tr>" +
+                                              "<tr><td><strong>Name:</strong></td><td>" + FirstName + " " + LastName + "</td></tr>" +
+                                              "<tr><td><strong>Email Address:</strong></td><td>" + userEmail + "</td></tr>" +
+                                              "<tr><td><strong>Phone #:</strong></td><td>" + userPhone + "</td></tr>" +
+                                              "<tr><td><strong>Address:</strong></td><td>" + address + ", " + cityFromGoogle + ", " + stateAbbrev + ", " + zip + "</td></tr>" +
+                                              "<tr><td><strong>SSN:</strong></td><td>" + ssn + "</td></tr>" +
+                                              "<tr><td><strong>isIdImageAdded:</strong></td><td>" + isIdImageAdded +
+                                              "</td></tr></table><br/><br/>- Nooch Bot</body></html>");
 
-                    StringBuilder st = new StringBuilder("<br/><p><strong>This user's Nooch Account information is:</strong></p>" +
-                                          "<table border='1' style='border-collapse:collapse;'>" +
-                                          "<tr><td><strong>MemberID:</strong></td><td>" + MemberId + "</td></tr>" +
-                                          "<tr><td><strongNooch_ID:</strong></td><td>" + MemberInfoInNoochDb.Nooch_ID + "</td></tr>" +
-                                          "<tr><td><strong>Nooch Name:</strong></td><td>" + noochFullName + "</td></tr>" +
-                                          "<tr><td><strong>Bank Included Name?:</strong></td><td>" + bankIncludedName + "</td></tr>" +
-                                          "<tr><td><strong>Name From Bank:</strong></td><td>" + fullNameFromBank + "</td></tr>" +
-                                          "<tr><td><strong>nameMatchedExactly:</strong></td><td>" + nameMatchedExactly + "</td></tr>" +
-                                          "<tr><td><strong>lastNameMatched:</strong></td><td>" + lastNameMatched + "</td></tr>" +
-                                          "<tr><td><strong>Nooch Email Address:</strong></td><td>" + noochEmailAddress + "</td></tr>" +
-                                          "<tr><td><strong>Nooch Phone #:</strong></td><td>" + MemberInfoInNoochDb.ContactNumber + "</td></tr>" +
-                                          "<tr><td><strong>Address:</strong></td><td>" + CommonHelper.GetDecryptedData(MemberInfoInNoochDb.Address) +
-                                          "</td></tr></table><br/><br/>- Nooch Bot</body></html>");
+                        // Notify Nooch Admin
+                        StringBuilder completeEmailTxt = new StringBuilder();
+                        string s = "<html><body><h2>New Nooch User Created</h2><p>The following person just created a Nooch account:</p>" +
+                                   st.ToString() +
+                                   "<br/><br/><small>This email was generated automatically in [MDA -> RegisterNonNoochUserWithSynapse]</small></body></html>";
 
-                    // Notify Nooch Admin
-                    StringBuilder completeEmailTxt = new StringBuilder();
-                    string s = "<html><body><h2>New Nooch User Created</h2><p>The following Nooch user just attached a Synapse bank account, which was unable " +
-                               "to be verified because the bank did not return an email address, BUT this user's SSN info was verified successfully with Synapse.</p>" +
-                               "<p>The bank account has beem marked \"Not Verified\" and is now awaiting Admin verification:</p>"
-                               + st.ToString() +
-                               "<br/><br/><small>This email was generated automatically in [MDA -> RegisterNonNoochUserWithSynapse]</small></body></html>";
+                        completeEmailTxt.Append(s);
 
-                    completeEmailTxt.Append(s);
+                        Utility.SendEmail(null, "admin-autonotify@nooch.com", "bankAdded@nooch.com", null,
+                                          "Nooch Admin Alert: Bank Added, Awaiting Admin Approval",
+                                          null, null, null, null, completeEmailTxt.ToString());
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 Error - Attempted to notify Cliff about new user - Exception: [" + ex + "]");
+                    }
 
-                    Utility.SendEmail(null, "admin-autonotify@nooch.com", "bankAdded@nooch.com", null,
-                                      "Nooch Admin Alert: Bank Added, Awaiting Admin Approval",
-                                      null, null, null, null, completeEmailTxt.ToString());
-                    
                     #endregion Notify Cliff About New User
                     
                     #region Create User with Synapse
