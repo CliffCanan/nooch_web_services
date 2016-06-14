@@ -2585,6 +2585,9 @@ namespace Nooch.DataAccess
                     Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 - DOB was NULL - [Name: " + userName + "], [TransId: " + transId + "]");
                 }
 
+               //Rajat Puri 14/6/2016 The following region is a kind of duplicate as the same work will get done at line number 2845 
+               // in the region *saving user image if provided* This will  upload same image again on the server.
+                #region    
                 if (isIdImageAdded == "1" && !String.IsNullOrEmpty(idImageData))
                 {
                     // We have ID Doc image... Now save on server and get URL to save
@@ -2615,7 +2618,7 @@ namespace Nooch.DataAccess
                                      "], [Email: " + userEmail + "], [Member_Id: " + res.memberIdGenerated + "]");
                     }
                 }
-
+                #endregion
                 string pinNumber = Utility.GetRandomPinNumber();
                 pinNumber = CommonHelper.GetEncryptedData(pinNumber);
                 memberObj.SecondaryEmail = memberObj.UserName; // In case the supplied email is different than what the Landlord used to invite, saving the original email here as secondary, and updating UserName in next line
