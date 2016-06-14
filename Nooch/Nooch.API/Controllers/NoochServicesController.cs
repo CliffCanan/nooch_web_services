@@ -25,6 +25,7 @@ using Nooch.Common.Entities.LandingPagesRelatedEntities;
 using System.Drawing;
 using ImageProcessor;
 using System.IO.Compression;
+using Hangfire;
 
 
 namespace Nooch.API.Controllers
@@ -3200,6 +3201,19 @@ namespace Nooch.API.Controllers
                                 }
 
                                 Logger.Info("Service Controller -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber SUCCESS - Added record to SynapseBanksOfMembers Table - [UserName: " + CommonHelper.GetDecryptedData(noochMember.UserName) + "]");
+
+
+                                // scheduling send reminder email for this particular transaction
+                                try
+                                {
+                                    BackgroundJob.Schedule(() => CommonHelper.SendMincroDepositsVerificationReminderEmail(sbom.MemberId.ToString(), sbom.Id.ToString(), Convert.ToBoolean(noochMember.isRentScene)), TimeSpan.FromDays(2));
+                                }
+                                catch (Exception exc)
+                                {
+
+                                    Logger.Error("Service Controller -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber schedulre verification alert FAILED , Exception: [" + exc + "]");
+
+                                }
 
                                 res.Is_success = true;
                             }

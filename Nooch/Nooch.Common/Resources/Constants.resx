@@ -112,10 +112,10 @@
     <value>2.0</value>
   </resheader>
   <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <resheader name="writer">
-    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="BREAK" xml:space="preserve">
     <value>&lt;br/&gt;</value>
@@ -383,5 +383,8 @@
   </data>
   <data name="STATUS_NON_REGISTERED" xml:space="preserve">
     <value>NonRegistered</value>
+  </data>
+  <data name="PLACEHOLDER_ACCOUNT_NICK_NAME" xml:space="preserve">
+    <value>$AccountNickName$</value>
   </data>
 </root>
