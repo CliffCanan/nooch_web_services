@@ -5698,9 +5698,7 @@ namespace Nooch.DataAccess
                                     Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser - SUCCESS Response From SYNAPSE's /order/add API - " +
                                                 "Synapse OrderID: [" + Call_Synapse_Order_API_Result.responseFromSynapse.trans._id.oid + "]");
 
-                                    //if (!isTesting)
-                                    //{
-                                    // If testing, keep this transaction as 'Pending' so we can more easily re-test with the same transaction.
+                                    //if (!isTesting) { //If testing, keep this transaction as 'Pending' so we can more easily re-test with the same transaction.
                                     Transaction.TransactionStatus = "Success";
                                     Transaction.DateAccepted = DateTime.Now;
                                     int save = _dbContext.SaveChanges();
@@ -6020,14 +6018,23 @@ namespace Nooch.DataAccess
                                     }
                                     else
                                     {
-                                        Logger.Error("MDA -> GetTokensAndTransferMoneyToNewUser FAILED - Unable to update transaction status in DB");
+                                        var error = "MDA -> GetTokensAndTransferMoneyToNewUser FAILED - Success from Call Synapse Create Order API, but" +
+                                                    "unable to save transaction status in DB - Error Message: [" + Call_Synapse_Order_API_Result.ErrorMessage +
+                                                    "], Response From Synapse: [" + Call_Synapse_Order_API_Result.responseFromSynapse + "]";
+                                        Logger.Error(error);
+                                        CommonHelper.notifyCliffAboutError(error);
                                         return "Error updating transaction status in DB";
                                     }
                                 }
                                 else
                                 {
-                                    Logger.Error("MDA - GetTokensAndTransferMoneyToNewUser FAILED -> Synapse Response was NOT successful");
-                                    return "Error from syn";
+                                    var error = "MDA - GetTokensAndTransferMoneyToNewUser FAILED -> Synapse Response was NOT successful - " +
+                                                 "Error Message: [" + Call_Synapse_Order_API_Result.ErrorMessage + "], Synapse Response: [" + Call_Synapse_Order_API_Result.responseFromSynapse + "]";
+                                    Logger.Error(error);
+                                    CommonHelper.notifyCliffAboutError(error);
+                                    return !String.IsNullOrEmpty(Call_Synapse_Order_API_Result.ErrorMessage)
+                                                ? Call_Synapse_Order_API_Result.ErrorMessage
+                                                : "Error from syn";
                                 }
                             }
                             else
@@ -6048,7 +6055,7 @@ namespace Nooch.DataAccess
                     {
                         Logger.Error("MDA - GetTokensAndTransferMoneyToNewUser FAILED -> Couldn't find Synapse User or Bank " +
                                      "Details for EXISTING user (which is bad...) - [TransID: " + TransactionId + "]");
-                        return "Missing 'MemberIdAfterSynapseAccountCreation' [9080]";
+                        return "Missing 'MemberIdAfterSynapseAccountCreation' [6058]";
                     }
                 }
                 else

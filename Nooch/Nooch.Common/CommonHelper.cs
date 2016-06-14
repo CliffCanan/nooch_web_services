@@ -2587,7 +2587,7 @@ namespace Nooch.Common
 
         public static synapseSearchUserResponse getUserPermissionsForSynapseV3(string userEmail)
         {
-            Logger.Info("CommonHelper -> getUserPermissionsForSynapseV3 Initiated - [Email: " + userEmail + "]");
+            Logger.Info("Common Helper -> getUserPermissionsForSynapseV3 Initiated - [Email: " + userEmail + "]");
 
             synapseSearchUserResponse res = new synapseSearchUserResponse();
             res.success = false;
@@ -2616,7 +2616,7 @@ namespace Nooch.Common
                 string UrlToHit = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/search"
                                                                                                       : "https://synapsepay.com/api/v3/user/search";
 
-                Logger.Info("CommonHelper -> getUserPermissionsForSynapseV3 - About to query Synapse's /user/search API - [UrlToHit: " + UrlToHit + "]");
+                Logger.Info("Common Helper -> getUserPermissionsForSynapseV3 - About to query Synapse's /user/search API - [UrlToHit: " + UrlToHit + "]");
 
                 var http = (HttpWebRequest)WebRequest.Create(new Uri(UrlToHit));
                 http.Accept = "application/json";
@@ -2841,8 +2841,8 @@ namespace Nooch.Common
 
                     // Cliff (5/13/16): several other methods use this value which was from Synapse V2, so just udpating it to be the OID so nothing should break elsewhere :-)
                     res.BankDetails.bankid = GetDecryptedData(defaultBank.oid);
-                    res.BankDetails.allowed = defaultBank.allowed;
                     res.BankDetails.bank_oid = GetDecryptedData(defaultBank.oid);
+                    res.BankDetails.allowed = defaultBank.allowed;
                     res.BankDetails.bankType = defaultBank.type_bank;
                     res.BankDetails.synapseType = defaultBank.type_synapse;
                     res.BankDetails.dateVerified = defaultBank.Status == "Verified" && defaultBank.VerifiedOn != null

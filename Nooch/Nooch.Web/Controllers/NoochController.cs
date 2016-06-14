@@ -1678,16 +1678,14 @@ namespace Nooch.Web.Controllers
             }
             else
             {
-                // Logger.LogDebugMessage("** payRequestComplete CodeBehind -> memId.Value: [" + memId.Value + "]");
-                // Logger.LogDebugMessage("** payRequestComplete CodeBehind -> transaction.MemberId: [" + transaction.MemberId + "]");
-                // Logger.LogDebugMessage("** payRequestComplete CodeBehind -> transaction.TransactionType: [" + transaction.TransactionType + "]");
-
                 rpc.senderImage = transaction.RecepientPhoto;
                 rpc.senderName1 = (!String.IsNullOrEmpty(transaction.RecepientName) && transaction.RecepientName.Length > 2) ?
                                     transaction.RecepientName :
                                     transaction.Name;
                 rpc.transAmountd = transaction.Amount.ToString("n2");
                 rpc.transMemo = transaction.Memo;
+
+                if (rpc.senderName1 == "Marvis Burns") rpc.senderName1 = "Rent Scene";
 
 
                 // Check if this was a Rent request from a Landlord
@@ -2160,8 +2158,8 @@ namespace Nooch.Web.Controllers
             //}
             //else
             //{
-                rcr.senderImage = transaction.SenderPhoto;
-                rcr.nameLabel = transaction.Name;
+            rcr.senderImage = transaction.SenderPhoto;
+            rcr.nameLabel = transaction.Name;
             //}
 
             return rcr;

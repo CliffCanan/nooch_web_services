@@ -20,18 +20,17 @@ namespace Nooch.API.Controllers
 
             try
             {
+                Logger.Info("WEBHOOK -> GetTransactionStatusFromSynapse Fired - TransactionID: [ " + transId +
+                                " ] At [ " + DateTime.Now + " ]. Content: [ " + jsonContent + " ]");
+
                 using (NOOCHEntities obj = new NOOCHEntities())
                 {
-
-                    Logger.Info("GetTransactionStatusFromSynapse [ WebHook ] loaded for TransactionId : [ " + transId +
-                                " ]. At [ " + DateTime.Now + " ]. With Request Body [ " + jsonContent + " ].");
-
                     // code to store transaction timeline info in db 
                     JObject jsonfromsynapse = JObject.Parse(jsonContent);
 
-                    JToken isTransExists = jsonfromsynapse["trans"];
+                    JToken doesTransExists = jsonfromsynapse["trans"];
 
-                    if (isTransExists != null)
+                    if (doesTransExists != null)
                     {
                         JToken transIdFromSyanpse = jsonfromsynapse["trans"]["_id"]["$oid"];
 
@@ -63,7 +62,8 @@ namespace Nooch.API.Controllers
                                 }
                             }
 
-                            // checking most recent status for updating in transactions table because timeline array may have multiple statuses and that may make confussion to update to most recent status
+                            // Checking most recent status to update Transactions Table b/c Timeline []
+                            // may have multiple statuses and that may be confusing to update to most recent status
 
                             JToken mostRecentToken = jsonfromsynapse["trans"]["recent_status"];
 
@@ -74,8 +74,8 @@ namespace Nooch.API.Controllers
                                     !String.IsNullOrEmpty(transId))
                                 {
                                     Guid transGuid = Utility.ConvertToGuid(transId);
-                                    Transaction t =
-                                        obj.Transactions.FirstOrDefault(t2 => t2.TransactionId == transGuid);
+                                    Transaction t = obj.Transactions.FirstOrDefault(t2 => t2.TransactionId == transGuid);
+
                                     if (t != null)
                                     {
                                         t.SynapseStatus = mostRecentToken["status"].ToString();
@@ -84,9 +84,16 @@ namespace Nooch.API.Controllers
                                 }
                             }
                         }
+                        else
+                        {
+                            Logger.Error("WEBHOOK -> GetTransactionStatusFromSynapse FAILED - TransactionID: [ " + transId +
+                                         " ] At [ " + DateTime.Now + " ]. Content: [ " + jsonContent + " ]");
+                        }
                     }
                     else
                     {
+                        #region Secondary Format From Synapse
+
                         // this time object is without trans key around --- don't know why, synapse is returning data in two different formats now.
                         JToken transIdFromSyanpse = jsonfromsynapse["_id"]["$oid"];
 
@@ -139,8 +146,9 @@ namespace Nooch.API.Controllers
                                     }
                                 }
                             }
-
                         }
+
+                        #endregion Secondary Format From Synapse
                     }
                 }
             }

@@ -149,7 +149,7 @@ $(document).ready(function () {
                     html: true,
                     customClass: "securityAlert confirmBtnFullWidth"
                 }, function () {
-                    redUrlForAddBank = (transType == "send") ? "https://www.noochme.com/noochweb/Nooch/PayRequestComplete?mem_id="
+                    redUrlForAddBank = (transType == "send") ? "https://www.noochme.com/noochweb/Nooch/DepositMoneyComplete?mem_id="
                                                              : "https://www.noochme.com/noochweb/Nooch/PayRequestComplete?mem_id=";
                     //redUrlForAddBank = (transType == "send") ? "http://nooch.info/Nooch/DepositMoneyComplete?mem_id="
                     //                                        : "http://nooch.info/Nooch/PayRequestComplete?mem_id=";
@@ -452,7 +452,7 @@ function runIdWizard() {
                                     indicatorNew: '',
                                 },
                                 maxFileCount: 1,
-                                maxFileSize: 750,
+                                maxFileSize: 2050,
                                 msgSizeTooLarge: "<strong>'{name}' ({size} KB)</strong> is a bit too large! Max allowed file size is <strong>{maxSize} KB</strong>. &nbsp;Please try a smaller picture!",
                                 showCaption: false,
                                 showUpload: false,

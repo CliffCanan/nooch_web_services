@@ -180,8 +180,14 @@
                 </div>
 
                 <div class="form-group" id="UserTypeGrp">
-                    <label for="amount" class="col-sm-3 control-label p-t-10">User Type</label>
-                    <div class="col-sm-9 inputContainer">
+                    <label for="amount" class="col-sm-3 control-label p-t-10">
+                        User Type
+                        <span data-toggle="popover" title="User Types" data-content='<span class="show m-t-10"><span class="text-success">CLIENT</span>: &nbsp;Users may send or receive funds; Photo ID required.</span><span class="show m-t-10"><span class="text-primary">Landlord</span>: &nbsp;May be a person or business. Photo ID + EIN letter (bus.) requried.</span><span class="show m-t-10"><span class="text-danger">VENDOR</span>: &nbsp;Users who will ONLY be receiving $ from Rent Scene).</span>' data-trigger="hover" data-placement="top" data-html="true">
+                            <i class="fa fa-question-circle-o m-l-5"></i>
+                        </span>
+                    </label>
+
+                    <div class="col-sm-9 inputContainer" style="margin-top: 3px">
                         <div class="btn-group btn-group-justified" data-toggle="buttons">
 
                             <label class="btn btn-default active">
@@ -194,9 +200,9 @@
                                 <input type="radio" name="userType" id="landlord" value="landlord" autocomplete="off">Landlord
                             </label>
 
-                            <label class="btn btn-default">
+                            <label class="btn btn-default disabled" data-toggle="tooltip" title="Vendors can only RECEIVE money.">
                                 <i class="fa fa-briefcase m-r-5"></i>
-                                <input type="radio" name="userType" id="vendor" value="vendor" autocomplete="off">Vendor
+                                <input type="radio" name="userType" id="vendor" value="vendor" autocomplete="off" disabled>Vendor
                             </label>
                         </div>
                     </div>
