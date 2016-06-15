@@ -97,12 +97,22 @@ namespace Nooch.Web.Controllers
                 rcr.showPaymentInfo = false;
                 rcr.resultMsg = "This looks like an invalid transaction - sorry about that!  Please try again or contact Nooch support for more information.";
             }
-
+            rcr.memberId = Request.QueryString["MemberId"].ToString();
+            rcr.UserType = Request.QueryString["UserType"];
             ViewData["OnLoaddata"] = rcr;
 
             return View();
         }
 
+        public ActionResult CancelRequestFinal(string TransId, string memberId, string UserType)
+        {
+            ResultCancelRequest rcr = new ResultCancelRequest();
+            ResultCancelRequest cancelResult = CancelMoneyRequest(TransId, memberId, UserType);
+            rcr = cancelResult;
+            ViewData["OnLoaddata"] = rcr;
+            //return View();
+            return Json(rcr);
+        }
 
         /// <summary>
         /// Just for CANCELING a payment - called by the CancelRequest() method when the CancelRequest page first loads.
@@ -125,8 +135,8 @@ namespace Nooch.Web.Controllers
 
                 if (transaction.TransactionStatus == "Pending")
                 {
-                    ResultCancelRequest cancelResult = CancelMoneyRequest(transaction.TransactionId, Request.QueryString["MemberId"], Request.QueryString["UserType"]);
-                    rcr = cancelResult;
+                    //ResultCancelRequest cancelResult = CancelMoneyRequest(transaction.TransactionId, Request.QueryString["MemberId"], Request.QueryString["UserType"]);
+                    //rcr = cancelResult;
                     // CLIFF (5/15/16): the transaction's status was actually just updated to 'Cancelled' in CancelMoneyRequest()
                     // but this flag is just for telling the CancelMoney.js to display a SweetAlert if it is NOT initially 'Pending' on page load.
                     rcr.initStatus = "pending";

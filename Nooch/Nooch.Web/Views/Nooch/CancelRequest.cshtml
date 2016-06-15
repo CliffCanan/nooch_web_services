@@ -22,6 +22,9 @@
 <body style="background-color: rgba(230, 231, 232, 0.8);" id="body-depositNew">
 
     <form id="form1">
+        <input type="hidden" id="TransId" value="@rcr.TransId" />
+        <input type="hidden" id="memberId" value="@rcr.memberId" />
+        <input type="hidden" id="UserType" value="@rcr.UserType" />
 
         <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
             <div class="clearfix">
@@ -64,6 +67,12 @@
                 <i class="fa fa-times-circle fa-stack-1x fa-lg fa-inverse red-text"></i>
             </span>
         </div>
+        @if(rcr.initStatus == "pending")
+        {
+        <div id="iconCircleFA" class="floating white-text col-sm-8 col-sm-offset-2 p-5">
+            <button id="CancelBtn" type="button" onclick="CancelReq();" class="btn btn-lg btn-danger">Cancel</button>
+        </div>
+        }
 
         <br />
 
@@ -113,6 +122,7 @@
     <![endif]-->
 
     <script src="~/js/app/CancelRequest.js"></script>
+    <input type="hidden" id="CancelRequestFinal" value="@Url.Action("CancelRequestFinal", "Nooch")" />
 </body>
 
 </html>
