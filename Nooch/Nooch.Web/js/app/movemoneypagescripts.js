@@ -55,8 +55,8 @@ $(document).ready(function () {
         $('.landingHeaderLogo img').attr('src', '../Assets/Images/rentscene.png');
         $('.landingHeaderLogo img').attr('alt', 'Rent Scene Logo');
         if (isLrgScrn)
-            $('.landingHeaderLogo img').css('width', '211px');
-		
+            $('.landingHeaderLogo img').css('width', '170px');
+
 		changeFavicon('../Assets/favicon2.ico')
     }
 
@@ -123,7 +123,7 @@ $(document).ready(function () {
 
                             runIdWizard()
 
-                        }, 250);
+                        }, 200);
                     }
                     else {
                         window.open("https://www.nooch.com/safe");
@@ -784,8 +784,9 @@ function createRecord() {
 
 			        $("#idVerWiz").addClass("animated bounceOut");
 
-			        $("#idVerContainer iframe").attr("src", "https://www.noochme.com/noochweb/Nooch/idVerification?memid=" + memIdGen + "&from=lndngpg");
-			        //$("#idVerContainer iframe").attr("src", "http://nooch.info/noochweb/Nooch/idVerification?memid=" + memIdGen + "&from=lndngpg");
+			        var idVerURL = $('#idVer_Url').val();
+
+			        $("#idVerContainer iframe").attr("src", idVerURL + "?memid=" + memIdGen + "&from=lndngpg");
 
 			        setTimeout(function () {
 			            $("#idVerWiz").css({

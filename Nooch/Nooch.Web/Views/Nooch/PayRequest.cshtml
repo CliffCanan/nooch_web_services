@@ -1,7 +1,7 @@
 ﻿@using Nooch.Common.Entities;
 @{
     Layout = null;
-    ResultPayRequest rpr = (ResultPayRequest)ViewData["OnLoaddata"];
+    ResultCompletePayment pgData = (ResultCompletePayment)ViewData["OnLoadData"];
 }
 
 <!DOCTYPE html>
@@ -29,55 +29,63 @@
 
     <form id="form1">
         <input type="hidden" id="addBank_Url" value="@Url.Action("AddBank","Nooch")" />
-        <input type="hidden" id="pymnt_status" value="@rpr.pymnt_status" />
-        <input type="hidden" id="transId" value="@rpr.transId" />
-        <input type="hidden" id="invitationSentto" value="@rpr.invitationSentto" />
-        <input type="hidden" id="invitationType" value="@rpr.invitationType">
-        <input type="hidden" id="transType" value="@rpr.transType" />
-        <input type="hidden" id="usrTyp" value="@rpr.usrTyp" />
-        <input type="hidden" id="memidexst" value="@rpr.memidexst" />
-        <input type="hidden" id="bnkName" value="@rpr.bnkName" />
-        <input type="hidden" id="bnkNickname" value="@rpr.bnkNickname" />
-        <input type="hidden" id="rs" value="@rpr.rs" />
-        <input type="hidden" id="cip" value="@rpr.cip" />
+        <input type="hidden" id="idVer_Url" value="@Url.Action("idVerification", "Nooch")" />
+        <input type="hidden" id="pymnt_status" value="@pgData.pymnt_status" />
+        <input type="hidden" id="transId" value="@pgData.transId" />
+        <input type="hidden" id="invitationSentto" value="@pgData.invitationSentto" />
+        <input type="hidden" id="invitationType" value="@pgData.invitationType">
+        <input type="hidden" id="transType" value="@pgData.transType" />
+        <input type="hidden" id="usrTyp" value="@pgData.usrTyp" />
+        <input type="hidden" id="memidexst" value="@pgData.memidexst" />
+        <input type="hidden" id="bnkName" value="@pgData.bnkName" />
+        <input type="hidden" id="bnkNickname" value="@pgData.bnkNickname" />
+        <input type="hidden" id="rs" value="@pgData.rs.ToString().ToLower()" />
+        <input type="hidden" id="cip" value="@pgData.cip" />
     </form>
 
     <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
         <div class="clearfix">
-            <a class="landingHeaderLogo center-block" href="https://www.nooch.com/">
-                <img src="../Assets/Images/nooch-logo2.svg" class="center-block" alt="Nooch Logo" />
-            </a>
+            @if (pgData.rs == true)
+            {
+                <a class="landingHeaderLogo center-block" href="https://www.rentscene.com/">
+                    <img src="../Assets/Images/rentscene.png" class="center-block" alt="Rent Scene Logo" />
+                </a>
+            }
+            else
+            {
+                <a class="landingHeaderLogo center-block" href="https://www.nooch.com/">
+                    <img src="../Assets/Images/nooch-logo2.svg" class="center-block" alt="Nooch Logo" />
+                </a>
+            }
         </div>
     </nav>
 
-    @if (rpr.payreqInfo != false)
+    @if (pgData.showPaymentInfo != false)
     {
         <div id="payreqInfo">
 
             <div id="depositHeader">
                 <div>Payment Request</div>
                 <div id="fromText">From</div>
-                <img class="media-object" id="senderImage" src="@rpr.senderImage" alt="Request Sender" />
+                <img class="media-object" id="senderImage" src="@pgData.senderImage" alt="Request Sender" />
                 <span id="senderName">
-                    <span id="senderName1">@rpr.senderName1</span>
+                    <span id="senderName1">@pgData.senderName1</span>
                 </span>
             </div>
 
             <div id="amountShell">
                 <div>
                     <span id="dollarSign">$</span>
-                    <span id="transAmountd">@rpr.transAmountd</span>
-                    <span id="cents">
-                        <span id="transAmountc">@rpr.transAmountc</span>
-                    </span>
+                    <span id="transAmountd">@pgData.transAmountd</span>
+                    <span id="cents">@pgData.transAmountc</span>
                 </div>
             </div>
 
             <div id="memo_shell">
                 <div>
-                    @if (rpr.transMemo != null)
+                    @if (pgData.transMemo != null)
                     {
-                        <label id="transMemo">@rpr.transMemo</label>
+                        <label id="transMemo">@pgData.transMemo</label>
                     }
                 </div>
             </div>
@@ -86,7 +94,7 @@
                 <button type="button" class="btn btn-lg btn-default"><i class="fa fa-fw fa-check-square-o m-r-15"></i>Complete This Payment</button>
             </div>
 
-            @if (rpr.nonRegUsrContainer == true && @rpr.pymnt_status == "pending" && @rpr.bnkName != "no bank found")
+            @if (pgData.nonRegUsrContainer == true && @pgData.pymnt_status == "pending" && @pgData.bnkName != "no bank found")
             {
                 <div id="nonRegUsrContainer" class="clearfix">
 
@@ -107,7 +115,7 @@
 
     <br />
 
-    @if (rpr.PayorInitialInfo)
+    @if (pgData.PayorInitialInfo)
     {
         <div id="PayorInitialInfo" class="animated bounceInUp hidden">
 
@@ -207,15 +215,25 @@
         </div>
     </div>
 
-
     <div class="footer footer-login">
         <div>
             <ul class="list-inline">
-                <li><a href="https://www.nooch.com/overview">About</a></li>
-                <li><a href="https://www.nooch.com/safe">Security</a></li>
-                <li><a href="http://support.nooch.com/">Support Center</a></li>
-                <li><a href="https://www.nooch.com/tos">Legal Stuff</a></li>
-                <li><a href="https://www.nooch.com/blog/">Blog</a></li>
+                @if (pgData.rs == true)
+                {
+                    <li><a href="https://www.rentscene.com" target="_blank">About</a></li>
+                    <li><a href="https://www.nooch.com/safe" target="_blank">Security</a></li>
+                    <li><a href="http://support.nooch.com" target="_blank">Support Center</a></li>
+                    <li><a href="https://www.nooch.com/tos" target="_blank">Legal Stuff</a></li>
+                    <li><a href="https://www.rentscene.com/faq" target="_blank">FAQ</a></li>
+                }
+                else
+                {
+                    <li><a href="https://www.nooch.com/overview" target="_blank">About</a></li>
+                    <li><a href="https://www.nooch.com/safe" target="_blank">Security</a></li>
+                    <li><a href="http://support.nooch.com/" target="_blank">Support Center</a></li>
+                    <li><a href="https://www.nooch.com/tos" target="_blank">Legal Stuff</a></li>
+                    <li><a href="https://www.nooch.com/blog/" target="_blank">Blog</a></li>
+                }
             </ul>
         </div>
     </div>
