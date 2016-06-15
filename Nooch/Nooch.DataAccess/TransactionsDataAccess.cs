@@ -2899,8 +2899,8 @@ namespace Nooch.DataAccess
 
                     foreach (synapseSearchUserResponse_User senderUser in senderPermissions.users)
                     {
-                        Logger.Info("TDA -> AddTransSynapseV3Reusable - User array for SENDER from Synapse [Name: " + senderUser.legal_names[0] +
-                                    "], [User OID: " + senderUser._id.oid + "] - About to check bank permissions...");
+                        Logger.Info("TDA -> AddTransSynapseV3Reusable - Got User array for SENDER from Synapse - Name: [" + senderUser.legal_names[0] +
+                                    "], User OID: [" + senderUser._id.oid + "] - About to check bank permissions...");
 
                         iterator++;
 

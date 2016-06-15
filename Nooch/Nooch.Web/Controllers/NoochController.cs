@@ -3063,84 +3063,89 @@ namespace Nooch.Web.Controllers
                     {
                         foreach (var trans in transactionList)
                         {
+                            #region Foreach inside
+
                             try
                             {
-                                #region Foreach inside
-
-                                TransactionClass obj = new TransactionClass();
-
-                                obj.TransactionId = trans.TransactionId;
-                                obj.TransactionType = CommonHelper.GetDecryptedData(trans.TransactionType);
-                                obj.TransactionStatus = trans.TransactionStatus;
-
-                                obj.TransactionDate1 = Convert.ToDateTime(trans.TransactionDate).ToShortDateString();
-                                obj.Amount = Math.Round(trans.Amount, 2);
-
-                                obj.Memo = trans.Memo;
-                                obj.city = (trans.GeoLocation != null && trans.GeoLocation.City != null) ? trans.GeoLocation.City : string.Empty;
-                                obj.state = (trans.GeoLocation != null && trans.GeoLocation.State != null) ? trans.GeoLocation.State : string.Empty;
-
-                                obj.TransLati = (trans.GeoLocation != null && trans.GeoLocation.Latitude != null) ? (float)trans.GeoLocation.Latitude : default(float);
-                                obj.TransLongi = (trans.GeoLocation != null && trans.GeoLocation.Longitude != null) ? (float)trans.GeoLocation.Longitude : default(float);
-
-                                #region Transaction Type Transfer
-
-                                if (obj.TransactionType == "Transfer" || obj.TransactionType == "Disputed" ||
-                                    obj.TransactionType == "Reward" || obj.TransactionType == "Invite" ||
-                                    obj.TransactionType == "Rent" || obj.TransactionType == "Request")
+                                if (trans.Memo.ToLower().IndexOf("test") == 0)
                                 {
-                                    if (String.IsNullOrEmpty(trans.InvitationSentTo) &&
-                                        (trans.IsPhoneInvitation == null || trans.IsPhoneInvitation == false))
-                                    {
-                                        // Transfer type request to existing Nooch user..straight forward
-                                        obj.IsInvitation = false;
-                                        obj.SenderId = trans.SenderId;
-                                        obj.SenderName = CommonHelper.GetDecryptedData(trans.Member.FirstName) + " " + CommonHelper.GetDecryptedData(trans.Member.LastName);
-                                        obj.SenderNoochId = trans.Member.Nooch_ID;
+                                    // Exclude transactions where the Memo begins with "test"
+                                }
+                                else
+                                {
+                                    TransactionClass obj = new TransactionClass();
 
-                                        obj.RecipientId = trans.RecipientId;
-                                        obj.RecipienName = CommonHelper.GetDecryptedData(trans.Member1.FirstName) + " " + CommonHelper.GetDecryptedData(trans.Member1.LastName);
-                                        obj.RecepientNoochId = trans.Member1.Nooch_ID;
-                                    }
-                                    else
-                                    {
-                                        obj.IsInvitation = true;
-                                        obj.SenderId = trans.SenderId;
-                                        obj.SenderName = CommonHelper.GetDecryptedData(trans.Member.FirstName) + " " + CommonHelper.GetDecryptedData(trans.Member.LastName);
-                                        obj.SenderNoochId = trans.Member.Nooch_ID;
+                                    obj.TransactionId = trans.TransactionId;
+                                    obj.TransactionType = CommonHelper.GetDecryptedData(trans.TransactionType);
+                                    obj.TransactionStatus = trans.TransactionStatus;
 
-                                        if (!String.IsNullOrEmpty(trans.InvitationSentTo))
+                                    obj.TransactionDate1 = Convert.ToDateTime(trans.TransactionDate).ToShortDateString();
+                                    obj.Amount = Math.Round(trans.Amount, 2);
+
+                                    obj.Memo = trans.Memo;
+                                    obj.city = (trans.GeoLocation != null && trans.GeoLocation.City != null) ? trans.GeoLocation.City : string.Empty;
+                                    obj.state = (trans.GeoLocation != null && trans.GeoLocation.State != null) ? trans.GeoLocation.State : string.Empty;
+
+                                    obj.TransLati = (trans.GeoLocation != null && trans.GeoLocation.Latitude != null) ? (float)trans.GeoLocation.Latitude : default(float);
+                                    obj.TransLongi = (trans.GeoLocation != null && trans.GeoLocation.Longitude != null) ? (float)trans.GeoLocation.Longitude : default(float);
+
+                                    #region Transaction Type Transfer
+
+                                    if (obj.TransactionType == "Transfer" || obj.TransactionType == "Disputed" ||
+                                        obj.TransactionType == "Reward" || obj.TransactionType == "Invite" ||
+                                        obj.TransactionType == "Rent" || obj.TransactionType == "Request")
+                                    {
+                                        if (String.IsNullOrEmpty(trans.InvitationSentTo) &&
+                                            (trans.IsPhoneInvitation == null || trans.IsPhoneInvitation == false))
                                         {
-                                            // Request/Invite via Email
-                                            if (trans.TransactionStatus == "Success")
-                                            {
-                                                Member invitedMemberObj = CommonHelper.GetMemberDetailsByUserName(CommonHelper.GetDecryptedData(trans.InvitationSentTo));
+                                            // Transfer type request to existing Nooch user..straight forward
+                                            obj.IsInvitation = false;
+                                            obj.SenderId = trans.SenderId;
+                                            obj.SenderName = CommonHelper.GetDecryptedData(trans.Member.FirstName) + " " + CommonHelper.GetDecryptedData(trans.Member.LastName);
+                                            obj.SenderNoochId = trans.Member.Nooch_ID;
 
-                                                if (invitedMemberObj != null)
+                                            obj.RecipientId = trans.RecipientId;
+                                            obj.RecipienName = CommonHelper.GetDecryptedData(trans.Member1.FirstName) + " " + CommonHelper.GetDecryptedData(trans.Member1.LastName);
+                                            obj.RecepientNoochId = trans.Member1.Nooch_ID;
+                                        }
+                                        else
+                                        {
+                                            obj.IsInvitation = true;
+                                            obj.SenderId = trans.SenderId;
+                                            obj.SenderName = CommonHelper.GetDecryptedData(trans.Member.FirstName) + " " + CommonHelper.GetDecryptedData(trans.Member.LastName);
+                                            obj.SenderNoochId = trans.Member.Nooch_ID;
+
+                                            if (!String.IsNullOrEmpty(trans.InvitationSentTo))
+                                            {
+                                                // Request/Invite via Email
+                                                if (trans.TransactionStatus == "Success")
                                                 {
-                                                    obj.RecipienName = CommonHelper.GetDecryptedData(invitedMemberObj.FirstName) + " " +
-                                                                       CommonHelper.GetDecryptedData(invitedMemberObj.LastName);
+                                                    Member invitedMemberObj = CommonHelper.GetMemberDetailsByUserName(CommonHelper.GetDecryptedData(trans.InvitationSentTo));
+
+                                                    if (invitedMemberObj != null)
+                                                    {
+                                                        obj.RecipienName = CommonHelper.GetDecryptedData(invitedMemberObj.FirstName) + " " +
+                                                                           CommonHelper.GetDecryptedData(invitedMemberObj.LastName);
+                                                    }
+                                                    else
+                                                        obj.RecipienName = CommonHelper.GetDecryptedData(trans.InvitationSentTo);
                                                 }
                                                 else
                                                     obj.RecipienName = CommonHelper.GetDecryptedData(trans.InvitationSentTo);
                                             }
-                                            else
-                                                obj.RecipienName = CommonHelper.GetDecryptedData(trans.InvitationSentTo);
-                                        }
-                                        if (trans.IsPhoneInvitation == true &&
-                                            !String.IsNullOrEmpty(trans.PhoneNumberInvited))
-                                        {
-                                            // invite through sms case
-                                            obj.RecipienName = CommonHelper.FormatPhoneNumber(CommonHelper.GetDecryptedData(trans.PhoneNumberInvited));
+                                            if (trans.IsPhoneInvitation == true &&
+                                                !String.IsNullOrEmpty(trans.PhoneNumberInvited))
+                                            {
+                                                // invite through sms case
+                                                obj.RecipienName = CommonHelper.FormatPhoneNumber(CommonHelper.GetDecryptedData(trans.PhoneNumberInvited));
+                                            }
                                         }
                                     }
+
+                                    #endregion
+
+                                    Transactions.Add(obj);
                                 }
-
-                                #endregion
-
-                                Transactions.Add(obj);
-
-                                #endregion Foreach inside
                             }
                             catch (Exception ex)
                             {
@@ -3149,6 +3154,8 @@ namespace Nooch.Web.Controllers
                                              "], Amount: [" + trans.Amount.ToString("n2") + "], Exception: [" + ex.Message + "]");
                                 continue;
                             }
+
+                            #endregion Foreach inside
                         }
                     }
 

@@ -2741,11 +2741,6 @@ namespace Nooch.Common
                             break;
                         }
                     }
-                    else if (node._id != null)
-                    {
-                        Logger.Info("Common Helper -> IsNodeActiveInGivenSetOfNodes (foreach loop) - No Match This Iteration - " +
-                                    "[NodeToMatch: " + nodeOid + "], Node Compared To From List: [" + node._id.oid + "]");
-                    }
                 }
             }
             catch (Exception ex)
@@ -2753,6 +2748,8 @@ namespace Nooch.Common
                 Logger.Error("Common Helper -> IsNodeActiveInGivenSetOfNodes FAILED - [NodeToMatch: " + nodeOid + "], Exception: [" + ex.Message + "]");
             }
 
+            Logger.Info("Common Helper -> IsNodeActiveInGivenSetOfNodes - About to return - IsPermissionFound: [" + res.IsPermissionfound +
+                        "], Permission: [" + res.PermissionType + "], NodeOID Checked: [" + nodeOid + "]");
             return res;
         }
 
