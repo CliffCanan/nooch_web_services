@@ -819,14 +819,13 @@ namespace Nooch.Web.Controllers
                     rdm.transAmountc = "00";
                 }
 
-                rdm.memidexst = !String.IsNullOrEmpty(transaction.RecepientId) ? transaction.RecepientId : "";
-
-                rdm.bnkName = transaction.BankName;
-                rdm.bnkNickname = transaction.BankId;
-
                 // Check if this was a request to an existing, but 'NonRegistered' User
                 if (transaction.IsExistingButNonRegUser == true)
                 {
+                    rdm.memidexst = !String.IsNullOrEmpty(transaction.RecepientId) ? transaction.RecepientId : "";
+                    rdm.bnkName = transaction.BankName;
+                    rdm.bnkNickname = transaction.BankId;
+
                     if (transaction.BankName == "no bank found")
                     {
                         Logger.Error("DepositMoney CodeBehind -> GetTransDetails - IsExistingButNonRegUser = 'true', but No Bank Found, so JS should display Add-Bank iFrame.");
@@ -1382,17 +1381,17 @@ namespace Nooch.Web.Controllers
                     rpr.transAmountc = "00";
                 }
 
-                rpr.memidexst = !String.IsNullOrEmpty(transaction.RecepientId) ? transaction.RecepientId : "";
-                rpr.bnkName = transaction.BankName;
-                rpr.bnkNickname = transaction.BankId;
-
                 // Check if this was a request to an existing, but 'NonRegistered' User
                 if (transaction.IsExistingButNonRegUser == true)
                 {
                     if (transaction.TransactionStatus.ToLower() != "pending")
                     {
-                        Logger.Info("payRequest CodeBehind -> GetTransDetails - IsExistingButNonRegUser = 'true', but Transaction no longer pending!");
+                        Logger.Error("payRequest CodeBehind -> GetTransDetails - IsExistingButNonRegUser = 'true', but Transaction no longer pending!");
                     }
+
+                    rpr.memidexst = !String.IsNullOrEmpty(transaction.RecepientId) ? transaction.RecepientId : "";
+                    rpr.bnkName = transaction.BankName;
+                    rpr.bnkNickname = transaction.BankId;
 
                     if (transaction.BankName == "no bank found")
                     {
@@ -1406,6 +1405,10 @@ namespace Nooch.Web.Controllers
                 else if (rpr.transType == "rent") // Set in Page_Load above based on URL query string
                 {
                     Logger.Info("payRequest CodeBehind -> GetTransDetails - Got a RENT Payment!");
+                }
+                else
+                {
+                    Logger.Info("payRequest CodeBehind -> GetTransDetails - Request was to a NEW USER - [" + transaction.InvitationSentTo + "]");
                 }
 
                 // Now check what TYPE of invitation (phone or email)
@@ -1838,7 +1841,7 @@ namespace Nooch.Web.Controllers
                 //Logger.Info("createAccount Code Behind -> GetMemberDetailsForCreateAccount Initiated - MemberID: [" + memberId + "]");
 
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-                string serviceMethod = "/GetMemberDetailsForLandingPage?memberId=" + memberId;
+                string serviceMethod = "GetMemberDetailsForLandingPage?memberId=" + memberId;
 
                 Logger.Info("createAccount Code Behind -> GetMemberDetailsForCreateAccount - URL to Query: [" + String.Concat(serviceUrl, serviceMethod) + "]");
 

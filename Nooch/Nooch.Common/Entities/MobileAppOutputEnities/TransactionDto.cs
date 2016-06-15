@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Nooch.Common.Entities.MobileAppOutputEnities
 {
-    public class    TransactionDto
+    public class TransactionDto
     {
         public string PinNumber { get; set; }
         public string MemberId { get; set; }

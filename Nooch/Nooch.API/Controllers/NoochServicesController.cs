@@ -2473,9 +2473,8 @@ namespace Nooch.API.Controllers
                 #region Transactions to Existing But NonRegistered Users
 
                 if (tr.IsPhoneInvitation != true &&
-                    ((String.IsNullOrEmpty(tr.InvitationSentTo) || tr.InvitationSentTo == "J7xCdPdfLcTvoVrLWCi/zw==") //|| // A few transactions to existing but NonReg users had encyrpted blank spaces for this value
-                    //(trans.TransactionType == "Rent" || tr.TransactionType != "EnOIzpmFFTEaAP16hm9Wsw==")) // "EnOIzpmFFTEaAP16hm9Wsw==" = "Rent"
-                     ))
+                    (String.IsNullOrEmpty(tr.InvitationSentTo) || tr.InvitationSentTo == "J7xCdPdfLcTvoVrLWCi/zw==") && //|| // A few transactions to existing but NonReg users had encyrpted blank spaces for this value
+                    tr.SenderId != tr.RecipientId)
                 {
                     Logger.Info("Service Cntrlr -> GetTransactionDetailByIdForRequestPayPage - This request is to an EXISTING user - " +
                                 "About to get Synapse Bank info for Payer -> [trans.RecepientName is: " + trans.RecepientName + "]");
