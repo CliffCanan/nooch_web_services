@@ -1,9 +1,7 @@
-﻿$(document).ready(function ()
-{
+﻿$(document).ready(function () {
     // Member.GetPageLoadData();
 
-    $(function ()
-    {
+    $(function () {
         var iOS = false,
         p = navigator.platform;
 
@@ -43,6 +41,61 @@
         });
     }
 });
+
+function CancelReq() {
+    var TransId = $('#TransId').val();
+    var memberId = $('#memberId').val();
+    var UserType = $('#UserType').val();
+    $("#CancelBtn").text('Cancelling...');
+    $('#CancelBtn').attr('disabled', 'disabled');
+
+    var data = {};
+    $.ajax({
+        type: "POST",
+        //url: URLs.CancelRequestFinal,
+        url: $('#CancelRequestFinal').val() + "?TransId=" + TransId + "&memberId=" + memberId + "&UserType=" + UserType,
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        async: "true",
+        cache: "false",
+        success: function (msg) {
+            var Responce = msg;
+            console.log("SUCCESS -> Transation Cancelled ... ");
+           
+            (Responce.succes == true)
+            {
+                $("#CancelBtn").text('Cancelled');
+
+                swal('Success !',  'You Request has been cancelled', 'success');
+               
+                //$('#CancelBtn').removeAttr("disabled");
+                             
+
+            }
+        }
+    });
+}
+
+
+
+
+//swal({
+//    title: "Email Already Registered",
+//    text: bodyText +
+//          "<span class='show f-600' style='margin: 10px 30px;'>Do you still want to send a payment request to " + sendPaymentResponse.name + "?</span>",
+//    type: "warning",
+//    showCancelButton: true,
+//    confirmButtonColor: "#3fabe1",
+//    confirmButtonText: "Send",
+//    html: true
+//}, function (isConfirm)
+//{
+//    if (isConfirm)
+//    {
+//        sendRequestToExistingUser();
+//    }
+//});
+//}
 
 // CLIFF (5/15/16): DON'T THINK THIS FILE IS USED AT ALL... EVERYTHING HAPPENS IN
 //                  NoochController (code-behind methods).
