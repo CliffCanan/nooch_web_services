@@ -4431,54 +4431,55 @@ namespace Nooch.Common
         public static string SendMincroDepositsVerificationReminderEmail(string MemberId, string BankId, bool IsRs)
         {
             Logger.Info("Common Helper -> SendMincroDepositsVerificationReminderEmail Initiated. MemberID: [" + MemberId + "], " +
-                                   "NodeId: [" + BankId + "], " +
-                                   "IsRs: [" + IsRs + "]");
+                        "NodeId: [" + BankId + "], " +
+                        "IsRs: [" + IsRs + "]");
 
             try
             {
                 using (NOOCHEntities db = new NOOCHEntities())
                 {
-                    var MemberIdGuid = Utility.ConvertToGuid(MemberId);
+                    var memGuid = Utility.ConvertToGuid(MemberId);
                     var BankIdInt = Convert.ToInt16(BankId);
 
-
-                    var MemberDettails = GetMemberDetails(MemberId);
-                    var bankAccountDetails =
-                        db.SynapseBanksOfMembers.FirstOrDefault(
-                            b =>
-                                b.IsDefault == true && b.IsAddedUsingRoutingNumber == true && b.Id == BankIdInt &&
-                                b.MemberId == MemberIdGuid && b.Status == "Not Verified");
-                    if (MemberDettails == null)
+                    var memberObj = GetMemberDetails(MemberId);
+                    if (memberObj == null)
                     {
                         return "Member not found.";
                     }
+
+                    var bankAccountDetails = db.SynapseBanksOfMembers.FirstOrDefault(b =>
+                                                                                     b.IsDefault == true &&
+                                                                                     b.IsAddedUsingRoutingNumber == true &&
+                                                                                     b.Id == BankIdInt &&
+                                                                                     b.MemberId == memGuid &&
+                                                                                     b.Status == "Not Verified");
+
                     if (bankAccountDetails == null)
                     {
                         return "Bank account not found.";
                     }
 
-                    if (MemberDettails != null && bankAccountDetails != null)
+                    if (memberObj != null && bankAccountDetails != null)
                     {
-                        #region sending reminder emails to user
+                        #region Send Reminder Email
 
-                        #region setting variables for email
                         string fromAddress = Utility.GetValueFromConfig("transfersMail");
-                        string toAddress = GetDecryptedData(MemberDettails.UserName);
+                        string toAddress = GetDecryptedData(memberObj.UserName);
 
-                        //user details
-                        string userFirstName = UppercaseFirst(GetDecryptedData(MemberDettails.FirstName));
-                        string userLastName = UppercaseFirst(GetDecryptedData(MemberDettails.LastName));
+                        // User Details
+                        string userFirstName = UppercaseFirst(GetDecryptedData(memberObj.FirstName));
+                        string userLastName = UppercaseFirst(GetDecryptedData(memberObj.LastName));
 
-                        //account details
+                        // Bank Account Details
                         string accountNumString = GetDecryptedData(bankAccountDetails.account_number_string);
                         string bankNameString = GetDecryptedData(bankAccountDetails.bank_name);
                         string nameOnAccountString = GetDecryptedData(bankAccountDetails.name_on_account);
-                        string accountNIckNameString = GetDecryptedData(bankAccountDetails.nickname);
+                        string accountNickNameString = GetDecryptedData(bankAccountDetails.nickname);
                         string routingNumString = GetDecryptedData(bankAccountDetails.routing_number_string);
 
-                        //verification link
+                        // Verification link
                         string verifyLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
-                            "Nooch/MicroDepositsVerification?mid=" + MemberDettails.MemberId + "&NodeId=" + bankAccountDetails.Id + "&IsRs=" + MemberDettails.isRentScene.ToString());
+                            "Nooch/MicroDepositsVerification?mid=" + MemberId + "&NodeId=" + bankAccountDetails.Id + "&IsRs=" + memberObj.isRentScene.ToString());
 
                         var tokens = new Dictionary<string, string>
                                 {
@@ -4486,27 +4487,18 @@ namespace Nooch.Common
 									{Constants.PLACEHOLDER_LAST_NAME, userLastName },
 									{Constants.PLACEHOLDER_BANK_ACCOUNT_NUMBER, accountNumString},
 									{Constants.PLACEHOLDER_BANK_NAME, bankNameString},
-									{Constants.MEMO, accountNIckNameString},
+									{Constants.MEMO, accountNickNameString},
                                     {Constants.PLACEHOLDER_EXISTINGUSER, routingNumString},
                                     {Constants.PLACEHOLDER_PAY_LINK, verifyLink}
-
 								};
 
-                        var templateToUse = IsRs ? "MicroDepositsReminderEmailToRentSceneUser"
-                                                           : "MicroDepositsReminderEmail";
-
-
-
-
-
-
-                        #endregion
+                        var templateToUse = IsRs ? "MicroDepositsReminderEmailToRentSceneUser" : "MicroDepositsReminderEmail";
 
                         try
                         {
                             Utility.SendEmail(templateToUse, fromAddress, toAddress, null,
-                                                        "Action required to complete bank account verification at Nooch - Reminder",
-                                                        null, tokens, null, null, null);
+                                              "Verify Your Bank - Reminder",
+                                              null, tokens, null, null, null);
 
                             Logger.Info("Common Helper -> SendMincroDepositsVerificationReminderEmail - [" + templateToUse + "] sent to [" + toAddress + "] successfully.");
                         }
@@ -4515,18 +4507,16 @@ namespace Nooch.Common
                             Logger.Error("Common Helper -> SendMincroDepositsVerificationReminderEmail - [" + templateToUse + "] NOT sent to [" + toAddress + "], Exception: [" + ex + "]");
                         }
 
-
-                        #endregion
+                        #endregion Send Reminder Email
                     }
+
                     return "OK";
-
                 }
-
-
             }
             catch (Exception ex)
             {
-                Logger.Error("Common Helper -> SendMincroDepositsVerificationReminderEmail FAILED - Outer Exception - [" + ex + "]");
+                Logger.Error("Common Helper -> SendMincroDepositsVerificationReminderEmail FAILED - Outer Exception - MemberID: [" + MemberId + "], " +
+                            "Exception: [" + ex + "]");
                 return "Error";
             }
         }

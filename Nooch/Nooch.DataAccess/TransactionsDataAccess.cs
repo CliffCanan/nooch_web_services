@@ -3151,11 +3151,12 @@ namespace Nooch.DataAccess
 
                     transParamsForSynapse.trans = transMain;
 
+                    string UrlToHitV3 = isTesting ? "https://sandbox.synapsepay.com/api/v3/trans/add" : "https://synapsepay.com/api/v3/trans/add";
+
                     #endregion Setup Synapse V3 Order Details
 
-                    #region Calling Synapse V3 TRANSACTION ADD
 
-                    string UrlToHitV3 = isTesting ? "https://sandbox.synapsepay.com/api/v3/trans/add" : "https://synapsepay.com/api/v3/trans/add";
+                    #region Calling Synapse V3 TRANSACTION ADD
 
                     try
                     {
@@ -4823,7 +4824,7 @@ namespace Nooch.DataAccess
                     return "Request Recipient Member Not Found";
                 }
 
-                if (requestDto.Amount == null || !String.IsNullOrEmpty(requestDto.Amount.ToString()))
+                if (requestDto.Amount == null || String.IsNullOrEmpty(requestDto.Amount.ToString()))
                 {
                     Logger.Error("TDA -> RequestMoneyToExistingButNonRegisteredUser FAILED - Missing Amount - [MemberID: " + requestDto.MemberId + "]");
                     return "Missing Amount";
@@ -4880,17 +4881,16 @@ namespace Nooch.DataAccess
                                  "Requester MemberID: [" + requestDto.MemberId + "]");
                     return "Requester does not have any bank added";
                 }
-                if (requestorSynInfo.UserDetails.permission != "SEND-AND-RECEIVE" ||
-                    requestorSynInfo.UserDetails.permission != "RECEIVE") // Requester's Permissions
+                if (!(requestorSynInfo.UserDetails.permission == "SEND-AND-RECEIVE" ||
+                      requestorSynInfo.UserDetails.permission == "RECEIVE")) // Requester's Permissions
                 {
                     Logger.Error("TDA -> RequestMoneyToExistingButNonregisteredUser FAILED - Sender's Synapse Permission is INSUFFICIENT: [" + requestorSynInfo.UserDetails.permission +
                                  "] MemberID: [" + requestDto.MemberId + "]");
                     //return "Requester does not have any bank added";
                     return "Requester has insufficient permissions: [" + requestorSynInfo.UserDetails.permission + "]";
                 }
-                if (requestorSynInfo.BankDetails.Status.ToLower() != "verified" ||
-                    (requestorSynInfo.BankDetails.allowed != "CREDIT-AND-DEBIT" &&
-                     requestorSynInfo.BankDetails.allowed != "CREDIT")) // Requester ($ recipient) just needs "CREDIT" for 'Allowed' Value
+                if (!(requestorSynInfo.BankDetails.allowed == "CREDIT-AND-DEBIT" ||
+                      requestorSynInfo.BankDetails.allowed == "CREDIT")) // Requester ($ recipient) just needs "CREDIT" for 'Allowed' Value
                 {
                     Logger.Error("TDA -> RequestMoneyToExistingButNonregisteredUser ABORTED: " +
                                 "Sender's Synapse bank not verified - Bank-Allowed: [" + requestorSynInfo.BankDetails.allowed + "], " +
@@ -6303,7 +6303,7 @@ namespace Nooch.DataAccess
             var SenderGuid = Utility.ConvertToGuid(transInput.MemberId);
             var RecepientGuid = Utility.ConvertToGuid(transInput.RecipientId);
 
-            #region Get Sender Synapse account details
+            #region Get Sender Synapse Details
 
             string sender_bank_node_id = "";
             string sender_oauth = "";
@@ -6330,7 +6330,7 @@ namespace Nooch.DataAccess
                 //return "Sender does not have any bank added";
                 return "Sender has insufficient permissions: [" + senderSynDetails.UserDetails.permission + "]";
             }
-            if (senderSynDetails.BankDetails.Status.ToLower() != "verified" || senderSynDetails.BankDetails.allowed != "CREDIT-AND-DEBIT")
+            if (senderSynDetails.BankDetails.allowed != "CREDIT-AND-DEBIT")
             {
                 Logger.Error("TDA -> TransferMoneyUsingSynapse - Transfer ABORTED: " +
                             "Sender's Synapse bank not verified - Bank-Allowed: [" + senderSynDetails.BankDetails.allowed + "], " +
@@ -6347,9 +6347,9 @@ namespace Nooch.DataAccess
             Logger.Info("TDA -> TransferMoneyUsingSynapse - Sender's Synapse Permission: [" + senderSynDetails.UserDetails.permission + "], " +
                         "Bank-Allowed: [" + senderSynDetails.BankDetails.allowed + "] - Continuing On...");
 
-            #endregion Get Sender Synapse Account Details
+            #endregion Get Sender Synapse Details
 
-            #region Get Recipient Synapse Account Details
+            #region Get Recipient Synapse Details
 
             string receiver_bank_node_id = ""; // This is not actually needed for the transaction to happen, we can remove this check later
             string receiver_oauth = "";
@@ -6369,17 +6369,16 @@ namespace Nooch.DataAccess
                             transInput.MemberId + "], [TransactionId: " + transInput.TransactionId + "]");
                 return "Recepient have not linked to any bank account yet.";
             }
-            if (recipientSynapseDetails.UserDetails.permission != "SEND-AND-RECEIVE" &&
-                recipientSynapseDetails.UserDetails.permission != "RECEIVE") // Recipient just needs "RECEIVE" or higher Permissions
+            if (!(recipientSynapseDetails.UserDetails.permission == "SEND-AND-RECEIVE" ||
+                  recipientSynapseDetails.UserDetails.permission == "RECEIVE")) // Recipient just needs "RECEIVE" or higher Permissions
             {
                 Logger.Error("TDA -> TransferMoneyUsingSynapse FAILED - Recipient's Synapse Permission is INSUFFICIENT: [" +
                              recipientSynapseDetails.UserDetails.permission + "] MemberID (Recip): [" + transInput.RecipientId + "]");
                 //return "Recipient does not have any bank added";
                 return "Recipient has insufficient permissions: [" + recipientSynapseDetails.UserDetails.permission + "]";
             }
-            if (recipientSynapseDetails.BankDetails.Status.ToLower() != "verified" ||
-                (recipientSynapseDetails.BankDetails.allowed != "CREDIT-AND-DEBIT" &&
-                 recipientSynapseDetails.BankDetails.allowed != "CREDIT")) // Recipient just needs "CREDIT" for 'Allowed' Value
+            if (!(recipientSynapseDetails.BankDetails.allowed == "CREDIT-AND-DEBIT" ||
+                  recipientSynapseDetails.BankDetails.allowed == "CREDIT")) // Recipient just needs "CREDIT" for 'Allowed' Value
             {
                 Logger.Error("TDA -> TransferMoneyUsingSynapse - Transfer ABORTED: " +
                             "Recipient's Synapse bank not verified - Bank-Allowed: [" + recipientSynapseDetails.BankDetails.allowed + "], " +
@@ -6396,7 +6395,22 @@ namespace Nooch.DataAccess
             Logger.Info("TDA -> TransferMoneyUsingSynapse - Recipient's Synapse Permission: [" + recipientSynapseDetails.UserDetails.permission + "], " +
                         "Bank-Allowed: [" + recipientSynapseDetails.BankDetails.allowed + "] - Continuing On...");
 
-            #endregion Get Recipient Synapse Account Details
+            #endregion Get Recipient Synapse Details
+
+            // Cliff (6/14/16): Adding this to check: a.) is this a Rent Scene payment what kind of payment this is
+            //                  and b.) what kind of user the recipient is: Client or Vendor, which determines which Node ID to use for Rent Scene
+
+            // 575ad909950629625ca88262 - Corp Checking
+            // 574f45d79506295ff7a81db8 - Passthrough (Linked to Rent Scene's parent account)
+            // 5759005795062906e1359a8e - Passthrough (Linked to Marvis Burn's Nooch account)
+            if ((senderNoochDetails.MemberId.ToString() == "852987E8-D5fE-47E7-A00B-58A80DD15B49" ||
+                sender_bank_node_id == "5759005795062906e1359a8e") &&
+                recipientNoochDetails.cipTag == "Vendor")
+            {
+                sender_bank_node_id = "575ad909950629625ca88262";
+                Logger.Info("TDA -> TransferMoneyUsingSynapse - RENT SCENE VENDOR Payment Detected - " +
+                            "Substituting Sender_Bank_NodeID to use RS's Corporate Checking account");
+            }
 
             #endregion Initial checks
 
@@ -7047,7 +7061,7 @@ namespace Nooch.DataAccess
                     return "Sender has insufficient permissions: [" + senderSynDetails.UserDetails.permission + "]";
                 }
                 // Check if Sender's Synapse bank account is Verified
-                if (senderSynDetails.BankDetails.Status != "Verified" || senderSynDetails.BankDetails.allowed != "CREDIT-AND-DEBIT")
+                if (senderSynDetails.BankDetails.allowed != "CREDIT-AND-DEBIT")
                 {
                     Logger.Error("TDA -> TransferMoneyToNonNoochUserUsingSynapse - Transfer ABORTED: " +
                                 "Sender's Synapse bank not verified - Bank-Allowed: [" + senderSynDetails.BankDetails.allowed + "], " +

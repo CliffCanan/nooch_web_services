@@ -1074,7 +1074,7 @@ namespace Nooch.API.Controllers
         [ActionName("RequestMoneyToExistingUserForRentScene")]
         public requestFromRentScene RequestMoneyToExistingUserForRentScene(string from, string name, string email, string amount, string memo, string pin, string ip, bool isRequest, string memberId, string nameFromServer)
         {
-            Logger.Info("Service Controller - RequestMoneyToExistingUserForRentScene Initiated - [From: " + from + ", [Name: " + name +
+            Logger.Info("Service Controller - RequestMoneyToExistingUserForRentScene Initiated - From: [" + from + ", Name: [" + name +
                         "], Email: [" + email + "], Amount: [" + amount +
                         "], Memo: [" + memo + "], PIN: [" + pin +
                         "], IP: [" + ip + "], isRequest: [" + isRequest + "]" +
@@ -2417,9 +2417,6 @@ namespace Nooch.API.Controllers
                 Transaction tr = tda.GetTransactionById(TransactionId);
 
                 TransactionDto trans = new TransactionDto();
-                trans.Amount = tr.Amount;
-
-                trans.Memo = tr.Memo;
 
                 // Recipient of the Request (user that will pay)
                 // NOTE (Cliff 11/25/15): For requests to non-Nooch users, the Members & Members1 BOTH REFER TO THE EXISTING NOOCH USER WHO SENT THE REQUEST.
@@ -2433,6 +2430,8 @@ namespace Nooch.API.Controllers
                 Logger.Info("Service Cntrlr -> GetTransactionDetailByIdForRequestPayPage - [trans.Name is: " + trans.Name +
                             "], [trans.RecepientName is: " + trans.RecepientName + "]");
 
+                trans.Amount = tr.Amount;
+                trans.Memo = tr.Memo;
                 trans.SenderPhoto = tr.Member.Photo ?? "https://www.noochme.com/noochweb/Assets/Images/userpic-default.png";
                 trans.RecepientPhoto = tr.Member1.Photo ?? "https://www.noochme.com/noochweb/Assets/Images/userpic-default.png";
                 trans.MemberId = tr.Member1.MemberId.ToString();
@@ -2442,6 +2441,13 @@ namespace Nooch.API.Controllers
                 trans.TransactionType = CommonHelper.GetDecryptedData(tr.TransactionType);
                 trans.TransactionDate = Convert.ToDateTime(tr.TransactionDate).ToString("d MMM, yyyy");
                 trans.IsPhoneInvitation = tr.IsPhoneInvitation ?? false;
+                if (tr.Member.isRentScene == true || tr.Member1.isRentScene == true ||
+                    tr.Member.MemberId.ToString() == "852987E8-D5FE-47E7-A00B-58A80DD15B49" || tr.Member1.MemberId.ToString() == "852987E8-D5FE-47E7-A00B-58A80DD15B49")
+                {
+                    trans.isRentScene = true;
+                }
+                else
+                    trans.isRentScene = false;
 
                 if (tr.InvitationSentTo != null &&
                     tr.IsPhoneInvitation != true &&
@@ -3195,35 +3201,52 @@ namespace Nooch.API.Controllers
                                 }
                                 catch (Exception ex)
                                 {
-                                    Logger.Error("Service Controller -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber FAILED - Could not save record " +
-                                                 "in SynapseBankLoginResults Table - ABORTING - [MemberID: " + MemberId + "], Exception: [" + ex + "]");
+                                    var error = "Service Controller -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber FAILED - Could not save record " +
+                                                 "in SynapseBanksOfMembers Table - ABORTING - MemberID: [" + MemberId + "], Exception: [" + ex + "]";
+                                    Logger.Error(error);
+                                    CommonHelper.notifyCliffAboutError(error);
                                     res.errorMsg = "Failed to save entry in BankLoginResults table: [" + ex.Message + "]";
                                 }
 
                                 Logger.Info("Service Controller -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber SUCCESS - Added record to SynapseBanksOfMembers Table - [UserName: " + CommonHelper.GetDecryptedData(noochMember.UserName) + "]");
 
 
-                                // scheduling send reminder email for this particular transaction
+                                #region Scheduling Micro-Deposit Reminder Email
+
                                 try
                                 {
+                                    // Determine when to send the reminder email
+                                    TimeSpan delayToUse = TimeSpan.FromDays(2);
+                                    DateTime currentDateTime = DateTime.Now;
+                                    if ((int)currentDateTime.DayOfWeek == 5)
+                                    {
+                                        delayToUse = TimeSpan.FromDays(5);
+                                    }
+                                    else if ((int)currentDateTime.DayOfWeek == 6)
+                                    {
+                                        delayToUse = TimeSpan.FromDays(4);
+                                    }
+                                    else if ((int)currentDateTime.DayOfWeek == 6)
+                                    {
+                                        delayToUse = TimeSpan.FromDays(4);
+                                    }
 
-                                    
-                                    
-                                    BackgroundJob.Schedule(() => CommonHelper.SendMincroDepositsVerificationReminderEmail(sbom.MemberId.ToString(), sbom.Id.ToString(), Convert.ToBoolean(noochMember.isRentScene)), TimeSpan.FromDays(2));
+                                    BackgroundJob.Schedule(() => CommonHelper.SendMincroDepositsVerificationReminderEmail(sbom.MemberId.ToString(), sbom.Id.ToString(), Convert.ToBoolean(noochMember.isRentScene)), delayToUse);
                                 }
-                                catch (Exception exc)
+                                catch (Exception ex)
                                 {
-
-                                    Logger.Error("Service Controller -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber schedulre verification alert FAILED , Exception: [" + exc + "]");
-
+                                    Logger.Error("Service Controller -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber ERROR - Failed to schedule Micro-Deposit Reminder Email - " +
+                                                 "MemberID: [" + MemberId + " ], Exception: [" + ex + "]");
                                 }
+
+                                #endregion Scheduling Micro-Deposit Reminder Email
 
                                 res.Is_success = true;
                             }
                         }
                         catch (Exception ex)
                         {
-                            Logger.Error("Service Controller -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber EXCEPTION on attempting to save SynapseBankLogin response for MFA Bank in DB - [MemberID: " +
+                            Logger.Error("Service Controller -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber FAILED - Unable to save SynapseBankLogin response for MFA Bank in DB - [MemberID: " +
                                                    MemberId + "], [Exception: " + ex + "]");
                             res.errorMsg = "Got exception - Failed to save entry in BankLoginResults table";
                         }
@@ -3266,7 +3289,7 @@ namespace Nooch.API.Controllers
                     }
                     else
                     {
-                        Logger.Error("Service Cntrlr -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber FAILED. No Error Msg found from Synapse response.");
+                        Logger.Error("Service Cntrlr -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber FAILED - No HTTP Status Code Received.");
                         res.errorMsg = "Error #3398 - Sorry this is not more helpful :-(";
                     }
 
@@ -3279,7 +3302,9 @@ namespace Nooch.API.Controllers
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Cntrlr -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber FAILED - OUTER EXCEPTION - [MemberID: " + MemberId + "], [Exception: " + ex + "]");
+                var error = "Service Cntrlr -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber FAILED - OUTER EXCEPTION - [MemberID: " + MemberId + "], [Exception: " + ex + "]";
+                Logger.Error(error);
+                CommonHelper.notifyCliffAboutError(error);
                 res.errorMsg = "Service Controller Outer Exception";
             }
 

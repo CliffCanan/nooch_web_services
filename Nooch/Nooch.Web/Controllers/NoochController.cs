@@ -717,64 +717,67 @@ namespace Nooch.Web.Controllers
 
         public ActionResult DepositMoney()
         {
-            ResultDepositMoney rdm = new ResultDepositMoney();
             Logger.Info("DepositMoney CodeBehind -> Page_load Initiated - [TransactionId Parameter: " + Request.QueryString["TransactionId"] + "]");
-            rdm.payreqInfo = true;
+
+            ResultCompletePayment res = new ResultCompletePayment();
+            res.showPaymentInfo = false;
+            res.PayorInitialInfo = false; // <div> containing the old form for entering name/email/phone...keeping just for reference
+
             try
             {
                 if (!String.IsNullOrEmpty(Request.QueryString["TransactionId"]))
                 {
-                    // Check if this payment is for Rent Scene
-                    if (Request.Params.AllKeys.Contains("rs") && Request["rs"] == "1")
-                    {
-                        Logger.Info("DepositMoney CodeBehind -> Page_load - RENT SCENE Transaction Detected");
-                        rdm.rs = "true";
-                    }
+                    res = GetTransDetailsForDepositMoney(Request.QueryString["TransactionId"].ToString(), res);
 
                     if (!String.IsNullOrEmpty(Request.QueryString["UserType"]))
                     {
                         string n = Request.QueryString["UserType"].ToString();
-                        rdm.usrTyp = CommonHelper.GetDecryptedData(n);
-                        Logger.Info("DepositMoney CodeBehind -> Page_load - UserType is: [" + rdm.usrTyp + "]");
+                        res.usrTyp = CommonHelper.GetDecryptedData(n);
+                        Logger.Info("DepositMoney CodeBehind -> Page_load - UserType is: [" + res.usrTyp + "]");
+                        if (res.usrTyp == "NonRegistered")
+                            res.nonRegUsrContainer = true;
                     }
 
                     // CIP is new for Synapse V3 and tells the page what type of ID verification the new user will need.
                     if (Request.Params.AllKeys.Contains("cip"))
                     {
-                        rdm.cip = Request.QueryString["cip"].ToString();
-                        Logger.Info("DepositMoney CodeBehind -> Page_load - CIP is: [" + rdm.cip + "]");
+                        res.cip = Request.QueryString["cip"].ToString();
+                        Logger.Info("DepositMoney CodeBehind -> Page_load - CIP is: [" + res.cip + "]");
                     }
 
-                    rdm = GetTransDetailsForDepositMoney(Request.QueryString["TransactionId"].ToString(), rdm);
+                    // CC (6/14/16): COMMENTING OUT BECAUSE NOW THE SERVER WILL RETURN WHETHER THIS IS A RENTSCENE TRANS OR NOT
+                    // Check if this payment is for Rent Scene
+                    //if (Request.Params.AllKeys.Contains("rs") && Request["rs"] == "1")
+                    //{
+                    //    Logger.Info("DepositMoney CodeBehind -> Page_load - RENT SCENE Transaction Detected");
+                    //    res.rs = true;
+                    //}
+
                     Response.Write("<script>var errorFromCodeBehind = '0';</script>");
                 }
                 else
                 {
                     // something wrong with query string
                     Response.Write("<script>var errorFromCodeBehind = '1';</script>");
-                    rdm.payreqInfo = false;
                 }
-
-                rdm.PayorInitialInfo = false;
             }
             catch (Exception ex)
             {
-                rdm.payreqInfo = false;
                 Response.Write("<script>var errorFromCodeBehind = '1';</script>");
-
                 Logger.Error("DepositMoney CodeBehind -> page_load OUTER EXCEPTION - [TransactionID: " + Request.QueryString["TransactionId"] +
                              "], [Exception: " + ex.Message + "]");
             }
 
-            ViewData["OnLoaddata"] = rdm;
+            ViewData["OnLoadData"] = res;
             return View();
         }
 
 
-        public ResultDepositMoney GetTransDetailsForDepositMoney(string TransactionId, ResultDepositMoney resultDepositMoney)
+        public ResultCompletePayment GetTransDetailsForDepositMoney(string TransactionId, ResultCompletePayment input)
         {
-            ResultDepositMoney rdm = resultDepositMoney;
             Logger.Info("DepositMoney CodeBehind -> GetTransDetails Initiated - TransactionID: [" + TransactionId + "]");
+
+            ResultCompletePayment rdm = input;
 
             string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
             string serviceMethod = "/GetTransactionDetailByIdForRequestPayPage?TransactionId=" + TransactionId;
@@ -787,20 +790,22 @@ namespace Nooch.Web.Controllers
             {
                 Logger.Error("DepositMoney CodeBehind -> GetTransDetails FAILED - Transaction Not Found - TransactionId: [" + TransactionId + "]");
 
-                rdm.payreqInfo = false;
+                rdm.showPaymentInfo = false;
                 rdm.pymnt_status = "0";
                 Response.Write("<script>errorFromCodeBehind = '1';</script>");
             }
             else
             {
+                rdm.rs = transaction.isRentScene;
                 rdm.transId = transaction.TransactionId;
                 rdm.pymnt_status = transaction.TransactionStatus.ToLower();
-
                 rdm.transMemo = transaction.Memo;
-
                 rdm.senderImage = transaction.SenderPhoto;
                 rdm.senderName1 = transaction.Name;
-                rdm.bnkName = transaction.BankName;
+                rdm.showPaymentInfo = true;
+
+                if (rdm.senderName1 == "Marvis Burns") rdm.senderName1 = "Rent Scene";
+
                 string s = transaction.Amount.ToString("n2");
                 string[] s1 = s.Split('.');
                 if (s1.Length == 2)
@@ -814,18 +819,29 @@ namespace Nooch.Web.Controllers
                     rdm.transAmountc = "00";
                 }
 
-                rdm.memidexst = !String.IsNullOrEmpty(transaction.RecepientId)
-                                     ? transaction.RecepientId
-                                     : "";
+                rdm.memidexst = !String.IsNullOrEmpty(transaction.RecepientId) ? transaction.RecepientId : "";
+
+                rdm.bnkName = transaction.BankName;
+                rdm.bnkNickname = transaction.BankId;
+
+                // Check if this was a request to an existing, but 'NonRegistered' User
+                if (transaction.IsExistingButNonRegUser == true)
+                {
+                    if (transaction.BankName == "no bank found")
+                    {
+                        Logger.Error("DepositMoney CodeBehind -> GetTransDetails - IsExistingButNonRegUser = 'true', but No Bank Found, so JS should display Add-Bank iFrame.");
+                    }
+                    else
+                    {
+                        rdm.nonRegUsrContainer = true;
+                    }
+                }
 
                 // Now check what TYPE of invitation (phone or email)
                 rdm.invitationType = transaction.IsPhoneInvitation == true ? "p" : "e";
-
-                if (!String.IsNullOrEmpty(transaction.InvitationSentTo))
-                {
-                    rdm.invitationSentto = transaction.InvitationSentTo;
-                }
+                rdm.invitationSentto = transaction.InvitationSentTo;
             }
+
             return rdm;
         }
 
@@ -1250,9 +1266,9 @@ namespace Nooch.Web.Controllers
 
         public ActionResult PayRequest()
         {
-            ResultPayRequest rpr = new ResultPayRequest();
-            rpr.payreqInfo = true;
-            rpr.PayorInitialInfo = false; // <div> containing the old form for entering name/email/phone...keeping just for reference
+            ResultCompletePayment res = new ResultCompletePayment();
+            res.showPaymentInfo = false;
+            res.PayorInitialInfo = false; // <div> containing the old form for entering name/email/phone...keeping just for reference
 
             Logger.Info("payRequest CodeBehind -> Page_load Initiated - TransactionId Parameter: [" + Request.QueryString["TransactionId"] + "]");
 
@@ -1260,20 +1276,22 @@ namespace Nooch.Web.Controllers
             {
                 if (!String.IsNullOrEmpty(Request.QueryString["TransactionId"]))
                 {
+                    res = GetTransDetailsForPayRequest(Request.QueryString["TransactionId"].ToString(), res);
+
                     if (!String.IsNullOrEmpty(Request.QueryString["UserType"]))
                     {
                         string n = Request.QueryString["UserType"].ToString();
-                        rpr.usrTyp = CommonHelper.GetDecryptedData(n);
-                        Logger.Info("payRequest CodeBehind -> Page_load - UserType is: [" + rpr.usrTyp + "]");
-                        if (rpr.usrTyp == "NonRegistered")
-                            rpr.nonRegUsrContainer = true;
+                        res.usrTyp = CommonHelper.GetDecryptedData(n);
+                        Logger.Info("payRequest CodeBehind -> Page_load - UserType is: [" + res.usrTyp + "]");
+                        if (res.usrTyp == "NonRegistered")
+                            res.nonRegUsrContainer = true;
                     }
 
                     // CIP is new for Synapse V3 and tells the page what type of ID verification the new user will need.
                     if (Request.Params.AllKeys.Contains("cip"))
                     {
-                        rpr.cip = Request.QueryString["cip"].ToString();
-                        Logger.Info("payRequest CodeBehind -> Page_load - CIP is: [" + rpr.cip + "]");
+                        res.cip = Request.QueryString["cip"].ToString();
+                        Logger.Info("payRequest CodeBehind -> Page_load - CIP is: [" + res.cip + "]");
                     }
 
                     // Check if this is a RENT Payment request (from a Landlord)
@@ -1283,50 +1301,44 @@ namespace Nooch.Web.Controllers
                         {
                             Logger.Info("payRequest CodeBehind -> Page_load - RENT PAYMENT Detected");
 
-                            rpr.transType = "rent";
-                            rpr.usrTyp = "tenant";
+                            res.transType = "rent";
+                            res.usrTyp = "tenant";
                         }
                     }
 
+                    // CC (6/14/16): COMMENTING OUT BECAUSE NOW THE SERVER WILL RETURN WHETHER THIS IS A RENTSCENE TRANS OR NOT
                     // Check if this payment is for Rent Scene
-                    if (Request.Params.AllKeys.Contains("rs") && Request["rs"] == "1")
-                    {
-                        Logger.Info("payRequest CodeBehind -> Page_load - RENT SCENE Transaction Detected");
-                        rpr.rs = "true";
-                    }
+                    //if (Request.Params.AllKeys.Contains("rs") && Request["rs"] == "1")
+                    //{
+                    //    Logger.Info("payRequest CodeBehind -> Page_load - RENT SCENE Transaction Detected");
+                    //    rpr.rs = true;
+                    //}
 
                     Response.Write("<script>var errorFromCodeBehind = '0';</script>");
-
-                    rpr = GetTransDetailsForPayRequest(Request.QueryString["TransactionId"].ToString(), rpr);
                 }
                 else
                 {
                     // something wrong with query string
                     Response.Write("<script>var errorFromCodeBehind = '1';</script>");
-                    rpr.payreqInfo = false;
                 }
-
-                rpr.PayorInitialInfo = false;
             }
             catch (Exception ex)
             {
-                rpr.payreqInfo = false;
                 Response.Write("<script>var errorFromCodeBehind = '1';</script>");
-
                 Logger.Error("payRequest CodeBehind -> page_load OUTER EXCEPTION - [TransactionId Parameter: " + Request.QueryString["TransactionId"] +
-                                       "], [Exception: " + ex.Message + "]");
+                             "], [Exception: " + ex.Message + "]");
             }
 
-            ViewData["OnLoaddata"] = rpr;
-
+            ViewData["OnLoadData"] = res;
             return View();
         }
 
 
-        public ResultPayRequest GetTransDetailsForPayRequest(string TransactionId, ResultPayRequest resultPayRequest)
+        public ResultCompletePayment GetTransDetailsForPayRequest(string TransactionId, ResultCompletePayment resultPayRequest)
         {
-            ResultPayRequest rpr = resultPayRequest;
             Logger.Info("payRequest CodeBehind -> GetTransDetails Initiated - TransactionID: [" + TransactionId + "]");
+
+            ResultCompletePayment rpr = resultPayRequest;
 
             string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
             string serviceMethod = "/GetTransactionDetailByIdForRequestPayPage?TransactionId=" + TransactionId;
@@ -1339,26 +1351,21 @@ namespace Nooch.Web.Controllers
             {
                 Logger.Error("payRequest CodeBehind -> GetTransDetails FAILED - Transaction Not Found - TransactionId: [" + TransactionId + "]");
 
-                rpr.payreqInfo = false;
+                rpr.showPaymentInfo = false;
                 rpr.pymnt_status = "0";
                 Response.Write("<script>errorFromCodeBehind = '1';</script>");
             }
             else
             {
-                if (transaction.MemberId == "852987e8-d5fe-47e7-a00b-58a80dd15b49")
-                {
-                    rpr.rs = "true";
-                }
-
+                rpr.rs = transaction.isRentScene;
                 rpr.transId = transaction.TransactionId;
                 rpr.pymnt_status = transaction.TransactionStatus.ToLower();
-
                 rpr.transMemo = transaction.Memo;
-
                 rpr.senderImage = transaction.RecepientPhoto;
                 rpr.senderName1 = (!String.IsNullOrEmpty(transaction.RecepientName) && transaction.RecepientName.Length > 2) ?
                                      transaction.RecepientName :
                                      transaction.Name;
+                rpr.showPaymentInfo = true;
 
                 if (rpr.senderName1 == "Marvis Burns") rpr.senderName1 = "Rent Scene";
 
@@ -1375,6 +1382,10 @@ namespace Nooch.Web.Controllers
                     rpr.transAmountc = "00";
                 }
 
+                rpr.memidexst = !String.IsNullOrEmpty(transaction.RecepientId) ? transaction.RecepientId : "";
+                rpr.bnkName = transaction.BankName;
+                rpr.bnkNickname = transaction.BankId;
+
                 // Check if this was a request to an existing, but 'NonRegistered' User
                 if (transaction.IsExistingButNonRegUser == true)
                 {
@@ -1382,13 +1393,6 @@ namespace Nooch.Web.Controllers
                     {
                         Logger.Info("payRequest CodeBehind -> GetTransDetails - IsExistingButNonRegUser = 'true', but Transaction no longer pending!");
                     }
-
-                    rpr.memidexst = !String.IsNullOrEmpty(transaction.RecepientId)
-                                      ? transaction.RecepientId
-                                      : "";
-
-                    rpr.bnkName = transaction.BankName;
-                    rpr.bnkNickname = transaction.BankId;
 
                     if (transaction.BankName == "no bank found")
                     {
@@ -1399,24 +1403,16 @@ namespace Nooch.Web.Controllers
                         rpr.nonRegUsrContainer = true;
                     }
                 }
-
                 else if (rpr.transType == "rent") // Set in Page_Load above based on URL query string
                 {
                     Logger.Info("payRequest CodeBehind -> GetTransDetails - Got a RENT Payment!");
-
-                    rpr.memidexst = !String.IsNullOrEmpty(transaction.RecepientId)
-                                      ? transaction.RecepientId
-                                      : "";
                 }
 
                 // Now check what TYPE of invitation (phone or email)
                 rpr.invitationType = transaction.IsPhoneInvitation == true ? "p" : "e";
-
-                if (!String.IsNullOrEmpty(transaction.InvitationSentTo))
-                {
-                    rpr.invitationSentto = transaction.InvitationSentTo;
-                }
+                rpr.invitationSentto = transaction.InvitationSentTo;
             }
+
             return rpr;
         }
 

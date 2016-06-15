@@ -309,7 +309,7 @@ function submitPayment()
 
                         // THEN DISPLAY SUCCESS ALERT...
                         swal({
-                            title: "Payment Created Successfully",
+                            title: "Payment Scheduled Successfully",
                             text: "<table border='0' width='95%' cellpadding='8'><tbody>" +
                                   "<tr><td>Amount</td><td>$" + amount + "</td></tr>" +
                                   "<tr><td>Name</td><td>" + name + "</td></tr>" +

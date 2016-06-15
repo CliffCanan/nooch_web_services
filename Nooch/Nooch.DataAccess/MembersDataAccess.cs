@@ -2585,9 +2585,9 @@ namespace Nooch.DataAccess
                     Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 - DOB was NULL - [Name: " + userName + "], [TransId: " + transId + "]");
                 }
 
-               //Rajat Puri 14/6/2016 The following region is a kind of duplicate as the same work will get done at line number 2845 
-               // in the region *saving user image if provided* This will  upload same image again on the server.
-                #region    
+                //Rajat Puri 14/6/2016 The following region is a kind of duplicate as the same work will get done at line number 2845 
+                // in the region *saving user image if provided* This will  upload same image again on the server.
+                #region
                 if (isIdImageAdded == "1" && !String.IsNullOrEmpty(idImageData))
                 {
                     // We have ID Doc image... Now save on server and get URL to save
@@ -3482,7 +3482,7 @@ namespace Nooch.DataAccess
                     }
 
                     #endregion Notify Cliff About New User
-                    
+
                     #region Create User with Synapse
 
                     synapseCreateUserV3Result_int createSynapseUserResult = new synapseCreateUserV3Result_int();
