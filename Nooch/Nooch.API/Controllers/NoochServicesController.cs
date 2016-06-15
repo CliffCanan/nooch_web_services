@@ -3206,6 +3206,9 @@ namespace Nooch.API.Controllers
                                 // scheduling send reminder email for this particular transaction
                                 try
                                 {
+
+                                    
+                                    
                                     BackgroundJob.Schedule(() => CommonHelper.SendMincroDepositsVerificationReminderEmail(sbom.MemberId.ToString(), sbom.Id.ToString(), Convert.ToBoolean(noochMember.isRentScene)), TimeSpan.FromDays(2));
                                 }
                                 catch (Exception exc)
