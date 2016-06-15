@@ -19,13 +19,9 @@ $(document).ready(function (e)
 
     $('[data-toggle="tooltip"]').tooltip();
 
-    $('#AllMembers')//.on( 'init.dt', function () {
-        //console.log('Table initialisation complete. #1');
-        //$('[data-toggle="tooltip"]').tooltip()
-    //})
-    .dataTable({
+    var table = $('#AllMembers').DataTable({
         responsive: true,
-        "order": [3, "desc"],
+        "order": [4, "desc"],
         "initComplete": function (settings, json)
         {
             //console.log('Table initialisation complete. #2');
@@ -34,17 +30,27 @@ $(document).ready(function (e)
         "columnDefs": [
             { className: "actions", "targets": [-1] },
             { className: "p-5", "targets": [-2] },
-            { "orderable": false, "targets": [0, -1] },
+            { "orderable": false, "targets": [0, 1, -1] },
             { "width": "70px", "targets": -1 },
             //{"type": "date", "targets": 3},
         ],
         "language": {
             "info": "Showing _START_ to _END_ of _TOTAL_ Total Transactions"
         },
+        "pageLength": 25,
         "tableTools": {
             "sSwfPath": "../js/plugins/dataTables/swf/copy_csv_xls_pdf.swf"
         }
     });
+
+    table.on('order.dt search.dt', function ()
+    {
+        table.column(0, { search: 'applied', order: 'applied' }).nodes().each(function (cell, i)
+        {
+            cell.innerHTML = i + 1;
+        });
+    }).draw();
+
 
     $(".btnCancel").click(function (e)
     {

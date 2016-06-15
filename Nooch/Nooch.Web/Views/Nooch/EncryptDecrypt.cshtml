@@ -1,5 +1,4 @@
-﻿
-@{
+﻿@{
     Layout = null;
 }
 
@@ -8,41 +7,96 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width" />
-    <title>EncryptDecrypt</title>
+    <title>Encryption Helper</title>
     <script src="~/Scripts/jquery-1.10.2.min.js"></script>
 
-
     <script type="text/javascript">
-        $(document).ready(function() {
-            $('#textToEncDec').val('');
+        $(document).ready(function ()
+        {
+            $('#textToEncDec').val('').focus();
             $('#res').html('');
         });
 
-
-        function enc() {
+        function enc()
+        {
             $('#res').html('');
-            $.post($('#tohit').val(), { OpType: "E", DataToWorkOn: $('#textToEncDec').val() }, function (d) {
+            $.post($('#tohit').val(), { OpType: "E", DataToWorkOn: $('#textToEncDec').val() }, function (d)
+            {
                 $('#res').html(d.DataToWorkOn);
             });
         }
 
-        function dec() {
+        function dec()
+        {
             $('#res').html('');
-            $.post($('#tohit').val(), { OpType: "D", DataToWorkOn: $('#textToEncDec').val() }, function (d) {
+            $.post($('#tohit').val(), { OpType: "D", DataToWorkOn: $('#textToEncDec').val() }, function (d)
+            {
                 $('#res').html(d.DataToWorkOn);
             });
         }
     </script>
+    <link href="@Url.Content("~/Assets/favicon.ico")" rel="icon" />
 </head>
+
 <body>
-<div>
-    <input id="tohit" value="@Url.Action("EncryptDecryptData")" type="hidden"/>
-    Text Here To Encrypt or Decrypt : <input type="text" id="textToEncDec"/> <br/>
-    <input type="button" id="btnEncrypt" value="Encrypt" onclick="enc();"/>
-    <br/>
-    <input type="button" id="btnDecrypt" value="Decrypt" onclick=" dec(); "/>
-    <br/>
-    <div id="res"></div>
-</div>
+    <div style="margin: 30px auto; width: 90%;">
+        <input id="tohit" value="@Url.Action("EncryptDecryptData")" type="hidden" />
+        Enter text to Encrypt or Decrypt:
+        <input type="text" id="textToEncDec" />
+        <input class="btn" type="button" id="btnEncrypt" value="Encrypt" onclick="enc();" style="margin-left:20px;" />
+        <input class="btn" type="button" id="btnDecrypt" value="Decrypt" onclick="dec()" style="margin-left:5px;" />
+
+        <div id="res"></div>
+    </div>
+
+    <style>
+        input[type='text'] {
+            margin-left: 5px;
+            padding: 5px;
+            min-width: 220px;
+            border: 1px solid #666;
+            border-radius: 6px;
+            font-size: 15.5px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 6px 12px;
+            margin-bottom: 0;
+            font-size: 14px;
+            font-weight: 400;
+            line-height: 1.42857143;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: middle;
+            -ms-touch-action: manipulation;
+            touch-action: manipulation;
+            cursor: pointer;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            background-image: none;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            color: #333;
+            background-color: #fff;
+            border-color: #ccc;
+        }
+
+            .btn:hover {
+                color: #333;
+                background-color: #e6e6e6;
+                border-color: #adadad;
+            }
+
+            .btn:active {
+                background-image: none;
+                outline: 0;
+                -webkit-box-shadow: inset 0 3px 5px rgba(0,0,0,.125);
+                box-shadow: inset 0 3px 5px rgba(0,0,0,.125);
+            }
+    </style>
+
 </body>
 </html>

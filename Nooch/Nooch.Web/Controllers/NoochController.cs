@@ -3389,8 +3389,8 @@ namespace Nooch.Web.Controllers
             catch (Exception)
             {
                 res.DataToWorkOn = "";
-
             }
+
             return Json(res);
         }
 
