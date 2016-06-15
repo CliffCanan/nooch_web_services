@@ -100,7 +100,7 @@ namespace Nooch.Common
                         {Constants.PLACEHOLDER_LAST_NAME, GetDecryptedData(memberObj.LastName)},
                         {
                             Constants.PLACEHOLDER_PASSWORDLINK,
-                            String.Concat(Utility.GetValueFromConfig("ApplicationURL"), "/ResetPassword?memberId=" + memberObj.MemberId)
+                            String.Concat(Utility.GetValueFromConfig("ApplicationURL"), "Nooch/ResetPassword?memberId=" + memberObj.MemberId)
                         }
                     };
 

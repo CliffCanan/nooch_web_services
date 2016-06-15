@@ -61,41 +61,25 @@ function CancelReq() {
         success: function (msg) {
             var Responce = msg;
             console.log("SUCCESS -> Transation Cancelled ... ");
-           
             (Responce.succes == true)
             {
                 $("#CancelBtn").text('Cancelled');
-
-                swal('Success !',  'You Request has been cancelled', 'success');
-               
                 //$('#CancelBtn').removeAttr("disabled");
-                             
 
+                swal({
+                    title: "Request Cancelled",
+                    text: "<span class='show m-t-10'>" + Responce.resultMsg + "</span>",
+                    type: "success",
+                    showCancelButton: false,
+                    confirmButtonColor: "#3fabe1",
+                    confirmButtonText: "Ok",
+                    html: true
+                });
             }
         }
     });
 }
 
-
-
-
-//swal({
-//    title: "Email Already Registered",
-//    text: bodyText +
-//          "<span class='show f-600' style='margin: 10px 30px;'>Do you still want to send a payment request to " + sendPaymentResponse.name + "?</span>",
-//    type: "warning",
-//    showCancelButton: true,
-//    confirmButtonColor: "#3fabe1",
-//    confirmButtonText: "Send",
-//    html: true
-//}, function (isConfirm)
-//{
-//    if (isConfirm)
-//    {
-//        sendRequestToExistingUser();
-//    }
-//});
-//}
 
 // CLIFF (5/15/16): DON'T THINK THIS FILE IS USED AT ALL... EVERYTHING HAPPENS IN
 //                  NoochController (code-behind methods).
