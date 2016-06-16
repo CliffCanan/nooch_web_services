@@ -101,9 +101,18 @@
                                                 {
                                                     <span class="text-danger"><strong>@ad.TransactionStatus</strong></span>
                                                 }
-                                                else if (ad.TransactionStatus == "Success")
+                                                else if (ad.TransactionStatus == "Success" || ad.TransactionStatus == "Paid")
                                                 {
                                                     <span class="text-success"><strong>@ad.TransactionStatus</strong></span>
+                                                }
+                                                else
+                                                {
+                                                    <span><strong>@ad.TransactionStatus</strong></span>
+                                                }
+
+                                                @if (ad.DateAccepted != null)
+                                                {
+                                                    <span class="show f-11">(@ad.DateAccepted)</span>
                                                 }
                                             </td>
 
@@ -111,7 +120,7 @@
 
                                             <td>@ad.SenderName</td>
 
-                                            <td>@ad.RecipienName</td>
+                                            <td>@ad.RecipientName</td>
 
                                             <td><b>$@ad.Amount</b></td>
 
@@ -123,7 +132,7 @@
                                             </td>
 
                                             <td>
-                                                <button type="button" id="btnLocation" class="btn-link" onclick="showLocationModal('@ad.TransLati','@ad.TransLongi','@ad.state')">
+                                                <button type="button" id="btnLocation" class="btn-link f-13" onclick="showLocationModal('@ad.TransLati','@ad.TransLongi','@ad.state')">
                                                     @ad.city@if (!String.IsNullOrEmpty(@ad.state))
                                                     {<span>, @ad.state</span>}
                                                 </button>

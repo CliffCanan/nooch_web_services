@@ -2537,7 +2537,7 @@ namespace Nooch.DataAccess
                 #region Update Member's Record in Members.dbo
 
                 // Get state from ZIP via Google Maps API
-                var googleMapsResult = CommonHelper.GetStateNameByZipcode(zip.Trim());
+                var googleMapsResult = CommonHelper.GetCityAndStateFromZip(zip.Trim());
                 var stateAbbrev = googleMapsResult != null && googleMapsResult.stateAbbrev != null ? googleMapsResult.stateAbbrev : "";
                 var cityFromGoogle = googleMapsResult != null && !String.IsNullOrEmpty(googleMapsResult.city) ? googleMapsResult.city : "";
 
@@ -3113,7 +3113,7 @@ namespace Nooch.DataAccess
                 #region Parse And Format Data To Save
 
                 // Get state from ZIP via Google Maps API
-                var googleMapsResult = CommonHelper.GetStateNameByZipcode(zip.Trim());
+                var googleMapsResult = CommonHelper.GetCityAndStateFromZip(zip.Trim());
                 var stateAbbrev = googleMapsResult != null && googleMapsResult.stateAbbrev != null ? googleMapsResult.stateAbbrev : "";
                 var cityFromGoogle = googleMapsResult != null && !String.IsNullOrEmpty(googleMapsResult.city) ? googleMapsResult.city : "";
 
@@ -5577,9 +5577,10 @@ namespace Nooch.DataAccess
                         "], TransID: [" + TransactionId + "], New User Member ID: [" + MemberIdAfterSynapseAccountCreation +
                         "], RecipientMemberID: [" + recipMemId + "]");
 
-            // If a REQUEST, TransactionType will be "RequestToNewUser" & MemberIdAfterSynapseAccountCreation is the Request Recipient, and should be the SENDER below
-            //               and the Request sender is the RecipMemID (if b/t 2 existing users)
-            // If an INVITE, TransactionType will be "SentToNewUser &  MemberIdAfterSynapseAccountCreation is the Invite Recipient, and should be the NEW USER (RECIPIENT) below
+            // If a REQUEST, TransactionType will be "RequestToNewUser" & MemberIdAfterSynapseAccountCreation is the Request Recipient, 
+            //               and should be the SENDER below, and the Request sender is the RecipMemID (if b/t 2 existing users)
+            // If an INVITE, TransactionType will be "SentToNewUser &  MemberIdAfterSynapseAccountCreation is the Invite Recipient,
+            //               and should be the NEW USER (RECIPIENT) below
 
             try
             {
@@ -5788,7 +5789,7 @@ namespace Nooch.DataAccess
                                         string wholeAmount = Transaction.Amount.ToString("n2");
                                         string[] s3 = wholeAmount.Split('.');
 
-                                        string transDate = Convert.ToDateTime(Transaction.TransactionDate).ToString(("MMMM dd, yyyy"));
+                                        string transDate = Convert.ToDateTime(Transaction.TransactionDate).ToString("MMMM dd, yyyy");
 
                                         string memo = "";
                                         if (!String.IsNullOrEmpty(Transaction.Memo))
@@ -6152,7 +6153,7 @@ namespace Nooch.DataAccess
                         member.Zipcode = CommonHelper.GetEncryptedData(zipCode);
 
                         // Get state from ZIP via Google Maps API
-                        var stateResult = CommonHelper.GetStateNameByZipcode(zipCode.Trim());
+                        var stateResult = CommonHelper.GetCityAndStateFromZip(zipCode.Trim());
                         var stateAbbrev = stateResult != null && stateResult.stateAbbrev != null ? stateResult.stateAbbrev : "";
                         var cityFromGoogle = stateResult != null && !String.IsNullOrEmpty(stateResult.city) ? stateResult.city : "";
 

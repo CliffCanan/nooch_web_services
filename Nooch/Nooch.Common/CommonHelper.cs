@@ -1802,7 +1802,7 @@ namespace Nooch.Common
                         // Missing City, so if user has a ZIP, try getting the City & States from Google
                         if (!String.IsNullOrEmpty(usersZip))
                         {
-                            var googleMapsRes = GetStateNameByZipcode(usersZip);
+                            var googleMapsRes = GetCityAndStateFromZip(usersZip);
                             if (googleMapsRes != null && !String.IsNullOrEmpty(googleMapsRes.city))
                             {
                                 usersCity = googleMapsRes.city;
@@ -1829,7 +1829,7 @@ namespace Nooch.Common
                         // Missing State, so if use does have a ZIP, try getting the City & States from Google
                         if (!String.IsNullOrEmpty(usersZip))
                         {
-                            var googleMapsRes = GetStateNameByZipcode(usersZip);
+                            var googleMapsRes = GetCityAndStateFromZip(usersZip);
                             if (googleMapsRes != null && !String.IsNullOrEmpty(googleMapsRes.stateAbbrev))
                                 usersState = googleMapsRes.stateAbbrev;
                         }
@@ -3128,7 +3128,6 @@ namespace Nooch.Common
         }
 
 
-
         // Method to change user fingerprint
         // this required user's member id and new fingerprint
         // from member id, we will get synapse id and password if any given
@@ -3428,7 +3427,6 @@ namespace Nooch.Common
 
             return res;
         }
-
 
 
         public static SynapseBankSetDefaultResult SetSynapseDefaultBank(string MemberId, string BankName, string BankOId)
@@ -4069,6 +4067,26 @@ namespace Nooch.Common
         }
 
 
+        public static Member GetMemberByContactNumber(string contactNumber)
+        {
+            Logger.Info("Common Helper -> GetMemberByContactNumber Initiated - contactNumber: [" + contactNumber + "]");
+
+            string trimmedContactNum = CommonHelper.RemovePhoneNumberFormatting(contactNumber);
+
+            var noochMember = _dbContext.Members.Where(memberTemp =>
+                                memberTemp.ContactNumber.Equals(trimmedContactNum) &&
+                                memberTemp.IsDeleted == false).FirstOrDefault();
+
+            if (noochMember != null)
+            {
+                _dbContext.Entry(noochMember).Reload();
+                return noochMember;
+            }
+
+            return null;
+        }
+
+
         public static string SaveMemberFBId(string MemberId, string MemberFBId, string IsConnect)
         {
             Logger.Info("Common Helper -> SaveMembersFBId - MemberId: [" + MemberId + "]");
@@ -4178,8 +4196,12 @@ namespace Nooch.Common
         }
 
 
-        // CC (6/1/16): Need to update this to also grab the CITY
-        public static GoogleGeolocationOutput GetStateNameByZipcode(string zipCode)
+        /// <summary>
+        /// Gets the City & State values for a given ZIP code from Google's Maps API.
+        /// </summary>
+        /// <param name="zipCode"></param>
+        /// <returns></returns>
+        public static GoogleGeolocationOutput GetCityAndStateFromZip(string zipCode)
         {
             GoogleGeolocationOutput res = new GoogleGeolocationOutput();
             res.IsSuccess = false;
@@ -4516,6 +4538,32 @@ namespace Nooch.Common
                             "Exception: [" + ex + "]");
                 return "Error";
             }
+        }
+
+
+        public static string GetTransSynapseStatus(string transId)
+        {
+            try
+            {
+                if (!String.IsNullOrEmpty(transId))
+                {
+                    var lastStatusObj = (from statusObj in _dbContext.TransactionsStatusAtSynapses
+                                         where statusObj.Nooch_Transaction_Id == transId
+                                         select statusObj).OrderByDescending(n => n.Id).FirstOrDefault();
+
+                    if (lastStatusObj != null)
+                    {
+                        return lastStatusObj.status_note;
+                    }
+                    else return "No status note";
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Common Helper -> GetTransSynapseStatus FAILED - Member ID: [" + transId + "], [Exception: " + ex + "]");
+            }
+
+            return "Failure";
         }
     }
 }

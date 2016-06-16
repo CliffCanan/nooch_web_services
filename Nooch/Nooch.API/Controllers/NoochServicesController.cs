@@ -5871,7 +5871,7 @@ namespace Nooch.API.Controllers
 
             try
             {
-                res = CommonHelper.GetStateNameByZipcode(zipCode);
+                res = CommonHelper.GetCityAndStateFromZip(zipCode);
             }
             catch (Exception ex)
             {

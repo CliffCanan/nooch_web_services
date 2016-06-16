@@ -30,6 +30,7 @@ $(document).ready(function (e)
         "columnDefs": [
             { className: "actions", "targets": [-1] },
             { className: "p-5", "targets": [-2] },
+            { className: "text-center", "targets": [0, 2, 3, 4, 7]},
             { "orderable": false, "targets": [0, 1, -1] },
             { "width": "70px", "targets": -1 },
             //{"type": "date", "targets": 3},

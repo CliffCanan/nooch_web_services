@@ -1437,7 +1437,16 @@ namespace Nooch.DataAccess
                     {
                         #region SubList NOT Included
 
-                        if (listType.ToUpper().Equals("SENT"))
+                        if (listType.ToUpper().Equals("ALL"))
+                        {
+                            transactions = _dbContext.Transactions.Where(trans =>
+                                                                         trans.SenderId == id ||
+                                                                         trans.RecipientId == id ||
+                                                                         trans.InvitationSentTo == member.UserName ||
+                                                                         trans.InvitationSentTo == member.UserNameLowerCase)
+                                                                         .OrderByDescending(r => r.TransactionDate).Take(pageSize).ToList();
+                        }
+                        else if (listType.ToUpper().Equals("SENT"))
                         {
                             transactions = _dbContext.Transactions.Where(trans =>
                                                                          (trans.SenderId == id ||
@@ -1463,15 +1472,6 @@ namespace Nooch.DataAccess
                                                                          trans.InvitationSentTo == member.UserName) &&
                                                                          trans.DisputeStatus != null &&
                                                                          trans.TransactionType == transactionTypeDisputed)
-                                                                         .OrderByDescending(r => r.TransactionDate).Take(pageSize).ToList();
-                        }
-                        else if (listType.ToUpper().Equals("ALL"))
-                        {
-                            transactions = _dbContext.Transactions.Where(trans =>
-                                                                         trans.SenderId == id ||
-                                                                         trans.RecipientId == id ||
-                                                                         trans.InvitationSentTo == member.UserName ||
-                                                                         trans.InvitationSentTo == member.UserNameLowerCase)
                                                                          .OrderByDescending(r => r.TransactionDate).Take(pageSize).ToList();
                         }
                         else if (listType.ToUpper().Equals("REQUEST"))
@@ -5894,7 +5894,6 @@ namespace Nooch.DataAccess
                         request.DeviceId = handleRequestDto.DeviceId;
                         request.TransactionStatus = "Success";
                         request.DateAccepted = DateTime.Now;
-
                         request.TransactionType = CommonHelper.GetEncryptedData(Constants.TRANSACTION_TYPE_TRANSFER);
 
                         int i = noochConnection.SaveChanges();
