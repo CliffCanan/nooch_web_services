@@ -88,7 +88,7 @@
 
                                             <td></td>
 
-                                            <td><small>@ad.TransactionId</small></td>
+                                            <td><small>@ad.TransactionTrackingId</small></td>
 
                                             <td>@ad.TransactionType</td>
 
@@ -103,7 +103,7 @@
                                                 }
                                                 else if (ad.TransactionStatus == "Success" || ad.TransactionStatus == "Paid")
                                                 {
-                                                    <span class="text-success"><strong>@ad.TransactionStatus</strong></span>
+                                                    <span class="text-success" data-toggle="tooltip" title="@ad.SynapseStatus @ad.SynapseStatusNote"><strong>@ad.TransactionStatus</strong></span>
                                                 }
                                                 else
                                                 {

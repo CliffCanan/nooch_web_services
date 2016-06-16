@@ -3088,7 +3088,8 @@ namespace Nooch.Web.Controllers
                                 {
                                     TransactionClass obj = new TransactionClass();
 
-                                    obj.TransactionId = trans.TransactionId;
+                                    //obj.TransactionId = trans.TransactionTrackingId;
+                                    obj.TransactionTrackingId = trans.TransactionTrackingId;
                                     obj.TransactionType = CommonHelper.GetDecryptedData(trans.TransactionType);
 
                                     obj.TransactionDate1 = Convert.ToDateTime(trans.TransactionDate).ToShortDateString();
