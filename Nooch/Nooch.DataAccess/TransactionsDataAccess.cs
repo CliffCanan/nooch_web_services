@@ -6402,8 +6402,9 @@ namespace Nooch.DataAccess
             // 575ad909950629625ca88262 - Corp Checking
             // 574f45d79506295ff7a81db8 - Passthrough (Linked to Rent Scene's parent account)
             // 5759005795062906e1359a8e - Passthrough (Linked to Marvis Burn's Nooch account)
-            if ((senderNoochDetails.MemberId.ToString() == "852987E8-D5fE-47E7-A00B-58A80DD15B49" ||
-                sender_bank_node_id == "5759005795062906e1359a8e") &&
+            if ((senderNoochDetails.MemberId.ToString().ToLower() == "852987E8-D5fE-47E7-A00B-58A80DD15B49" ||
+                sender_bank_node_id == "5759005795062906e1359a8e" ||
+                sender_bank_node_id == "574f45d79506295ff7a81db8") &&
                 recipientNoochDetails.cipTag == "Vendor")
             {
                 sender_bank_node_id = "575ad909950629625ca88262";

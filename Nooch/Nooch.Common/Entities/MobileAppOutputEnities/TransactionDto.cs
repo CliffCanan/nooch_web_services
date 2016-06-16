@@ -8,6 +8,16 @@ namespace Nooch.Common.Entities.MobileAppOutputEnities
 {
     public class TransactionDto
     {
+        public bool IsPrePaidTransaction { get; set; }
+        public bool IsPhoneInvitation { get; set; }
+        public bool IsExistingButNonRegUser { get; set; }
+        public bool doNotSendEmails { get; set; }
+        public bool isRentAutoPayment { get; set; }
+        public bool isRentScene { get; set; }
+        public decimal Amount { get; set; }
+        public decimal? TransactionFee { get; set; }
+        public int TotalRecordsCount { get; set; }
+        public DateTime TransDate { get; set; }
         public string PinNumber { get; set; }
         public string MemberId { get; set; }
         public string NoochId { get; set; }
@@ -16,7 +26,6 @@ namespace Nooch.Common.Entities.MobileAppOutputEnities
         public string TransactionId { get; set; }
         public string Name { get; set; }
         public string RecepientName { get; set; }
-        public decimal Amount { get; set; }
         public string Memo { get; set; }
         public string TransactionDate { get; set; }
         public string DeviceId { get; set; }
@@ -47,9 +56,6 @@ namespace Nooch.Common.Entities.MobileAppOutputEnities
         public string Time { get; set; }
         public string LocationId { get; set; }
         public string Location { get; set; }
-        public int TotalRecordsCount { get; set; }
-        public DateTime TransDate { get; set; }
-        public decimal? TransactionFee { get; set; }
         public string AdminNotes { get; set; }
         public string RaisedBy { get; set; }
         public byte[] Picture { get; set; }
@@ -57,12 +63,6 @@ namespace Nooch.Common.Entities.MobileAppOutputEnities
         public string BankAccountId { get; set; }
         public string BankId { get; set; }
         public string BankName { get; set; }
-        public bool IsPrePaidTransaction { get; set; }
-        public bool IsPhoneInvitation { get; set; }
-        public bool IsExistingButNonRegUser { get; set; }
-        public bool doNotSendEmails { get; set; }
-        public bool isRentAutoPayment { get; set; }
-        public bool isRentScene { get; set; }
         public string SsnIsVerified { get; set; }
     }
 }

@@ -521,7 +521,7 @@ namespace Nooch.Web.Controllers
             catch (Exception we)
             {
                 Logger.Error("NoochController CodeBehind -> addBank (Manual) FAILED - [MemberID: " + inp.memberid +
-                             "], [Exception: " + we.Message + "]");
+                             "], [Exception: " + we + "]");
                 res.ERROR_MSG = "Add Bank exception # 494";
             }
 
@@ -1340,7 +1340,7 @@ namespace Nooch.Web.Controllers
             ResultCompletePayment rpr = resultPayRequest;
 
             string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-            string serviceMethod = "/GetTransactionDetailByIdForRequestPayPage?TransactionId=" + TransactionId;
+            string serviceMethod = "GetTransactionDetailByIdForRequestPayPage?TransactionId=" + TransactionId;
 
             Logger.Info("payRequest CodeBehind -> GetTransDetails - URL to query: [" + String.Concat(serviceUrl, serviceMethod) + "]");
 
@@ -1553,7 +1553,7 @@ namespace Nooch.Web.Controllers
         {
             ResultPayRequestComplete rpc = new ResultPayRequestComplete();
 
-            Logger.Info("PayRequestComplete CodeBehind -> page_load Initiated - 'mem_id' Parameter In URL: [" + Request.QueryString["mem_id"] + "]");
+            Logger.Info("PayRequestComplete Code Behind -> page_load Initiated - 'mem_id' Parameter In URL: [" + Request.QueryString["mem_id"] + "]");
 
             rpc.paymentSuccess = false;
 
@@ -1623,7 +1623,7 @@ namespace Nooch.Web.Controllers
             try
             {
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-                string serviceMethod = "/GetTransactionDetailByIdAndMoveMoneyForNewUserDeposit?TransactionId=" + TransactionId +
+                string serviceMethod = "GetTransactionDetailByIdAndMoveMoneyForNewUserDeposit?TransactionId=" + TransactionId +
                                        "&MemberIdAfterSynapseAccountCreation=" + MemberIdAfterSynapseAccountCreation +
                                        "&TransactionType=RequestToNewUser";
 
@@ -1637,7 +1637,7 @@ namespace Nooch.Web.Controllers
                     serviceMethod = serviceMethod + "&recipMemId=";
                 }
 
-                Logger.Info("NoochController -> completeTrans - About to Query Nooch Service to move money - URL: [" +
+                Logger.Info("PayRequestComplete Code Behind -> completeTrans - About to Query Nooch Service to move money - URL: [" +
                              String.Concat(serviceUrl, serviceMethod) + "]");
 
                 TransactionDto moveMoneyResult = ResponseConverter<TransactionDto>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
@@ -1650,7 +1650,7 @@ namespace Nooch.Web.Controllers
                     }
                     else
                     {
-                        Logger.Error("NoochController -> completeTrans FAILED - TransId: [" + TransactionId + "]");
+                        Logger.Error("PayRequestComplete Code Behind -> completeTrans FAILED - TransId: [" + TransactionId + "]");
 
                         Response.Write("<script>errorFromCodeBehind = 'failed';</script>");
                     }
@@ -1658,7 +1658,7 @@ namespace Nooch.Web.Controllers
             }
             catch (Exception ex)
             {
-                Logger.Error("payRequestComplete CodeBehind -> completeTrans FAILED - TransId: [" + TransactionId +
+                Logger.Error("PayRequestComplete Code Behind CodeBehind -> completeTrans FAILED - TransId: [" + TransactionId +
                              "], Exception: [" + ex + "]");
             }
 

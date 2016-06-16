@@ -2776,7 +2776,7 @@ namespace Nooch.Common
                     res.wereUserDetailsFound = true;
 
                     Logger.Info("Common Helper -> GetSynapseBankAndUserDetailsforGivenMemberId - Checkpoint #1 - " +
-                                "SynapseCreateUserResults Record Found! - Now about to check if Synapse OAuth Key is expired or still valid.");
+                                "SynapseCreateUserResults Record Found! - MemberID: [" + memberId + "] - Now about to check if Synapse OAuth Key is still valid.");
 
                     #region Check If OAuth Key Still Valid
                     // CLIFF (10/3/15): ADDING CALL TO NEW METHOD TO CHECK USER'S STATUS WITH SYNAPSE, AND REFRESHING OAUTH KEY IF NECESSARY
@@ -2789,7 +2789,7 @@ namespace Nooch.Common
                         {
                             res.UserDetails = new SynapseDetailsClass_UserDetails();
                             res.UserDetails.MemberId = memberId;
-                            res.UserDetails.access_token = GetDecryptedData(checkTokenResult.oauth_consumer_key);  // Note: Giving in encrypted format
+                            res.UserDetails.access_token = GetDecryptedData(checkTokenResult.oauth_consumer_key); // Note: Giving in encrypted format
                             res.UserDetails.user_id = checkTokenResult.user_oid;
                             res.UserDetails.user_fingerprints = memberObject.UDID1;
                             res.UserDetails.permission = createSynapseUserObj.permission;

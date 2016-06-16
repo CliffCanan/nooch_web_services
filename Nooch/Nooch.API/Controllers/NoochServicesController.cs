@@ -2829,7 +2829,7 @@ namespace Nooch.API.Controllers
             {
                 Logger.Info("Service Cntrlr -> RegisterNonNoochUserWithSynapse Initiated - MemberID: [" + input.memberId + "], " +
                             "Name: [" + input.fullname + "], Email: [" + input.email +
-                            "Is ID Img Sent: [" + input.isIdImageAdded + "], CIP: [" + input.cip +
+                            "], Is ID Img Sent: [" + input.isIdImageAdded + "], CIP: [" + input.cip +
                             "], FBID: [" + input.fbid + "], isRentScene: [" + input.isRentScene + "]");
 
                 MembersDataAccess mda = new MembersDataAccess();
@@ -5613,20 +5613,21 @@ namespace Nooch.API.Controllers
 
         [HttpPost]
         [ActionName("TransferMoneyUsingSynapse")]
-        public StringResult TransferMoneyUsingSynapse(TransactionDto transactionInput, string accessToken)
+        public StringResult TransferMoneyUsingSynapse(TransactionDto transInput, string accessToken)
         {
-            Logger.Info("Service Layer -> TransferMoneyUsingSynapse Initiated - Trans.MemberID: [" + transactionInput.MemberId +
-                                  "], RecipientID: [" + transactionInput.RecepientId +
-                                  "], Amount: [" + transactionInput.Amount.ToString("n2") +
-                                  "], doNotSendEmails: [" + transactionInput.doNotSendEmails + "]");
+            Logger.Info("Service Layer -> TransferMoneyUsingSynapse Initiated - Trans.MemberID: [" + transInput.MemberId +
+                        "], RecipientID: [" + transInput.RecepientId +
+                        "], Amount: [" + transInput.Amount.ToString("n2") +
+                        "], doNotSendEmails: [" + transInput.doNotSendEmails + "]");
 
-            if (CommonHelper.IsValidRequest(accessToken, transactionInput.MemberId))
+            if (transInput.isRentScene == true || transInput.isRentAutoPayment == true ||
+                CommonHelper.IsValidRequest(accessToken, transInput.MemberId))
             {
                 string trnsactionId = string.Empty;
 
                 try
                 {
-                    TransactionEntity transactionEntity = GetTransactionEntity(transactionInput);
+                    TransactionEntity transactionEntity = GetTransactionEntity(transInput);
 
                     var tda = new TransactionsDataAccess();
 
@@ -5634,7 +5635,7 @@ namespace Nooch.API.Controllers
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Layer -> TransferMoneyUsingSynapse FAILED - [MemberID: " + transactionInput.MemberId + "], [Exception: " + ex + "]");
+                    Logger.Error("Service Layer -> TransferMoneyUsingSynapse FAILED - [MemberID: " + transInput.MemberId + "], [Exception: " + ex + "]");
                     //UtilityService.ThrowFaultException(ex);
                 }
 
@@ -5643,7 +5644,7 @@ namespace Nooch.API.Controllers
             else
             {
                 Logger.Error("Service Layer -> TransferMoneyUsingSynapse FAILED. AccessToken invalid or not found - " +
-                                       "MemberID: [" + transactionInput.MemberId + "]");
+                                       "MemberID: [" + transInput.MemberId + "]");
                 throw new Exception("Invalid OAuth 2 Access");
             }
         }

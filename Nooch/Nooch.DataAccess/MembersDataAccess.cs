@@ -3452,11 +3452,13 @@ namespace Nooch.DataAccess
                     #region Notify Cliff About New User
                     try
                     {
+                        string lastNameUnEncr = CommonHelper.GetDecryptedData(LastName);
+
                         StringBuilder st = new StringBuilder("<br/><p><strong>This user's Nooch Account information is:</strong></p>" +
                                               "<table border='1' style='border-collapse:collapse;'>" +
                                               "<tr><td><strong>MemberID:</strong></td><td>" + member.MemberId + "</td></tr>" +
-                                              "<tr><td><strongNooch_ID:</strong></td><td>" + member.Nooch_ID + "</td></tr>" +
-                                              "<tr><td><strong>Name:</strong></td><td>" + FirstName + " " + LastName + "</td></tr>" +
+                                              "<tr><td><strong>Nooch_ID:</strong></td><td>" + member.Nooch_ID + "</td></tr>" +
+                                              "<tr><td><strong>Name:</strong></td><td>" + namearray[0] + " " + lastNameUnEncr + "</td></tr>" +
                                               "<tr><td><strong>Email Address:</strong></td><td>" + userEmail + "</td></tr>" +
                                               "<tr><td><strong>Phone #:</strong></td><td>" + userPhone + "</td></tr>" +
                                               "<tr><td><strong>Address:</strong></td><td>" + address + ", " + cityFromGoogle + ", " + stateAbbrev + ", " + zip + "</td></tr>" +
@@ -3473,7 +3475,7 @@ namespace Nooch.DataAccess
                         completeEmailTxt.Append(s);
 
                         Utility.SendEmail(null, "admin-autonotify@nooch.com", "bankAdded@nooch.com", null,
-                                          "Nooch Admin Alert: Bank Added, Awaiting Admin Approval",
+                                          "Nooch Alert: New User - " + namearray[0] + " " + lastNameUnEncr,
                                           null, null, null, null, completeEmailTxt.ToString());
                     }
                     catch (Exception ex)
@@ -3849,7 +3851,7 @@ namespace Nooch.DataAccess
 
                     submitDocToSynapse_user user = new submitDocToSynapse_user();
                     submitDocToSynapse_user_doc doc = new submitDocToSynapse_user_doc();
-                    doc.attachment = "data:text/csv;base64," + CommonHelper.ConvertImageURLToBase64(ImageUrl).Replace("\\", "");
+                    doc.attachment = "data:image/png;base64," + CommonHelper.ConvertImageURLToBase64(ImageUrl).Replace("\\", "");
 
                     user.fingerprint = usersFingerprint;
                     user.doc = doc;
