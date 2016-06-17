@@ -178,6 +178,7 @@ namespace Nooch.Common
             return sourceNum;
         }
 
+
         public static string UppercaseFirst(string s)
         {
             if (string.IsNullOrEmpty(s))
@@ -187,6 +188,7 @@ namespace Nooch.Common
 
             return char.ToUpper(s[0]) + s.Substring(1);
         }
+
 
         public static bool IsValidRequest(string accessToken, string memberId)
         {
@@ -247,6 +249,7 @@ namespace Nooch.Common
             }
         }
 
+
         public static MemberBusinessDto GetMemberByUdId(string udId)
         {
             Logger.Info("Common Helper -> GetMemberByUdId[ udId:" + udId + "].");
@@ -267,6 +270,7 @@ namespace Nooch.Common
                 Status = "You are not a nooch member. Please register to become a nooch member."
             };
         }
+
 
         public static string GetMemberIdByUserName(string userName)
         {
@@ -289,6 +293,7 @@ namespace Nooch.Common
             }
             return null;
         }
+
 
         public static string GetMemberUsernameByMemberId(string MemberId)
         {
@@ -315,6 +320,7 @@ namespace Nooch.Common
             return null;
         }
 
+
         public static string GetPhoneNumberByMemberId(string MemberId)
         {
             Guid memGuid = Utility.ConvertToGuid(MemberId);
@@ -330,6 +336,7 @@ namespace Nooch.Common
             return noochMember != null ? noochMember.ContactNumber : null;
         }
 
+
         public static string GetMemberIdByPhone(string memberPhone)
         {
             var noochMember =
@@ -343,6 +350,7 @@ namespace Nooch.Common
 
             return noochMember != null ? noochMember.MemberId.ToString() : null;
         }
+
 
         public static string GetMemberReferralCodeByMemberId(string MemberId)
         {
@@ -364,6 +372,7 @@ namespace Nooch.Common
             }
             return inviteCodeREsult != null ? inviteCodeREsult.code : "";
         }
+
 
         public static string GetMemberNameByUserName(string userName)
         {
@@ -388,6 +397,7 @@ namespace Nooch.Common
             }
             return null;
         }
+
 
         /// <summary>
         /// Returns ENCRYPTED form of a user's PIN based on a given Username.
@@ -427,6 +437,82 @@ namespace Nooch.Common
 
             return null;
         }
+
+
+        /// <summary>
+        /// Created 6/17/16: For the MakePayment page to check the user's Nooch PIN.
+        /// </summary>
+        /// <param name="user"></param>
+        /// <param name="pin"></param>
+        /// <returns></returns>
+        public static genericResponse CheckUserPin(string user, string pin)
+        {
+            genericResponse res = new genericResponse();
+            res.success = false;
+
+            try
+            {
+                if (String.IsNullOrEmpty(user))
+                {
+                    res.msg = "Missing user";
+                    return res;
+                }
+                if (String.IsNullOrEmpty(pin))
+                {
+                    res.msg = "Missing PIN";
+                    return res;
+                }
+                else if (pin.Length != 4)
+                {
+                    res.msg = "Incorrect PIN length";
+                    return res;
+                }
+
+                string memId = string.Empty;
+
+                if (user.ToLower() == "appjaxx")
+                    memId = "8b4b4983-f022-4289-ba6e-48d5affb5484";
+                else if (user.ToLower() == "rentscene")
+                    memId = "852987e8-d5fe-47e7-a00b-58a80dd15b49";
+                else if (user == "cliff")
+                    memId = "b3a6cf7b-561f-4105-99e4-406a215ccf60";
+                else
+                {
+                    res.msg = "Invalid user";
+                    return res;
+                }
+
+                Member memberObj = GetMemberDetails(memId);
+                
+                if (memberObj != null)
+                {
+                    var pinEnc = GetEncryptedData(pin);
+
+                    if (pinEnc == memberObj.PinNumber)
+                    {
+                        res.success = true;
+                        res.msg = "PIN confirmed successfully";
+                    }
+                    else
+                    {
+                        res.msg = "Incorrect PIN";
+                    }
+                }
+                else
+                {
+                    Logger.Error("Common Helper -> GetMemberPinByUserName FAILED - User not found - User: [" + user + "]");
+                    res.msg = "User not found";
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Common Helper -> GetMemberPinByUserName FAILED - [User: " + user + "], [Exception: " + ex.Message + "]");
+                res.msg = ex.Message;
+            }
+
+            return res;
+        }
+
 
         public static bool IsMemberActivated(string tokenId)
         {

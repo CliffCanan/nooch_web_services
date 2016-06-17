@@ -18,10 +18,12 @@ namespace Nooch.Common.Entities
         public bool Div2 { get; set; }
     }
 
-    public class HiddenField
+    public class makePaymentPg
     {
-        public String errorId { get; set; }
-        public String type { get; set; }
-        public String from { get; set; }
+        public string errorId { get; set; }
+        public string type { get; set; }
+        public string from { get; set; }
+        public string classForForm { get; set; }
+        public string classForPinButton { get; set; }
     }
 }

@@ -2,7 +2,7 @@
 @using Nooch.Common.Entities;
 @{
     Layout = null;
-    HiddenField onLoadD = (HiddenField)ViewData["OnLoadData"];
+    makePaymentPg onLoadD = (makePaymentPg)ViewData["OnLoadData"];
 }
 
 <!DOCTYPE html>
@@ -112,11 +112,16 @@
         </span>
     </div>
 
-    <div class="" id="makePaymentContainer">
+
+    <div id="makePaymentContainer">
 
         <div id="idVerWiz" class="">
 
-            <form id="paymentForm" role="form" class="form-horizontal">
+            @*<div id="pinBtnWrap" class="animated bounceIn @onLoadD.classForPinButton">
+                <button type="button" class="btn btn-primary center-block" onclick="showPinPrompt()">Enter PIN</button>
+            </div>*@
+
+            <form id="paymentForm" role="form" class="animated form-horizontal @onLoadD.classForForm">
 
                 <div class="well well-sm m-b-15">
                     <div class="f-16">

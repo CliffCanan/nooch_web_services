@@ -260,6 +260,7 @@ namespace Nooch.Web.Controllers
         #endregion Cancel Request Page
 
 
+
         #region Add Bank Page
 
         public ActionResult AddBank(string MemberId)
@@ -713,6 +714,7 @@ namespace Nooch.Web.Controllers
         #endregion Add Bank Page
 
 
+
         #region DepositMoney Page
 
         public ActionResult DepositMoney()
@@ -950,6 +952,7 @@ namespace Nooch.Web.Controllers
         #endregion DepositMoney Page
 
 
+
         #region DepositMoneyComplete Page
 
         public ActionResult DepositMoneyComplete()
@@ -1124,6 +1127,7 @@ namespace Nooch.Web.Controllers
         #endregion DepositMoneyComplete Page
 
 
+
         #region Reset Password Page
 
         public ActionResult ResetPassword()
@@ -1259,6 +1263,7 @@ namespace Nooch.Web.Controllers
         }
 
         #endregion Reset Password Page
+
 
 
         #region PayRequest Page
@@ -1547,6 +1552,7 @@ namespace Nooch.Web.Controllers
         #endregion PayRequest Page
 
 
+
         #region PayRequestComplete Page
 
         public ActionResult PayRequestComplete()
@@ -1734,6 +1740,7 @@ namespace Nooch.Web.Controllers
         }
 
         #endregion PayRequestComplete Page
+
 
 
         #region CreateAccount Page
@@ -2026,6 +2033,7 @@ namespace Nooch.Web.Controllers
         #endregion CreateAccount Page
 
 
+
         #region RejectMoney Page
 
         public ActionResult RejectMoney(string TransactionId, string UserType, string TransType)
@@ -2194,6 +2202,7 @@ namespace Nooch.Web.Controllers
                 //checkEmailMsg.Visible = true;
             }
         }
+
 
 
         #region IDVerification Page
@@ -2433,6 +2442,7 @@ namespace Nooch.Web.Controllers
         #endregion IDVerification Page
 
 
+
         #region MakePayment Page
 
         /// <summary>
@@ -2441,39 +2451,46 @@ namespace Nooch.Web.Controllers
         /// <returns></returns>
         public ActionResult makePayment()
         {
-            HiddenField hkf = new HiddenField();
+            makePaymentPg res = new makePaymentPg();
+            res.classForPinButton = "hidden";
+            res.classForForm = "";
+
             try
             {
                 if (!String.IsNullOrEmpty(Request.QueryString["from"]))
                 {
-                    if (Request.QueryString["from"] == "rentscene")
+                    if (Request.QueryString["from"].IndexOf("rentscene") > -1)
                     {
                         //Logger.Info("Make Payment CodeBehind -> Page Initiated - Is for RENTSCENE");
-                        hkf.from = "rentscene";
+                        res.from = "rentscene";
                     }
                     else if (Request.QueryString["from"] == "appjaxx")
                     {
                         Logger.Info("Make Payment CodeBehind -> Page Initiated - Is for APPJAXX");
-                        hkf.from = "appjaxx";
+                        res.from = "appjaxx";
+
+                        // Only requiring the PIN for AppJaxx (for now), which is why the classForPinButton is 'hidden' by default but not classForForm
+                        res.classForForm = "hidden";
+                        res.classForPinButton = "";
                     }
                     else
                     {
-                        hkf.from = "nooch";
+                        res.from = "nooch";
                     }
                 }
                 else
                 {
                     // Set Nooch as the default
-                    hkf.from = "nooch";
+                    res.from = "nooch";
                 }
             }
             catch (Exception ex)
             {
-                hkf.errorId = "1";
+                res.errorId = "1";
                 Logger.Error("Make Payment CodeBehind -> page_load OUTER EXCEPTION - [Exception: " + ex.Message + "]");
             }
 
-            ViewData["OnLoadData"] = hkf;
+            ViewData["OnLoadData"] = res;
             return View();
         }
 
@@ -2848,7 +2865,37 @@ namespace Nooch.Web.Controllers
             return Json(res);
         }
 
+
+        /// <summary>
+        /// For checking the user's PIN before granting access to the MakePayment page.
+        /// </summary>
+        /// <param name="user"></param>
+        /// <param name="pin"></param>
+        /// <returns></returns>
+        public ActionResult checkUsersPin(string user, string pin)
+        {
+            Logger.Info("Make Payment Code Behind -> checkUsersPin Initiated - User: [" + user + "], PIN: [" + pin + "]");
+
+            genericResponse res = new genericResponse();
+            res.success = false;
+            res.msg = "Initial - code behind";
+
+            try
+            {
+                res = CommonHelper.CheckUserPin(user, pin);
+                Logger.Info("Make Payment Code Behind -> checkUsersPin SUCCESS! - Message: [" + res.msg + "]");
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Make Payment Code Behind -> checkUsersPin FAILED - User: [" + user + "], Exception: [" + ex.Message + "]");
+                res.msg = ex.Message;
+            }
+
+            return Json(res);
+        }
+
         #endregion MakePayment Page
+
 
 
         // Not complete code problem with JS file and GetPayeeDetails method
@@ -2966,6 +3013,7 @@ namespace Nooch.Web.Controllers
         #endregion PayAnyone Page
 
 
+
         /// <summary>
         /// When the /Activation page first loads (page is for verifying an email address).
         /// </summary>
@@ -3019,6 +3067,7 @@ namespace Nooch.Web.Controllers
 
             return View();
         }
+
 
 
         #region History Page
@@ -3271,6 +3320,7 @@ namespace Nooch.Web.Controllers
         #endregion History Page
 
 
+
         #region Micro-Deposit Verification Page
 
         // MemberId here is plane memberId =- non encrypted
@@ -3332,19 +3382,28 @@ namespace Nooch.Web.Controllers
             SynapseV3VerifyNodeWithMicroDeposits_ServiceInput rpr = new SynapseV3VerifyNodeWithMicroDeposits_ServiceInput();
             rpr.success = false;
 
-            string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-            string serviceMethod = "/GetMemberInfoForMicroDepositPage?memberId=" + memberId;
-
-            SynapseV3VerifyNodeWithMicroDeposits_ServiceInput details = ResponseConverter<SynapseV3VerifyNodeWithMicroDeposits_ServiceInput>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
-
-            if (details == null)
+            try
             {
-                Logger.Error("MicroDepositsVerification CodeBehind -> GetTransDetails FAILED - Transaction Not Found - TransactionId: [" + memberId + "]");
-                rpr.errorMsg = "Unable to find bank record";
+                string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+                string serviceMethod = "/GetMemberInfoForMicroDepositPage?memberId=" + memberId;
+
+                SynapseV3VerifyNodeWithMicroDeposits_ServiceInput details = ResponseConverter<SynapseV3VerifyNodeWithMicroDeposits_ServiceInput>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+
+                if (details == null)
+                {
+                    Logger.Error("MicroDepositsVerification Code Behind -> GetTransDetails FAILED - Transaction Not Found - TransactionId: [" + memberId + "]");
+                    rpr.errorMsg = "Unable to find bank record";
+                }
+                else
+                {
+                    rpr = details;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                rpr = details;
+                Logger.Error("MicroDepositsVerification Code Behind -> GetTransDetails Failed - TransacationID: [" + memberId +
+                             "], Exception: [" + ex + "]");
+                rpr.errorMsg = "Exception: [" + ex.Message + "]";
             }
 
             return rpr;
@@ -3398,12 +3457,14 @@ namespace Nooch.Web.Controllers
             {
                 Logger.Error("NoochController -> MFALoginWithRoutingAndAccountNumber FAILED - [MemberID: " + memberid +
                              "], [Exception: " + ex + "]");
+                res.ERROR_MSG = ex.Message;
             }
 
             return Json(res);
         }
 
         #endregion Micro-Deposit Verification Page
+
 
 
         public ActionResult EncryptDecrypt()

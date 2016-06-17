@@ -7,6 +7,9 @@ var amount, name, email, memo, pin, ipVal, userType;
 
 var existNAME, existMEMID;
 
+var askForPin = false;
+var pinVerified = false;
+
 $(document).ready(function ()
 {
     var isSmScrn = false;
@@ -28,21 +31,28 @@ $(document).ready(function ()
     }
     else if (FROM == "appjaxx" || FROM == "josh")
     {
-		$('.navbar img').attr('src', '../Assets/Images/appjaxx-nav.png');
+        $('.navbar img').attr('src', '../Assets/Images/appjaxx-nav.png');
+        askForPin = true;
 	}
     else
     {
         $('.navbar img').attr('src', '../Assets/Images/nooch-logo2.svg');
     }
 
-    $('#amount').mask("#,##0.00", { reverse: true });
-
-    setTimeout(function ()
+    if (askForPin)
     {
-        $('#amount').focus();
-    }, 200)
+        showPinPrompt();
+    }
+    else {
+        setTimeout(function ()
+        {
+            $('#amount').focus();
+        }, 200)
+    }
 
     //console.log(ipusr);
+
+    $('#amount').mask("#,##0.00", { reverse: true });
 
     $('[data-toggle="popover"]').popover();
 
@@ -98,6 +108,7 @@ function formatAmount()
 		updateValidationUi("amount", false);
 	}
 }
+
 
 function checkFormData()
 {
@@ -165,8 +176,14 @@ function checkFormData()
     return;
 }
 
+
 function submitPayment()
 {
+    if (askForPin && !pinVerified)
+    {
+        return;
+    }
+
     var transType = $('input[name="type"]:checked').val();
     isRequest = transType == "send" ? false : true;
 
@@ -801,6 +818,137 @@ function showErrorAlert(errorNum)
     });
 }
 
+
+function showPinPrompt(type)
+{
+    var title = type == "incorrect" ? "Incorrect PIN" : "Hola Josh";
+
+    swal({
+        title: title,
+        text: "Please enter your PIN to access this page",
+        type: "input",
+        inputType: "password",
+        inputPlaceholder: "ENTER PIN",
+        allowEscapeKey: false,
+        showCancelButton: false,
+        confirmButtonColor: "#3fabe1",
+        confirmButtonText: "Ok",
+        customClass: "pinInput",
+        closeOnConfirm: false
+    }, function (inputTxt)
+    {
+        console.log("Entered Text: [" + inputTxt + "]");
+
+        if (inputTxt === false) return false;
+
+        if (inputTxt === "") {
+            swal.showInputError("Please enter the PIN sent to your phone.");
+            return false
+        }
+        if (inputTxt.length < 4) {
+            swal.showInputError("Double check you entered the entire PIN!");
+            return false
+        }
+
+        swal.close();
+
+        submitPin(inputTxt.trim())
+    });
+}
+
+function submitPin(pin)
+{
+    console.log("submitPin fired - PIN [" + pin + "]");
+
+    // ADD THE LOADING BOX
+    $.blockUI({
+        message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Submitting PIN...</span>',
+        css: {
+            border: 'none',
+            padding: '26px 8px 20px',
+            backgroundColor: '#000',
+            '-webkit-border-radius': '15px',
+            '-moz-border-radius': '15px',
+            'border-radius': '15px',
+            opacity: '.75',
+            'z-index': '99999',
+            margin: '0 auto',
+            color: '#fff'
+        }
+    });
+
+    $.ajax({
+        type: "POST",
+        url: "checkUsersPin",
+        data: "{ 'user':'" + FROM +
+              "', 'pin':'" + pin + "'}",
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        async: "true",
+        cache: "false",
+        success: function (result)
+        {
+            console.log("SUCCESS -> checkUsersPin result is... [next line]");
+            console.log(result);
+
+            if (result.success == true)
+            {
+                console.log("SubmitPIN: Success!");
+
+                // THEN DISPLAY SUCCESS ALERT...
+                swal({
+                    title: "Great Success",
+                    text: "Your PIN has been confirmed.",
+                    type: "success",
+                    showCancelButton: false,
+                    confirmButtonColor: "#3fabe1",
+                    confirmButtonText: "Ok",
+                    closeOnConfirm: true,
+                    customClass: "idVerSuccessAlert",
+                    timer: 2000
+                }, function ()
+                {
+                    pinVerified = true;
+
+                    $('#pinBtnWrap').addClass('hidden');
+                    $('#paymentForm').removeClass('hidden');
+                });
+            }
+            else if (result.msg != null)
+            {
+                console.log(result.msg);
+
+                if (result.msg.indexOf("Incorrect") > -1) {
+                    showPinPrompt("incorrect");
+                }
+                else if (resultReason.indexOf("User not found") > -1) {
+                    console.log("Error: missing critical data");
+                    showErrorAlert('2');
+                }
+                else {
+                    showErrorAlert('2');
+                }
+            }
+            else {
+                showErrorAlert('2');
+            }
+            
+        },
+        Error: function (x, e)
+        {
+            // Hide the Loading Block
+            $('#idWizContainer').unblock();
+
+            console.log("Submit PIN ERROR --> 'x', then 'e' is... ");
+            console.log(x);
+            console.log(e);
+
+            showErrorAlert('3');
+        }
+    });
+}
+
+$(document).ajaxStop($.unblockUI);
 
 function changeFavicon(src) {
   var link = document.createElement('link'),
