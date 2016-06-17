@@ -2479,8 +2479,7 @@ namespace Nooch.Web.Controllers
 
 
         /// <summary>
-        /// For Submitting a payment from the MakePayment browser page.
-        /// Currently only used for making Rent Scene requests - eventually want to add ability to send a transfer as well.
+        /// For Submitting a payment or request from the MakePayment browser page.
         /// </summary>
         /// <param name="from"></param>
         /// <param name="isRequest"></param>
@@ -2575,7 +2574,7 @@ namespace Nooch.Web.Controllers
 
                 if (isRequest)
                 {
-                    serviceMethod = "/RequestMoneyForRentScene?from=" + from +
+                    serviceMethod = "RequestMoneyForRentScene?from=" + from +
                                                              "&name=" + name +
                                                              "&email=" + email + "&amount=" + amount +
                                                              "&memo=" + memo + "&pin=" + pin +
@@ -2625,27 +2624,25 @@ namespace Nooch.Web.Controllers
 
                     var scriptSerializer = new JavaScriptSerializer();
 
-                    serviceMethod = "/TransferMoneyToNonNoochUserUsingSynapse?accessToken=" + accessToken + "&inviteType=email&receiverEmailId=" + email;
+                    serviceMethod = "TransferMoneyToNonNoochUserUsingSynapse?accessToken=" + accessToken + "&inviteType=email&receiverEmailId=" + email;
                     json = scriptSerializer.Serialize(transactionDto);
 
+                    // CC (6/17/16): Transfer service just returns a String Result, different from the Request
+                    //               service.  We should eventually update to both use the same class.
                     StringResult sr = ResponseConverter<StringResult>.CallServicePostMethod(String.Concat(serviceUrl, serviceMethod), json);
-
-                    if (sr.Result.Contains("successfully"))
-                    {
-                        response.success = true;
-                        response.msg = sr.Result;
-                    }
+                    response.msg = sr.Result;
+                    response.success = sr.Result.Contains("successfully") ? true : false;
                 }
 
                 string urlToUse = String.Concat(serviceUrl, serviceMethod);
 
-                Logger.Info("Make Payment Code-Behind -> submitPayment - URL To Query: [" + urlToUse + "]");
+                Logger.Info("Make Payment Code Behind -> submitPayment - URL To Query: [" + urlToUse + "]");
 
                 if (response != null)
                 {
                     res = response;
 
-                    Logger.Info("Make Payment Code-Behind -> submitPayment RESULT.Success: [" + response.success + "], RESULT.Msg: [" + response.msg + "]");
+                    Logger.Info("Make Payment Code Behind -> submitPayment RESULT.Success: [" + response.success + "], RESULT.Msg: [" + response.msg + "]");
 
                     #region Logging For Debugging
 
@@ -2675,11 +2672,12 @@ namespace Nooch.Web.Controllers
                 else
                 {
                     res.msg = "Unknown server error - Server's response was null.";
+                    Logger.Error("Make Payment Code Behind -> submitPayment FAILED - " + res.msg + "]");
                 }
             }
             catch (Exception ex)
             {
-                Logger.Error("Make Payment Code-Behind -> submitPayment FAILED - email: [" + email + "], Exception: [" + ex.Message + "]");
+                Logger.Error("Make Payment Code Behind -> submitPayment FAILED - email: [" + email + "], Exception: [" + ex.Message + "]");
                 res.msg = "Code-behind exception during submitPayment.";
             }
 
@@ -3035,7 +3033,6 @@ namespace Nooch.Web.Controllers
         {
             TransactionsPageData res = new TransactionsPageData();
             res.isSuccess = false;
-            string memberId = string.Empty;
 
             if (Request.QueryString["memId"] == null && Request.QueryString["user"] == null)
             {
@@ -3043,23 +3040,19 @@ namespace Nooch.Web.Controllers
             }
             else
             {
-                if (!String.IsNullOrEmpty(memId))
-                {
-                    memberId = Request.QueryString["memId"];
-                }
-                else if (!String.IsNullOrEmpty(user))
+                if (!String.IsNullOrEmpty(user))
                 {
                     if (user.ToLower() == "appjaxx")
-                        memberId = "8b4b4983-f022-4289-ba6e-48d5affb5484";
+                        memId = "8b4b4983-f022-4289-ba6e-48d5affb5484";
                     else if (user.ToLower() == "rentscene")
-                        memberId = "852987e8-d5fe-47e7-a00b-58a80dd15b49";
+                        memId = "852987e8-d5fe-47e7-a00b-58a80dd15b49";
                     else if (user == "cliff")
-                        memberId = "b3a6cf7b-561f-4105-99e4-406a215ccf60";
+                        memId = "b3a6cf7b-561f-4105-99e4-406a215ccf60";
                 }
 
-                res.memId = memberId;
+                res.memId = memId;
 
-                Logger.Info("History CodeBehind -> Page_load Initiated - [MemberID: " + memId + "]");
+                Logger.Info("History CodeBehind -> Page_load Initiated - MemberID: [" + memId + "]");
 
                 List<TransactionClass> Transactions = new List<TransactionClass>();
 
@@ -3070,7 +3063,7 @@ namespace Nooch.Web.Controllers
                     int totalRecordsCount = 0;
 
                     TransactionsDataAccess tda = new TransactionsDataAccess();
-                    var transactionList = tda.GetTransactionsList(memberId, listType, 100, 1, "", out totalRecordsCount);
+                    var transactionList = tda.GetTransactionsList(memId, listType, 100, 1, "", out totalRecordsCount);
 
                     if (transactionList != null && transactionList.Count > 0)
                     {
@@ -3088,7 +3081,7 @@ namespace Nooch.Web.Controllers
                                 {
                                     TransactionClass obj = new TransactionClass();
 
-                                    //obj.TransactionId = trans.TransactionTrackingId;
+                                    obj.TransactionId = trans.TransactionId;
                                     obj.TransactionTrackingId = trans.TransactionTrackingId;
                                     obj.TransactionType = CommonHelper.GetDecryptedData(trans.TransactionType);
 
@@ -3215,7 +3208,7 @@ namespace Nooch.Web.Controllers
                             catch (Exception ex)
                             {
                                 Logger.Error("History CodeBehind - ERROR - Inner Exception during loop through all transactions - " +
-                                             "MemberID: [" + memberId + "], TransID: [" + trans.TransactionId +
+                                             "MemberID: [" + memId + "], TransID: [" + trans.TransactionId +
                                              "], Amount: [" + trans.Amount.ToString("n2") + "], Exception: [" + ex.Message + "]");
                                 continue;
                             }
@@ -3233,7 +3226,7 @@ namespace Nooch.Web.Controllers
                 }
 
                 // Now get the user's Name
-                var memberObj = CommonHelper.GetMemberDetails(memberId);
+                var memberObj = CommonHelper.GetMemberDetails(memId);
                 if (memberObj != null && !String.IsNullOrEmpty(memberObj.FirstName))
                 {
                     res.usersName = user == "rentscene" ? "Rent Scene" : CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName));
@@ -3265,8 +3258,7 @@ namespace Nooch.Web.Controllers
             try
             {
                 var userType = input.UserType == "new" ? "U6De3haw2r4mSgweNpdgXQ==" : "mx5bTcAYyiOf9I5Py9TiLw==";
-                ResultCancelRequest cancelResult = CancelMoneyRequest(input.TransId, input.memberId, userType);
-                res = cancelResult;
+                res = CancelMoneyRequest(input.TransId, input.memberId, userType);
             }
             catch (Exception ex)
             {

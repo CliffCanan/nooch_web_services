@@ -3152,7 +3152,8 @@ namespace Nooch.API.Controllers
 
                             if (addBankRespFromSynapse["nodes"][0]["info"] != null)
                             {
-                                // First mark all existing banks for this user as inactive
+                                #region Mark all existing banks as inactive
+
                                 try
                                 {
                                     var existingBanks = _dbContext.SynapseBanksOfMembers.Where(bank => bank.MemberId.Value.Equals(id) &&
@@ -3169,6 +3170,8 @@ namespace Nooch.API.Controllers
                                     Logger.Error("Service Cntrlr -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber - ERROR marking existing banks as not default - " +
                                                  "Exception: [" + ex.Message + "]");
                                 }
+
+                                #endregion Mark all existing banks as inactive
 
                                 JToken info = addBankRespFromSynapse["nodes"][0]["info"];
 
@@ -3210,6 +3213,49 @@ namespace Nooch.API.Controllers
                                 Logger.Info("Service Controller -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber SUCCESS - Added record to SynapseBanksOfMembers Table - [UserName: " + CommonHelper.GetDecryptedData(noochMember.UserName) + "]");
 
 
+                                #region Send Initial Micro-Deposit Email
+
+                                _dbContext.Entry(sbom).Reload();
+
+                                var firstName = CommonHelper.GetDecryptedData(noochMember.FirstName);
+                                var lastName = CommonHelper.GetDecryptedData(noochMember.LastName);
+                                var accountNum = "**** - " + account_num.Substring(account_num.Length - 4);
+
+                                var templateToUse = noochMember.isRentScene == true ? "MicroDepositNotification" : "MicroDepositNotification_RentScene";
+
+                                var tokens = new Dictionary<string, string>
+	                                        {
+                                                {Constants.PLACEHOLDER_FIRST_NAME, firstName},
+	                                            {Constants.PLACEHOLDER_FRIEND_FIRST_NAME, firstName + " " + lastName},
+                                                {"$BankName$", bankNickName},
+	                                            {"$BankRouting$", routing_num},
+	                                            {"$BankAccountNum$", accountNum},
+                                                {"$BankType$", accounttype},
+	                                            {"$BankClass$", accountclass},
+                                                {"$DateAdded$", DateTime.Now.ToString("MMM dd, yyyy")}
+	                                        };
+
+                                string fromAddress = Utility.GetValueFromConfig("transfersMail");
+                                var toAddress = CommonHelper.GetDecryptedData(noochMember.UserName);
+
+                                try
+                                {
+                                    string subject = "";
+
+                                    Utility.SendEmail(templateToUse, fromAddress, toAddress, null,
+                                                      subject, null, tokens, null, null, null);
+
+                                    Logger.Info("Service Cntrlr -> SynapseV3 AddNodeWithAccountNumberAndRoutingNumber - [" + templateToUse + "] Email sent to [" +
+                                                 toAddress + "] successfully");
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.Error("Service Cntrlr -> SynapseV3 AddNodeWithAccountNumberAndRoutingNumber -> EMAIL FAILED: " +
+                                                 "[" + templateToUse + "] Email NOT sent to [" + toAddress + "], [Exception: " + ex + "]");
+                                }
+
+                                #endregion Send Initial Micro-Deposit Email
+
                                 #region Scheduling Micro-Deposit Reminder Email
 
                                 try
@@ -3230,7 +3276,12 @@ namespace Nooch.API.Controllers
                                         delayToUse = TimeSpan.FromDays(4);
                                     }
 
-                                    BackgroundJob.Schedule(() => CommonHelper.SendMincroDepositsVerificationReminderEmail(sbom.MemberId.ToString(), sbom.Id.ToString(), Convert.ToBoolean(noochMember.isRentScene)), delayToUse);
+                                    var x = BackgroundJob.Schedule(() => CommonHelper.SendMincroDepositsVerificationReminderEmail(sbom.MemberId.ToString(), sbom.Id.ToString(), Convert.ToBoolean(noochMember.isRentScene)), delayToUse);
+                                    if (x != null)
+                                    {
+                                        Logger.Info("Service Cntrlr -> SynapseV3 AddNodeWithAccountNumberAndRoutingNumber - Scheduled Micro Deposit Reminder email in Background - [" +
+                                                    "] DelayToUser: [" + delayToUse.ToString() + "]");
+                                    }
                                 }
                                 catch (Exception ex)
                                 {
@@ -5700,25 +5751,28 @@ namespace Nooch.API.Controllers
         {
             if (CommonHelper.IsValidRequest(accessToken, transactionInput.MemberId))
             {
+                StringResult res = new StringResult();
                 string trnsactionId = string.Empty;
+
                 try
                 {
                     var transactionDataAccess = new TransactionsDataAccess();
                     TransactionEntity transactionEntity = GetTransactionEntity(transactionInput);
 
-                    return new StringResult { Result = transactionDataAccess.TransferMoneyToNonNoochUserUsingSynapse(inviteType, receiverEmailId, transactionEntity) };
+                    res.Result = transactionDataAccess.TransferMoneyToNonNoochUserUsingSynapse(inviteType, receiverEmailId, transactionEntity);
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service layer -> TransferMoneyToNonNoochUserUsingSynapse FAILED. [Exception: " + ex + "]");
-
+                    Logger.Error("Service Cntrlr -> TransferMoneyToNonNoochUserUsingSynapse FAILED - Exception: [" + ex + "]");
+                    res.Result = ex.Message;
                 }
-                return new StringResult();
+
+                return res;
             }
             else
             {
-                Logger.Error("Service Layer -> TransferMoneyToNonNoochUserUsingSynapse FAILED. AccessToken not found or invalid - " +
-                                       "[MemberID: " + transactionInput.MemberId + "], [Receiver Email: " + receiverEmailId + "]");
+                Logger.Error("Service Cntrlr -> TransferMoneyToNonNoochUserUsingSynapse FAILED. AccessToken not found or invalid - " +
+                             "[MemberID: " + transactionInput.MemberId + "], [Receiver Email: " + receiverEmailId + "]");
                 throw new Exception("Invalid OAuth 2 Access");
             }
         }

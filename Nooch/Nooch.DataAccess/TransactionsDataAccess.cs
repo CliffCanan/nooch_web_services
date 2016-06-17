@@ -4672,50 +4672,54 @@ namespace Nooch.DataAccess
                         }
                     }
 
-                    var tokens = new Dictionary<string, string>
-					    {
-						    {Constants.PLACEHOLDER_FIRST_NAME, RequesterFirstName},
-						    {Constants.PLACEHOLDER_NEWUSER, recipientsEmail},
-						    {Constants.PLACEHOLDER_TRANSFER_AMOUNT, s32[0].ToString()},
-						    {Constants.PLACEHLODER_CENTS, s32[1].ToString()},
-			    		    {Constants.PLACEHOLDER_OTHER_LINK, cancelLink},
-						    {Constants.MEMO, memo}
-					     };
+                    if (!isForRentScene)
+                    {
+                        try
+                        {
+                            var tokens = new Dictionary<string, string>
+					        {
+						        {Constants.PLACEHOLDER_FIRST_NAME, RequesterFirstName},
+						        {Constants.PLACEHOLDER_NEWUSER, recipientsEmail},
+						        {Constants.PLACEHOLDER_TRANSFER_AMOUNT, s32[0].ToString()},
+						        {Constants.PLACEHLODER_CENTS, s32[1].ToString()},
+						        {Constants.PLACEHOLDER_OTHER_LINK, cancelLink},
+						        {Constants.MEMO, memo}
+					         };
+
+                            Utility.SendEmail(templateToUse_Sender, fromAddress, RequesterEmail, null,
+                                              "Your payment request to " + recipientsEmail + " is pending",
+                                              null, tokens, null, null, null);
+
+                            Logger.Info("TDA -> RequestMoneyToNonNoochUserUsingSynapse -> [" + templateToUse_Sender + "] email sent to [" + RequesterEmail + "] successfully.");
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Error("TDA -> RequestMoneyToNonNoochUserUsingSynapse -> [" + templateToUse_Sender + "] email NOT sent to [" + RequesterEmail +
+                                         "], [Exception: " + ex + "]");
+                        }
+                    }
 
                     try
                     {
-                        Utility.SendEmail(templateToUse_Sender, fromAddress, RequesterEmail, null,
-                                          "Your payment request to " + recipientsEmail + " is pending",
-                                          null, tokens, null, null, null);
+                        // Send email to Request Receiver -- sending UserType, TransType as encrypted along with request
+                        // In this case UserType would = 'New'
+                        // TransType would = 'Request'
+                        // and link source would = 'Email'
+                        cancelLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
+                                                   "Nooch/RejectMoney?TransactionId=" + requestId +
+                                                   "&UserType=U6De3haw2r4mSgweNpdgXQ==" +
+                                                   "&TransType=T3EMY1WWZ9IscHIj3dbcNw==");
 
-                        Logger.Info("TDA -> RequestMoneyToNonNoochUserUsingSynapse -> [" + templateToUse_Sender + "] email sent to [" + RequesterEmail + "] successfully.");
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.Error("TDA -> RequestMoneyToNonNoochUserUsingSynapse -> [" + templateToUse_Sender + "] email NOT sent to [" + RequesterEmail +
-                                     "], [Exception: " + ex + "]");
-                    }
+                        string paylink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
+                                                       "Nooch/PayRequest?TransactionId=" + requestId +
+                                                       "&UserType=U6De3haw2r4mSgweNpdgXQ=="); // UserType = "New"
 
+                        if (isForRentScene)
+                        {
+                            paylink = paylink + "&rs=1";
+                        }
 
-                    // Send email to Request Receiver -- sending UserType, TransType as encrypted along with request
-                    // In this case UserType would = 'New'
-                    // TransType would = 'Request'
-                    // and link source would = 'Email'
-                    cancelLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
-                                               "Nooch/RejectMoney?TransactionId=" + requestId +
-                                               "&UserType=U6De3haw2r4mSgweNpdgXQ==" +
-                                               "&TransType=T3EMY1WWZ9IscHIj3dbcNw==");
-
-                    string paylink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
-                                                   "Nooch/PayRequest?TransactionId=" + requestId +
-                                                   "&UserType=U6De3haw2r4mSgweNpdgXQ=="); // UserType = "New"
-
-                    if (isForRentScene)
-                    {
-                        paylink = paylink + "&rs=1";
-                    }
-
-                    var tokens2 = new Dictionary<string, string>
+                        var tokens2 = new Dictionary<string, string>
                         {
 					        {Constants.PLACEHOLDER_FIRST_NAME, RequesterFirstName},
 					        {Constants.PLACEHOLDER_NEWUSER, recipientsEmail},
@@ -4727,8 +4731,6 @@ namespace Nooch.DataAccess
 					        {Constants.PLACEHOLDER_PAY_LINK, paylink}
 					    };
 
-                    try
-                    {
                         string subject = isForRentScene
                                          ? "Payment Request from Rent Scene"
                                          : RequesterFirstName + " " + RequesterLastName + " requested " + "$" + s22.ToString() + " with Nooch";

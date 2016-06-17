@@ -199,7 +199,7 @@ function submitPayment()
     amount = $('#amount').val();
     name = $('#name').val();
     email = $('#email').val().trim();
-    memo = $('#memo').val().trim();
+    memo = $('#memo').val().trim().replace("'","%27");
     pin = "";
     ipVal = ipusr;
     userType = $('input[name="userType"]:checked').val();
@@ -418,6 +418,9 @@ function submitPayment()
                     }
                     else if (resultReason.indexOf("Missing") > -1) {
                         showErrorAlert('5');
+                    }
+                    else if (resultReason.indexOf("Sender does not have any bank") > -1) {
+                        showErrorAlert('6');
                     }
                     else {
                         showErrorAlert('2');
@@ -738,6 +741,12 @@ function showErrorAlert(errorNum)
     {
         alertTitle = "Oh No - Error!";
         alertBodyText = "Looks like we were missing some required information. &nbsp;Please refresh this page to try again and if you continue to see this message, contact <span style='font-weight:600;'>Nooch Support</span>:" +
+                        "<a href='mailto:support@nooch.com' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>support@nooch.com</a>";
+    }
+    else if (errorNum == '6') // Sender has no active bank account linked
+    {
+        alertTitle = "Missing Funding Source";
+        alertBodyText = "Looks like your don't have a funding source set up yet. &nbsp;Please contact <span style='font-weight:600;'>Nooch Support</span>:" +
                         "<a href='mailto:support@nooch.com' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>support@nooch.com</a>";
     }
     else if (errorNum == '20') // EMAIL came back as already registered with Nooch.

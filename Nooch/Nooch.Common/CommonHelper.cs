@@ -4490,13 +4490,13 @@ namespace Nooch.Common
                         string userLastName = UppercaseFirst(GetDecryptedData(memberObj.LastName));
 
                         // Bank Account Details
-                        string accountNumString = GetDecryptedData(bankAccountDetails.account_number_string);
-                        string bankNameString = GetDecryptedData(bankAccountDetails.bank_name);
-                        string nameOnAccountString = GetDecryptedData(bankAccountDetails.name_on_account);
-                        string accountNickNameString = GetDecryptedData(bankAccountDetails.nickname);
-                        string routingNumString = GetDecryptedData(bankAccountDetails.routing_number_string);
+                        string accountNum = GetDecryptedData(bankAccountDetails.account_number_string);
+                        accountNum = "**** - " + accountNum.Substring(accountNum.Length - 4);
+                        string bankName = GetDecryptedData(bankAccountDetails.bank_name);
+                        string nameOnAccount = GetDecryptedData(bankAccountDetails.name_on_account);
+                        string accountNickName = GetDecryptedData(bankAccountDetails.nickname);
+                        string routingNum = GetDecryptedData(bankAccountDetails.routing_number_string);
 
-                        // Verification link
                         string verifyLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
                             "Nooch/MicroDepositsVerification?mid=" + MemberId + "&NodeId=" + bankAccountDetails.Id + "&IsRs=" + memberObj.isRentScene.ToString());
 
@@ -4504,10 +4504,10 @@ namespace Nooch.Common
                                 {
 								    {Constants.PLACEHOLDER_FIRST_NAME, userFirstName },
 									{Constants.PLACEHOLDER_LAST_NAME, userLastName },
-									{Constants.PLACEHOLDER_BANK_ACCOUNT_NUMBER, accountNumString},
-									{Constants.PLACEHOLDER_BANK_NAME, bankNameString},
-									{Constants.MEMO, accountNickNameString},
-                                    {Constants.PLACEHOLDER_EXISTINGUSER, routingNumString},
+									{Constants.PLACEHOLDER_BANK_ACCOUNT_NUMBER, accountNum},
+									{Constants.PLACEHOLDER_BANK_NAME, bankName},
+									{Constants.MEMO, accountNickName},
+                                    {Constants.PLACEHOLDER_EXISTINGUSER, routingNum},
                                     {Constants.PLACEHOLDER_PAY_LINK, verifyLink}
 								};
 
