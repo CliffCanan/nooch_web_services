@@ -42,12 +42,9 @@ $(document).ready(function () {
         $('.landingHeaderLogo').attr('href', 'http://www.rentscene.com');
 
         var w = isSmScrn ? '90px' : '130px'
-        if (isSmScrn) {
-            $('.landingHeaderLogo img').attr('src', 'https://noochme.com/noochweb/Assets/Images/rentscene.png').css('width', w);
-        }
-        else {
-            $('.landingHeaderLogo img').attr('src', 'https://noochme.com/noochweb/Assets/Images/rentscene.png').css('width', w);
-        }
+        $('.landingHeaderLogo img').attr('src', 'https://noochme.com/noochweb/Assets/Images/rentscene.png').css('width', w);
+
+		changeFavicon('../Assets/favicon2.ico');
     }
 
     if (TYPE == "personal" || TYPE == "2")
@@ -98,7 +95,7 @@ $(document).ready(function () {
                     new Fingerprint2().get(function (result)
                     {
                         fingprint = result;
-                        //console.log(fingprint);
+                        console.log(fingprint);
                     });
 
                     setTimeout(function ()
@@ -352,7 +349,7 @@ function runIdWizard() {
                                     indicatorNew: '',
                                 },
                                 maxFileCount: 1,
-                                maxFileSize: 750,
+                                maxFileSize: 3000,
                                 msgSizeTooLarge: "<strong>'{name}' ({size} KB)</strong> is a bit too large! Max allowed file size is <strong>{maxSize} KB</strong>. &nbsp;Please try a smaller picture!",
                                 showCaption: false,
                                 showUpload: false,
@@ -1285,6 +1282,19 @@ function ssnWhy()
         confirmButtonText: "Ok",
         html: true
     });
+}
+
+
+function changeFavicon(src) {
+  var link = document.createElement('link'),
+   oldLink = document.getElementById('dynamic-favicon');
+  link.id = 'dynamic-favicon';
+  link.rel = 'shortcut icon';
+  link.href = src;
+  if (oldLink) {
+    document.head.removeChild(oldLink);
+  }
+  document.head.appendChild(link);
 }
 
 // -------------------

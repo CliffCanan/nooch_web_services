@@ -894,7 +894,7 @@ function submitPin(pin) {
     console.log("SubmitPIN Payload -> {memId: " + memId + ", PIN: " + pin + "}");
 
     // ADD THE LOADING BOX
-    $('#idWizContainer').block({
+    $.blockUI({
         message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Submitting PIN...</span>',
         css: {
             border: 'none',
@@ -926,7 +926,7 @@ function submitPin(pin) {
             resultReason = result.msg;
 
             // Hide the Loading Block
-            $('#idWizContainer').unblock();
+            $.unblockUI();
 
             if (result.success == true) {
                 console.log("SubmitPIN: Success!");
@@ -992,7 +992,7 @@ function submitPin(pin) {
         },
         Error: function (x, e) {
             // Hide the Loading Block
-            $('#idWizContainer').unblock();
+            $.unblockUI();
 
             console.log("Submit PIN ERROR --> 'x', then 'e' is... ");
             console.log(x);

@@ -2925,7 +2925,7 @@ namespace Nooch.DataAccess
                                                  nodePermCheckRes.PermissionType + "] for [Sender_bank_node_id: " + sender_bank_node_id + "]";
                                     Logger.Error(error);
                                     CommonHelper.notifyCliffAboutError(error);
-                                    res.ErrorMessage = "Sender's bank has insufficient permissions [ " + nodePermCheckRes.PermissionType + "] to complete this payment (TDA - 3166)";
+                                    res.ErrorMessage = "Sender's bank has insufficient permission: [" + nodePermCheckRes.PermissionType + "] to complete this payment";
                                     return res;
                                 }
                             }

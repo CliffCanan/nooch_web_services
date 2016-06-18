@@ -1363,7 +1363,7 @@ div#pwFormShell #depositCreateAccount,
 #idVerWiz .content {
   min-height: 18em;
   height: 25em;
-  box-shadow: 0 8px 18px -9px rgba(32,33,34,.4);
+  box-shadow: 0 7px 18px -7px rgba(32,33,34,.35);
 }
 .wizard > .content { overflow: visible; }
 #idVerWiz .content .body { text-align:center; }
@@ -1517,12 +1517,23 @@ div#pwFormShell #depositCreateAccount,
     background-color: rgba(250,251,254,.95);
 }
 
-#idWizContainer > div {
-  background-color: #fff;
-  padding: 15px 25px;
-  border-radius: 35px;
+
+#idWizContainer {
+  width:96%;
+  max-width:690px;
+  margin: 15px auto;
 }
 
+#idWizContainer > div {
+  background-color: #fff;
+  padding: 5px;
+  border-radius: 20px;
+}
+
+#idVerWiz .well-sm { margin-bottom; 5px;}
+
+#idVerWiz dl {font-size: 15px;}
+#idVerWiz input {font-size: 15px;}
 
 .dl-horizontal .withIcon { 
     position: relative;
@@ -1793,11 +1804,19 @@ div#carousel ~ a:hover {
   top: -1px;
 }
 
+#nameInNavContainer h4 {
+	margin: -3px 0 0;
+    font-size: 14px;
+}
+
 #body-depositNew iframe { height: 710px; }
 
 
 @media only screen and (max-width: 350px) {
   #depositHeader { max-width: 314px; }
+  
+  #nameInNavContainer h4 { font-size: 13px !important;}
+
 }
 
 @media only screen and (max-width: 480px) {
@@ -2363,6 +2382,9 @@ h3.table-header > a > .glyphicon {
     top: 12px;
     width: 100%;
 }
+
+
+#idWizContainer dl { margin-bottom: 5px;}
 }
 
 .form-group-divider { padding: 10px 0 30px; }
@@ -2550,6 +2572,15 @@ form .table-header {
 #payreqInfo {position:relative;}
 
 .sweet-alert button { font-size: 17px; }
+
+#nameInNavContainer h4 {
+	margin: 0;
+    font-size: 15px;
+}
+#idWizContainer > div {
+  padding: 15px 20px;
+  border-radius: 35px;
+}
 }
 
 
@@ -2577,7 +2608,7 @@ form .table-header {
 	  padding: 4px 2px;
       text-align: center;
   }
-  #idVerWiz .well-sm { padding: 5px 3px; font-size: 14.5px; margin-bottom: 5px; }
+  #idVerWiz .well-sm { margin-bottom: 5px; }
   #idVerWiz .content { margin-top: 0; }
   .modal dl { margin-bottom: 0px; }
   .blockUI.blockElement { top: 110px !important; }
@@ -2748,6 +2779,10 @@ body#history .footer li a {color: #3fabe1;}
   font-size: 85%;
   margin-left: 10px;
   padding-left: 12px;
+}
+
+.disabled {
+  pointer-events: none !important;
 }
 
 /*==============================================

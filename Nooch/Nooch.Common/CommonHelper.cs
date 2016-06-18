@@ -483,7 +483,7 @@ namespace Nooch.Common
                 }
 
                 Member memberObj = GetMemberDetails(memId);
-                
+
                 if (memberObj != null)
                 {
                     var pinEnc = GetEncryptedData(pin);
@@ -4487,24 +4487,21 @@ namespace Nooch.Common
         {
             TransactionsStatusAtSynapse transactionsStatusAtSynapse = new TransactionsStatusAtSynapse();
 
+            try
             {
-                try
+                transactionsStatusAtSynapse = _dbContext.TransactionsStatusAtSynapses.OrderByDescending(m => m.Id).FirstOrDefault(m => m.Nooch_Transaction_Id == TransationId);
+                if (transactionsStatusAtSynapse != null)
                 {
-                    transactionsStatusAtSynapse = _dbContext.TransactionsStatusAtSynapses.OrderByDescending(m => m.Id).FirstOrDefault(m => m.Nooch_Transaction_Id == TransationId);
-                    if (transactionsStatusAtSynapse != null)
-                    {
-                        _dbContext.Entry(transactionsStatusAtSynapse).Reload();
-                        return transactionsStatusAtSynapse;
-                    }
+                    _dbContext.Entry(transactionsStatusAtSynapse).Reload();
+                    return transactionsStatusAtSynapse;
                 }
-                catch (Exception ex)
-                {
-                    Logger.Error("Common Helper -> getTransationDetailsAtSynapse FAILED - Exception: [" + ex.Message + "]");
-                }
-                return null;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Common Helper -> getTransationDetailsAtSynapse FAILED - Exception: [" + ex.Message + "]");
             }
 
-
+            return null;
         }
 
 
@@ -4515,7 +4512,7 @@ namespace Nooch.Common
                 StringBuilder completeEmailTxt = new StringBuilder();
                 string s = "<html><body><h2>Error Occurred</h2><p>The following error just occurred (at [" + DateTime.Now.ToString("MMMM dd, yyyy MM/dd/yy H:mm:ss") +
                             "]:<br/><br>" + bodyTxt +
-                           "<br/><br/><small>This email was generated automatically in [Common Helper -> notifyCliffAboutError</small></body></html>";
+                           "<br/><br/><small>This email was generated automatically in [Common Helper -> notifyCliffAboutError]</small></body></html>";
 
                 completeEmailTxt.Append(s);
 

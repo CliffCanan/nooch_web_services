@@ -3450,12 +3450,13 @@ namespace Nooch.DataAccess
                     // NEXT, ATTEMPT TO CREATE A SYNAPSE ACCOUNT FOR THIS USER
 
                     #region Notify Cliff About New User
+
                     try
                     {
                         string lastNameUnEncr = CommonHelper.GetDecryptedData(LastName);
 
-                        StringBuilder st = new StringBuilder("<br/><p><strong>This user's Nooch Account information is:</strong></p>" +
-                                              "<table border='1' style='border-collapse:collapse;'>" +
+                        StringBuilder st = new StringBuilder("<p><strong>This user's Nooch Account information is:</strong></p>" +
+                                              "<table border='1' cellspacing='5' style='border-collapse:collapse;'>" +
                                               "<tr><td><strong>MemberID:</strong></td><td>" + member.MemberId + "</td></tr>" +
                                               "<tr><td><strong>Nooch_ID:</strong></td><td>" + member.Nooch_ID + "</td></tr>" +
                                               "<tr><td><strong>Name:</strong></td><td>" + namearray[0] + " " + lastNameUnEncr + "</td></tr>" +
@@ -3474,8 +3475,8 @@ namespace Nooch.DataAccess
 
                         completeEmailTxt.Append(s);
 
-                        Utility.SendEmail(null, "admin-autonotify@nooch.com", "bankAdded@nooch.com", null,
-                                          "Nooch Alert: New User - " + namearray[0] + " " + lastNameUnEncr,
+                        Utility.SendEmail(null, "admin-autonotify@nooch.com", "newUser@nooch.com", null,
+                                          "Nooch Alert - NEW USER: " + namearray[0] + " " + lastNameUnEncr,
                                           null, null, null, null, completeEmailTxt.ToString());
                     }
                     catch (Exception ex)
