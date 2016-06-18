@@ -97,10 +97,11 @@ namespace Nooch.Web.Controllers
                 rcr.showPaymentInfo = false;
                 rcr.resultMsg = "This looks like an invalid transaction - sorry about that!  Please try again or contact Nooch support for more information.";
             }
+
             rcr.memberId = Request.QueryString["MemberId"].ToString();
             rcr.UserType = Request.QueryString["UserType"];
-            ViewData["OnLoaddata"] = rcr;
 
+            ViewData["OnLoaddata"] = rcr;
             return View();
         }
 
@@ -667,7 +668,7 @@ namespace Nooch.Web.Controllers
         public ActionResult SetDefaultBank(setDefaultBankInput input)
         {
             Logger.Info("**Add_Bank** CodeBehind -> SetDefaultBank Initiated - [MemberID: " + input.MemberId +
-                                   "], [Bank Name: " + input.BankName + "], [BankID: " + input.BankOId + "]");
+                        "], [Bank Name: " + input.BankName + "], [BankID: " + input.BankOId + "]");
 
             SynapseBankSetDefaultResult res = new SynapseBankSetDefaultResult();
 

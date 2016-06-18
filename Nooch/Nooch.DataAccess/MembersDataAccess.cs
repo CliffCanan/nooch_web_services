@@ -4726,43 +4726,47 @@ namespace Nooch.DataAccess
                                         // saving these banks ('nodes') in DB, later one of these banks will be set as default bank
                                         foreach (nodes v in allNodesParsedResult.nodes)
                                         {
-                                            Logger.Info("MDA -> SynapseV3MFABankVerify - Node [" + nodeCount + "], Bank: [" + v.info.bank_name +
-                                                        "], Name on Account: [" + v.info.name_on_account + "], Allowed: [" + v.allowed + "], Type: [" + v.info.type + "]");
-                                            nodeCount += 1;
-
-                                            SynapseBanksOfMember sbm = new SynapseBanksOfMember();
-
-                                            Guid memId = Utility.ConvertToGuid(MemberId);
-                                            sbm.MemberId = memId;
-                                            sbm.AddedOn = DateTime.Now;
-                                            sbm.bankAdddate = DateTime.Now.ToShortDateString();
-                                            sbm.IsDefault = false;
-                                            sbm.mfa_verifed = true;
-                                            sbm.IsAddedUsingRoutingNumber = false;
-
-                                            sbm.account_number_string = !String.IsNullOrEmpty(v.info.account_num) ? CommonHelper.GetEncryptedData(v.info.account_num) : null;
-                                            sbm.routing_number_string = !String.IsNullOrEmpty(v.info.routing_num) ? CommonHelper.GetEncryptedData(v.info.routing_num) : null;
-                                            sbm.bank_name = !String.IsNullOrEmpty(v.info.bank_name) ? CommonHelper.GetEncryptedData(v.info.bank_name) : null;
-                                            sbm.oid = CommonHelper.GetEncryptedData(v._id.oid.ToString());
-                                            sbm.name_on_account = !String.IsNullOrEmpty(v.info.name_on_account) ? CommonHelper.GetEncryptedData(v.info.name_on_account) : null;
-                                            sbm.nickname = !String.IsNullOrEmpty(v.info.nickname) ? CommonHelper.GetEncryptedData(v.info.nickname) : null;
-                                            sbm.allowed = v.allowed;
-                                            sbm.balance = v.info.balance.amount;
-                                            sbm.is_active = v.is_active;
-                                            sbm.type_bank = v.info.type;
-                                            sbm.type_synapse = v.type;
-                                            sbm.supp_id = v.extra.supp_id;
-
                                             try
                                             {
+                                                Logger.Info("MDA -> SynapseV3MFABankVerify - Node [" + nodeCount + "], Bank: [" + v.info.bank_name +
+                                                            "], Name on Account: [" + v.info.name_on_account +
+                                                            "], Allowed: [" + v.allowed +
+                                                            "], Type: [" + v.info.type +
+                                                            "], OID: [" + v._id.oid + "]");
+                                                nodeCount += 1;
+
+                                                SynapseBanksOfMember sbm = new SynapseBanksOfMember();
+
+                                                Guid memId = Utility.ConvertToGuid(MemberId);
+                                                sbm.MemberId = memId;
+                                                sbm.AddedOn = DateTime.Now;
+                                                sbm.bankAdddate = DateTime.Now.ToShortDateString();
+                                                sbm.IsDefault = false;
+                                                sbm.mfa_verifed = true;
+                                                sbm.IsAddedUsingRoutingNumber = false;
+                                                sbm.account_number_string = !String.IsNullOrEmpty(v.info.account_num) ? CommonHelper.GetEncryptedData(v.info.account_num) : null;
+                                                sbm.routing_number_string = !String.IsNullOrEmpty(v.info.routing_num) ? CommonHelper.GetEncryptedData(v.info.routing_num) : null;
+                                                sbm.bank_name = !String.IsNullOrEmpty(v.info.bank_name) ? CommonHelper.GetEncryptedData(v.info.bank_name) : null;
+                                                sbm.oid = CommonHelper.GetEncryptedData(v._id.oid.ToString());
+                                                sbm.name_on_account = !String.IsNullOrEmpty(v.info.name_on_account) ? CommonHelper.GetEncryptedData(v.info.name_on_account) : null;
+                                                sbm.nickname = !String.IsNullOrEmpty(v.info.nickname) ? CommonHelper.GetEncryptedData(v.info.nickname) : null;
+                                                sbm.allowed = v.allowed;
+                                                sbm.balance = v.info.balance.amount;
+                                                sbm.is_active = v.is_active;
+                                                sbm.type_bank = v.info.type;
+                                                sbm.type_synapse = v.type;
+                                                sbm.supp_id = v.extra.supp_id;
+
                                                 _dbContext.SynapseBanksOfMembers.Add(sbm);
                                                 _dbContext.SaveChanges();
                                                 _dbContext.Entry(sbm).Reload();
                                             }
                                             catch (Exception ex)
                                             {
-                                                Logger.Error("MDA -> SynapseV3MFABankVerify (No MFA Again) FAILED - Unable to update DB for: [" + MemberId +
-                                                             "], Exception: [" + ex + "]");
+                                                var error = "MDA -> SynapseV3MFABankVerify (No MFA Again) FAILED - Unable to update DB for: [" + MemberId +
+                                                             "], Exception: [" + ex + "]";
+                                                Logger.Error(error);
+                                                CommonHelper.notifyCliffAboutError(error);
                                                 res.errorMsg = "Error while saving this bank in DB - [" + ex.Message + "]";
                                             }
                                         }
@@ -4798,15 +4802,13 @@ namespace Nooch.DataAccess
                             Logger.Error("MDA -> SynapseV3MFABankVerify FAILED - HTTP ErrorCode: [" + errorCode.ToString() + "], WebException was: [" + we.Message + "]");
                             Logger.Error(jsonFromSynapse.ToString());
 
+                            CommonHelper.notifyCliffAboutError("MDA -> SynapseV3MFABankVerify FAILED - JSON from Synapse: [" + jsonFromSynapse.ToString() + "]");
+
                             var error_code = jsonFromSynapse["error_code"].ToString();
                             res.errorMsg = jsonFromSynapse["error"]["en"].ToString();
 
-                            if (!String.IsNullOrEmpty(error_code))
-                            {
-                                // Synapse Error could be:
-                                // "Incorrect verification information supplied"
-                                Logger.Error("MDA -> SynapseV3MFABankVerify FAILED - [Synapse Error Code: " + error_code + "]");
-                            }
+                            // Synapse Error could be:
+                            // "Incorrect verification information supplied"
                             if (!String.IsNullOrEmpty(res.errorMsg))
                             {
                                 Logger.Error("MDA -> SynapseV3MFABankVerify FAILED. Synapse Error Msg was: [" + res.errorMsg + "]");
@@ -4822,7 +4824,7 @@ namespace Nooch.DataAccess
                             }
                             else
                             {
-                                res.errorMsg = "Error in Synapse response - #4877";
+                                res.errorMsg = "Error in Synapse response - #4827";
                             }
 
                             #endregion MFA Bank Verify Error From Synapse

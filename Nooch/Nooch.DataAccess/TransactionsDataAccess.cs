@@ -265,12 +265,12 @@ namespace Nooch.DataAccess
                             else
                             {
                                 var tokens2 = new Dictionary<string, string>
-                            {
-                                {Constants.PLACEHOLDER_FIRST_NAME, recipientUserPhoneOrEmail},
-                                {Constants.PLACEHOLDER_LAST_NAME, requesterFirstName + " " + requesterLastName},
-                                {Constants.PLACEHOLDER_TRANSFER_AMOUNT, amount},
-                                {Constants.MEMO, memo}
-                            };
+                                {
+                                    {Constants.PLACEHOLDER_FIRST_NAME, recipientUserPhoneOrEmail},
+                                    {Constants.PLACEHOLDER_LAST_NAME, requesterFirstName + " " + requesterLastName},
+                                    {Constants.PLACEHOLDER_TRANSFER_AMOUNT, amount},
+                                    {Constants.MEMO, memo}
+                                };
 
                                 var toAddress2 = recipientUserPhoneOrEmail;
 
@@ -281,12 +281,12 @@ namespace Nooch.DataAccess
                                                       " cancelled a payment request to you", null, tokens2, null, null, null);
 
                                     Logger.Info("TDA -> CancelMoneyRequestForNonNoochUser - requestCancelledToRecipient email sent to [" +
-                                                toAddress + "] successfully.");
+                                                toAddress2 + "] successfully.");
                                 }
                                 catch (Exception ex)
                                 {
                                     Logger.Error("TDA -> CancelMoneyRequestForNonNoochUser - requestCancelledToRecipient email NOT sent to [" +
-                                                 toAddress + "], Exception: [" + ex + "]");
+                                                 toAddress2 + "], Exception: [" + ex + "]");
                                 }
                             }
                         }

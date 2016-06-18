@@ -8,7 +8,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Nooch | Cancel Request</title>
+    <title>Cancel Request | Nooch</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.6.0/css/font-awesome.min.css" />
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
@@ -16,7 +16,6 @@
     <link href="@Url.Content("~/Assets/Css/sweetalert-override.min.css")" rel="stylesheet" />
     <link href="@Url.Content("~/Assets/Css/tweaks.css")" rel="stylesheet" />
     <link rel="icon" href="../Assets/favicon.ico" />
-    <meta name="apple-itunes-app" content="app-id=917955306">
 </head>
 
 <body style="background-color: rgba(230, 231, 232, 0.8);" id="body-depositNew">
@@ -29,7 +28,6 @@
         <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
             <div class="clearfix">
                 <a class="landingHeaderLogo center-block" href="https://www.nooch.com/">
-
                     <img src="@Url.Content("~/Assets/Images/nooch-logo2.svg")" class="center-block" alt="Nooch Logo" />
                 </a>
             </div>
@@ -37,7 +35,7 @@
 
         @if (rcr.showPaymentInfo != false)
         {
-            <div class="depositComplete-TransDetails paymentInfo" id="paymentInfo" runat="server">
+            <div class="depositComplete-TransDetails paymentInfo" id="paymentInfo">
 
                 <div class="media">
 
@@ -61,39 +59,37 @@
             </div>
         }
 
-        <div id="iconCircleFA" class="floating white-text col-sm-8 col-sm-offset-2 p-5">
+        <div id="iconCircleFA" class="floating white-text col-sm-8 col-sm-offset-2 p-b-5">
             <span class="fa-stack fa-lg">
                 <i class="fa fa-circle fa-stack-1x"></i>
                 <i class="fa fa-times-circle fa-stack-1x fa-lg fa-inverse red-text"></i>
             </span>
         </div>
-        @if(rcr.initStatus == "pending")
+
+        @if (rcr.initStatus == "pending")
         {
-        <div id="iconCircleFA" class="floating white-text col-sm-8 col-sm-offset-2 p-5">
-            <button id="CancelBtn" type="button" onclick="CancelReq();" class="btn btn-lg btn-danger">Cancel</button>
-        </div>
+            <div class="col-xs-2 col-xs-offset-5">
+                <button id="CancelBtn" type="button" onclick="CancelReq();" class="btn btn-lg btn-danger btn-block">Cancel</button>
+            </div>
         }
 
         <br />
 
         <div class="emailConfHeader">
-            @if (rcr.success == true)
-            {
-                <div style="font-size: 110%">
-                    <label id="reslt1">Request Cancelled</label>
-                </div>
-            }
-            <div id="fromText">
-                @if (rcr.resultMsg != "")
-                {
-                    <label id="reslt">@rcr.resultMsg</label>
-                }
+
+            <div id="cancalledHdr" class="hidden" style="font-size: 110%">
+                <label id="reslt1">Request Cancelled</label>
             </div>
 
-            <div class="iphoneLogin hidden"><a href="nooch://" class="btn btn-default">Click here to login to Nooch</a></div>
+            <div id="fromText" class="hidden">
+                <label id="reslt">@rcr.resultMsg</label>
+            </div>
+
+            @*<div class="iphoneLogin hidden"><a href="nooch://" class="btn btn-default">Click here to login to Nooch</a></div>*@
+
         </div>
 
-        <div class="footer footer-landing" style="position:fixed; bottom:3%;">
+        <div class="footer footer-landing" style="position:fixed; bottom:1%;">
             <div>
                 <ul class="list-inline">
                     <li><a href="https://www.nooch.com/overview">About</a></li>
@@ -109,7 +105,7 @@
 
     </form>
 
-    <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="//code.jquery.com/jquery-1.12.4.min.js"></script>
     <script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
     <script src="../js/sweetalert.min.js"></script>
