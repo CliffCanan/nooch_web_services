@@ -406,7 +406,7 @@ namespace Nooch.API.Controllers
                     var memberEntity = CommonHelper.GetMemberDetails(memberId);
 
                     // Get Synapse Bank Account Info
-                    var synapseBank = CommonHelper.GetSynapseBankAccountDetails(memberId);
+                    var synapseBank = CommonHelper.GetSynapseBankDetails(memberId);
 
                     string accountstatus = "";
                     if (synapseBank != null)
@@ -2325,7 +2325,7 @@ namespace Nooch.API.Controllers
                 var memberEntity = CommonHelper.GetMemberDetails(memberId);
 
                 // Get Synapse Bank Account Info
-                var synapseBank = CommonHelper.GetSynapseBankAccountDetails(memberId);
+                var synapseBank = CommonHelper.GetSynapseBankDetails(memberId);
 
                 string accountstatus = "";
 
@@ -4353,7 +4353,7 @@ namespace Nooch.API.Controllers
             {
                 try
                 {
-                    var accountCollection = CommonHelper.GetSynapseBankAccountDetails(memberId);
+                    var accountCollection = CommonHelper.GetSynapseBankDetails(memberId);
 
                     if (accountCollection != null)
                     {
@@ -4477,7 +4477,7 @@ namespace Nooch.API.Controllers
                     res.userLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.LastName));
                     res.IsRs = memberObj.isRentScene.ToString() ?? "false";
 
-                    var synapseBankDetails = CommonHelper.GetSynapseBankAccountDetails(memberId);
+                    var synapseBankDetails = CommonHelper.GetSynapseBankDetails(memberId);
 
                     if (synapseBankDetails != null) // No Synapse user details were found, so need to create a new Synapse User
                     {

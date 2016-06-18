@@ -42,31 +42,47 @@ namespace Nooch.Common
 
         public static string GetEncryptedData(string sourceData)
         {
-            try
+            if (!String.IsNullOrEmpty(sourceData))
             {
-                var aesAlgorithm = new AES();
-                string encryptedData = aesAlgorithm.Encrypt(sourceData, string.Empty);
-                return encryptedData.Replace(" ", "+");
+                try
+                {
+                    var aesAlgorithm = new AES();
+                    string encryptedData = aesAlgorithm.Encrypt(sourceData, string.Empty);
+                    return encryptedData.Replace(" ", "+");
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Common Helper -> GetEncryptedData FAILED - SourceData: [" + sourceData + "],  [Exception: " + ex + "]");
+                }
             }
-            catch (Exception ex)
+            else
             {
-                Logger.Error("Common Helper -> GetEncryptedData FAILED - [SourceData: " + sourceData + "],  [Exception: " + ex + "]");
+                Logger.Error("Common Helper -> GetEncryptedData FAILED - SourceData was NULL or Empty: [" + sourceData + "]");
             }
+
             return string.Empty;
         }
 
         public static string GetDecryptedData(string sourceData)
         {
-            try
+            if (!String.IsNullOrEmpty(sourceData))
             {
-                var aesAlgorithm = new AES();
-                string decryptedData = aesAlgorithm.Decrypt(sourceData.Replace(" ", "+"), string.Empty);
-                return decryptedData;
+                try
+                {
+                    var aesAlgorithm = new AES();
+                    string decryptedData = aesAlgorithm.Decrypt(sourceData.Replace(" ", "+"), string.Empty);
+                    return decryptedData;
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Common Helper -> GetDecryptedData FAILED - SourceData: [" + sourceData + "],  [Exception: " + ex + "]");
+                }
             }
-            catch (Exception ex)
+            else
             {
-                Logger.Error("Common Helper -> GetDecryptedData FAILED - [SourceData: " + sourceData + "],  [Exception: " + ex + "]");
+                Logger.Error("Common Helper -> GetDecryptedData FAILED - SourceData was NULL or Empty: [" + sourceData + "]");
             }
+
             return string.Empty;
         }
 
@@ -719,21 +735,27 @@ namespace Nooch.Common
         /// </summary>
         /// <param name="memberId"></param>
         /// <returns></returns>
-        public static SynapseBanksOfMember GetSynapseBankAccountDetails(string memberId)
+        public static SynapseBanksOfMember GetSynapseBankDetails(string memberId)
         {
-            Logger.Info("Common Helper -> GetSynapseBankAccountDetails Initiated - MemberId: [" + memberId + "]");
+            Logger.Info("Common Helper -> GetSynapseBankDetails Fired - MemberId: [" + memberId + "]");
 
             var id = Utility.ConvertToGuid(memberId);
 
-            var bankDetailsFromDB = _dbContext.SynapseBanksOfMembers.FirstOrDefault(m => m.MemberId == id && m.IsDefault == true);
+            var bankDetailsFromDB = _dbContext.SynapseBanksOfMembers.FirstOrDefault(m => m.MemberId == id &&
+                                                                                         m.IsDefault == true);
             if (bankDetailsFromDB != null)
             {
                 _dbContext.Entry(bankDetailsFromDB).Reload();
-                return bankDetailsFromDB;
+            }
+            else
+            {
+                Logger.Error("Common Helper -> GetSynapseBankDetails FAILED - No Synapse Bank " +
+                             "User Record found for MemberId: [" + memberId + "]");
             }
 
-            return null;
+            return bankDetailsFromDB;
         }
+
 
         /// <summary>
         /// Gets the user's Synapse user details from SynapseCreateUserResults Table in Nooch's DB.
@@ -742,7 +764,7 @@ namespace Nooch.Common
         /// <returns></returns>
         public static SynapseCreateUserResult GetSynapseCreateaUserDetails(string memberId)
         {
-            Logger.Info("Common Helper -> GetSynapseCreateaUserDetails Initiated - MemberId: [" + memberId + "]");
+            Logger.Info("Common Helper -> GetSynapseCreateaUserDetails Fired - MemberId: [" + memberId + "]");
 
             var id = Utility.ConvertToGuid(memberId);
 
@@ -750,6 +772,11 @@ namespace Nooch.Common
             if (memberObj != null)
             {
                 _dbContext.Entry(memberObj).Reload();
+            }
+            else
+            {
+                Logger.Error("Common Helper -> GetSynapseCreateaUserDetails FAILED - No Synapse Create " +
+                             "User Record found for MemberId: [" + memberId + "]");
             }
 
             return memberObj;
@@ -2851,19 +2878,18 @@ namespace Nooch.Common
                 Member memberObject = GetMemberDetails(memberId);
 
                 // Check Synapse USER details from Nooch's DB
-                var createSynapseUserObj = GetSynapseCreateaUserDetails(id.ToString());
+                #region Get Users Synapse USER Details
+
+                var createSynapseUserObj = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
 
                 if (createSynapseUserObj != null && !String.IsNullOrEmpty(createSynapseUserObj.access_token))
                 {
-                    // This MemberId was found in the SynapseCreateUserResults DB
                     res.wereUserDetailsFound = true;
 
                     Logger.Info("Common Helper -> GetSynapseBankAndUserDetailsforGivenMemberId - Checkpoint #1 - " +
                                 "SynapseCreateUserResults Record Found! - MemberID: [" + memberId + "] - Now about to check if Synapse OAuth Key is still valid.");
 
-                    #region Check If OAuth Key Still Valid
                     // CLIFF (10/3/15): ADDING CALL TO NEW METHOD TO CHECK USER'S STATUS WITH SYNAPSE, AND REFRESHING OAUTH KEY IF NECESSARY
-
                     synapseV3checkUsersOauthKey checkTokenResult = refreshSynapseV3OautKey(createSynapseUserObj.access_token);
 
                     if (checkTokenResult != null)
@@ -2882,7 +2908,6 @@ namespace Nooch.Common
                         {
                             Logger.Error("Common Helper -> GetSynapseBankAndUserDetailsforGivenMemberId FAILED on Checking User's Synapse OAuth Token - " +
                                          "CheckTokenResult.msg: [" + checkTokenResult.msg + "], MemberID: [" + memberId + "]");
-
                             res.UserDetailsErrMessage = checkTokenResult.msg;
                             return res;
                         }
@@ -2891,27 +2916,26 @@ namespace Nooch.Common
                     {
                         Logger.Error("Common Helper -> GetSynapseBankAndUserDetailsforGivenMemberId FAILED on Checking User's Synapse OAuth Token - " +
                                      "CheckTokenResult was NULL, MemberID: [" + memberId + "]");
-
                         res.UserDetailsErrMessage = "Unable to check user's Oauth Token";
                     }
-
-                    #endregion Check If OAuth Key Still Valid
                 }
                 else
                 {
-                    Logger.Error("Common Helper -> GetSynapseBankAndUserDetailsforGivenMemberId FAILED - Unable to find Synapse Create User Details - " +
-                                 "MemberID: [" + memberId + "]");
-
+                    Logger.Error("Common Helper -> GetSynapseBankAndUserDetailsforGivenMemberId FAILED - Unable to find Synapse " +
+                                 "USER Details - MemberID: [" + memberId + "] - CONTINUING ON TO CHECK FOR SYNAPSE BANK...");
                     res.UserDetails = null;
                     res.UserDetailsErrMessage = "User synapse details not found.";
                 }
 
-                #region Get The User's Synapse Bank Details
+                #endregion Get Users Synapse USER Details
 
-                // Now get the user's Synapse BANK account details (From Nooch's DB)
-                var defaultBank = GetSynapseBankAccountDetails(id.ToString());
 
-                if (defaultBank != null)
+                #region Get Users Synapse Bank Details
+
+                var defaultBank = _dbContext.SynapseBanksOfMembers.FirstOrDefault(m => m.MemberId == id &&
+                                                                                       m.IsDefault == true);
+
+                if (defaultBank != null && !String.IsNullOrEmpty(defaultBank.oid))
                 {
                     // Found a Synapse bank account for this user
                     res.wereBankDetailsFound = true;
@@ -2931,6 +2955,8 @@ namespace Nooch.Common
                 }
                 else
                 {
+                    Logger.Error("Common Helper -> GetSynapseBankAndUserDetailsforGivenMemberId FAILED - Unable to find Synapse " +
+                                 "BANK Details - MemberID: [" + memberId + "]");
                     res.BankDetails = null;
                     res.AccountDetailsErrMessage = "User synapse bank not found.";
                 }

@@ -436,7 +436,9 @@ function submitPayment()
                     else if (resultReason.indexOf("Missing") > -1) {
                         showErrorAlert('5');
                     }
-                    else if (resultReason.indexOf("Sender does not have any bank") > -1) {
+                    else if (resultReason.indexOf("Sender does not have any bank") > -1 ||
+                             resultReason.indexOf("Requester does not have any bank added") > -1)
+                    {
                         showErrorAlert('6');
                     }
                     else {

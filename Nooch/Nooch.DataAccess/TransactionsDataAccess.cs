@@ -4522,7 +4522,7 @@ namespace Nooch.DataAccess
                         if (transactionAmount > thisUserTransLimit)
                         {
                             Logger.Error("TDA -> RequestMoneyToNonNoochUserUsingSynapse FAILED - OVER PERSONAL TRANS LIMIT - Amount Requested: [" + transactionAmount.ToString() +
-                                                   "], Indiv. Limit: [" + thisUserTransLimit + "], MemberId: [" + requestDto.MemberId + "]");
+                                         "], Indiv. Limit: [" + thisUserTransLimit + "], MemberId: [" + requestDto.MemberId + "]");
                             return "Hold on there cowboy! To keep Nooch safe, the maximum amount you can request is $" + thisUserTransLimit.ToString("F2");
                         }
                     }
@@ -4531,7 +4531,7 @@ namespace Nooch.DataAccess
                 if (CommonHelper.isOverTransactionLimit(transactionAmount, "", requestDto.MemberId))
                 {
                     Logger.Error("TDA -> RequestMoneyToNonNoochUserUsingSynapse FAILED - OVER GLOBAL TRANS LIMIT - Amount Requested: [" + transactionAmount.ToString() +
-                                                   "], Indiv. Limit: [" + thisUserTransLimit + "], MemberId: [" + requestDto.MemberId + "]");
+                                 "], Indiv. Limit: [" + thisUserTransLimit + "], MemberId: [" + requestDto.MemberId + "]");
 
                     return "Hold on there cowboy! To keep Nooch safe, the maximum amount you can request is $" + Convert.ToDecimal(Utility.GetValueFromConfig("MaximumTransferLimitPerTransaction")).ToString("F2");
                 }
@@ -4539,24 +4539,26 @@ namespace Nooch.DataAccess
                 #region SenderSynapseAccountDetails
 
                 var requestorInfo = CommonHelper.GetSynapseBankAndUserDetailsforGivenMemberId(requestDto.MemberId.ToString());
-
+                Logger.Info("TDA - RequestMoneyToNonNoochUserUsingSynapse CHECKPOINT #0");
                 if (requestorInfo.wereBankDetailsFound == false || requestorInfo.BankDetails == null)
                 {
+                    Logger.Error("TDA - RequestMoneyToNonNoochUserUsingSynapse FAILED -> Transfer ABORTED: No Bank Details found for " +
+                                 "Requester - MemberID: [" + requestDto.MemberId + "]");
                     return "Requester does not have any bank added";
                 }
 
-                // Check Requestor's Synapse Bank Account status
-                if (requestorInfo.BankDetails != null &&
-                    requestorInfo.BankDetails.Status != "Verified")
+                // Check Requestor's Synapse Bank Account STATUS
+                if (requestorInfo.BankDetails.Status != "Verified")
                 {
-                    Logger.Info("TDA - RequestMoneyToNonNoochUserUsingSynapse -> Transfer Aborted: No verified bank account for Sender - " +
-                                "Requester MemberID is: [" + requestDto.MemberId + "]");
+                    Logger.Error("TDA - RequestMoneyToNonNoochUserUsingSynapse FAILED -> Transfer ABORTED: No verified bank account for " +
+                                 "Requester - MemberID: [" + requestDto.MemberId + "]");
                     return "Requester does not have any verified bank account.";
                 }
 
                 #endregion SenderSynapseAccountDetails
 
                 #endregion Initial Checks
+
 
                 #region Create & Save Transaction Object
 
@@ -4565,13 +4567,11 @@ namespace Nooch.DataAccess
                     TransactionId = Guid.NewGuid(),
                     SenderId = Utility.ConvertToGuid(requestDto.MemberId),
                     RecipientId = Utility.ConvertToGuid(requestDto.MemberId),
-
                     Amount = requestDto.Amount,
                     TransactionDate = DateTime.Now,
                     Picture = (requestDto.Picture != null) ? requestDto.Picture : null,
                     Memo = !String.IsNullOrEmpty(requestDto.Memo) ? requestDto.Memo : "",
                     DisputeStatus = null,
-
                     TransactionStatus = "Pending",
                     TransactionType = CommonHelper.GetEncryptedData("Request"),
                     DeviceId = requestDto.DeviceId,
@@ -4672,7 +4672,7 @@ namespace Nooch.DataAccess
                         }
                     }
 
-                    if (!isForRentScene)
+                    if (!isForRentScene) // Not sending this one to Rent Scene (just b/c it was considered unnecessary for them)
                     {
                         try
                         {
@@ -4744,7 +4744,7 @@ namespace Nooch.DataAccess
                     catch (Exception ex)
                     {
                         Logger.Error("TDA -> RequestMoneyToNonNoochUserUsingSynapse -> [" + templateToUse_Recip + "] email NOT sent to [" + recipientsEmail +
-                                               "], Exception: [" + ex + "]");
+                                     "], Exception: [" + ex + "]");
                     }
 
                     #endregion Send Notifications
