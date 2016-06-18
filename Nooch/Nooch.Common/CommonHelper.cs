@@ -50,7 +50,7 @@ namespace Nooch.Common
             }
             catch (Exception ex)
             {
-                Logger.Error("CommonHelper -> GetEncryptedData FAILED - [SourceData: " + sourceData + "],  [Exception: " + ex + "]");
+                Logger.Error("Common Helper -> GetEncryptedData FAILED - [SourceData: " + sourceData + "],  [Exception: " + ex + "]");
             }
             return string.Empty;
         }
@@ -65,7 +65,7 @@ namespace Nooch.Common
             }
             catch (Exception ex)
             {
-                Logger.Error("CommonHelper -> GetDecryptedData FAILED - [SourceData: " + sourceData + "],  [Exception: " + ex + "]");
+                Logger.Error("Common Helper -> GetDecryptedData FAILED - [SourceData: " + sourceData + "],  [Exception: " + ex + "]");
             }
             return string.Empty;
         }
@@ -173,7 +173,7 @@ namespace Nooch.Common
             }
             else
             {
-                Logger.Error("CommonHelper -> RemovePhoneNumberFormatting Source String was NULL or EMPTY - [SourceData: " + sourceNum + "]");
+                Logger.Error("Common Helper -> RemovePhoneNumberFormatting Source String was NULL or EMPTY - [SourceData: " + sourceNum + "]");
             }
             return sourceNum;
         }
@@ -220,7 +220,7 @@ namespace Nooch.Common
                             string msg = "Hi\n You are automatically logged out from your device because you signed in into another device.\n - Team Nooch";
 
                             var fromAddress = Utility.GetValueFromConfig("adminMail");
-                            var toAddress = CommonHelper.GetDecryptedData(member.UserName);
+                            var toAddress = Common Helper.GetDecryptedData(member.UserName);
                             try
                             {
                                 // email notification
@@ -890,8 +890,8 @@ namespace Nooch.Common
                         "<tr><td>Phone Number: </td><td>" + noochMemberN.ContactNumber + "</td></tr></table><br/>- Nooch SDN Check</body></html>";
 
                     str.Append(s);
-                    string adminUserName = CommonHelper.GetEncryptedData(Utility.GetValueFromConfig("transfersMail"));
-                    var fromAddress = CommonHelper.GetDecryptedData(adminUserName);
+                    string adminUserName = GetEncryptedData(Utility.GetValueFromConfig("transfersMail"));
+                    var fromAddress = GetDecryptedData(adminUserName);
 
                     bool b = Utility.SendEmail(null, fromAddress,
                         Utility.GetValueFromConfig("SDNMailReciever"), null, "SDN Listed", null, null, null,
@@ -993,8 +993,8 @@ namespace Nooch.Common
                     memberEntity.InvalidPinAttemptTime = null;
                     //if member has no dispute raised or under review, he can be made active, else he should remain suspended so that he cant do fund transfer or withdraw amount...
 
-                    var disputeStatus = CommonHelper.GetEncryptedData(Constants.DISPUTE_STATUS_REPORTED);
-                    var disputeReviewStatus = CommonHelper.GetEncryptedData(Constants.DISPUTE_STATUS_REVIEW);
+                    var disputeStatus = GetEncryptedData(Constants.DISPUTE_STATUS_REPORTED);
+                    var disputeReviewStatus = GetEncryptedData(Constants.DISPUTE_STATUS_REVIEW);
 
                     if (
                         !memberEntity.Transactions.Any(transaction =>
@@ -1055,18 +1055,15 @@ namespace Nooch.Common
                     var tokens = new Dictionary<string, string>
                         {
                             {
-                                Constants.PLACEHOLDER_FIRST_NAME,
-                                CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberEntity.FirstName))
+                                Constants.PLACEHOLDER_FIRST_NAME, UppercaseFirst(GetDecryptedData(memberEntity.FirstName))
                             }
                         };
 
                     try
                     {
                         var fromAddress = Utility.GetValueFromConfig("adminMail");
-                        string emailAddress = CommonHelper.GetDecryptedData(memberEntity.UserName);
-                        Logger.Info(
-                            "Validate PIN Number --> Attempt to send mail for Suspend Member[ memberId:" +
-                            memberEntity.MemberId + "].");
+                        string emailAddress = GetDecryptedData(memberEntity.UserName);
+                        Logger.Info("Validate PIN Number --> Attempt to send mail for Suspend Member[ memberId:" + memberEntity.MemberId + "].");
                         Utility.SendEmail("userSuspended", fromAddress, emailAddress,
                             null, "Your Nooch account has been suspended", null, tokens, null, null, null);
                     }
@@ -1322,7 +1319,7 @@ namespace Nooch.Common
         /// <returns></returns>
         public static submitIdVerificationInt sendUserSsnInfoToSynapseV3(string MemberId)
         {
-            Logger.Info("CommonHelper -> sendUserSsnInfoToSynapseV3 Initialized - [MemberId: " + MemberId + "]");
+            Logger.Info("Common Helper -> sendUserSsnInfoToSynapseV3 Fired - [MemberId: " + MemberId + "]");
 
             submitIdVerificationInt res = new submitIdVerificationInt();
             res.success = false;
@@ -1720,7 +1717,7 @@ namespace Nooch.Common
                             {
                                 StringBuilder st = new StringBuilder();
 
-                                string city = !String.IsNullOrEmpty(memberEntity.City) ? CommonHelper.GetDecryptedData(memberEntity.City) : "NONE";
+                                string city = !String.IsNullOrEmpty(memberEntity.City) ? GetDecryptedData(memberEntity.City) : "NONE";
 
                                 st.Append("<table border='1' cellpadding='6' style='border-collapse:collapse;text-align:center;'>" +
                                           "<tr><th>PARAMETER</th><th>VALUE</th></tr>");
@@ -1733,7 +1730,7 @@ namespace Nooch.Common
                                 st.Append("<tr><td><strong>Address</strong></td><td>" + usersAddress + "</td></tr>");
                                 st.Append("<tr><td><strong>City</strong></td><td>" + city + "</td></tr>");
                                 st.Append("<tr><td><strong>ZIP</strong></td><td>" + usersZip + "</td></tr>");
-                                st.Append("<tr><td><strong>Contact #</strong></td><td>" + CommonHelper.FormatPhoneNumber(memberEntity.ContactNumber) + "</td></tr>");
+                                st.Append("<tr><td><strong>Contact #</strong></td><td>" + FormatPhoneNumber(memberEntity.ContactNumber) + "</td></tr>");
                                 st.Append("<tr><td><strong>Phone Verified?</strong></td><td>" + memberEntity.IsVerifiedPhone.ToString() + "</td></tr>");
                                 st.Append("<tr><td><strong>IsVerifiedWithSynapse</strong></td><td>" + memberEntity.IsVerifiedWithSynapse.ToString() + "</td></tr>");
                                 st.Append("</table>");
@@ -1741,7 +1738,7 @@ namespace Nooch.Common
                                 StringBuilder completeEmailTxt = new StringBuilder();
                                 string s = "<html><body><h3>Nooch SSN Verification Failure</h3><p style='margin:0 auto 20px;'>The following Nooch user just failed an SSN Verification attempt:</p>"
                                            + st.ToString() +
-                                           "<br/><br/><small>This email was generated automatically during <strong>[CommonHelper -> sendUserSsnInfoToSynapseV3]</strong>.</small></body></html>";
+                                           "<br/><br/><small>This email was generated automatically during <strong>[Common Helper -> sendUserSsnInfoToSynapseV3]</strong>.</small></body></html>";
 
                                 completeEmailTxt.Append(s);
                                 Utility.SendEmail(null, "SSNFAILURE@nooch.com", "cliff@nooch.com",
@@ -1758,7 +1755,7 @@ namespace Nooch.Common
                             // Now try to send ID verification document (IF VerificationDoc is AVAILABLE... WHICH IT PROBABLY WON'T BE)
                             if (!String.IsNullOrEmpty(memberEntity.VerificationDocumentPath))
                             {
-                                Logger.Info("CommonHelper -> sendUserSsnInfoToSynapseV3 - ID Document Path found, so attempting submitDocumentToSynapseV3()");
+                                Logger.Info("Common Helper -> sendUserSsnInfoToSynapseV3 - ID Document Path found, so attempting submitDocumentToSynapseV3()");
 
                                 // CC (5/31/16): submitDocumentToSynapseV3 is in MDA... but for some strange reason there is a duplicate in Common Helper
                                 //               It should really be only in Common Helper, but the one in MDA is the one actually used right now.
@@ -1768,7 +1765,7 @@ namespace Nooch.Common
                     }
                     else
                     {
-                        res.message = "CommonHelper Exception #1683";
+                        res.message = "Common Helper Exception #1768";
                     }
                 }
 
@@ -1841,7 +1838,7 @@ namespace Nooch.Common
 
                 string usersSynapseOauthKey = "";
                 string usersFingerprint = "";
-                string ipAddress = CommonHelper.GetRecentOrDefaultIPOfMember(id);
+                string ipAddress = GetRecentOrDefaultIPOfMember(id);
 
                 try
                 {
@@ -2376,7 +2373,7 @@ namespace Nooch.Common
                             {
                                 StringBuilder st = new StringBuilder();
 
-                                string city = !String.IsNullOrEmpty(memberEntity.City) ? CommonHelper.GetDecryptedData(memberEntity.City) : "NONE";
+                                string city = !String.IsNullOrEmpty(memberEntity.City) ? GetDecryptedData(memberEntity.City) : "NONE";
 
                                 st.Append("<table border='1' cellpadding='6' style='border-collapse:collapse;text-align:center;'>" +
                                           "<tr><th>PARAMETER</th><th>VALUE</th></tr>");
@@ -2389,7 +2386,7 @@ namespace Nooch.Common
                                 st.Append("<tr><td><strong>Address</strong></td><td>" + usersAddress + "</td></tr>");
                                 st.Append("<tr><td><strong>City</strong></td><td>" + city + "</td></tr>");
                                 st.Append("<tr><td><strong>ZIP</strong></td><td>" + usersZip + "</td></tr>");
-                                st.Append("<tr><td><strong>Contact #</strong></td><td>" + CommonHelper.FormatPhoneNumber(memberEntity.ContactNumber) + "</td></tr>");
+                                st.Append("<tr><td><strong>Contact #</strong></td><td>" + FormatPhoneNumber(memberEntity.ContactNumber) + "</td></tr>");
                                 st.Append("<tr><td><strong>Phone Verified?</strong></td><td>" + memberEntity.IsVerifiedPhone.ToString() + "</td></tr>");
                                 st.Append("<tr><td><strong>IsVerifiedWithSynapse</strong></td><td>" + memberEntity.IsVerifiedWithSynapse.ToString() + "</td></tr>");
                                 st.Append("</table>");
@@ -2397,7 +2394,7 @@ namespace Nooch.Common
                                 StringBuilder completeEmailTxt = new StringBuilder();
                                 string s = "<html><body><h3>Nooch SSN Verification Failure (V3)</h3><p style='margin:0 auto 20px;'>The following Nooch user just failed an SSN Verification attempt:</p>"
                                            + st.ToString() +
-                                           "<br/><br/><small>This email was generated automatically during <strong>[CommonHelper -> sendUserSsnInfoToSynapseV3]</strong>.</small></body></html>";
+                                           "<br/><br/><small>This email was generated automatically during <strong>[Common Helper -> sendUserSsnInfoToSynapseV3]</strong>.</small></body></html>";
 
                                 completeEmailTxt.Append(s);
                                 Utility.SendEmail(null, "SSNFAILURE@nooch.com", "cliff@nooch.com",
@@ -2414,7 +2411,7 @@ namespace Nooch.Common
                             // Now try to send ID verification document (IF VerificationDoc is AVAILABLE... WHICH IT PROBABLY WON'T BE)
                             if (!String.IsNullOrEmpty(memberEntity.VerificationDocumentPath))
                             {
-                                Logger.Info("CommonHelper -> sendDocsToSynapseV3 - ID Document Path found, so attempting submitDocumentToSynapseV3()");
+                                Logger.Info("Common Helper -> sendDocsToSynapseV3 - ID Document Path found, so attempting submitDocumentToSynapseV3()");
 
                                 // CC (5/31/16): submitDocumentToSynapseV3 is in MDA... but for some strange reason there is a duplicate in Common Helper
                                 //               It should really be only in Common Helper, but the one in MDA is the one actually used right now.
@@ -2424,7 +2421,7 @@ namespace Nooch.Common
                     }
                     else
                     {
-                        res.message = "CommonHelper Exception #1660";
+                        res.message = "Common Helper Exception #1660";
                     }
                 }
 
@@ -2680,8 +2677,8 @@ namespace Nooch.Common
 
             try
             {
-                String memberId = CommonHelper.GetMemberIdByUserName(userEmail);
-                List<string> clientIds = CommonHelper.getClientSecretId(memberId);
+                String memberId = GetMemberIdByUserName(userEmail);
+                List<string> clientIds = getClientSecretId(memberId);
 
                 string SynapseClientId = clientIds[0];
                 string SynapseClientSecret = clientIds[1];
@@ -2729,7 +2726,7 @@ namespace Nooch.Common
                     if (checkPermissionResponse["success"] != null &&
                         Convert.ToBoolean(checkPermissionResponse["success"]) == true)
                     {
-                        //Logger.Info("CommonHelper -> getUserPermissionsForSynapseV3 - JSON Result from Synapse: [" + checkPermissionResponse + "]");
+                        //Logger.Info("Common Helper -> getUserPermissionsForSynapseV3 - JSON Result from Synapse: [" + checkPermissionResponse + "]");
                         res = JsonConvert.DeserializeObject<synapseSearchUserResponse>(content);
 
                         if (res.page != res.page_count || res.page == res.page_count)
@@ -2974,7 +2971,7 @@ namespace Nooch.Common
 
                     SynapseV3RefreshOauthKeyAndSign_Input input = new SynapseV3RefreshOauthKeyAndSign_Input();
 
-                    List<string> clientIds = CommonHelper.getClientSecretId(noochMemberObject.MemberId.ToString());
+                    List<string> clientIds = getClientSecretId(noochMemberObject.MemberId.ToString());
 
                     string SynapseClientId = clientIds[0];
                     string SynapseClientSecret = clientIds[1];
@@ -3276,7 +3273,7 @@ namespace Nooch.Common
 
                     Logger.Info("Common Helper -> SynapseV3SignIn - Found Member By Original OAuth Key");
 
-                    List<string> clientIds = CommonHelper.getClientSecretId(memberObj.MemberId.ToString());
+                    List<string> clientIds = getClientSecretId(memberObj.MemberId.ToString());
 
                     string SynapseClientId = clientIds[0];
                     string SynapseClientSecret = clientIds[1];
@@ -3855,7 +3852,7 @@ namespace Nooch.Common
                                           "<tr><td><strong>lastNameMatched:</strong></td><td>" + lastNameMatched + "</td></tr>" +
                                           "<tr><td><strong>Nooch Email Address:</strong></td><td>" + noochEmailAddress + "</td></tr>" +
                                           "<tr><td><strong>Nooch Phone #:</strong></td><td>" + MemberInfoInNoochDb.ContactNumber + "</td></tr>" +
-                                          "<tr><td><strong>Address:</strong></td><td>" + CommonHelper.GetDecryptedData(MemberInfoInNoochDb.Address) +
+                                          "<tr><td><strong>Address:</strong></td><td>" + GetDecryptedData(MemberInfoInNoochDb.Address) +
                                           "</td></tr></table><br/><br/>- Nooch Bot</body></html>");
 
                                 // Notify Nooch Admin
@@ -3883,7 +3880,7 @@ namespace Nooch.Common
 
                                 var tokens = new Dictionary<string, string>
                                             {
-                                                {Constants.PLACEHOLDER_FIRST_NAME, CommonHelper.UppercaseFirst(noochFirstName)},
+                                                {Constants.PLACEHOLDER_FIRST_NAME, UppercaseFirst(noochFirstName)},
                                                 {Constants.PLACEHOLDER_BANK_NAME, BankName},
                                                 {Constants.PLACEHOLDER_BANK_BALANCE, bankLogoUrl}
                                             };
@@ -4137,7 +4134,7 @@ namespace Nooch.Common
         {
             Logger.Info("Common Helper -> GetMemberIdByContactNumber Initiated - [userContactNumber: " + userContactNumber + "]");
 
-            string trimmedContactNum = CommonHelper.RemovePhoneNumberFormatting(userContactNumber);
+            string trimmedContactNum = RemovePhoneNumberFormatting(userContactNumber);
 
             var noochMember = _dbContext.Members.Where(memberTemp =>
                                 memberTemp.ContactNumber.Equals(trimmedContactNum) &&
@@ -4157,7 +4154,7 @@ namespace Nooch.Common
         {
             Logger.Info("Common Helper -> GetMemberByContactNumber Initiated - contactNumber: [" + contactNumber + "]");
 
-            string trimmedContactNum = CommonHelper.RemovePhoneNumberFormatting(contactNumber);
+            string trimmedContactNum = RemovePhoneNumberFormatting(contactNumber);
 
             var noochMember = _dbContext.Members.Where(memberTemp =>
                                 memberTemp.ContactNumber.Equals(trimmedContactNum) &&
@@ -4346,13 +4343,13 @@ namespace Nooch.Common
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("CommonHelper -> GetStateNameByZipcode FAILED (Google API Exception) - zipCode: [" + zipCode + "], Exception: [" + ex + "]");
+                    Logger.Error("Common Helper -> GetStateNameByZipcode FAILED (Google API Exception) - zipCode: [" + zipCode + "], Exception: [" + ex + "]");
                     res.ErrorMessage = "Server Exception: [" + ex.Message + "]";
                 }
             }
             else
             {
-                Logger.Error("CommonHelper -> GetStateNameByZipcode FAILED - No Zipcode passed - zipCode: [" + zipCode + "]");
+                Logger.Error("Common Helper -> GetStateNameByZipcode FAILED - No Zipcode passed - zipCode: [" + zipCode + "]");
                 res.ErrorMessage = "No zipcode passed";
             }
 
