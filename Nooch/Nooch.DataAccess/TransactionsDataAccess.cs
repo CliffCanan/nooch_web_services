@@ -1322,7 +1322,7 @@ namespace Nooch.DataAccess
         /// </summary>
         public Transaction GetTransactionById(string transactionId)
         {
-            Logger.Info("TDA -> GetTransactionById Initiated - [Transaction Id: " + transactionId + "]");
+            Logger.Info("TDA -> GetTransactionById Fired - TransactionID: [" + transactionId + "]");
 
             try
             {
@@ -4492,7 +4492,7 @@ namespace Nooch.DataAccess
 
             if (checkuser == null)
             {
-                Logger.Info("TDA -> RequestMoneyToNonNoochUserUsingSynapse Initiated - Requestor MemberId: [" + requestDto.MemberId + "].");
+                Logger.Info("TDA -> RequestMoneyToNonNoochUserUsingSynapse Initiated - Requester MemberId: [" + requestDto.MemberId + "].");
 
                 var requester = CommonHelper.GetMemberDetails(requestDto.MemberId);
 
@@ -6638,10 +6638,12 @@ namespace Nooch.DataAccess
                             {
                                 #region Send Email to Sender on transfer success
 
-                                var sendersNotificationSets = CommonHelper.GetMemberNotificationSettings(senderNoochDetails.MemberId.ToString());
+                                // CC (6/18/16): Bypassing the Notifcation Settings Check since no users currently can edit those,
+                                //               so it should always return true... so just skip it until we do something with the Notification Settings again.
+                                //var sendersNotificationSets = CommonHelper.GetMemberNotificationSettings(senderNoochDetails.MemberId.ToString());
 
-                                if (((sendersNotificationSets != null && sendersNotificationSets.EmailTransferSent != false) ||
-                                    isForRentScene) &&
+                                if (//((sendersNotificationSets != null && sendersNotificationSets.EmailTransferSent != false) ||
+                                    //isForRentScene) &&
                                     !isRentScenePayrollPayment) // don't send email to sender if sender is Rent Scene and it's a payment to a RS employee
                                 {
                                     if (!String.IsNullOrEmpty(recipientNoochDetails.Photo) && recipientNoochDetails.Photo.Length > 20)
@@ -6697,12 +6699,12 @@ namespace Nooch.DataAccess
                                                                     subject, null, tokens, null, null, null);
 
                                         Logger.Info("TDA -> TransferMoneyUsingSynapse - [" + template + "] email sent to [" +
-                                                               toAddress + "] successfully. Subject: [" + subject + "]");
+                                                    toAddress + "] successfully. Subject: [" + subject + "]");
                                     }
                                     catch (Exception ex)
                                     {
                                         Logger.Error("TDA -> TransferMoneyUsingSynapse -> EMAIL TO RECIPIENT FAILED: TransferReceived Email NOT sent to [" +
-                                                               toAddress + "], [Exception: " + ex + "]");
+                                                     toAddress + "], [Exception: " + ex + "]");
                                     }
                                 }
 
@@ -6712,66 +6714,57 @@ namespace Nooch.DataAccess
 
                                 #region Send Notifications to Recipient on transfer success
 
-                                var recipNotificationSets = CommonHelper.GetMemberNotificationSettings(recipientNoochDetails.MemberId.ToString());
+                                // CC (6/18/16): Bypassing the Notifcation Settings Check since no users currently can edit those,
+                                //               so it should always return true... so just skip it until we do something with the Notification Settings again.
+                                //var recipNotificationSets = CommonHelper.GetMemberNotificationSettings(recipientNoochDetails.MemberId.ToString());
 
-                                if (recipNotificationSets != null)
+                                //if (recipNotificationSets != null)
+                                //{
+                                // First, send push notification
+                                #region Push notification to Recipient
+
+                                if (//recipNotificationSets.TransferReceived == true &&
+                                    !String.IsNullOrEmpty(recipientNoochDetails.DeviceToken) &&
+                                    recipientNoochDetails.DeviceToken.Length > 6)
                                 {
-                                    // First, send push notification
-                                    #region Push notification to Recipient
+                                    string recipDeviceId = recipientNoochDetails.DeviceToken;
 
-                                    if (recipNotificationSets.TransferReceived == true &&
-                                        !String.IsNullOrEmpty(recipientNoochDetails.DeviceToken) && recipientNoochDetails.DeviceToken.Length > 6)
+                                    string pushBodyText = isAutoPay
+                                                          ? "Rent Auto Payment for $" + wholeAmount + " received from " +
+                                                            senderFirstName + " " + senderLastName + "."
+                                                          : "You received $" + wholeAmount + " from " + senderFirstName +
+                                                            " " + senderLastName + "! Spend it wisely :-)";
+                                    try
                                     {
-                                        string recipDeviceId = recipientNoochDetails.DeviceToken;
+                                        Utility.SendNotificationMessage(pushBodyText, 1, null, recipDeviceId,
+                                                                        Utility.GetValueFromConfig("AppKey"),
+                                                                        Utility.GetValueFromConfig("MasterSecret"));
 
-                                        string pushBodyText = isAutoPay
-                                                              ? "Rent Auto Payment for $" + wholeAmount + " received from " +
-                                                                senderFirstName + " " + senderLastName + "."
-                                                              : "You received $" + wholeAmount + " from " + senderFirstName +
-                                                                " " + senderLastName + "! Spend it wisely :-)";
-                                        try
-                                        {
-                                            if (recipDeviceId.Length > 5 &&
-                                                (recipNotificationSets.TransferReceived ?? false))
-                                            {
-                                                Utility.SendNotificationMessage(pushBodyText, 1,
-                                                    null, recipDeviceId,
-                                                    Utility.GetValueFromConfig("AppKey"),
-                                                    Utility.GetValueFromConfig("MasterSecret"));
+                                        Logger.Info("TDA -> TransferMoneyUsingSynapse -> SUCCESS - Push notification sent to " +
+                                                    "Recipient [" + recipientFirstName + " " + recipientLastName + "] successfully.");
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Logger.Error("TDA -> TransferMoneyUsingSynapse -> Success - BUT Push notification FAILURE - Push to Recipient NOT sent [" +
+                                                     recipientFirstName + " " + recipientLastName + "], Exception: [" + ex + "]");
+                                    }
+                                }
 
-                                                Logger.Info("TDA -> TransferMoneyUsingSynapse -> SUCCESS - Push notification sent to " +
-                                                                       "Recipient [" + recipientFirstName + " " + recipientLastName + "] successfully.");
-                                            }
-                                        }
-                                        catch (Exception ex)
-                                        {
-                                            Logger.Error(
-                                                "TDA -> TransferMoneyUsingSynapse -> Success - BUT Push notification FAILURE - Push to Recipient NOT sent [" +
-                                                    recipientFirstName + " " + recipientLastName + "], Exception: [" + ex + "]");
-                                        }
+                                #endregion Push notification to Recipient
+
+                                // Now send email notification
+                                #region Email notification to Recipient
+
+                                if (true)//recipNotificationSets.EmailTransferReceived ?? false || isForRentScene)
+                                {
+                                    if (!String.IsNullOrEmpty(senderNoochDetails.Photo) && senderNoochDetails.Photo.Length > 20)
+                                    {
+                                        senderPic = senderNoochDetails.Photo.ToString();
                                     }
 
-                                    #endregion Push notification to Recipient
+                                    var templateToUse = (isAutoPay || isForRentScene) ? "TransferReceived_RentScene" : "TransferReceived";
 
-                                    // Now send email notification
-                                    #region Email notification to Recipient
-
-                                    if ((recipNotificationSets.EmailTransferReceived ?? false) ||
-                                         isForRentScene)
-                                    {
-                                        if (!String.IsNullOrEmpty(senderNoochDetails.Photo) && senderNoochDetails.Photo.Length > 20)
-                                        {
-                                            senderPic = senderNoochDetails.Photo.ToString();
-                                        }
-
-                                        var templateToUse = "TransferReceived";
-
-                                        if (isAutoPay || isForRentScene)
-                                        {
-                                            templateToUse = "TransferReceived_RentScene";
-                                        }
-
-                                        var tokensR = new Dictionary<string, string>
+                                    var tokensR = new Dictionary<string, string>
 	                                        {
                                                 {Constants.PLACEHOLDER_FIRST_NAME, recipientFirstName},
 	                                            {Constants.PLACEHOLDER_FRIEND_FIRST_NAME, senderFirstName + " " + senderLastName},
@@ -6781,47 +6774,46 @@ namespace Nooch.DataAccess
 	                                            {Constants.MEMO, memo}
 	                                        };
 
-                                        var toAddress = receiverUserName;
+                                    var toAddress = receiverUserName;
 
-                                        try
+                                    try
+                                    {
+                                        string subject = "";
+                                        if (isAutoPay)
                                         {
-                                            string subject = "";
-                                            if (isAutoPay)
-                                            {
-                                                subject = "Rent AutoPayment from " + senderFirstName + " " + senderLastName + " - $" + wholeAmount;
-                                            }
-                                            else if (senderFirstName == "Rent Scene")
-                                            {
-                                                subject = "Payment Received From Rent Scene for $" + wholeAmount;
-                                            }
-                                            else
-                                            {
-                                                subject = senderFirstName + " " + senderLastName + " sent you $" + wholeAmount;
-                                            }
-
-                                            Utility.SendEmail(templateToUse, fromAddress, toAddress, null,
-                                                                        subject, null, tokensR, null, null, null);
-
-                                            Logger.Info("TDA -> TransferMoneyUsingSynapse - [" + templateToUse + "] Email sent to [" +
-                                                                   toAddress + "] successfully");
+                                            subject = "Rent AutoPayment from " + senderFirstName + " " + senderLastName + " - $" + wholeAmount;
                                         }
-                                        catch (Exception ex)
+                                        else if (senderFirstName == "Rent Scene")
                                         {
-                                            Logger.Error("TDA -> TransferMoneyUsingSynapse -> EMAIL TO RECIPIENT FAILED: " +
-                                                                   "[" + templateToUse + "] Email NOT sent to [" + toAddress + "], [Exception: " + ex + "]");
+                                            subject = "Payment Received From Rent Scene for $" + wholeAmount;
                                         }
+                                        else
+                                        {
+                                            subject = senderFirstName + " " + senderLastName + " sent you $" + wholeAmount;
+                                        }
+
+                                        Utility.SendEmail(templateToUse, fromAddress, toAddress, null,
+                                                          subject, null, tokensR, null, null, null);
+
+                                        Logger.Info("TDA -> TransferMoneyUsingSynapse - [" + templateToUse + "] Email sent to [" +
+                                                    toAddress + "] successfully");
                                     }
-
-                                    #endregion Email notification to Recipient
+                                    catch (Exception ex)
+                                    {
+                                        Logger.Error("TDA -> TransferMoneyUsingSynapse -> EMAIL TO RECIPIENT FAILED: " +
+                                                     "[" + templateToUse + "] Email NOT sent to [" + toAddress + "], [Exception: " + ex + "]");
+                                    }
                                 }
+
+                                #endregion Email notification to Recipient
 
                                 #endregion Send Notifications to Recipient on transfer success
                             }
                             else
                             {
                                 Logger.Info("TDA -> TransferMoneyUsigSynapse - shouldSendEmail flag is [" + transInput.doNotSendEmails +
-                                            "] - SO NOT SENDING TRANSFER SENT EMAIL TO SENDER (" + CommonHelper.GetDecryptedData(senderNoochDetails.UserName) +
-                                            ") OR RECIPIENT (" + CommonHelper.GetDecryptedData(recipientNoochDetails.UserName) + ")");
+                                            "] - SO NOT SENDING TRANSFER SENT EMAIL TO SENDER: [" + senderUserName +
+                                            "] OR RECIPIENT: [" + receiverUserName + "]");
                             }
 
                             return "Your cash was sent successfully";

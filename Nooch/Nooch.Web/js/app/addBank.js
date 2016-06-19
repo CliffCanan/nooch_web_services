@@ -940,54 +940,6 @@ function MFALogin() {
 					if (typeof res.bankoid != null) {
 					    $('#bankAccessTokenForQuestion').val(res.bankoid);
 					}
-
-					//if (SEC_QUES_NO == 1) {
-					//	console.log("We got to SEC_QUES_NO == 1");
-
-					//	$('#ques1Div').velocity("transition.slideLeftBigOut",600, function() {
-					//		$('#ques2Div').removeClass('hide');
-					//		$('#ques2Div').velocity("transition.expandIn",700, function() {
-					//			$('#securityQuest2').focus();
-					//		});
-					//	});
-					//    $('#ques3Div').addClass('hide');
-					//	$('#securityQuestionTwoFromServer').html(res.mfaMessage);
-					//	$('#securityQuest1').attr('data-parsley-required', 'false');
-					//	$('#securityQuest2').attr('data-parsley-required', 'true');
-					//}
-					//else if (SEC_QUES_NO == 2) {
-					//	console.log("We got to SEC_QUES_NO == 2");
-
-					//	$('#ques2Div').velocity("transition.slideLeftBigOut",600, function() {
-					//		$('#ques3Div').removeClass('hide');
-					//		$('#ques3Div').velocity("transition.expandIn",700, function() {
-					//			$('#securityQuest3').focus();
-					//		});
-					//	});
-
-					//	$('#securityQuestionThreeFromServer').html(res.mfaMessage);
-					//	$('#securityQuest2').attr('data-parsley-required', 'false');
-					//	$('#securityQuest3').attr('data-parsley-required', 'true');
-					//}
-					//else
-					//{
-					//	console.log("We got to SEC_QUES_NO == else... we got a problem!");
-					//	//shouldn't ever reach here, but just in case, we'll go back to the 1st Question div to display any additional MFA questions
-						
-					//	$('#ques1Div').removeClass('hide');
-					//	$('#ques1Div').velocity("transition.expandIn",600);
-					//	$('#ques2Div').velocity("transition.slideLeftBigOut",400);
-					//	$('#ques3Div').velocity("transition.slideLeftBigOut",400);
-
-					//	$('#securityQuest1').html('Security Question'); 
-					//	$('#securityQuestionOneFromServer').html(res.mfaMessage);
-
-					//	$('#securityQuest1').attr('data-parsley-required', 'true');
-					//	$('#securityQuest2').attr('data-parsley-required', 'false');
-					//	$('#securityQuest3').attr('data-parsley-required', 'false');
-					//}
-
-					//SEC_QUES_NO++; // incremented it to write question mfa for 2nd round.
 				}
 
                 else if (res.Is_MFA == false && res.SynapseBanksList != null)

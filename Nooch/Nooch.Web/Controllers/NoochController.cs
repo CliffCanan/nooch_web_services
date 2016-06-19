@@ -667,8 +667,8 @@ namespace Nooch.Web.Controllers
         [ActionName("SetDefaultBank")]
         public ActionResult SetDefaultBank(setDefaultBankInput input)
         {
-            Logger.Info("**Add_Bank** CodeBehind -> SetDefaultBank Initiated - [MemberID: " + input.MemberId +
-                        "], [Bank Name: " + input.BankName + "], [BankID: " + input.BankOId + "]");
+            Logger.Info("Add_Bank Code Behind -> SetDefaultBank Initiated - MemberID: [" + input.MemberId +
+                        "], Bank Name: [" + input.BankName + "], BankID: [" + input.BankOId + "]");
 
             SynapseBankSetDefaultResult res = new SynapseBankSetDefaultResult();
 
@@ -692,23 +692,27 @@ namespace Nooch.Web.Controllers
                     }
 
                     res.Is_success = false;
+
+                    Logger.Error("Add_Bank Code Behind -> SetDefaultBank FAILED - " + res.Message);
                 }
                 else
                 {
                     string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+                    res = CommonHelper.SetSynapseDefaultBank(input.MemberId, input.BankName, input.BankOId);
 
-                    string serviceMethod = "/SetSynapseDefaultBank?MemberId=" + input.MemberId + "&BankName=" + input.BankName + "&BankId=" + input.BankOId;
-                    SynapseBankSetDefaultResult bnkloginresult = ResponseConverter<SynapseBankSetDefaultResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+                    //string serviceMethod = "SetSynapseDefaultBank?MemberId=" + input.MemberId + "&BankName=" + input.BankName + "&BankId=" + input.BankOId;
+                    //SynapseBankSetDefaultResult bnkloginresult = ResponseConverter<SynapseBankSetDefaultResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
 
-                    res.Is_success = bnkloginresult.Is_success;
-                    res.Message = bnkloginresult.Message;
+                    //res.Is_success = bnkloginresult.Is_success;
+                    //res.Message = bnkloginresult.Message;
                 }
             }
             catch (Exception we)
             {
-                Logger.Error("**Add_Bank** CodeBehind -> SetDefaultBank FAILED - [MemberID: " + input.MemberId +
-                                   "], [Exception: " + we.InnerException + "]");
+                Logger.Error("Add_Bank CodeBehind -> SetDefaultBank FAILED - [MemberID: " + input.MemberId +
+                              "], [Exception: " + we.InnerException + "]");
             }
+
             return Json(res);
         }
 

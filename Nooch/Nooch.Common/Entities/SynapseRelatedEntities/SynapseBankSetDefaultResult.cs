@@ -8,9 +8,7 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
 {
     public class SynapseBankSetDefaultResult
     {
-        
         public bool Is_success { get; set; }
-          
         public string Message { get; set; }
     }
 }

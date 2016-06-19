@@ -3060,17 +3060,21 @@ namespace Nooch.DataAccess
 
             #region Check if given Email and Phone already exist
 
-            string memberIdFromPhone = CommonHelper.GetMemberIdByContactNumber(userPhone);
-            if (!String.IsNullOrEmpty(memberIdFromPhone))
-            {
-                res.reason = "Given phone number already registered.";
-                return res;
-            }
-
             string memberIdFromEmail = CommonHelper.GetMemberIdByUserName(userEmail);
             if (!String.IsNullOrEmpty(memberIdFromEmail))
             {
                 res.reason = "Given email already registered.";
+                Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 FAILED - EMAIL Already Registered: [" + userEmail + "]");
+
+                return res;
+            }
+
+            string memberIdFromPhone = CommonHelper.GetMemberIdByContactNumber(userPhone);
+            if (!String.IsNullOrEmpty(memberIdFromPhone))
+            {
+                res.reason = "Given phone number already registered.";
+                Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 FAILED - PHONE Already Registered: [" + userPhone + "]");
+
                 return res;
             }
 
@@ -4435,7 +4439,7 @@ namespace Nooch.DataAccess
                                 Logger.Info("MDA -> SynapseV3MFABankVerifyWithMicroDeposits SUCCESSFUL for: [" + MemberId + "]");
 
                                 // Mark Any Existing Synapse Bank Login Entries as Deleted
-                                var removeExistingSynapseBankLoginResult = CommonHelper.RemoveSynapseBankLoginResultsForGivenMemberId(id.ToString());
+                                var removeExistingSynapseBankLoginResult = CommonHelper.RemoveSynapseBankLoginResults(id.ToString());
 
                                 #region Update Bank Record in DB
 
@@ -4728,7 +4732,8 @@ namespace Nooch.DataAccess
                                         {
                                             try
                                             {
-                                                Logger.Info("MDA -> SynapseV3MFABankVerify - Node [" + nodeCount + "], Bank: [" + v.info.bank_name +
+                                                Logger.Info("MDA -> SynapseV3MFABankVerify - Parsing Bank Array From Synapse - Node # [" + nodeCount +
+                                                            "], Bank: [" + v.info.bank_name +
                                                             "], Name on Account: [" + v.info.name_on_account +
                                                             "], Allowed: [" + v.allowed +
                                                             "], Type: [" + v.info.type +
@@ -6037,7 +6042,7 @@ namespace Nooch.DataAccess
                                 }
                                 else
                                 {
-                                    var error = "MDA - GetTokensAndTransferMoneyToNewUser FAILED -> Synapse Response was NOT successful - " +
+                                    var error = "MDA -> GetTokensAndTransferMoneyToNewUser FAILED - " +
                                                  "Error Message: [" + Call_Synapse_Order_API_Result.ErrorMessage + "], Synapse Response: [" + Call_Synapse_Order_API_Result.responseFromSynapse + "]";
                                     Logger.Error(error);
                                     CommonHelper.notifyCliffAboutError(error);

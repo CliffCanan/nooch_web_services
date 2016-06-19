@@ -703,7 +703,7 @@ namespace Nooch.Common
         }
 
 
-        public static bool RemoveSynapseBankLoginResultsForGivenMemberId(string memberId)
+        public static bool RemoveSynapseBankLoginResults(string memberId)
         {
             Logger.Info("Common Helper -> RemoveSynapseBankLoginResultsForGivenMemberId Initiated - MemberId: [" + memberId + "]");
 
@@ -711,13 +711,19 @@ namespace Nooch.Common
             {
                 var id = Utility.ConvertToGuid(memberId);
 
-                var memberAccountDetails = _dbContext.SynapseBankLoginResults.Where(m => m.MemberId == id && m.IsDeleted == false).ToList();
+                var oldBankLoginRecords = _dbContext.SynapseBankLoginResults.Where(m => m.MemberId == id && m.IsDeleted == false).ToList();
 
-                foreach (SynapseBankLoginResult v in memberAccountDetails)
+                if (oldBankLoginRecords != null && oldBankLoginRecords.Count > 0)
                 {
-                    v.IsDeleted = true;
-                    _dbContext.SaveChanges();
-                    _dbContext.Entry(memberAccountDetails).Reload();
+                    // CC (6/18/16): THIS BLOCK IS THROWING AN ERROR EVERY TIME... maybe b/c it's attempting to save
+                    //               the changes to "v" which is not the actual DB object?
+                    // ERROR is: "System.InvalidOperationException: The entity type List`1 is not part of the model for the current context."
+                    foreach (SynapseBankLoginResult v in oldBankLoginRecords)
+                    {
+                        v.IsDeleted = true;
+                        _dbContext.SaveChanges();
+                        _dbContext.Entry(oldBankLoginRecords).Reload();
+                    }
                 }
 
                 return true;
@@ -1180,7 +1186,7 @@ namespace Nooch.Common
 
         public static MemberNotification GetMemberNotificationSettings(string memberId)
         {
-            Logger.Info("Common Helper -> GetMemberNotificationSettings Initiated - [MemberId: " + memberId + "]");
+            //Logger.Info("Common Helper -> GetMemberNotificationSettings Initiated - MemberId: [" + memberId + "]");
 
             try
             {
@@ -1197,7 +1203,8 @@ namespace Nooch.Common
             }
             catch (Exception ex)
             {
-                Logger.Info("Common Helper -> GetMemberNotificationSettings FAILED - Exception: [" + ex.Message + "]");
+                Logger.Info("Common Helper -> GetMemberNotificationSettings FAILED - MemberId: [" + memberId +
+                            "], Exception: [" + ex.Message + "]");
             }
 
             return null;
@@ -3068,11 +3075,11 @@ namespace Nooch.Common
                             if (synCreateUserObject.access_token == GetEncryptedData(refreshResultFromSyn.oauth.oauth_key))
                             {
                                 res.success = true;
-                                Logger.Info("Common Helper -> refreshSynapseV3OautKey - Access_Token from Synapse MATCHES what we already had in DB.");
+                                Logger.Info("Common Helper -> refreshSynapseV3OautKey - Access_Token from Synapse MATCHES whats in DB");
                             }
                             else // New Access Token...
                             {
-                                Logger.Info("Common Helper -> refreshSynapseV3OautKey - Access_Token from Synapse MATCHES what we already had in DB.");
+                                Logger.Info("Common Helper -> refreshSynapseV3OautKey - Access_Token from Synapse is NEW");
                             }
 
                             // Update all values no matter what, even if access_token hasn't changed - possible one of the other values did
@@ -3094,7 +3101,7 @@ namespace Nooch.Common
 
                             if (save > 0)
                             {
-                                Logger.Info("Common Helper -> refreshSynapseV3OautKey - SUCCESS From Synapse and Successfully saved updates to Nooch DB.");
+                                Logger.Info("Common Helper -> refreshSynapseV3OautKey - SUCCESS From Synapse & saved updates to DB.");
 
                                 res.success = true;
                                 res.oauth_consumer_key = synCreateUserObject.access_token;
@@ -3104,7 +3111,7 @@ namespace Nooch.Common
                             }
                             else
                             {
-                                Logger.Error("Common Helper -> refreshSynapseV3OautKey FAILED - Error saving new key in Nooch DB - " +
+                                Logger.Error("Common Helper -> refreshSynapseV3OautKey FAILED - Error saving key in Nooch DB - " +
                                              "Orig. Oauth Key: [" + oauthKey + "], " +
                                              "Refreshed OAuth Key: [" + synCreateUserObject.access_token + "]");
                                 res.msg = "Failed to save new OAuth key in Nooch DB.";
@@ -3115,17 +3122,6 @@ namespace Nooch.Common
 
                         else if (refreshResponse["success"] != null && Convert.ToBoolean(refreshResponse["success"]) == false)
                         {
-                            // Error returned from Synapse, but not a 400 HTTP Code error (probably will be a 202 Code). Example:
-                            /* {"error": {
-                                  "en": "Fingerprint not verified. Please verify fingerprint via 2FA."
-                                },
-                                "error_code": "10",
-                                "http_code": "202",
-                                "phone_numbers": [
-                                  "3133339465"
-                                ],
-                                "success": false
-                              }*/
                             if (refreshResponse["error"] != null && refreshResponse["error"]["en"] != null)
                             {
                                 res.msg = refreshResponse["error"]["en"].ToString();
@@ -3540,8 +3536,8 @@ namespace Nooch.Common
 
         public static SynapseBankSetDefaultResult SetSynapseDefaultBank(string MemberId, string BankName, string BankOId)
         {
-            Logger.Info("Common Helper -> SetSynapseDefaultBank Initiated. [MemberId: " + MemberId + "], [Bank Name: " +
-                        BankName + "], [BankOId: " + BankOId + "]");
+            Logger.Info("Common Helper -> SetSynapseDefaultBank Fired - MemberId: [" + MemberId + "], Bank Name: [" +
+                        BankName + "], BankOId: [" + BankOId + "]");
 
             SynapseBankSetDefaultResult res = new SynapseBankSetDefaultResult();
             res.Is_success = false;
@@ -3549,14 +3545,14 @@ namespace Nooch.Common
             #region Check Query Data
 
             if (String.IsNullOrEmpty(MemberId) ||
-                String.IsNullOrEmpty(BankName) ||
+                //String.IsNullOrEmpty(BankName) ||
                 String.IsNullOrEmpty(BankOId))
             {
-                if (String.IsNullOrEmpty(BankName))
-                {
-                    res.Message = "Invalid data - need Bank Name";
-                }
-                else if (String.IsNullOrEmpty(MemberId))
+                //if (String.IsNullOrEmpty(BankName))
+                //{
+                //    res.Message = "Invalid data - need Bank Name";
+                //}
+                if (String.IsNullOrEmpty(MemberId))
                 {
                     res.Message = "Invalid data - need MemberId";
                 }
@@ -3586,10 +3582,10 @@ namespace Nooch.Common
                     string bankNameEncrypted = GetEncryptedData(BankName);
                     string bankOId = GetEncryptedData(BankOId);
 
-                    var banksFound = _dbContext.SynapseBanksOfMembers.Where(memberTemp =>
-                                        memberTemp.MemberId.Value.Equals(MemberInfoInNoochDb.MemberId) &&
-                                        memberTemp.bank_name == bankNameEncrypted &&
-                                        memberTemp.oid == bankOId).ToList();
+                    var banksFound = _dbContext.SynapseBanksOfMembers.Where(bank =>
+                                        bank.MemberId == MemberInfoInNoochDb.MemberId &&
+                                        //memberTemp.bank_name == bankNameEncrypted &&
+                                        bank.oid == bankOId).ToList();
 
                     // CLIFF (10/7/15): ADDING THIS CODE TO MAKE SURE WE SELECT THE *MOST RECENT* BANK (b/c it creates problems when a user
                     //                  re-attaches the same bank... it has the same ID from Synapse, there may be more than one match)
@@ -3868,7 +3864,7 @@ namespace Nooch.Common
                                             "NOT sending the Verification Email - [MemberID: " + MemberId + "], [Username: " + noochEmailAddress + "]");
 
                                 StringBuilder st = new StringBuilder("<br/><p><strong>This user's Nooch Account information is:</strong></p>" +
-                                          "<table border='1' style='border-collapse:collapse;'>" +
+                                          "<table border='1' cellpadding='3' style='border-collapse:collapse;'>" +
                                           "<tr><td><strong>MemberID:</strong></td><td>" + MemberId + "</td></tr>" +
                                           "<tr><td><strongNooch_ID:</strong></td><td>" + MemberInfoInNoochDb.Nooch_ID + "</td></tr>" +
                                           "<tr><td><strong>Nooch Name:</strong></td><td>" + noochFullName + "</td></tr>" +
@@ -4053,12 +4049,12 @@ namespace Nooch.Common
                         if (a > 0)
                         {
                             _dbContext.Entry(lastIpFound).Reload();
-                            Logger.Info("Common Helper -> UpdateMemberIPAddressAndDeviceId SUCCESS For Saving IP Address (1) - [MemberId: " + MemberId + "]");
+                            Logger.Info("Common Helper -> UpdateMemberIPAddressAndDeviceId SUCCESS - IP Address Saved (1) - MemberId: [" + MemberId + "]");
                             ipSavedSuccessfully = true;
                         }
                         else
                         {
-                            Logger.Info("Common Helper -> UpdateMemberIPAddressAndDeviceId FAILED Trying To Saving IP Address (1) in DB - [MemberId: " + MemberId + "]");
+                            Logger.Error("Common Helper -> UpdateMemberIPAddressAndDeviceId FAILED Trying To Saving IP Address (1) in DB - MemberId: [" + MemberId + "]");
                         }
                     }
                     else
@@ -4076,23 +4072,23 @@ namespace Nooch.Common
                         if (b > 0)
                         {
                             _dbContext.Entry(mip).Reload();
-                            Logger.Info("Common Helper -> UpdateMemberIPAddressAndDeviceId SUCCESS For Saving IP Address (2) - [MemberId: " + MemberId + "]");
+                            Logger.Info("Common Helper -> UpdateMemberIPAddressAndDeviceId SUCCESS - IP Address Saved (2) - MemberId: [" + MemberId + "]");
                             ipSavedSuccessfully = true;
                         }
                         else
                         {
-                            Logger.Info("Common Helper -> UpdateMemberIPAddressAndDeviceId FAILED Trying To Saving IP Address (2) in DB - [MemberId: " + MemberId + "]");
+                            Logger.Error("Common Helper -> UpdateMemberIPAddressAndDeviceId FAILED Trying To Saving IP Address (2) in DB - MemberId: [" + MemberId + "]");
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    Logger.Info("Common Helper -> UpdateMemberIPAddressAndDeviceId FAILED For Saving IP Address - [Exception: " + ex + "]");
+                    Logger.Error("Common Helper -> UpdateMemberIPAddressAndDeviceId FAILED For Saving IP Address - Exception: [" + ex + "]");
                 }
             }
             else
             {
-                Logger.Info("Common Helper -> UpdateMemberIPAddressAndDeviceId - No IP Address Passed - [MemberId: " + MemberId + "]");
+                Logger.Error("Common Helper -> UpdateMemberIPAddressAndDeviceId - No IP Address Passed - MemberId: [" + MemberId + "]");
             }
 
             #endregion Save IP Address
@@ -4118,22 +4114,22 @@ namespace Nooch.Common
                     if (c > 0)
                     {
                         _dbContext.Entry(member).Reload();
-                        Logger.Info("Common Helper -> UpdateMemberIPAddressAndDeviceId SUCCESS For Saving Device ID - [MemberId: " + MemberId + "]");
+                        Logger.Info("Common Helper -> UpdateMemberIPAddressAndDeviceId SUCCESS - Device ID Saved - MemberId: [" + MemberId + "]");
                         udidIdSavedSuccessfully = true;
                     }
                     else
                     {
-                        Logger.Info("Common Helper -> UpdateMemberIPAddressAndDeviceId FAILED Trying To Saving Device ID in DB - [MemberId: " + MemberId + "]");
+                        Logger.Error("Common Helper -> UpdateMemberIPAddressAndDeviceId FAILED Trying To Saving Device ID in DB - MemberId: [" + MemberId + "]");
                     }
                 }
                 catch (Exception ex)
                 {
-                    Logger.Info("Common Helper -> UpdateMemberIPAddressAndDeviceId FAILED For Saving Device ID - [Exception: " + ex + "]");
+                    Logger.Error("Common Helper -> UpdateMemberIPAddressAndDeviceId FAILED For Saving Device ID - Exception: [" + ex + "]");
                 }
             }
             else
             {
-                Logger.Info("Common Helper -> UpdateMemberIPAddressAndDeviceId - No Device ID Passed - [MemberId: " + MemberId + "]");
+                Logger.Error("Common Helper -> UpdateMemberIPAddressAndDeviceId - No Device ID Passed - MemberId: [" + MemberId + "]");
             }
 
             #endregion Save Device ID
@@ -4152,13 +4148,12 @@ namespace Nooch.Common
             }
 
             return "Neither IP address nor DeviceID were saved.";
-
         }
 
 
         public static string GetMemberIdByContactNumber(string userContactNumber)
         {
-            Logger.Info("Common Helper -> GetMemberIdByContactNumber Initiated - [userContactNumber: " + userContactNumber + "]");
+            Logger.Info("Common Helper -> GetMemberIdByContactNumber Initiated - ContactNumber: [" + userContactNumber + "]");
 
             string trimmedContactNum = RemovePhoneNumberFormatting(userContactNumber);
 

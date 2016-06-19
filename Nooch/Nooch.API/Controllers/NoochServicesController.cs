@@ -2411,7 +2411,7 @@ namespace Nooch.API.Controllers
         {
             try
             {
-                Logger.Info("Service Cntrlr -> GetTransactionDetailByIdForRequestPayPage Initiated - [Trans ID: " + TransactionId + "]");
+                Logger.Info("Service Cntrlr -> GetTransactionDetailByIdForRequestPayPage Fired - TransID: [" + TransactionId + "]");
 
                 var tda = new TransactionsDataAccess();
                 Transaction tr = tda.GetTransactionById(TransactionId);
@@ -3576,23 +3576,21 @@ namespace Nooch.API.Controllers
                         bankLoginRespFromSynapse["nodes"] != null)
                     {
                         // Marking Any Existing Synapse Bank Login Entries as Deleted
-                        var removeExistingSynapseBankLoginResult = CommonHelper.RemoveSynapseBankLoginResultsForGivenMemberId(id.ToString());
+                        var removeExistingSynapseBankLoginResult = CommonHelper.RemoveSynapseBankLoginResults(id.ToString());
 
-                        RootBankObject rootBankObj = new RootBankObject();
-                        rootBankObj.success = true;
+                        //RootBankObject rootBankObj = new RootBankObject();
+                        //rootBankObj.success = true;
 
                         #region Save New Record In SynapseBankLoginResults
 
                         try
                         {
-                            // Preparing to save results in SynapseBankLoginResults DB table
                             SynapseBankLoginResult sbr = new SynapseBankLoginResult();
-
                             sbr.MemberId = id;
                             sbr.IsSuccess = true;
                             sbr.dateCreated = DateTime.Now;
                             sbr.IsDeleted = false;
-                            sbr.IsCodeBasedAuth = false;  // NO MORE CODE-BASED WITH SYNAPSE V3, EVERY MFA IS THE SAME NOW
+                            sbr.IsCodeBasedAuth = false; // NO MORE CODE-BASED WITH SYNAPSE V3, EVERY MFA IS THE SAME NOW
                             sbr.mfaMessage = null; // For Code-Based MFA - NOT USED ANYMORE, SHOULD REMOVE FROM DB
                             sbr.BankAccessToken = CommonHelper.GetEncryptedData(bankLoginRespFromSynapse["nodes"][0]["_id"]["$oid"].ToString());
 
@@ -3736,13 +3734,13 @@ namespace Nooch.API.Controllers
                                     sbm.IsDefault = false;
                                     sbm.MemberId = Utility.ConvertToGuid(MemberId);
 
-                                    // Holdovers from v3
+                                    // Holdovers from V2
                                     sbm.account_number_string = !String.IsNullOrEmpty(n.info.account_num) ? CommonHelper.GetEncryptedData(n.info.account_num) : null;
                                     sbm.bank_name = !String.IsNullOrEmpty(n.info.bank_name) ? CommonHelper.GetEncryptedData(n.info.bank_name) : null;
                                     sbm.name_on_account = !String.IsNullOrEmpty(n.info.name_on_account) ? CommonHelper.GetEncryptedData(n.info.name_on_account) : null;
                                     sbm.nickname = !String.IsNullOrEmpty(n.info.nickname) ? CommonHelper.GetEncryptedData(n.info.nickname) : null;
                                     sbm.routing_number_string = !String.IsNullOrEmpty(n.info.routing_num) ? CommonHelper.GetEncryptedData(n.info.routing_num) : null;
-                                    sbm.is_active = (n.is_active != null) ? n.is_active : false;
+                                    sbm.is_active = n.is_active;
                                     sbm.Status = "Not Verified";
                                     sbm.mfa_verifed = false;
 
@@ -3761,19 +3759,20 @@ namespace Nooch.API.Controllers
 
                                     if (addBankToDB == 1)
                                     {
-                                        Logger.Info("Service Controller -> SynapseV3AddNode -SUCCESSFULLY Added Bank to DB - [MemberID: " + MemberId + "]");
+                                        Logger.Info("Service Controller -> SynapseV3AddNode -SUCCESSFULLY Added Bank to DB - Bank OID: [" + n._id.oid +
+                                                    "], MemberID: [" + MemberId + "]");
                                         numOfBanksSavedSuccessfully += 1;
                                     }
                                     else
                                     {
-                                        Logger.Error("Service Controller -> SynapseV3AddNode - Failed to save new BANK in SynapseBanksOfMembers Table in DB - [MemberID: " + MemberId + "]");
+                                        Logger.Error("Service Controller -> SynapseV3AddNode - Failed to save new BANK in SynapseBanksOfMembers Table in DB - MemberID: [" + MemberId + "]");
                                         numOfBanksSavedSuccessfully -= 1;
                                     }
                                 }
                                 catch (Exception ex)
                                 {
                                     res.errorMsg = "Error occured while saving banks from Synapse.";
-                                    Logger.Error("Service Controller -> SynapseV3AddNode EXCEPTION on attempting to save SynapseBankLogin response for MFA Bank in DB - [MemberID: " +
+                                    Logger.Error("Service Controller -> SynapseV3AddNode EXCEPTION on attempting to save SynapseBankLogin response for MFA Bank in DB - MemberID: [" +
                                                    MemberId + "], [Exception: " + ex + "]");
                                 }
                             }
@@ -3806,7 +3805,7 @@ namespace Nooch.API.Controllers
                     else
                     {
                         // Synapse response for 'success' was not true
-                        Logger.Error("Service Cntrlr -> SynapseV3AddNode ERROR - Synapse response for 'success' was not true - [MemberID: " + MemberId + "]");
+                        Logger.Error("Service Cntrlr -> SynapseV3AddNode ERROR - Synapse response for 'success' was not true - MemberID: [" + MemberId + "]");
                         res.errorMsg = "Synapse response for success was not true";
                     }
                 }
@@ -3851,7 +3850,7 @@ namespace Nooch.API.Controllers
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Cntrlr -> SynapseV3AddNode FAILED - OUTER EXCEPTION - [MemberID: " + MemberId + "], [Exception: " + ex + "]");
+                Logger.Error("Service Cntrlr -> SynapseV3AddNode FAILED - OUTER EXCEPTION - MemberID: [" + MemberId + "], Exception: [" + ex + "]");
                 res.errorMsg = "Service Controller Outer Exception";
             }
 
