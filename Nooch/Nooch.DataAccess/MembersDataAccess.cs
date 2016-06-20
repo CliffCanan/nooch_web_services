@@ -4452,6 +4452,7 @@ namespace Nooch.DataAccess
                                     bankAccountDetails.allowed = allNodesParsedResult.nodes[0].allowed.ToString();
                                     bankAccountDetails.mfa_verifed = true;
                                     bankAccountDetails.Status = "Verified";
+                                    bankAccountDetails.VerifiedOn = DateTime.Now;
 
                                     try
                                     {

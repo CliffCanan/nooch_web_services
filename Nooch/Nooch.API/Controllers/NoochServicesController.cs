@@ -383,13 +383,6 @@ namespace Nooch.API.Controllers
             }
         }
 
-        public StringResult WeeklyLimitTest(string memId)
-        {
-            var tda = new TransactionsDataAccess();
-            Guid memGuid = Utility.ConvertToGuid(memId);
-
-            return new StringResult { Result = CommonHelper.IsWeeklyTransferLimitExceeded(memGuid, 5).ToString() };
-        }
 
         [HttpGet]
         [ActionName("GetMemberDetails")]

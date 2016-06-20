@@ -32,9 +32,18 @@
 
         <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
             <div class="clearfix">
-                <a class="landingHeaderLogo center-block" href="https://www.nooch.com/">
-                    <img src="@Url.Content("~/Assets/Images/nooch-logo2.svg")" class="center-block" alt="Nooch Logo" />
-                </a>
+                @if (@mod.isRentScene == "true")
+                {
+                    <a class="landingHeaderLogo center-block" href="https://www.rentscene.com/">
+                        <img src="@Url.Content("~/Assets/Images/rentscene.png")" class="center-block" alt="Rent Scene Logo" />
+                    </a>
+                }
+                else
+                {
+                    <a class="landingHeaderLogo center-block" href="https://www.nooch.com/">
+                        <img src="@Url.Content("~/Assets/Images/nooch-logo2.svg")" class="center-block" alt="Nooch Logo" />
+                    </a>
+                }
             </div>
         </nav>
 

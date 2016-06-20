@@ -5657,7 +5657,7 @@ namespace Nooch.DataAccess
                 }
 
                 // Weekly limit check
-                if (CommonHelper.IsWeeklyTransferLimitExceeded(Utility.ConvertToGuid(handleRequestDto.MemberId), transactionAmount))
+                if (CommonHelper.IsWeeklyTransferLimitExceeded(Utility.ConvertToGuid(handleRequestDto.MemberId), transactionAmount, handleRequestDto.ReceiverId))
                 {
                     Logger.Info("TDA -> HandleRequestMoney - Weekly transfer limit exceeded. MemberId: [" + handleRequestDto.MemberId + "]");
                     return "Weekly transfer limit exceeded.";
@@ -6182,16 +6182,13 @@ namespace Nooch.DataAccess
         {
             string transactionTrackingId = CommonHelper.GetRandomTransactionTrackingId();
 
-            var noochConnection = new NOOCHEntities();
+            //var noochConnection = new NOOCHEntities();
 
             var entity = new Transaction
             {
                 TransactionId = Guid.NewGuid(),
-
                 SenderId = Utility.ConvertToGuid(transactionEntity.MemberId),
-
                 RecipientId = Utility.ConvertToGuid(transactionEntity.RecipientId),
-
                 Amount = transactionEntity.Amount,
                 TransactionDate = DateTime.Now,
                 DisputeStatus = null,
@@ -6202,6 +6199,7 @@ namespace Nooch.DataAccess
                 IsPrepaidTransaction = false,
                 TransactionFee = 0,
             };
+
             return entity;
         }
 
@@ -6293,7 +6291,7 @@ namespace Nooch.DataAccess
             }
 
             // Check weekly transfer limit
-            if (CommonHelper.IsWeeklyTransferLimitExceeded(Utility.ConvertToGuid(transInput.MemberId), transactionAmount))
+            if (CommonHelper.IsWeeklyTransferLimitExceeded(Utility.ConvertToGuid(transInput.MemberId), transactionAmount, transInput.RecipientId))
             {
                 Logger.Error("TDA -> TransferMoneyUsingSynapse -> Weekly transfer limit exceeded. MemberId: [" +
                                        transInput.MemberId + "]");
@@ -6520,7 +6518,6 @@ namespace Nooch.DataAccess
                     string sender_fingerPrint = senderNoochDetails.UDID1;
                     string amount = transInput.Amount.ToString();
                     string receiver_fingerprint = recipientNoochDetails.UDID1;
-                    string suppID_or_transID = transInput.TransactionId.ToString();
                     string iPForTransaction = CommonHelper.GetRecentOrDefaultIPOfMember(SenderGuid);
                     string fee = "0";
                     if (transactionAmount > 10)
@@ -6532,8 +6529,12 @@ namespace Nooch.DataAccess
                         fee = "0.10";
                     }
 
+                    // CC (6/20/16): Must get the TransactionID from 'SetTransactionDetails' here so we send the right webhook to Synapse.
+                    Transaction transactionDetail = new Transaction();
+                    transactionDetail = SetTransactionDetails(transInput, Constants.TRANSACTION_TYPE_TRANSFER, 0);
+
                     SynapseV3AddTrans_ReusableClass transactionResultFromSynapseAPI = AddTransSynapseV3Reusable(sender_oauth, sender_fingerPrint, sender_bank_node_id,
-                        amount, fee, receiver_oauth, receiver_fingerprint, receiver_bank_node_id, suppID_or_transID,
+                        amount, fee, receiver_oauth, receiver_fingerprint, receiver_bank_node_id, transactionDetail.TransactionId.ToString(),
                         senderUserName, receiverUserName, iPForTransaction, senderLastName, recipientLastName);
 
                     short shouldSendFailureNotifications = 0;
@@ -6547,9 +6548,6 @@ namespace Nooch.DataAccess
 
                         #region Save Info in Transaction Details Table
 
-                        Transaction transactionDetail = new Transaction();
-
-                        transactionDetail = SetTransactionDetails(transInput, Constants.TRANSACTION_TYPE_TRANSFER, 0);
                         transactionDetail.TransactionStatus = "Success";
                         transactionDetail.Memo = transInput.Memo;
                         transactionDetail.Picture = transInput.Picture;
@@ -7027,7 +7025,7 @@ namespace Nooch.DataAccess
                 }
 
                 // Check weekly transfer limit
-                if (CommonHelper.IsWeeklyTransferLimitExceeded(Utility.ConvertToGuid(transactionEntity.MemberId), transactionAmount))
+                if (CommonHelper.IsWeeklyTransferLimitExceeded(Utility.ConvertToGuid(transactionEntity.MemberId), transactionAmount, null))
                 {
                     Logger.Info("TDA -> TransferMoneyToNonNoochUserUsingSynapse -> Weekly transfer limit exceeded. MemberId: [" +
                                            transactionEntity.MemberId + "]");
@@ -7456,7 +7454,7 @@ namespace Nooch.DataAccess
                         }
 
                         // Check weekly transaction limit
-                        if (CommonHelper.IsWeeklyTransferLimitExceeded(Utility.ConvertToGuid(transactionEntity.MemberId), transactionAmount))
+                        if (CommonHelper.IsWeeklyTransferLimitExceeded(Utility.ConvertToGuid(transactionEntity.MemberId), transactionAmount, null))
                         {
                             Logger.Error("TDA -> TransferMoneyToNonNoochUserThroughPhoneUsingsynapse -> Weekly transfer limit exceeded. MemberId: [" +
                                                    transactionEntity.MemberId + "]");

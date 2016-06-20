@@ -3189,7 +3189,7 @@ namespace Nooch.Web.Controllers
 
                                         var transIdString = trans.TransactionId.ToString().ToLower();
 
-                                        var synStatus = CommonHelper.GetTransSynapseStatus(transIdString);
+                                        var synStatus = CommonHelper.GetTransSynapseStatusNote(transIdString);
                                         obj.SynapseStatusNote = synStatus != "Failure" ? synStatus : "";
                                     }
 
@@ -3440,7 +3440,6 @@ namespace Nooch.Web.Controllers
         /// <returns></returns>
         [HttpPost]
         [ActionName("MFALoginWithRoutingAndAccountNumber")]
-        //public SynapseBankLoginRequestResult MFALoginWithRoutingAndAccountNumber(string bank, string memberid, string MicroDepositOne, string MicroDepositTwo, string bankId)
         public ActionResult MFALoginWithRoutingAndAccountNumber(string bank, string memberid, string MicroDepositOne, string MicroDepositTwo, string NodeId1)
         {
             SynapseV3BankLoginResult_ServiceRes res = new SynapseV3BankLoginResult_ServiceRes();
