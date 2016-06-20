@@ -4750,11 +4750,14 @@ namespace Nooch.Common
 
                                 suggestions suggestion = new suggestions();
                                 suggestion.value = name;
-                                suggestion.data.nooch_id = otherUser.Nooch_ID;
-                                suggestion.data.name = name;
-                                suggestion.data.cip = otherUser.cipTag;
-                                suggestion.data.email = GetDecryptedData(otherUser.UserName);
-                                suggestion.data.imgUrl = otherUser.Photo;
+                                suggestion.data = new suggestions_data
+                                {
+                                    nooch_id = otherUser.Nooch_ID,
+                                    name = name,
+                                    cip = otherUser.cipTag,
+                                    email = GetDecryptedData(otherUser.UserName),
+                                    imgUrl = otherUser.Photo
+                                };
 
                                 Logger.Info("Common Helper - GetSuggestedUsers - CHECKPOINT #1.0");
 

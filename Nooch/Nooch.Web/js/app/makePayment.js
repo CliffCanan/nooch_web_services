@@ -28,9 +28,9 @@ $(document).ready(function () {
 
         changeFavicon('../Assets/favicon2.ico')
 
-        //var suggestedUsers = getSuggestedUsers();
+        var suggestedUsers = getSuggestedUsers();
         
-        //console.log(suggestedUsers);
+        console.log(suggestedUsers);
     }
     else if (FROM == "appjaxx" || FROM == "josh")
     {
