@@ -4551,7 +4551,7 @@ namespace Nooch.Common
         public static string SendMincroDepositsVerificationReminderEmail(string MemberId, string BankId, bool IsRs)
         {
             Logger.Info("Common Helper -> SendMincroDepositsVerificationReminderEmail Initiated. MemberID: [" + MemberId + "], " +
-                        "NodeId: [" + BankId + "], " +
+                        "Node OID (enc): [" + BankId + "], " +
                         "IsRs: [" + IsRs + "]");
 
             try
@@ -4559,7 +4559,6 @@ namespace Nooch.Common
                 using (NOOCHEntities db = new NOOCHEntities())
                 {
                     var memGuid = Utility.ConvertToGuid(MemberId);
-                    var BankIdInt = Convert.ToInt16(BankId);
 
                     var memberObj = GetMemberDetails(MemberId);
                     if (memberObj == null)
@@ -4570,7 +4569,7 @@ namespace Nooch.Common
                     var bankAccountDetails = db.SynapseBanksOfMembers.FirstOrDefault(b =>
                                                                                      b.IsDefault == true &&
                                                                                      b.IsAddedUsingRoutingNumber == true &&
-                                                                                     b.Id == BankIdInt &&
+                                                                                     b.oid == BankId &&
                                                                                      b.MemberId == memGuid &&
                                                                                      b.Status == "Not Verified");
 
@@ -4599,7 +4598,7 @@ namespace Nooch.Common
                         string routingNum = GetDecryptedData(bankAccountDetails.routing_number_string);
 
                         string verifyLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
-                            "Nooch/MicroDepositsVerification?mid=" + MemberId + "&NodeId=" + bankAccountDetails.Id + "&IsRs=" + memberObj.isRentScene.ToString());
+                                                          "Nooch/MicroDepositsVerification?mid=" + MemberId);
 
                         var tokens = new Dictionary<string, string>
                                 {
