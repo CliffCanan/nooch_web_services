@@ -718,11 +718,13 @@ namespace Nooch.Common
                     // CC (6/18/16): THIS BLOCK IS THROWING AN ERROR EVERY TIME... maybe b/c it's attempting to save
                     //               the changes to "v" which is not the actual DB object?
                     // ERROR is: "System.InvalidOperationException: The entity type List`1 is not part of the model for the current context."
+                    // Malkit (20 June 2016) : This is fixed, you should load correct db context in such cases Remeber to call GetDbContextFromEntity method from CommonHelper.. ;)
                     foreach (SynapseBankLoginResult v in oldBankLoginRecords)
                     {
+                        DbContext db = GetDbContextFromEntity( v);
                         v.IsDeleted = true;
-                        _dbContext.SaveChanges();
-                        _dbContext.Entry(oldBankLoginRecords).Reload();
+                        db.SaveChanges();
+                        db.Entry(oldBankLoginRecords).Reload();
                     }
                 }
 
