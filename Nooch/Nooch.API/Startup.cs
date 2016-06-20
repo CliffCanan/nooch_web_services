@@ -19,9 +19,10 @@ namespace Nooch.API
             Hangfire.GlobalConfiguration.Configuration.UseSqlServerStorage(connString);
 
 
-
             //app.UseHangfireDashboard();
             app.UseHangfireServer();
         }
     }
+
+   
 }
