@@ -16,6 +16,7 @@ namespace Nooch.Common.Entities.LandingPagesRelatedEntities
         public string ERROR_MSG { get; set; }
         public SynapseBanksListClass SynapseBanksList { get; set; }
         public SynapseQuestionBasedMFAClass SynapseQuestionBasedResponse { get; set; } // Not sure this is still needed with Synapse V3
+        public bool IsBankManulAdded { get; set; }
     }
 
     public class BankLoginResult

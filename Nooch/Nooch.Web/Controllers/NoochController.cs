@@ -526,7 +526,7 @@ namespace Nooch.Web.Controllers
                              "], [Exception: " + we + "]");
                 res.ERROR_MSG = "Add Bank exception # 494";
             }
-
+            res.IsBankManulAdded = true;
             return Json(res);
         }
 

@@ -16,6 +16,7 @@ var step1height = '554px';
 var step2height = '520px';
 
 var wasEnterPressed = false;
+var IsBankManulAdded = false;
 
 $('#bankSearch').on('keypress', function (e) {
     // This function prevents the form from submitting... otherwise the browser was always selecting Bank of America no matter what was in the text field, not sure why
@@ -777,7 +778,9 @@ function submitManualBank() {
         success: function (bnkManualResult) {
             console.log("SUBMIT BANK MANUAL response msg is...");
             console.log(bnkManualResult);
-	
+
+            IsBankManulAdded = bnkManualResult.IsBankManulAdded;
+
 			// Hide UIBlock (loading box))
             $('.addBankContainer-body').unblock();
 
@@ -1232,6 +1235,40 @@ function sendToRedUrl() {
                 }, 300);
             //});
         }
+        else if(IsBankManulAdded == true)
+            {
+                swal({
+                    title: "Bank Linked Successfully",
+                    text: "<p>Thanks for completing this <strong>one-time</strong> process. &nbsp;Now check your mail for verification of your account via Microdeposit !</p>",
+                    type: "success",
+                    confirmButtonColor: "#3fabe1",
+                    confirmButtonText: "Done",
+                    customClass: "largeText",
+                    html: true
+                }, function (isConfirm) {
+                    $('.addBankContainer-body').block({
+                        message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Finishing...</span>',
+                        css: {
+                            border: 'none',
+                            padding: '26px 8px 20px',
+                            backgroundColor: '#000',
+                            '-webkit-border-radius': '15px',
+                            '-moz-border-radius': '15px',
+                            'border-radius': '15px',
+                            opacity: '.8',
+                            width: '70%',
+                            left: '15%',
+                            top: '25px',
+                            color: '#fff'
+                        }
+                    });
+
+                    setTimeout(function () {
+                        window.top.location.href = "https://www.nooch.com/";
+                    }, 300);
+                });
+            }
+
         else // All Others - most likely no RED_URL was passed in URL, so defaulting to a Sweet Alert
             {
                 swal({
