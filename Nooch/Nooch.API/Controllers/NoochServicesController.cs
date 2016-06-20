@@ -3946,19 +3946,15 @@ namespace Nooch.API.Controllers
 
             try
             {
-                Logger.Info("Service Controller - SynapseV3MFABankVerifyWithMicroDeposits Initiated - MemberId: [" + input.MemberId + "]");
-
-                MembersDataAccess mda = new MembersDataAccess();
-
-                #region Check Oauthkey is Still valid
+                Logger.Info("Service Cntrlr - SynapseV3MFABankVerifyWithMicroDeposits Initiated - MemberId: [" + input.MemberId + "]");
 
                 var OauthObj = CommonHelper.GetSynapseCreateaUserDetails(input.MemberId);
                 synapseV3checkUsersOauthKey checkTokenResult = CommonHelper.refreshSynapseV3OautKey(OauthObj.access_token);
 
-                #endregion
-
                 if (checkTokenResult.success == true)
                 {
+                    MembersDataAccess mda = new MembersDataAccess();
+
                     SynapseBankLoginV3_Response_Int mdaResult = new SynapseBankLoginV3_Response_Int();
                     mdaResult = mda.SynapseV3MFABankVerifyWithMicroDeposits(input.MemberId, input.microDespositOne, input.microDespositTwo, input.bankId);
 
@@ -3969,7 +3965,7 @@ namespace Nooch.API.Controllers
                 }
                 else
                 {
-                    Logger.Error("service controller - synapsev3mfabankverifywithmicrodeposits failed on checking user's synapse oauth token - " +
+                    Logger.Error("Service Cntrlr - SynapseV3MFABankVerifyWithMicroDeposits failed on checking user's synapse oauth token - " +
                                  "checktokenresult.msg: [" + checkTokenResult.msg + "], memberid: [" + input.MemberId + "]");
                     res.errorMsg = checkTokenResult.msg;
                     return res;
@@ -4474,16 +4470,16 @@ namespace Nooch.API.Controllers
                 {
                     res.userFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName));
                     res.userLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.LastName));
-                    res.IsRs = memberObj.isRentScene.ToString() ?? "false";
+                    res.IsRs = memberObj.isRentScene.ToString().ToLower() ?? "false";
 
                     var synapseBankDetails = CommonHelper.GetSynapseBankDetails(memberId);
 
-                    if (synapseBankDetails != null) // No Synapse user details were found, so need to create a new Synapse User
+                    if (synapseBankDetails != null)
                     {
                         res.bankName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(synapseBankDetails.bank_name));
                         res.bankNickName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(synapseBankDetails.nickname));
                         res.bankId = synapseBankDetails.oid;
-                        // res.NodeId1 = Convert.ToString(synapseBankDetails.Id); 
+                        res.NodeId1 = synapseBankDetails.oid;
 
                         if (synapseBankDetails.Status == "Verified")
                         {

@@ -152,23 +152,23 @@
                     <div class="col-sm-9 inputContainer">
                         <i class="fa fa-usd"></i>
                         <div class="fg-line">
-                            <input id="amount" type="text" class="form-control p-l-20" value="" placeholder=" 00.00" onblur="formatAmount()" />
+                            <input id="amount" type="text" class="form-control p-l-20" value="" placeholder="00.00" onblur="formatAmount()" />
                         </div>
                     </div>
                 </div>
                 <div class="form-group" id="nameGrp">
                     <label for="name" class="col-sm-3 control-label p-t-10">Name</label>
                     <div class="col-sm-9 inputContainer">
-                        @if (@onLoadD.from == "rentscene")
+                        @*@if (@onLoadD.from == "rentscene")
                         {
                             <input id="name" type="text" class="form-control autocomplete" name="country" />
                         }
                         else
-                        {
+                        {*@
                             <div class="fg-line">
                                 <input id="name" type="text" class="form-control" value="" placeholder="Enter the recipient's full name" />
                             </div>
-                        }
+                        @*}*@
                     </div>
                 </div>
                 <div class="form-group" id="emailGrp">

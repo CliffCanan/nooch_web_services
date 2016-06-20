@@ -28,9 +28,9 @@ $(document).ready(function () {
 
         changeFavicon('../Assets/favicon2.ico')
 
-        var suggestedUsers = getSuggestedUsers();
+        //var suggestedUsers = getSuggestedUsers();
         
-        console.log(suggestedUsers);
+        //console.log(suggestedUsers);
     }
     else if (FROM == "appjaxx" || FROM == "josh")
     {
@@ -227,7 +227,7 @@ function submitPayment() {
     ipVal = ipusr;
     userType = $('input[name="userType"]:checked').val();
 
-    alert("SUBMIT PAYMENT -> {from: " + FROM +
+    console.log("SUBMIT PAYMENT -> {from: " + FROM +
                                  ", isRequest: " + isRequest +
                                  ", amount: " + amount +
                                  ", name: " + name +
