@@ -118,8 +118,8 @@
         <div id="idVerWiz" class="">
 
             @*<div id="pinBtnWrap" class="animated bounceIn @onLoadD.classForPinButton">
-                <button type="button" class="btn btn-primary center-block" onclick="showPinPrompt()">Enter PIN</button>
-            </div>*@
+                    <button type="button" class="btn btn-primary center-block" onclick="showPinPrompt()">Enter PIN</button>
+                </div>*@
 
             <form id="paymentForm" role="form" class="animated form-horizontal @onLoadD.classForForm">
 
@@ -156,16 +156,21 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="form-group" id="nameGrp">
                     <label for="name" class="col-sm-3 control-label p-t-10">Name</label>
                     <div class="col-sm-9 inputContainer">
-                        <div class="fg-line">
-                            <input id="name" type="text" class="form-control" value="" placeholder="Enter the recipient's full name" />
-                        </div>
+                        @if (@onLoadD.from == "rentscene")
+                        {
+                            <input id="name" type="text" class="form-control autocomplete" name="country" />
+                        }
+                        else
+                        {
+                            <div class="fg-line">
+                                <input id="name" type="text" class="form-control" value="" placeholder="Enter the recipient's full name" />
+                            </div>
+                        }
                     </div>
                 </div>
-
                 <div class="form-group" id="emailGrp">
                     <label for="amount" class="col-sm-3 control-label p-t-10">Email</label>
                     <div class="col-sm-9 inputContainer">
@@ -229,29 +234,29 @@
     </div>
 
 
-    <!-- CLIFF (12/17/15): THIS IS JUST UNRELATED TEST CODE FOR THE RENT SCENE WEBSITE - SUMO ME SCROLL BOX... DELETE EVENTUALLY -->
-    <!--<div class="hidden" style="border-top: 10px solid #49a7f5; font-family: 'Montserrat', Helvetica, sans-serif !important; padding: 10px 22px 15px;">
-        <img src="https://noochme.com/noochweb/Assets/Images/rentscene.png" style="margin: 15px auto; display: block; max-width: 70%;" />
+    @*<!-- CLIFF (12/17/15): THIS IS JUST UNRELATED TEST CODE FOR THE RENT SCENE WEBSITE - SUMO ME SCROLL BOX... DELETE EVENTUALLY -->
+        <!--<div class="hidden" style="border-top: 10px solid #49a7f5; font-family: 'Montserrat', Helvetica, sans-serif !important; padding: 10px 22px 15px;">
+            <img src="https://noochme.com/noochweb/Assets/Images/rentscene.png" style="margin: 15px auto; display: block; max-width: 70%;" />
 
-        <h3 class="text-center m-b-20" style="font-family: 'Montserrat', Open Sans, Helvetica, sans-serif;">Rent Scene New Listing Alerts</h3>
+            <h3 class="text-center m-b-20" style="font-family: 'Montserrat', Open Sans, Helvetica, sans-serif;">Rent Scene New Listing Alerts</h3>
 
-        <div class="p-15 m-b-15" style="background: rgba(114,191,40,1); color: #fff; border-radius: 5px; text-shadow: 0 1px 0px rgba(0,0,0,.3); font-weight: 300;">
-            <p class="m-0 text-center" style="font-size: 16px; line-height: 1.5; /* font-weight: 500; */">
-                Signup today and be the first to get notified when new apartments become available that fit your criteria.
-            </p>
-        </div>
-
-        <form>
-            <div class="form-group">
-                <input type="text" class="form-control" placeholder="Enter your email here..." style="text-align: center; height: 50px; font-size: 18px; border-radius: 5px;" />
+            <div class="p-15 m-b-15" style="background: rgba(114,191,40,1); color: #fff; border-radius: 5px; text-shadow: 0 1px 0px rgba(0,0,0,.3); font-weight: 300;">
+                <p class="m-0 text-center" style="font-size: 16px; line-height: 1.5; /* font-weight: 500; */">
+                    Signup today and be the first to get notified when new apartments become available that fit your criteria.
+                </p>
             </div>
 
-            <a class="" style="width: 100%; padding: 16px 10px; background: #49a7f5; color: #fff; display: block; text-align: center; border-radius: 5px; font-size: 18px; text-shadow: 0 0px 20px rgba(19,44,64,.5); font-weight: 100;">
-                Submit
-                <i class="m-l-10 fa fa-angle-right" style="font-family: 'FontAwesome'; font-style: normal;"></i>
-            </a>
-        </form>
-    </div>-->
+            <form>
+                <div class="form-group">
+                    <input type="text" class="form-control" placeholder="Enter your email here..." style="text-align: center; height: 50px; font-size: 18px; border-radius: 5px;" />
+                </div>
+
+                <a class="" style="width: 100%; padding: 16px 10px; background: #49a7f5; color: #fff; display: block; text-align: center; border-radius: 5px; font-size: 18px; text-shadow: 0 0px 20px rgba(19,44,64,.5); font-weight: 100;">
+                    Submit
+                    <i class="m-l-10 fa fa-angle-right" style="font-family: 'FontAwesome'; font-style: normal;"></i>
+                </a>
+            </form>
+        </div>-->*@
 
     <div class="errorMessage hidden"></div>
 
@@ -262,6 +267,7 @@
 
     <script src="../js/jquery.blockUI.min.js"></script>
     <script src="../js/input-mask.min.js"></script>
+    <script src="../js/jquery.autocomplete.min.js"></script>
     <script type="text/javascript">
         var ipusr;
     </script>

@@ -1422,6 +1422,8 @@ $(document).ready(function () {
 			}
 		});		
 	}
+
+
 	/**** CREATING AUTO-COMPLETE LIST OF BANKS FOR SEARCHING ****/
 	$("#bankSearch").autoComplete({
 	    minChars: 2,

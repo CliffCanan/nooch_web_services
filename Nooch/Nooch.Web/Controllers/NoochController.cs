@@ -2190,25 +2190,6 @@ namespace Nooch.Web.Controllers
         #endregion RejectMoney Page
 
 
-        protected void createPassword_Click()
-        {
-            string serviceMethod = string.Empty;
-            string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-            //serviceMethod = "/CreateNonNoochUserAccountAfterRejectMoney?TransId=" + Request.QueryString["TransId"].ToString() + "&password=" + password.Text + "&EmailId=" + userNameText.Text + "&UserName="+nameText.Text;
-
-            var serviceResult = ResponseConverter<Nooch.Common.Entities.StringResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
-
-            if (serviceResult.Result == "Thanks for registering! Check your email to complete activation.")
-            {
-                //checkEmailMsg.Visible = true;
-            }
-            else
-            {
-                //checkEmailMsg.Visible = true;
-            }
-        }
-
-
 
         #region IDVerification Page
 
@@ -2893,6 +2874,50 @@ namespace Nooch.Web.Controllers
             catch (Exception ex)
             {
                 Logger.Error("Make Payment Code Behind -> checkUsersPin FAILED - User: [" + user + "], Exception: [" + ex.Message + "]");
+                res.msg = ex.Message;
+            }
+
+            return Json(res);
+        }
+
+
+        /// <summary>
+        /// For the Make Payment page: gets the user's recent list for the Autocomplete name input.
+        /// Added by Cliff (6/19/16)
+        /// </summary>
+        /// <param name="user"></param>
+        /// <returns></returns>
+        public ActionResult getUserSuggestions(string user)
+        {
+            Logger.Info("Make Payment Code Behind -> getUserSuggestions Initiated - User: [" + user + "]");
+
+            suggestedUsers res = new suggestedUsers();
+            res.success = false;
+            res.msg = "Initial - code behind";
+
+            try
+            {
+                var memid = string.Empty;
+
+                if (!String.IsNullOrEmpty(user))
+                {
+                    if (user.ToLower() == "appjaxx")
+                        memid = "8b4b4983-f022-4289-ba6e-48d5affb5484";
+                    else if (user.ToLower() == "rentscene")
+                        memid = "852987e8-d5fe-47e7-a00b-58a80dd15b49";
+                    else if (user == "cliff")
+                        memid = "b3a6cf7b-561f-4105-99e4-406a215ccf60";
+                }
+
+                if (!String.IsNullOrEmpty(memid))
+                {
+                    res = CommonHelper.GetSuggestedUsers(memid);
+                    Logger.Info("Make Payment Code Behind -> getUserSuggestions SUCCESS! - Message: [" + res.msg + "]");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Make Payment Code Behind -> getUserSuggestions FAILED - User: [" + user + "], Exception: [" + ex.Message + "]");
                 res.msg = ex.Message;
             }
 

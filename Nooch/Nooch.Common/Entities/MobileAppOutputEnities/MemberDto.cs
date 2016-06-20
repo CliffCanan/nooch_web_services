@@ -55,9 +55,29 @@ namespace Nooch.Common.Entities.MobileAppOutputEnities
         public string dateCreated { get; set; }
         public string memberStatus { get; set; }
         public string memberId { get; set; }
-
         public string synapseUserPermission { get; set; }
         public string synapseBankAllowed { get; set; }
-   
+    }
+
+    public class suggestedUsers
+    {
+        public bool success { get; set; }
+        public string msg { get; set; }
+        public suggestions[] suggestions { get; set; }
+    }
+
+    public class suggestions
+    {
+        public string value { get; set; }
+        public suggestions_data data { get; set; }
+    }
+
+    public class suggestions_data
+    {
+        public string nooch_id { get; set; }
+        public string name { get; set; }
+        public string email { get; set; }
+        public string cip { get; set; }
+        public string imgUrl { get; set; }
     }
 }

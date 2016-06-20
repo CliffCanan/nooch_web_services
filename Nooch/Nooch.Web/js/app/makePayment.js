@@ -10,8 +10,7 @@ var existNAME, existMEMID;
 var askForPin = false;
 var pinVerified = false;
 
-$(document).ready(function ()
-{
+$(document).ready(function () {
     var isSmScrn = false;
     if ($(window).width() < 768)
     {
@@ -26,14 +25,18 @@ $(document).ready(function ()
         {
             $('.navbar img').css('width', '100px');
         }
-		
-		changeFavicon('../Assets/favicon2.ico')
+
+        changeFavicon('../Assets/favicon2.ico')
+
+        var suggestedUsers = getSuggestedUsers();
+        
+        console.log(suggestedUsers);
     }
     else if (FROM == "appjaxx" || FROM == "josh")
     {
         $('.navbar img').attr('src', '../Assets/Images/appjaxx-nav.png');
         askForPin = true;
-	}
+    }
     else
     {
         $('.navbar img').attr('src', '../Assets/Images/nooch-logo2.svg');
@@ -43,9 +46,9 @@ $(document).ready(function ()
     {
         showPinPrompt();
     }
-    else {
-        setTimeout(function ()
-        {
+    else
+    {
+        setTimeout(function () {
             $('#amount').focus();
         }, 200)
     }
@@ -56,62 +59,66 @@ $(document).ready(function ()
 
     $('[data-toggle="popover"]').popover();
 
-    $('#submitPayment').click(function ()
-    {
+    $('#submitPayment').click(function () {
         checkFormData();
         return false;
     });
 
-    $('input[name="userType"]').change(function ()
-    {
-        if ($('input[name="userType"]:checked').val() == 'vendor') {
-            if ($('input[name="type"]:checked').val() == 'request') {
+    $('input[name="userType"]').change(function () {
+        if ($('input[name="userType"]:checked').val() == 'vendor')
+        {
+            if ($('input[name="type"]:checked').val() == 'request')
+            {
                 return false;
             }
         }
     });
 
 
-	$( "input[name='type']" ).change(function() {
-		if ($('input[name="type"]:checked').val() == 'request')
-		{
-			$('#typeGrp .btn').removeClass('btn-success').addClass('btn-primary');
-			$('#submitPayment').removeClass('btn-success').addClass('btn-primary');
-			$('#vendor').closest('label').addClass('disabled');
+    $("input[name='type']").change(function () {
+        if ($('input[name="type"]:checked').val() == 'request')
+        {
+            $('#typeGrp .btn').removeClass('btn-success').addClass('btn-primary');
+            $('#submitPayment').removeClass('btn-success').addClass('btn-primary');
+            $('#vendor').closest('label').addClass('disabled');
         }
-		else // Send has been clicked
-		{
-			$('#typeGrp .btn').removeClass('btn-primary').addClass('btn-success');
-			$('#submitPayment').removeClass('btn-primary').addClass('btn-success');
-			$('#vendor').closest('label').removeClass('disabled');
-		}
-	});
+        else // Send has been clicked
+        {
+            $('#typeGrp .btn').removeClass('btn-primary').addClass('btn-success');
+            $('#submitPayment').removeClass('btn-primary').addClass('btn-success');
+            $('#vendor').closest('label').removeClass('disabled');
+        }
+    });
 });
 
-function formatAmount()
-{
-	var formattedAmount = $('#amount').val().trim().replace(",","");
 
-	if (formattedAmount.length > 0) {
-		if (formattedAmount.length <= 2) {
-			$('#amount').val(formattedAmount + '.00');
-		}
+function formatAmount() {
+    var formattedAmount = $('#amount').val().trim().replace(",", "");
 
-		if (Number(formattedAmount) < 5 || Number(formattedAmount) > 5000) {
-			updateValidationUi("amount", false);
-		}
-		else {
-			updateValidationUi("amount", true);
-		}
-	}
-	else {
-		updateValidationUi("amount", false);
-	}
+    if (formattedAmount.length > 0)
+    {
+        if (formattedAmount.length <= 2)
+        {
+            $('#amount').val(formattedAmount + '.00');
+        }
+
+        if (Number(formattedAmount) < 5 || Number(formattedAmount) > 5000)
+        {
+            updateValidationUi("amount", false);
+        }
+        else
+        {
+            updateValidationUi("amount", true);
+        }
+    }
+    else
+    {
+        updateValidationUi("amount", false);
+    }
 }
 
 
-function checkFormData()
-{
+function checkFormData() {
     console.log('submitPayment Initiated...');
 
     // CHECK TO MAKE SURE ALL FIELDS WERE COMPLETED
@@ -177,8 +184,7 @@ function checkFormData()
 }
 
 
-function submitPayment()
-{
+function submitPayment() {
     if (askForPin && !pinVerified)
     {
         return;
@@ -216,12 +222,12 @@ function submitPayment()
     amount = $('#amount').val();
     name = $('#name').val();
     email = $('#email').val().trim();
-    memo = $('#memo').val().trim().replace("'","%27");
+    memo = $('#memo').val().trim().replace("'", "%27");
     pin = "";
     ipVal = ipusr;
     userType = $('input[name="userType"]:checked').val();
 
-    console.log("SUBMIT PAYMENT -> {from: " + FROM +
+    alert("SUBMIT PAYMENT -> {from: " + FROM +
                                  ", isRequest: " + isRequest +
                                  ", amount: " + amount +
                                  ", name: " + name +
@@ -247,8 +253,7 @@ function submitPayment()
         dataType: "json",
         async: "true",
         cache: "false",
-        success: function (msg)
-        {
+        success: function (msg) {
             var sendPaymentResponse = msg;
             console.log("SUCCESS -> 'sendPaymentResponse' is... ");
             console.log(sendPaymentResponse);
@@ -294,10 +299,10 @@ function submitPayment()
                                        "<tr><td>Status:</td><td><span class='" + statusCssClass + "'>" + status + "</span></td></tr>" +
                                        "<tr><td>Date Created:</td><td>" + sendPaymentResponse.dateCreated + "</td></tr>" +
                                        "<tr><td>Bank Linked:</td><td>" + sendPaymentResponse.isBankAttached + "</td></tr>";
-                    
+
                         if (sendPaymentResponse.isBankAttached == true)
                             bodyText = bodyText + "<tr><td>Bank Status:</td><td>" + sendPaymentResponse.bankStatus + "</td></tr>";
-                    
+
                         bodyText = bodyText + "</tbody></table>";
 
                         // THEN DISPLAY SUCCESS ALERT...
@@ -310,8 +315,7 @@ function submitPayment()
                             confirmButtonColor: "#3fabe1",
                             confirmButtonText: "Send",
                             html: true
-                        }, function (isConfirm)
-                        {
+                        }, function (isConfirm) {
                             if (isConfirm)
                             {
                                 sendRequestToExistingUser();
@@ -338,8 +342,7 @@ function submitPayment()
                             confirmButtonColor: "#3fabe1",
                             confirmButtonText: "Ok",
                             html: true
-                        }, function ()
-                        {
+                        }, function () {
                             resetForm();
                         });
                     }
@@ -355,16 +358,19 @@ function submitPayment()
                         var statusCssClass = "f-600";
 
                         if (sendPaymentResponse.memberStatus == "Suspended" ||
-                            sendPaymentResponse.memberStatus == "Temporarily_Blocked") {
+                            sendPaymentResponse.memberStatus == "Temporarily_Blocked")
+                        {
                             status = "Suspended";
                             statusCssClass = "label label-danger";
                         }
                         else if (sendPaymentResponse.memberStatus == "Active" ||
-                                 sendPaymentResponse.memberStatus == "NonRegistered") {
+                                 sendPaymentResponse.memberStatus == "NonRegistered")
+                        {
                             status = "Active";
                             statusCssClass = "label label-success"
                         }
-                        else if (sendPaymentResponse.memberStatus != null) {
+                        else if (sendPaymentResponse.memberStatus != null)
+                        {
                             status = sendPaymentResponse.memberStatus;
                             statusCssClass = "";
                         }
@@ -390,9 +396,9 @@ function submitPayment()
                             confirmButtonColor: "#3fabe1",
                             confirmButtonText: "Send",
                             html: true
-                        }, function (isConfirm)
-                        {
-                            if (isConfirm) {
+                        }, function (isConfirm) {
+                            if (isConfirm)
+                            {
                                 sendRequestToExistingUser();
                             }
                         });
@@ -416,8 +422,7 @@ function submitPayment()
                             confirmButtonColor: "#3fabe1",
                             confirmButtonText: "Ok",
                             html: true
-                        }, function ()
-                        {
+                        }, function () {
                             resetForm();
                         });
                     }
@@ -426,14 +431,18 @@ function submitPayment()
             }
             else
             {
-                if (resultReason != null) {
-                    if (resultReason.indexOf("email already registered") > -1) {
+                if (resultReason != null)
+                {
+                    if (resultReason.indexOf("email already registered") > -1)
+                    {
                         showErrorAlert('20');
                     }
-                    else if (resultReason.indexOf("Requester does not have any verified bank account") > -1) {
+                    else if (resultReason.indexOf("Requester does not have any verified bank account") > -1)
+                    {
                         showErrorAlert('4');
                     }
-                    else if (resultReason.indexOf("Missing") > -1) {
+                    else if (resultReason.indexOf("Missing") > -1)
+                    {
                         showErrorAlert('5');
                     }
                     else if (resultReason.indexOf("Sender does not have any bank") > -1 ||
@@ -441,17 +450,18 @@ function submitPayment()
                     {
                         showErrorAlert('6');
                     }
-                    else {
+                    else
+                    {
                         showErrorAlert('2');
                     }
                 }
-                else {
+                else
+                {
                     showErrorAlert('2');
                 }
             }
         },
-        Error: function (x, e)
-        {
+        Error: function (x, e) {
             // Hide the Loading Block
             $('#makePaymentContainer').unblock();
 
@@ -465,8 +475,7 @@ function submitPayment()
 }
 
 // This can only be called for SENDING payments IF the recipient has a fully verified user & bank account w/ Nooch & Synapse.
-function sendRequestToExistingUser()
-{
+function sendRequestToExistingUser() {
     var transType = $('input[name="type"]:checked').val();
     isRequest = transType == "send" ? false : true;
 
@@ -492,7 +501,7 @@ function sendRequestToExistingUser()
                                  ", isRequest: " + isRequest +
                                  ", amount: " + amount +
                                  ", nameEntered: " + name +
-                                 ", nameFromServer: " + existNAME+
+                                 ", nameFromServer: " + existNAME +
                                  ", email: " + email +
                                  ", memo: " + memo +
                                  ", MemID: " + existMEMID +
@@ -516,8 +525,7 @@ function sendRequestToExistingUser()
         dataType: "json",
         async: "true",
         cache: "false",
-        success: function (msg)
-        {
+        success: function (msg) {
             var sendPaymentResponse = msg;
             console.log("SUCCESS -> 'sendPaymentResponse' is... ");
             console.log(sendPaymentResponse);
@@ -534,7 +542,8 @@ function sendRequestToExistingUser()
                 $('.alert.alert-success').removeClass('hidden').slideDown();
 
                 // THEN DISPLAY SUCCESS ALERT...
-                if (isRequest == true) {
+                if (isRequest == true)
+                {
                     swal({
                         title: "Payment Created Successfully",
                         text: "<table border='0' width='95%' cellpadding='8'><tbody>" +
@@ -552,7 +561,8 @@ function sendRequestToExistingUser()
                         resetForm();
                     });
                 }
-                else {
+                else
+                {
                     swal({
                         title: "Payment Scheduled Successfully",
                         text: "<table border='0' width='95%' cellpadding='8'><tbody>" +
@@ -583,8 +593,7 @@ function sendRequestToExistingUser()
                 }
             }
         },
-        Error: function (x, e)
-        {
+        Error: function (x, e) {
             // Hide the Loading Block
             $('#makePaymentContainer').unblock();
 
@@ -598,8 +607,7 @@ function sendRequestToExistingUser()
 }
 
 
-function updateValidationUi(field, success)
-{
+function updateValidationUi(field, success) {
     //console.log("Field: " + field + "; success: " + success);
 
     if (success == true)
@@ -659,16 +667,14 @@ function updateValidationUi(field, success)
         }
 
         // Now focus on the element that failed validation
-        setTimeout(function ()
-        {
+        setTimeout(function () {
             $('#' + field + 'Grp input').focus();
         }, 200)
     }
 }
 
 
-function ValidateEmail(str)
-{
+function ValidateEmail(str) {
     var at = "@"
     var dot = "."
     var lat = str.indexOf(at)
@@ -714,8 +720,7 @@ function ValidateEmail(str)
 };
 
 
-function resetForm()
-{
+function resetForm() {
     console.log("Resetting form...");
 
     $('#paymentForm .form-group').removeClass('has-error has-success');
@@ -729,8 +734,7 @@ function resetForm()
 }
 
 
-function showErrorAlert(errorNum)
-{
+function showErrorAlert(errorNum) {
     var alertTitle = "";
     var alertBodyText = "";
     var shouldFocusOnEmail = false;
@@ -807,8 +811,7 @@ function showErrorAlert(errorNum)
         closeOnCancel: false,
         allowEscapeKey: false,
         html: true
-    }, function (isConfirm)
-    {
+    }, function (isConfirm) {
         if (!isConfirm)
         {
             window.open("mailto:support@nooch.com");
@@ -821,8 +824,7 @@ function showErrorAlert(errorNum)
 }
 
 
-function showPinPrompt(type)
-{
+function showPinPrompt(type) {
     var title = type == "incorrect" ? "Incorrect PIN" : "Hola Josh";
 
     swal({
@@ -837,17 +839,18 @@ function showPinPrompt(type)
         confirmButtonText: "Ok",
         customClass: "pinInput",
         closeOnConfirm: false
-    }, function (inputTxt)
-    {
+    }, function (inputTxt) {
         console.log("Entered Text: [" + inputTxt + "]");
 
         if (inputTxt === false) return false;
 
-        if (inputTxt === "") {
-            swal.showInputError("Please enter the PIN sent to your phone.");
+        if (inputTxt === "")
+        {
+            swal.showInputError("Please enter a PIN.");
             return false
         }
-        if (inputTxt.length < 4) {
+        if (inputTxt.length < 4)
+        {
             swal.showInputError("Double check you entered the entire PIN!");
             return false
         }
@@ -858,8 +861,8 @@ function showPinPrompt(type)
     });
 }
 
-function submitPin(pin)
-{
+
+function submitPin(pin) {
     console.log("submitPin fired - PIN [" + pin + "]");
 
     // ADD THE LOADING BOX
@@ -888,8 +891,7 @@ function submitPin(pin)
         dataType: "json",
         async: "true",
         cache: "false",
-        success: function (result)
-        {
+        success: function (result) {
             console.log("SUCCESS -> checkUsersPin result is... [next line]");
             console.log(result);
 
@@ -908,8 +910,7 @@ function submitPin(pin)
                     closeOnConfirm: true,
                     customClass: "idVerSuccessAlert",
                     timer: 2000
-                }, function ()
-                {
+                }, function () {
                     pinVerified = true;
 
                     $('#pinBtnWrap').addClass('hidden');
@@ -920,24 +921,27 @@ function submitPin(pin)
             {
                 console.log(result.msg);
 
-                if (result.msg.indexOf("Incorrect") > -1) {
+                if (result.msg.indexOf("Incorrect") > -1)
+                {
                     showPinPrompt("incorrect");
                 }
-                else if (resultReason.indexOf("User not found") > -1) {
+                else if (resultReason.indexOf("User not found") > -1)
+                {
                     console.log("Error: missing critical data");
                     showErrorAlert('2');
                 }
-                else {
+                else
+                {
                     showErrorAlert('2');
                 }
             }
-            else {
+            else
+            {
                 showErrorAlert('2');
             }
-            
+
         },
-        Error: function (x, e)
-        {
+        Error: function (x, e) {
             // Hide the Loading Block
             $('#idWizContainer').unblock();
 
@@ -950,27 +954,78 @@ function submitPin(pin)
     });
 }
 
-$(document).ajaxStop($.unblockUI);
 
-function changeFavicon(src) {
-  var link = document.createElement('link'),
-   oldLink = document.getElementById('dynamic-favicon');
-  link.id = 'dynamic-favicon';
-  link.rel = 'shortcut icon';
-  link.href = src;
-  if (oldLink) {
-    document.head.removeChild(oldLink);
-  }
-  document.head.appendChild(link);
+function getSuggestedUsers()
+{
+    $.ajax({
+        type: "POST",
+        url: "getUserSuggestions",
+        data: "{'user':'" + FROM + "'}",
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        async: "true",
+        cache: "false",
+        success: function (msg) {
+            console.log(msg);
+
+            if (typeof msg.suggestions != "undefined")
+            {
+                    //var countries = [
+                    //   { value: 'Tori Moore', data: tori },
+                    //   { value: 'Jonny Dolezal', data: 'AD' },
+                    //   { value: 'Lisa Bernstein', data: 'AD' },
+                    //   { value: 'Aaron Moore', data: 'ZZ' }
+                    //];
+
+                // Set up user Autocomplete
+                $('#name').autocomplete({
+                    //serviceUrl: '/autocomplete/countries',
+                    lookup: msg.suggestions,
+                    autoSelectFirst: true,
+                    showNoSuggestionNotice: true,
+                    noSuggestionNotice: "No users found :-(",
+                    onSelect: function (suggestion) {
+                        //alert('You selected: ' + suggestion.value + ', ' + suggestion.data.email);
+
+                        $('#email').val(suggestion.data.email);
+                        $('#memo').focus();
+                    }
+                });
+            }
+            return msg.suggestions;
+        },
+        Error: function (x, e) {
+            console.log("ERROR --> 'x' then 'e' is... ");
+            console.log(x);
+            console.log(e);
+        }
+    });
+
+    return false;
 }
 
-$('body').on('focus', '.form-control', function ()
-{
+
+$(document).ajaxStop($.unblockUI);
+
+
+function changeFavicon(src) {
+    var link = document.createElement('link'),
+     oldLink = document.getElementById('dynamic-favicon');
+    link.id = 'dynamic-favicon';
+    link.rel = 'shortcut icon';
+    link.href = src;
+    if (oldLink)
+    {
+        document.head.removeChild(oldLink);
+    }
+    document.head.appendChild(link);
+}
+
+$('body').on('focus', '.form-control', function () {
     $(this).closest('.fg-line').addClass('fg-toggled');
 })
 
-$('body').on('blur', '.form-control', function ()
-{
+$('body').on('blur', '.form-control', function () {
     var fgrp = $(this).closest('.form-group');
     var ipgrp = $(this).closest('.input-group');
 

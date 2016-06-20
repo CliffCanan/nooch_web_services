@@ -3630,7 +3630,7 @@ namespace Nooch.API.Controllers
 
                                 // CLIFF (5/8/16): what happens to 'nodenew'? It never goes anywhere or is returned anywhere...
 
-                                rootBankObj.nodes = nodesarray;
+                                //rootBankObj.nodes = nodesarray;
 
                                 res.SynapseNodesList = new SynapseNodesListClass();
                                 res.SynapseNodesList.nodes = new List<SynapseIndividualNodeClass>();

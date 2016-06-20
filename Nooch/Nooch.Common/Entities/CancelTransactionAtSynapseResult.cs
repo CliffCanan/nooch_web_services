@@ -9,9 +9,9 @@ namespace Nooch.Common.Entities
 {
     public class CancelTransactionAtSynapseResult
     {
+        public bool IsSuccess { get; set; }
         public bool IsRentScene { get; set; }
         public string errorMsg { get; set; }
-        public bool IsSuccess { get; set; }
         public string Message { get; set; }
     }
 
@@ -32,7 +32,6 @@ namespace Nooch.Common.Entities
     }
     public class Trans
     {
-       
         public _ID _id { get; set; }
     }
 
@@ -53,5 +52,5 @@ namespace Nooch.Common.Entities
     {
         public string en { get; set; }
     }
-     
+
 }

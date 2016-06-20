@@ -319,6 +319,7 @@
     <Content Include="js\fingerprint2.min.js" />
     <Content Include="js\input-mask.min.js" />
     <Content Include="js\jasny-bootstrap.min.js" />
+    <Content Include="js\jquery.autocomplete.min.js" />
     <Content Include="js\jquery.auto-complete.min.js" />
     <Content Include="js\jquery.blockUI.js" />
     <Content Include="js\jquery.blockUI.min.js" />

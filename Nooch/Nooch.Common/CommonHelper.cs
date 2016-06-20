@@ -3584,7 +3584,7 @@ namespace Nooch.Common
 
                     var banksFound = _dbContext.SynapseBanksOfMembers.Where(bank =>
                                         bank.MemberId == MemberInfoInNoochDb.MemberId &&
-                                        //memberTemp.bank_name == bankNameEncrypted &&
+                                            //memberTemp.bank_name == bankNameEncrypted &&
                                         bank.oid == bankOId).ToList();
 
                     // CLIFF (10/7/15): ADDING THIS CODE TO MAKE SURE WE SELECT THE *MOST RECENT* BANK (b/c it creates problems when a user
@@ -4665,6 +4665,126 @@ namespace Nooch.Common
             }
 
             return "Failure";
+        }
+
+
+        public static suggestedUsers GetSuggestedUsers(string memberId)
+        {
+            Logger.Info("Common Helper - GetSuggestedUsers - MemberID: [" + memberId + "]");
+
+            suggestedUsers suggestedUsers = new suggestedUsers();
+            suggestedUsers.success = false;
+            suggestedUsers.suggestions = new suggestions[10];
+
+            try
+            {
+                var id = Utility.ConvertToGuid(memberId);
+
+                var member = _dbContext.Members.FirstOrDefault(u => u.MemberId == id);
+
+                if (member != null)
+                {
+                    var transactions = new List<Transaction>();
+
+                    transactions = _dbContext.Transactions.Where(trans =>
+                                                                         trans.SenderId == id ||
+                                                                         trans.RecipientId == id ||
+                                                                         trans.InvitationSentTo == member.UserName ||
+                                                                         trans.InvitationSentTo == member.UserNameLowerCase)
+                                                                         .OrderByDescending(r => r.TransactionDate).Take(20).ToList();
+
+                    if (transactions != null && transactions.Count > 0)
+                    {
+                        int i = 0;
+
+                        //Logger.Info("Common Helper - GetSuggestedUsers - CHECKPOINT #1 - TRANS.COUNT: [" + transactions.Count + "]");
+
+                        foreach (var trans in transactions)
+                        {
+                            try
+                            {
+                                Member otherUser = new Member();
+
+                                if (trans.SenderId == id && trans.SenderId != trans.RecipientId) // Sent to existing user, get recipient
+                                {
+                                    otherUser = _dbContext.Members.FirstOrDefault(m => m.MemberId == trans.RecipientId && m.IsDeleted == false);
+                                }
+                                else if (trans.SenderId != id && trans.SenderId != trans.RecipientId) // Received from existing user, get sender
+                                {
+                                    otherUser = _dbContext.Members.FirstOrDefault(m => m.MemberId == trans.SenderId && m.IsDeleted == false);
+                                }
+                                else if (trans.SenderId == id && trans.InvitationSentTo != null) // Sent to non-Nooch user, get recipient by email
+                                {
+                                    var invitedUsersEmailEnc = GetEncryptedData(trans.InvitationSentTo);
+                                    otherUser = _dbContext.Members.FirstOrDefault(m => (m.UserName == invitedUsersEmailEnc ||
+                                                                                        m.UserNameLowerCase == invitedUsersEmailEnc ||
+                                                                                        m.SecondaryEmail == invitedUsersEmailEnc) &&
+                                                                                        m.IsDeleted == false);
+                                }
+
+                                if (otherUser == null) continue;
+
+                                // Check if this user has already been added to the Array
+                                bool keepGoing = true;
+
+                                if (i > 0) //suggestedUsers.suggestions[0] != null &&
+                                //suggestedUsers.suggestions.Length > 0)
+                                {
+                                    foreach (suggestions s in suggestedUsers.suggestions)
+                                    {
+                                        if (s != null && s.data.nooch_id != null && s.data.nooch_id == otherUser.Nooch_ID)
+                                        {
+                                            keepGoing = false;
+                                            break;
+                                        }
+                                    }
+                                }
+
+                                Logger.Info("Common Helper - GetSuggestedUsers - CHECKPOINT #A - KeepGoing: [" + keepGoing + "], 'i': [" + i + "]");
+
+                                if (!keepGoing) continue;
+
+                                var name = UppercaseFirst(GetDecryptedData(otherUser.FirstName)) + " " + UppercaseFirst(GetDecryptedData(otherUser.LastName));
+
+                                Logger.Info("Common Helper - GetSuggestedUsers - CHECKPOINT #1.0");
+
+                                suggestions suggestion = new suggestions();
+                                suggestion.value = name;
+                                suggestion.data.nooch_id = otherUser.Nooch_ID;
+                                suggestion.data.name = name;
+                                suggestion.data.cip = otherUser.cipTag;
+                                suggestion.data.email = GetDecryptedData(otherUser.UserName);
+                                suggestion.data.imgUrl = otherUser.Photo;
+
+                                Logger.Info("Common Helper - GetSuggestedUsers - CHECKPOINT #1.0");
+
+                                suggestedUsers.suggestions[i] = suggestion;
+
+                                if (i == 10) break;
+
+                                i++;
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.Error("Common Helper - GetSuggestedUsers - EXCEPTION inside FOREACH loop - [" + ex.Message + "]");
+                            }
+                        }
+
+                        Logger.Info("Common Helper - GetSuggestedUsers SUCCESS - COUNT: [" + suggestedUsers.suggestions.Length + "], [MemberID: " + memberId + "]");
+
+                        suggestedUsers.success = true;
+                        suggestedUsers.msg = "Found [" + suggestedUsers.suggestions.Length.ToString() + "]";
+                        return suggestedUsers;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Common Helper - GetSuggestedUsers FAILED - [MemberID: " + memberId + "], Exception: [" + ex + "]");
+                suggestedUsers.msg = "Exception: [" + ex.Message + "]";
+            }
+
+            return new suggestedUsers();
         }
     }
 }
