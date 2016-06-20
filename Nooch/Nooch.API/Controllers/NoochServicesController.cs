@@ -3240,10 +3240,9 @@ namespace Nooch.API.Controllers
 
                                 try
                                 {
-                                    string subject = "";
-
                                     Utility.SendEmail(templateToUse, fromAddress, toAddress, null,
-                                                      subject, null, tokens, null, null, null);
+                                                      "Bank Account Verification - Important Info",
+                                                      null, tokens, null, null, null);
 
                                     Logger.Info("Service Cntrlr -> SynapseV3 AddNodeWithAccountNumberAndRoutingNumber - [" + templateToUse + "] Email sent to [" +
                                                  toAddress + "] successfully");
@@ -3276,7 +3275,7 @@ namespace Nooch.API.Controllers
                                         delayToUse = TimeSpan.FromDays(4);
                                     }
 
-                                    var x = BackgroundJob.Schedule(() => CommonHelper.SendMincroDepositsVerificationReminderEmail(sbom.MemberId.ToString(), sbom.Id.ToString(), Convert.ToBoolean(noochMember.isRentScene)), delayToUse);
+                                    var x = BackgroundJob.Schedule(() => CommonHelper.SendMincroDepositsVerificationReminderEmail(sbom.MemberId.ToString(), sbom.oid, Convert.ToBoolean(noochMember.isRentScene)), delayToUse);
                                     if (x != null)
                                     {
                                         Logger.Info("Service Cntrlr -> SynapseV3 AddNodeWithAccountNumberAndRoutingNumber - Scheduled Micro Deposit Reminder email in Background - [" +
