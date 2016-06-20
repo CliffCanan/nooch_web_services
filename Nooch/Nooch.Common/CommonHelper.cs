@@ -718,11 +718,13 @@ namespace Nooch.Common
                     // CC (6/18/16): THIS BLOCK IS THROWING AN ERROR EVERY TIME... maybe b/c it's attempting to save
                     //               the changes to "v" which is not the actual DB object?
                     // ERROR is: "System.InvalidOperationException: The entity type List`1 is not part of the model for the current context."
+                    // Malkit (20 June 2016) : This is fixed, you should load correct db context in such cases Remeber to call GetDbContextFromEntity method from CommonHelper.. ;)
                     foreach (SynapseBankLoginResult v in oldBankLoginRecords)
                     {
+                        DbContext db = GetDbContextFromEntity( v);
                         v.IsDeleted = true;
-                        _dbContext.SaveChanges();
-                        _dbContext.Entry(oldBankLoginRecords).Reload();
+                        db.SaveChanges();
+                        db.Entry(oldBankLoginRecords).Reload();
                     }
                 }
 
@@ -4551,7 +4553,7 @@ namespace Nooch.Common
         public static string SendMincroDepositsVerificationReminderEmail(string MemberId, string BankId, bool IsRs)
         {
             Logger.Info("Common Helper -> SendMincroDepositsVerificationReminderEmail Initiated. MemberID: [" + MemberId + "], " +
-                        "NodeId: [" + BankId + "], " +
+                        "Node OID (enc): [" + BankId + "], " +
                         "IsRs: [" + IsRs + "]");
 
             try
@@ -4559,7 +4561,6 @@ namespace Nooch.Common
                 using (NOOCHEntities db = new NOOCHEntities())
                 {
                     var memGuid = Utility.ConvertToGuid(MemberId);
-                    var BankIdInt = Convert.ToInt16(BankId);
 
                     var memberObj = GetMemberDetails(MemberId);
                     if (memberObj == null)
@@ -4570,7 +4571,7 @@ namespace Nooch.Common
                     var bankAccountDetails = db.SynapseBanksOfMembers.FirstOrDefault(b =>
                                                                                      b.IsDefault == true &&
                                                                                      b.IsAddedUsingRoutingNumber == true &&
-                                                                                     b.Id == BankIdInt &&
+                                                                                     b.oid == BankId &&
                                                                                      b.MemberId == memGuid &&
                                                                                      b.Status == "Not Verified");
 
@@ -4599,7 +4600,7 @@ namespace Nooch.Common
                         string routingNum = GetDecryptedData(bankAccountDetails.routing_number_string);
 
                         string verifyLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
-                            "Nooch/MicroDepositsVerification?mid=" + MemberId + "&NodeId=" + bankAccountDetails.Id + "&IsRs=" + memberObj.isRentScene.ToString());
+                                                          "Nooch/MicroDepositsVerification?mid=" + MemberId);
 
                         var tokens = new Dictionary<string, string>
                                 {
@@ -4750,11 +4751,14 @@ namespace Nooch.Common
 
                                 suggestions suggestion = new suggestions();
                                 suggestion.value = name;
-                                suggestion.data.nooch_id = otherUser.Nooch_ID;
-                                suggestion.data.name = name;
-                                suggestion.data.cip = otherUser.cipTag;
-                                suggestion.data.email = GetDecryptedData(otherUser.UserName);
-                                suggestion.data.imgUrl = otherUser.Photo;
+                                suggestion.data = new suggestions_data
+                                {
+                                    nooch_id = otherUser.Nooch_ID,
+                                    name = name,
+                                    cip = otherUser.cipTag,
+                                    email = GetDecryptedData(otherUser.UserName),
+                                    imgUrl = otherUser.Photo
+                                };
 
                                 Logger.Info("Common Helper - GetSuggestedUsers - CHECKPOINT #1.0");
 

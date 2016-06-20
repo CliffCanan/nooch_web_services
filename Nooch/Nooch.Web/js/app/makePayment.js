@@ -227,7 +227,7 @@ function submitPayment() {
     ipVal = ipusr;
     userType = $('input[name="userType"]:checked').val();
 
-    alert("SUBMIT PAYMENT -> {from: " + FROM +
+    console.log("SUBMIT PAYMENT -> {from: " + FROM +
                                  ", isRequest: " + isRequest +
                                  ", amount: " + amount +
                                  ", name: " + name +

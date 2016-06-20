@@ -4316,7 +4316,7 @@ namespace Nooch.DataAccess
         public SynapseBankLoginV3_Response_Int SynapseV3MFABankVerifyWithMicroDeposits(string MemberId, string microDepositOne, string microDepositTwo, string BankId)
         {
             Logger.Info("MDA -> SynapseV3MFABankVerifyWithMicroDeposits Initiated - [MemberId: " + MemberId +
-                        "], [BankId: " + BankId + "], Micro1: [" + microDepositOne + "], Micro2: [" + microDepositTwo + "]");
+                        "], [BankId (enc): " + BankId + "], Micro1: [" + microDepositOne + "], Micro2: [" + microDepositTwo + "]");
 
             SynapseBankLoginV3_Response_Int res = new SynapseBankLoginV3_Response_Int();
             res.Is_success = false;
@@ -4369,9 +4369,9 @@ namespace Nooch.DataAccess
 
                 if (noochMemberResultFromSynapse != null)
                 {
-                    int bnkId = Convert.ToInt16(BankId);
+                    var bankIdEnc = CommonHelper.GetEncryptedData(BankId);
 
-                    var bankAccountDetails = _dbContext.SynapseBanksOfMembers.FirstOrDefault(b => b.Id == bnkId &&
+                    var bankAccountDetails = _dbContext.SynapseBanksOfMembers.FirstOrDefault(b => b.oid == BankId &&
                                                                                                   b.MemberId == id &&
                                                                                                   b.IsAddedUsingRoutingNumber == true);
                     if (bankAccountDetails != null)
@@ -4380,7 +4380,8 @@ namespace Nooch.DataAccess
 
                         try
                         {
-                            var bankOid = CommonHelper.GetDecryptedData(bankAccountDetails.oid);
+                            Logger.Info("MDA -> SynapseV3MFABankVerifyWithMicroDeposits - CHECKPOUINT #1");
+                            var bankOid = CommonHelper.GetDecryptedData(BankId);
 
                             SynapseV3Input_login log = new SynapseV3Input_login()
                             {
@@ -4488,13 +4489,15 @@ namespace Nooch.DataAccess
                         {
                             var errorCode = ((HttpWebResponse)we.Response).StatusCode;
 
-                            Logger.Error("MDA -> SynapseV3MFABankVerifyWithMicroDeposits FAILED. Exception was: [" +
-                                         we.ToString() + "], and errorCode: [" + errorCode.ToString() + "]");
+                            Logger.Error("MDA -> SynapseV3MFABankVerifyWithMicroDeposits FAILED. Exception was: [" + we.Message + "]");
 
                             res.Is_success = false;
 
                             var resp = new StreamReader(we.Response.GetResponseStream()).ReadToEnd();
                             JObject jsonfromsynapse = JObject.Parse(resp);
+
+                            Logger.Error("MDA -> SynapseV3MFABankVerifyWithMicroDeposits - Response was: [" + jsonfromsynapse + "]");
+
                             JToken token = jsonfromsynapse["error"]["en"];
 
                             if (token != null)

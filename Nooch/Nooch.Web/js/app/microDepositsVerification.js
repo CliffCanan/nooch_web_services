@@ -1,12 +1,13 @@
 ﻿var FOR_RENTSCENE = $('#IsRs').val();
 var isLrgScrn = false;
+var COMPANY = "Nooch";
 
-$(function ()
-{
-    $('.two-digits').keyup(function ()
-    {
-        if ($(this).val().indexOf('.') != -1) {
-            if ($(this).val().split(".")[1].length > 2) {
+$(function () {
+    $('.two-digits').keyup(function () {
+        if ($(this).val().indexOf('.') != -1)
+        {
+            if ($(this).val().split(".")[1].length > 2)
+            {
                 if (isNaN(parseFloat(this.value))) return;
                 this.value = parseFloat(this.value).toFixed(2);
             }
@@ -16,35 +17,35 @@ $(function ()
 });
 
 
-$(document).ready(function ()
-{
-    if ($(window).width() > 1000) {
+$(document).ready(function () {
+    if ($(window).width() > 1000)
+    {
         isLrgScrn = true;
     }
 
-    if (FOR_RENTSCENE == "true") {
-        $('.landingHeaderLogo').attr('href', 'http://www.rentscene.com');
-        $('.landingHeaderLogo img').attr('src', '../Assets/Images/rentscene.png');
-        $('.landingHeaderLogo img').attr('alt', 'Rent Scene Logo');
+    if (FOR_RENTSCENE == "true")
+    {
         if (isLrgScrn)
-            $('.landingHeaderLogo img').css('width', '211px');
+            $('.landingHeaderLogo img').css('width', '170px');
 
         changeFavicon('../Assets/favicon2.ico');
+        COMPANY = "Rent Scene";
     }
 
 
     $('#microVerForm').parsley();
 
 
-    $(".two-digits").keydown(function (e)
-    {
+    $(".two-digits").keydown(function (e) {
         if ($.inArray(e.keyCode, [46, 8, 9, 27, 13, 110, 190]) !== -1 ||
             (e.keyCode == 65 && (e.ctrlKey === true || e.metaKey === true)) ||
-            (e.keyCode >= 35 && e.keyCode <= 40)) {
+            (e.keyCode >= 35 && e.keyCode <= 40))
+        {
             return;
         }
 
-        if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+        if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105))
+        {
             e.preventDefault();
         }
     });
@@ -52,8 +53,7 @@ $(document).ready(function ()
 
 
 
-function SubmitInfo()
-{
+function SubmitInfo() {
     console.log('SubmitInfo fired');
 
     if ($('#MicroDepositOne').val().length == 2)
@@ -92,8 +92,7 @@ function SubmitInfo()
             dataType: "json",
             async: "true",
             cache: "false",
-            success: function (result)
-            {
+            success: function (result) {
                 console.log("SUCCESS -> MFALoginWithRoutingAndAccountNumber result is... [next line]");
                 console.log(result);
                 resultReason = result.msg;
@@ -101,7 +100,7 @@ function SubmitInfo()
                 $("#Submit").text('Submit');
                 $('#Submit').removeAttr("disabled");
 
-                if (result.Is_success == true)
+                if (result.Is_success == true || result.Is_success == "True")
                 {
                     console.log("Success == true");
 
@@ -114,69 +113,82 @@ function SubmitInfo()
                         confirmButtonColor: "#3fabe1",
                         confirmButtonText: "Ok",
                         closeOnConfirm: true,
-                        customClass: "idVerSuccessAlert",
+                        customClass: "idVerSuccessAlert"
                     });
                 }
-                    //else if (result.mfaMessage.indexOf('Incorrect microdeposit amounts') != -1)
-                    // swal({
-                    //     title: "Unexpected Error",
-                    //     text: result.mfaMessage,
-                    //     type: "error",
-                    //     confirmButtonColor: "#3fabe1",
-                    //     confirmButtonText: "Ok",
-                    //     html: true
-                    // });
-
-                else swal({
-                    title: "Unexpected Error",
-                    text: "Something went wrong - extremely sorry about this. We hate it when something breaks!",
-                    type: "error",
-                    confirmButtonColor: "#3fabe1",
-                    confirmButtonText: "Ok",
-                    html: true
-                });
-
+                else if (result.errorMsg.indexOf("Incorrect microdeposit amounts") > -1)
+                {
+                    swal({
+                        title: "Incorrect Amounts",
+                        text: result.errorMsg,
+                        type: "error",
+                        confirmButtonColor: "#3fabe1",
+                        confirmButtonText: "Ok"
+                    });
+                }
+                else
+                {
+                    swal({
+                        title: "Unexpected Error",
+                        text: "Something went wrong - extremely sorry about this. Please contact " + COMPANY + " support by clicking below.",
+                        type: "error",
+                        showCancelButton: true,
+                        cancelButtonText: "OK",
+                        confirmButtonColor: "#3fabe1",
+                        confirmButtonText: "Contact Support",
+                    }, function (isConfirm) {
+                        if (isConfirm)
+                        {
+                            var supportEmail = COMPANY == "Rent Scene" ? "payments@rentscene.com" : "support@nooch.com";
+                            window.open("mailto:" + supportEmail);
+                        }
+                    });
+                }
             }
         });
     }
 }
 
-$('body').on('focus', '.form-control', function ()
-{
+
+$('body').on('focus', '.form-control', function () {
     $(this).closest('.fg-line').addClass('fg-toggled');
 })
 
-$('body').on('blur', '.form-control', function ()
-{
+$('body').on('blur', '.form-control', function () {
     var fgrp = $(this).closest('.form-group');
     var ipgrp = $(this).closest('.input-group');
 
     var val = fgrp.find('.form-control').val();
     var val2 = ipgrp.find('.form-control').val();
 
-    if (fgrp.hasClass('fg-float')) {
-        if (val.length == 0) {
+    if (fgrp.hasClass('fg-float'))
+    {
+        if (val.length == 0)
+        {
             $(this).closest('.fg-line').removeClass('fg-toggled');
         }
     }
-    else if (ipgrp.hasClass('fg-float')) {
-        if (val2.length == 0) {
+    else if (ipgrp.hasClass('fg-float'))
+    {
+        if (val2.length == 0)
+        {
             $(this).closest('.fg-line').removeClass('fg-toggled');
         }
     }
-    else {
+    else
+    {
         $(this).closest('.fg-line').removeClass('fg-toggled');
     }
 });
 
-function changeFavicon(src)
-{
+function changeFavicon(src) {
     var link = document.createElement('link'),
      oldLink = document.getElementById('dynamic-favicon');
     link.id = 'dynamic-favicon';
     link.rel = 'shortcut icon';
     link.href = src;
-    if (oldLink) {
+    if (oldLink)
+    {
         document.head.removeChild(oldLink);
     }
     document.head.appendChild(link);

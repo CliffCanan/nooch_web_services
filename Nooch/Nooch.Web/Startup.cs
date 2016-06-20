@@ -18,8 +18,6 @@ namespace Nooch.Web
             connString = Utility.GetValueFromConfig("isRunningOnSandbox") == "true" ? Utility.GetValueFromConfig("HangFireSandboxConnectionString") : Utility.GetValueFromConfig("HangFireProductionConnectionString");
             Hangfire.GlobalConfiguration.Configuration.UseSqlServerStorage(connString);
 
-
-
             //app.UseHangfireDashboard();
             app.UseHangfireServer();
         }

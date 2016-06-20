@@ -3371,21 +3371,10 @@ namespace Nooch.Web.Controllers
                     MicroDeposit.errorMsg = "Missing MemberID";
                 }
 
-                if (String.IsNullOrEmpty(NodeId))
-                {
-                    Logger.Error("MicroDepositsVerification CodeBehind -> Page_load - CIP is: [" + NodeId + "]");
-                    MicroDeposit.errorMsg = "Missing node ID";
-                }
-                //else
-                //{
-                //    MicroDeposit.NodeId1 = NodeId;
-                //}
-
                 if (String.IsNullOrEmpty(MicroDeposit.errorMsg))
                 {
                     // Get Bank Info from server
                     MicroDeposit = GetBankDetailsForMicroDepositVerification(mid.Trim());
-                    MicroDeposit.NodeId1 = NodeId;
                 }
 
                 if (IsRs == true) // if this flag is in the URL, then force RS branding, regardless of server response
@@ -3405,7 +3394,7 @@ namespace Nooch.Web.Controllers
         }
 
 
-        public SynapseV3VerifyNodeWithMicroDeposits_ServiceInput GetBankDetailsForMicroDepositVerification(string memberId)//, string nodeId)
+        public SynapseV3VerifyNodeWithMicroDeposits_ServiceInput GetBankDetailsForMicroDepositVerification(string memberId)
         {
             Logger.Info("MicroDepositsVerification CodeBehind -> GetBankDetailsForMicroDepositVerification Initiated - MemberID: [" + memberId + "]");
 
@@ -3454,19 +3443,19 @@ namespace Nooch.Web.Controllers
         //public SynapseBankLoginRequestResult MFALoginWithRoutingAndAccountNumber(string bank, string memberid, string MicroDepositOne, string MicroDepositTwo, string bankId)
         public ActionResult MFALoginWithRoutingAndAccountNumber(string bank, string memberid, string MicroDepositOne, string MicroDepositTwo, string NodeId1)
         {
-            SynapseBankLoginRequestResult res = new SynapseBankLoginRequestResult();
+            SynapseV3BankLoginResult_ServiceRes res = new SynapseV3BankLoginResult_ServiceRes();
             res.Is_success = false;
 
             try
             {
-                Logger.Info("NoochController -> MFALoginWithRoutingAndAccountNumber Initiated -> [MemberID: " + memberid + "], [Bank: " + bank + "]");
+                Logger.Info("NoochController -> MFALoginWithRoutingAndAccountNumber Initiated -> MemberID: [" + memberid + "], NodeID: [" + NodeId1 + "], Bank: [" + bank + "]");
 
                 SynapseV3VerifyNodeWithMicroDeposits_ServiceInput inpu = new SynapseV3VerifyNodeWithMicroDeposits_ServiceInput();
                 inpu.bankName = bank; // not required..keeping it for just in case we need something to do with it.
                 inpu.MemberId = memberid;
                 inpu.microDespositOne = MicroDepositOne;
                 inpu.microDespositTwo = MicroDepositTwo;
-                inpu.bankId = NodeId1;
+                inpu.bankId = NodeId1; // should be the encrypted OID of the bank
 
                 // preparing data for POST type request
                 var scriptSerializer = new JavaScriptSerializer();
@@ -3475,19 +3464,19 @@ namespace Nooch.Web.Controllers
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
                 string serviceMethod = "/SynapseV3MFABankVerifyWithMicroDeposits";
 
-                res = ResponseConverter<SynapseBankLoginRequestResult>.CallServicePostMethod(String.Concat(serviceUrl, serviceMethod), json);
+                res = ResponseConverter<SynapseV3BankLoginResult_ServiceRes>.CallServicePostMethod(String.Concat(serviceUrl, serviceMethod), json);
 
                 if (res.Is_success != true)
                 {
-                    Logger.Error("NoochController -> MFALoginWithRoutingAndAccountNumber FAILED -> [Error Msg: " + res.ERROR_MSG +
-                                 "], [MemberID: " + memberid + "], [Bank: " + bank + "]");
+                    Logger.Error("NoochController -> MFALoginWithRoutingAndAccountNumber FAILED -> Error Msg: [" + res.errorMsg +
+                                 "], MemberID: [" + memberid + "], Bank: [" + bank + "]");
                 }
             }
             catch (Exception ex)
             {
-                Logger.Error("NoochController -> MFALoginWithRoutingAndAccountNumber FAILED - [MemberID: " + memberid +
-                             "], [Exception: " + ex + "]");
-                res.ERROR_MSG = ex.Message;
+                Logger.Error("NoochController -> MFALoginWithRoutingAndAccountNumber FAILED - MemberID: [" + memberid +
+                             "], Exception: [" + ex + "]");
+                res.errorMsg = ex.Message;
             }
 
             return Json(res);

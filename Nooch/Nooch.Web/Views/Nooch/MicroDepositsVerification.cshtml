@@ -79,19 +79,28 @@
     <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
         <div class="clearfix">
             <div class="m-l-15">
-                <a class="landingHeaderLogo" href="https://www.nooch.com/" style="float:left;">
-                    <img src="../Assets/Images/nooch-logo2.svg" class="center-block" alt="Nooch Logo" />
-                </a>
+                @if (MicroDeposit.IsRs.ToLower() == "true")
+                {
+                    <a class="landingHeaderLogo" href="https://www.rentscene.com/" style="float:left;">
+                        <img src="../Assets/Images/rentscene.png" class="center-block" alt="Rent Scene Logo" />
+                    </a>
+                }
+                else
+                {
+                    <a class="landingHeaderLogo" href="https://www.nooch.com/" style="float:left;">
+                        <img src="../Assets/Images/nooch-logo2.svg" class="center-block" alt="Nooch Logo" />
+                    </a>
+                }
                 <div id="nameInNavContainer" class="text-center" style="position:absolute; left:10%; width:80%; top: 8px;">
                     <label id="nameInNav" class="m-t-5 m-b-0 center-block f-600 h4">@MicroDeposit.userFirstName @MicroDeposit.userLastName</label>
-                    <h4 class="f-16 bankName">@MicroDeposit.bankName | @MicroDeposit.bankNickName</h4>
+                    <h4 class="f-15 bankName">@MicroDeposit.bankName | @MicroDeposit.bankNickName</h4>
                 </div>
             </div>
         </div>
     </nav>
 
     <form id="form1">
-        <input type="hidden" id="IsRs" value="@MicroDeposit.IsRs" />
+        <input type="hidden" id="IsRs" value="@MicroDeposit.IsRs.ToLower()" />
         <input type="hidden" id="MemberId" value="@MicroDeposit.MemberId" />
         <input type="hidden" id="NodeId1" value="@MicroDeposit.NodeId1" />
     </form>
@@ -109,7 +118,7 @@
                 <div>
 
                     <div class="well text-center f-15">
-                        <span class="show f-19 m-b-5 text-primary">Hi @MicroDeposit.userFirstName,</span>Please enter the amounts of the two (2) deposits from <em>"Rent Scene, Co"</em> on your bank statement:<br /><span style="font-weight:normal;">(both should be between $0.01-$0.99)</span>
+                        <span class="show f-19 m-b-5 text-primary">Hi @MicroDeposit.userFirstName,</span>Please enter the amounts of the two (2) deposits from <em>"Rent Scene"</em> on your bank statement:<br /><span style="font-weight:normal;">(both should be between $0.01 - $0.99)</span>
                     </div>
 
                     <form id="microVerForm" class="form-horizontal" role="form">
@@ -119,7 +128,7 @@
                                 <div class="input-group">
                                     <span class="input-group-addon">$0.</span>
                                     <div class="fg-line">
-                                        <input type="text" id="MicroDepositOne" class="form-control two-digits p-l-10" placeholder="00" maxlength="2" required data-parsley-trigger="keyup" data-parsley-minlength="2" data-parsley-minlength-message="Please enter a 2-digit number." data-parsley-validation-threshold="1" data-parsley-errors-container="#errorMsg1" />
+                                        <input type="text" id="MicroDepositOne" class="form-control two-digits p-l-10" placeholder="00" maxlength="2" required data-parsley-trigger="keyup" data-parsley-minlength="2" data-parsley-minlength-message="Please enter a 2-digit number." data-parsley-validation-threshold="0" data-parsley-errors-container="#errorMsg1" />
                                     </div>
                                 </div>
                                 <span class="glyphicon glyphicon-ok form-control-feedback hidden" aria-hidden="true"></span>
@@ -132,7 +141,7 @@
                                 <div class="input-group">
                                     <span class="input-group-addon">$0.</span>
                                     <div class="fg-line">
-                                        <input type="text" id="MicroDepositTwo" class="form-control two-digits" placeholder="00" maxlength="2" required data-parsley-trigger="keyup" data-parsley-minlength="2" maxlength="2" data-parsley-minlength-message="Please enter a 2-digit number." data-parsley-validation-threshold="1" data-parsley-errors-container="#errorMsg2" />
+                                        <input type="text" id="MicroDepositTwo" class="form-control two-digits" placeholder="00" maxlength="2" required data-parsley-trigger="keyup" data-parsley-minlength="2" maxlength="2" data-parsley-minlength-message="Please enter a 2-digit number." data-parsley-validation-threshold="0" data-parsley-errors-container="#errorMsg2" />
                                     </div>
                                 </div>
                                 <span class="glyphicon glyphicon-ok form-control-feedback hidden" aria-hidden="true"></span>
@@ -141,7 +150,7 @@
                         </div>
 
                         <div class="form-group m-t-30">
-                            <div class="col-sm-offset-2 col-sm-10">
+                            <div class="col-sm-offset-2 col-sm-8">
                                 <button type="button" class="btn btn-primary btn-lg btn-block" id="Submit" onclick="SubmitInfo()">Submit</button>
                             </div>
                         </div>
