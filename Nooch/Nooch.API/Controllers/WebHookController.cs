@@ -21,7 +21,7 @@ namespace Nooch.API.Controllers
             try
             {
                 Logger.Info("WEBHOOK -> GetTransactionStatusFromSynapse Fired - TransactionID: [ " + transId +
-                            " ] At: [ " + DateTime.Now + " ], Content: [ " + jsonContent + " ]");
+                            " ], Content: [ " + jsonContent + " ]");
 
                 using (NOOCHEntities obj = new NOOCHEntities())
                 {

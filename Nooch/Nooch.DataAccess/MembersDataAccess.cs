@@ -96,7 +96,7 @@ namespace Nooch.DataAccess
         /// <param name="newPassword"></param>
         public bool ResetPassword(string memberId, string newPassword, string newUser)
         {
-            Logger.Info("MDA -> ResetPassword Initiated - [MemberId: " + memberId + "]");
+            Logger.Info("MDA -> ResetPassword Initiated - MemberId: [" + memberId + "]");
 
             try
             {
@@ -104,9 +104,8 @@ namespace Nooch.DataAccess
                 {
                     var id = Utility.ConvertToGuid(memberId);
 
-                    var noochMember =
-                        noochConnection.Members.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
-
+                    var noochMember = noochConnection.Members.FirstOrDefault(m => m.MemberId == id &&
+                                                                                  m.IsDeleted == false);
 
                     if (noochMember != null)
                     {

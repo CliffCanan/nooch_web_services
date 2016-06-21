@@ -2875,6 +2875,8 @@ namespace Nooch.Common
             res.wereUserDetailsFound = false;
             res.wereBankDetailsFound = false;
 
+            Logger.Info("Common Helper -> GetSynapseBankAndUserDetailsforGivenMemberId Fired - MemberID: [" + memberId + "]");
+            
             try
             {
                 var id = Utility.ConvertToGuid(memberId);
@@ -4674,7 +4676,7 @@ namespace Nooch.Common
 
             suggestedUsers suggestedUsers = new suggestedUsers();
             suggestedUsers.success = false;
-            suggestedUsers.suggestions = new suggestions[10];
+            suggestedUsers.suggestions = new suggestions[6];
 
             try
             {
@@ -4691,13 +4693,11 @@ namespace Nooch.Common
                                                                          trans.RecipientId == id ||
                                                                          trans.InvitationSentTo == member.UserName ||
                                                                          trans.InvitationSentTo == member.UserNameLowerCase)
-                                                                         .OrderByDescending(r => r.TransactionDate).Take(20).ToList();
+                                                                         .OrderByDescending(r => r.TransactionDate).Take(25).ToList();
 
                     if (transactions != null && transactions.Count > 0)
                     {
                         int i = 0;
-
-                        //Logger.Info("Common Helper - GetSuggestedUsers - CHECKPOINT #1 - TRANS.COUNT: [" + transactions.Count + "]");
 
                         foreach (var trans in transactions)
                         {
@@ -4740,13 +4740,9 @@ namespace Nooch.Common
                                     }
                                 }
 
-                                Logger.Info("Common Helper - GetSuggestedUsers - CHECKPOINT #A - KeepGoing: [" + keepGoing + "], 'i': [" + i + "]");
-
                                 if (!keepGoing) continue;
 
                                 var name = UppercaseFirst(GetDecryptedData(otherUser.FirstName)) + " " + UppercaseFirst(GetDecryptedData(otherUser.LastName));
-
-                                Logger.Info("Common Helper - GetSuggestedUsers - CHECKPOINT #1.0");
 
                                 suggestions suggestion = new suggestions();
                                 suggestion.value = name;
@@ -4759,11 +4755,9 @@ namespace Nooch.Common
                                     imgUrl = otherUser.Photo
                                 };
 
-                                Logger.Info("Common Helper - GetSuggestedUsers - CHECKPOINT #1.0");
-
                                 suggestedUsers.suggestions[i] = suggestion;
 
-                                if (i == 10) break;
+                                if (i == 6) break;
 
                                 i++;
                             }
@@ -4773,7 +4767,7 @@ namespace Nooch.Common
                             }
                         }
 
-                        Logger.Info("Common Helper - GetSuggestedUsers SUCCESS - COUNT: [" + suggestedUsers.suggestions.Length + "], [MemberID: " + memberId + "]");
+                        Logger.Info("Common Helper - GetSuggestedUsers SUCCESS - COUNT: [" + suggestedUsers.suggestions.Length + "], MemberID: [" + memberId + "]");
 
                         suggestedUsers.success = true;
                         suggestedUsers.msg = "Found [" + suggestedUsers.suggestions.Length.ToString() + "]";
