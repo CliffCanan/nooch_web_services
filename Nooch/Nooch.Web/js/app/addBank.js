@@ -16,7 +16,7 @@ var step1height = '554px';
 var step2height = '520px';
 
 var wasEnterPressed = false;
-var IsBankManulAdded = false;
+var IsBankAddedManually = false;
 
 $('#bankSearch').on('keypress', function (e) {
     // This function prevents the form from submitting... otherwise the browser was always selecting Bank of America no matter what was in the text field, not sure why
@@ -779,8 +779,6 @@ function submitManualBank() {
             console.log("SUBMIT BANK MANUAL response msg is...");
             console.log(bnkManualResult);
 
-            IsBankManulAdded = bnkManualResult.IsBankManulAdded;
-
 			// Hide UIBlock (loading box))
             $('.addBankContainer-body').unblock();
 
@@ -801,6 +799,8 @@ function submitManualBank() {
 
 			        sendToIdVerQuestions = true;
 			    }
+
+			    IsBankAddedManually = true;
 
 				sendToRedUrl();
 			}
@@ -1146,8 +1146,8 @@ function sendToRedUrl() {
         if (sendToIdVerQuestions == true)
         {
             console.log("sending to ID Verification page...");
-            window.top.location.href = "https://www.noochme.com/noochweb/Nooch/idVerification?memid=" + MEMBER_ID + "&from=addbnk&redUrl=" + RED_URL;
-            //window.top.location.href = "http://nooch.info/noochweb/Nooch/idVerification?memid=" + MEMBER_ID + "&from=addbnk&redUrl=" + RED_URL;
+            var idVerURL = $("#idVer_Url").val();
+            window.top.location.href = idVerURL + "?memid=" + MEMBER_ID + "&from=addbnk&redUrl=" + RED_URL;
         }
         else if (RED_URL.indexOf("rentscene") > -1) // For RentScene
         {
@@ -1197,12 +1197,12 @@ function sendToRedUrl() {
             console.log("AddBank -> TRIGGERING COMPLETE IN PARENT - Success!");
             window.parent.$('body').trigger('addBankComplete');
         }
-         
+
         else if (RED_URL.indexOf('DepositMoneyComplete') > 1 ||
                  RED_URL.indexOf('PayRequestComplete') > 1)
         {
-			// CC (5/19/16): Commenting out this alert, better to just send the user to the Complete page otherwise they might think
-			//				 this is the end and not wait for the page to load after clicking 'Done' in this alert.
+            // CC (5/19/16): Commenting out this alert, better to just send the user to the Complete page otherwise they might think
+            //				 this is the end and not wait for the page to load after clicking 'Done' in this alert.
             /*swal({
                 title: "Bank Linked Successfully",
                 text: "<p>Thanks for completing this <strong>one-time</strong> process. &nbsp;Now you can make secure payments with anyone and never share your bank details!</p>",
@@ -1213,8 +1213,40 @@ function sendToRedUrl() {
                 html: true
             }, function (isConfirm)
             {*/
+            $('.addBankContainer-body').block({
+                message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Submitting...</span>',
+                css: {
+                    border: 'none',
+                    padding: '26px 8px 20px',
+                    backgroundColor: '#000',
+                    '-webkit-border-radius': '15px',
+                    '-moz-border-radius': '15px',
+                    'border-radius': '15px',
+                    opacity: '.75',
+                    width: '70%',
+                    left: '15%',
+                    top: '25px',
+                    color: '#fff'
+                }
+            });
+
+            setTimeout(function () {
+                window.top.location.href = RED_URL;
+            }, 300);
+        }
+        else if (IsBankManulAdded == true)
+        {
+            swal({
+                title: "Bank Linked Successfully",
+                text: "<p>Thanks for completing this <strong>one-time</strong> process. &nbsp;Now check your mail for verification of your account via Microdeposit !</p>",
+                type: "success",
+                confirmButtonColor: "#3fabe1",
+                confirmButtonText: "Done",
+                customClass: "largeText",
+                html: true
+            }, function (isConfirm) {
                 $('.addBankContainer-body').block({
-                    message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Submitting...</span>',
+                    message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Finishing...</span>',
                     css: {
                         border: 'none',
                         padding: '26px 8px 20px',
@@ -1222,7 +1254,7 @@ function sendToRedUrl() {
                         '-webkit-border-radius': '15px',
                         '-moz-border-radius': '15px',
                         'border-radius': '15px',
-                        opacity: '.75',
+                        opacity: '.8',
                         width: '70%',
                         left: '15%',
                         top: '25px',
@@ -1231,79 +1263,45 @@ function sendToRedUrl() {
                 });
 
                 setTimeout(function () {
-                    window.top.location.href = RED_URL;
+                    window.top.location.href = "https://www.nooch.com/";
                 }, 300);
-            //});
+            });
         }
-        else if(IsBankManulAdded == true)
-            {
-                swal({
-                    title: "Bank Linked Successfully",
-                    text: "<p>Thanks for completing this <strong>one-time</strong> process. &nbsp;Now check your mail for verification of your account via Microdeposit !</p>",
-                    type: "success",
-                    confirmButtonColor: "#3fabe1",
-                    confirmButtonText: "Done",
-                    customClass: "largeText",
-                    html: true
-                }, function (isConfirm) {
-                    $('.addBankContainer-body').block({
-                        message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Finishing...</span>',
-                        css: {
-                            border: 'none',
-                            padding: '26px 8px 20px',
-                            backgroundColor: '#000',
-                            '-webkit-border-radius': '15px',
-                            '-moz-border-radius': '15px',
-                            'border-radius': '15px',
-                            opacity: '.8',
-                            width: '70%',
-                            left: '15%',
-                            top: '25px',
-                            color: '#fff'
-                        }
-                    });
-
-                    setTimeout(function () {
-                        window.top.location.href = "https://www.nooch.com/";
-                    }, 300);
-                });
-            }
 
         else // All Others - most likely no RED_URL was passed in URL, so defaulting to a Sweet Alert
-            {
-                swal({
-                    title: "Bank Linked Successfully",
-                    text: "<p>Thanks for completing this <strong>one-time</strong> process. &nbsp;Now you can make secure payments with anyone and never share your bank details!</p>",
-                    type: "success",
-                    confirmButtonColor: "#3fabe1",
-                    confirmButtonText: "Done",
-                    customClass: "largeText",
-                    html: true
-                }, function (isConfirm) {
-                    $('.addBankContainer-body').block({
-                        message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Finishing...</span>',
-                        css: {
-                            border: 'none',
-                            padding: '26px 8px 20px',
-                            backgroundColor: '#000',
-                            '-webkit-border-radius': '15px',
-                            '-moz-border-radius': '15px',
-                            'border-radius': '15px',
-                            opacity: '.8',
-                            width: '70%',
-                            left: '15%',
-                            top: '25px',
-                            color: '#fff'
-                        }
-                    });
-
-                    setTimeout(function ()
-                    {
-                        window.top.location.href = "https://www.nooch.com/";
-                    }, 300);
+        {
+            swal({
+                title: "Bank Linked Successfully",
+                text: "<p>Thanks for completing this <strong>one-time</strong> process. &nbsp;Now you can make secure payments with anyone and never share your bank details!</p>",
+                type: "success",
+                confirmButtonColor: "#3fabe1",
+                confirmButtonText: "Done",
+                customClass: "largeText",
+                html: true
+            }, function (isConfirm) {
+                $('.addBankContainer-body').block({
+                    message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Finishing...</span>',
+                    css: {
+                        border: 'none',
+                        padding: '26px 8px 20px',
+                        backgroundColor: '#000',
+                        '-webkit-border-radius': '15px',
+                        '-moz-border-radius': '15px',
+                        'border-radius': '15px',
+                        opacity: '.8',
+                        width: '70%',
+                        left: '15%',
+                        top: '25px',
+                        color: '#fff'
+                    }
                 });
-            }
+
+                setTimeout(function () {
+                    window.top.location.href = "https://www.nooch.com/";
+                }, 300);
+            });
         }
+    }
 }
 
 

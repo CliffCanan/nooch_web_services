@@ -1544,6 +1544,42 @@ div#pwFormShell #depositCreateAccount,
     opacity: .85;
 }
 
+.form-control.autocomplete {
+  padding-left: 6px;
+  color: #111;
+}
+/*********************/
+/**  AUTO-COMPLETE  **/
+/*********************/
+.autocomplete-suggestions {
+  background: #FFF;
+  border: 1px solid #ccc;
+  border-radius: 0 0 5px 5px;
+  box-shadow: 0 3px 10px -2px rgba(0,0,0,.25);
+  overflow: auto;
+}
+.autocomplete-suggestion {
+  padding: 12px 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+ }
+.autocomplete-selected {
+  background: #F0F0F0;
+}
+.autocomplete-suggestions strong {
+  font-weight: normal;
+  color: #3399FF;
+}
+.autocomplete-group {
+  padding: 2px 5px;
+}
+.autocomplete-group strong {
+  display: block;
+  border-bottom: 1px solid #000;
+}
+
+
 /**********
     404
 ***********/

@@ -464,7 +464,7 @@ namespace Nooch.Web.Controllers
         [ActionName("addBank")]
         public ActionResult addBank(bankaddInputFormClass inp)
         {
-            Logger.Info("NoochController -> addBank (for manual routing/account #) Initiated - [MemberID: " + inp.memberid + "]");
+            Logger.Info("NoochController -> addBank (for manual routing/account #) Initiated - MemberID: [" + inp.memberid + "]");
 
             SynapseBankLoginRequestResult res = new SynapseBankLoginRequestResult();
             res.Is_success = false;
@@ -476,7 +476,7 @@ namespace Nooch.Web.Controllers
 
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
 
-                string serviceMethod = "/SynapseV3AddNodeWithAccountNumberAndRoutingNumber?MemberId=" + inp.memberid + "&routing_num=" + inp.routing
+                string serviceMethod = "SynapseV3AddNodeWithAccountNumberAndRoutingNumber?MemberId=" + inp.memberid + "&routing_num=" + inp.routing
                                        + "&account_num=" + inp.account + "&bankNickName=" + inp.nickname + "&accountclass=" + inp.cl + "&accounttype=" + inp.type;
 
                 SynapseBankLoginV3_Response_Int bankAddRes =
@@ -1135,53 +1135,64 @@ namespace Nooch.Web.Controllers
 
         #region Reset Password Page
 
-        public ActionResult ResetPassword()
+        public ActionResult ResetPassword(string memberId)
         {
             ResultResetPassword resultResetPassword = new ResultResetPassword();
-
-            string strUserAgent = Request.UserAgent.ToLower();
             resultResetPassword.requestExpiredorNotFound = false;
+            resultResetPassword.pin = false;
 
-            if (strUserAgent != null)
+            if (!String.IsNullOrEmpty(memberId))
             {
-
-                if (Request.Browser.IsMobileDevice || strUserAgent.Contains("iphone") ||
-                      strUserAgent.Contains("mobile"))
+                var memberObj = CommonHelper.GetMemberDetails(memberId);
+                if (memberObj != null)
                 {
-                    resultResetPassword.clientScript = "<script>Show('iPhoneButton','ctl00_detailContentPlaceHolder_activationLinkButton')</script>";
+                    resultResetPassword.usermail = CommonHelper.GetDecryptedData(memberObj.UserName);
+                    resultResetPassword.isRs = memberObj.isRentScene ?? false;
+
+                    string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+                    string serviceMethod = "resetlinkvalidationcheck?memberId=" + memberId;
+
+                    var isMemberPwdResetted = ResponseConverter<Nooch.Common.Entities.BoolResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+
+                    if (isMemberPwdResetted.Result == false)
+                    {
+                        resultResetPassword.requestExpiredorNotFound = true;
+                    }
                 }
                 else
                 {
-                    resultResetPassword.clientScript = "<script>Show('ctl00_detailContentPlaceHolder_newPasswordLinkButton','iPhoneButton')</script>";
+                    resultResetPassword.invalidUser = "true";
                 }
             }
+            else
+            {
+                resultResetPassword.invalidUser = "true";
+            }
 
-            resultResetPassword.ResetPasswordMessageLabel = false;
-            resultResetPassword.messageLabel = false;
-            resultResetPassword = bindusermail(resultResetPassword);
             ViewData["OnLoaddata"] = resultResetPassword;
             return View();
         }
 
 
-        public string ResetPasswordButton_Click(string PWDText, string memberId, string newUser = "")
+        public string ResetPasswordSubmit(string PWDText, string memberId, string newUser = "")
         {
-            var objAesAlgorithm = new AES();
-            string encryptedPassword = objAesAlgorithm.Encrypt(PWDText.Trim(), string.Empty);
-            string serviceMethod = string.Empty;
-            string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-
-            // serviceMethod = "/ResetPassword?memberId=" + memberId + "&newPassword=" + encryptedPassword + "&newUser=true";
-            serviceMethod = "/ResetPassword?memberId=" + memberId + "&newPassword=" + encryptedPassword + "&newUser=" + newUser;
-
-            var isMemberPwdResetted = ResponseConverter<Nooch.Common.Entities.BoolResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
-            if (isMemberPwdResetted.Result)
+            try
             {
-                return "true";
+                var objAesAlgorithm = new AES();
+                string encryptedPassword = objAesAlgorithm.Encrypt(PWDText.Trim(), string.Empty);
+                string serviceMethod = string.Empty;
+                string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+
+                serviceMethod = "ResetPassword?memberId=" + memberId + "&newPassword=" + encryptedPassword + "&newUser=" + newUser;
+
+                var isMemberPwdResetted = ResponseConverter<Nooch.Common.Entities.BoolResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+
+                return isMemberPwdResetted.Result ? "true" : "false";
             }
-            else
+            catch (Exception ex)
             {
-                return "false";
+                Logger.Error("Reset PW Code Behind -> ResetPasswordButton FAILED - MemberID: [" + memberId + "], Exception: [" + ex + "]");
+                return ex.Message;
             }
         }
 
@@ -1189,83 +1200,30 @@ namespace Nooch.Web.Controllers
         public ActionResult pinNumberVerificationButton_Click(string PINTextBox, string memberId)
         {
             synapseV3GenericResponse res = new synapseV3GenericResponse();
+            res.isSuccess = false;
 
             var objAesAlgorithm = new AES();
             string encryptedPin = objAesAlgorithm.Encrypt(PINTextBox.Trim(), string.Empty);
             string serviceMethod = string.Empty;
             string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
 
-            serviceMethod = "/ValidatePinNumberForPasswordForgotPage?memberId=" + memberId + "&pinNo=" + encryptedPin;
+            serviceMethod = "ValidatePinNumberForPasswordForgotPage?memberId=" + memberId + "&pinNo=" + encryptedPin;
 
             var isMemberValid = ResponseConverter<Nooch.Common.Entities.StringResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
             if (isMemberValid.Result.Equals("Success"))
             {
-                Page p = HttpContext.Handler as Page;
-                p.RegisterStartupScript("showButton", "<script>Show('resetPasswordDiv','pinNumberVerificationDiv')</script>");
+                //Page p = HttpContext.Handler as Page;
+                //p.RegisterStartupScript("showButton", "<script>Show('resetPasswordDiv','pinNumberVerificationDiv')</script>");
                 res.isSuccess = true;
-
-                return Json(res);
             }
             else
             {
-                res.isSuccess = false;
                 res.msg = isMemberValid.Result.ToString();
-                return Json(res);
             }
+
+            return Json(res);
         }
 
-
-        ResultResetPassword bindusermail(ResultResetPassword rrp)
-        {
-            ResultResetPassword resultResetPass = rrp;
-            string memberId = Request.QueryString["memberId"];
-
-            if (!String.IsNullOrEmpty(memberId))
-            {
-                string serviceMethod = string.Empty;
-                string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-                serviceMethod = "/GetMemberUsernameByMemberId?memberId=" + memberId;
-
-                var isMemberPwdReset = ResponseConverter<Nooch.Common.Entities.StringResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
-                if (isMemberPwdReset.Result != null)
-                {
-                    resultResetPass.usermail = isMemberPwdReset.Result;
-                    resultResetPass = resetlinkvalidationcheck(resultResetPass);
-                }
-                else
-                {
-                    resultResetPass.invalidUser = "true";
-                    rrp.pin = false;
-
-                }
-            }
-            else
-            {
-                resultResetPass.invalidUser = "true";
-                rrp.pin = false;
-
-            }
-
-            return resultResetPass;
-        }
-
-
-        ResultResetPassword resetlinkvalidationcheck(ResultResetPassword rrp)
-        {
-            ResultResetPassword resultResetPass = rrp;
-            string memberId = Request.QueryString["memberId"];
-            string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-            string serviceMethod = string.Empty;
-            serviceMethod = "/resetlinkvalidationcheck?memberId=" + memberId;
-            var isMemberPwdResetted = ResponseConverter<Nooch.Common.Entities.BoolResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
-            if (isMemberPwdResetted.Result == false)
-            {
-                resultResetPass.requestExpiredorNotFound = true;
-                resultResetPass.pin = false;
-            }
-
-            return resultResetPass;
-        }
 
         #endregion Reset Password Page
 

@@ -51,19 +51,14 @@ namespace Nooch.DataAccess
                 {
                     var id = Utility.ConvertToGuid(memberId);
 
-                    var noochMember =
-                        noochConnection.Members.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
-
+                    var noochMember = noochConnection.Members.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
 
                     if (noochMember != null)
                     {
                         // checking password reset request time
-
-                        var resereq =
-                            noochConnection.PasswordResetRequests.OrderByDescending(m => m.Id)
-                                .Take(1)
-                                .FirstOrDefault(m => m.MemberId == id);
-
+                        var resereq = noochConnection.PasswordResetRequests.OrderByDescending(m => m.Id)
+                                                     .Take(1)
+                                                     .FirstOrDefault(m => m.MemberId == id);
 
                         if (resereq == null)
                         {
@@ -120,11 +115,8 @@ namespace Nooch.DataAccess
                         if (String.IsNullOrEmpty(newUser))
                         {
                             // checking password reset request time
-
-                            var resetRequestTime =
-                                noochConnection.PasswordResetRequests.OrderByDescending(m => m.Id).Take(1)
-                                    .FirstOrDefault(m => m.MemberId == id);
-
+                            var resetRequestTime = noochConnection.PasswordResetRequests.OrderByDescending(m => m.Id).Take(1)
+                                                                                        .FirstOrDefault(m => m.MemberId == id);
 
                             if (resetRequestTime == null)
                             {
@@ -163,7 +155,7 @@ namespace Nooch.DataAccess
                             if (noochConnection.SaveChanges() > 0)
                             {
                                 Logger.Info("MDA -> ResetPassword - PW Reset Successfully for: Username: [" + emailAddress +
-                                                       "], MemberId: [" + memberId + "]");
+                                            "], MemberID: [" + memberId + "]");
                                 return true;
                             }
                         }
@@ -178,6 +170,7 @@ namespace Nooch.DataAccess
             {
                 Logger.Error("MDA -> ResetPassword FAILED - MemberID: [" + memberId + "], Exception: [" + ex + "]");
             }
+
             return false;
         }
 
@@ -3460,7 +3453,7 @@ namespace Nooch.DataAccess
                         string lastNameUnEncr = CommonHelper.GetDecryptedData(LastName);
 
                         StringBuilder st = new StringBuilder("<p><strong>This user's Nooch Account information is:</strong></p>" +
-                                              "<table border='1' cellspacing='5' style='border-collapse:collapse;'>" +
+                                              "<table border='1' cellpadding='5' style='border-collapse:collapse;'>" +
                                               "<tr><td><strong>MemberID:</strong></td><td>" + member.MemberId + "</td></tr>" +
                                               "<tr><td><strong>Nooch_ID:</strong></td><td>" + member.Nooch_ID + "</td></tr>" +
                                               "<tr><td><strong>Name:</strong></td><td>" + namearray[0] + " " + lastNameUnEncr + "</td></tr>" +
