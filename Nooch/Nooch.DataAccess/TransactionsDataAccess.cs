@@ -2860,12 +2860,13 @@ namespace Nooch.DataAccess
 
 
         public SynapseV3AddTrans_ReusableClass AddTransSynapseV3Reusable(string sender_oauth, string sender_fingerPrint,
-            string sender_bank_node_id, string amount, string fee, string receiver_oauth, string receiver_fingerprint,
-            string receiver_bank_node_id, string suppID_or_transID, string senderUserName, string receiverUserName, string iPForTransaction, string senderLastName, string recipientLastName)
+            string sender_bank_node_id, string amount, string receiver_oauth, string receiver_fingerprint,
+            string receiver_bank_node_id, string suppID_or_transID, string senderUserName, string receiverUserName,
+            string iPForTransaction, string senderLastName, string recipientLastName, string memo)
         {
-            Logger.Info("TDA -> AddTransSynapseV3Reusable Initiated - [Sender Last Name: " + senderLastName +
-                        "], [Sender Username: " + senderUserName + "], [Recip Last Name: " + recipientLastName +
-                        "], [Recipient Username: " + receiverUserName + "], [Amount: " + amount + "]");
+            Logger.Info("TDA -> AddTransSynapseV3Reusable Initiated - Sender Last Name: [" + senderLastName +
+                        "], Sender Username: " + senderUserName + "], Recip Last Name: [" + recipientLastName +
+                        "], Recipient Username: [" + receiverUserName + "], Amount: [" + amount + "]");
 
             SynapseV3AddTrans_ReusableClass res = new SynapseV3AddTrans_ReusableClass();
             res.success = false;
@@ -5834,29 +5835,20 @@ namespace Nooch.DataAccess
 
                 string sender_fingerPrint = sender.UDID1;
                 string amount = request.Amount.ToString();
-                string fee = "0";
-                if (transactionAmount > 10)
-                {
-                    fee = "0.20"; //to offset the Synapse fee so the user doesn't pay it
-                }
-                else if (transactionAmount < 10)
-                {
-                    fee = "0.10"; //to offset the Synapse fee so the user doesn't pay it
-                }
-
                 string receiver_fingerprint = requester.UDID1;
                 string suppID_or_transID = request.TransactionId.ToString();
                 string senderUserName = CommonHelper.GetDecryptedData(sender.UserName).ToLower();
                 string receiverUserName = CommonHelper.GetDecryptedData(requester.UserName).ToLower();
                 string iPForTransaction = CommonHelper.GetRecentOrDefaultIPOfMember(sender.MemberId);
                 string senderLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(sender.LastName));
-                string recepientLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(requester.LastName));
+                string recipientLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(requester.LastName));
+                string memoForSyn = !string.IsNullOrEmpty(request.Memo) ? request.Memo : "";
 
                 #endregion SYNAPSE V3
 
-                SynapseV3AddTrans_ReusableClass transactionResultFromSynapseAPI = AddTransSynapseV3Reusable(sender_oauth, sender_fingerPrint, senderBankOid,
-                    amount, fee, receiver_oauth, receiver_fingerprint, recipBankOid, suppID_or_transID,
-                    senderUserName, receiverUserName, iPForTransaction, senderLastName, recepientLastName);
+                SynapseV3AddTrans_ReusableClass transactionResultFromSynapseAPI = AddTransSynapseV3Reusable(sender_oauth, sender_fingerPrint,
+                                                senderBankOid, amount, receiver_oauth, receiver_fingerprint, recipBankOid, suppID_or_transID,
+                                                senderUserName, receiverUserName, iPForTransaction, senderLastName, recipientLastName, memoForSyn);
 
                 if (transactionResultFromSynapseAPI.success == true)
                 {
@@ -5913,6 +5905,7 @@ namespace Nooch.DataAccess
                         string s2 = request.Amount.ToString("n2");
 
                         #region Add Memo
+
                         string memo = "";
                         if (!string.IsNullOrEmpty(request.Memo))
                         {
@@ -5935,6 +5928,7 @@ namespace Nooch.DataAccess
                                 memo = "For " + request.Memo.ToString();
                             }
                         }
+
                         #endregion Add Memo
 
                         #endregion Setup Notification Variables
@@ -6278,8 +6272,7 @@ namespace Nooch.DataAccess
             // Check weekly transfer limit
             if (CommonHelper.IsWeeklyTransferLimitExceeded(Utility.ConvertToGuid(transInput.MemberId), transactionAmount, transInput.RecipientId))
             {
-                Logger.Error("TDA -> TransferMoneyUsingSynapse -> Weekly transfer limit exceeded. MemberId: [" +
-                                       transInput.MemberId + "]");
+                Logger.Error("TDA -> TransferMoneyUsingSynapse -> Weekly transfer limit exceeded. MemberId: [" + transInput.MemberId + "]");
                 return "Weekly transfer limit exceeded.";
             }
 
@@ -6289,7 +6282,7 @@ namespace Nooch.DataAccess
 
             #region Get Sender Synapse Details
 
-            string sender_bank_node_id = "";
+            string senderBankOid = "";
             string sender_oauth = "";
 
             var senderSynDetails = CommonHelper.GetSynapseBankAndUserDetailsforGivenMemberId(transInput.MemberId);
@@ -6323,7 +6316,7 @@ namespace Nooch.DataAccess
                 return "Sender's bank has insufficient permissions: [" + senderSynDetails.BankDetails.allowed + "]";
             }
 
-            sender_bank_node_id = senderSynDetails.BankDetails.bank_oid;
+            senderBankOid = senderSynDetails.BankDetails.bank_oid;
             sender_oauth = senderSynDetails.UserDetails.access_token;
 
             Logger.Info("TDA -> TransferMoneyUsingSynapse - Sender's Synapse Permission: [" + senderSynDetails.UserDetails.permission + "], " +
@@ -6333,7 +6326,7 @@ namespace Nooch.DataAccess
 
             #region Get Recipient Synapse Details
 
-            string receiver_bank_node_id = ""; // This is not actually needed for the transaction to happen, we can remove this check later
+            string recipBankOid = ""; // This is not actually needed for the transaction to happen, we can remove this check later
             string receiver_oauth = "";
 
             var recipientNoochDetails = CommonHelper.GetMemberDetails(transInput.RecipientId);
@@ -6370,7 +6363,7 @@ namespace Nooch.DataAccess
             }
 
 
-            receiver_bank_node_id = recipientSynapseDetails.BankDetails.bank_oid;
+            recipBankOid = recipientSynapseDetails.BankDetails.bank_oid;
             receiver_oauth = recipientSynapseDetails.UserDetails.access_token;
 
             Logger.Info("TDA -> TransferMoneyUsingSynapse - Recipient's Synapse Permission: [" + recipientSynapseDetails.UserDetails.permission + "], " +
@@ -6385,24 +6378,24 @@ namespace Nooch.DataAccess
             // 574f45d79506295ff7a81db8 - Passthrough (Linked to Rent Scene's parent account - USE FOR RENT PAYMENTS - ANYTHING OVER $1,000)
             // 5759005795062906e1359a8e - Passthrough (Linked to Marvis Burn's Nooch account - NEVER USE)
             if ((senderNoochDetails.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49" ||
-                sender_bank_node_id == "5759005795062906e1359a8e" ||
-                sender_bank_node_id == "574f45d79506295ff7a81db8") &&
+                senderBankOid == "5759005795062906e1359a8e" ||
+                senderBankOid == "574f45d79506295ff7a81db8") &&
                 recipientNoochDetails.cipTag == "Vendor")
             {
                 // Sender is Rent Scene and recipient is a 'Vendor'
-                sender_bank_node_id = "575ad909950629625ca88262";
+                senderBankOid = "575ad909950629625ca88262";
                 Logger.Info("TDA -> TransferMoneyUsingSynapse - RENT SCENE VENDOR Payment Detected - " +
                             "Substituting Sender_Bank_NodeID to use RS's Corporate Checking account");
             }
             else if (transactionAmount < 200 &&
                      (recipientNoochDetails.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49" ||
-                      receiver_bank_node_id == "574f45d79506295ff7a81db8" ||
-                      receiver_bank_node_id == "5759005795062906e1359a8e") &&
+                      recipBankOid == "574f45d79506295ff7a81db8" ||
+                      recipBankOid == "5759005795062906e1359a8e") &&
                       senderNoochDetails.cipTag == "Client")
             {
                 // Recipient is Rent Scene AND Sender is a Client AND Amount is < $200 (so it's probably an application fee)
                 // So use RS's Corporate Checking account.
-                receiver_bank_node_id = "575ad909950629625ca88262";
+                recipBankOid = "575ad909950629625ca88262";
                 Logger.Info("TDA -> TransferMoneyUsingSynapse - RENT SCENE Payment Detected Under $200 - " +
                             "Substituting Receiver_Bank_NodeID to use RS's Corporate Checking account");
             }
@@ -6416,7 +6409,7 @@ namespace Nooch.DataAccess
             {
                 try
                 {
-                    Logger.Info("TDA -> TransferMoneyUsingSynapse CHECKPOINT #2 - BOTH USERS' SYNAPSE INFO RETRIEVED SUCCESSFULLY  ");
+                    //Logger.Info("TDA -> TransferMoneyUsingSynapse CHECKPOINT #2 - BOTH USERS' SYNAPSE INFO RETRIEVED SUCCESSFULLY");
 
                     // Prepare variables for Email/SMS notifications (This block is this early because these vars will be used for both success & failure scenarios below)
                     #region Define Variables From Transaction for Notifications
@@ -6510,27 +6503,20 @@ namespace Nooch.DataAccess
 
                     #region Synapse V3 Add Trans
 
-                    string sender_fingerPrint = senderNoochDetails.UDID1;
-                    string amount = transInput.Amount.ToString();
-                    string receiver_fingerprint = recipientNoochDetails.UDID1;
-                    string iPForTransaction = CommonHelper.GetRecentOrDefaultIPOfMember(SenderGuid);
-                    string fee = "0";
-                    if (transactionAmount > 10)
-                    {
-                        fee = "0.10"; //to offset the Synapse fee so the user doesn't pay it
-                    }
-                    else if (transactionAmount < 10)
-                    {
-                        fee = "0.10";
-                    }
-
                     // CC (6/20/16): Must get the TransactionID from 'SetTransactionDetails' here so we send the right webhook to Synapse.
                     Transaction transactionDetail = new Transaction();
                     transactionDetail = SetTransactionDetails(transInput, Constants.TRANSACTION_TYPE_TRANSFER, 0);
 
-                    SynapseV3AddTrans_ReusableClass transactionResultFromSynapseAPI = AddTransSynapseV3Reusable(sender_oauth, sender_fingerPrint, sender_bank_node_id,
-                        amount, fee, receiver_oauth, receiver_fingerprint, receiver_bank_node_id, transactionDetail.TransactionId.ToString(),
-                        senderUserName, receiverUserName, iPForTransaction, senderLastName, recipientLastName);
+                    string sender_fingerPrint = senderNoochDetails.UDID1;
+                    string amount = transInput.Amount.ToString();
+                    string receiver_fingerprint = recipientNoochDetails.UDID1;
+                    string iPForTransaction = CommonHelper.GetRecentOrDefaultIPOfMember(SenderGuid);
+                    string memoForSyn = !string.IsNullOrEmpty(transInput.Memo) ? transInput.Memo : "";
+                    string suppID_or_transID = transactionDetail.TransactionId.ToString();
+
+                    SynapseV3AddTrans_ReusableClass transactionResultFromSynapseAPI = AddTransSynapseV3Reusable(sender_oauth, sender_fingerPrint,
+                                                    senderBankOid, amount, receiver_oauth, receiver_fingerprint, recipBankOid, suppID_or_transID,
+                                                    senderUserName, receiverUserName, iPForTransaction, senderLastName, recipientLastName, memoForSyn);
 
                     short shouldSendFailureNotifications = 0;
 

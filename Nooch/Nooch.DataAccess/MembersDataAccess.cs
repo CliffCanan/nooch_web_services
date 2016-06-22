@@ -5652,15 +5652,6 @@ namespace Nooch.DataAccess
                                 // We have all details of both users.  Now call Synapse's Order API service
                                 #region Call Synapse Order API
 
-                                string facilitator_fee = "0";
-                                if (Convert.ToDecimal(Transaction.Amount) > 10)
-                                {
-                                    facilitator_fee = "-.25";
-                                }
-                                else if (Convert.ToDecimal(Transaction.Amount) < 10)
-                                {
-                                    facilitator_fee = "-.10";
-                                }
                                 var sender = GetMemberDetails(SenderId.ToString());
                                 string senderEmail = CommonHelper.GetDecryptedData(sender.UserName);
                                 string moneySenderFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(sender.FirstName));
@@ -5681,6 +5672,7 @@ namespace Nooch.DataAccess
 
                                 var transId = Transaction.TransactionId.ToString();
                                 var amount = Transaction.Amount.ToString();
+                                string memoForSyn = !string.IsNullOrEmpty(Transaction.Memo) ? Transaction.Memo : "";
 
                                 // Cliff (6/14/16): Adding this to check: a.) is this a payment to Rent Scene?
                                 //                  and b.) what kind of user the recipient is: Client or Vendor, which determines which Node ID to use for Rent Scene
@@ -5723,7 +5715,6 @@ namespace Nooch.DataAccess
                                     senderFingerprint,
                                     senderBankOid,
                                     amount,
-                                    facilitator_fee,
                                     recipSynapseUserId,
                                     recipFingerprint,
                                     recipBankOid,
@@ -5732,7 +5723,7 @@ namespace Nooch.DataAccess
                                     recipEmail,
                                     CommonHelper.GetRecentOrDefaultIPOfMember(sender.MemberId),
                                     moneySenderLastName,
-                                    moneyRecipientLastName);
+                                    moneyRecipientLastName, memoForSyn);
 
                                 #endregion Call Synapse Order API
 
