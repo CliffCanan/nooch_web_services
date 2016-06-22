@@ -126,7 +126,7 @@ namespace Nooch.Web.Controllers
             rcr.success = false;
 
             string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-            string serviceMethod = "/GetTransactionDetailById?TransactionId=" + TransactionId;
+            string serviceMethod = "GetTransactionDetailById?TransactionId=" + TransactionId;
 
             TransactionDto transaction = ResponseConverter<TransactionDto>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
 
@@ -227,12 +227,12 @@ namespace Nooch.Web.Controllers
             if (userType == "mx5bTcAYyiOf9I5Py9TiLw==")
             {
                 // Service to cancel a REQUEST to an EXISTING Nooch user
-                serviceMethod = "/CancelMoneyRequestForExistingNoochUser?TransactionId=" + TransactionId + "&MemberId=" + MemberId;
+                serviceMethod = "CancelMoneyRequestForExistingNoochUser?TransactionId=" + TransactionId + "&MemberId=" + MemberId;
             }
             else if (userType == "U6De3haw2r4mSgweNpdgXQ==")
             {
                 // Service to cancel a REQUEST to NON-NOOCH user
-                serviceMethod = "/CancelMoneyRequestForNonNoochUser?TransactionId=" + TransactionId + "&MemberId=" + MemberId;
+                serviceMethod = "CancelMoneyRequestForNonNoochUser?TransactionId=" + TransactionId + "&MemberId=" + MemberId;
             }
 
             var serviceResult = ResponseConverter<Nooch.Common.Entities.StringResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
@@ -284,7 +284,7 @@ namespace Nooch.Web.Controllers
             {
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
 
-                string serviceMethod = "/CheckSynapseBankDetails?BankName=" + bankname;
+                string serviceMethod = "CheckSynapseBankDetails?BankName=" + bankname;
                 Logger.Info("**Add_Bank** CodeBehind -> CheckBankDetails - Service Method to call: [" + String.Concat(serviceUrl, serviceMethod) + "]");
 
                 CheckSynapseBankDetails bankInfoFromServer = ResponseConverter<CheckSynapseBankDetails>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
@@ -325,7 +325,7 @@ namespace Nooch.Web.Controllers
             try
             {
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-                string serviceMethod = "/RegisterUserWithSynapseV3?memberId=" + memberid;
+                string serviceMethod = "RegisterUserWithSynapseV3?memberId=" + memberid;
 
                 synapseCreateUserV3Result_int transaction = ResponseConverter<synapseCreateUserV3Result_int>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
 
@@ -377,7 +377,7 @@ namespace Nooch.Web.Controllers
                     //    Response could be: 1.) array[] of banks,  2.) Question-based MFA,  3.) Code-based MFA, or  4.) Failure/Error
 
                     string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-                    string serviceMethod = "/SynapseV3AddNode?MemberId=" + inp.memberid + "&BnkName=" + inp.bankname + "&BnkUserName=" + inp.username +
+                    string serviceMethod = "SynapseV3AddNode?MemberId=" + inp.memberid + "&BnkName=" + inp.bankname + "&BnkUserName=" + inp.username +
                                            "&BnkPw=" + inp.password;
 
                     SynapseV3BankLoginResult_ServiceRes bankLoginResult = ResponseConverter<SynapseV3BankLoginResult_ServiceRes>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
@@ -464,7 +464,7 @@ namespace Nooch.Web.Controllers
         [ActionName("addBank")]
         public ActionResult addBank(bankaddInputFormClass inp)
         {
-            Logger.Info("NoochController -> addBank (for manual routing/account #) Initiated - MemberID: [" + inp.memberid + "]");
+            Logger.Info("NoochController -> Add Bank Code Behind - addBank (for manual routing/account #) Initiated - MemberID: [" + inp.memberid + "]");
 
             SynapseBankLoginRequestResult res = new SynapseBankLoginRequestResult();
             res.Is_success = false;
@@ -522,7 +522,7 @@ namespace Nooch.Web.Controllers
             }
             catch (Exception we)
             {
-                Logger.Error("NoochController CodeBehind -> addBank (Manual) FAILED - [MemberID: " + inp.memberid +
+                Logger.Error("NoochController Code Behind -> addBank (Manual) FAILED - [MemberID: " + inp.memberid +
                              "], [Exception: " + we + "]");
                 res.ERROR_MSG = "Add Bank exception # 494";
             }
@@ -562,7 +562,7 @@ namespace Nooch.Web.Controllers
                     var json = scriptSerializer.Serialize(verifyNodeObj);
 
                     string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-                    string serviceMethod = "/SynapseV3MFABankVerify";
+                    string serviceMethod = "SynapseV3MFABankVerify";
 
                     SynapseV3BankLoginResult_ServiceRes bnkloginresult = ResponseConverter<SynapseV3BankLoginResult_ServiceRes>.CallServicePostMethod(String.Concat(serviceUrl, serviceMethod), json);
 
@@ -722,9 +722,9 @@ namespace Nooch.Web.Controllers
 
         #region DepositMoney Page
 
-        public ActionResult DepositMoney()
+        public ActionResult DepositMoney(string transid, string cip)
         {
-            Logger.Info("DepositMoney CodeBehind -> Page_load Initiated - [TransactionId Parameter: " + Request.QueryString["TransactionId"] + "]");
+            Logger.Info("DepositMoney Code Behind -> Page_load Initiated - transID Param: [" + transid + "], cip: [" + cip + "]");
 
             ResultCompletePayment res = new ResultCompletePayment();
             res.showPaymentInfo = false;
@@ -732,24 +732,30 @@ namespace Nooch.Web.Controllers
 
             try
             {
-                if (!String.IsNullOrEmpty(Request.QueryString["TransactionId"]))
+                if (!String.IsNullOrEmpty(transid))
                 {
-                    res = GetTransDetailsForDepositMoney(Request.QueryString["TransactionId"].ToString(), res);
+                    res = GetTransDetailsForDepositMoney(transid.ToString(), res);
 
-                    if (!String.IsNullOrEmpty(Request.QueryString["UserType"]))
-                    {
-                        string n = Request.QueryString["UserType"].ToString();
-                        res.usrTyp = CommonHelper.GetDecryptedData(n);
-                        Logger.Info("DepositMoney CodeBehind -> Page_load - UserType is: [" + res.usrTyp + "]");
-                        if (res.usrTyp == "NonRegistered")
-                            res.nonRegUsrContainer = true;
-                    }
+                    //if (!String.IsNullOrEmpty(userType))
+                    //{
+                    //    string n = userType;
+                    //    res.usrTyp = CommonHelper.GetDecryptedData(n);
+                    //    Logger.Info("DepositMoney Code Behind -> Page_load - UserType is: [" + res.usrTyp + "]");
+                    //    if (res.usrTyp == "NonRegistered")
+                    //        res.nonRegUsrContainer = true;
+                    //}
 
                     // CIP is new for Synapse V3 and tells the page what type of ID verification the new user will need.
-                    if (Request.Params.AllKeys.Contains("cip"))
+                    if (!String.IsNullOrEmpty(cip))
                     {
-                        res.cip = Request.QueryString["cip"].ToString();
-                        Logger.Info("DepositMoney CodeBehind -> Page_load - CIP is: [" + res.cip + "]");
+                        res.cip = "renter"; // most common
+
+                        if (cip == "2")
+                            res.cip = "vendor";
+                        else if (cip == "3")
+                            res.cip = "landlord";
+
+                        Logger.Info("DepositMoney Code Behind -> Page_load - CIP is: [" + res.cip + "]");
                     }
 
                     // CC (6/14/16): COMMENTING OUT BECAUSE NOW THE SERVER WILL RETURN WHETHER THIS IS A RENTSCENE TRANS OR NOT
@@ -771,7 +777,7 @@ namespace Nooch.Web.Controllers
             catch (Exception ex)
             {
                 Response.Write("<script>var errorFromCodeBehind = '1';</script>");
-                Logger.Error("DepositMoney CodeBehind -> page_load OUTER EXCEPTION - [TransactionID: " + Request.QueryString["TransactionId"] +
+                Logger.Error("DepositMoney Code Behind -> page_load OUTER EXCEPTION - transID: [" + transid +
                              "], [Exception: " + ex.Message + "]");
             }
 
@@ -780,22 +786,22 @@ namespace Nooch.Web.Controllers
         }
 
 
-        public ResultCompletePayment GetTransDetailsForDepositMoney(string TransactionId, ResultCompletePayment input)
+        public ResultCompletePayment GetTransDetailsForDepositMoney(string transId, ResultCompletePayment input)
         {
-            Logger.Info("DepositMoney CodeBehind -> GetTransDetails Initiated - TransactionID: [" + TransactionId + "]");
+            Logger.Info("DepositMoney Code Behind -> GetTransDetails Initiated - TransactionID: [" + transId + "]");
 
             ResultCompletePayment rdm = input;
 
             string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-            string serviceMethod = "/GetTransactionDetailByIdForRequestPayPage?TransactionId=" + TransactionId;
+            string serviceMethod = "GetTransactionDetailByIdForRequestPayPage?TransactionId=" + transId;
 
-            Logger.Info("DepositMoney CodeBehind -> GetTransDetails - URL to query: [" + String.Concat(serviceUrl, serviceMethod) + "]");
+            Logger.Info("DepositMoney Code Behind -> GetTransDetails - URL to query: [" + String.Concat(serviceUrl, serviceMethod) + "]");
 
             TransactionDto transaction = ResponseConverter<TransactionDto>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
 
             if (transaction == null)
             {
-                Logger.Error("DepositMoney CodeBehind -> GetTransDetails FAILED - Transaction Not Found - TransactionId: [" + TransactionId + "]");
+                Logger.Error("DepositMoney Code Behind -> GetTransDetails FAILED - Transaction Not Found - TransactionId: [" + transId + "]");
 
                 rdm.showPaymentInfo = false;
                 rdm.pymnt_status = "0";
@@ -835,7 +841,7 @@ namespace Nooch.Web.Controllers
 
                     if (transaction.BankName == "no bank found")
                     {
-                        Logger.Error("DepositMoney CodeBehind -> GetTransDetails - IsExistingButNonRegUser = 'true', but No Bank Found, so JS should display Add-Bank iFrame.");
+                        Logger.Error("DepositMoney Code Behind -> GetTransDetails - IsExistingButNonRegUser = 'true', but No Bank Found, so JS should display Add-Bank iFrame.");
                     }
                     else
                     {
@@ -892,7 +898,7 @@ namespace Nooch.Web.Controllers
             try
             {
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-                string serviceMethod = "/RegisterNonNoochUserWithSynapse";
+                string serviceMethod = "RegisterNonNoochUserWithSynapse";
 
                 userPh = CommonHelper.RemovePhoneNumberFormatting(userPh);
 
@@ -1028,7 +1034,7 @@ namespace Nooch.Web.Controllers
         {
             ResultDepositMoneyComplete rdmc = resultDepositMoneyComplete;
             string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-            string serviceMethod = "/GetTransactionDetailByIdForRequestPayPage?TransactionId=" + TransactionId;
+            string serviceMethod = "GetTransactionDetailByIdForRequestPayPage?TransactionId=" + TransactionId;
 
             TransactionDto transaction = ResponseConverter<TransactionDto>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
 
@@ -1089,7 +1095,7 @@ namespace Nooch.Web.Controllers
             try
             {
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-                string serviceMethod = "/GetTransactionDetailByIdAndMoveMoneyForNewUserDeposit?TransactionId=" + TransactionId +
+                string serviceMethod = "GetTransactionDetailByIdAndMoveMoneyForNewUserDeposit?TransactionId=" + TransactionId +
                                        "&MemberIdAfterSynapseAccountCreation=" + MemberIdAfterSynapseAccountCreation +
                                        "&TransactionType=SentToNewUser";
 
@@ -1470,12 +1476,12 @@ namespace Nooch.Web.Controllers
                     inputClass.memberId = memberId;
 
                     // Member must already exist, so use RegisterEXISTINGUserWithSynapseV3()
-                    serviceMethod = "/RegisterExistingUserWithSynapseV3";
+                    serviceMethod = "RegisterExistingUserWithSynapseV3";
                 }
                 else
                 {
                     // Member DOES NOT already exist, so use RegisterNONNOOCHUserWithSynapse()
-                    serviceMethod = "/RegisterNonNoochUserWithSynapse";
+                    serviceMethod = "RegisterNonNoochUserWithSynapse";
                 }
 
                 string json = scriptSerializer.Serialize(inputClass);
@@ -1773,7 +1779,7 @@ namespace Nooch.Web.Controllers
             Logger.Info("createAccount Code Behind -> GetTransDetails Initiated - TransactionId: [" + TransactionId + "]");
 
             string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-            string serviceMethod = "/GetTransactionDetailById?TransactionId=" + TransactionId;
+            string serviceMethod = "GetTransactionDetailById?TransactionId=" + TransactionId;
 
             TransactionDto transaction = ResponseConverter<TransactionDto>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
 
@@ -1963,7 +1969,7 @@ namespace Nooch.Web.Controllers
             try
             {
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-                string serviceMethod = "/Submit2FAPin?memberId=" + userData.memberId + "&pin=" + userData.pin;
+                string serviceMethod = "Submit2FAPin?memberId=" + userData.memberId + "&pin=" + userData.pin;
                 string urlToUse = String.Concat(serviceUrl, serviceMethod);
 
                 Logger.Info("Create Account Code-Behind -> submit2FAPin CHECKPOINT #1 - URL To Use: [" + urlToUse + "]");
@@ -2208,7 +2214,7 @@ namespace Nooch.Web.Controllers
             try
             {
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-                string serviceMethod = "/getIdVerificationQuestionsV3?memberid=" + memberId;
+                string serviceMethod = "getIdVerificationQuestionsV3?memberid=" + memberId;
 
                 synapseV2_IdVerQsForDisplay_Int questionsFromDb =
                     ResponseConverter<synapseV2_IdVerQsForDisplay_Int>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
@@ -2362,9 +2368,7 @@ namespace Nooch.Web.Controllers
 
                     // All required data exists, now send to NoochService.svc
                     string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-                    //string serviceMethod = "/submitIdVerificationAswersV3?memberId=" + memId + "&qSetId=" + qSetId + "&a1=" + a1 + "&a2=" + a2 +
-                    //                       "&a3=" + a3 + "&a4=" + a4 + "&a5=" + a5;
-                    string serviceMethod = "/submitIdVerificationAswersV3?memberId=" + MemberId + "&questionSetId=" + questionSetId + "&quest1id=" + quest1id +
+                    string serviceMethod = "submitIdVerificationAswersV3?memberId=" + MemberId + "&questionSetId=" + questionSetId + "&quest1id=" + quest1id +
                         "&quest2id=" + quest2id + "&quest3id=" + quest3id + "&quest4id=" + quest4id + "&quest5id=" + quest5id + "&answer1id=" + answer1id + "&answer2id=" + answer2id +
                         "&answer3id=" + answer3id + "&answer4id=" + answer4id + "&answer5id=" + answer5id;
 
@@ -2582,6 +2586,7 @@ namespace Nooch.Web.Controllers
                     transactionDto.PinNumber = pin;
                     transactionDto.Amount = Convert.ToDecimal(amount);
                     transactionDto.Memo = memo;
+                    transactionDto.cip = cip;
 
                     var scriptSerializer = new JavaScriptSerializer();
 
@@ -2712,7 +2717,7 @@ namespace Nooch.Web.Controllers
                 {
                     textLoggerHelper = " Request";
 
-                    serviceMethod = "/RequestMoneyToExistingUserForRentScene?from=" + from + "&name=" + name +
+                    serviceMethod = "RequestMoneyToExistingUserForRentScene?from=" + from + "&name=" + name +
                                     "&email=" + email + "&amount=" + amount +
                                     "&memo=" + memo + "&pin=" + pin +
                                     "&ip=" + ip + "&isRequest=" + isRequest +
@@ -2759,7 +2764,7 @@ namespace Nooch.Web.Controllers
                     transactionDto.Memo = memo;
                     transactionDto.RecepientId = RecepientId;
 
-                    serviceMethod = "/TransferMoneyUsingSynapse?accessToken=" + accessToken;
+                    serviceMethod = "TransferMoneyUsingSynapse?accessToken=" + accessToken;
                     json = scriptSerializer.Serialize(transactionDto);
                     StringResult sr = ResponseConverter<StringResult>.CallServicePostMethod(String.Concat(serviceUrl, serviceMethod), json);
 
@@ -2917,7 +2922,7 @@ namespace Nooch.Web.Controllers
         {
             ResultpayAnyone payAnyone = resultpayAnyone;
             string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-            string serviceMethod = "/GetPayeeDetails?memberTag=" + memberTag;
+            string serviceMethod = "GetPayeeDetails?memberTag=" + memberTag;
 
             MemberDto member = ResponseConverter<MemberDto>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
 
@@ -2952,7 +2957,7 @@ namespace Nooch.Web.Controllers
             try
             {
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-                string serviceMethod = "/RegisterNonNoochUserWithSynapse";
+                string serviceMethod = "RegisterNonNoochUserWithSynapse";
                 userPhone = CommonHelper.RemovePhoneNumberFormatting(userPhone);
 
                 RegisterUserWithSynapseV3_Input inputclass = new RegisterUserWithSynapseV3_Input();
@@ -3362,7 +3367,7 @@ namespace Nooch.Web.Controllers
             try
             {
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-                string serviceMethod = "/GetMemberInfoForMicroDepositPage?memberId=" + memberId;
+                string serviceMethod = "GetMemberInfoForMicroDepositPage?memberId=" + memberId;
 
                 SynapseV3VerifyNodeWithMicroDeposits_ServiceInput details = ResponseConverter<SynapseV3VerifyNodeWithMicroDeposits_ServiceInput>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
 
@@ -3419,7 +3424,7 @@ namespace Nooch.Web.Controllers
                 string json = scriptSerializer.Serialize(inpu);
 
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-                string serviceMethod = "/SynapseV3MFABankVerifyWithMicroDeposits";
+                string serviceMethod = "SynapseV3MFABankVerifyWithMicroDeposits";
 
                 res = ResponseConverter<SynapseV3BankLoginResult_ServiceRes>.CallServicePostMethod(String.Concat(serviceUrl, serviceMethod), json);
 

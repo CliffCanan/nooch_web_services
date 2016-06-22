@@ -16,7 +16,6 @@ var step1height = '554px';
 var step2height = '520px';
 
 var wasEnterPressed = false;
-var IsBankAddedManually = false;
 
 $('#bankSearch').on('keypress', function (e) {
     // This function prevents the form from submitting... otherwise the browser was always selecting Bank of America no matter what was in the text field, not sure why
@@ -36,23 +35,8 @@ $("#popularBanks .popBank-shell").click(function (e) {
 
 /**** (Step 2) USER JUST SELECTED A BANK ****/
 function bankHasBeenSelected(selectedBankName) {
-	// ADD THE LOADING BOX
-	$('.addBankContainer-body').block({
-		message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Connecting...</span>', 
-		css: {
-            border: 'none',
-            padding: '26px 8px 20px',
-            backgroundColor: '#000',
-            '-webkit-border-radius': '15px',
-            '-moz-border-radius': '15px',
-            'border-radius': '15px',
-            opacity: '.8',
-			width: '70%',
-			left: '15%',
-			top: '35px',
-            color: '#fff'
-        }
-	});
+    // ADD THE LOADING BOX
+    showLoadingHUD("Connecting");
 
 	$('#selectedBankInput').val(selectedBankName);
 
@@ -389,23 +373,8 @@ $('#bankLogin').submit(function(e) {
 			// OR if PIN is NOT required
 		    if (!Is_PIN_REQUIRED || (Is_PIN_REQUIRED && $('#bankLogin #bankPin').parsley().validate() === true))
 			{
-				// ADD THE LOADING BOX
-		        $('.addBankContainer-body').block({
-				    message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Attempting Login...</span>',
-				    css: {
-				        border: 'none',
-				        padding: '26px 8px 20px',
-				        backgroundColor: '#000',
-				        '-webkit-border-radius': '15px',
-				        '-moz-border-radius': '15px',
-						'border-radius': '15px',
-				        opacity: '.8',
-				        width: '70%',
-				        left: '15%',
-				        top: '35px',
-				        color: '#fff' 
-				    }
-				});
+		        // ADD THE LOADING BOX
+		        showLoadingHUD("Attempting Login");
 
 				submitBnkLgn();
 			}
@@ -435,7 +404,6 @@ $('#bankLogin').submit(function(e) {
 							   .velocity({'color':'#3fabe1'},{delay:800});
 		$('#bankUsername').focus();
 	}
-
 });
 
 
@@ -701,22 +669,7 @@ $('#bankLoginManual').submit(function(e) {
 	            if ($('#bankAcntNickName').parsley().validate() === true)
 	            {
 	                // ADD THE LOADING BOX
-	                $('.addBankContainer-body').block({
-	                    message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Submitting...</span>',
-	                    css: {
-	                        border: 'none',
-	                        padding: '20px 8px 14px',
-	                        backgroundColor: '#000',
-	                        '-webkit-border-radius': '12px',
-	                        '-moz-border-radius': '12px',
-	                        'border-radius': '12px',
-	                        opacity: '.75',
-	                        width: '80%',
-	                        left: '10%',
-	                        top: '25px',
-	                        color: '#fff'
-	                    }
-	                });
+	                showLoadingHUD("Submitting");
 
 	                submitManualBank();
 	            }
@@ -790,7 +743,11 @@ function submitManualBank() {
 
 			if (bnkManualResult.Is_success == true)
 			{
+			    isManual = true;
+
 			    // Check if Additional ID Verification Questions Are Needed
+			    // CC (6/22/16): As of V3.0 thiswon't ever happen b/c users must verify their ID
+                //               BEFORE adding a bank now. So they would have already answered these.
 			    if (bnkManualResult.ssn_verify_status != null &&
                     bnkManualResult.ssn_verify_status.indexOf("additional") > -1)
 			    {
@@ -800,7 +757,22 @@ function submitManualBank() {
 			        sendToIdVerQuestions = true;
 			    }
 
-			    IsBankAddedManually = true;
+			    swal({
+			        title: "Bank Submitted Successfully<br/><span style='color:#1f8ec6;font-size:85%;text-transform:uppercase;'>Verify Your Account</span>",
+			        text: "<span class='show' style='margin-top:-8px;'>Your bank info has been submitted successfully. Before this account can be used to send money, we are required to verify that you are the account owner.</span>" +
+                          "<span class='show' style='margin-top:12px;'><strong>We will make 2 \"microdeposits\" ($0.00 - $0.99) small payments to your account</strong>. &nbsp;Just check your bank statement and then report the amounts using the link we just emailed you.</span>" +
+                          "<span class='show' style='margin-top:13px;'>You will get an email reminder with more information - please allow 1-2 business days for the microdeposits to arrive!</p>",
+			        type: "success",
+			        confirmButtonColor: "#3fabe1",
+			        confirmButtonText: "Ok",
+			        html: true
+			    }, function (isConfirm) {
+			        showLoadingHUD("Finishing");
+
+			        setTimeout(function () {
+			            window.top.location.href = "https://www.nooch.com/";
+			        }, 300);
+			    });
 
 				sendToRedUrl();
 			}
@@ -887,22 +859,8 @@ function MFALogin() {
     // Check the right input based on which # question is being answered
 	mfaResp = $('#securityQuest1').val();
 
-	// ADD THE LOADING BOX
-    $('.addBankContainer-body').block({
-        message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Checking that response...</span>',
-		css: { 
-			border: 'none', 
-			padding: '26px 8px 26px',
-			backgroundColor: '#000', 
-			'-webkit-border-radius': '15px',
-			'-moz-border-radius': '15px',
-			opacity: '.8',
-			width: '70%',
-			left: '15%',
-			top: '15px',
-			color: '#fff' 
-		}
-	});
+    // ADD THE LOADING BOX
+	showLoadingHUD("Checking that response");
 
 	//console.log("Submitting MFA response with data:  {bank: '" + BANK_NAME + "', memberid: '" + MEMBER_ID + "', bankname: '" + BANK_NAME + "', MFA: '" + mfaResp + "', ba: '" + accessCode + "'}");
     $.ajax({
@@ -1019,6 +977,7 @@ function MFALogin() {
     });
 }
 
+
 function mfaErrorAlert() {
     swal({
         title: "Oh No!",
@@ -1047,6 +1006,7 @@ function mfaErrorAlert() {
     });
 }
 
+
 function SetDefaultAct() {
 
     if ($("#addBank-selectAccount").parsley().validate() === true)
@@ -1054,23 +1014,8 @@ function SetDefaultAct() {
 		var bankId = $("input:radio[name='account']:checked").val();
 		var bankName = $("input:radio[name='account']:checked").data("bname");
 
-		// ADD THE LOADING BOX
-		$('.addBankContainer-body').block({
-		    message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Linking Account...</span>',
-			css: { 
-				border: 'none', 
-				padding: '26px 8px 20px',
-				backgroundColor: '#000', 
-				'-webkit-border-radius': '15px',
-				'-moz-border-radius': '15px',
-				'border-radius': '15px',
-				opacity: '.8',
-				width: '70%',
-				left: '15%',
-				top: '15px',
-				color: '#fff' 
-			}
-		});
+        // ADD THE LOADING BOX
+		showLoadingHUD("Linking Account");
 
 		$.ajax({
 			type: "POST",
@@ -1169,23 +1114,6 @@ function sendToRedUrl() {
                 customClass: "largeText",
                 html: true
             }, function (isConfirm) {
-                $('.addBankContainer-body').block({
-                    message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Completing Payment...</span>',
-                    css: {
-                        border: 'none',
-                        padding: '26px 8px 20px',
-                        backgroundColor: '#000',
-                        '-webkit-border-radius': '15px',
-                        '-moz-border-radius': '15px',
-                        'border-radius': '15px',
-                        opacity: '.8',
-                        width: '70%',
-                        left: '15%',
-                        top: '25px',
-                        color: '#fff'
-                    }
-                });
-
                 setTimeout(function () {
                     window.top.location.href = "https://www.nooch.com/nooch-for-landlords";
                 }, 300);
@@ -1197,7 +1125,6 @@ function sendToRedUrl() {
             console.log("AddBank -> TRIGGERING COMPLETE IN PARENT - Success!");
             window.parent.$('body').trigger('addBankComplete');
         }
-
         else if (RED_URL.indexOf('DepositMoneyComplete') > 1 ||
                  RED_URL.indexOf('PayRequestComplete') > 1)
         {
@@ -1213,61 +1140,23 @@ function sendToRedUrl() {
                 html: true
             }, function (isConfirm)
             {*/
-            $('.addBankContainer-body').block({
-                message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Submitting...</span>',
-                css: {
-                    border: 'none',
-                    padding: '26px 8px 20px',
-                    backgroundColor: '#000',
-                    '-webkit-border-radius': '15px',
-                    '-moz-border-radius': '15px',
-                    'border-radius': '15px',
-                    opacity: '.75',
-                    width: '70%',
-                    left: '15%',
-                    top: '25px',
-                    color: '#fff'
-                }
-            });
 
-            setTimeout(function () {
-                window.top.location.href = RED_URL;
-            }, 300);
-        }
-        else if (IsBankManulAdded == true)
-        {
-            swal({
-                title: "Bank Linked Successfully",
-                text: "<p>Thanks for completing this <strong>one-time</strong> process. &nbsp;Now check your mail for verification of your account via Microdeposit !</p>",
-                type: "success",
-                confirmButtonColor: "#3fabe1",
-                confirmButtonText: "Done",
-                customClass: "largeText",
-                html: true
-            }, function (isConfirm) {
-                $('.addBankContainer-body').block({
-                    message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Finishing...</span>',
-                    css: {
-                        border: 'none',
-                        padding: '26px 8px 20px',
-                        backgroundColor: '#000',
-                        '-webkit-border-radius': '15px',
-                        '-moz-border-radius': '15px',
-                        'border-radius': '15px',
-                        opacity: '.8',
-                        width: '70%',
-                        left: '15%',
-                        top: '25px',
-                        color: '#fff'
-                    }
-                });
+            // If user adds a bank with routing/account # and it's a request (meaning the user is trying to send $)
+            // then they must wait for the microdeposits to verify ownership of the account.  If just DEPOSITING $,
+            // they can proceed to DepositMoneyComplete page.
+            if (isManual == false || RED_URL.indexOf('DepositMoneyComplete') > 1)
+            {
+                showLoadingHUD("Completing Payment");
 
                 setTimeout(function () {
-                    window.top.location.href = "https://www.nooch.com/";
+                    window.top.location.href = RED_URL;
                 }, 300);
-            });
+            }
+            else
+            {
+                console.log("Bank added manually - END.");
+            }
         }
-
         else // All Others - most likely no RED_URL was passed in URL, so defaulting to a Sweet Alert
         {
             swal({
@@ -1279,22 +1168,7 @@ function sendToRedUrl() {
                 customClass: "largeText",
                 html: true
             }, function (isConfirm) {
-                $('.addBankContainer-body').block({
-                    message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Finishing...</span>',
-                    css: {
-                        border: 'none',
-                        padding: '26px 8px 20px',
-                        backgroundColor: '#000',
-                        '-webkit-border-radius': '15px',
-                        '-moz-border-radius': '15px',
-                        'border-radius': '15px',
-                        opacity: '.8',
-                        width: '70%',
-                        left: '15%',
-                        top: '25px',
-                        color: '#fff'
-                    }
-                });
+                showLoadingHUD("Finishing");
 
                 setTimeout(function () {
                     window.top.location.href = "https://www.nooch.com/";
@@ -1302,6 +1176,26 @@ function sendToRedUrl() {
             });
         }
     }
+}
+
+function showLoadingHUD(msg)
+{
+    $('.addBankContainer-body').block({
+        message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">' + msg + '...</span>',
+        css: {
+            border: 'none',
+            padding: '26px 8px 20px',
+            backgroundColor: '#000',
+            '-webkit-border-radius': '15px',
+            '-moz-border-radius': '15px',
+            'border-radius': '15px',
+            opacity: '.8',
+            width: '70%',
+            left: '15%',
+            top: '25px',
+            color: '#fff'
+        }
+    });
 }
 
 

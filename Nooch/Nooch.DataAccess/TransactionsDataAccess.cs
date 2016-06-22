@@ -990,7 +990,7 @@ namespace Nooch.DataAccess
                                                           "&TransType=DrRr1tU1usk7nNibjtcZkA==");
 
                         string acceptLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
-                                                          "Nooch/DepositMoney?TransactionId=" + trans.TransactionId.ToString());
+                                                          "Nooch/DepositMoney?transid=" + trans.TransactionId.ToString());
 
                         string s22 = trans.Amount.ToString("n2");
                         string[] s32 = s22.Split('.');
@@ -4634,11 +4634,7 @@ namespace Nooch.DataAccess
                     string recipientsEmail = (requestDto.isTesting == "true") ? "testering@nooch.com"
                                                                               : requestDto.MoneySenderEmailId;
 
-                    bool isForRentScene = false;
-                    if (requester.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49") // Rent Scene's account
-                    {
-                        isForRentScene = true;
-                    }
+                    bool isForRentScene = (requester.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49") ? true : false; // Rent Scene's account
 
                     var fromAddress = isForRentScene ? "payments@rentscene.com"
                                                      : Utility.GetValueFromConfig("transfersMail");
@@ -6962,12 +6958,12 @@ namespace Nooch.DataAccess
         /// <param name="receiverEmailId"></param>
         /// <param name="transactionEntity"></param>
         /// <param name="trnsactionId"></param>
-        public string TransferMoneyToNonNoochUserUsingSynapse(string inviteType, string receiverEmailId, TransactionEntity transactionEntity)
+        public string TransferMoneyToNonNoochUserUsingSynapse(string inviteType, string receiverEmailId, TransactionEntity transactionEntity, string cip = "renter")
         {
             Logger.Info("TDA -> TransferMoneyToNonNoochUserUsingSynapse Initiated - " +
                         "MemberId: [" + transactionEntity.MemberId + "], " +
                         "Recipient: [" + receiverEmailId + "], " +
-                        "Amount: [" + transactionEntity.Amount + "]");
+                        "Amount: [" + transactionEntity.Amount + "], CIP: [" + cip + "]");
 
             string trnsactionId = string.Empty;
 
@@ -7118,8 +7114,8 @@ namespace Nooch.DataAccess
                     }
                     catch (Exception ex)
                     {
-                        Logger.Error("TDA -> TransferMoneyToNonNoochUserUsingSynapse ERROR - FAILED to update Sender's Total Transfer Count in DB - MemberID: [" +
-                                               sender.MemberId.ToString() + "], [Exception: " + ex + "]");
+                        Logger.Error("TDA -> TransferMoneyToNonNoochUserUsingSynapse ERROR - FAILED to update Sender's Total Transfer Count in DB - " +
+                                     "MemberID: [" + sender.MemberId.ToString() + "], [Exception: " + ex + "]");
                     }
 
                     #region Increment Invite Code
@@ -7161,8 +7157,7 @@ namespace Nooch.DataAccess
                     }
 
                     bool isForRentScene = false;
-                    if (sender.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49" || // Rent Scene's account
-                        sender.MemberId.ToString().ToLower() == "a35c14e9-ee7b-4fc6-b5d5-f54961f2596a") // Just for testing: "sallyanejones00@nooch.com"
+                    if (sender.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49") // Rent Scene's account
                     {
                         isForRentScene = true;
                         senderFirstName = "Rent Scene";
@@ -7198,16 +7193,16 @@ namespace Nooch.DataAccess
                     #endregion Define Variables From Transaction for email/sms notifications
 
 
-                    #region Sender updated in DB Successfully
+                    #region Sender Updated in DB Successfully
 
                     if (updateSenderInDB > 0)
                     {
                         // Now notify Sender of transfer success
-                        #region Email to sender
+                        #region Email to Sender
 
-                        var senderNotifSets = CommonHelper.GetMemberNotificationSettingsByUserName(CommonHelper.GetDecryptedData(sender.UserName));
+                        //var senderNotifSets = CommonHelper.GetMemberNotificationSettingsByUserName(CommonHelper.GetDecryptedData(sender.UserName));
 
-                        if (senderNotifSets != null && (senderNotifSets.EmailTransferSent ?? false))
+                        if (!isForRentScene) //senderNotifSets != null && (senderNotifSets.EmailTransferSent ?? false))
                         {
                             string otherlink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"), "Nooch/CancelRequest?TransactionId=" + transactionDetail.TransactionId +
                                                                                                            "&MemberId=" + transactionEntity.MemberId +
@@ -7235,33 +7230,50 @@ namespace Nooch.DataAccess
                             catch (Exception ex)
                             {
                                 Logger.Error("TDA -> TransferMoneyToNonNoochUserUsingSynapse - TransferSent email NOT sent to [" + toAddress +
-                                             "], [Exception: " + ex + "]");
+                                             "], Exception: [" + ex + "]");
                             }
                         }
 
-                        #endregion Email to sender
+                        #endregion Email to Sender
 
 
                         // Now Send email to Recipient (non-Nooch user in this case)
                         #region Email To Recipient New User
-
+                        
                         // In this case UserType would = 'New'
                         // TransType would = 'Invite'
-
-                        string rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
-                                                          "Nooch/RejectMoney?TransactionId=" + transactionDetail.TransactionId +
-                                                          "&UserType=U6De3haw2r4mSgweNpdgXQ==" +
-                                                          "&TransType=DrRr1tU1usk7nNibjtcZkA==");
-
-                        string acceptLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
-                                                          "Nooch/DepositMoney?TransactionId=" + transactionDetail.TransactionId);
-
-                        if (isForRentScene)
+                  
+                        try
                         {
-                            acceptLink = acceptLink + "&rs=1";
-                        }
+                            string cipToUse = "1";
+                            switch (cip)
+                            {
+                                case "renter":
+                                    cipToUse = "1";
+                                    break;
+                                case "vendor":
+                                    cipToUse = "2";
+                                    break;
+                                case "landlord":
+                                    cipToUse = "3";
+                                    break;
+                            }
 
-                        var tokens2 = new Dictionary<string, string>
+                            string rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
+                                                              "Nooch/RejectMoney?TransactionId=" + transactionDetail.TransactionId +
+                                                              "&UserType=U6De3haw2r4mSgweNpdgXQ==" +
+                                                              "&TransType=DrRr1tU1usk7nNibjtcZkA==");
+
+                            string acceptLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
+                                                              "Nooch/DepositMoney?transid=" + transactionDetail.TransactionId +
+                                                              "&cip=" + cipToUse);
+
+                            if (isForRentScene)
+                            {
+                                acceptLink = acceptLink + "&rs=1";
+                            }
+
+                            var tokens2 = new Dictionary<string, string>
 												 {
                                                      {"$UserPicture$", senderPic},
 													 {Constants.PLACEHOLDER_FIRST_NAME, senderFirstName + " " + senderLastName},
@@ -7272,8 +7284,7 @@ namespace Nooch.DataAccess
 													 {Constants.MEMO, memo}
 												 };
 
-                        try
-                        {
+
                             string cents = (s3[1] == "00") ? ""
                                                            : "." + s3[1];
 
@@ -7289,13 +7300,13 @@ namespace Nooch.DataAccess
                         catch (Exception ex)
                         {
                             Logger.Error("TDA -> TransferMoneyToNonNoochUserUsingSynapse - transferReceivedNewUser email NOT sent to [" + receiverEmailId +
-                                         "], [Exception: " + ex + "]");
+                                         "], Exception: [" + ex + "]");
                         }
 
                         #endregion Email To Recipient New User
                     }
 
-                    #endregion Sender updated in DB Successfully
+                    #endregion Sender Updated in DB Successfully
 
                     #region Sender NOT updated in DB
 
@@ -7630,7 +7641,7 @@ namespace Nooch.DataAccess
                                                                   "&TransType=DrRr1tU1usk7nNibjtcZkA==");
 
                                 string acceptLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
-                                                                  "Nooch/DepositMoney?TransactionId=" + transactionDetail.TransactionId);
+                                                                  "Nooch/DepositMoney?transid=" + transactionDetail.TransactionId);
 
                                 string googleUrlAPIKey = Utility.GetValueFromConfig("GoogleURLAPI");
 
