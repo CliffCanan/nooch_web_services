@@ -1480,7 +1480,7 @@ namespace Nooch.Web.Controllers
 
                 string json = scriptSerializer.Serialize(inputClass);
 
-                Logger.Info("PayRequest Code-Behind -> RegisterUserWithSynpForPayRequest - Full Query String: [ " + String.Concat(serviceUrl, serviceMethod) + " ]");
+                Logger.Info("PayRequest Code Behind -> RegisterUserWithSynpForPayRequest - Full Query String: [ " + String.Concat(serviceUrl, serviceMethod) + " ]");
 
                 RegisterUserSynapseResultClassExt regUserResponse = ResponseConverter<RegisterUserSynapseResultClassExt>.CallServicePostMethod(String.Concat(serviceUrl, serviceMethod), json);
 
@@ -1492,12 +1492,12 @@ namespace Nooch.Web.Controllers
                 }
                 else if (regUserResponse.success.ToLower() == "false")
                 {
-                    Logger.Error("PayRequest Code-Behind -> RegisterUserWithSynpForPayRequest FAILED - SERVER RETURNED 'success' = 'false' - [TransID: " + transId + "]");
+                    Logger.Error("PayRequest Code Behind -> RegisterUserWithSynpForPayRequest FAILED - SERVER RETURNED 'success' = 'false' - [TransID: " + transId + "]");
                     res.reason = regUserResponse.reason;
                 }
                 else
                 {
-                    Logger.Error("PayRequest Code-Behind -> RegisterUserWithSynpForPayRequest FAILED - UNKNOWN ERROR FROM SERVER - [TransID: " + transId + "]");
+                    Logger.Error("PayRequest Code Behind -> RegisterUserWithSynpForPayRequest FAILED - UNKNOWN ERROR FROM SERVER - [TransID: " + transId + "]");
                 }
 
                 res.ssn_verify_status = regUserResponse.ssn_verify_status;
@@ -1506,7 +1506,7 @@ namespace Nooch.Web.Controllers
             }
             catch (Exception ex)
             {
-                Logger.Error("PayRequest Code-Behind -> RegisterUserWithSynpForPayRequest attempt FAILED Failed - Reason: [" + res.reason + "], " +
+                Logger.Error("PayRequest Code Behind -> RegisterUserWithSynpForPayRequest attempt FAILED Failed - Reason: [" + res.reason + "], " +
                              "TransId: [" + transId + "], [Exception: " + ex.Message + "]");
                 return Json(res);
             }
@@ -1545,7 +1545,7 @@ namespace Nooch.Web.Controllers
                         // Check if this payment is for Rent Scene
                         if (isForRentScene == "true")
                         {
-                            Logger.Info("PayRequestComplete CodeBehind -> RENT SCENE Transaction Detected - TransID: [" + tr_id + "]");
+                            Logger.Info("PayRequestComplete Code Behind -> RENT SCENE Transaction Detected - TransID: [" + tr_id + "]");
                             rpc.rs = "true";
                         }
 
@@ -1559,22 +1559,22 @@ namespace Nooch.Web.Controllers
                     }
                     else
                     {
-                        Logger.Error("PayRequestComplete CodeBehind -> page_load ERROR - 'mem_id' in query string did not have 2 parts as expected - [mem_id Parameter: " + Request.QueryString["mem_id"] + "]");
+                        Logger.Error("PayRequestComplete Code Behind -> page_load ERROR - 'mem_id' in query string did not have 2 parts as expected - [mem_id Parameter: " + Request.QueryString["mem_id"] + "]");
                         Response.Write("<script>var errorFromCodeBehind = '2';</script>");
                     }
                 }
                 else
                 {
                     // something wrong with query string
-                    Logger.Error("PayRequestComplete CodeBehind -> page_load ERROR - 'mem_id' in query string was NULL or empty [mem_id Parameter: " + rpc.memId + "]");
+                    Logger.Error("PayRequestComplete Code Behind FAILED -> page_load ERROR - 'mem_id' in query string was NULL or empty - mem_id Parameter: " + rpc.memId + "]");
                     Response.Write("<script>var errorFromCodeBehind = '1';</script>");
                 }
 
             }
             catch (Exception ex)
             {
-                Logger.Error("payRequestComplete CodeBehind -> page_load OUTER EXCEPTION - mem_id Parameter: [" +
-                                        rpc.memId + "], [Exception: " + ex + "]");
+                Logger.Error("PayRequestComplete CodeBehind -> page_load OUTER EXCEPTION - mem_id Parameter: [" +
+                             rpc.memId + "], [Exception: " + ex + "]");
                 rpc.payinfobar = false;
                 Response.Write("<script>var errorFromCodeBehind = '1';</script>");
             }
@@ -1641,7 +1641,7 @@ namespace Nooch.Web.Controllers
 
             ResultPayRequestComplete rpc = resultPayRequestComplt;
             string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-            string serviceMethod = "/GetTransactionDetailByIdForRequestPayPage?TransactionId=" + TransactionId;
+            string serviceMethod = "GetTransactionDetailByIdForRequestPayPage?TransactionId=" + TransactionId;
 
             TransactionDto transaction = ResponseConverter<TransactionDto>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
 

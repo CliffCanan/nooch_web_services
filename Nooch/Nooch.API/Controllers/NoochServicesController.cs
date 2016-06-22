@@ -912,7 +912,7 @@ namespace Nooch.API.Controllers
         [ActionName("RequestMoneyForRentScene")]
         public requestFromRentScene RequestMoneyForRentScene(string from, string name, string email, string amount, string memo, string pin, string ip, string cip, bool isRequest)
         {
-            Logger.Info("Service Controller - RequestMoneyForRentScene Initiated - [From: " + from +
+            Logger.Info("Service Cntrlr - RequestMoneyForRentScene Initiated - [From: " + from +
                         "], [Name: " + name + "], Email: [" + email +
                         "], amount: [" + amount + "], memo: [" + memo +
                         "], pin: [" + pin + "], ip: [" + ip +
@@ -959,7 +959,7 @@ namespace Nooch.API.Controllers
             }
             if (isMissingData)
             {
-                Logger.Error("Service Controller -> RequestMoneyForRentScene FAILED - Missing required data - Msg is: [" + res.msg + "]");
+                Logger.Error("Service Cntrlr -> RequestMoneyForRentScene FAILED - Missing required data - Msg is: [" + res.msg + "]");
                 return res;
             }
 

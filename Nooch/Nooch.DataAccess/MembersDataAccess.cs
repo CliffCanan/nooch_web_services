@@ -5581,7 +5581,7 @@ namespace Nooch.DataAccess
         {
             Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser Initiated - TransType: [" + TransactionType +
                         "], TransID: [" + TransactionId + "], New User Member ID: [" + MemberIdAfterSynapseAccountCreation +
-                        "], RecipientMemberID: [" + recipMemId + "]");
+                        "], Recip MemberID: [" + recipMemId + "]");
 
             // If a REQUEST, TransactionType will be "RequestToNewUser" & MemberIdAfterSynapseAccountCreation is the Request Recipient, 
             //               and should be the SENDER below, and the Request sender is the RecipMemID (if b/t 2 existing users)
@@ -5636,7 +5636,7 @@ namespace Nooch.DataAccess
                             }
                         }
 
-                        Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser - SENDER MemberId: [" + SenderId +
+                        Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser - SENDER MemberID: [" + SenderId +
                                     "], RECIPIENT MemberId: [" + RecipientId + "]");
 
                         var SenderUserAndBankDetails = CommonHelper.GetSynapseBankAndUserDetailsforGivenMemberId(SenderId.ToString());
@@ -5662,29 +5662,62 @@ namespace Nooch.DataAccess
                                     facilitator_fee = "-.10";
                                 }
                                 var sender = GetMemberDetails(SenderId.ToString());
-                                var recipient = GetMemberDetails(RecipientId.ToString());
+                                string senderEmail = CommonHelper.GetDecryptedData(sender.UserName);
                                 string moneySenderFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(sender.FirstName));
                                 string moneySenderLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(sender.LastName));
-                                //string requesterPic = "https://www.noochme.com/noochservice/UploadedPhotos/Photos/" + Transaction.Members.MemberId.ToString() + ".png";
 
-                                string moneyRecipientFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(recipient.FirstName));
-                                string moneyRecipientLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(recipient.LastName));
-
-                                TransactionsDataAccess tda = new TransactionsDataAccess();
-
-                                var transId = Transaction.TransactionId.ToString();
                                 var access_token = SenderUserAndBankDetails.UserDetails.access_token;
                                 var senderFingerprint = SenderUserAndBankDetails.UserDetails.user_fingerprints;
                                 var senderBankOid = SenderUserAndBankDetails.BankDetails.bank_oid;
 
+                                var recipient = GetMemberDetails(RecipientId.ToString());
+                                string recipEmail = CommonHelper.GetDecryptedData(recipient.UserName);
+                                string moneyRecipientFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(recipient.FirstName));
+                                string moneyRecipientLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(recipient.LastName));
+
                                 var recipSynapseUserId = RecipientUserAndBankDetails.UserDetails.user_id;
                                 var recipFingerprint = RecipientUserAndBankDetails.UserDetails.user_fingerprints;
                                 var recipBankOid = RecipientUserAndBankDetails.BankDetails.bank_oid;
+
+                                var transId = Transaction.TransactionId.ToString();
                                 var amount = Transaction.Amount.ToString();
 
-                                Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser - About to call AddTransSynapseV3Reusable() in TDA - " +
-                                            "[TransID: " + transId + "], [Amount: " + amount + "], [Sender Name: " + moneySenderFirstName + " " + moneySenderLastName + "], " +
-                                            "[Sender BankOID: " + senderBankOid + "], [Recip Name: " + moneyRecipientFirstName + " " + moneyRecipientLastName + "], [access_token: " + "]");
+                                // Cliff (6/14/16): Adding this to check: a.) is this a payment to Rent Scene?
+                                //                  and b.) what kind of user the recipient is: Client or Vendor, which determines which Node ID to use for Rent Scene
+
+                                // 575ad909950629625ca88262 - Corp Checking - USE FOR ALL NON-PASSTHROUGH PAYMENTS, i.e.: Payments TO Vendors, and Application fees from Clients to RS
+                                // 574f45d79506295ff7a81db8 - Passthrough (Linked to Rent Scene's parent account - USE FOR RENT PAYMENTS - ANYTHING OVER $1,000)
+                                // 5759005795062906e1359a8e - Passthrough (Linked to Marvis Burn's Nooch account - NEVER USE)
+                                if ((sender.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49" ||
+                                    senderBankOid == "5759005795062906e1359a8e" ||
+                                    senderBankOid == "574f45d79506295ff7a81db8") &&
+                                    recipient.cipTag == "Vendor")
+                                {
+                                    // Sender is Rent Scene and recipient is a 'Vendor'
+                                    senderBankOid = "575ad909950629625ca88262";
+                                    Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser - RENT SCENE VENDOR Payment Detected - " +
+                                                "Substituting Sender_Bank_NodeID to use RS's Corporate Checking account");
+                                }
+                                else if (Transaction.Amount < 200 &&
+                                         (recipient.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49" ||
+                                          recipBankOid == "574f45d79506295ff7a81db8" ||
+                                          recipBankOid == "5759005795062906e1359a8e") &&
+                                          sender.cipTag == "Client")
+                                {
+                                    // Recipient is Rent Scene AND Sender is a Client AND Amount is < $200 (so it's probably an application fee)
+                                    // So use RS's Corporate Checking account.
+                                    recipBankOid = "575ad909950629625ca88262";
+                                    Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser - RENT SCENE Payment Detected Under $200 - " +
+                                                "Substituting Receiver_Bank_NodeID to use RS's Corporate Checking account");
+                                }
+
+                                var log = "MDA -> GetTokensAndTransferMoneyToNewUser - About to call AddTransSynapseV3Reusable() in TDA - " +
+                                          "TransID: [" + transId + "], Amount: [" + amount + "], Sender Name: [" + moneySenderFirstName + " " + moneySenderLastName +
+                                          "], Sender BankOID: [" + senderBankOid + "], Recip Name: [" + moneyRecipientFirstName + " " + moneyRecipientLastName +
+                                          "], Recip BankOID: [" + recipBankOid + "]";
+                                Logger.Info(log);
+
+                                TransactionsDataAccess tda = new TransactionsDataAccess();
 
                                 SynapseV3AddTrans_ReusableClass Call_Synapse_Order_API_Result = tda.AddTransSynapseV3Reusable(access_token,
                                     senderFingerprint,
@@ -5695,8 +5728,8 @@ namespace Nooch.DataAccess
                                     recipFingerprint,
                                     recipBankOid,
                                     transId,
-                                    CommonHelper.GetDecryptedData(sender.UserName),
-                                    CommonHelper.GetDecryptedData(recipient.UserName),
+                                    senderEmail,
+                                    recipEmail,
                                     CommonHelper.GetRecentOrDefaultIPOfMember(sender.MemberId),
                                     moneySenderLastName,
                                     moneyRecipientLastName);
@@ -5708,11 +5741,9 @@ namespace Nooch.DataAccess
                                     Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser - SUCCESS Response From SYNAPSE's /order/add API - " +
                                                 "Synapse OrderID: [" + Call_Synapse_Order_API_Result.responseFromSynapse.trans._id.oid + "]");
 
-                                    //if (!isTesting) { //If testing, keep this transaction as 'Pending' so we can more easily re-test with the same transaction.
                                     Transaction.TransactionStatus = "Success";
                                     Transaction.DateAccepted = DateTime.Now;
                                     int save = _dbContext.SaveChanges();
-                                    //}
 
                                     #region Update Tenant Info If A RENT Payment
 
@@ -5759,8 +5790,7 @@ namespace Nooch.DataAccess
                                         }
 
                                         bool isForRentScene = false;
-                                        if (recipient.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49" || // Rent Scene's account
-                                            recipient.MemberId.ToString().ToLower() == "a35c14e9-ee7b-4fc6-b5d5-f54961f2596a") // Just for testing: "sallyanejones00@nooch.com"
+                                        if (recipient.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49") // Rent Scene's account
                                         {
                                             isForRentScene = true;
                                             moneyRecipientFirstName = "Rent Scene";
@@ -6000,7 +6030,7 @@ namespace Nooch.DataAccess
                                                         {Constants.PLACEHOLDER_TRANSFER_AMOUNT, wholeAmount},
                                                     };
 
-                                            var toAddress = CommonHelper.GetDecryptedData(recipient.UserName);
+                                            var toAddress = recipEmail;
 
                                             try
                                             {
@@ -6041,7 +6071,7 @@ namespace Nooch.DataAccess
                                     var error = "MDA -> GetTokensAndTransferMoneyToNewUser FAILED - " +
                                                  "Error Message: [" + Call_Synapse_Order_API_Result.ErrorMessage + "], Synapse Response: [" + Call_Synapse_Order_API_Result.responseFromSynapse + "]";
                                     Logger.Error(error);
-                                    CommonHelper.notifyCliffAboutError(error);
+                                    CommonHelper.notifyCliffAboutError(error + "\n\n  Trans Info: " + log);
                                     return !String.IsNullOrEmpty(Call_Synapse_Order_API_Result.ErrorMessage)
                                                 ? Call_Synapse_Order_API_Result.ErrorMessage
                                                 : "Error from syn";

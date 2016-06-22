@@ -1321,7 +1321,7 @@ namespace Nooch.Common
 
         public static string GetRecentOrDefaultIPOfMember(Guid MemberIdPassed)
         {
-            string RecentIpOfUser = "";
+            string lastIP = "";
 
             try
             {
@@ -1331,15 +1331,16 @@ namespace Nooch.Common
                 {
                     _dbContext.Entry(memberIP).Reload();
                 }
-                RecentIpOfUser = memberIP != null ? memberIP.Ip.ToString() : "54.201.43.89";
+
+                lastIP = memberIP != null ? memberIP.Ip : "54.201.43.89";
             }
             catch (Exception ex)
             {
-                Logger.Error("Common Helper -> GetRecentOrDefaultIPOfMember FAILED - [Exception: " + ex.Message + "]");
-                RecentIpOfUser = "Server exception on IP Lookup: [" + ex.Message + "]";
+                Logger.Error("Common Helper -> GetRecentOrDefaultIPOfMember FAILED - Exception: [" + ex + "]");
+                lastIP = "Server exception on IP Lookup: [" + ex.Message + "]";
             }
 
-            return RecentIpOfUser;
+            return lastIP;
         }
 
 
@@ -2876,7 +2877,7 @@ namespace Nooch.Common
             res.wereBankDetailsFound = false;
 
             Logger.Info("Common Helper -> GetSynapseBankAndUserDetailsforGivenMemberId Fired - MemberID: [" + memberId + "]");
-            
+
             try
             {
                 var id = Utility.ConvertToGuid(memberId);
