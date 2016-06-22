@@ -16,6 +16,9 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
 
     public class SynapseV3VerifyNodeWithMicroDeposits_ServiceInput
     {
+        public bool success { get; set; }
+        public bool isAlreadyVerified { get; set; }
+        public string verifiedDate { get; set; }
         public string userFirstName { get; set; }
         public string userLastName { get; set; }
         public string bankName { get; set; }
@@ -26,7 +29,6 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
         public string bankId { get; set; }
         public string errorMsg { get; set; }
         public string IsRs { get; set; }
-        public bool success { get; set; }
         public string NodeId1 { get; set; }
     }
 }

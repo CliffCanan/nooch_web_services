@@ -3013,7 +3013,7 @@ namespace Nooch.Web.Controllers
         /// <returns></returns>
         public ActionResult Activation()
         {
-            Logger.Info("Email Activation Page -> Initiated");
+            Logger.Info("Email Activation Page Code Behind -> Initiated");
 
             ResultActivation resultActivation = new ResultActivation();
             resultActivation.success = false;

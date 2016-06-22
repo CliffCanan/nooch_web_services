@@ -14,13 +14,9 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.0/css/font-awesome.min.css" />
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
     <link rel="stylesheet" href="@Url.Content("~/Assets/Css/animate.css")" />
-    <link rel="stylesheet" href="@Url.Content("~/Assets/Css/tweaks.css")" />
     <link rel="stylesheet" href="@Url.Content("~/Assets/Css/sweetalert-override.min.css")" />
-
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
-
+    <link rel="stylesheet" href="@Url.Content("~/Assets/Css/tweaks.css")" />
     <link rel="icon" href="@Url.Content("~/Assets/favicon.ico")" />
-    <meta name="apple-itunes-app" content="app-id=917955306" />
 
     <style>
         .well {
@@ -35,11 +31,12 @@
         .input-group-addon, input.form-control {
             font-size: 22px;
             font-weight: 600;
+            height: 50px !important;
             letter-spacing: 2px;
         }
 
         .form-control {
-            padding: 25px 14px;
+            padding: 5px 14px;
             font-weight: 700;
         }
 
@@ -55,7 +52,7 @@
 
         .input-group-addon {
             border: 0;
-            padding: 10px 6px 10px 12px;
+            padding: 5px 6px 5px 12px;
             color: #888;
         }
 
@@ -81,15 +78,15 @@
             <div class="m-l-15">
                 @if (MicroDeposit.IsRs.ToLower() == "true")
                 {
-                    <a class="landingHeaderLogo" href="https://www.rentscene.com/" style="float:left;">
-                        <img src="../Assets/Images/rentscene.png" class="center-block" alt="Rent Scene Logo" />
-                    </a>
+                <a class="landingHeaderLogo" href="https://www.rentscene.com/" style="float:left;">
+                    <img src="../Assets/Images/rentscene.png" class="center-block" alt="Rent Scene Logo" />
+                </a>
                 }
                 else
                 {
-                    <a class="landingHeaderLogo" href="https://www.nooch.com/" style="float:left;">
-                        <img src="../Assets/Images/nooch-logo2.svg" class="center-block" alt="Nooch Logo" />
-                    </a>
+                <a class="landingHeaderLogo" href="https://www.nooch.com/" style="float:left;">
+                    <img src="../Assets/Images/nooch-logo2.svg" class="center-block" alt="Nooch Logo" />
+                </a>
                 }
                 <div id="nameInNavContainer" class="text-center" style="position:absolute; left:10%; width:80%; top: 8px;">
                     <label id="nameInNav" class="m-t-5 m-b-0 center-block f-600 h4">@MicroDeposit.userFirstName @MicroDeposit.userLastName</label>
@@ -99,80 +96,106 @@
         </div>
     </nav>
 
-    <form id="form1">
-        <input type="hidden" id="IsRs" value="@MicroDeposit.IsRs.ToLower()" />
-        <input type="hidden" id="MemberId" value="@MicroDeposit.MemberId" />
-        <input type="hidden" id="NodeId1" value="@MicroDeposit.NodeId1" />
-    </form>
-
-    <div class="resultDiv col-md-6 col-md-offset-3 col-lg-4 col-lg-offset-4 hidden">
+    <div class="resultDiv col-sm-6 col-sm-offset-3 col-lg-4 col-lg-offset-4 hidden">
         <i class="fa fa-check"></i>
         <h2>Thanks, You're All Set</h2>
-        <p>Thanks for submitting your ID information. &nbsp;That helps us keep Rent Scene safe for everyone. &nbsp;We only use this information to prevent ID fraud and never share it without your permission.</p>
+        <p>Thanks for verifying your bank. &nbsp;We are committed to preventing ID fraud and making sure the platform safe for everyone.</p>
+        <p>You may now use this bank account to send or receive funds.</p>
     </div>
 
-    <div class="row m-0">
-        <div id="idWizContainer" class="" style="width:96%; max-width:530px; margin: 25px auto;">
-            <div class="row animated bounceIn">
+    @if (@MicroDeposit.success)
+    {
+        <div class="row m-0">
+            <div id="idWizContainer" class="" style="width:96%; max-width:530px; margin: 25px auto;">
+                <div class="row animated bounceIn">
 
-                <div>
+                    <div>
 
-                    <div class="well text-center f-15">
-                        <span class="show f-19 m-b-5 text-primary">Hi @MicroDeposit.userFirstName,</span>Please enter the amounts of the two (2) deposits from <em>"Rent Scene"</em> on your bank statement:<br /><span style="font-weight:normal;">(both should be between $0.01 - $0.99)</span>
+                        <div class="well text-center f-15">
+                            <span class="show f-19 m-b-5 text-primary">Hi @MicroDeposit.userFirstName,</span>Please enter the amounts of the two (2) deposits from <em>"Rent Scene"</em> on your bank statement:<br /><span style="font-weight:normal;">(both should be between $0.01 - $0.99)</span>
+                        </div>
+
+                        <form id="microVerForm" class="form-horizontal" role="form">
+
+                            <div class="form-group" id="micro1Grp">
+                                <div>
+                                    <div class="input-group">
+                                        <span class="input-group-addon">$0.</span>
+                                        <div class="fg-line">
+                                            <input type="text" id="MicroDepositOne" class="form-control two-digits p-l-10" placeholder="00" maxlength="2" required data-parsley-trigger="keyup" data-parsley-minlength="2" data-parsley-minlength-message="Please enter a 2-digit number." data-parsley-validation-threshold="0" data-parsley-errors-container="#errorMsg1" />
+                                        </div>
+                                    </div>
+                                    <span class="glyphicon glyphicon-ok form-control-feedback hidden" aria-hidden="true"></span>
+                                    <div id="errorMsg1"></div>
+                                </div>
+                            </div>
+
+                            <div class="form-group" id="micro2Grp">
+                                <div>
+                                    <div class="input-group">
+                                        <span class="input-group-addon">$0.</span>
+                                        <div class="fg-line">
+                                            <input type="text" id="MicroDepositTwo" class="form-control two-digits" placeholder="00" maxlength="2" required data-parsley-trigger="keyup" data-parsley-minlength="2" maxlength="2" data-parsley-minlength-message="Please enter a 2-digit number." data-parsley-validation-threshold="0" data-parsley-errors-container="#errorMsg2" />
+                                        </div>
+                                    </div>
+                                    <span class="glyphicon glyphicon-ok form-control-feedback hidden" aria-hidden="true"></span>
+                                    <div id="errorMsg2"></div>
+                                </div>
+                            </div>
+
+                            <div class="form-group m-t-30">
+                                <div class="col-sm-offset-2 col-sm-8">
+                                    <button type="button" class="btn btn-primary btn-lg btn-block" id="Submit" onclick="SubmitInfo()">Submit</button>
+                                </div>
+                            </div>
+
+                        </form>
+
                     </div>
-
-                    <form id="microVerForm" class="form-horizontal" role="form">
-
-                        <div class="form-group" id="micro1Grp">
-                            <div>
-                                <div class="input-group">
-                                    <span class="input-group-addon">$0.</span>
-                                    <div class="fg-line">
-                                        <input type="text" id="MicroDepositOne" class="form-control two-digits p-l-10" placeholder="00" maxlength="2" required data-parsley-trigger="keyup" data-parsley-minlength="2" data-parsley-minlength-message="Please enter a 2-digit number." data-parsley-validation-threshold="0" data-parsley-errors-container="#errorMsg1" />
-                                    </div>
-                                </div>
-                                <span class="glyphicon glyphicon-ok form-control-feedback hidden" aria-hidden="true"></span>
-                                <div id="errorMsg1"></div>
-                            </div>
-                        </div>
-
-                        <div class="form-group" id="micro2Grp">
-                            <div>
-                                <div class="input-group">
-                                    <span class="input-group-addon">$0.</span>
-                                    <div class="fg-line">
-                                        <input type="text" id="MicroDepositTwo" class="form-control two-digits" placeholder="00" maxlength="2" required data-parsley-trigger="keyup" data-parsley-minlength="2" maxlength="2" data-parsley-minlength-message="Please enter a 2-digit number." data-parsley-validation-threshold="0" data-parsley-errors-container="#errorMsg2" />
-                                    </div>
-                                </div>
-                                <span class="glyphicon glyphicon-ok form-control-feedback hidden" aria-hidden="true"></span>
-                                <div id="errorMsg2"></div>
-                            </div>
-                        </div>
-
-                        <div class="form-group m-t-30">
-                            <div class="col-sm-offset-2 col-sm-8">
-                                <button type="button" class="btn btn-primary btn-lg btn-block" id="Submit" onclick="SubmitInfo()">Submit</button>
-                            </div>
-                        </div>
-                        <!--@*<input type="hidden" id="SynapseV3MFABankVerifyWithMicroDepositsUrl" value="@Url.Action("MFALoginWithRoutingAndAccountNumber", "Nooch")" />*@-->
-                    </form>
-
                 </div>
             </div>
         </div>
-    </div>
+    }
+    else
+    {
+        <div class="resultDiv col-sm-6 col-sm-offset-3 col-lg-4 col-lg-offset-4">
+            <i class="fa fa-bank"></i>
+            <h3>Account Already Verified</h3>
+            <p>Looks like you're already good to go! &nbsp;This bank account was verified on <strong>@MicroDeposit.verifiedDate</strong>.</p>
+            <p>You may use this bank account to send or receive funds.</p>
+        </div>
+    }
 
     <div class="footer footer-landing" style="position:fixed; bottom:1%;">
         <div>
             <ul class="list-inline">
-                <li><a href="https://www.nooch.com/overview"></a></li>
-                <li><a href="https://www.nooch.com/safe">Security</a></li>
-                <li><a href="http://support.nooch.com/">Support Center</a></li>
-                <li><a href="https://www.nooch.com/privacy">Privacy Policy</a></li>
-                <li><a href="https://www.nooch.com/blog/">Blog</a></li>
+                @if (MicroDeposit.IsRs.ToLower() == "true")
+                {
+                <li><a href="https://www.rentscene.com" target="_blank">About</a></li>
+                <li><a href="https://www.nooch.com/safe" target="_blank">Security</a></li>
+                <li><a href="https://www.nooch.com/tos" target="_blank">Legal Stuff</a></li>
+                <li><a href="https://www.rentscene.com/faq" target="_blank">FAQ</a></li>
+                }
+                else
+                {
+                <li><a href="https://www.nooch.com/overview" target="_blank">About</a></li>
+                <li><a href="https://www.nooch.com/safe" target="_blank">Security</a></li>
+                <li><a href="http://support.nooch.com/" target="_blank">Support Center</a></li>
+                <li><a href="https://www.nooch.com/tos" target="_blank">Legal Stuff</a></li>
+                <li><a href="https://www.nooch.com/blog/" target="_blank">Blog</a></li>
+                }
             </ul>
         </div>
     </div>
+
+    <form id="form1">
+        <input type="hidden" id="IsRs" value="@MicroDeposit.IsRs.ToLower()" />
+        <input type="hidden" id="MemberId" value="@MicroDeposit.MemberId" />
+        <input type="hidden" id="NodeId1" value="@MicroDeposit.NodeId1" />
+        <input type="hidden" id="errorMsg" value="@MicroDeposit.errorMsg" />
+        <input type="hidden" id="success" value="@MicroDeposit.success.ToString().ToLower()" />
+        <input type="hidden" id="errorMsg" value="@MicroDeposit.verifiedDate" />
+    </form>
 
     <script src="//code.jquery.com/jquery-1.12.4.min.js"></script>
     <script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>

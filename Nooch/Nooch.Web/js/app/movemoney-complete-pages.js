@@ -12,12 +12,8 @@ $(document).ready(function ()
     console.log("errorFromCodeBehind is: " + errorFromCodeBehind);
 
     if (FOR_RENTSCENE == "true") {
-        $('.landingHeaderLogo').attr('href', 'http://www.rentscene.com');
-        $('.landingHeaderLogo img').attr('src', '../Assets/Images/rentscene.png');
-        $('.landingHeaderLogo img').attr('alt', 'Rent Scene Logo');
-
         if ($(window).width() > 1000) {
-            $('.landingHeaderLogo img').css('width', '211px');
+            $('.landingHeaderLogo img').css('width', '170px');
         }
 		
 		changeFavicon('../Assets/favicon2.ico')

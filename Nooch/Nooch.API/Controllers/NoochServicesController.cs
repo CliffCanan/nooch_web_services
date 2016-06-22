@@ -4471,6 +4471,8 @@ namespace Nooch.API.Controllers
 
                         if (synapseBankDetails.Status == "Verified")
                         {
+                            res.isAlreadyVerified = true;
+                            res.verifiedDate = Convert.ToDateTime(synapseBankDetails.VerifiedOn).ToString("MMM d, yyyy");
                             res.errorMsg = "Bank already verified on [" + Convert.ToDateTime(synapseBankDetails.VerifiedOn).ToString("MM/dd/yyyy") + "]";
                         }
                         else
