@@ -4677,7 +4677,7 @@ namespace Nooch.Common
 
             suggestedUsers suggestedUsers = new suggestedUsers();
             suggestedUsers.success = false;
-            suggestedUsers.suggestions = new suggestions[6];
+            suggestedUsers.suggestions = new List<suggestions>();
 
             try
             {
@@ -4756,9 +4756,9 @@ namespace Nooch.Common
                                     imgUrl = otherUser.Photo
                                 };
 
-                                suggestedUsers.suggestions[i] = suggestion;
+                                suggestedUsers.suggestions.Add( suggestion);
 
-                                if (i == 6) break;
+                                //if (i == 6) break;
 
                                 i++;
                             }
@@ -4768,10 +4768,10 @@ namespace Nooch.Common
                             }
                         }
 
-                        Logger.Info("Common Helper - GetSuggestedUsers SUCCESS - COUNT: [" + suggestedUsers.suggestions.Length + "], MemberID: [" + memberId + "]");
+                        Logger.Info("Common Helper - GetSuggestedUsers SUCCESS - COUNT: [" + suggestedUsers.suggestions.Count + "], MemberID: [" + memberId + "]");
 
                         suggestedUsers.success = true;
-                        suggestedUsers.msg = "Found [" + suggestedUsers.suggestions.Length.ToString() + "]";
+                        suggestedUsers.msg = "Found [" + suggestedUsers.suggestions.Count.ToString() + "]";
                         return suggestedUsers;
                     }
                 }
