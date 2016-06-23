@@ -3416,7 +3416,7 @@ namespace Nooch.Web.Controllers
 
                 res.showPaymentInfo = true;
                 res.success = true;
-                res.resultMsg = "Your reminder sent successfully.";
+                res.resultMsg = "Transaction reminder sent successfully.";
             }
             else
             {
