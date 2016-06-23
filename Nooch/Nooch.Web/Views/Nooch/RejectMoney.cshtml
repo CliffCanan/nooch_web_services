@@ -32,9 +32,18 @@
 
         <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
             <div class="clearfix">
-                <a class="landingHeaderLogo center-block" href="https://www.nooch.com/">
-                    <img src="@Url.Content("~/Assets/Images/nooch-logo2.svg")" class="center-block" alt="Nooch Logo" />
-                </a>
+                @if (@mod.isRentScene == "true")
+                {
+                    <a class="landingHeaderLogo center-block" href="https://www.rentscene.com/">
+                        <img src="@Url.Content("~/Assets/Images/rentscene.png")" class="center-block" alt="Rent Scene Logo" />
+                    </a>
+                }
+                else
+                {
+                    <a class="landingHeaderLogo center-block" href="https://www.nooch.com/">
+                        <img src="@Url.Content("~/Assets/Images/nooch-logo2.svg")" class="center-block" alt="Nooch Logo" />
+                    </a>
+                }
             </div>
         </nav>
 
@@ -91,21 +100,33 @@
             <input type="button" id="rejectBtn" class="btn btn-default btn-lg center-block animated bounceIn" value="Yes - Confirm" onclick="rejectBtnClicked()" />
         </div>
 
-        <!--<div id="createAccountPrompt" class="hidden">
-            <div class="depositInstructions">
-                If you create a Nooch account, you can make payment requests too. For Free. To anyone's email address or phone number, even if they don't have Nooch.
-                <br />
-                <input type="button" id="btnCreateAccount" class="btn btn-default btn-lg m-t-15 animated bounceIn" value="Create Account" onclick="btnCreateAccount_Click" />
-            </div>
-        </div>-->
+        @*<div id="createAccountPrompt" class="hidden">
+                <div class="depositInstructions">
+                    If you create a Nooch account, you can make payment requests too. For Free. To anyone's email address or phone number, even if they don't have Nooch.
+                    <br />
+                    <input type="button" id="btnCreateAccount" class="btn btn-default btn-lg m-t-15 animated bounceIn" value="Create Account" onclick="btnCreateAccount_Click" />
+                </div>
+            </div>*@
 
-        <div class="footer footer-landing" style="position:fixed; bottom:3%;">
+        <div class="footer footer-landing" style="position:fixed; bottom:1%;">
             <div>
                 <ul class="list-inline">
-                    <li><a href="https://www.nooch.com/overview">Security</a></li>
-                    <li><a href="http://support.nooch.com/">Support Center</a></li>
-                    <li><a href="https://www.nooch.com/tos">Legal Stuff</a></li>
-                    <li><a href="https://www.nooch.com/blog/">Blog</a></li>
+                    @if (@mod.isRentScene == "true")
+                    {
+                        <li><a href="https://www.rentscene.com" target="_blank">About</a></li>
+                        <li><a href="https://www.nooch.com/safe" target="_blank">Security</a></li>
+                        <li><a href="http://support.nooch.com" target="_blank">Support Center</a></li>
+                        <li><a href="https://www.nooch.com/tos" target="_blank">Legal Stuff</a></li>
+                        <li><a href="https://www.rentscene.com/faq" target="_blank">FAQ</a></li>
+                    }
+                    else
+                    {
+                        <li><a href="https://www.nooch.com/overview" target="_blank">About</a></li>
+                        <li><a href="https://www.nooch.com/safe" target="_blank">Security</a></li>
+                        <li><a href="http://support.nooch.com/" target="_blank">Support Center</a></li>
+                        <li><a href="https://www.nooch.com/tos" target="_blank">Legal Stuff</a></li>
+                        <li><a href="https://www.nooch.com/blog/" target="_blank">Blog</a></li>
+                    }
                 </ul>
             </div>
         </div>

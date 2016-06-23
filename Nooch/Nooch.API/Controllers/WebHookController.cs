@@ -21,7 +21,7 @@ namespace Nooch.API.Controllers
             try
             {
                 Logger.Info("WEBHOOK -> GetTransactionStatusFromSynapse Fired - TransactionID: [ " + transId +
-                            " ] At: [ " + DateTime.Now + " ], Content: [ " + jsonContent + " ]");
+                            " ], Content: [ " + jsonContent + " ]");
 
                 using (NOOCHEntities obj = new NOOCHEntities())
                 {
@@ -32,6 +32,8 @@ namespace Nooch.API.Controllers
 
                     if (doesTransExists != null)
                     {
+                        #region Expected Format
+
                         JToken transIdFromSyanpse = jsonfromsynapse["trans"]["_id"]["$oid"];
 
                         if (transIdFromSyanpse != null)
@@ -82,13 +84,22 @@ namespace Nooch.API.Controllers
                                         obj.SaveChanges();
                                     }
                                 }
+
+                                // Notify Cliff if the status is "CANCELED"
+                                if (mostRecentToken["status"].ToString() == "CANCELED")
+                                {
+                                    CommonHelper.notifyCliffAboutError("<h3>WEBHOOK -> Synapse Payment CANCELED<h3><br/><br/><p><strong>TransactionID:</strong> " +
+                                                                       transId + " <p>JSON from Synapse:</p><p>" + jsonContent + "</p>");
+                                }
                             }
                         }
                         else
                         {
-                            Logger.Error("WEBHOOK -> GetTransactionStatusFromSynapse FAILED - TransactionID: [ " + transId +
-                                         " ] At [ " + DateTime.Now + " ]. Content: [ " + jsonContent + " ]");
+                            Logger.Error("WEBHOOK -> GetTransactionStatusFromSynapse FAILED - TransactionID: [" + transId +
+                                         "] - Content: [ " + jsonContent + " ]");
                         }
+
+                        #endregion Expected Format
                     }
                     else
                     {
@@ -125,8 +136,8 @@ namespace Nooch.API.Controllers
                                 }
                             }
 
-
-                            // checking most recent status for updating in transactions table because timeline array may have multiple statuses and that may make confussion to update to most recent status
+                            // Checking most recent status to update Transactions Table b/c Timeline []
+                            // may have multiple statuses and that may be confusing to update to most recent status
 
                             JToken mostRecentToken = jsonfromsynapse["recent_status"];
 
@@ -137,13 +148,20 @@ namespace Nooch.API.Controllers
                                     !String.IsNullOrEmpty(transId))
                                 {
                                     Guid transGuid = Utility.ConvertToGuid(transId);
-                                    Transaction t =
-                                        obj.Transactions.FirstOrDefault(t2 => t2.TransactionId == transGuid);
+                                    Transaction t = obj.Transactions.FirstOrDefault(t2 => t2.TransactionId == transGuid);
+
                                     if (t != null)
                                     {
                                         t.SynapseStatus = mostRecentToken["status"].ToString();
                                         obj.SaveChanges();
                                     }
+                                }
+
+                                // Notify Cliff if the status is "CANCELED"
+                                if (mostRecentToken["status"].ToString() == "CANCELED")
+                                {
+                                    CommonHelper.notifyCliffAboutError("<h3>WEBHOOK -> Synapse Payment CANCELED<h3><br/><br/><p><strong>TransactionID:</strong> " +
+                                                                       transId + " <p>JSON from Synapse:</p><p>" + jsonContent + "</p>");
                                 }
                             }
                         }
@@ -154,7 +172,8 @@ namespace Nooch.API.Controllers
             }
             catch (Exception ex)
             {
-                Logger.Error("GetTransactionStatusFromSynapse [ WebHook ] failed to save in db for TransactionId : [ " + transId + " ]. At [ " + DateTime.Now + " ]. Exception -> [ " + ex + " ].");
+                Logger.Error("WEBHOOK -> GetTransactionStatusFromSynapse FAILED - TransactionID: [ " + transId +
+                             " ] - Outer Exception: [" + ex + "]");
             }
         }
 

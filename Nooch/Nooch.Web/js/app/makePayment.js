@@ -981,7 +981,7 @@ function getSuggestedUsers()
                 $('#name').autocomplete({
                     //serviceUrl: '/autocomplete/countries',
                     lookup: msg.suggestions,
-                    autoSelectFirst: true,
+                    //autoSelectFirst: true,
                     showNoSuggestionNotice: true,
                     noSuggestionNotice: "No users found :-(",
                     onSelect: function (suggestion) {

@@ -104,6 +104,11 @@ function SubmitInfo() {
                 {
                     console.log("Success == true");
 
+                    $('#idWizContainer').fadeOut(300);
+                    setTimeout(function () {
+                        $('.resultDiv').addClass('animated bounceIn').removeClass('hidden')
+                    }, 350);
+
                     // THEN DISPLAY SUCCESS ALERT...
                     swal({
                         title: "Submitted Successfully",
@@ -125,6 +130,19 @@ function SubmitInfo() {
                         confirmButtonColor: "#3fabe1",
                         confirmButtonText: "Ok"
                     });
+                }
+                else if (result.errorMsg.indexOf("Microdeposits have not been sent to the bank") > -1)
+                {
+                    swal({
+                        title: "Deposits Haven't Arrived yet!",
+                        text: "The Microdeposits have not been sent to your bank account yet - please wait until you see two small deposits on your bank statement within the next business day.",
+                        type: "error",
+                        confirmButtonColor: "#3fabe1",
+                        confirmButtonText: "Ok"
+
+                    });
+                    $('#MicroDepositOne').attr('disabled', true).val('');
+                    $('#MicroDepositTwo').attr('disabled', true).val('');
                 }
                 else
                 {

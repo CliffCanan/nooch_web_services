@@ -63,7 +63,7 @@ namespace Nooch.Common.Entities.MobileAppOutputEnities
     {
         public bool success { get; set; }
         public string msg { get; set; }
-        public suggestions[] suggestions { get; set; }
+        public List<suggestions> suggestions { get; set; }
     }
 
     public class suggestions

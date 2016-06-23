@@ -10,11 +10,8 @@ $(document).ready(function () {
 
     if (ISRS == "true")
     {
-        $('.landingHeaderLogo').attr('href', 'http://www.rentscene.com');
-        $('.landingHeaderLogo img').attr('src', '../Assets/Images/rentscene.png');
-        $('.landingHeaderLogo img').attr('alt', 'Rent Scene Logo');
         if (isLrgScrn)
-            $('.landingHeaderLogo img').css('width', '211px');
+            $('.landingHeaderLogo img').css('width', '170px');
 
         changeFavicon('../Assets/favicon2.ico')
     }
@@ -27,7 +24,7 @@ $(document).ready(function () {
         }
         //$('#createAccountPrompt').hide();
 
-        if (transType == "Invite") 
+        if (transType == "Invite")
         {
             $('#SenderAndTransInfodiv .intro-header').text('Payment From').addClass('label-success');
             $('#clickToReject p').text('Are you sure you want to reject this payment?');
@@ -38,13 +35,14 @@ $(document).ready(function () {
             $('#clickToReject p').text('Are you sure you want to reject this payment request?');
         }
     }
-    else 
+    else
     {
         console.log("20. There was an error! :-(");
     }
 
     // Format the Memo if present
-    if ($("#transMemo").text().length > 0) {
+    if ($("#transMemo").text().length > 0)
+    {
         $("#transMemo").prepend("<i class='fa fa-fw fa-comment fa-flip-horizontal'>&nbsp;</i><em>&quot;</em>").append("<em>&quot;</em>");
     }
 });
@@ -70,12 +68,11 @@ function areThereErrors() {
     }
 
     console.log("No Errors!");
-	return false;
+    return false;
 }
 
 
-function checkIfStillPending() 
-{
+function checkIfStillPending() {
     if (typeof transStatus != 'undefined' &&
        transStatus != "pending" && transStatus != "Pending")
     {
@@ -125,7 +122,8 @@ function checkIfStillPending()
             allowEscapeKey: false,
             html: true
         }, function (isConfirm) {
-            if (!isConfirm) {
+            if (!isConfirm)
+            {
                 window.open("mailto:" + SUPPORTEMAIL);
             }
         });
@@ -139,10 +137,10 @@ function checkIfStillPending()
 }
 
 
-function rejectBtnClicked(){
+function rejectBtnClicked() {
     console.log("rejectThisRequestReached!");
 
-     //ADD THE LOADING BOX
+    //ADD THE LOADING BOX
     $.blockUI({
         message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Rejecting This Request...</span>',
         css: {
@@ -161,7 +159,7 @@ function rejectBtnClicked(){
     var transId = getParameterByName('TransactionId');
     var userType = getParameterByName('UserType');
     var transType = getParameterByName('TransType');
-  
+
     $.ajax({
         type: "POST",
         url: $('#rejectMoneyLink').val() + "?TransactionId=" + transId + "&UserType=" + userType + "&TransType=" + transType,
@@ -169,27 +167,28 @@ function rejectBtnClicked(){
         success: function (msg) {
             console.log("SUCCESS -> RejectMoneyResult is... ");
             console.log(msg);
-            
+
             // Hide the Loading Block
             $.unblockUI()
 
             if (typeof msg.errorFromCodeBehind != 'undefined' &&
 			    (msg.errorFromCodeBehind.indexOf("no longer pending") > -1 || msg.transStatus.indexOf("no longer pending") > -1))
-			{
+            {
                 console.log("This payment was no longer pending.");
                 transStatus = "not pending";
-				checkIfStillPending();
-			}
-			else if (msg.errorFromCodeBehind = "0")
+                checkIfStillPending();
+            }
+            else if (msg.errorFromCodeBehind = "0")
             {
                 $("#transResult").text("Request Rejected Successfully");
-				$("#clickToReject").fadeOut('fast');
+                $("#clickToReject").fadeOut('fast');
 
-				var firstName = $('#nameLabel').text().trim().split(" ");
+                var firstName = $('#nameLabel').text().trim().split(" ");
+                var textAddon = ISRS == "true" ? "" : "<br/><br/>Hope " + firstName[0] + " won't mind!";
 
                 swal({
                     title: "Payment Rejected",
-                    text: "You just rejected that payment request successfully.<br/><br/>Hope " + firstName[0] + " won't mind!",
+                    text: "You just rejected that payment request successfully." + textAddon,
                     type: "success",
                     showCancelButton: false,
                     confirmButtonColor: "#3fabe1",
@@ -254,7 +253,7 @@ function showErrorAlert(errorNum) {
         alertBodyText = "Our apologies, but we were not able to reject that request.  Please try again or contact <span style='font-weight:600;'>" + COMPANY + " Support</span>:" +
                         "<br/><a href='mailto:" + SUPPORTEMAIL + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + SUPPORTEMAIL + "</a>";
     }
-    // Generic Error
+        // Generic Error
     else
     {
         alertTitle = "Errors Are The Worst!";
@@ -278,21 +277,22 @@ function showErrorAlert(errorNum) {
         allowEscapeKey: false,
         html: true
     }, function (isConfirm) {
-        if (!isConfirm) {
+        if (!isConfirm)
+        {
             window.open("mailto:" + SUPPORTEMAIL);
         }
     });
 }
 
 
-function changeFavicon(src)
-{
+function changeFavicon(src) {
     var link = document.createElement('link'),
      oldLink = document.getElementById('dynamic-favicon');
     link.id = 'dynamic-favicon';
     link.rel = 'shortcut icon';
     link.href = src;
-    if (oldLink) {
+    if (oldLink)
+    {
         document.head.removeChild(oldLink);
     }
     document.head.appendChild(link);

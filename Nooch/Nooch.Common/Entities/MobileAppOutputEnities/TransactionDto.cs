@@ -64,5 +64,6 @@ namespace Nooch.Common.Entities.MobileAppOutputEnities
         public string BankId { get; set; }
         public string BankName { get; set; }
         public string SsnIsVerified { get; set; }
+        public string cip { get; set; } // For Synapse User Type
     }
 }

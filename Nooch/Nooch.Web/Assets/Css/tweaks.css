@@ -345,7 +345,6 @@ h1 a:hover {text-decoration:none;}
        -moz-appearance: none;
             appearance: none;
     padding: 0;
-    border-radius: 0;
     -webkit-transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
          -o-transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
             transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
@@ -1333,21 +1332,31 @@ div#pwFormShell #depositCreateAccount,
 }
 
 .resultDiv {
-    text-align:center;
-    margin-top: 10px;
+	background: rgb(244,245,246);
+	border-radius: 20px;
+    color: #222;
+    margin-top: 15px;
     margin-bottom: 10px;
-    color: #fff;
-    text-shadow: 0 1px 0 rgba(0,0,0,.4);
+	padding: 20px;
+    text-align:center;
+    text-shadow: 0 1px 0 rgba(255,255,255,.8);
 }
 
 .resultDiv h2,
 .resultDiv h3 {
-    text-shadow: 0 2px 0 rgba(0,0,0,.24);
+	color: #1f8ec6;
+    font-weight: bold;
+	text-transform: uppercase;
+	font-size: 20px;
 }
 .resultDiv i {
-    font-size: 80px; 
-    text-shadow: 0px 2px 40px rgba(25,25,25,0.2),
-                 3px 4px 0px rgba(0,0,0,.25);
+	color: #555;
+    font-size: 60px;
+}
+
+.resultDiv i.fa-bank {
+    color: #ddd;
+    text-shadow: 0px -1px rgba(88,90,92,.5);
 }
 
 .resultDiv p {
@@ -1543,6 +1552,42 @@ div#pwFormShell #depositCreateAccount,
     font-size: 14px;
     opacity: .85;
 }
+
+.form-control.autocomplete {
+  padding-left: 6px;
+  color: #111;
+}
+/*********************/
+/**  AUTO-COMPLETE  **/
+/*********************/
+.autocomplete-suggestions {
+  background: #FFF;
+  border: 1px solid #ccc;
+  border-radius: 0 0 5px 5px;
+  box-shadow: 0 3px 10px -2px rgba(0,0,0,.25);
+  overflow: auto;
+}
+.autocomplete-suggestion {
+  padding: 12px 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+ }
+.autocomplete-selected {
+  background: #F0F0F0;
+}
+.autocomplete-suggestions strong {
+  font-weight: normal;
+  color: #3399FF;
+}
+.autocomplete-group {
+  padding: 2px 5px;
+}
+.autocomplete-group strong {
+  display: block;
+  border-bottom: 1px solid #000;
+}
+
 
 /**********
     404
@@ -2558,6 +2603,9 @@ form .table-header {
 #idVerWiz .well .ast > span { font-size: 92%; font-weight: 300; position: relative; top: -1px; left: 1px; opacity: 0.85; }
 #idVerWiz .form-group { margin-bottom: 20px; }
 
+#idVerWiz dl {font-size: 16px;}
+#idVerWiz input {font-size: 16.5px;}
+
 .sweet-alert.securityAlert { left: 54%; }
 
 .pay-request-pg .sweet-overlay,
@@ -2647,6 +2695,11 @@ form .table-header {
   #body-depositNew { padding-top: 70px; }
   #body-depositNew iframe { height: 760px; }
   
+  .resultDiv {
+	padding: 20px 25px;
+	margin-top: 20px;
+  }
+
   #idVer .modal-dialog { width: 640px; }
 }
 

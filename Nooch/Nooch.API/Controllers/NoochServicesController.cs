@@ -383,13 +383,6 @@ namespace Nooch.API.Controllers
             }
         }
 
-        public StringResult WeeklyLimitTest(string memId)
-        {
-            var tda = new TransactionsDataAccess();
-            Guid memGuid = Utility.ConvertToGuid(memId);
-
-            return new StringResult { Result = CommonHelper.IsWeeklyTransferLimitExceeded(memGuid, 5).ToString() };
-        }
 
         [HttpGet]
         [ActionName("GetMemberDetails")]
@@ -919,7 +912,7 @@ namespace Nooch.API.Controllers
         [ActionName("RequestMoneyForRentScene")]
         public requestFromRentScene RequestMoneyForRentScene(string from, string name, string email, string amount, string memo, string pin, string ip, string cip, bool isRequest)
         {
-            Logger.Info("Service Controller - RequestMoneyForRentScene Initiated - [From: " + from +
+            Logger.Info("Service Cntrlr - RequestMoneyForRentScene Initiated - [From: " + from +
                         "], [Name: " + name + "], Email: [" + email +
                         "], amount: [" + amount + "], memo: [" + memo +
                         "], pin: [" + pin + "], ip: [" + ip +
@@ -966,7 +959,7 @@ namespace Nooch.API.Controllers
             }
             if (isMissingData)
             {
-                Logger.Error("Service Controller -> RequestMoneyForRentScene FAILED - Missing required data - Msg is: [" + res.msg + "]");
+                Logger.Error("Service Cntrlr -> RequestMoneyForRentScene FAILED - Missing required data - Msg is: [" + res.msg + "]");
                 return res;
             }
 
@@ -2270,19 +2263,15 @@ namespace Nooch.API.Controllers
             {
                 try
                 {
-
-
                     var r = GetTransactionsList(memberId, "ALL", 100000, 1, accessToken, "").Select(i => new { i.TransactionId, SenderId = i.MemberId, RecepientId = i.RecepientId, i.DisputeId, i.Amount, i.TransactionDate, i.TransactionFee, i.TransactionType, i.LocationId, i.DisputeReportedDate, i.DisputeReviewDate, i.DisputeResolvedDate, i.AdminNotes, i.RaisedBy, i.Memo, i.Picture, i.TransactionStatus });
                     var csv = string.Join(", ", r.Select(i => i.ToString()).ToArray()).Replace("{", "").Replace("}", "");
-
-
 
                     var sender = CommonHelper.GetMemberDetails(memberId);
 
                     var tokens = new Dictionary<string, string>
-								 {
-									 {Constants.PLACEHOLDER_FIRST_NAME, CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(sender.FirstName))}
-								 };
+                    {
+					    {Constants.PLACEHOLDER_FIRST_NAME, CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(sender.FirstName))}
+				    };
 
                     bool b = Utility.SendEmailCSV(toAddress, csv, "Here's your Nooch activity report", "Hi,<br/> Your complete Nooch transaction history is attached in a .CSV file.<br/><br/>Thanks<br/>-Nooch Team", tokens);
                     Logger.Info("TransactionHistorySent - TransactionHistorySent status mail sent to [" + toAddress + "].");
@@ -3011,7 +3000,7 @@ namespace Nooch.API.Controllers
 
                 if (noochMember == null)
                 {
-                    Logger.Error("Service Controller -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber FAILED - Member NOT FOUND.");
+                    Logger.Error("Service Cntrlr -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber FAILED - Member NOT FOUND.");
                     res.errorMsg = "Member not found.";
                     return res;
                 }
@@ -3058,14 +3047,14 @@ namespace Nooch.API.Controllers
                     }
                     else
                     {
-                        Logger.Error("Service Controller -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber FAILED: Could not create Synapse User Record for: [" + MemberId + "].");
+                        Logger.Error("Service Cntrlr -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber FAILED: Could not create Synapse User Record for: [" + MemberId + "].");
                     }
                 }
 
                 // Check again if it's still null (which it shouldn't be because we just created a new Synapse user above if it was null.
                 if (createSynapseUserDetails == null)
                 {
-                    Logger.Error("Service Controller -> SynapseV3 ADD NODE ERROR: No Synapse OAuth code found in Nooch DB for: [" + MemberId + "].");
+                    Logger.Error("Service Cntrlr -> SynapseV3 ADD NODE ERROR: No Synapse OAuth code found in Nooch DB for: [" + MemberId + "].");
                     res.errorMsg = "No Authentication code found for given user.";
                     return res;
                 }
@@ -3242,9 +3231,9 @@ namespace Nooch.API.Controllers
                                 {
                                     Utility.SendEmail(templateToUse, fromAddress, toAddress, null,
                                                       "Bank Account Verification - Important Info",
-                                                      null, tokens, null, null, null);
+                                                      null, tokens, null, "bankAddedManually@nooch.com", null);
 
-                                    Logger.Info("Service Cntrlr -> SynapseV3 AddNodeWithAccountNumberAndRoutingNumber - [" + templateToUse + "] Email sent to [" +
+                                    Logger.Info("Service Cntrlr -> SynapseV3 AddNodeWithAccountNumberAndRoutingNumber - [" + templateToUse + "] - Email sent to [" +
                                                  toAddress + "] successfully");
                                 }
                                 catch (Exception ex)
@@ -4482,6 +4471,8 @@ namespace Nooch.API.Controllers
 
                         if (synapseBankDetails.Status == "Verified")
                         {
+                            res.isAlreadyVerified = true;
+                            res.verifiedDate = Convert.ToDateTime(synapseBankDetails.VerifiedOn).ToString("MMM d, yyyy");
                             res.errorMsg = "Bank already verified on [" + Convert.ToDateTime(synapseBankDetails.VerifiedOn).ToString("MM/dd/yyyy") + "]";
                         }
                         else
@@ -5740,8 +5731,7 @@ namespace Nooch.API.Controllers
 
         [HttpPost]
         [ActionName("TransferMoneyToNonNoochUserUsingSynapse")]
-        public StringResult TransferMoneyToNonNoochUserUsingSynapse(TransactionDto transactionInput,
-            string accessToken, string inviteType, string receiverEmailId)
+        public StringResult TransferMoneyToNonNoochUserUsingSynapse(TransactionDto transactionInput, string accessToken, string inviteType, string receiverEmailId)
         {
             if (CommonHelper.IsValidRequest(accessToken, transactionInput.MemberId))
             {
@@ -5753,7 +5743,7 @@ namespace Nooch.API.Controllers
                     var transactionDataAccess = new TransactionsDataAccess();
                     TransactionEntity transactionEntity = GetTransactionEntity(transactionInput);
 
-                    res.Result = transactionDataAccess.TransferMoneyToNonNoochUserUsingSynapse(inviteType, receiverEmailId, transactionEntity);
+                    res.Result = transactionDataAccess.TransferMoneyToNonNoochUserUsingSynapse(inviteType, receiverEmailId, transactionEntity, transactionInput.cip);
                 }
                 catch (Exception ex)
                 {
