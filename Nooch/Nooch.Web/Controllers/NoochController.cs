@@ -3327,74 +3327,69 @@ namespace Nooch.Web.Controllers
 
             ResultCancelRequest res = new ResultCancelRequest();
             res.success = false;
-            var MemDeatils = CommonHelper.GetMemberDetails(input.memberId); 
-          
+
+            #region Inititial Data Checks
+
+            if (String.IsNullOrEmpty(input.TransId))
+            {
+                res.resultMsg = "Missing TransactionId";
+                return Json(res);
+            }
+            if (String.IsNullOrEmpty(input.memberId))
+            {
+                res.resultMsg = "Missing MemberId";
+                return Json(res);
+            }
+            if (String.IsNullOrEmpty(input.UserType))
+            {
+                res.resultMsg = "Missing ReminderType";
+                return Json(res);
+            }
+
+            #endregion Inititial Data Checks
+
             try
             {
-                //var userType = input.UserType == "new" ? "U6De3haw2r4mSgweNpdgXQ==" : "mx5bTcAYyiOf9I5Py9TiLw=="; new & Existing
-                var userType = input.UserType == "new" ? "InvitationReminderToNewUser" : "RequestMoneyReminderToExistingUser"; 
-                res = paymentReminderService(userType,input.TransId, MemDeatils.AccessToken, input.memberId );
-               
+                var MemDeatils = CommonHelper.GetMemberDetails(input.memberId);
+
+                if (MemDeatils != null)
+                {
+                    //var userType = input.UserType == "new" ? "U6De3haw2r4mSgweNpdgXQ==" : "mx5bTcAYyiOf9I5Py9TiLw=="; new & Existing
+                    var reminderType = input.UserType == "new" ? "InvitationReminderToNewUser" : "RequestMoneyReminderToExistingUser";
+
+                    string serviceMethod = serviceMethod = "SendTransactionReminderEmail?ReminderType=" + reminderType + "&TransactionId=" + input.TransId + "&accessToken=" + MemDeatils.AccessToken + "&MemberId=" + input.memberId;
+                    string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+
+                    var serviceResult = ResponseConverter<Nooch.Common.Entities.StringResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+
+                    Logger.Info(Json(serviceResult));
+
+                    if (serviceResult.Result == "Reminder mail sent successfully." || serviceResult.Result == "Reminder sms sent successfully.")
+                    {
+                        Logger.Info("History Code Behind -> paymentReminder - Reminder sent Successfully - TransID: [" + input.TransId + "], MemberID: [" + input.memberId + "]");
+
+                        res.showPaymentInfo = true;
+                        res.success = true;
+                        res.resultMsg = "Transaction reminder sent successfully.";
+                    }
+                    else
+                    {
+                        Logger.Error("History Code Behind -> paymentReminder - paymentReminderService FAILED - TransID: [" + input.TransId + "], MemberID: [" + input.memberId + "], ReminderType: [" + reminderType + "]");
+                        res.resultMsg = "Looks like this request is no longer pending. You may have cancelled it already or the recipient has already responded by accepting or rejecting.";
+                    }
+                }
+                else
+                {
+                    res.resultMsg = "Member not found";
+                }
             }
             catch (Exception ex)
             {
-                Logger.Error("History Code Behind -> cancelPayment FAILED - TransID: [" + input.TransId + "], Exception: [" + ex.Message + "]");
+                Logger.Error("History Code Behind -> paymentReminder FAILED - TransID: [" + input.TransId + "], Exception: [" + ex.Message + "]");
+                res.resultMsg = ex.Message;
             }
+
             return Json(res);
-        }
-        public ResultCancelRequest paymentReminderService(string ReminderType, string TransactionId, string accessToken, string MemberId)
-        {
-             ResultCancelRequest res = new ResultCancelRequest();
-            res.success = false;   
-             #region Inititial Data Checks
-
-            if (String.IsNullOrEmpty(ReminderType))
-            {
-                res.resultMsg = "Missing ReminderType";
-                return res;
-            }
-            if (String.IsNullOrEmpty(TransactionId))
-            {
-                res.resultMsg = "Missing TransactionId";
-                return res;
-            }
-            if (String.IsNullOrEmpty(accessToken))
-            {
-                res.resultMsg = "Missing accessToken";
-                return res;
-            }
-            if (String.IsNullOrEmpty(MemberId))
-            {
-                res.resultMsg = "Missing MemberId";
-                return res;
-            }
-            #endregion Inititial Data Checks
-                                     
-            // Service to Send Reminder Mail for exsiting and new user
-
-            string serviceMethod = string.Empty;
-            string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-            serviceMethod = "/SendTransactionReminderEmail?ReminderType=" + ReminderType + "&TransactionId=" + TransactionId + "&accessToken=" + accessToken + "&MemberId=" + MemberId;
-                                                                    
-            var serviceResult = ResponseConverter<Nooch.Common.Entities.StringResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
-
-            Logger.Info(Json(serviceResult));
-
-            if (serviceResult.Result == "Reminder mail sent successfully." || serviceResult.Result == "Reminder sms sent successfully.")
-            {
-                Logger.Info("paymentReminderService Code Behind -> Reminder sent Successfully - [TransID: " + TransactionId + "], [MemberID: " + MemberId + "]");
-
-                res.showPaymentInfo = true;
-                res.success = true;
-                res.resultMsg = "Transaction reminder sent successfully.";
-            }
-            else
-            {
-                Logger.Error("paymentReminderService Code Behind -> paymentReminderService FAILED - [TransID: " + TransactionId + "], [MemberID: " + MemberId + "], [UserType: ]");
-                res.resultMsg = "Looks like this request is no longer pending. You may have cancelled it already or the recipient has already responded by accepting or rejecting.";
-            }
-                   
-            return res;
         }
 
         #endregion History Page
