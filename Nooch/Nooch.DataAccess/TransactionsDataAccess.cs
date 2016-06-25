@@ -3117,7 +3117,7 @@ namespace Nooch.DataAccess
                     };
                     transMain.amount = amountMain;
 
-                    if (!String.IsNullOrEmpty(iPForTransaction) || iPForTransaction.Length < 6)
+                    if (String.IsNullOrEmpty(iPForTransaction) || iPForTransaction.Length < 6)
                     {
                         iPForTransaction = "54.148.37.21"; // Nooch's Server IP as default
                     }
@@ -3138,7 +3138,7 @@ namespace Nooch.DataAccess
 
                     SynapseV3AddTransInput_trans_fees feeMain = new SynapseV3AddTransInput_trans_fees();
                     feeMain.note = "Negative " + companyName + " Fee";
-                    feeMain.fee = "0.10"; // to offset the Synapse fee so the user doesn't pay it
+                    feeMain.fee = "-0.10"; // to offset the Synapse fee so the user doesn't pay it
 
                     SynapseV3AddTransInput_trans_fees_to tomain = new SynapseV3AddTransInput_trans_fees_to()
                     {

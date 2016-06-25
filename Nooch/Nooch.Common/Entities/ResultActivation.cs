@@ -12,7 +12,5 @@ namespace Nooch.Common.Entities
         public bool toLandlordApp { get; set; }
         public bool success { get; set; }
         public bool error { get; set; }
-
-
     }
 }

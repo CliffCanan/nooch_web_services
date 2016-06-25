@@ -29,7 +29,7 @@ $(document).ready(function () {
         changeFavicon('../Assets/favicon2.ico')
 
         var suggestedUsers = getSuggestedUsers();
-        
+
         console.log(suggestedUsers);
     }
     else if (FROM == "appjaxx" || FROM == "josh")
@@ -733,6 +733,9 @@ function resetForm() {
     $('#memo').val('');
 }
 
+function resetName() {
+    $('#name').val('').focus();
+}
 
 function showErrorAlert(errorNum) {
     var alertTitle = "";
@@ -955,8 +958,7 @@ function submitPin(pin) {
 }
 
 
-function getSuggestedUsers()
-{
+function getSuggestedUsers() {
     $.ajax({
         type: "POST",
         url: "getUserSuggestions",
@@ -970,16 +972,8 @@ function getSuggestedUsers()
 
             if (typeof msg.suggestions != "undefined")
             {
-                    //var countries = [
-                    //   { value: 'Tori Moore', data: tori },
-                    //   { value: 'Jonny Dolezal', data: 'AD' },
-                    //   { value: 'Lisa Bernstein', data: 'AD' },
-                    //   { value: 'Aaron Moore', data: 'ZZ' }
-                    //];
-
                 // Set up user Autocomplete
                 $('#name').autocomplete({
-                    //serviceUrl: '/autocomplete/countries',
                     lookup: msg.suggestions,
                     //autoSelectFirst: true,
                     showNoSuggestionNotice: true,
@@ -988,7 +982,7 @@ function getSuggestedUsers()
                         //alert('You selected: ' + suggestion.value + ', ' + suggestion.data.email);
 
                         $('#email').val(suggestion.data.email);
-                        $('#memo').focus();
+                        //$('#memo').focus();
                     }
                 });
             }

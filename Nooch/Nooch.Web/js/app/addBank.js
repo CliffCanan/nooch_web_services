@@ -1,16 +1,17 @@
 var Is_PIN_REQUIRED = false;
 var MFA_TYPE = '';
-var MEMBER_ID = '';
-var RED_URL = '';
 var BANK_NAME = '';
 var SEC_QUES_NO = 0;
-var fromLandlordApp = '';
 var sendToIdVerQuestions = false;
 var isManual = false;
-var COMPANY = "Nooch";
-var SUPPORTLINK = "support@nooch.com";
 
-var isUpgradeToV3 = 'false';
+var isRs = $('#isRs').val();
+var MEMBER_ID = $('#memId').val();
+var RED_URL = $('#redUrl').val();
+var COMPANY = isRs == "true" ? "Rent Scene" : "Nooch";
+var SUPPORTLINK = isRs == "true" ? "payments@rentscene.com" : "support@nooch.com";
+var fromLandlordApp = $('#isLl').val();
+
 
 var step1height = '554px';
 var step2height = '520px';
@@ -465,13 +466,13 @@ function submitBnkLgn() {
 				    // ADD PROMPT FOR MANUAL ROUNTING/ACCOUNT #
 				    bankLoginErrorAlert();
 
-					$('#bankLogin_errorMsg').append("<div><p class='parsley-errors-list filled'>Oh no! Looks like we are experiencing some temporary trouble with " + BANK_NAME + ". :-( Please try again or contact " + COMPANY + " Support.</p></div>");
+					$('#bankLogin_errorMsg').append("<div><p class='parsley-errors-list filled'>Oh no! Looks like we are experiencing some temporary trouble with " + BANK_NAME + ". :-( &nbsp;Please try again or contact " + COMPANY + " Support.</p></div>");
 				}
 				else if (bnkLoginResult.ERROR_MSG.indexOf("account has not been fully set up") > -1 ||
 				         bnkLoginResult.ERROR_MSG.indexOf("Prompt the user to visit the issuing institution's site and finish the setup process") > -1)
 				{
-					$('#modal-OtherError #par1').html("Looks like that " + BANK_NAME + " account is not fully set up for online banking yet.  Please visit " + BANK_NAME + "'s website to complete the setup process.");
-					$('#modal-OtherError #par2').html("After setting up your online banking, then try connecting it to Nooch again.  If you continue to see this error we'd appreciate hearing about it at <a href='" + SUPPORTLINK + "' target='_blank' style='font-weight: 500;'>" + SUPPORTLINK + "</a>.");
+					$('#modal-OtherError #par1').html("Looks like that " + BANK_NAME + " account is not fully set up for online banking yet. &nbsp;Please visit " + BANK_NAME + "'s website to complete the setup process.");
+					$('#modal-OtherError #par2').html("After setting up your online banking, then try connecting it to " + COMPANY + " again. &nbsp;If you continue to see this error we'd appreciate hearing about it at <a href='" + SUPPORTLINK + "' target='_blank' style='font-weight: 500;'>" + SUPPORTLINK + "</a>.");
 					$('#modal-OtherError').modal({
 						backdrop:'static'
 					});
@@ -494,7 +495,7 @@ function submitBnkLgn() {
 				        html: true
 				    }, function (isConfirm) {
 				        if (!isConfirm) {
-				            window.open("mailto:support@nooch.com");
+				            window.open("mailto:" + SUPPORTLINK);
 				        }
 				    });
 				}
@@ -507,8 +508,6 @@ function submitBnkLgn() {
 				else
 				{
 					$('#bankLogin_errorMsg').append("<div><p class='parsley-errors-list filled'>Oh no! We are having some trouble connecting to " + BANK_NAME + ". Please try again!</p></div>");
-					//$('#bankUsername').val('');
-					//$('#bankUsername').focus();
 
 				    // ADD PROMPT FOR MANUAL ROUNTING/ACCOUNT #
 					bankLoginErrorAlert();
@@ -1220,41 +1219,6 @@ $(document).ready(function () {
 	});
 
 
-    function getParameterByName(name) {
-        name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
-        var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
-            results = regex.exec(location.search);
-        return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
-    }
-
-    MEMBER_ID = getParameterByName('MemberId');
-    if (MEMBER_ID == null || MEMBER_ID.length < 1)
-    {
-        MEMBER_ID = getParameterByName('memberid');
-    }
-
-    RED_URL = getParameterByName('redUrl');
-
-    $('#red_url').val(RED_URL);
-
-    // Check if RED_URL is empty (wasn't passed in URL) or a variation of 'nooch.com'
-    // The redirection will hit a 404 unless the entire URL is sent, including the protocol ('https')
-    if (RED_URL.length < 2 || RED_URL.indexOf('nooch.com') > -1)
-    {
-        console.log("No RED_URL found!")
-        RED_URL = "https://www.nooch.com"
-    }
-    else if (RED_URL.indexOf("rentscene") > -1) {
-        COMPANY = "Rent Scene";
-        SUPPORTLINK = "payments@rentscene.com";
-    }
-
-    fromLandlordApp = getParameterByName('ll');
-    isUpgradeToV3 = getParameterByName('update');
-
-	console.log("isUpgradeToV3 is: [" + isUpgradeToV3 + "]");
-
-	$('#bankNotListed').removeClass('hide');
 
 	if (RED_URL.indexOf("nooch://") > -1)
 	{
@@ -1276,11 +1240,6 @@ $(document).ready(function () {
 	    //$('.addBank-heading').hide();
 	}
 	
-	if (isUpgradeToV3 == 'true')
-	{
-	    $('#headerAlt').removeClass('hidden');
-	}
-
 	if ($(window).width() > 1100)
 	{
 	    step1height = '650px';
@@ -1293,40 +1252,40 @@ $(document).ready(function () {
 	{
 	    swal({
 	        title: "Configuration Error",
-	        text: "It looks like we had trouble loading your account information.  Please contact <a href=\"mailto:support@nooch.com\">Nooch Support</a> to get help and mention Error #450.",
+	        text: "It looks like we had trouble loading your account information. &nbsp;Please contact <a href='" + SUPPORTLINK + "'>" + COMPANY + " Support</a> to get help and mention <strong>Error #450</strong>.",
 	        type: "error",
 	        confirmButtonColor: "#3fabe1",
 	        confirmButtonText: "Ok",
-            html: true
+	        html: true
 	    })
-	}
+    }
+	else if (COMPANY == "Rent Scene" && $(window).width() > 1200) // Only should show when the user came straight to this page, i.e. NOT via iFrame from another page.
+    {
+        $('#headerAlt').removeClass('hidden');
 
-	else if (COMPANY == "Rent Scene") {
-	    $('#form1').append('<img src="https://noochme.com/noochweb/Assets/Images/rentscene.png" class="brandedLogo desk-only" />');
-
-	    swal({
-	        title: "Secure, Private Payments",
-	        text: "<p>Rent Scene offers a quick, secure way to pay rent without giving your routing or account number. &nbsp;Just select your bank and login to your online banking<span class='desk-only'> as you normally do</span>.</p>" +
+        swal({
+            title: "Secure, Private Payments",
+            text: "<p>Rent Scene offers a quick, secure way to pay rent without giving your routing or account number. &nbsp;Just select your bank and login to your online banking<span class='desk-only'> as you normally do</span>.</p>" +
 				  "<ul class='fa-ul'><li><i class='fa-li fa fa-check'></i><strong>We don't see or store</strong> your bank credentials</li>" +
 				  "<li><i class='fa-li fa fa-check'></i>The person you pay never sees any of your personal or bank info (except your name)</li>" +
 				  "<li><i class='fa-li fa fa-check'></i>All data is secured with <strong>bank-grade encryption</strong></li></ul>",
-	        imageUrl: "../Assets/Images/secure.svg",
-			imageSize: "194x80",
-			showCancelButton: true,
-			cancelButtonText: "Learn More",
-	        confirmButtonColor: "#3fabe1",
-	        confirmButtonText: "Great, Let's Go!",
-	        customClass: "securityAlert",
-	        allowEscapeKey: false,
-	        html: true
-	    }, function (isConfirm) {
-			if (!isConfirm) {
-				window.top.location.href = "https://www.nooch.com/safe";
-			}
-		});
-	}
-
-	else if (isUpgradeToV3 == 'true')
+            imageUrl: "../Assets/Images/secure.svg",
+            imageSize: "194x80",
+            showCancelButton: true,
+            cancelButtonText: "Learn More",
+            confirmButtonColor: "#3fabe1",
+            confirmButtonText: "Great, Let's Go!",
+            customClass: "securityAlert",
+            allowEscapeKey: false,
+            html: true
+        }, function (isConfirm) {
+            if (!isConfirm)
+            {
+                window.top.location.href = "https://www.nooch.com/safe";
+            }
+        });
+    }
+    /* else if (isUpgradeToV3 == 'true')
 	{
 	    swal({
 	        title: "Security Upgrade Notice",
@@ -1350,7 +1309,7 @@ $(document).ready(function () {
 				window.top.location.href = "https://www.nooch.com/safe";
 			}
 		});		
-	}
+	}*/
 
 
 	/**** CREATING AUTO-COMPLETE LIST OF BANKS FOR SEARCHING ****/

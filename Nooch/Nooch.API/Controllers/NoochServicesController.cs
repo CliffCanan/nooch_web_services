@@ -2321,15 +2321,8 @@ namespace Nooch.API.Controllers
                 if (synapseBank != null)
                 {
                     // Now check this bank's status. 
-                    // CLIFF (10/7/15): If the user's ID is verified (after sending SSN info to Synapse), then consider the bank Verified as well
-                    if (memberEntity.IsVerifiedWithSynapse == true)
-                    {
-                        accountstatus = "Verified";
-                    }
-                    else
-                    {
-                        accountstatus = synapseBank.Status;
-                    }
+                    // CC (10/7/15): If the user's ID is verified (after sending SSN info to Synapse), then consider the bank Verified as well
+                    accountstatus = memberEntity.IsVerifiedWithSynapse == true ? "Verified" : synapseBank.Status;
                 }
 
                 // Create MemberDTO Object to return to the app
@@ -2738,22 +2731,20 @@ namespace Nooch.API.Controllers
         [ActionName("RegisterUserWithSynapseV3")]
         public synapseCreateUserV3Result_int RegisterUserWithSynapseV3(string memberId)
         {
+            synapseCreateUserV3Result_int res = new synapseCreateUserV3Result_int();
+            res.success = false;
+
             try
             {
                 MembersDataAccess mda = new MembersDataAccess();
-                // for testing
-                synapseCreateUserV3Result_int res = mda.RegisterUserWithSynapseV3(memberId);
-                //for live 
-                //synapseCreateUserV3Result_int res = mda.RegisterUserWithSynapseV3(memberId, false);
-
-                return res;
+                res = mda.RegisterUserWithSynapseV3(memberId);
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Controller -> RegisterUserWithSynapseV3 FAILED. [Exception: " + ex.ToString() + "]");
-
-                return null;
+                Logger.Error("Service Cntrlr -> RegisterUserWithSynapseV3 FAILED - Exception: [" + ex + "]");
             }
+
+            return res;
         }
 
 
@@ -2763,9 +2754,9 @@ namespace Nooch.API.Controllers
         {
             try
             {
-                Logger.Info("Service Cntrlr -> RegisterExistingUserWithSynapseV3 Initiated - MemberID: [" + input.memberId + "], " +
-                            "Name: [" + input.fullname + "], Email: [" + input.email +
-                            "Is ID Img Sent: [" + input.isIdImageAdded + "], CIP: [" + input.cip +
+                Logger.Info("Service Cntrlr -> RegisterExistingUserWithSynapseV3 Initiated - MemberID: [" + input.memberId +
+                            "], Name: [" + input.fullname + "], Email: [" + input.email +
+                            "], Is ID Img Sent: [" + input.isIdImageAdded + "], CIP: [" + input.cip +
                             "], FBID: [" + input.fbid + "], isRentScene: [" + input.isRentScene + "]");
 
                 MembersDataAccess mda = new MembersDataAccess();
@@ -2940,9 +2931,9 @@ namespace Nooch.API.Controllers
         [ActionName("SynapseV3AddNodeWithAccountNumberAndRoutingNumber")]
         public SynapseBankLoginV3_Response_Int SynapseV3AddNodeWithAccountNumberAndRoutingNumber(string MemberId, string bankNickName, string account_num, string routing_num, string accounttype, string accountclass)
         {
-            Logger.Info("Service Cntrlr -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber Initiated - MemberId: [" + MemberId +
-                        "], bankNickName: [" + bankNickName + "], routing_num: [" + routing_num +
-                        "], accounttype: [" + accounttype + "], accountclass: [" + accountclass + "]");
+            Logger.Info("Service Cntrlr -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber Initiated - MemberID: [" + MemberId +
+                        "], Bank Nick Name: [" + bankNickName + "], Routing #: [" + routing_num +
+                        "], Account #: [" + account_num + "], Type: [" + accounttype + "], Class: [" + accountclass + "]");
 
             SynapseBankLoginV3_Response_Int res = new SynapseBankLoginV3_Response_Int();
             res.Is_success = false;
@@ -3307,28 +3298,20 @@ namespace Nooch.API.Controllers
                     res.Is_success = false;
 
                     var errorCode = ((HttpWebResponse)we.Response).StatusCode;
+                    var resp = new StreamReader(we.Response.GetResponseStream()).ReadToEnd();
 
-                    Logger.Error("Service Cntrlr -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber ADD NODE FAILED - errorCode: [" +
-                                 errorCode.ToString() + "] WebException was: [" + we.ToString() + "]");
+                    JObject jsonFromSynapse = JObject.Parse(resp);
+                    Logger.Error("Service Cntrlr -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber FAILED - Synapse Response JSON: [" + jsonFromSynapse.ToString() + "]");
 
+                    var error_code = jsonFromSynapse["error_code"].ToString();
+                    var errorMsg = jsonFromSynapse["error"]["en"].ToString();
 
-                    if (errorCode != null)
+                    JToken error = jsonFromSynapse["error"];
+
+                    if (error != null)
                     {
-                        var resp = new StreamReader(we.Response.GetResponseStream()).ReadToEnd();
-                        JObject jsonFromSynapse = JObject.Parse(resp);
-
-                        JToken error = jsonFromSynapse["error"];
-
-                        if (error != null)
-                        {
-                            Logger.Error("Service Cntrlr -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber FAILED. Synapse MESSAGE was: [" + jsonFromSynapse["error"]["en"] + "]");
-                            res.errorMsg = jsonFromSynapse["error"]["en"].ToString();
-                        }
-                    }
-                    else
-                    {
-                        Logger.Error("Service Cntrlr -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber FAILED - No HTTP Status Code Received.");
-                        res.errorMsg = "Error #3398 - Sorry this is not more helpful :-(";
+                        res.errorMsg = errorMsg;
+                        Logger.Error("Service Cntrlr -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber FAILED. Synapse MESSAGE was: [" + errorMsg + "]");
                     }
 
                     return res;
@@ -3817,7 +3800,7 @@ namespace Nooch.API.Controllers
                     {
                         // Synapse Error could be:
                         // "Incorrect oauth_key/fingerprint"
-                        Logger.Error("Service Cntrlr -> SynapseBankLoginRequest FAILED - [Synapse Error Code: " + error_code + "]");
+                        Logger.Error("Service Cntrlr -> SynapseBankLoginRequest FAILED - Synapse Error Code: [" + error_code + "]");
                     }
                     if (!String.IsNullOrEmpty(res.errorMsg))
                     {

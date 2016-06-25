@@ -1,5 +1,8 @@
-﻿@{
+﻿@using Nooch.Common.Entities;
+
+@{
     Layout = null;
+    AddBankResult res = (AddBankResult)ViewData["OnLoaddata"];
 }
 
 <!DOCTYPE html>
@@ -30,11 +33,20 @@
     <script src="@Url.Content("~/js/sweetalert.min.js")"></script>
     <script src="@Url.Content("~/js/jquery.auto-complete.min.js")"></script>
 
-    <nav id="headerAlt" class="navbar navbar-default navbar-fixed-top hidden" role="navigation">
+    <nav id="headerAlt" class="navbar navbar-default navbar-fixed-top desk-only hidden" role="navigation">
         <div class="clearfix">
-            <a class="pull-left" href="https://www.nooch.com/" style="margin: 12px auto 12px !important;">
-                <img src="../Assets/Images/nooch-logo2.svg" class="center-block" alt="Rent Scene Logo" />
-            </a>
+            @if (res.isRs)
+            {
+                <a class="pull-left" href="https://www.rentscene.com/" style="margin: 12px auto 12px !important;">
+                    <img src="../Assets/Images/rentscene.png" class="center-block" alt="Rent Scene Logo" />
+                </a>
+            }
+            else
+            {
+                <a class="pull-left" href="https://www.nooch.com/" style="margin: 12px auto 12px !important;">
+                    <img src="../Assets/Images/nooch-logo2.svg" class="center-block" alt="Rent Scene Logo" />
+                </a>
+            }
             <div class="text-center" style="position: absolute; left: 10%; top: 0px; width: 80%;">
                 <h3 class="center-block f-25" style="font-family: 'Roboto', 'Open Sans', sans-serif">Link A Bank Account</h3>
             </div>
@@ -356,87 +368,88 @@
         </div>
 
         <div class="backdrop"></div>
-
-        <div class="modal fade" id="modal-selectBankWarning" role="dialog" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h4 class="modal-title"><span class="fa fa-exclamation-triangle pull-left"></span>Whoa Now</h4>
-                    </div>
-                    <div class="modal-body">
-                        <img src="@Url.Content("~/Assets/Images/bankPictures/bank.png")" class="modalContentImage">
-                        <p style="text-align: center; margin: 0;">Please select a bank first.</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-primary" data-dismiss="modal">Whoops, OK!</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="modal fade" id="modal-cancelAddBank" role="dialog" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h4 class="modal-title"><span class="fa fa-exclamation-triangle pull-left"></span>Cancel</h4>
-                    </div>
-                    <div class="modal-body">
-                        <p style="">Are you sure you want to cancel adding a bank account?</p>
-                        <p class="small"><span style="font-weight: bold">Note:</span> This account will not be connected to Nooch. You can re-start the process at any time.</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-default pull-left" data-dismiss="modal">No</button>
-                        <a href="http://support.nooch.com" type="button" class="btn btn-danger">Confirm Cancel</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="modal fade" id="modal-bankNotFound" role="dialog" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h4 class="modal-title"><span class="fa fa-exclamation-circle pull-left"></span>Bank Not Found</h4>
-                    </div>
-                    <div class="modal-body">
-                        <p>Oh no! We had trouble connecting with that bank.</p>
-                        <p>Please try again or if you continue to see this error we'd greatly appreciate hearing about it at <a href="mailto:support@nooch.com" style="font-weight: 500;">support@nooch.com</a>. We're very sorry for the frustration - thanks for your patience!</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="modal fade" id="modal-OtherError" role="dialog" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h4 class="modal-title"><span class="fa fa-frown-o pull-left"></span>Bank Account Error</h4>
-                    </div>
-                    <div class="modal-body regFntWght">
-                        <p id="par1">Oh no! We had trouble connecting with that bank.</p>
-                        <p id="par2">Please try again or if you continue to see this error we'd greatly appreciate hearing about it at <a href="mailto:support@nooch.com" style="font-weight: 500;">support@nooch.com</a>. We're very sorry for the frustration - thanks for your patience!</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <input type="hidden" id="idVer_Url" value="@Url.Action("idVerification", "Nooch")" />
-        <input type="hidden" id="MFALoginUrl" value="@Url.Action("MFALogin", "Nooch")" />
-        <input type="hidden" id="setDefaultBankUrl" value="@Url.Action("SetDefaultBank", "Nooch")" />
-
     </form>
+
+    <div class="modal fade" id="modal-selectBankWarning" role="dialog" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title"><span class="fa fa-exclamation-triangle pull-left"></span>Whoa Now</h4>
+                </div>
+                <div class="modal-body">
+                    <img src="@Url.Content("~/Assets/Images/bankPictures/bank.png")" class="modalContentImage">
+                    <p style="text-align: center; margin: 0;">Please select a bank first.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">Whoops, OK!</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modal-cancelAddBank" role="dialog" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title"><span class="fa fa-exclamation-triangle pull-left"></span>Cancel</h4>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to cancel adding a bank account?</p>
+                    <p class="small"><strong>Note:</strong> This account will not be connected. You can re-start the process at any time.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal">No</button>
+                    <a href="http://support.nooch.com" type="button" class="btn btn-danger">Confirm Cancel</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modal-bankNotFound" role="dialog" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title"><span class="fa fa-exclamation-circle pull-left"></span>Bank Not Found</h4>
+                </div>
+                <div class="modal-body">
+                    <p>Oh no! We had trouble connecting with that bank.</p>
+                    <p>Please try again or if you continue to see this error we'd greatly appreciate hearing about it at <a href="mailto:support@nooch.com" style="font-weight: 500;">support@nooch.com</a>. We're very sorry for the frustration - thanks for your patience!</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modal-OtherError" role="dialog" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title"><span class="fa fa-frown-o pull-left"></span>Bank Account Error</h4>
+                </div>
+                <div class="modal-body regFntWght">
+                    <p id="par1">Oh no! We had trouble connecting with that bank.</p>
+                    <p id="par2">Please try again or if you continue to see this error we'd greatly appreciate hearing about it at <a href="mailto:support@nooch.com" style="font-weight: 500;">support@nooch.com</a>. We're very sorry for the frustration - thanks for your patience!</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <input type="hidden" id="idVer_Url" value="@Url.Action("idVerification", "Nooch")" />
+    <input type="hidden" id="MFALoginUrl" value="@Url.Action("MFALogin", "Nooch")" />
+    <input type="hidden" id="setDefaultBankUrl" value="@Url.Action("SetDefaultBank", "Nooch")" />
+    <input type="hidden" id="memId" value="@res.memId" />
+    <input type="hidden" id="redUrl" value="@res.redUrl" />
+    <input type="hidden" id="isRs" value="@res.isRs.ToString().ToLower()" />
+    <input type="hidden" id="isLl" value="@res.isLandlord.ToString().ToLower()" />
 
     <script type="text/javascript">
 
-        // Add a script element as a child of the body
-        function downloadJSAtOnload()
-        {
+        function downloadJSAtOnload() {
             var element = document.createElement("script");
             element.src = "@Url.Content("~/js/app/addBank.js")";
             document.body.appendChild(element);

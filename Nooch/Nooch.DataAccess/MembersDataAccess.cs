@@ -1746,7 +1746,7 @@ namespace Nooch.DataAccess
         /// <returns></returns>
         public synapseCreateUserV3Result_int RegisterUserWithSynapseV3(string memberId)
         {
-            Logger.Info("MDA -> RegisterUserWithSynapseV3 Initiated - [Member: " + memberId + "]");
+            Logger.Info("MDA -> RegisterUserWithSynapseV3 Initiated - Member: [" + memberId + "]");
 
             synapseCreateUserV3Result_int res = new synapseCreateUserV3Result_int();
             res.success = false;
@@ -2259,11 +2259,11 @@ namespace Nooch.DataAccess
 
                     if (save)
                     {
-                        Logger.Info("MDA -> RegisterUserWithSynapseV3 SUCCESS - [errorMsg: " + res.errorMsg + "], [user_id: " + res.user_id + "]");
+                        Logger.Info("MDA -> RegisterUserWithSynapseV3 SUCCESS - Synapse User ID: [" + res.user_id + "], Permission: [" + res.user.permission + "]");
 
                         if (noochMember.IsVerifiedWithSynapse == true)
                         {
-                            Logger.Info("MDA -> RegisterUserWithSynapseV3 - ** ID Already Verified ** - [MemberID: " + memberId + "]");
+                            Logger.Info("MDA -> RegisterUserWithSynapseV3 - ** ID Already Verified ** - MemberID: [" + memberId + "]");
                             res.ssn_verify_status = "id already verified";
                         }
                         else if (res.user.permission == "SEND-AND-RECEIVE") // Probobly wouldn't ever be this b/c I don't think Synapse ever returns this for brand new users
@@ -2272,7 +2272,7 @@ namespace Nooch.DataAccess
 
                             try
                             {
-                                Logger.Info("MDA -> RegisterUserWithSynapseV3 - ** ID Already Verified (Case 2) ** - [MemberID: " + memberId + "]");
+                                Logger.Info("MDA -> RegisterUserWithSynapseV3 - ** ID Already Verified (Case 2) ** - MemberID: [" + memberId + "]");
 
                                 noochMember.IsVerifiedWithSynapse = true;
                                 noochMember.TransferLimit = "5000";
@@ -2283,7 +2283,7 @@ namespace Nooch.DataAccess
                             catch (Exception ex)
                             {
                                 Logger.Error("MDA -> RegisterUserWithSynapseV3 - IsVerifiedWithSynapse is false, but Synapse returned Permission of \"SEND-AND-RECEIVE\" - " +
-                                             "[Exception: " + ex + "]");
+                                             "Exception: [" + ex + "]");
                             }
 
                             #endregion User Not Previously Verified But Got Send-Receive Permissions This Time
@@ -2292,14 +2292,14 @@ namespace Nooch.DataAccess
                         {
                             try
                             {
-                                Logger.Info("MDA -> RegisterUserWithSynapseV3 - ID NOT Already Verified - Checking if user submitted SSN or FB Login - [MemberID: " + memberId + "]");
+                                Logger.Info("MDA -> RegisterUserWithSynapseV3 - ID NOT Already Verified - Checking if user submitted SSN or FB Login - MemberID: [" + memberId + "]");
 
                                 // Check whether the user provided an SSN or Facebook Login
                                 if ((!String.IsNullOrEmpty(noochMember.SSN) && CommonHelper.GetDecryptedData(noochMember.SSN).Length > 4) ||
                                     //(!String.IsNullOrEmpty(noochMember.FacebookUserId) && noochMember.FacebookUserId.Length > 5) ||
                                      !String.IsNullOrEmpty(noochMember.VerificationDocumentPath))
                                 {
-                                    Logger.Info("MDA -> RegisterUserWithSynapseV3 - About to send Docs (SSN, FBID, and/or ID Img) to SynapseV3 - [SSN: " + noochMember.SSN +
+                                    Logger.Info("MDA -> RegisterUserWithSynapseV3 - About to send Docs (SSN, FBID, and/or ID Img) to SynapseV3 - SSN: [" + noochMember.SSN +
                                                 "], FBID: [" + noochMember.FacebookUserId + "], VerificationDocPath: [" + noochMember.VerificationDocumentPath + "]");
 
                                     // (CC - 6/1/16): UPDATED TO USE NEW METHOD FOR SENDING *ALL* DOCS AT THE SAME TIME
@@ -2358,7 +2358,7 @@ namespace Nooch.DataAccess
                             }
                             catch (Exception ex)
                             {
-                                Logger.Error("MDA -> RegisterUserWithSynapseV3 - Attempted sendUserSsnInfoToSynapseV3 but got Exception: [" + ex.Message + "]");
+                                Logger.Error("MDA -> RegisterUserWithSynapseV3 FAILED - Attempted sendUserSsnInfoToSynapseV3 but got Exception: [" + ex + "]");
                             }
                         }
                     }
@@ -3453,21 +3453,22 @@ namespace Nooch.DataAccess
 
                         StringBuilder st = new StringBuilder("<p><strong>This user's Nooch Account information is:</strong></p>" +
                                               "<table border='1' cellpadding='5' style='border-collapse:collapse;'>" +
+                                              "<tr><td><strong>Name:</strong></td><td><strong>" + namearray[0] + " " + lastNameUnEncr + "</strong></td></tr>" +
                                               "<tr><td><strong>MemberID:</strong></td><td>" + member.MemberId + "</td></tr>" +
                                               "<tr><td><strong>Nooch_ID:</strong></td><td>" + member.Nooch_ID + "</td></tr>" +
-                                              "<tr><td><strong>Name:</strong></td><td>" + namearray[0] + " " + lastNameUnEncr + "</td></tr>" +
                                               "<tr><td><strong>Email Address:</strong></td><td>" + userEmail + "</td></tr>" +
                                               "<tr><td><strong>Phone #:</strong></td><td>" + userPhone + "</td></tr>" +
                                               "<tr><td><strong>Address:</strong></td><td>" + address + ", " + cityFromGoogle + ", " + stateAbbrev + ", " + zip + "</td></tr>" +
                                               "<tr><td><strong>SSN:</strong></td><td>" + ssn + "</td></tr>" +
                                               "<tr><td><strong>isIdImageAdded:</strong></td><td>" + isIdImageAdded +
+                                              "<tr><td><strong>Invite Code Used:</strong></td><td>" + inviteCode +
                                               "</td></tr></table><br/><br/>- Nooch Bot</body></html>");
 
                         // Notify Nooch Admin
                         StringBuilder completeEmailTxt = new StringBuilder();
                         string s = "<html><body><h2>New Nooch User Created</h2><p>The following person just created a Nooch account:</p>" +
                                    st.ToString() +
-                                   "<br/><br/><small>This email was generated automatically in [MDA -> RegisterNonNoochUserWithSynapse]</small></body></html>";
+                                   "<br/><br/><small><strong>This email was generated automatically in: [MDA -> RegisterNonNoochUserWithSynapse]</strong></small></body></html>";
 
                         completeEmailTxt.Append(s);
 
@@ -3493,7 +3494,7 @@ namespace Nooch.DataAccess
                     }
                     catch (Exception ex)
                     {
-                        Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 - createSynapseUser FAILED - [Exception: " + ex.Message + "]");
+                        Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 - createSynapseUser FAILED - Exception: [" + ex.Message + "]");
                     }
 
                     if (createSynapseUserResult != null)
@@ -3505,23 +3506,20 @@ namespace Nooch.DataAccess
                         if (createSynapseUserResult.success == true && !String.IsNullOrEmpty(createSynapseUserResult.oauth.oauth_key))
                         {
                             Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - Synapse User created SUCCESSFULLY (LN: 3462) - " +
-                                        "[oauth_consumer_key: " + createSynapseUserResult.oauth.oauth_key + "]. Now attempting to save in Nooch DB.");
+                                        "oauth_consumer_key: [" + createSynapseUserResult.oauth.oauth_key + "]. Now attempting to save in Nooch DB.");
 
                             res = createSynapseUserResult;
 
                             if (!String.IsNullOrEmpty(res.reason) && res.reason.IndexOf("Email already registered") > -1)
                             {
                                 res.reason = "User already existed, successfully received consumer_key.";
-                                Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 SUCCESS -> [Reason: " + res.reason + "], [Email: " + userEmail + "], [user_id: " + res.user_id + "]");
+                                Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 SUCCESS -> Reason: [" + res.reason + "], Email: [" + userEmail + "], user_id: [" + res.user_id + "]");
                             }
                             else
                             {
                                 // EXPECTED OUTCOME for most users creating a new Synapse Account.
-                                Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 SUCCESS - [Email: " + userEmail + "], [user_id: " + createSynapseUserResult.user_id +
+                                Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 SUCCESS - Email: [" + userEmail + "], user_id: [" + createSynapseUserResult.user_id +
                                             "]. Now about to attempt to send SSN info to Synapse.");
-
-                                // Now attempt to verify user's ID by sending SSN, DOB, name, & address to Synapse
-                                // UPDATE (April 2016): No need of the following code any more as this has already been done in RegisterUserWithSynapseV3 method
                             }
 
                             createUserV3Result_oauth oath = new createUserV3Result_oauth();
@@ -3576,7 +3574,7 @@ namespace Nooch.DataAccess
                                     {
                                         // (7/27/15) Cliff: We should use 'force_create'='no' in the /user/create call to Synapse. Then Synapse will return the user's Oauth key if found.
                                         Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 Failed - User already registered with Synapse BUT not found in Nooch DB - " +
-                                                     "[transId: " + transId + "] ");
+                                                     "TransID: [" + transId + "] ");
                                         res.reason = "Account already registered, but not found in Nooch DB.";
                                     }
                                 }

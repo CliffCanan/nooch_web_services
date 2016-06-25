@@ -2894,8 +2894,8 @@ namespace Nooch.Common
                 {
                     res.wereUserDetailsFound = true;
 
-                    //Logger.Info("Common Helper -> GetSynapseBankAndUserDetailsforGivenMemberId - Checkpoint #1 - " +
-                    //            "SynapseCreateUserResults Record Found! - MemberID: [" + memberId + "] - Now about to check if Synapse OAuth Key is still valid.");
+                    Logger.Info("Common Helper -> GetSynapseBankAndUserDetailsforGivenMemberId - Checkpoint #1 - " +
+                                "SynapseCreateUserResults Record Found - MemberID: [" + memberId + "], Access_Token: [" + createSynapseUserObj.access_token + "] - Now about to check if Synapse OAuth Key is still valid.");
 
                     // CLIFF (10/3/15): ADDING CALL TO NEW METHOD TO CHECK USER'S STATUS WITH SYNAPSE, AND REFRESHING OAUTH KEY IF NECESSARY
                     synapseV3checkUsersOauthKey checkTokenResult = refreshSynapseV3OautKey(createSynapseUserObj.access_token);
@@ -4673,7 +4673,7 @@ namespace Nooch.Common
 
         public static suggestedUsers GetSuggestedUsers(string memberId)
         {
-            Logger.Info("Common Helper - GetSuggestedUsers - MemberID: [" + memberId + "]");
+            Logger.Info("Common Helper -> GetSuggestedUsers - MemberID: [" + memberId + "]");
 
             suggestedUsers suggestedUsers = new suggestedUsers();
             suggestedUsers.success = false;
@@ -4689,16 +4689,16 @@ namespace Nooch.Common
                 {
                     var transactions = new List<Transaction>();
 
-                    transactions = _dbContext.Transactions.Where(trans =>
-                                                                         trans.SenderId == id ||
-                                                                         trans.RecipientId == id ||
-                                                                         trans.InvitationSentTo == member.UserName ||
-                                                                         trans.InvitationSentTo == member.UserNameLowerCase)
-                                                                         .OrderByDescending(r => r.TransactionDate).Take(25).ToList();
+                    transactions = _dbContext.Transactions.Where(trans => trans.TransactionStatus == "Success" &&
+                                                                         (trans.SenderId == id ||
+                                                                          trans.RecipientId == id))
+                                                                          .OrderByDescending(r => r.TransactionDate).Take(30).ToList();
 
                     if (transactions != null && transactions.Count > 0)
                     {
                         int i = 0;
+
+                        #region Loop Through Transaction List
 
                         foreach (var trans in transactions)
                         {
@@ -4728,8 +4728,7 @@ namespace Nooch.Common
                                 // Check if this user has already been added to the Array
                                 bool keepGoing = true;
 
-                                if (i > 0) //suggestedUsers.suggestions[0] != null &&
-                                //suggestedUsers.suggestions.Length > 0)
+                                if (i > 0)
                                 {
                                     foreach (suggestions s in suggestedUsers.suggestions)
                                     {
@@ -4756,24 +4755,31 @@ namespace Nooch.Common
                                     imgUrl = otherUser.Photo
                                 };
 
-                                suggestedUsers.suggestions.Add( suggestion);
-
-                                //if (i == 6) break;
+                                suggestedUsers.suggestions.Add(suggestion);
 
                                 i++;
                             }
                             catch (Exception ex)
                             {
-                                Logger.Error("Common Helper - GetSuggestedUsers - EXCEPTION inside FOREACH loop - [" + ex.Message + "]");
+                                Logger.Error("Common Helper -> GetSuggestedUsers - EXCEPTION inside FOREACH loop - [" + ex.Message + "]");
                             }
                         }
 
-                        Logger.Info("Common Helper - GetSuggestedUsers SUCCESS - COUNT: [" + suggestedUsers.suggestions.Count + "], MemberID: [" + memberId + "]");
+                        #endregion Loop Through Transaction List
+
+                        Logger.Info("Common Helper -> GetSuggestedUsers SUCCESS - COUNT: [" + suggestedUsers.suggestions.Count + "], MemberID: [" + memberId + "]");
 
                         suggestedUsers.success = true;
                         suggestedUsers.msg = "Found [" + suggestedUsers.suggestions.Count.ToString() + "]";
-                        return suggestedUsers;
                     }
+                    else
+                    {
+                        suggestedUsers.msg = "No transactions found";
+                    }
+                }
+                else
+                {
+                    suggestedUsers.msg = "Member not found";
                 }
             }
             catch (Exception ex)
@@ -4782,7 +4788,7 @@ namespace Nooch.Common
                 suggestedUsers.msg = "Exception: [" + ex.Message + "]";
             }
 
-            return new suggestedUsers();
+            return suggestedUsers;
         }
     }
 }

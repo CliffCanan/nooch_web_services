@@ -119,6 +119,7 @@
     <Compile Include="Entities\ResultPayRequest.cs" />
     <Compile Include="Entities\ResultPayRequestComplete.cs" />
     <Compile Include="Entities\ResultResetPassword.cs" />
+    <Compile Include="Entities\AddBank.cs" />
     <Compile Include="Entities\StringResult.cs" />
     <Compile Include="Entities\CancelTransactionAtSynapseResult.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\CheckSynapseBankDetails.cs" />

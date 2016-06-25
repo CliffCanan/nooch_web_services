@@ -1134,17 +1134,6 @@ html.landlord {overflow-y: visible;}
 
     .addBank-container { margin: 10px auto 30px; }
 
-    .addBank-instructions {
-        font-size: 18px;
-        letter-spacing: .2px;
-        box-shadow: 2px 6px 12px -4px rgba(0,0,0,.35);
-        position: fixed;
-        right: 2.5%;
-        max-width: 365px;
-        top: 26%;
-        padding: 10px;
-    }
-
     #bankLogin .addBank-instructions {
         position: static;
     }
@@ -1194,6 +1183,19 @@ html.landlord {overflow-y: visible;}
     }
 
     .encryption-notice { left: 9%; width: 82%; }
+}
+
+@media only screen and (min-width: 1300px) {
+    .addBank-instructions {
+        font-size: 18px;
+        letter-spacing: .2px;
+        box-shadow: 2px 6px 12px -4px rgba(0,0,0,.35);
+        position: fixed;
+        right: 2.5%;
+        max-width: 365px;
+        top: 26%;
+        padding: 10px;
+    }
 }
 
 
@@ -1334,39 +1336,6 @@ html.landlord {overflow-y: visible;}
   * Based on the "Sort Switches / Toggles (PSD)" by Ormal Clarck
   * http://www.premiumpixels.com/freebies/sort-switches-toggles-psd/
   */
-  .switch-candy {
-    background-color: #2d3035;
-    border-radius: 3px;
-    color: #fff;
-    font-weight: bold;
-    text-align: center;
-    text-shadow: 1px 1px 1px #191b1e;
-    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.3), 0 1px 0 rgba(255, 255, 255, 0.2);
-  }
-  .switch-candy label {
-    color: #fff;
-    -webkit-transition: color 0.2s ease-out;
-    -moz-transition: color 0.2s ease-out;
-    transition: color 0.2s ease-out;
-  }
-  .switch-candy input:checked + label {
-    color: #333;
-    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
-  }
-  .switch-candy a {
-    border: 1px solid #333;
-    background-color: #70c66b;
-    border-radius: 3px;
-    background-image: -webkit-linear-gradient(top, rgba(255, 255, 255, 0.2), rgba(0, 0, 0, 0));
-    background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.2), rgba(0, 0, 0, 0));
-    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.45);
-  }
-  .switch-candy > span {
-    color: #333;
-    text-shadow: none;}
-  .switch-candy span {color: #fff;}
-  .switch-candy.switch-candy-blue a {background-color: #38a3d4;}
-  .switch-candy.switch-candy-yellow a {background-color: #f5e560; }
 
 /** Switch iOS Theme **/
 .switch-ios.switch-light {
