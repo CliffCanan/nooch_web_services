@@ -668,7 +668,6 @@ namespace Nooch.DataAccess
 
             try
             {
-
                 var TransId = Utility.ConvertToGuid(TransactionId);
                 var MemId = Utility.ConvertToGuid(MemberId);
 
@@ -677,12 +676,9 @@ namespace Nooch.DataAccess
                 {
                     #region Requests - Both Types
 
-
                     var trans = _dbContext.Transactions.FirstOrDefault(m => m.Member1.MemberId == MemId && m.TransactionId == TransId
                         && m.TransactionStatus == "Pending" && m.TransactionType == "T3EMY1WWZ9IscHIj3dbcNw=="
                         );
-
-
 
                     if (trans != null)
                     {
@@ -691,16 +687,13 @@ namespace Nooch.DataAccess
                         #region Setup Common Variables
 
                         string fromAddress = Utility.GetValueFromConfig("transfersMail");
-
                         string senderFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member.FirstName));
                         string senderLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member.LastName));
-
                         string payLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
                                                        "Nooch/payRequest?TransactionId=" + trans.TransactionId);
 
                         string s22 = trans.Amount.ToString("n2");
                         string[] s32 = s22.Split('.');
-
                         string memo = "";
                         if (!string.IsNullOrEmpty(trans.Memo))
                         {
@@ -724,7 +717,6 @@ namespace Nooch.DataAccess
                             }
                         }
 
-
                         bool isForRentScene = false;
 
                         if (trans.Member.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49") // Rent Scene's account
@@ -732,15 +724,12 @@ namespace Nooch.DataAccess
                             isForRentScene = true;
                             senderFirstName = "Rent Scene";
                             senderLastName = "";
-
                             payLink = payLink + "&rs=1";
                         }
 
                         #endregion Setup Common Variables
 
-
                         #region RequestMoneyReminderToNewUser
-
                         // Now check if this transaction was sent via Email or Phone Number (SMS)
                         if (trans.InvitationSentTo != null) // 'InvitationSentTo' field only used if it's an Email Transaction
                         {
@@ -846,9 +835,7 @@ namespace Nooch.DataAccess
 
                             #endregion Shortening URLs for SMS
 
-
                             #region Sending SMS
-
                             try
                             {
                                 string SMSContent = "Just a reminder, " + senderFirstName + " " + senderLastName + " requested $" +
@@ -857,9 +844,7 @@ namespace Nooch.DataAccess
                                                       ". Tap here to reject: " + RejectShortLink;
 
                                 Utility.SendSMS(CommonHelper.GetDecryptedData(trans.PhoneNumberInvited), SMSContent);
-
                                 Logger.Info("TDA -> SendTransactionReminderEmail -> Request Reminder SMS sent to [" + CommonHelper.GetDecryptedData(trans.PhoneNumberInvited) + "].");
-
                                 return "Reminder sms sent successfully.";
                             }
                             catch (Exception)
@@ -970,9 +955,7 @@ namespace Nooch.DataAccess
                 else if (ReminderType == "InvitationReminderToNewUser")
                 {
                     #region InvitationReminderToNewUser
-
-
-
+                    
                     var trans = _dbContext.Transactions.FirstOrDefault(m => m.Member1.MemberId == MemId
                         && m.TransactionId == TransId && m.TransactionStatus == "Pending" && (m.TransactionType == "5dt4HUwCue532sNmw3LKDQ==" || m.TransactionType == "DrRr1tU1usk7nNibjtcZkA==")
                         );
@@ -1162,7 +1145,6 @@ namespace Nooch.DataAccess
                 return "Error";
             }
         }
-
         #endregion
 
 

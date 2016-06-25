@@ -110,6 +110,60 @@ $(document).ready(function (e)
             }
         });
     });
+
+    $(".btnRemind").click(function (e) {
+        var btnClicked = $(this);
+        var transId = btnClicked.attr('data-val');
+        var UserType = btnClicked.attr('data-typ') == "" ? "new" : "existing";
+        var memid = $('#memid').val();
+
+        console.log("TransID: [" + transId + "], MemberID: [" + memid + "]");
+
+        swal({
+            title: "Are you sure?",
+            text: "Do you want to Send Reminder for this transaction?",
+            type: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#DD6B55",
+            confirmButtonText: "Yes - Cancel",
+        }, function (isConfirm) {
+            if (isConfirm) {
+                var url = "paymentReminder";
+                var data = {};
+                data.TransId = transId;
+                data.UserType = "EXISTING";
+                data.memberId = memid;
+
+                $.blockUI({
+                    message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Sending reminder...</span>',
+                    css: {
+                        border: 'none',
+                        padding: '25px 8px 20px',
+                        backgroundColor: '#000',
+                        '-webkit-border-radius': '14px',
+                        '-moz-border-radius': '14px',
+                        'border-radius': '14px',
+                        opacity: '.8',
+                        width: '270px',
+                        margin: '0 auto',
+                        color: '#fff'
+                    }
+                });
+
+                $.post(url, data, function (result) {
+                    if (result.success == true) {
+                        toastr.success('Reminder sent successfully');
+                        swal("Reminder Sent", result.resultMsg, "success");
+                                                
+                        //$("#" + transId + " ~ .actions").html("");
+                    }
+                    else {
+                        toastr.error(result.resultMsg, 'Error');
+                    }
+                });
+            }
+        });
+    });
 });
 
 function showLocationModal(lati, longi, stte)
