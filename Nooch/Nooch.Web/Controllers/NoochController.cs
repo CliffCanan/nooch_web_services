@@ -404,7 +404,7 @@ namespace Nooch.Web.Controllers
                     //    Response could be: 1.) array[] of banks,  2.) Question-based MFA,  3.) Code-based MFA, or  4.) Failure/Error
 
                     string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-                    string serviceMethod = "SynapseV3AddNode?MemberId=" + inp.memberid + "&BnkName=" + inp.bankname + "&BnkUserName=" + inp.username +
+                    string serviceMethod = "SynapseV3AddNodeBankLogin?MemberId=" + inp.memberid + "&BnkName=" + inp.bankname + "&BnkUserName=" + inp.username +
                                            "&BnkPw=" + inp.password;
 
                     SynapseV3BankLoginResult_ServiceRes bankLoginResult = ResponseConverter<SynapseV3BankLoginResult_ServiceRes>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
@@ -1506,7 +1506,8 @@ namespace Nooch.Web.Controllers
                 }
                 else if (regUserResponse.success.ToLower() == "false")
                 {
-                    Logger.Error("PayRequest Code Behind -> RegisterUserWithSynpForPayRequest FAILED - SERVER RETURNED 'success' = 'false' - TransID: [" + transId + "]");
+                    Logger.Error("PayRequest Code Behind -> RegisterUserWithSynpForPayRequest FAILED - Reason: [" + regUserResponse.reason +
+                                 "], TransID: [" + transId + "]");
                     res.reason = regUserResponse.reason;
                 }
                 else

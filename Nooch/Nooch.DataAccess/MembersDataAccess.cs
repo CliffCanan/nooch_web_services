@@ -2970,14 +2970,14 @@ namespace Nooch.DataAccess
             // What's the plan? -- Store new Nooch member, then create Synpase user, then check if user supplied a (is password.Length > 0)
             // then store data in new added field in SynapseCreateUserResults table for later use
 
-            Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 Initiated - [Name: " + userName +
+            Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 Initiated - Name: [" + userName +
                         "], Email: [" + userEmail + "], Phone: [" + userPhone +
                         "], DOB: [" + dob + "], SSN: [" + ssn +
                         "], Address: [" + address + "], ZIP: [" + zip +
                         "], IP: [" + ip + "], Fngprnt: [" + fngprnt +
                         "], TransId: [" + transId + "], CIP: [" + cip +
                         "], FBID: [" + fbid + "], isRentScene: [" + isRentScene +
-                        "], isIdImageAdded: " + isIdImageAdded + "]");
+                        "], isIdImageAdded: [" + isIdImageAdded + "]");
 
             synapseCreateUserV3Result_int res = new synapseCreateUserV3Result_int();
             res.success = false;
@@ -4772,7 +4772,9 @@ namespace Nooch.DataAccess
                                     }
                                     else
                                     {
-                                        Logger.Error("MDA -> SynapseV3MFABankVerify (No MFA Again) ERROR: allbanksParsedResult was NULL for: [" + MemberId + "]");
+                                        var error = "MDA -> SynapseV3MFABankVerify (No MFA Again) ERROR: allbanksParsedResult was NULL for: [" + MemberId + "]";
+                                        Logger.Error(error);
+                                        CommonHelper.notifyCliffAboutError(error);
                                         res.errorMsg = "Error occured while parsing banks list.";
                                     }
                                 }

@@ -26,16 +26,15 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
 
     public class SynapseIndividualNodeClass
     {
-        public string account_class { get; set; }
-        public string account_num { get; set; }
-        public string routing_num { get; set; }
-        public int account_type { get; set; }
-        public string bank_name { get; set; }
-        public string date { get; set; }
-        public string oid { get; set; }
         public bool is_active { get; set; }
         public bool is_verified { get; set; }
         public bool mfa_verifed { get; set; }
+        public int account_type { get; set; }
+        public string account_class { get; set; }
+        public string account_num { get; set; }
+        public string routing_num { get; set; }
+        public string bank_name { get; set; }
+        public string oid { get; set; }
         public string name_on_account { get; set; }
         public string nickname { get; set; }
     }

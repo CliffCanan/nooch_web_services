@@ -745,14 +745,12 @@ function submitManualBank() {
 			    isManual = true;
 
 			    // Check if Additional ID Verification Questions Are Needed
-			    // CC (6/22/16): As of V3.0 thiswon't ever happen b/c users must verify their ID
+			    // CC (6/22/16): As of V3.0 this won't ever happen b/c users must verify their ID
                 //               BEFORE adding a bank now. So they would have already answered these.
 			    if (bnkManualResult.ssn_verify_status != null &&
                     bnkManualResult.ssn_verify_status.indexOf("additional") > -1)
 			    {
-			        // Will need to send user to answer ID verification questions
 			        console.log("Need to answer ID verification questions");
-
 			        sendToIdVerQuestions = true;
 			    }
 
@@ -781,22 +779,26 @@ function submitManualBank() {
 
 				$('#bankLogin').velocity("callout.shake");
 
-				var errorText = "Something went wrong - very sorry about this. We hate it when something breaks! Please try again or contact <a href='mailto:" + SUPPORTLINK +
-				                "' target='_blank'>" + SUPPORTLINK + "</a> if the problem happens again." +
-				                "<small class='show' style='margin-top:12px'>Error Reference: <strong>#SMB-1</strong></small>";
+				var errorText = "";
 
 				if (bnkManualResult.ERROR_MSG.indexOf('Currently we are unable to login to') >= 0 ||
 				    bnkManualResult.ERROR_MSG.indexOf('Please try again later') >= 0)
 				{
-				    errorText: "Something went wrong - terrible sorry about this. We hate it when something breaks! Please try again or contact <a href='mailto:" + SUPPORTLINK +
-				               "' target='_blank'>" + SUPPORTLINK + "</a> if the problem happens again." +
-				               "<small class='show' style='margin-top:12px'>Error Reference: <strong>#SMB-2</strong></small>";
+				    errorText = "Something went wrong - terrible sorry about this. We hate it when something breaks! Please try again or contact <a href='mailto:" + SUPPORTLINK +
+				                "' target='_blank'>" + SUPPORTLINK + "</a> if the problem happens again." +
+				                "<small class='show' style='margin-top:12px'>Error Reference: <strong>#SMB-2</strong></small>";
 				}
 				else if (bnkManualResult.ERROR_MSG.indexOf('error occured at server') >= 0)
 				{
-				    errorText: "Something went wrong - extremely sorry about this. We hate it when something breaks! Please try again or contact <a href='mailto:" + SUPPORTLINK +
-				               "' target='_blank'>" + SUPPORTLINK + "</a> if the problem happens again." +
-				               "<small class='show' style='margin-top:12px'>Error Reference: <strong>#SMB-3</strong></small>";
+				    errorText = "Something went wrong - extremely sorry about this. We hate it when something breaks! Please try again or contact <a href='mailto:" + SUPPORTLINK +
+				                "' target='_blank'>" + SUPPORTLINK + "</a> if the problem happens again." +
+				                "<small class='show' style='margin-top:12px'>Error Reference: <strong>#SMB-3</strong></small>";
+				}
+				else
+				{
+				    errorText = "Something went wrong - very sorry about this. We hate it when something breaks! Please try again or contact <a href='mailto:" + SUPPORTLINK +
+				                "' target='_blank'>" + SUPPORTLINK + "</a> if the problem happens again." +
+				                "<small class='show' style='margin-top:12px'>Error Reference: <strong>#SMB-1</strong></small>";
 				}
 
 				swal({
