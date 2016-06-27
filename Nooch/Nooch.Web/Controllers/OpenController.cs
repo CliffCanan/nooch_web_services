@@ -106,7 +106,7 @@ namespace Nooch.Web.Controllers
                     catch (Exception ex)
                     {
                         Logger.Error("OpenController-> VerifyPhoneNumber FAILED -> EXCEPTION on checking if this user is a TENANT - " +
-                                     "MemberID: [" + memberId + "], [Exception: " + ex + "]");
+                                     "MemberID: [" + memberId + "], Exception: [" + ex + "]");
                         isOk = false;
                     }
 
@@ -116,22 +116,22 @@ namespace Nooch.Web.Controllers
                     {
                         Utility.SendSMS(to, "Thanks, " + firstName + "! Your phone number has been verified - have a great day!");
 
-                        Logger.Info("OpenController-> VerifyPhoneNumber -> Success: Response received from user successfully & Phone is now Verified - " +
+                        Logger.Info("OpenController -> VerifyPhoneNumber -> Success: Response received from user successfully & Phone is now Verified - " +
                                     "Phone #: [" + memberPhone + "], " +
                                     "Name: " + firstName + " " + lastName + "], " +
                                     "MemberID: [" + memberId + "]");
                     }
                     else
                     {
-                        Logger.Error("WebHook Cntrlr -> VerifyPhoneNumber FAILED - Error #277. [Phone #: " + memberPhone + "], " +
-                                     "[Name: " + firstName + " " + lastName + "],  [MemberId: " + memberId + "]");
+                        Logger.Error("OpenController Cntrlr -> VerifyPhoneNumber FAILED - Phone #: [" + memberPhone + "], " +
+                                     "Name: [" + firstName + " " + lastName + "], MemberID: [" + memberId + "]");
 
                         Utility.SendSMS(to, "Whoops, something went wrong. Please try again or contact support@nooch.com for help.");
                     }
                 }
                 else
                 {
-                    Logger.Error("SMSResponse -> FAILED --> Empty message or invalid format data received.");
+                    Logger.Error("OpenController -> VerifyPhoneNumber FAILED -> Empty message or invalid format data received.");
                 }
             }
             return View();

@@ -2360,7 +2360,8 @@ namespace Nooch.API.Controllers
                     IsVerifiedWithSynapse = memberEntity.IsVerifiedWithSynapse,
                     DateCreatedString = memberEntity.DateCreated == null ? "" : Convert.ToDateTime(memberEntity.DateCreated).ToString("MM/dd/yyyy"),
                     DeviceToken = memberEntity.DeviceToken,
-                    fngrprnt = !String.IsNullOrEmpty(memberEntity.UDID1) ? memberEntity.UDID1 : null
+                    fngrprnt = !String.IsNullOrEmpty(memberEntity.UDID1) ? memberEntity.UDID1 : null,
+                    isRs = memberEntity.isRentScene ?? false
                 };
 
                 if (memberEntity.Type == "Landlord")
@@ -3195,22 +3196,23 @@ namespace Nooch.API.Controllers
 
                                 _dbContext.Entry(sbom).Reload();
 
-                                var firstName = CommonHelper.GetDecryptedData(noochMember.FirstName);
-                                var lastName = CommonHelper.GetDecryptedData(noochMember.LastName);
-                                var accountNum = "**** - " + account_num.Substring(account_num.Length - 4);
+                                string firstName = CommonHelper.GetDecryptedData(noochMember.FirstName);
+                                string lastName = CommonHelper.GetDecryptedData(noochMember.LastName);
+                                string accountNum = "**** - " + account_num.Substring(account_num.Length - 4);
+                                string verifyLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
+                                                    "Nooch/MicroDepositsVerification?mid=" + MemberId);
 
                                 var templateToUse = noochMember.isRentScene == true ? "MicroDepositNotification" : "MicroDepositNotification_RentScene";
 
                                 var tokens = new Dictionary<string, string>
 	                                        {
                                                 {Constants.PLACEHOLDER_FIRST_NAME, firstName},
-	                                            {Constants.PLACEHOLDER_FRIEND_FIRST_NAME, firstName + " " + lastName},
                                                 {"$BankName$", bankNickName},
 	                                            {"$BankRouting$", routing_num},
 	                                            {"$BankAccountNum$", accountNum},
                                                 {"$BankType$", accounttype},
 	                                            {"$BankClass$", accountclass},
-                                                {"$DateAdded$", DateTime.Now.ToString("MMM dd, yyyy")}
+	                                            {"$PayLink$", verifyLink}
 	                                        };
 
                                 string fromAddress = Utility.GetValueFromConfig("transfersMail");

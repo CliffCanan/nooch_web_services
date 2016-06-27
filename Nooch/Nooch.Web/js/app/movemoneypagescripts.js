@@ -51,9 +51,8 @@ $(document).ready(function () {
     if (FOR_RENTSCENE == "true")
     {
         alertBodyOpening = "Rent Scene offers a quick, secure way to " + verb + " without having to enter a credit card.";
-        $('.landingHeaderLogo').attr('href', 'http://www.rentscene.com');
-        $('.landingHeaderLogo img').attr('src', '../Assets/Images/rentscene.png');
-        $('.landingHeaderLogo img').attr('alt', 'Rent Scene Logo');
+        //$('.landingHeaderLogo').attr('href', 'http://www.rentscene.com');
+        //$('.landingHeaderLogo img').attr('src', '../Assets/Images/rentscene.png');
         if (isLrgScrn)
             $('.landingHeaderLogo img').css('width', '170px');
 

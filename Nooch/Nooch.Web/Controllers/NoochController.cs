@@ -295,8 +295,6 @@ namespace Nooch.Web.Controllers
 
             ViewData["OnLoadData"] = res;
             return View();
-
-            //return RedirectToAction("Index");
         }
 
 
@@ -489,7 +487,7 @@ namespace Nooch.Web.Controllers
         [ActionName("addBank")]
         public ActionResult addBank(bankaddInputFormClass inp)
         {
-            Logger.Info("Add Bank Code Behind -> Add Bank Code Behind - AddBank (for manual routing/account #) Initiated - MemberID: [" + inp.memberid + "]");
+            Logger.Info("Add Bank Code Behind -> AddBank (for manual routing/account #) Initiated - MemberID: [" + inp.memberid + "]");
 
             SynapseBankLoginRequestResult res = new SynapseBankLoginRequestResult();
             res.Is_success = false;
@@ -501,8 +499,8 @@ namespace Nooch.Web.Controllers
 
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
 
-                string serviceMethod = "SynapseV3AddNodeWithAccountNumberAndRoutingNumber?MemberId=" + inp.memberid + "&routing_num=" + inp.routing
-                                       + "&account_num=" + inp.account + "&bankNickName=" + inp.nickname + "&accountclass=" + inp.cl + "&accounttype=" + inp.type;
+                string serviceMethod = "SynapseV3AddNodeWithAccountNumberAndRoutingNumber?MemberId=" + inp.memberid + "&routing_num=" + inp.routing +
+                                       "&account_num=" + inp.account + "&bankNickName=" + inp.nickname + "&accountclass=" + inp.cl + "&accounttype=" + inp.type;
 
                 SynapseBankLoginV3_Response_Int bankAddRes =
                     ResponseConverter<SynapseBankLoginV3_Response_Int>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
@@ -511,46 +509,29 @@ namespace Nooch.Web.Controllers
                 {
                     res.Is_success = true;
                     res.Is_MFA = bankAddRes.Is_MFA;
-
-                    List<SynapseBankClass> synbanksList = new List<SynapseBankClass>();
-
-                    foreach (nodes bankNode in bankAddRes.SynapseNodesList.nodes)
-                    {
-                        SynapseBankClass sbc = new SynapseBankClass();
-                        sbc.account_class = bankNode.info._class;
-                        sbc.account_number_string = bankNode.info.account_num;
-                        sbc.account_type = bankNode.type;
-                        sbc.balance = bankNode.info.balance.amount;
-                        sbc.bank_name = bankNode.info.bank_name;
-                        sbc.bankoid = bankNode._id.ToString();
-                        sbc.account_class = bankNode.info._class;
-                        sbc.nickname = bankNode.info.nickname;
-                        sbc.routing_number_string = bankNode.info.routing_num;
-                        sbc.account_type = bankNode.info.type;
-                        sbc.is_active = bankNode.is_active;
-
-                        synbanksList.Add(sbc);
-                    }
-
-                    res.SynapseBanksList = new SynapseBanksListClass()
-                    {
-                        banks = synbanksList,
-                        success = true
-                    };
-
                     res.ERROR_MSG = "OK";
+
+                    Logger.Info("Add Bank Code Behind -> AddBank - Bank added MANUALLY Saved Successfully - MemberID: [" + inp.memberid +
+                                "], Full Name: [" + inp.fullname + "], Bank Nickname: [" + inp.nickname + "]");
                 }
                 else
                 {
+                    var error = "Add Bank Code Behind -> AddBank FAILED - Unable to save bank added MANUALLY - MemberID: [" + inp.memberid +
+                                "], Full Name: [" + inp.fullname + "], Bank Nickname: [" + inp.nickname + "]";
+                    Logger.Info(error);
+                    CommonHelper.notifyCliffAboutError(error);
                     res.ERROR_MSG = bankAddRes.errorMsg;
                 }
             }
             catch (Exception we)
             {
-                Logger.Error("Add Bank Code Behind -> addBank (Manual) FAILED - [MemberID: " + inp.memberid +
-                             "], [Exception: " + we + "]");
-                res.ERROR_MSG = "Add Bank exception # 494";
+                var error = "Add Bank Code Behind -> addBank (Manual) FAILED - MemberID: [" + inp.memberid +
+                             "], Exception: [" + we + "]";
+                Logger.Error(error);
+                CommonHelper.notifyCliffAboutError(error);
+                res.ERROR_MSG = "Add Bank exception # 550";
             }
+
             res.IsBankManulAdded = true;
             return Json(res);
         }
@@ -1730,49 +1711,38 @@ namespace Nooch.Web.Controllers
             {
                 rca.memId = memId;
 
-                if (!String.IsNullOrEmpty(Request.QueryString["rs"]))
+                if (!String.IsNullOrEmpty(memId))
                 {
-                    Logger.Info("createAccount CodeBehind -> Page_load Initiated - Is a RentScene Payment: [" + Request.QueryString["rs"] + "]");
-
-                    rca.rs = (Request.QueryString["rs"].ToLower() == "true" || Request.QueryString["rs"].ToLower() == "yes") ? "true" : "false";
+                    Logger.Info("createAccount CodeBehind -> Page_load Initiated - MemberID Parameter: [" + memId + "]");
+                    rca = GetMemberDetailsForCreateAccount(memId, rca);
                 }
-
-                if (!String.IsNullOrEmpty(Request.QueryString["TransId"]))
+                else if (!String.IsNullOrEmpty(TransId))
                 {
-                    Logger.Info("createAccount CodeBehind -> Page_load Initiated - [TransactionId Parameter: " + Request.QueryString["TransactionId"] + "]");
-
-                    Session["TransId"] = Request.QueryString["TransId"];
-
-                    rca = GetTransDetailsForCreateAccount(Request.QueryString["TransId"].ToString(), rca);
-                }
-                else if (!String.IsNullOrEmpty(Request.QueryString["type"]))
-                {
-                    rca.type = Request.QueryString["type"];
-
-                    if (String.IsNullOrEmpty(Request.QueryString["memId"]))
-                    {
-                        // No MemberID in URL, so must be creating a brand NEW user
-                        rca.errorId = "0";
-                        rca.isNewUser = true;
-                    }
-                    else
-                    {
-                        Logger.Info("createAccount CodeBehind -> Page_load Initiated - MemberID Parameter: [" + Request.QueryString["memId"] + "]");
-
-                        rca = GetMemberDetailsForCreateAccount(Request.QueryString["memId"], rca);
-                    }
+                    Logger.Info("createAccount Code Behind -> Page_Load Initiated - TransId [: " + TransId + "]");
+                    Session["TransId"] = TransId;
+                    rca = GetTransDetailsForCreateAccount(TransId.ToString(), rca);
                 }
                 else
                 {
-                    rca.errorId = "2";
+                    // No MemberID in URL, so must be creating a brand NEW user
+                    rca.errorId = "0";
+                    rca.isNewUser = true;
+
+                    if (!String.IsNullOrEmpty(rs))
+                    {
+                        Logger.Info("createAccount Code Behind -> Page_load Initiated - Is a RentScene Payment: [" + rs + "]");
+                        rca.rs = (rs.ToLower() == "true" || rs.ToLower() == "yes") ? "true" : "false";
+                    }
+
+                    rca.type = !String.IsNullOrEmpty(type) ? type : "personal";
                 }
             }
             catch (Exception ex)
             {
                 rca.errorId = "1";
 
-                Logger.Error("payRequest CodeBehind -> page_load OUTER EXCEPTION - [TransactionId Parameter: " + Request.QueryString["TransactionId"] +
-                             "], [Exception: " + ex.Message + "]");
+                Logger.Error("createAccount Code Behind -> Page_Load OUTER EXCEPTION - MemberID: [" + memId +
+                             "], Exception: [" + ex.Message + "]");
             }
 
             ViewData["OnLoaddata"] = rca;
@@ -1849,6 +1819,7 @@ namespace Nooch.Web.Controllers
                     rca.phone = member.ContactNumber;
                     rca.ssn = member.ssnLast4;
                     rca.fngprnt = member.fngrprnt;
+                    rca.rs = member.isRs ? "true" : "false";
 
                     if (member.companyName != null && member.companyName.Length > 3)
                     {

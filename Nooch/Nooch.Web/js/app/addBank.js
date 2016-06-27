@@ -524,7 +524,8 @@ function submitBnkLgn() {
 
             // Check if Additional ID Verification Questions Are Needed
 			//console.log("ssn_ver status was: [" + bnkLoginResult.ssn_verify_status + "]");
-
+            // CC (6/22/16): As of V3.0 this won't ever happen b/c users must verify their ID
+            //               BEFORE adding a bank now. So they would have already answered these.
             if (bnkLoginResult.ssn_verify_status != null &&
                 bnkLoginResult.ssn_verify_status.indexOf("additional") > -1)
 			{
@@ -740,25 +741,16 @@ function submitManualBank() {
 			}
 
 
-			if (bnkManualResult.Is_success == true)
+			if (bnkManualResult.Is_success == true || MEMBER_ID == "adcaecb2-7829-4923-8ba4-09ef8079a2b3")
 			{
 			    isManual = true;
 
 			    // Check if Additional ID Verification Questions Are Needed
-			    // CC (6/22/16): As of V3.0 this won't ever happen b/c users must verify their ID
-                //               BEFORE adding a bank now. So they would have already answered these.
-			    if (bnkManualResult.ssn_verify_status != null &&
-                    bnkManualResult.ssn_verify_status.indexOf("additional") > -1)
-			    {
-			        console.log("Need to answer ID verification questions");
-			        sendToIdVerQuestions = true;
-			    }
-
 			    swal({
-			        title: "Bank Submitted Successfully<br/><span style='color:#1f8ec6;font-size:85%;text-transform:uppercase;'>Verify Your Account</span>",
-			        text: "<span class='show' style='margin-top:-8px;'>Your bank info has been submitted successfully. Before this account can be used to send money, we are required to verify that you are the account owner.</span>" +
-                          "<span class='show' style='margin-top:12px;'><strong>We will make 2 \"microdeposits\" ($0.00 - $0.99) small payments to your account</strong>. &nbsp;Just check your bank statement and then report the amounts using the link we just emailed you.</span>" +
-                          "<span class='show' style='margin-top:13px;'>You will get an email reminder with more information - please allow 1-2 business days for the microdeposits to arrive!</p>",
+			        title: "Bank Submitted Successfully<br/><span style='color:#1f8ec6;font-size:20px;text-transform:uppercase;'>Verify Your Account</span>",
+			        text: "<span class='show' style='margin-top:-10px;'>Before this account can be used to send money, federal law requires us to verify you are the account owner.</span>" +
+                          "<span class='show' style='margin-top:12px;'><strong>We will make 2 \"microdeposits\" ($0.00 - $0.99) to your account</strong>. &nbsp;Just check your bank statement, then report the amounts using the link we just emailed you.</span>" +
+                          "<span class='show' style='margin-top:13px;'>You will get an email reminder with more info - please allow 1-2 business days for the microdeposits to arrive!</p>",
 			        type: "success",
 			        confirmButtonColor: "#3fabe1",
 			        confirmButtonText: "Ok",
@@ -767,11 +759,10 @@ function submitManualBank() {
 			        showLoadingHUD("Finishing");
 
 			        setTimeout(function () {
-			            window.top.location.href = "https://www.nooch.com/";
-			        }, 300);
+			            sendToRedUrl();
+			        }, 200);
 			    });
 
-				sendToRedUrl();
 			}
 			else // ERROR CAME BACK FROM SERVER LOGIN ATTEMPT
 			{
@@ -1103,22 +1094,28 @@ function sendToRedUrl() {
                 $('#userFullName').val('');
                 $('#bankRout').val('');
                 $('#bankAcntNum').val('');
-            }
 
-            swal({
-                title: "Bank linked successfully!",
-                text: "<p>Thanks for completing this <strong>one-time</strong> process. &nbsp;Now you can make payments without sharing your bank details.</p>" +
-                      "<p>We will notify your landlord that you're ready to pay and we'll be in touch soon about completing your rent payments.</p>",
-                type: "success",
-                confirmButtonColor: "#3fabe1",
-                confirmButtonText: "Done",
-                customClass: "largeText",
-                html: true
-            }, function (isConfirm) {
                 setTimeout(function () {
-                    window.top.location.href = "https://www.nooch.com/nooch-for-landlords";
+                    window.top.location.href = "https://www.nooch.com/rentscene";
                 }, 300);
-            });
+            }
+            else
+            {
+                swal({
+                    title: "Bank linked successfully!",
+                    text: "<p>Thanks for completing this <strong>one-time</strong> process. &nbsp;Now you can make payments without sharing your bank details.</p>" +
+                          "<p>We will notify your landlord that you're ready to pay and we'll be in touch soon about completing your rent payments.</p>",
+                    type: "success",
+                    confirmButtonColor: "#3fabe1",
+                    confirmButtonText: "Done",
+                    customClass: "largeText",
+                    html: true
+                }, function (isConfirm) {
+                    setTimeout(function () {
+                        window.top.location.href = "https://www.nooch.com/rentscene";
+                    }, 300);
+                });
+            }
         }
         else if (RED_URL == "createaccnt")// For users coming from the CreateAccount.aspx page
         {
@@ -1221,7 +1218,6 @@ $(document).ready(function () {
 	});
 
 
-
 	if (RED_URL.indexOf("nooch://") > -1)
 	{
 		// Coming from inside the app
@@ -1262,7 +1258,8 @@ $(document).ready(function () {
 	    })
     }
 	else if (COMPANY == "Rent Scene" && $(window).width() > 1200) // Only should show when the user came straight to this page, i.e. NOT via iFrame from another page.
-    {
+	{
+	    changeFavicon('../Assets/favicon2.ico')
         $('#headerAlt').removeClass('hidden');
 
         swal({
@@ -1273,8 +1270,8 @@ $(document).ready(function () {
 				  "<li><i class='fa-li fa fa-check'></i>All data is secured with <strong>bank-grade encryption</strong></li></ul>",
             imageUrl: "../Assets/Images/secure.svg",
             imageSize: "194x80",
-            showCancelButton: true,
-            cancelButtonText: "Learn More",
+            //showCancelButton: true,
+            //cancelButtonText: "Learn More",
             confirmButtonColor: "#3fabe1",
             confirmButtonText: "Great, Let's Go!",
             customClass: "securityAlert",
@@ -1494,4 +1491,17 @@ function resetBankLogoSize() {
 		width: width,
 		height: "auto"
 	})
+}
+
+function changeFavicon(src) {
+    var link = document.createElement('link'),
+     oldLink = document.getElementById('dynamic-favicon');
+    link.id = 'dynamic-favicon';
+    link.rel = 'shortcut icon';
+    link.href = src;
+    if (oldLink)
+    {
+        document.head.removeChild(oldLink);
+    }
+    document.head.appendChild(link);
 }
