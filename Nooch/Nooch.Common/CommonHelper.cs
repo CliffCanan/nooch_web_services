@@ -720,7 +720,7 @@ namespace Nooch.Common
                         DbContext db = GetDbContextFromEntity(v);
                         v.IsDeleted = true;
                         db.SaveChanges();
-                        db.Entry(oldBankLoginRecords).Reload();
+                        //db.Entry(oldBankLoginRecords).Reload();
                     }
                 }
 
