@@ -3358,12 +3358,15 @@ namespace Nooch.Web.Controllers
                     //var userType = input.UserType == "new" ? "U6De3haw2r4mSgweNpdgXQ==" : "mx5bTcAYyiOf9I5Py9TiLw=="; new & Existing
                     var reminderType = input.UserType == "new" ? "InvitationReminderToNewUser" : "RequestMoneyReminderToExistingUser";
 
-                    string serviceMethod = serviceMethod = "SendTransactionReminderEmail?ReminderType=" + reminderType + "&TransactionId=" + input.TransId + "&accessToken=" + MemDeatils.AccessToken + "&MemberId=" + input.memberId;
+                    string serviceMethod =  "SendTransactionReminderEmail?ReminderType=" + reminderType + "&TransactionId=" + input.TransId + "&accessToken=" + MemDeatils.AccessToken + "&MemberId=" + input.memberId;
                     string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
 
-                    var serviceResult = ResponseConverter<Nooch.Common.Entities.StringResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
 
-                    Logger.Info(Json(serviceResult));
+                    Logger.Info("URL made for transaction reminder is " + String.Concat(serviceUrl, serviceMethod));
+
+                    var serviceResult = ResponseConverter<StringResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+
+                    //Logger.Info(Json(serviceResult));
 
                     if (serviceResult.Result == "Reminder mail sent successfully." || serviceResult.Result == "Reminder sms sent successfully.")
                     {

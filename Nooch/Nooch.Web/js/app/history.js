@@ -125,7 +125,7 @@ $(document).ready(function (e)
             type: "warning",
             showCancelButton: true,
             confirmButtonColor: "#DD6B55",
-            confirmButtonText: "Yes - Cancel",
+            confirmButtonText: "Yes - Send",
         }, function (isConfirm) {
             if (isConfirm) {
                 var url = "paymentReminder";
