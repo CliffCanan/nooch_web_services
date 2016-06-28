@@ -2814,9 +2814,9 @@ namespace Nooch.API.Controllers
                 MembersDataAccess mda = new MembersDataAccess();
 
                 synapseCreateUserV3Result_int mdaRes = mda.RegisterNonNoochUserWithSynapseV3(input.transId, input.email, input.phone, input.fullname,
-                                                                                          input.pw, input.ssn, input.dob, input.address,
-                                                                                          input.zip, input.fngprnt, input.ip, input.cip, input.fbid,
-                                                                                          input.isRentScene, input.isIdImageAdded, input.idImageData);
+                                                                                             input.pw, input.ssn, input.dob, input.address,
+                                                                                             input.zip, input.fngprnt, input.ip, input.cip, input.fbid,
+                                                                                             input.isRentScene, input.isIdImageAdded, input.idImageData);
 
                 if (mdaRes.success == true)
                 {
@@ -3412,9 +3412,9 @@ namespace Nooch.API.Controllers
 
                 // Checks on user account: is phone verified? Is user's status = 'Active'?
 
-                if (noochMember.Status != "Active" &&
-                    noochMember.Status != "NonRegistered" &&
-                    noochMember.Type != "Personal - Browser")
+                if (noochMember.Status == "Suspended" ||
+                    noochMember.Status == "Temporarily_Blocked" ||
+                    noochMember.Status == "Deleted")
                 {
                     Logger.Error("Service Cntrlr -> SynapseV3 ADD NODE Attempted, but Member is Not 'Active' but [" + noochMember.Status + "] for MemberId: [" + MemberId + "]");
 
@@ -3423,7 +3423,9 @@ namespace Nooch.API.Controllers
                 }
 
                 if (noochMember.IsVerifiedPhone != true &&
-                    noochMember.Status != "NonRegistered" && noochMember.Type != "Personal - Browser")
+                    noochMember.Status != "NonRegistered" &&
+                    noochMember.isRentScene != true &&
+                    noochMember.Type != "Personal - Browser")
                 {
                     Logger.Error("Service Cntrlr -> SynapseV3 ADD NODE Attempted, but Member's Phone is Not Verified. MemberId: [" + MemberId + "]");
 
@@ -3441,27 +3443,29 @@ namespace Nooch.API.Controllers
 
                 if (createSynapseUserDetails == null) // No Synapse user details were found, so need to create a new Synapse User
                 {
+                    Logger.Info("Service Cntrlr -> SynapseV3AddNodeBankLogin - Unable to find existing Synapse Create User record, attempting to register new one: [" + MemberId + "]");
+
                     // Call RegisterUserWithSynapse() to get auth token by registering this user with Synapse
-                    // This accounts for all users connecting a bank for the FIRST TIME (Sent to this method from Add-Bank.aspx.cs)
+                    // This accounts for all users connecting a bank for the FIRST TIME (Sent to this method from AddBank.aspx.cs)
                     synapseCreateUserV3Result_int registerSynapseUserResult = RegisterUserWithSynapseV3(MemberId);
 
                     if (registerSynapseUserResult.success)
                     {
                         createSynapseUserDetails = CommonHelper.GetSynapseCreateaUserDetails(id.ToString());
+
+                        // Check again if it's still null (which it shouldn't be because we just created a new Synapse user above if it was null.
+                        if (createSynapseUserDetails == null)
+                        {
+                            Logger.Error("Service Cntrlr -> SynapseV3AddNodeBankLogin FAILED - Unable to find existing Synapse Create User record or create a new one: [" + MemberId + "]");
+
+                            res.errorMsg = "No Authentication code found for given user.";
+                            return res;
+                        }
                     }
                     else
                     {
                         Logger.Info("Service Controller -> SynapseV3 ADD NODE ERROR: Could not create Synapse User Record for: [" + MemberId + "].");
                     }
-                }
-
-                // Check again if it's still null (which it shouldn't be because we just created a new Synapse user above if it was null.
-                if (createSynapseUserDetails == null)
-                {
-                    Logger.Error("Service Controller -> SynapseV3 ADD NODE ERROR: No Synapse OAuth code found in Nooch DB for: [" + MemberId + "].");
-
-                    res.errorMsg = "No Authentication code found for given user.";
-                    return res;
                 }
 
                 #endregion Get Synapse Account Credentials
@@ -5636,7 +5640,7 @@ namespace Nooch.API.Controllers
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Layer -> TransferMoneyUsingSynapse FAILED - [MemberID: " + transInput.MemberId + "], [Exception: " + ex + "]");
+                    Logger.Error("Service Layer -> TransferMoneyUsingSynapse FAILED - MemberID: [" + transInput.MemberId + "], Exception: [" + ex + "]");
                     //UtilityService.ThrowFaultException(ex);
                 }
 
@@ -5645,7 +5649,7 @@ namespace Nooch.API.Controllers
             else
             {
                 Logger.Error("Service Layer -> TransferMoneyUsingSynapse FAILED. AccessToken invalid or not found - " +
-                                       "MemberID: [" + transInput.MemberId + "]");
+                             "MemberID: [" + transInput.MemberId + "]");
                 throw new Exception("Invalid OAuth 2 Access");
             }
         }

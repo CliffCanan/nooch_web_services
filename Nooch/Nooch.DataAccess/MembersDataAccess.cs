@@ -1762,18 +1762,21 @@ namespace Nooch.DataAccess
 
                 #region User Already Has Synapse Account
 
-                var synapseCreateUserObjIfExists = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == guid && m.IsDeleted == false);
+                var synapseCreateUserObjIfExists = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == guid &&
+                                                                                                           m.IsDeleted == false);
+
                 if (synapseCreateUserObjIfExists != null)
                 {
                     try
                     {
                         Logger.Info("MDA -> RegisterUserWithSynapseV3 - User ALREADY has a Synapse account - About to query refreshSynapseV3OautKey()");
 
-                        var refreshTokenResult = CommonHelper.refreshSynapseV3OautKey((synapseCreateUserObjIfExists.access_token));
-                        synapseCreateUserObjIfExists = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == guid && m.IsDeleted == false);
+                        var refreshTokenResult = CommonHelper.refreshSynapseV3OautKey(synapseCreateUserObjIfExists.access_token);
 
                         if (refreshTokenResult != null && refreshTokenResult.success)
                         {
+                            _dbContext.Entry(synapseCreateUserObjIfExists).Reload();
+
                             if (refreshTokenResult.is2FA)
                             {
                                 // 2FA was triggered during /user/signin (Refresh Service), probably b/c the user's Fingerprint has changed since the Synapse user was created.
@@ -1809,8 +1812,8 @@ namespace Nooch.DataAccess
 
                                 if (noochMember.IsVerifiedWithSynapse == true)
                                 {
-                                    Logger.Info("MDA -> RegisterUserWithSynapseV3 - ** ID Already Verified on [" + noochMember.ValidatedDate +
-                                                "] ** - Continuing on... - [MemberID: " + memberId + "]");
+                                    Logger.Info("MDA -> RegisterUserWithSynapseV3 - ID Already Verified on [" + noochMember.ValidatedDate +
+                                                "] - RETURNING - MemberID: " + memberId + "], ssn_verify_status: [id already verified]");
                                     res.ssn_verify_status = "id already verified";
                                 }
                                 else if (res.user.permission == "SEND-AND-RECEIVE")
@@ -1909,14 +1912,14 @@ namespace Nooch.DataAccess
                         else
                         {
                             res.errorMsg = refreshTokenResult.msg;
-                            Logger.Error("MDA -> RegisterUserWithSynapseV3 FAILED - Error from Refresh Oauth Key service - [Msg: " + res.errorMsg + "]");
+                            Logger.Error("MDA -> RegisterUserWithSynapseV3 FAILED - Error from Refresh Oauth Key service - Msg: [" + res.errorMsg + "]");
                         }
                     }
                     catch (Exception ex)
                     {
                         res.errorMsg = ex.Message;
                         Logger.Error("MDA -> RegisterUserWithSynapseV3 FAILED - User already had Synapse Create User record, but got Exception - " +
-                                     "[MemberID: " + memberId + "], [Exception: " + res.errorMsg + "]");
+                                     "MemberID: [" + memberId + "], Exception: [" + res.errorMsg + "]");
                     }
 
                     return res;
@@ -4646,7 +4649,7 @@ namespace Nooch.DataAccess
                             if (bankLoginRespFromSynapse["success"].ToString().ToLower() == "true" &&
                                 bankLoginRespFromSynapse["nodes"] != null)
                             {
-                                Logger.Info("MDA -> SynapseV3MFABankVerify - Sucess from Synapse! - [" + bankLoginRespFromSynapse["nodes"].Count() + " Nodes Returned");
+                                Logger.Info("MDA -> SynapseV3MFABankVerify - SUCCESS from Synapse - [" + bankLoginRespFromSynapse["nodes"].Count() + "] Nodes Returned");
 
                                 res.Is_success = true;
 

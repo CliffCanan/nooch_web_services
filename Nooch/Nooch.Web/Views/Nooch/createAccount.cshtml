@@ -7,7 +7,7 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-    <title>Nooch | Create Account</title>
+    <title>Create Account | Nooch Payments</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
@@ -30,7 +30,7 @@
     <form id="form1">
         <input type="hidden" id="transId" value="@rca.transId" />
         <input type="hidden" id="memId" value="@rca.memId" />
-        <input type="hidden" id="isNew" value="@rca.isNewUser" />
+        <input type="hidden" id="isNew" value="@rca.isNewUser.ToString().ToLower()" />
         <input type="hidden" id="errorId" value="@rca.errorId" />
         <input type="hidden" id="transType" value="@rca.transType" />
         <input type="hidden" id="sentTo" value="@rca.sentTo" />
@@ -44,12 +44,30 @@
     <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
         <div class="clearfix">
             <div class="m-l-15">
-                <a class="landingHeaderLogo m-t-15 m-b-15" href="https://www.nooch.com/" style="float:left;">
-                    <img src="../Assets/Images/nooch-logo2.svg" class="center-block" alt="Logo" />
-                </a>
+
+                @if (rca.rs == "true")
+                {
+                    <a class="landingHeaderLogo m-t-15 m-b-15" href="https://www.rentscene.com/" style="float:left;">
+                        <img src="../Assets/Images/rentscene.png" class="center-block" alt="Rent Scene Logo" />
+                    </a>
+                }
+                else
+                {
+                    <a class="landingHeaderLogo m-t-15 m-b-15" href="https://www.nooch.com/" style="float:left;">
+                        <img src="../Assets/Images/nooch-logo2.svg" class="center-block" alt="Nooch Logo" />
+                    </a>
+                }
+
                 <div id="nameInNavContainer" class="text-center" style="position:absolute; left:10%; width:80%; top: 5px;">
                     <label id="nameInNav" class="m-t-5 center-block f-600 f-18" style="margin-bottom:3px;">@rca.name</label>
-                    <h4>Update Account</h4>
+                    @if (rca.isNewUser)
+                    {
+                        <h4>Create Account</h4>
+                    }
+                    else
+                    {
+                        <h4>Update Account</h4>
+                    }
                 </div>
             </div>
         </div>

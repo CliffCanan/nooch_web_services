@@ -13,6 +13,7 @@ $(document).ready(function () {
         if (isLrgScrn)
             $('.landingHeaderLogo img').css('width', '170px');
 
+        document.title = "Reject Payment | Rent Scene Payments";
         changeFavicon('../Assets/favicon2.ico')
     }
 

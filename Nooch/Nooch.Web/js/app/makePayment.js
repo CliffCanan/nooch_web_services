@@ -22,24 +22,16 @@ $(document).ready(function () {
         COMPANY = "Rent Scene";
 
         if (isSmScrn)
-        {
             $('.navbar img').css('width', '100px');
-        }
 
         changeFavicon('../Assets/favicon2.ico')
 
         var suggestedUsers = getSuggestedUsers();
-
-        console.log(suggestedUsers);
     }
     else if (FROM == "appjaxx" || FROM == "josh")
     {
-        $('.navbar img').attr('src', '../Assets/Images/appjaxx-nav.png');
         askForPin = true;
-    }
-    else
-    {
-        $('.navbar img').attr('src', '../Assets/Images/nooch-logo2.svg');
+        var suggestedUsers = getSuggestedUsers();
     }
 
     if (askForPin)

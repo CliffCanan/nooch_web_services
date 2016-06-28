@@ -7,8 +7,8 @@
 
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
-<head runat="server">
-    <title>Make A Payment</title>
+<head>
+    <title>Make A Payment | Nooch</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.6.0/css/font-awesome.min.css" />
@@ -104,9 +104,24 @@
     <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
         <div class="clearfix">
             <div class="m-l-15">
-                <a class="pull-left" href="https://www.rentscene.com/" style="margin: 12px auto 12px !important;">
-                    <img src="https://noochme.com/noochweb/Assets/Images/rentscene.png" class="center-block" alt="Rent Scene Logo" />
-                </a>
+                @if (onLoadD.from == "rentscene")
+                {
+                    <a class="pull-left" href="https://www.rentscene.com/" style="margin: 12px auto 12px !important;">
+                        <img src="https://noochme.com/noochweb/Assets/Images/rentscene.png" class="center-block" alt="Rent Scene Logo" />
+                    </a>
+                }
+                else if (onLoadD.from == "appjaxx")
+                {
+                    <a class="pull-left" href="http://www.appjaxx.com/" style="margin: 12px auto 12px !important;">
+                        <img src="https://noochme.com/noochweb/Assets/Images/appjaxx-nav.png" class="center-block" alt="AppJaxx Logo" />
+                    </a>
+                }
+                else
+                {
+                    <a class="pull-left" href="https://www.nooch.com/" style="margin: 12px auto 12px !important;">
+                        <img src="https://noochme.com/noochweb/Assets/Images/nooch-logo2.svg" class="center-block" alt="Nooch Logo" />
+                    </a>
+                }
                 <div class="text-center" style="position: absolute; left: 10%; top: 20px; width: 80%;">
                     <label class="center-block f-20">Create A Payment</label>
                 </div>

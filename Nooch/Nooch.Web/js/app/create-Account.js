@@ -36,15 +36,22 @@ $(document).ready(function () {
 
     console.log("isUpgradeToV3 is: [" + isUpgradeToV3 + "]");
 
-    if (RENTSCENE == "true") {
+    if (RENTSCENE == "true")
+    {
         COMPANY = "Rent Scene";
 
-        $('.landingHeaderLogo').attr('href', 'http://www.rentscene.com');
-
         var w = isSmScrn ? '90px' : '130px'
-        $('.landingHeaderLogo img').attr('src', 'https://noochme.com/noochweb/Assets/Images/rentscene.png').css('width', w);
+        $('.landingHeaderLogo img').css('width', w);
 
-		changeFavicon('../Assets/favicon2.ico');
+        if (ISNEW == "true")
+        {
+            document.title = "Create Account | Rent Scene Payments";
+        }
+        else
+        {
+            document.title = "Update Account | Rent Scene Payments";
+        }
+        changeFavicon('../Assets/favicon2.ico');
     }
 
     if (TYPE == "personal" || TYPE == "2")
@@ -59,7 +66,8 @@ $(document).ready(function () {
         $('#nameInNav').hide();
     }
 
-    if (areThereErrors() == false) {
+    if (areThereErrors() == false)
+    {
         if (transType == "phone") {
             usrEm = "";
             usrPhn = sentTo;
@@ -69,7 +77,15 @@ $(document).ready(function () {
             usrPhn = "";
         }
 
-        if (isUpgradeToV3 == 'true') {
+        // Get Fingerprint
+        new Fingerprint2().get(function (result) {
+            fingprint = result;
+            //console.log(fingprint);
+        });
+        //console.log(ipusr);
+
+        if (isUpgradeToV3 == 'true')
+        {
             swal({
                 title: "Security Upgrade Notice",
                 text: "<p>" + COMPANY + " offers a quick, secure way to pay anyone without giving them your sensitive bank or credit card information. &nbsp;Just select your bank and login to your online banking<span class='desk-only'> as you normally do</span>.</p>" +
@@ -86,30 +102,23 @@ $(document).ready(function () {
                 confirmButtonText: "Let's Go!",
                 customClass: "upgradeNotice",
                 allowEscapeKey: false,
-                animation: 'slide-from-top',
                 html: true
             }, function (isConfirm)
             {
-                if (isConfirm) {
-                    //Get Fingerprint
-                    new Fingerprint2().get(function (result)
-                    {
-                        fingprint = result;
-                        console.log(fingprint);
-                    });
-
-                    setTimeout(function ()
-                    {
+                if (isConfirm)
+                {
+                    setTimeout(function () {
                         $('input#idVer-name').focus();
-                    }, 800)
+                    }, 500)
                 }
-                else {
+                else
+                {
                     window.open("https://www.nooch.com/safe");
                 }
-                //console.log(ipusr);
             });
         }
-        else {
+        else
+        {
             swal({
                 title: "Secure, Private, & Direct Payments",
                 text: "<p>Send money without having to leave your seat! &nbsp;Secure, direct, and traceable payments when you want them. &nbsp;Please verify your identity as an authorized user of your company's account.</p>" +
@@ -127,27 +136,20 @@ $(document).ready(function () {
                 customClass: "securityAlert",
                 allowEscapeKey: false,
                 html: true
-            }, function (isConfirm)
-            {
-                if (isConfirm) {
-                    //Get Fingerprint
-                    new Fingerprint2().get(function (result)
-                    {
-                        fingprint = result;
-                        //console.log(fingprint);
-                    });
-
-                    setTimeout(function ()
-                    {
+            }, function (isConfirm) {
+                if (isConfirm)
+                {
+                    setTimeout(function () {
                         $('input#idVer-name').focus();
-                    }, 800)
+                    }, 500)
                 }
-                else {
+                else
+                {
                     window.open("https://www.nooch.com/safe");
                 }
-                //console.log(ipusr);
             });
         }
+
         // Now show the wizard since there are no errors (hidden on initial page load because it takes
         // a split second to format the Steps plugin, so it was visible as un-formatted code briefly.
         $('#idWizContainer').removeClass('hidden');
@@ -1004,10 +1006,12 @@ $('body').bind('addBankComplete', function ()
             html: true
         });
 
-        if (ISNEW == true) {
+        if (ISNEW == "true")
+        {
             $('#checkEmailMsg').removeClass('hidden');
         }
-        else {
+        else
+        {
             $('.resultDiv').removeClass('hidden');
         }
 

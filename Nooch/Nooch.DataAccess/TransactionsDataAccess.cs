@@ -955,7 +955,7 @@ namespace Nooch.DataAccess
                 else if (ReminderType == "InvitationReminderToNewUser")
                 {
                     #region InvitationReminderToNewUser
-                    
+
                     var trans = _dbContext.Transactions.FirstOrDefault(m => m.Member1.MemberId == MemId
                         && m.TransactionId == TransId && m.TransactionStatus == "Pending" && (m.TransactionType == "5dt4HUwCue532sNmw3LKDQ==" || m.TransactionType == "DrRr1tU1usk7nNibjtcZkA==")
                         );
@@ -7207,10 +7207,10 @@ namespace Nooch.DataAccess
 
                         // Now Send email to Recipient (non-Nooch user in this case)
                         #region Email To Recipient New User
-                        
+
                         // In this case UserType would = 'New'
                         // TransType would = 'Invite'
-                  
+
                         try
                         {
                             string cipToUse = "1";

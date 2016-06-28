@@ -383,6 +383,9 @@ namespace Nooch.Web.Controllers
         [ActionName("BankLogin")]
         public ActionResult BankLogin(bankLoginInputFormClass inp)
         {
+            Logger.Info("Add Bank CodeBehind -> BankLogin Initiated - MemberID: [" + inp.memberid +
+                        "], Bank Name: [" + inp.bankname + "]");
+
             SynapseBankLoginRequestResult res = new SynapseBankLoginRequestResult();
             res.Is_success = false;
 
@@ -1746,7 +1749,6 @@ namespace Nooch.Web.Controllers
             }
 
             ViewData["OnLoaddata"] = rca;
-
             return View();
         }
 
@@ -2843,10 +2845,10 @@ namespace Nooch.Web.Controllers
 
                 if (!String.IsNullOrEmpty(user))
                 {
-                    if (user.ToLower() == "appjaxx")
-                        memid = "8b4b4983-f022-4289-ba6e-48d5affb5484";
-                    else if (user.ToLower() == "rentscene")
+                    if (user.ToLower() == "rentscene")
                         memid = "852987e8-d5fe-47e7-a00b-58a80dd15b49";
+                    else if (user.ToLower() == "appjaxx" || user.ToLower() == "josh")
+                        memid = "8b4b4983-f022-4289-ba6e-48d5affb5484";
                     else if (user == "cliff")
                         memid = "b3a6cf7b-561f-4105-99e4-406a215ccf60";
                 }
@@ -3329,7 +3331,7 @@ namespace Nooch.Web.Controllers
                     //var userType = input.UserType == "new" ? "U6De3haw2r4mSgweNpdgXQ==" : "mx5bTcAYyiOf9I5Py9TiLw=="; new & Existing
                     var reminderType = input.UserType == "new" ? "InvitationReminderToNewUser" : "RequestMoneyReminderToExistingUser";
 
-                    string serviceMethod =  "SendTransactionReminderEmail?ReminderType=" + reminderType + "&TransactionId=" + input.TransId + "&accessToken=" + MemDeatils.AccessToken + "&MemberId=" + input.memberId;
+                    string serviceMethod = "SendTransactionReminderEmail?ReminderType=" + reminderType + "&TransactionId=" + input.TransId + "&accessToken=" + MemDeatils.AccessToken + "&MemberId=" + input.memberId;
                     string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
 
 
