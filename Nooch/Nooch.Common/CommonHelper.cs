@@ -4053,12 +4053,12 @@ namespace Nooch.Common
                         if (a > 0)
                         {
                             _dbContext.Entry(lastIpFound).Reload();
-                            Logger.Info("Common Helper -> UpdateMemberIPAddressAndDeviceId SUCCESS - IP Address Saved (1) - MemberId: [" + MemberId + "]");
+                            Logger.Info("Common Helper -> UpdateMemberIPAddressAndDeviceId SUCCESS - IP Address Saved (1) - MemberID: [" + MemberId + "]");
                             ipSavedSuccessfully = true;
                         }
                         else
                         {
-                            Logger.Error("Common Helper -> UpdateMemberIPAddressAndDeviceId FAILED Trying To Saving IP Address (1) in DB - MemberId: [" + MemberId + "]");
+                            Logger.Error("Common Helper -> UpdateMemberIPAddressAndDeviceId FAILED Trying To Saving IP Address (1) in DB - MemberID: [" + MemberId + "]");
                         }
                     }
                     else
@@ -4076,12 +4076,12 @@ namespace Nooch.Common
                         if (b > 0)
                         {
                             _dbContext.Entry(mip).Reload();
-                            Logger.Info("Common Helper -> UpdateMemberIPAddressAndDeviceId SUCCESS - IP Address Saved (2) - MemberId: [" + MemberId + "]");
+                            Logger.Info("Common Helper -> UpdateMemberIPAddressAndDeviceId SUCCESS - IP Address Saved (2) - MemberID: [" + MemberId + "]");
                             ipSavedSuccessfully = true;
                         }
                         else
                         {
-                            Logger.Error("Common Helper -> UpdateMemberIPAddressAndDeviceId FAILED Trying To Saving IP Address (2) in DB - MemberId: [" + MemberId + "]");
+                            Logger.Error("Common Helper -> UpdateMemberIPAddressAndDeviceId FAILED Trying To Saving IP Address (2) in DB - MemberID: [" + MemberId + "]");
                         }
                     }
                 }
@@ -4092,7 +4092,7 @@ namespace Nooch.Common
             }
             else
             {
-                Logger.Error("Common Helper -> UpdateMemberIPAddressAndDeviceId - No IP Address Passed - MemberId: [" + MemberId + "]");
+                Logger.Info("Common Helper -> UpdateMemberIPAddressAndDeviceId - No IP Address Passed - MemberID: [" + MemberId + "]");
             }
 
             #endregion Save IP Address
@@ -4118,12 +4118,12 @@ namespace Nooch.Common
                     if (c > 0)
                     {
                         _dbContext.Entry(member).Reload();
-                        Logger.Info("Common Helper -> UpdateMemberIPAddressAndDeviceId SUCCESS - Device ID Saved - MemberId: [" + MemberId + "]");
+                        Logger.Info("Common Helper -> UpdateMemberIPAddressAndDeviceId SUCCESS - Device ID Saved - MemberID: [" + MemberId + "]");
                         udidIdSavedSuccessfully = true;
                     }
                     else
                     {
-                        Logger.Error("Common Helper -> UpdateMemberIPAddressAndDeviceId FAILED Trying To Saving Device ID in DB - MemberId: [" + MemberId + "]");
+                        Logger.Error("Common Helper -> UpdateMemberIPAddressAndDeviceId FAILED Trying To Saving Device ID in DB - MemberID: [" + MemberId + "]");
                     }
                 }
                 catch (Exception ex)
@@ -4133,7 +4133,7 @@ namespace Nooch.Common
             }
             else
             {
-                Logger.Error("Common Helper -> UpdateMemberIPAddressAndDeviceId - No Device ID Passed - MemberId: [" + MemberId + "]");
+                Logger.Info("Common Helper -> UpdateMemberIPAddressAndDeviceId - No Device ID Passed - MemberID: [" + MemberId + "]");
             }
 
             #endregion Save Device ID

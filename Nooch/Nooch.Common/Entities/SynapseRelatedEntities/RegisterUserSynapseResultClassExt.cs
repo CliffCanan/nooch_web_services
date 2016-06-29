@@ -8,11 +8,12 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
 {
     public class RegisterUserSynapseResultClassExt
     {
+        public string success { get; set; }
+        public string errorMsg { get; set; }
         public string access_token { get; set; }
         public string expires_in { get; set; }
         public string reason { get; set; }
         public string refresh_token { get; set; }
-        public string success { get; set; }
         public string user_id { get; set; }
         public string username { get; set; }
         public string memberIdGenerated { get; set; }

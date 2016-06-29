@@ -53,6 +53,10 @@ $(document).ready(function () {
         }
         changeFavicon('../Assets/favicon2.ico');
     }
+    else if (ISNEW != "true")
+    {
+        document.title = "Upgrade Account | Nooch Payments";
+    }
 
     if (TYPE == "personal" || TYPE == "2")
     {
@@ -326,13 +330,15 @@ function runIdWizard() {
                 if ($('#idVer-dob').val().length == 10)
                 {
                     // Double check that DOB is not still "01/01/1980", which is the default and probably not the user's B-Day...
-                    if ($('#idVer-dob').val() != "01/01/1980") {
+                    if ($('#idVer-dob').val() != "01/01/1980")
+                    {
                         updateValidationUi("dob", true);
 
                         var ssnVal = $('#idVer-ssn').val().trim();
                         ssnVal = ssnVal.replace(/ /g, "").replace(/-/g, "");
                         // Check SSN field
-                        if (ssnVal.length == 9 || FBID != "not connected") {
+                        if (ssnVal.length == 9 || FBID != "not connected")
+                        {
                             updateValidationUi("ssn", true);
 
                             // Great, go to the next step of the wizard :-]
@@ -357,17 +363,17 @@ function runIdWizard() {
                                 showUpload: false,
                                 showPreview: true,
                                 resizeImage: true,
-                                maxImageWidth: 500,
-                                maxImageHeight: 500,
+                                maxImageWidth: 1000,
+                                maxImageHeight: 1000,
                                 resizePreference: 'width'
                             });
 
                             $('#idVer_idDoc').on('fileerror', function (event, data, msg) {
-                                $('#idVerWiz > .content').animate({ height: "30em" }, 700)
+                                $('#idVerWiz > .content').animate({ height: "31em" }, 700)
                             });
 
                             $('#idVer_idDoc').on('fileloaded', function (event, file, previewId, index, reader) {
-                                $('#idVerWiz > .content').animate({ height: "28em" }, 700)
+                                $('#idVerWiz > .content').animate({ height: "29em" }, 700)
 
                                 isFileAdded = "1";
                                 var readerN = new FileReader();
@@ -382,18 +388,18 @@ function runIdWizard() {
                             });
 
                             $('#idVer_idDoc').on('fileclear', function (event) {
-                                $('#idVerWiz > .content').animate({ height: "22em" }, 800)
+                                $('#idVerWiz > .content').animate({ height: "23em" }, 800)
                                 isFileAdded = "0";
                                 FileData = null;
                             });
 
                             $('#idVer_idDoc').on('filecleared', function (event) {
-                                $('#idVerWiz > .content').animate({ height: "22em" }, 800)
+                                $('#idVerWiz > .content').animate({ height: "23em" }, 800)
                                 isFileAdded = "0";
                                 FileData = null;
                             });
 
-                            $('#idVerWiz > .content').animate({ height: "28em" }, 800)
+                            $('#idVerWiz > .content').animate({ height: "29em" }, 800)
                             return true;
                         }
                         else {
@@ -862,7 +868,7 @@ function submitPin(pin)
                 console.log("SubmitPIN: Success!");
 
                 // THEN DISPLAY SUCCESS ALERT...
-                swal({
+                /*swal({
                     title: "Great Success",
                     text: "Your phone number has been confirmed.",
                     type: "success",
@@ -873,11 +879,11 @@ function submitPin(pin)
                     html: true,
                     customClass: "idVerSuccessAlert",
                 }, function (isConfirm)
-                {
+                {*/
                     // SUBMIT ID WIZARD DATA TO SERVER AGAIN...
                     console.log("Calling createRecord() again...")
                     createRecord();
-                });
+                //});
             }
             else
             {

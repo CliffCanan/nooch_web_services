@@ -2777,6 +2777,7 @@ namespace Nooch.API.Controllers
                     nc.user_id = res.user_id;
                     nc.memberIdGenerated = res.memberIdGenerated;
                     nc.ssn_verify_status = res.ssn_verify_status;
+                    nc.errorMsg = res.errorMsg;
                 }
                 else
                 {
@@ -2784,7 +2785,8 @@ namespace Nooch.API.Controllers
                     nc.reason = res.reason;
                 }
 
-                Logger.Info("Service Cntrlr -> RegisterExistingUserWithSynapseV3 - Returning Payload - Reason: [" + (nc.reason) + "]");
+                Logger.Info("Service Cntrlr -> RegisterExistingUserWithSynapseV3 - Returning Payload - Reason: [" + nc.reason +
+                            "], Error Msg: [" + nc.errorMsg + "]");
 
                 return nc;
             }

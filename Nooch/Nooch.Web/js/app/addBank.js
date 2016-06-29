@@ -1257,7 +1257,8 @@ $(document).ready(function () {
 	        html: true
 	    })
     }
-	else if (COMPANY == "Rent Scene" && $(window).width() > 1200) // Only should show when the user came straight to this page, i.e. NOT via iFrame from another page.
+	else if (COMPANY == "Rent Scene" && $(window).width() > 1200 && // Only should show when the user came straight to this page, i.e. NOT via iFrame from another page.
+             RED_URL != "createaccnt")
 	{
 	    changeFavicon('../Assets/favicon2.ico')
         $('#headerAlt').removeClass('hidden');

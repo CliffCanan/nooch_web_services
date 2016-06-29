@@ -1404,11 +1404,11 @@ namespace Nooch.Web.Controllers
                 userPh = CommonHelper.RemovePhoneNumberFormatting(userPh);
 
                 Logger.Info("payRequest Code Behind -> RegisterUserWithSynp -> PARAMETERS to send to Server: transId: " + transId +
-                            ", memberId (If existing user): " + memberId + ", userEm: " + userEm +
-                            ", userPh: " + userPh + ", userPw: " + userPw +
-                            ", ssn: " + ssn + ", dob: " + dob +
-                            ", address: " + address + ", zip: " + zip +
-                            ", Has ID Img: [" + isIdImage + "], CIP: [" + cip +
+                            ", memberId (If existing user): [" + memberId + "], userEm: [" + userEm +
+                            "], userPh: [" + userPh + "], userPw: [" + userPw +
+                            "], ssn: [" + ssn + "], dob: [" + dob +
+                            "], address: [" + address + "], zip: [" + zip +
+                            "], Has ID Img: [" + isIdImage + "], CIP: [" + cip +
                             "], FBID: [" + fbid + "], isRentScene: [" + isRentScene + "]");
 
 

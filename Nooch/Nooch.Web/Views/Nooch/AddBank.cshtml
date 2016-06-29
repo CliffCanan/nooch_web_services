@@ -33,25 +33,28 @@
     <script src="@Url.Content("~/js/sweetalert.min.js")"></script>
     <script src="@Url.Content("~/js/jquery.auto-complete.min.js")"></script>
 
-    <nav id="headerAlt" class="navbar navbar-default navbar-fixed-top desk-only hidden" role="navigation">
-        <div class="clearfix">
-            @if (res.isRs)
-            {
-                <a class="pull-left" href="https://www.rentscene.com/" style="margin: 12px auto 12px !important;">
-                    <img src="../Assets/Images/rentscene.png" class="center-block" alt="Rent Scene Logo" />
-                </a>
-            }
-            else
-            {
-                <a class="pull-left" href="https://www.nooch.com/" style="margin: 12px auto 12px !important;">
-                    <img src="../Assets/Images/nooch-logo2.svg" class="center-block" alt="Rent Scene Logo" />
-                </a>
-            }
-            <div class="text-center" style="position: absolute; left: 10%; top: 0px; width: 80%;">
-                <h3 class="center-block f-25" style="font-family: 'Roboto', 'Open Sans', sans-serif">Link A Bank Account</h3>
+    @if (res.redUrl != "createaccnt")
+    {
+        <nav id="headerAlt" class="navbar navbar-default navbar-fixed-top desk-only hidden" role="navigation">
+            <div class="clearfix">
+                @if (res.isRs)
+                {
+                    <a class="pull-left" href="https://www.rentscene.com/" style="margin: 12px auto 12px !important;">
+                        <img src="../Assets/Images/rentscene.png" class="center-block" alt="Rent Scene Logo" />
+                    </a>
+                }
+                else
+                {
+                    <a class="pull-left" href="https://www.nooch.com/" style="margin: 12px auto 12px !important;">
+                        <img src="../Assets/Images/nooch-logo2.svg" class="center-block" alt="Rent Scene Logo" />
+                    </a>
+                }
+                <div class="text-center" style="position: absolute; left: 10%; top: 0px; width: 80%;">
+                    <h3 class="center-block f-25" style="font-family: 'Roboto', 'Open Sans', sans-serif">Link A Bank Account</h3>
+                </div>
             </div>
-        </div>
-    </nav>
+        </nav>
+    }
 
     <form id="form1">
         <asp:ScriptManager ID="ScriptManager1" runat="server" EnablePageMethods="true"></asp:ScriptManager>
