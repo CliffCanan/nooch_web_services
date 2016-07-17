@@ -2722,16 +2722,16 @@ namespace Nooch.DataAccess
                                     if (emailUsedToInvite.Trim().ToLower() == userEmail.Trim().ToLower())
                                     {
                                         Logger.Info("MDA -> RegisterExistingUserWithSynapseV2 - Email provided by new user [" + userEmail +
-                                                               "] matches Email from transaction ('InvitationSentTo') [" + emailUsedToInvite + "] - " +
-                                                               "Marking Tenant's Email as Verified in Tenants Table.");
+                                                    "] matches Email from transaction ('InvitationSentTo') [" + emailUsedToInvite + "] - " +
+                                                    "Marking Tenant's Email as Verified in Tenants Table.");
 
                                         tenantObj.IsEmailVerified = true;
                                     }
                                     else
                                     {
                                         Logger.Info("MDA -> RegisterExistingUserWithSynapseV2 - Email provided by new user [" + userEmail +
-                                                               "] does NOTE match Email from transaction ('InvitationSentTo') [" + emailUsedToInvite + "] - " +
-                                                               "Marking Tenant's Email as UN-Verified in Tenants Table.");
+                                                    "] does NOTE match Email from transaction ('InvitationSentTo') [" + emailUsedToInvite + "] - " +
+                                                    "Marking Tenant's Email as UN-Verified in Tenants Table.");
 
                                         tenantObj.IsEmailVerified = false;
                                     }
@@ -2740,7 +2740,7 @@ namespace Nooch.DataAccess
                             catch (Exception ex)
                             {
                                 Logger.Error("MDA -> RegisterExistingUserWithSynapseV2 - Error on comparing email provided by new user [" + userEmail +
-                                                       "] with Email from transaction ('InvitationSentTo') - Exception: [" + ex.Message + "]");
+                                             "] with Email from transaction ('InvitationSentTo') - Exception: [" + ex.Message + "]");
 
                                 tenantObj.IsEmailVerified = false;
                             }
@@ -2753,19 +2753,19 @@ namespace Nooch.DataAccess
                             if (_dbContext.SaveChanges() > 0)
                             {
                                 Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 - Saved changes to TENANT table successfully - " +
-                                                       "MemberID: [" + memberId + "]");
+                                            "MemberID: [" + memberId + "]");
                             }
                             else
                             {
                                 Logger.Error("MDA -> RegisterExistingUserWithSynapseV3 - FAILED to save changes to TENANT table - " +
-                                                       "MemberID: [" + memberId + "]");
+                                             "MemberID: [" + memberId + "]");
                             }
                         }
                     }
                     catch (Exception ex)
                     {
                         Logger.Error("MDA -> RegisterExistingUserWithSynapseV3 EXCEPTION on checking if this user is a TENANT - " +
-                                               "[MemberID: " + memberId + "], [Exception: " + ex + "]");
+                                     "MemberID: [" + memberId + "], Exception: [" + ex + "]");
                     }
                 }
 
@@ -5897,7 +5897,7 @@ namespace Nooch.DataAccess
                                                     Utility.SendEmail("transferAcceptedToRecipient", fromAddress, newUsersEmail,
                                                                                 null, subject, null, tokens, null, null, null);
 
-                                                    Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser -> transferAcceptedToRecipient Email sent to [" +
+                                                    Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser - transferAcceptedToRecipient Email sent to [" +
                                                                            newUsersEmail + "] successfully.");
                                                 }
                                                 catch (Exception ex)

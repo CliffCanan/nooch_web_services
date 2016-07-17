@@ -3198,13 +3198,12 @@ namespace Nooch.API.Controllers
 
                                 _dbContext.Entry(sbom).Reload();
 
-                                string firstName = CommonHelper.GetDecryptedData(noochMember.FirstName);
-                                string lastName = CommonHelper.GetDecryptedData(noochMember.LastName);
+                                string firstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(noochMember.FirstName));
                                 string accountNum = "**** - " + account_num.Substring(account_num.Length - 4);
                                 string verifyLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
                                                     "Nooch/MicroDepositsVerification?mid=" + MemberId);
 
-                                var templateToUse = noochMember.isRentScene == true ? "MicroDepositNotification" : "MicroDepositNotification_RentScene";
+                                var templateToUse = noochMember.isRentScene == true ? "MicroDepositNotification_RentScene" : "MicroDepositNotification";
 
                                 var tokens = new Dictionary<string, string>
 	                                        {
@@ -3231,8 +3230,8 @@ namespace Nooch.API.Controllers
                                 }
                                 catch (Exception ex)
                                 {
-                                    Logger.Error("Service Cntrlr -> SynapseV3 AddNodeWithAccountNumberAndRoutingNumber -> EMAIL FAILED: " +
-                                                 "[" + templateToUse + "] Email NOT sent to [" + toAddress + "], [Exception: " + ex + "]");
+                                    Logger.Error("Service Cntrlr -> SynapseV3 AddNodeWithAccountNumberAndRoutingNumber - EMAIL FAILED: " +
+                                                 "[" + templateToUse + "] Email NOT sent to [" + toAddress + "], Exception: [" + ex + "]");
                                 }
 
                                 #endregion Send Initial Micro-Deposit Email

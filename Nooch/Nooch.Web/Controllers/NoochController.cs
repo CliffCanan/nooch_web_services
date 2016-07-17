@@ -1536,12 +1536,12 @@ namespace Nooch.Web.Controllers
 
                         string mem_id = allQueryStrings[0];
                         string tr_id = allQueryStrings[1];
-                        string isForRentScene = allQueryStrings[2];
+                        bool isForRentScene = allQueryStrings.Length > 2 && allQueryStrings[2] == "true" ? true : false;
 
                         rpc.memId = mem_id;
 
                         // Check if this payment is for Rent Scene
-                        if (isForRentScene == "true")
+                        if (isForRentScene)
                         {
                             Logger.Info("PayRequestComplete Code Behind -> RENT SCENE Transaction Detected - TransID: [" + tr_id + "]");
                             rpc.rs = "true";
@@ -1553,6 +1553,10 @@ namespace Nooch.Web.Controllers
                         if (rpc.IsTransactionStillPending)
                         {
                             rpc = completeTrans(mem_id, tr_id, rpc);
+                        }
+                        else
+                        {
+                            Logger.Error("PayRequestComplete Code Behind -> page_load - Transaction No Longer Pending - TransID: [" + tr_id + "]");
                         }
                     }
                     else
@@ -1567,7 +1571,6 @@ namespace Nooch.Web.Controllers
                     Logger.Error("PayRequestComplete Code Behind FAILED -> page_load ERROR - 'mem_id' in query string was NULL or empty - mem_id Parameter: " + rpc.memId + "]");
                     Response.Write("<script>var errorFromCodeBehind = '1';</script>");
                 }
-
             }
             catch (Exception ex)
             {
@@ -1990,30 +1993,29 @@ namespace Nooch.Web.Controllers
         {
             PageLoadDataRejectMoney res = new PageLoadDataRejectMoney();
 
-            Logger.Info("rejectMoney CodeBehind -> Page_load Initiated - [TransactionId Parameter: " + Request.QueryString["TransactionId"] + "]");
+            Logger.Info("rejectMoney CodeBehind -> Page_load Initiated - TransactionId Parameter: [" + TransactionId + "]");
 
             try
             {
                 // TransId - transaction id from query string
                 // UserType - tells us if user opening link is existing, nonregistered, or completelty brand new user -- need this to show hide create account form later
 
-                if (!String.IsNullOrEmpty(Request.QueryString["TransactionId"]) &&
-                    !String.IsNullOrEmpty(Request.QueryString["UserType"]) &&
-                    !String.IsNullOrEmpty(Request.QueryString["TransType"]))
+                if (!String.IsNullOrEmpty(TransactionId) &&
+                    !String.IsNullOrEmpty(UserType))
                 {
-                    Session["TransactionId"] = Request.QueryString["TransactionId"];
-                    Session["UserType"] = Request.QueryString["UserType"];
-                    Session["TransType"] = Request.QueryString["TransType"];
+                    Session["TransactionId"] = TransactionId;
+                    Session["UserType"] = UserType;
+                    Session["TransType"] = TransType;
 
                     res.errorFromCodeBehind = "0";
 
-                    ResultCancelRequest TransDetails = GetTransToReject(Request.QueryString["TransactionId"]);
+                    ResultCancelRequest TransDetails = GetTransToReject(TransactionId);
 
                     if (TransDetails.IsTransFound)
                     {
                         res.transType = TransDetails.UserType;
                         res.TransId = TransDetails.TransId;
-                        res.UserType = Request.QueryString["UserType"];
+                        res.UserType = UserType;
                         res.transStatus = TransDetails.TransStatus;
                         res.transAmout = TransDetails.AmountLabel;
                         res.transMemo = TransDetails.transMemo;
@@ -2023,6 +2025,7 @@ namespace Nooch.Web.Controllers
                     }
                     else
                     {
+                        Logger.Error("rejectMoney Code Behind -> page_load ERROR - Transaction Not Found - TransID: [" + TransactionId + "]");
                         res.errorFromCodeBehind = "1";
                     }
                 }
@@ -2035,15 +2038,15 @@ namespace Nooch.Web.Controllers
                     res.TransactionResult = true;
                     res.errorFromCodeBehind = "1";
 
-                    Logger.Error("rejectMoney CodeBehind -> page_load ERROR - One of the required fields in query string was NULL or empty - " +
-                                 "TransactionId Parameter: [" + Request.QueryString["TransactionId"] + "], " +
-                                 "UserType Parameter: [" + Request.QueryString["UserType"] + "], " +
-                                 "TransType Parameter: [" + Request.QueryString["TransType"] + "]");
+                    Logger.Error("rejectMoney Code Behind -> page_load ERROR - One of the required fields in query string was NULL or empty - " +
+                                 "TransID: [" + TransactionId + "], " +
+                                 "UserType: [" + UserType + "], " +
+                                 "TransType: [" + TransType + "]");
                 }
             }
             catch (Exception ex)
             {
-                Logger.Error("rejectMoney CodeBehind -> page_load OUTER EXCEPTION - TransactionId Parameter: [" + Request.QueryString["TransactionId"] +
+                Logger.Error("rejectMoney Code Behind -> page_load OUTER EXCEPTION - TransactionId Parameter: [" + TransactionId +
                              "], Exception: [" + ex.Message + "]");
             }
 

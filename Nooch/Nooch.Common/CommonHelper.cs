@@ -1766,6 +1766,7 @@ namespace Nooch.Common
                                 st.Append("<tr><td><strong>Contact #</strong></td><td>" + FormatPhoneNumber(memberEntity.ContactNumber) + "</td></tr>");
                                 st.Append("<tr><td><strong>Phone Verified?</strong></td><td>" + memberEntity.IsVerifiedPhone.ToString() + "</td></tr>");
                                 st.Append("<tr><td><strong>IsVerifiedWithSynapse</strong></td><td>" + memberEntity.IsVerifiedWithSynapse.ToString() + "</td></tr>");
+                                st.Append("<tr><td><strong>Synapse Msg</strong></td><td>" + errorMsg + "</td></tr>");
                                 st.Append("</table>");
 
                                 StringBuilder completeEmailTxt = new StringBuilder();
