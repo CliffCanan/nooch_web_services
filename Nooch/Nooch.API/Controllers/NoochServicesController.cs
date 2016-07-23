@@ -26,10 +26,15 @@ using System.Drawing;
 using ImageProcessor;
 using System.IO.Compression;
 using Hangfire;
+using System.Web.Http.Cors;
 
 
 namespace Nooch.API.Controllers
 {
+    // Malkit (23 July 2016)
+    // Make sure to not push code to production server with CORS line uncommented 
+    // CORS exposes api's for cross site scripting, added these to use on dev server only for the purpose of testing ionic app in browser
+   // [EnableCors(origins: "*", headers: "*", methods: "*")] 
     public class NoochServicesController : ApiController
     {
 
