@@ -4517,16 +4517,19 @@ namespace Nooch.API.Controllers
 
                     var settings = new MySettingsInput
                     {
-                        UserName = myDetails.UserName,
-                        FirstName = myDetails.FirstName,
-                        LastName = myDetails.LastName,
+                        UserName = !String.IsNullOrEmpty(myDetails.UserName) ? CommonHelper.GetDecryptedData(myDetails.UserName) : "",
+                        FirstName = !String.IsNullOrEmpty(myDetails.FirstName) ? CommonHelper.GetDecryptedData(myDetails.FirstName) : "",
+
+                        LastName = !String.IsNullOrEmpty(myDetails.LastName) ? CommonHelper.GetDecryptedData(myDetails.LastName) : "",
                         Password = myDetails.Password,
                         ContactNumber = myDetails.ContactNumber,
                         SecondaryMail = myDetails.SecondaryEmail,
                         RecoveryMail = myDetails.RecoveryEmail,
                         ShowInSearch = Convert.ToBoolean(myDetails.ShowInSearch),
-                        Address = myDetails.Address,
-                        City = myDetails.City,
+                        //Address = myDetails.Address,
+                        Address = !String.IsNullOrEmpty(myDetails.Address) ? CommonHelper.GetDecryptedData(myDetails.Address) : "",
+                        //City = myDetails.City,
+                        City = !String.IsNullOrEmpty(myDetails.City) ? CommonHelper.GetDecryptedData(myDetails.City) : "",
                         State = myDetails.State,
                         Zipcode = myDetails.Zipcode,
                         IsVerifiedPhone = myDetails.IsVerifiedPhone ?? false,
