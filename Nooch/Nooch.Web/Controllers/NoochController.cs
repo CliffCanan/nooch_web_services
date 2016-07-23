@@ -732,7 +732,7 @@ namespace Nooch.Web.Controllers
 
         public ActionResult DepositMoney(string transid, string cip)
         {
-            Logger.Info("DepositMoney Code Behind -> Page_load Initiated - transID Param: [" + transid + "], cip: [" + cip + "]");
+            Logger.Info("DepositMoney Code Behind -> Page Loaded - transID: [" + transid + "], cip: [" + cip + "]");
 
             ResultCompletePayment res = new ResultCompletePayment();
             res.showPaymentInfo = false;
@@ -763,7 +763,7 @@ namespace Nooch.Web.Controllers
                         else if (cip == "3")
                             res.cip = "landlord";
 
-                        Logger.Info("DepositMoney Code Behind -> Page_load - CIP is: [" + res.cip + "]");
+                        Logger.Info("DepositMoney Code Behind -> Page Loaded - CIP is: [" + res.cip + "]");
                     }
 
                     Response.Write("<script>var errorFromCodeBehind = '0';</script>");
@@ -777,7 +777,7 @@ namespace Nooch.Web.Controllers
             {
                 Response.Write("<script>var errorFromCodeBehind = '1';</script>");
                 Logger.Error("DepositMoney Code Behind -> page_load OUTER EXCEPTION - transID: [" + transid +
-                             "], [Exception: " + ex.Message + "]");
+                             "], Exception: [" + ex.Message + "]");
             }
 
             ViewData["OnLoadData"] = res;
@@ -922,7 +922,8 @@ namespace Nooch.Web.Controllers
                 inputClass.ssn = ssn;
                 inputClass.transId = transId;
                 inputClass.zip = zip;
-                inputClass.isRentScene = isRentScene != null ? isRentScene : false;
+                inputClass.isRentScene = isRentScene;
+                inputClass.cip = cip;
 
                 var scriptSerializer = new JavaScriptSerializer();
                 string json = scriptSerializer.Serialize(inputClass);
@@ -948,15 +949,14 @@ namespace Nooch.Web.Controllers
                 }
 
                 res.ssn_verify_status = regUserResponse.ssn_verify_status;
-
-                return Json(res);
             }
             catch (Exception ex)
             {
                 Logger.Error("DepositMoney Code-Behind -> RegisterUserWithSynpForDepositMoney attempt FAILED Failed, Reason: [" + res.reason + "], " +
                              "TransId: [" + transId + "], [Exception: " + ex + "]");
-                return Json(res);
             }
+
+            return Json(res);
         }
 
         #endregion DepositMoney Page
@@ -1236,23 +1236,23 @@ namespace Nooch.Web.Controllers
 
         #region PayRequest Page
 
-        public ActionResult PayRequest()
+        public ActionResult PayRequest(string TransactionId, string UserType, string cip)
         {
             ResultCompletePayment res = new ResultCompletePayment();
             res.showPaymentInfo = false;
             res.PayorInitialInfo = false; // <div> containing the old form for entering name/email/phone...keeping just for reference
 
-            Logger.Info("PayRequest Code Behind -> Page Loaded - TransactionId Parameter: [" + Request.QueryString["TransactionId"] + "]");
+            Logger.Info("PayRequest Code Behind -> Page Loaded - TransactionId Parameter: [" + TransactionId + "]");
 
             try
             {
-                if (!String.IsNullOrEmpty(Request.QueryString["TransactionId"]))
+                if (!String.IsNullOrEmpty(TransactionId))
                 {
-                    res = GetTransDetailsForPayRequest(Request.QueryString["TransactionId"].ToString(), res);
+                    res = GetTransDetailsForPayRequest(TransactionId.ToString(), res);
 
-                    if (!String.IsNullOrEmpty(Request.QueryString["UserType"]))
+                    if (!String.IsNullOrEmpty(UserType))
                     {
-                        string n = Request.QueryString["UserType"].ToString();
+                        string n = UserType;
                         res.usrTyp = CommonHelper.GetDecryptedData(n);
                         Logger.Info("PayRequest Code Behind -> Page Load - UserType is: [" + res.usrTyp + "]");
 
@@ -1261,9 +1261,15 @@ namespace Nooch.Web.Controllers
                     }
 
                     // CIP is new for Synapse V3 and tells the page what type of ID verification the new user will need.
-                    if (Request.Params.AllKeys.Contains("cip"))
+                    if (!String.IsNullOrEmpty(cip))
                     {
-                        res.cip = Request.QueryString["cip"].ToString();
+                        res.cip = "renter"; // most common
+
+                        if (cip == "2")
+                            res.cip = "vendor";
+                        else if (cip == "3")
+                            res.cip = "landlord";
+
                         Logger.Info("PayRequest Code Behind -> Page Load - CIP is: [" + res.cip + "]");
                     }
 
@@ -1290,7 +1296,7 @@ namespace Nooch.Web.Controllers
             catch (Exception ex)
             {
                 Response.Write("<script>var errorFromCodeBehind = '1';</script>");
-                Logger.Error("PayRequest Code Behind -> Page Load FAILED - OUTER EXCEPTION - TransactionID: [" + Request.QueryString["TransactionId"] +
+                Logger.Error("PayRequest Code Behind -> Page Load FAILED - OUTER EXCEPTION - TransactionID: [" + TransactionId +
                              "], Exception: [" + ex.Message + "]");
             }
 
@@ -1740,7 +1746,7 @@ namespace Nooch.Web.Controllers
                         rca.rs = (rs.ToLower() == "true" || rs.ToLower() == "yes") ? "true" : "false";
                     }
 
-                    rca.type = !String.IsNullOrEmpty(type) ? type : "personal";
+                    rca.type = !String.IsNullOrEmpty(type) ? type : "1";
                 }
             }
             catch (Exception ex)
@@ -1905,6 +1911,7 @@ namespace Nooch.Web.Controllers
                 inputClass.transId = userData.transId;
                 inputClass.isRentScene = userData.rs == "true" ? true : false;
                 inputClass.cip = userData.cip.Length == 1 ? userData.cip : "renter";
+
                 var scriptSerializer = new JavaScriptSerializer();
                 string json = scriptSerializer.Serialize(inputClass);
 
@@ -2381,7 +2388,7 @@ namespace Nooch.Web.Controllers
         /// For when the /makePayment page first loads.
         /// </summary>
         /// <returns></returns>
-        public ActionResult makePayment()
+        public ActionResult makePayment(string from, string TransId, string type)
         {
             makePaymentPg res = new makePaymentPg();
             res.classForPinButton = "hidden";
@@ -2389,16 +2396,24 @@ namespace Nooch.Web.Controllers
 
             try
             {
-                if (!String.IsNullOrEmpty(Request.QueryString["from"]))
+                if (!String.IsNullOrEmpty(from))
                 {
-                    if (Request.QueryString["from"].IndexOf("rentscene") > -1)
+                    Logger.Info("Make Payment CodeBehind -> Page Loaded for: [" + from.ToUpper() + "]");
+
+                    if (from.IndexOf("rentscene") > -1)
                     {
-                        //Logger.Info("Make Payment CodeBehind -> Page Initiated - Is for RENTSCENE");
                         res.from = "rentscene";
                     }
-                    else if (Request.QueryString["from"] == "appjaxx")
+                    else if (from == "habitat")
                     {
-                        Logger.Info("Make Payment CodeBehind -> Page Initiated - Is for APPJAXX");
+                        res.from = "habitat";
+
+                        // Require PIN for Habitat (for now)
+                        res.classForForm = "hidden";
+                        res.classForPinButton = "";
+                    }
+                    else if (from == "appjaxx")
+                    {
                         res.from = "appjaxx";
 
                         // Only requiring the PIN for AppJaxx (for now), which is why the classForPinButton is 'hidden' by default but not classForForm
@@ -2498,6 +2513,10 @@ namespace Nooch.Web.Controllers
                 {
                     pin = CommonHelper.GetMemberPinByUserName("payments@rentscene.com");
                 }
+                else if (from == "habitat")
+                {
+                    pin = CommonHelper.GetMemberPinByUserName("andrew@tryhabitat.com");
+                }
                 else if (from == "nooch")
                 {
                     pin = CommonHelper.GetMemberPinByUserName("team@nooch.com");
@@ -2542,6 +2561,12 @@ namespace Nooch.Web.Controllers
                     {
                         Member member = CommonHelper.GetMemberDetailsByUserName("payments@rentscene.com");
 
+                        memIdToUse = member.MemberId.ToString();
+                        accessToken = member.AccessToken.ToString();
+                    }
+                    else if (from.ToLower() == "habitat")
+                    {
+                        Member member = CommonHelper.GetMemberDetailsByUserName("andrew@tryhabitat.com");
                         memIdToUse = member.MemberId.ToString();
                         accessToken = member.AccessToken.ToString();
                     }
@@ -2816,7 +2841,7 @@ namespace Nooch.Web.Controllers
             try
             {
                 res = CommonHelper.CheckUserPin(user, pin);
-                Logger.Info("Make Payment Code Behind -> checkUsersPin SUCCESS! - Message: [" + res.msg + "]");
+                Logger.Info("Make Payment Code Behind -> checkUsersPin Result -> Message: [" + res.msg + "]");
             }
             catch (Exception ex)
             {
@@ -2850,6 +2875,8 @@ namespace Nooch.Web.Controllers
                 {
                     if (user.ToLower() == "rentscene")
                         memid = "852987e8-d5fe-47e7-a00b-58a80dd15b49";
+                    else if (user == "habitat")
+                        memid = "45357cf0-e651-40e7-b825-e1ff48bf44d2";
                     else if (user.ToLower() == "appjaxx" || user.ToLower() == "josh")
                         memid = "8b4b4983-f022-4289-ba6e-48d5affb5484";
                     else if (user == "cliff")
@@ -2982,7 +3009,7 @@ namespace Nooch.Web.Controllers
             }
             catch (Exception ex)
             {
-                Logger.Info("payRequest Page -> Register Synapse User attempt FAILED Failed, Reason: [" + ex.Message + "]. TransId: [" + transId + "].");
+                Logger.Info("Pay Anyone Page -> Register Synapse User attempt FAILED Failed, Reason: [" + ex.Message + "]. TransId: [" + transId + "].");
                 return res;
             }
         }
@@ -3068,10 +3095,12 @@ namespace Nooch.Web.Controllers
             {
                 if (!String.IsNullOrEmpty(user))
                 {
-                    if (user.ToLower() == "appjaxx")
-                        memId = "8b4b4983-f022-4289-ba6e-48d5affb5484";
-                    else if (user.ToLower() == "rentscene")
+                    if (user.ToLower() == "rentscene")
                         memId = "852987e8-d5fe-47e7-a00b-58a80dd15b49";
+                    else if (user == "habitat")
+                        memId = "45357cf0-e651-40e7-b825-e1ff48bf44d2";
+                    else if (user.ToLower() == "appjaxx")
+                        memId = "8b4b4983-f022-4289-ba6e-48d5affb5484";
                     else if (user == "cliff")
                         memId = "b3a6cf7b-561f-4105-99e4-406a215ccf60";
                 }

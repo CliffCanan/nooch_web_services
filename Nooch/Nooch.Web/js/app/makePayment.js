@@ -28,6 +28,20 @@ $(document).ready(function () {
 
         var suggestedUsers = getSuggestedUsers();
     }
+    else if (FROM == "habitat")
+    {
+        COMPANY = "Habitat";
+
+        if (isSmScrn)
+            $('.navbar img').css('width', '100px');
+
+        $('#navbar-title').css('top', '12px');
+
+        changeFavicon('../Assets/favicon-habitat.png')
+
+        askForPin = true;
+        var suggestedUsers = getSuggestedUsers();
+    }
     else if (FROM == "appjaxx" || FROM == "josh")
     {
         askForPin = true;
@@ -36,7 +50,7 @@ $(document).ready(function () {
 
     if (askForPin)
     {
-        showPinPrompt();
+        showPinPrompt("initial", FROM);
     }
     else
     {
@@ -250,7 +264,7 @@ function submitPayment() {
             console.log("SUCCESS -> 'sendPaymentResponse' is... ");
             console.log(sendPaymentResponse);
 
-            resultReason = sendPaymentResponse.msg;
+            var resultReason = sendPaymentResponse.msg;
 
             // Hide the Loading Block
             $('#makePaymentContainer').unblock();
@@ -301,7 +315,7 @@ function submitPayment() {
                         swal({
                             title: "Email Already Registered",
                             text: bodyText +
-                                  "<span class='show f-600' style='margin: 10px 30px;'>Do you still want to send a payment request to " + sendPaymentResponse.name + "?</span>",
+                                  "<span class='show f-600' style='margin: 10px 30px;'>Do you still want to send a payment request to <strong>" + sendPaymentResponse.name + "</strong>?</span>",
                             type: "warning",
                             showCancelButton: true,
                             confirmButtonColor: "#3fabe1",
@@ -522,7 +536,7 @@ function sendRequestToExistingUser() {
             console.log("SUCCESS -> 'sendPaymentResponse' is... ");
             console.log(sendPaymentResponse);
 
-            resultReason = sendPaymentResponse;
+            var resultReason = sendPaymentResponse;
 
             // Hide the Loading Block
             $('#makePaymentContainer').unblock();
@@ -735,7 +749,7 @@ function showErrorAlert(errorNum) {
     var shouldFocusOnEmail = false;
     var shouldShowErrorDiv = true;
 
-    console.log("ShowError -> errorNum is: [" + errorNum + "], resultReason is: [" + resultReason + "]");
+    console.log("ShowError -> errorNum is: [" + errorNum + "]");
 
     if (errorNum == '1') // Codebehind errors
     {
@@ -819,8 +833,29 @@ function showErrorAlert(errorNum) {
 }
 
 
-function showPinPrompt(type) {
-    var title = type == "incorrect" ? "Incorrect PIN" : "Hola Josh";
+function showPinPrompt(type, user) {
+    var title = "";
+    var imgName = "";
+    var imgSize = "";
+
+    if (type == "incorrect")
+    {
+        title = "Incorrect PIN";
+        imgName = "sweet-alert-x.png";
+        imgSize = "88x88";
+    }
+    else if (user == "habitat")
+    {
+        title = "Hello Habitat!";
+        imgName = "habitat-logo.png";
+        imgSize = "220x50";
+    }
+    else if (user == "appjaxx")
+    {
+        title = "Hola Josh";
+        imgName = "appjaxx-nav.png"
+        imgSize = "220x50";
+    }
 
     swal({
         title: title,
@@ -828,11 +863,13 @@ function showPinPrompt(type) {
         type: "input",
         inputType: "password",
         inputPlaceholder: "ENTER PIN",
+        imageUrl: "../Assets/Images/" + imgName,
+        imageSize: imgSize,
         allowEscapeKey: false,
         showCancelButton: false,
         confirmButtonColor: "#3fabe1",
         confirmButtonText: "Ok",
-        customClass: "pinInput",
+        customClass: "pinInput largeText",
         closeOnConfirm: false
     }, function (inputTxt) {
         console.log("Entered Text: [" + inputTxt + "]");
@@ -893,6 +930,7 @@ function submitPin(pin) {
             if (result.success == true)
             {
                 console.log("SubmitPIN: Success!");
+                pinVerified = true;
 
                 // THEN DISPLAY SUCCESS ALERT...
                 swal({
@@ -903,10 +941,11 @@ function submitPin(pin) {
                     confirmButtonColor: "#3fabe1",
                     confirmButtonText: "Ok",
                     closeOnConfirm: true,
-                    customClass: "idVerSuccessAlert",
-                    timer: 2000
+                    customClass: "largeText",
+                    showConfirmButton: false,
+                    timer: 1800
                 }, function () {
-                    pinVerified = true;
+                    swal.close();
 
                     $('#pinBtnWrap').addClass('hidden');
                     $('#paymentForm').removeClass('hidden');
@@ -918,11 +957,11 @@ function submitPin(pin) {
 
                 if (result.msg.indexOf("Incorrect") > -1)
                 {
-                    showPinPrompt("incorrect");
+                    showPinPrompt("incorrect", FROM);
                 }
-                else if (resultReason.indexOf("User not found") > -1)
+                else if (result.msg.indexOf("User not found") > -1)
                 {
-                    console.log("Error: missing critical data");
+                    console.log("Error: User not found");
                     showErrorAlert('2');
                 }
                 else

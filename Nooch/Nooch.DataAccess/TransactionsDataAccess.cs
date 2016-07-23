@@ -4674,29 +4674,46 @@ namespace Nooch.DataAccess
                         catch (Exception ex)
                         {
                             Logger.Error("TDA -> RequestMoneyToNonNoochUserUsingSynapse -> [" + templateToUse_Sender + "] email NOT sent to [" + RequesterEmail +
-                                         "], [Exception: " + ex + "]");
+                                         "], Exception: [" + ex + "]");
                         }
                     }
 
                     try
                     {
-                        // Send email to Request Receiver -- sending UserType, TransType as encrypted along with request
+                        // Send email to Request Receiver
                         // In this case UserType would = 'New'
                         // TransType would = 'Request'
                         // and link source would = 'Email'
-                        cancelLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
+
+                        string cipToUse = "1";
+                        switch (requestDto.cipTag)
+                        {
+                            case "renter":
+                                cipToUse = "1";
+                                break;
+                            case "vendor":
+                                cipToUse = "2";
+                                break;
+                            case "runner":
+                                cipToUse = "2";
+                                break;
+                            case "landlord":
+                                cipToUse = "3";
+                                break;
+                        }
+
+                        string rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
                                                    "Nooch/RejectMoney?TransactionId=" + requestId +
                                                    "&UserType=U6De3haw2r4mSgweNpdgXQ==" +
                                                    "&TransType=T3EMY1WWZ9IscHIj3dbcNw==");
 
                         string paylink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
                                                        "Nooch/PayRequest?TransactionId=" + requestId +
-                                                       "&UserType=U6De3haw2r4mSgweNpdgXQ=="); // UserType = "New"
+                                                       "&UserType=U6De3haw2r4mSgweNpdgXQ==" + // UserType = "New"
+                                                       "&cip=" + cipToUse);
 
                         if (isForRentScene)
-                        {
-                            paylink = paylink + "&rs=1";
-                        }
+                            paylink += "&rs=1";
 
                         var tokens2 = new Dictionary<string, string>
                         {
@@ -4704,7 +4721,7 @@ namespace Nooch.DataAccess
 					        {Constants.PLACEHOLDER_NEWUSER, recipientsEmail},
 					        {Constants.PLACEHOLDER_TRANSFER_AMOUNT, s32[0].ToString()},
 					        {Constants.PLACEHLODER_CENTS, s32[1].ToString()},
-					        {Constants.PLACEHOLDER_REJECT_LINK, cancelLink},
+					        {Constants.PLACEHOLDER_REJECT_LINK, rejectLink},
 					        {Constants.PLACEHOLDER_SENDER_FULL_NAME, RequesterFirstName + " " + RequesterLastName},
 					        {Constants.MEMO,memo},
 					        {Constants.PLACEHOLDER_PAY_LINK, paylink}
@@ -7220,6 +7237,9 @@ namespace Nooch.DataAccess
                                     cipToUse = "1";
                                     break;
                                 case "vendor":
+                                    cipToUse = "2";
+                                    break;
+                                case "runner":
                                     cipToUse = "2";
                                     break;
                                 case "landlord":

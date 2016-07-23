@@ -486,10 +486,12 @@ namespace Nooch.Common
 
                 string memId = string.Empty;
 
-                if (user.ToLower() == "appjaxx")
-                    memId = "8b4b4983-f022-4289-ba6e-48d5affb5484";
-                else if (user.ToLower() == "rentscene")
+                if (user.ToLower() == "rentscene")
                     memId = "852987e8-d5fe-47e7-a00b-58a80dd15b49";
+                else if (user == "habitat")
+                    memId = "45357cf0-e651-40e7-b825-e1ff48bf44d2";
+                else if (user.ToLower() == "appjaxx")
+                    memId = "8b4b4983-f022-4289-ba6e-48d5affb5484";
                 else if (user == "cliff")
                     memId = "b3a6cf7b-561f-4105-99e4-406a215ccf60";
                 else
@@ -656,7 +658,8 @@ namespace Nooch.Common
             {
                 Logger.Error("Common Helper -> GetMemberDetails FAILED - Member ID: [" + memberId + "], [Exception: " + ex + "]");
             }
-            return new Member();
+
+            return null;
         }
 
         /// <summary>
@@ -1943,7 +1946,7 @@ namespace Nooch.Common
                     }
                     if (String.IsNullOrEmpty(memberEntity.State) && String.IsNullOrEmpty(usersState))
                     {
-                        // Missing State, so if use does have a ZIP, try getting the City & States from Google
+                        // Missing State, so if user does have a ZIP, try getting the City & States from Google
                         if (!String.IsNullOrEmpty(usersZip))
                         {
                             var googleMapsRes = GetCityAndStateFromZip(usersZip);
@@ -1998,7 +2001,7 @@ namespace Nooch.Common
                         hasFBID = true;
                     }
                     // Now check for ID verification document (Checking the one in the Members Table here -
-                    // could also be an ID img in SynapseCreateUserResults table
+                    // could also be an ID img in SynapseCreateUserResults table, which is checked for later in this method)
                     if (!String.IsNullOrEmpty(memberEntity.VerificationDocumentPath))
                     {
                         usersPhotoIDurl = memberEntity.VerificationDocumentPath;
@@ -2024,7 +2027,11 @@ namespace Nooch.Common
 
                     if (usersSynapseDetails == null)
                     {
-                        Logger.Error("Common Helper -> sendDocsToSynapseV3 ABORTED: Member's Synapse User Details not found. [Username: " + userNameDecrypted + "]");
+                        var error = "Common Helper -> sendDocsToSynapseV3 ABORTED: Member's Synapse User Details not found - Username: [" + userNameDecrypted +
+                                     "], MemberID: [" + MemberId + "]";
+                        Logger.Error(error);
+                        notifyCliffAboutError(error);
+
                         res.message = "Users synapse details not found";
                         return res;
                     }
@@ -2239,8 +2246,8 @@ namespace Nooch.Common
 
                             try
                             {
-                                // Preparing to update values in CreateSynapseUserResults table
-                                // Get existing records from dbo.SynapseCreateUserResults for this Member
+                                // Update values in SynapseCreateUserResults table
+                                // Get existing record from dbo.SynapseCreateUserResults
                                 var synapseRes = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == id &&
                                                                                                          m.IsDeleted == false);
 
@@ -2357,14 +2364,22 @@ namespace Nooch.Common
                         {
                             // Response from Synapse had 'success' != true
                             // SHOULDN'T EVER GET HERE B/C IF SYNAPSE CAN'T VERIFY THE USER, IT RETURNS A 400 BAD REQUEST HTTP ERROR WITH A MESSAGE...SEE WEB EX BELOW
-                            Logger.Error("Common Helper -> sendDocsToSynapseV3 FAILED: Synapse Result \"success != true\" - [Username: " + userNameDecrypted + "]");
+                            var error = "Common Helper -> sendDocsToSynapseV3 FAILED: Synapse Result \"success != true\" - Username: [" + userNameDecrypted +
+                                         "], MemberID: [" + MemberId + "]... SHOULDN'T EVER GET HERE B/C IF SYNAPSE CAN'T VERIFY THE USER, IT RETURNS A 400 BAD REQUEST HTTP ERROR WITH A MESSAGE...";
+                            Logger.Error(error);
+                            notifyCliffAboutError(error);
+
                             res.message = "Add Docs response from synapse was false";
                         }
                     }
                     else
                     {
                         // Response from Synapse was null
-                        Logger.Error("Common Helper -> sendDocsToSynapseV3 FAILED: Synapse Result was NULL - [Username: " + userNameDecrypted + "]");
+                        var error = "Common Helper -> sendDocsToSynapseV3 FAILED: Synapse Result was NULL - Username: [" + userNameDecrypted +
+                                    "], MemberID : [" + MemberId + "]";
+                        Logger.Error(error);
+                        notifyCliffAboutError(error);
+
                         res.message = "Add Docs response from synapse was null";
                     }
 
@@ -2457,9 +2472,9 @@ namespace Nooch.Common
                     {
                         res.message = "Common Helper Exception #1660";
                     }
-                }
 
                     #endregion Synapse Error Returned
+                }
 
                 // Save changes to Members DB
                 memberEntity.DateModified = DateTime.Now;
@@ -4693,7 +4708,7 @@ namespace Nooch.Common
                     transactions = _dbContext.Transactions.Where(trans => trans.TransactionStatus == "Success" &&
                                                                          (trans.SenderId == id ||
                                                                           trans.RecipientId == id))
-                                                                          .OrderByDescending(r => r.TransactionDate).Take(30).ToList();
+                                                                          .OrderByDescending(r => r.TransactionDate).Take(40).ToList();
 
                     if (transactions != null && transactions.Count > 0)
                     {

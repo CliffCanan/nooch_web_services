@@ -1431,7 +1431,6 @@ div#pwFormShell #depositCreateAccount,
   border-radius: 5px;
   color: #fff;
   height: 45px;
-  font-size: 16px;
   padding: 0 12px !important;
 }
 .btn.btn-fb > i { margin: 0 8px 0 0;}
@@ -1720,7 +1719,8 @@ div#carousel ~ a:hover {
   line-height: 1.4;
   margin: 20px 0;
 }
-.sweet-alert.largeText p { font-size: 18px; }
+.sweet-alert.largeText p,
+div[data-custom-class*="largeText"] p { font-size: 18px !important; }
 .sweet-alert ul > li { margin-bottom: 5px; }
 .sweet-alert button {
   box-shadow: none !important;
@@ -1793,12 +1793,13 @@ div#carousel ~ a:hover {
   line-height: 20px;
 }
 
-.sweet-alert.pinInput input {
-  text-align: center;
-  letter-spacing: 4px;
+.sweet-alert.pinInput input,
+.sweet-alert[data-custom-class*="pinInput"] input {
+  letter-spacing: 8px;
   font-size: 24px;
   font-weight: bold;
   margin-top: 0;
+  padding: 6px;
 }
 .sweet-alert.pinInput .sa-input-error { top: 15px; }
 

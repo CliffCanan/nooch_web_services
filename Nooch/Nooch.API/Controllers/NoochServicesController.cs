@@ -5725,8 +5725,8 @@ namespace Nooch.API.Controllers
             }
             else
             {
-                Logger.Error("Service Cntrlr -> TransferMoneyToNonNoochUserUsingSynapse FAILED. AccessToken not found or invalid - " +
-                             "[MemberID: " + transactionInput.MemberId + "], [Receiver Email: " + receiverEmailId + "]");
+                Logger.Error("Service Cntrlr -> TransferMoneyToNonNoochUserUsingSynapse FAILED - AccessToken Not Found or Invalid - " +
+                             "MemberID: [" + transactionInput.MemberId + "], Receiver Email: [" + receiverEmailId + "]");
                 throw new Exception("Invalid OAuth 2 Access");
             }
         }

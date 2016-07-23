@@ -2,7 +2,7 @@
 @using Nooch.Common.Entities;
 @{
     Layout = null;
-    makePaymentPg onLoadD = (makePaymentPg)ViewData["OnLoadData"];
+    makePaymentPg onLoad = (makePaymentPg)ViewData["OnLoadData"];
 }
 
 <!DOCTYPE html>
@@ -96,21 +96,27 @@
 <body id="body-depositNew" class="createAccountPg">
 
     <form id="form1">
-        <input type="hidden" id="errorId" value="@onLoadD.errorId" />
-        <input type="hidden" id="type" value="@onLoadD.type" />
-        <input type="hidden" id="from" value="@onLoadD.from" />
+        <input type="hidden" id="errorId" value="@onLoad.errorId" />
+        <input type="hidden" id="type" value="@onLoad.type" />
+        <input type="hidden" id="from" value="@onLoad.from" />
     </form>
 
     <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
         <div class="clearfix">
             <div class="m-l-15">
-                @if (onLoadD.from == "rentscene")
+                @if (onLoad.from == "rentscene")
                 {
                     <a class="pull-left" href="https://www.rentscene.com/" style="margin: 12px auto 12px !important;">
                         <img src="https://noochme.com/noochweb/Assets/Images/rentscene.png" class="center-block" alt="Rent Scene Logo" />
                     </a>
                 }
-                else if (onLoadD.from == "appjaxx")
+                else if (onLoad.from == "habitat")
+                {
+                    <a class="pull-left" href="https://tryhabitat.com/" style="margin: 12px auto 12px !important;">
+                        <img src="https://noochme.com/noochweb/Assets/Images/habitat-logo.png" class="center-block" alt="AppJaxx Logo" />
+                    </a>
+                }
+                else if (onLoad.from == "appjaxx")
                 {
                     <a class="pull-left" href="http://www.appjaxx.com/" style="margin: 12px auto 12px !important;">
                         <img src="https://noochme.com/noochweb/Assets/Images/appjaxx-nav.png" class="center-block" alt="AppJaxx Logo" />
@@ -122,7 +128,7 @@
                         <img src="https://noochme.com/noochweb/Assets/Images/nooch-logo2.svg" class="center-block" alt="Nooch Logo" />
                     </a>
                 }
-                <div class="text-center" style="position: absolute; left: 10%; top: 20px; width: 80%;">
+                <div id="navbar-title" class="text-center" style="position: absolute; left: 10%; top: 20px; width: 80%;">
                     <label class="center-block f-20">Create A Payment</label>
                 </div>
             </div>
@@ -142,11 +148,11 @@
 
         <div id="idVerWiz" class="">
 
-            @*<div id="pinBtnWrap" class="animated bounceIn @onLoadD.classForPinButton">
+            @*<div id="pinBtnWrap" class="animated bounceIn @onLoad.classForPinButton">
                     <button type="button" class="btn btn-primary center-block" onclick="showPinPrompt()">Enter PIN</button>
                 </div>*@
 
-            <form id="paymentForm" role="form" class="animated form-horizontal @onLoadD.classForForm">
+            <form id="paymentForm" role="form" class="animated form-horizontal @onLoad.classForForm">
 
                 <div class="well well-sm m-b-15">
                     <div class="f-16">
@@ -184,12 +190,6 @@
                 <div class="form-group" id="nameGrp">
                     <label for="name" class="col-sm-3 control-label p-t-10">Name</label>
                     <div class="col-sm-9 inputContainer">
-                        @*@if (@onLoadD.from == "rentscene")
-                            {
-                                <input id="name" type="text" class="form-control autocomplete" name="country" />
-                            }
-                            else
-                            {*@
                         <div class="fg-line">
                             <input id="name" type="text" class="form-control" value="" placeholder="Enter the recipient's full name" />
                             <i class="fa fa-close" onclick="resetName()"></i>
@@ -223,16 +223,32 @@
                     <div class="col-sm-9 inputContainer" style="margin-top: 3px">
                         <div class="btn-group btn-group-justified" data-toggle="buttons">
 
-                            <label class="btn btn-default active">
-                                <i class="fa fa-user m-r-5"></i>
-                                <input type="radio" name="userType" id="renter" value="client" autocomplete="off" checked="checked">Client
-                            </label>
+                            @if (onLoad.from == "rentscene")
+                            {
+                                <label class="btn btn-default active">
+                                    <i class="fa fa-user m-r-5"></i>
+                                    <input type="radio" name="userType" id="renter" value="client" autocomplete="off" checked="checked">Renter
+                                </label>
 
-                            <label class="btn btn-default">
-                                <i class="fa fa-building m-r-5"></i>
-                                <input type="radio" name="userType" id="landlord" value="landlord" autocomplete="off">Landlord
-                            </label>
-
+                                <label class="btn btn-default">
+                                    <i class="fa fa-building m-r-5"></i>
+                                    <input type="radio" name="userType" id="landlord" value="landlord" autocomplete="off">Landlord
+                                </label>
+                            }
+                            else if (onLoad.from == "habitat")
+                            {
+                                <label class="btn btn-default active">
+                                    <i class="fa fa-user m-r-5"></i>
+                                    <input type="radio" name="userType" id="runner" value="vendor" autocomplete="off" checked="checked">Runner
+                                </label>
+                            }
+                            else if (onLoad.from == "appjaxx")
+                            {
+                                <label class="btn btn-default active">
+                                    <i class="fa fa-user m-r-5"></i>
+                                    <input type="radio" name="userType" id="renter" value="client" autocomplete="off" checked="checked">Client
+                                </label>
+                            }
                             <label class="btn btn-default disabled" data-toggle="tooltip" title="Vendors can only RECEIVE money.">
                                 <i class="fa fa-briefcase m-r-5"></i>
                                 <input type="radio" name="userType" id="vendor" value="vendor" autocomplete="off" disabled>Vendor
@@ -282,7 +298,6 @@
         </div>-->*@
 
     <div class="errorMessage hidden"></div>
-
 
     <script src="//code.jquery.com/jquery-1.12.4.min.js"></script>
     <script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>

@@ -392,18 +392,21 @@
 
                             </section>
 
-                            <h3><i class="fa fa-fw fa-picture-o"></i><br />ID Doc<span class="hide-sm">ument</span></h3>
-                            <section>
+                            @if (pgData.cip != "vendor")
+                            {
+                                <h3><i class="fa fa-fw fa-picture-o"></i><br />ID Doc<span class="hide-sm">ument</span></h3>
+                                <section>
 
-                                <div class="well well-sm m-b-15">
-                                    <div>Please upload a picture of any government-issued <strong>photo ID</strong> with your name<span class="hide-sm"> on it</span>.</div>
-                                </div>
+                                    <div class="well well-sm m-b-15">
+                                        <div>Please upload a picture of any government-issued <strong>photo ID</strong> with your name<span class="hide-sm"> on it</span>.</div>
+                                    </div>
 
-                                <div id="idDocWrap">
-                                    <input id="idVer_idDoc" type="file" class="">
-                                </div>
+                                    <div id="idDocWrap">
+                                        <input id="idVer_idDoc" type="file" class="">
+                                    </div>
 
-                            </section>
+                                </section>
+                            }
 
                         </div>
 

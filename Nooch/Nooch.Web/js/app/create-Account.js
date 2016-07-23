@@ -62,10 +62,10 @@ $(document).ready(function () {
     {
         var fontSize = isSmScrn ? '18px' : '20px';
 
-        $('#nameInNavContainer h5').removeClass('m-t-5').css({
+        $('#nameInNavContainer h4').removeClass('m-t-5').css({
             'font-size': fontSize,
             'font-weight': '600',
-            'margin-top': '25px'
+            'margin-top': '24px'
         })
         $('#nameInNav').hide();
     }
