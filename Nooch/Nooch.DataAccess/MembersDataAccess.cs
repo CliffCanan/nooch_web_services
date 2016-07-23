@@ -6427,7 +6427,10 @@ namespace Nooch.DataAccess
                 memberNotifications.NewAndUpdate = newAndUpdate;
                 memberNotifications.DateModified = DateTime.Now;
 
-                return _dbContext.SaveChanges() > 0 ? "Success" : "Failure";
+
+                DbContext dbc = CommonHelper.GetDbContextFromEntity(memberNotifications);
+
+                return dbc.SaveChanges() > 0 ? "Success" : "Failure";
             }
             catch (Exception ex)
             {

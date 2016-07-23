@@ -26,10 +26,15 @@ using System.Drawing;
 using ImageProcessor;
 using System.IO.Compression;
 using Hangfire;
+using System.Web.Http.Cors;
 
 
 namespace Nooch.API.Controllers
 {
+    // Malkit (23 July 2016)
+    // Make sure to not push code to production server with CORS line uncommented 
+    // CORS exposes api's for cross site scripting, added these to use on dev server only for the purpose of testing ionic app in browser
+   // [EnableCors(origins: "*", headers: "*", methods: "*")] 
     public class NoochServicesController : ApiController
     {
 
@@ -4512,16 +4517,19 @@ namespace Nooch.API.Controllers
 
                     var settings = new MySettingsInput
                     {
-                        UserName = myDetails.UserName,
-                        FirstName = myDetails.FirstName,
-                        LastName = myDetails.LastName,
+                        UserName = !String.IsNullOrEmpty(myDetails.UserName) ? CommonHelper.GetDecryptedData(myDetails.UserName) : "",
+                        FirstName = !String.IsNullOrEmpty(myDetails.FirstName) ? CommonHelper.GetDecryptedData(myDetails.FirstName) : "",
+
+                        LastName = !String.IsNullOrEmpty(myDetails.LastName) ? CommonHelper.GetDecryptedData(myDetails.LastName) : "",
                         Password = myDetails.Password,
                         ContactNumber = myDetails.ContactNumber,
                         SecondaryMail = myDetails.SecondaryEmail,
                         RecoveryMail = myDetails.RecoveryEmail,
                         ShowInSearch = Convert.ToBoolean(myDetails.ShowInSearch),
-                        Address = myDetails.Address,
-                        City = myDetails.City,
+                        //Address = myDetails.Address,
+                        Address = !String.IsNullOrEmpty(myDetails.Address) ? CommonHelper.GetDecryptedData(myDetails.Address) : "",
+                        //City = myDetails.City,
+                        City = !String.IsNullOrEmpty(myDetails.City) ? CommonHelper.GetDecryptedData(myDetails.City) : "",
                         State = myDetails.State,
                         Zipcode = myDetails.Zipcode,
                         IsVerifiedPhone = myDetails.IsVerifiedPhone ?? false,
