@@ -932,20 +932,20 @@ namespace Nooch.Web.Controllers
 
                 RegisterUserSynapseResultClassExt regUserResponse = ResponseConverter<RegisterUserSynapseResultClassExt>.CallServicePostMethod(String.Concat(serviceUrl, serviceMethod), json);
 
-                if (regUserResponse.success == "True")
+                if (regUserResponse.success == "true")
                 {
                     res.success = "true";
                     res.reason = "OK";
                     res.memberIdGenerated = regUserResponse.memberIdGenerated;
                 }
-                else if (regUserResponse.success == "False")
+                else if (regUserResponse.success == "false")
                 {
-                    Logger.Error("DepositMoney Code-Behind -> RegisterUserWithSynpForDepositMoney FAILED - SERVER RETURNED 'success' = 'false' - [TransID: " + transId + "]");
+                    Logger.Error("DepositMoney Code-Behind -> RegisterUserWithSynpForDepositMoney FAILED - SERVER RETURNED 'success' = 'false' - TransID: [" + transId + "]");
                     res.reason = regUserResponse.reason;
                 }
                 else
                 {
-                    Logger.Error("DepositMoney Code-Behind -> RegisterUserWithSynpForDepositMoney FAILED - UNKNOWN ERROR FROM SERVER - [TransID: " + transId + "]");
+                    Logger.Error("DepositMoney Code-Behind -> RegisterUserWithSynpForDepositMoney FAILED - UNKNOWN ERROR FROM SERVER - TransID: [" + transId + "]");
                 }
 
                 res.ssn_verify_status = regUserResponse.ssn_verify_status;

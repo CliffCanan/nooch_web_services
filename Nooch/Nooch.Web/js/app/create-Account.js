@@ -21,7 +21,8 @@ var isIdVerified = false;
 var isSmScrn = false;
 
 $(document).ready(function () {
-    if ($(window).width() < 768) {
+    if ($(window).width() < 768)
+    {
         isSmScrn = true;
     }
 
@@ -58,25 +59,27 @@ $(document).ready(function () {
         document.title = "Upgrade Account | Nooch Payments";
     }
 
-    if (TYPE == "personal" || TYPE == "2")
+    if ((TYPE == "personal" || TYPE == "2") && memid == "")
     {
         var fontSize = isSmScrn ? '18px' : '20px';
 
         $('#nameInNavContainer h4').removeClass('m-t-5').css({
             'font-size': fontSize,
             'font-weight': '600',
-            'margin-top': '24px'
+            'margin-top': '25px'
         })
         $('#nameInNav').hide();
     }
 
     if (areThereErrors() == false)
     {
-        if (transType == "phone") {
+        if (transType == "phone")
+        {
             usrEm = "";
             usrPhn = sentTo;
         }
-        else {
+        else
+        {
             usrEm = sentTo;
             usrPhn = "";
         }
@@ -103,12 +106,11 @@ $(document).ready(function () {
                 cancelButtonText: "Learn More",
                 closeOnCancel: false,
                 confirmButtonColor: "#3fabe1",
-                confirmButtonText: "Let's Go!",
+                confirmButtonText: "Let's Go",
                 customClass: "upgradeNotice",
                 allowEscapeKey: false,
                 html: true
-            }, function (isConfirm)
-            {
+            }, function (isConfirm) {
                 if (isConfirm)
                 {
                     setTimeout(function () {
@@ -135,7 +137,7 @@ $(document).ready(function () {
                 showCancelButton: false,
                 cancelButtonText: "Learn More",
                 confirmButtonColor: "#3fabe1",
-                confirmButtonText: "Let's Go!",
+                confirmButtonText: "Let's Go",
                 closeOnCancel: false,
                 customClass: "securityAlert",
                 allowEscapeKey: false,
@@ -170,7 +172,8 @@ $(document).ready(function () {
             runIdWizard()
         });
     }
-    else {
+    else
+    {
         console.log("93. There was an error! :-(");
     }
 });
@@ -215,28 +218,28 @@ function runIdWizard() {
 
             var calendarIcon = $('.datePickerGrp i');
 
-            calendarIcon.click(function ()
-            {
-                setTimeout(function ()
-                {
+            calendarIcon.click(function () {
+                setTimeout(function () {
                     $('#dobGrp .dtp-container.dropdown').addClass('fg-toggled open');
                     $('#idVer-dob').data("DateTimePicker").show();
                 }, 150);
             });
 
             $('#idVer-ssn').mask("000 - 00 - 0000");
-            $('#idVer-zip').mask("00000");
+            //$('#idVer-zip').mask("00000");
             $('#idVer-phone').mask('(000) 000-0000');
 
             $('[data-toggle="popover"]').popover();
         },
         onStepChanging: function (event, currentIndex, newIndex) {
 
-            if (newIndex == 0) {
+            if (newIndex == 0)
+            {
                 $('#idVerWiz > .content').animate({ height: "26em" }, 600)
             }
 
-            if (currentIndex == 1) {
+            if (currentIndex == 1)
+            {
                 $('.createAccountPg #idVerWiz').css('overflow', 'hidden');
             }
 
@@ -270,19 +273,23 @@ function runIdWizard() {
                                 $('#idVerWiz > .content').animate({ height: "19em" }, 600)
                                 return true;
                             }
-                            else {
+                            else
+                            {
                                 updateValidationUi("phone", false);
                             }
                         }
-                        else {
+                        else
+                        {
                             updateValidationUi("email", false);
                         }
                     }
-                    else {
+                    else
+                    {
                         updateValidationUi("name", false);
                     }
                 }
-                else {
+                else
+                {
                     updateValidationUi("name", false);
                 }
 
@@ -305,7 +312,8 @@ function runIdWizard() {
                     var trimmedZip = $('#idVer-zip').val().trim();
                     $('#idVer-zip').val(trimmedZip);
 
-                    if ($('#idVer-zip').val().length == 5)
+                    //if ($('#idVer-zip').val().length == 5)
+                    if ($('#idVer-zip').val().length > 4)
                     {
                         updateValidationUi("zip", true);
 
@@ -314,11 +322,13 @@ function runIdWizard() {
                         $('#idVerWiz > .content').animate({ height: "26.5em" }, 500)
                         return true;
                     }
-                    else {
+                    else
+                    {
                         updateValidationUi("zip", false);
                     }
                 }
-                else {
+                else
+                {
                     updateValidationUi("address", false);
                 }
             }
@@ -402,30 +412,36 @@ function runIdWizard() {
                             $('#idVerWiz > .content').animate({ height: "29em" }, 800)
                             return true;
                         }
-                        else {
+                        else
+                        {
                             updateValidationUi("ssn", false);
                         }
                     }
-                    else {
+                    else
+                    {
                         updateValidationUi("dob-default", false);
                     }
                 }
-                else {
+                else
+                {
                     updateValidationUi("dob", false);
                 }
             }
 
             // Allways allow previous action even if the current form is not valid!
-            if (currentIndex > newIndex) {
+            if (currentIndex > newIndex)
+            {
                 return true;
             }
         },
         onStepChanged: function (event, currentIndex, priorIndex) {
-            if (currentIndex == 1) {
+            if (currentIndex == 1)
+            {
                 $('.createAccountPg #idVerWiz').css('overflow', 'visible');
                 $('#idVer-address').focus();
             }
-            else if (currentIndex == 2) {
+            else if (currentIndex == 2)
+            {
                 $('#idVer-email').focus();
             }
         },
@@ -449,7 +465,8 @@ function runIdWizard() {
 function updateValidationUi(field, success) {
     //console.log("Field: " + field + "; success: " + success);
 
-    if (field == "dob-default") {
+    if (field == "dob-default")
+    {
         field = "dob";
 
         swal({
@@ -465,63 +482,77 @@ function updateValidationUi(field, success) {
         });
     }
 
-    if (success == true) {
+    if (success == true)
+    {
         $('#' + field + 'Grp .form-group').removeClass('has-error').addClass('has-success');
         $('#' + field + 'Grp .help-block').slideUp();
 
         // Show the success checkmark
-        if (!$('#' + field + 'Grp .iconFeedback').length) {
+        if (!$('#' + field + 'Grp .iconFeedback').length)
+        {
             $('#' + field + 'Grp .form-group .fg-line').append('<i class="fa fa-check text-success iconFeedback animated bounceIn"></i>');
         }
-        else {
+        else
+        {
             $('#' + field + 'Grp .iconFeedback').removeClass('bounceOut').addClass('bounceIn');
         }
     }
-    else {
+    else
+    {
         $('#' + field + 'Grp .form-group').removeClass('has-success').addClass('has-error');
 
         // Hide the success checkmark if present
-        if ($('#' + field + 'Grp .iconFeedback').length) {
+        if ($('#' + field + 'Grp .iconFeedback').length)
+        {
             $('#' + field + 'Grp .iconFeedback').addClass('bounceOut');
         }
 
         var helpBlockTxt = "";
-        if (field == "name") {
+        if (field == "name")
+        {
             helpBlockTxt = "Please enter your full <strong>legal name</strong>.";
         }
-        else if (field == "dob") {
+        else if (field == "dob")
+        {
             helpBlockTxt = "Please enter your date of birth. &nbsp;Only needed to verify your ID!"
         }
-        else if (field == "ssn") {
+        else if (field == "ssn")
+        {
             $('#idVerWiz > .content').animate({ height: "28em" }, 600)
             helpBlockTxt = isSmScrn ? "Please enter your <strong>SSN</strong>."
-                                    : "<strong>Please enter your SSN.</strong>"// or connect with FB." // CC (6/7/16): Un-comment once Synapse finishes adding /user/docs/add to V3.0
+                                    : "<strong>Please enter your full SSN.</strong>"// or connect with FB." // CC (6/7/16): Un-comment once Synapse finishes adding /user/docs/add to V3.0
 
             if (isSmScrn)
             {
                 $('#idVerWiz > .content').animate({ height: "27em" }, 300)
             }
         }
-        else if (field == "address") {
+        else if (field == "address")
+        {
             helpBlockTxt = "Please enter <strong>just the <span style='text-decoration:underline;'>street address</span></strong> of where you <strong>currently</strong> live."
             $('#idVerWiz > .content').animate({ height: "21em" }, 600);
         }
-        else if (field == "zip") {
+        else if (field == "zip")
+        {
             helpBlockTxt = "Please enter the ZIP code for the street address above."
             $('#idVerWiz > .content').animate({ height: "21em" }, 600);
         }
-        else if (field == "email") {
+        else if (field == "email")
+        {
             helpBlockTxt = "Please enter a valid email address that you own."
         }
-        else if (field == "phone") {
+        else if (field == "phone")
+        {
             helpBlockTxt = "<strong>Please enter a valid 10-digit phone number.</strong>"
         }
 
-        if (!$('#' + field + 'Grp .help-block').length) {
+        if (!$('#' + field + 'Grp .help-block').length)
+        {
             $('#' + field + 'Grp .form-group').append('<small class="help-block" style="display:none">' + helpBlockTxt + '</small>');
             $('#' + field + 'Grp .help-block').slideDown();
         }
-        else { $('#' + field + 'Grp .help-block').show() }
+        else
+        { $('#' + field + 'Grp .help-block').show() }
 
         // Now focus on the element that failed validation
         setTimeout(function () {
@@ -539,31 +570,38 @@ function ValidateEmail(str) {
     var lstr = str.length
     var ldot = str.indexOf(dot)
 
-    if (lstr < 5) {
+    if (lstr < 5)
+    {
         return false;
     }
 
-    if (lat == -1 || lat == 0 || lat == lstr) {
+    if (lat == -1 || lat == 0 || lat == lstr)
+    {
         return false
     }
 
-    if (ldot == -1 || ldot == 0 || ldot > lstr - 3) {
+    if (ldot == -1 || ldot == 0 || ldot > lstr - 3)
+    {
         return false
     }
 
-    if (str.indexOf(at, (lat + 1)) != -1) {
+    if (str.indexOf(at, (lat + 1)) != -1)
+    {
         return false
     }
 
-    if (str.substring(lat - 1, lat) == dot || str.substring(lat + 1, lat + 2) == dot) {
+    if (str.substring(lat - 1, lat) == dot || str.substring(lat + 1, lat + 2) == dot)
+    {
         return false
     }
 
-    if (str.indexOf(dot, (lat + 2)) == -1) {
+    if (str.indexOf(dot, (lat + 2)) == -1)
+    {
         return false
     }
 
-    if (str.indexOf(" ") != -1) {
+    if (str.indexOf(" ") != -1)
+    {
         return false
     }
 
@@ -644,8 +682,7 @@ function createRecord() {
         dataType: "json",
         async: "true",
         cache: "false",
-        success: function (result)
-        {
+        success: function (result) {
             console.log("SUCCESS -> Save Member Info result is... [next line]");
             console.log(result);
 
@@ -675,8 +712,7 @@ function createRecord() {
                         //$("#idVerContainer iframe").attr("src", "http://nooch.info/noochweb/Nooch/idVerification?memid=" + memIdGen + "&from=lndngpg");
 
                         // Show iFrame w/ ID Verification KBA Questions
-                        setTimeout(function ()
-                        {
+                        setTimeout(function () {
                             $("#idVerContainer").addClass("bounceIn").removeClass("hidden");
                         }, 750);
                     }
@@ -699,41 +735,41 @@ function createRecord() {
                 {
                     console.log(resultReason);
 
-					if (resultReason.indexOf('Validation PIN sent') > -1)
-					{
-						swal({
-							title: "Check Your Phone",
-							text: "To verify your phone number, we just sent a text message to your phone.  Please enter the <strong>PIN</strong> to continue.</span>" +
+                    if (resultReason.indexOf('Validation PIN sent') > -1)
+                    {
+                        swal({
+                            title: "Check Your Phone",
+                            text: "To verify your phone number, we just sent a text message to your phone.  Please enter the <strong>PIN</strong> to continue.</span>" +
 								  "<i class='show fa fa-mobile' style='font-size:40px; margin: 10px 0 0;'></i>",
-							type: "input",
-						    inputPlaceholder: "ENTER PIN",
-							showCancelButton: true,
-							confirmButtonColor: "#3fabe1",
-							confirmButtonText: "Ok",
-							customClass: "pinInput",
+                            type: "input",
+                            inputPlaceholder: "ENTER PIN",
+                            showCancelButton: true,
+                            confirmButtonColor: "#3fabe1",
+                            confirmButtonText: "Ok",
+                            customClass: "pinInput",
                             closeOnConfirm: false,
-							html: true
-						}, function (inputTxt) {
-						    console.log("Entered Text: [" + inputTxt + "]");
+                            html: true
+                        }, function (inputTxt) {
+                            console.log("Entered Text: [" + inputTxt + "]");
 
-						    if (inputTxt === false) return false;
+                            if (inputTxt === false) return false;
 
-						    if (inputTxt === "")
-						    {
-						        swal.showInputError("Please enter the PIN sent to your phone.");
-						        return false
-						    }
-						    if (inputTxt.length < 4)
-						    {
-						        swal.showInputError("Double check you entered the entire PIN!");
-						        return false
-						    }
+                            if (inputTxt === "")
+                            {
+                                swal.showInputError("Please enter the PIN sent to your phone.");
+                                return false
+                            }
+                            if (inputTxt.length < 4)
+                            {
+                                swal.showInputError("Double check you entered the entire PIN!");
+                                return false
+                            }
 
-						    swal.close();
+                            swal.close();
 
-						    submitPin(inputTxt.trim())
-						});
-					}
+                            submitPin(inputTxt.trim())
+                        });
+                    }
                     else if (resultReason.indexOf("email already registered") > -1)
                     {
                         console.log("Error: email already registered");
@@ -775,8 +811,7 @@ function createRecord() {
 }
 
 
-function idVerifiedSuccess()
-{
+function idVerifiedSuccess() {
     $(".errorMessage").addClass('hidden');
 
     $('#idWizContainer').slideUp()
@@ -787,8 +822,7 @@ function idVerifiedSuccess()
         $("#idVerContainer").addClass("bounceOut");
     }
 
-    setTimeout(function ()
-    {
+    setTimeout(function () {
         // THEN DISPLAY SUCCESS ALERT...
         swal({
             title: "Submitted Successfully",
@@ -810,8 +844,7 @@ function idVerifiedSuccess()
 
             $('#AddBankDiv').removeClass('hidden').addClass('bounceIn');
 
-            setTimeout(function ()
-            {
+            setTimeout(function () {
                 scrollToAddBank();
             }, 800);
         });
@@ -819,8 +852,7 @@ function idVerifiedSuccess()
 }
 
 
-function submitPin(pin)
-{
+function submitPin(pin) {
     console.log("submitPin fired - PIN [" + pin + "]");
 
     var memId = $('#memId').val();
@@ -848,13 +880,12 @@ function submitPin(pin)
         type: "POST",
         url: "submit2FAPin",
         data: "{ 'memberId':'" + memId +
-             "', 'pin':'" + pin+ "'}",
+             "', 'pin':'" + pin + "'}",
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         async: "true",
         cache: "false",
-        success: function (result)
-        {
+        success: function (result) {
             console.log("SUCCESS -> SubmitPIN result is... [next line]");
             console.log(result);
 
@@ -880,9 +911,9 @@ function submitPin(pin)
                     customClass: "idVerSuccessAlert",
                 }, function (isConfirm)
                 {*/
-                    // SUBMIT ID WIZARD DATA TO SERVER AGAIN...
-                    console.log("Calling createRecord() again...")
-                    createRecord();
+                // SUBMIT ID WIZARD DATA TO SERVER AGAIN...
+                console.log("Calling createRecord() again...")
+                createRecord();
                 //});
             }
             else
@@ -904,35 +935,38 @@ function submitPin(pin)
                             confirmButtonColor: "#3fabe1",
                             confirmButtonText: "Ok",
                             html: true
-                        }, function (inputTxt)
-                        {
+                        }, function (inputTxt) {
                             console.log("Entered Text: [" + inputTxt + "]");
                         });
                     }
-                    else if (resultReason.indexOf("email already registered") > -1) {
+                    else if (resultReason.indexOf("email already registered") > -1)
+                    {
                         console.log("Error: email already registered");
                         showErrorAlert('20');
                     }
-                    else if (resultReason.indexOf("phone number already registered") > -1) {
+                    else if (resultReason.indexOf("phone number already registered") > -1)
+                    {
                         console.log("Error: phone number already registered");
                         showErrorAlert('30');
                     }
-                    else if (resultReason.indexOf("Missing critical data") > -1) {
+                    else if (resultReason.indexOf("Missing critical data") > -1)
+                    {
                         console.log("Error: missing critical data");
                         showErrorAlert('2');
                     }
-                    else {
+                    else
+                    {
                         showErrorAlert('2');
                     }
                 }
-                else {
+                else
+                {
                     console.log("Error checkpoint [#834]");
                     showErrorAlert('2');
                 }
             }
         },
-        Error: function (x, e)
-        {
+        Error: function (x, e) {
             // Hide the Loading Block
             $('#idWizContainer').unblock();
 
@@ -947,8 +981,7 @@ function submitPin(pin)
 
 
 // To handle success from extra verification iFrame
-$('body').bind('complete', function ()
-{
+$('body').bind('complete', function () {
     var result = $('#iframeIdVer').get(0).contentWindow.isCompleted;
 
     // Hide the Loading Block
@@ -972,8 +1005,7 @@ $('body').bind('complete', function ()
     }
 });
 
-$('body').bind('addblockLdg', function ()
-{
+$('body').bind('addblockLdg', function () {
     // Show the Loading Block
     $('#idVerContainer').block({
         message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Submitting responses...</span>',
@@ -994,12 +1026,10 @@ $('body').bind('addblockLdg', function ()
 
 // To handle success from Add-Bank page (CC: 1/20/16)
 // CC (5/24/16): NEED TO UPDATE FOR NEW ARCHITECTURE
-$('body').bind('addBankComplete', function ()
-{
+$('body').bind('addBankComplete', function () {
     $('#AddBankDiv').slideUp();
 
-    setTimeout(function ()
-    {
+    setTimeout(function () {
         // THEN DISPLAY SUCCESS ALERT...
         swal({
             title: "Bank Linked Successfully",
@@ -1012,134 +1042,134 @@ $('body').bind('addBankComplete', function ()
             html: true
         });
 
-        if (ISNEW == "true")
-        {
-            $('#checkEmailMsg').removeClass('hidden');
-        }
-        else
-        {
-            $('.resultDiv').removeClass('hidden');
-        }
+        //if (ISNEW == "true")
+        //{
+        //    $('#checkEmailMsg').removeClass('hidden');
+        //}
+        //else
+        //{
+        $('.resultDiv').removeClass('hidden');
+        //}
 
     }, 500);
 
 
     // OLD CODE FOR LETTING USER ADD A PW - NEED TO UPDATE FOR V3.0
 
-  /*swal({
-        title: "Bank Linked Successfully",
-        text: "<i class=\"fa fa-bank text-success\"></i>" +
-              "<span class='m-t-10'>Your bank account is now linked!" +
-              "<span>Enter a password below if you'd like to be able to make future payments without re-entering all your info. <em>Optional</em></span>",
-        type: "input",
-        inputType: "password",
-        inputPlaceholder: "Password",
-        showCancelButton: true,
-        confirmButtonColor: "#3fabe1",
-        confirmButtonText: "Submit",
-        cancelButtonText: "No thanks",
-        closeOnConfirm: false,
-        html: true
-    }, function (inputValue)
-    {
-        if (inputValue === false) return false;
+    /*swal({
+          title: "Bank Linked Successfully",
+          text: "<i class=\"fa fa-bank text-success\"></i>" +
+                "<span class='m-t-10'>Your bank account is now linked!" +
+                "<span>Enter a password below if you'd like to be able to make future payments without re-entering all your info. <em>Optional</em></span>",
+          type: "input",
+          inputType: "password",
+          inputPlaceholder: "Password",
+          showCancelButton: true,
+          confirmButtonColor: "#3fabe1",
+          confirmButtonText: "Submit",
+          cancelButtonText: "No thanks",
+          closeOnConfirm: false,
+          html: true
+      }, function (inputValue)
+      {
+          if (inputValue === false) return false;
 
-        if (inputValue === "")
-        {
-            swal.showInputError("You can't have a blank password unfortunately!");
-            return false
-        }
-        if (inputValue.length < 6)
-        {
-            swal.showInputError("For security, please choose a slightly longer password!");
-            return false
-        }
+          if (inputValue === "")
+          {
+              swal.showInputError("You can't have a blank password unfortunately!");
+              return false
+          }
+          if (inputValue.length < 6)
+          {
+              swal.showInputError("For security, please choose a slightly longer password!");
+              return false
+          }
 
-        var dataToSend = "";
+          var dataToSend = "";
+  
+          if (typeof memIdGen == "string" && memIdGen.length > 30) // make sure it's not 'undefined' or 'object' (for NULL)
+          {
+              dataToSend = "{'newPw':'" + inputValue.trim() +
+                           "', 'memId':'" + memIdGen + "'}";
+          }
+          else
+          {
+              return false;
+          }
 
-        if (typeof memIdGen == "string" && memIdGen.length > 30) // make sure it's not 'undefined' or 'object' (for NULL)
-        {
-            dataToSend = "{'newPw':'" + inputValue.trim() +
-                         "', 'memId':'" + memIdGen + "'}";
-        }
-        else
-        {
-            return false;
-        }
+          // ADD THE LOADING BOX
+          $('#idWizContainer').block({
+              message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Validating Your Info...</span>',
+              css: {
+                  border: 'none',
+                  padding: '26px 8px 20px',
+                  backgroundColor: '#000',
+                  '-webkit-border-radius': '15px',
+                  '-moz-border-radius': '15px',
+                  'border-radius': '15px',
+                  opacity: '.75',
+                  'z-index': '99999',
+                  margin: '0 auto',
+                  color: '#fff'
+              }
+          });
 
-        // ADD THE LOADING BOX
-        $('#idWizContainer').block({
-            message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">Validating Your Info...</span>',
-            css: {
-                border: 'none',
-                padding: '26px 8px 20px',
-                backgroundColor: '#000',
-                '-webkit-border-radius': '15px',
-                '-moz-border-radius': '15px',
-                'border-radius': '15px',
-                opacity: '.75',
-                'z-index': '99999',
-                margin: '0 auto',
-                color: '#fff'
-            }
-        });
+          var urlToUse = "";
+          if (transType == "send")
+          {
+              urlToUse = "depositMoney.aspx/setPw";
+          }
+          else // must be a Request or Rent payment (which also uses the payRequest page)
+          {
+              urlToUse = "payRequest.aspx/setPw";
+          }
 
-        var urlToUse = "";
-        if (transType == "send")
-        {
-            urlToUse = "depositMoney.aspx/setPw";
-        }
-        else // must be a Request or Rent payment (which also uses the payRequest page)
-        {
-            urlToUse = "payRequest.aspx/setPw";
-        }
+          $.ajax({
+              type: "POST",
+              url: "createAccount.aspx/setPw",
+              data: dataToSend,
+              contentType: "application/json; charset=utf-8",
+              dataType: "json",
+              async: "true",
+              cache: "false",
+              success: function (msg)
+              {
+                  var setPw = msg;
+                  console.log("SUCCESS -> 'RegisterUserWithSynpResult' is... ");
+                  console.log(setPw);
 
-        $.ajax({
-            type: "POST",
-            url: "createAccount.aspx/setPw",
-            data: dataToSend,
-            contentType: "application/json; charset=utf-8",
-            dataType: "json",
-            async: "true",
-            cache: "false",
-            success: function (msg)
-            {
-                var setPw = msg;
-                console.log("SUCCESS -> 'RegisterUserWithSynpResult' is... ");
-                console.log(setPw);
+                  // Hide the Loading Block
+                  $('.modal-content').unblock();
 
-                // Hide the Loading Block
-                $('.modal-content').unblock();
+                  swal({
+                      title: "Great Job!",
+                      text: "You can now login to the Nooch iOS app to create payments on the go." +
+                            "<span class='show m-t-10'>Don't have an iPhone? You can still accept payments (or pay requests) from any browser - the other party just needs to know your email address or phone number, that's it!</span>",
+                      type: "success",
+                      showCancelButton: true,
+                      confirmButtonColor: "#3fabe1",
+                      confirmButtonText: "Download App",
+                      cancelButtonText: "Close",
+                      html: true
+                  }, function (isConfirm) {
+                      if (isConfirm)
+                      {
+                          window.location = "https://geo.itunes.apple.com/us/app/nooch/id917955306?mt=8";
+                      }
+                  });
+              },
+              Error: function (x, e)
+              {
+                  // Hide the Loading Block
+                  $('.modal-content').unblock();
+                  console.log("ERROR --> 'x', then 'e' is... ");
+                  console.log(x);
+                  console.log(e);
 
-                swal({
-                    title: "Great Job!",
-                    text: "You can now login to the Nooch iOS app to create payments on the go." +
-                          "<span class='show m-t-10'>Don't have an iPhone? You can still accept payments (or pay requests) from any browser - the other party just needs to know your email address or phone number, that's it!</span>",
-                    type: "success",
-                    showCancelButton: true,
-                    confirmButtonColor: "#3fabe1",
-                    confirmButtonText: "Download App",
-                    cancelButtonText: "Close",
-                    html: true
-                }, function (isConfirm) {
-                    if (isConfirm)
-                    {
-                        window.location = "https://geo.itunes.apple.com/us/app/nooch/id917955306?mt=8";
-                    }
-                });
-            },
-            Error: function (x, e)
-            {
-                // Hide the Loading Block
-                $('.modal-content').unblock();
-                console.log("ERROR --> 'x', then 'e' is... ");
-                console.log(x);
-                console.log(e);
-
-                showErrorAlert('2');
-            }
-        });
-    });*/
+                  showErrorAlert('2');
+              }
+          });
+      });*/
 });
 
 
@@ -1173,7 +1203,8 @@ function showErrorAlert(errorNum) {
     var shouldShowErrorDiv = true;
 
     var supportEmail = "support@nooch.com";
-    if (COMPANY == "Rent Scene") {
+    if (COMPANY == "Rent Scene")
+    {
         supportEmail = "payments@rentscene.com"
     }
 
@@ -1218,12 +1249,14 @@ function showErrorAlert(errorNum) {
                         COMPANY + " Support</span>:<br/><a href='mailto:" + supportEmail + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + supportEmail + "</a>";
     }
 
-    if (shouldShowErrorDiv == true) {
+    if (shouldShowErrorDiv == true)
+    {
         $(".errorMessage").removeClass('hidden');
         $(".errorMessage").html(alertBodyText);
         $(".errorMessage a").addClass("btn btn-default m-t-20 animated bounceIn");
     }
-    else {
+    else
+    {
         $(".errorMessage").addClass('hidden');
     }
 
@@ -1240,13 +1273,16 @@ function showErrorAlert(errorNum) {
         allowEscapeKey: false,
         html: true
     }, function (isConfirm) {
-        if (!isConfirm) {
+        if (!isConfirm)
+        {
             window.open("mailto:" + supportEmail);
         }
-        else if (shouldFocusOnEmail) {
+        else if (shouldFocusOnEmail)
+        {
             updateValidationUi("email", false);
         }
-        else if (shouldFocusOnPhone) {
+        else if (shouldFocusOnPhone)
+        {
             updateValidationUi("phone", false);
         }
     });
@@ -1264,23 +1300,27 @@ $('body').on('blur', '.form-control', function () {
     var val = fgrp.find('.form-control').val();
     var val2 = ipgrp.find('.form-control').val();
 
-    if (fgrp.hasClass('fg-float')) {
-        if (val.length == 0) {
+    if (fgrp.hasClass('fg-float'))
+    {
+        if (val.length == 0)
+        {
             $(this).closest('.fg-line').removeClass('fg-toggled');
         }
     }
-    else if (ipgrp.hasClass('fg-float')) {
-        if (val2.length == 0) {
+    else if (ipgrp.hasClass('fg-float'))
+    {
+        if (val2.length == 0)
+        {
             $(this).closest('.fg-line').removeClass('fg-toggled');
         }
     }
-    else {
+    else
+    {
         $(this).closest('.fg-line').removeClass('fg-toggled');
     }
 });
 
-function ssnWhy()
-{
+function ssnWhy() {
     swal({
         title: "Why Do We Collect SSN?",
         text: "We hate identify fraud.  With a passion.<span class='show m-t-15'>" +
@@ -1296,25 +1336,26 @@ function ssnWhy()
 
 
 function changeFavicon(src) {
-  var link = document.createElement('link'),
-   oldLink = document.getElementById('dynamic-favicon');
-  link.id = 'dynamic-favicon';
-  link.rel = 'shortcut icon';
-  link.href = src;
-  if (oldLink) {
-    document.head.removeChild(oldLink);
-  }
-  document.head.appendChild(link);
+    var link = document.createElement('link'),
+     oldLink = document.getElementById('dynamic-favicon');
+    link.id = 'dynamic-favicon';
+    link.rel = 'shortcut icon';
+    link.href = src;
+    if (oldLink)
+    {
+        document.head.removeChild(oldLink);
+    }
+    document.head.appendChild(link);
 }
 
 // -------------------
 //	Scroll To Section
 // -------------------
-function scrollToAddBank()
-{
+function scrollToAddBank() {
     var scroll_to = $('#frame').offset().top - 75;
 
-    if ($(window).scrollTop() != scroll_to) {
+    if ($(window).scrollTop() != scroll_to)
+    {
         $('html, body').stop().animate({ scrollTop: scroll_to }, 1000, null);
     }
 }
@@ -1322,8 +1363,7 @@ function scrollToAddBank()
 // -------------------
 //	FACEBOOK
 // -------------------
-window.fbAsyncInit = function ()
-{
+window.fbAsyncInit = function () {
     FB.init({
         appId: '198279616971457',
         xfbml: true,
@@ -1342,20 +1382,22 @@ window.fbAsyncInit = function ()
 var fbStatus = "";
 // The response object is returned with a status field that lets the app know the current login status of the person.
 function checkLoginState() {
-    
+
     FB.getLoginStatus(function (response) {
-       
+
         console.log(response);
         fbStatus = response.status;
 
-        if (response.status === 'connected') {
+        if (response.status === 'connected')
+        {
             // Logged into your app and FB
             FBID = response.authResponse.userID;
             $('#fbLoginBtn span').text('Facebook Connected');
             $('#fbResult').html('<strong>Facebook Connected Successfully! <i class="fa fa-smile-o m-l-5"></i></strong>')
 						  .addClass('bounceIn text-success').removeClass('hidden');
         }
-        else {
+        else
+        {
             // Not logged in, so attempt to Login to FB
             fbLogin();
         }
@@ -1363,16 +1405,18 @@ function checkLoginState() {
 }
 
 function fbLogin() {
-    
+
     FB.login(function (response) {
-        if (response.status === 'connected') {
+        if (response.status === 'connected')
+        {
             FBID = response.authResponse.userID;
 
             $('#fbLoginBtn span').text('Facebook Connected');
             $('#fbResult').html('<strong>Facebook Connected Successfully! <i class="fa fa-smile-o m-l-5"></i></strong>')
 						  .addClass('bounceIn text-success').removeClass('hidden');
         }
-        else {
+        else
+        {
             FBID = "not connected";
         }
     });

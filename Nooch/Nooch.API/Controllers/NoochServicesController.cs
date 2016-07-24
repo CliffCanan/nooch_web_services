@@ -917,8 +917,8 @@ namespace Nooch.API.Controllers
         [ActionName("RequestMoneyForRentScene")]
         public requestFromRentScene RequestMoneyForRentScene(string from, string name, string email, string amount, string memo, string pin, string ip, string cip, bool isRequest)
         {
-            Logger.Info("Service Cntrlr - RequestMoneyForRentScene Initiated - [From: " + from +
-                        "], [Name: " + name + "], Email: [" + email +
+            Logger.Info("Service Cntrlr - RequestMoneyForRentScene Initiated - From: [" + from +
+                        "], Name: [" + name + "], Email: [" + email +
                         "], amount: [" + amount + "], memo: [" + memo +
                         "], pin: [" + pin + "], ip: [" + ip +
                         "], CIP Tag: [" + cip + "], isRequest: [" + isRequest + "]");
@@ -983,6 +983,12 @@ namespace Nooch.API.Controllers
                 addressToUse = "1500 JFK Blvd";
                 zipToUse = "19102";
             }
+            else if (from.ToLower() == "habitat")
+            {
+                memIdToUse = CommonHelper.GetMemberIdByUserName("andrew@tryhabitat.com");
+                addressToUse = "1856 N. Willington St.";
+                zipToUse = "19121";
+            }
             else if (from.ToLower() == "nooch")
             {
                 memIdToUse = CommonHelper.GetMemberIdByUserName("team@nooch.com");
@@ -998,7 +1004,7 @@ namespace Nooch.API.Controllers
 
             if (String.IsNullOrEmpty(memIdToUse))
             {
-                Logger.Error("Service Cntlr -> RequestMoneyForRentScene FAILED - unable to get MemberID based on given username - ['from' param: " + from + "]");
+                Logger.Error("Service Cntlr -> RequestMoneyForRentScene FAILED - unable to get MemberID based on given username - From: [" + from + "]");
                 res.msg = "Unable to get MemberID based on given username";
 
                 return res;
@@ -2825,23 +2831,15 @@ namespace Nooch.API.Controllers
                                                                                              input.zip, input.fngprnt, input.ip, input.cip, input.fbid,
                                                                                              input.isRentScene, input.isIdImageAdded, input.idImageData);
 
-                if (mdaRes.success == true)
-                {
-                    res.success = "true";
-                    res.access_token = mdaRes.oauth.oauth_key;
-                    res.expires_in = mdaRes.oauth.expires_in;
-                    res.reason = mdaRes.reason;
-                    res.refresh_token = mdaRes.oauth.refresh_token;
-                    res.user_id = mdaRes.user_id;
-                    res.username = mdaRes.user.logins[0].email;
-                    res.memberIdGenerated = mdaRes.memberIdGenerated;
-                    res.ssn_verify_status = mdaRes.ssn_verify_status;
-                }
-                else
-                {
-                    res.success = "false";
-                    res.reason = mdaRes.reason;
-                }
+                res.success = mdaRes.success.ToString().ToLower();
+                res.access_token = mdaRes.oauth.oauth_key;
+                res.expires_in = mdaRes.oauth.expires_in;
+                res.reason = mdaRes.reason;
+                res.refresh_token = mdaRes.oauth.refresh_token;
+                res.user_id = mdaRes.user_id;
+                res.username = mdaRes.user.logins[0].email;
+                res.memberIdGenerated = mdaRes.memberIdGenerated;
+                res.ssn_verify_status = mdaRes.ssn_verify_status;
             }
             catch (Exception ex)
             {

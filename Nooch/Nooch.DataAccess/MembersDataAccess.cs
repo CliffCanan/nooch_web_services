@@ -2347,19 +2347,19 @@ namespace Nooch.DataAccess
                                         if (!String.IsNullOrEmpty(submitAllDocs.message) &&
                                             submitAllDocs.message.IndexOf("additional") > -1)
                                         {
-                                            Logger.Info("MDA -> RegisterUserWithSynapseV3 - SSN Info Verified, but have additional questions - [Email: " + logins.email +
-                                                        "], [submitSsn.message: " + submitAllDocs.message + "]");
+                                            Logger.Info("MDA -> RegisterUserWithSynapseV3 - SSN Info Verified, but have additional questions - Email: [" + logins.email +
+                                                        "], submitSsn.message: [" + submitAllDocs.message + "]");
                                         }
                                         else
                                         {
-                                            Logger.Info("MDA -> RegisterUserWithSynapseV3 - SSN Info Verified completely :-) - [Email: " + logins.email +
-                                                        "], [submitSsn.message: " + submitAllDocs.message + "]");
+                                            Logger.Info("MDA -> RegisterUserWithSynapseV3 - SSN Info Verified completely :-) - Email: [" + logins.email +
+                                                        "], submitSsn.message: [" + submitAllDocs.message + "]");
                                         }
                                     }
                                     else
                                     {
-                                        Logger.Error("MDA -> RegisterUserWithSynapseV3 - SSN Info Verified FAILED :-(  [Email: " + logins.email +
-                                                     "], [submitSsn.message: " + submitAllDocs.message + "]");
+                                        Logger.Error("MDA -> RegisterUserWithSynapseV3 - SSN Info Verified FAILED :-(  Email: [" + logins.email +
+                                                     "], submitSsn.message: [" + submitAllDocs.message + "]");
                                     }
 
                                     #endregion Logging
@@ -3113,6 +3113,8 @@ namespace Nooch.DataAccess
                 #region Get Invite Code ID from transaction
 
                 string inviteCode = "";
+                string inviteCodeMemberName = "";
+
                 Transaction trans = new Transaction();
 
                 try
@@ -3125,6 +3127,10 @@ namespace Nooch.DataAccess
                     {
                         _dbContext.Entry(trans).Reload();
                         inviteCode = trans.Member.InviteCodeId.ToString();
+
+                        // Now get the Member's Name associated with the Invite Code from Members Table
+                        inviteCodeMemberName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member.FirstName)) + " " +
+                                               CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member.LastName));
                     }
                 }
                 catch (Exception ex)
@@ -3271,8 +3277,8 @@ namespace Nooch.DataAccess
 
                 if (addNewMemberToDB > 0)
                 {
-                    Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - New Nooch Member successfully added to DB (via Browser Landing Page) - " +
-                                "UserName: [" + userEmail + "], MemberID: " + member.MemberId + "]");
+                    Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - New Member successfully added to DB (via Browser Landing Page) - " +
+                                "UserName: [" + userEmail + "], MemberID: [" + member.MemberId + "]");
 
                     // NOW ADD THE IP ADDRESS RECORD TO THE MembersIPAddress Table =
                     // (waited until after the member was actually added to the Members table above... shouldn't actually matter b/c 
@@ -3493,7 +3499,7 @@ namespace Nooch.DataAccess
                                               "<tr><td><strong>Address:</strong></td><td>" + address + ", " + cityFromGoogle + ", " + stateAbbrev + ", " + zip + "</td></tr>" +
                                               "<tr><td><strong>SSN:</strong></td><td>" + ssn + "</td></tr>" +
                                               "<tr><td><strong>isIdImageAdded:</strong></td><td>" + isIdImageAdded +
-                                              "<tr><td><strong>Invite Code Used:</strong></td><td>" + inviteCode +
+                                              "<tr><td><strong>Invited By:</strong></td><td>" + inviteCodeMemberName +
                                               "</td></tr></table><br/><br/>- Nooch Bot</body></html>");
 
                         // Notify Nooch Admin
