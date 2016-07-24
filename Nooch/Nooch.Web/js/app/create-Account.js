@@ -198,6 +198,10 @@ function runIdWizard() {
 
         /* Events */
         onInit: function (event, currentIndex) {
+
+            if (TYPE == "2") // Vendors only need to receive $, so Synapse doesn't require an ID, so Step 4 doesn't get displayed
+                $(".wizard > .steps > ul > li").css("width", "33%");
+
             $('#idVerWiz > .content').animate({ height: "27em" }, 300)
 
             var DOB = $('#dob').val() ? $('#dob').val() : "1980 01 01";
