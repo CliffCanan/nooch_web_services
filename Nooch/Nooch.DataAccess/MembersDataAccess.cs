@@ -1135,7 +1135,7 @@ namespace Nooch.DataAccess
 
         public List<LocationSearch> GetLocationSearch(string MemberId, int Radius)
         {
-            Logger.Info("MDA -> GetLocationSearch - [MemberId: " + MemberId + "],  [Radius: " + Radius + "]");
+            Logger.Info("MDA -> GetLocationSearch - MemberID: [" + MemberId + "], Radius: [" + Radius + "]");
 
             try
             {
@@ -1144,25 +1144,32 @@ namespace Nooch.DataAccess
 
                 foreach (GetLocationSearch_Result loc in list)
                 {
+                    try
+                    {
+                        var config =
+                            new MapperConfiguration(cfg => cfg.CreateMap<GetLocationSearch_Result, LocationSearch>()
+                                .BeforeMap((src, dest) => src.FirstName = CommonHelper.GetDecryptedData(src.FirstName))
+                                .BeforeMap((src, dest) => src.LastName = CommonHelper.GetDecryptedData(src.LastName))
+                                );
 
-                    var config =
-                        new MapperConfiguration(cfg => cfg.CreateMap<GetLocationSearch_Result, LocationSearch>()
-                            .BeforeMap((src, dest) => src.FirstName = CommonHelper.GetDecryptedData(src.FirstName))
-                            .BeforeMap((src, dest) => src.LastName = CommonHelper.GetDecryptedData(src.LastName))
-                            );
+                        var mapper = config.CreateMapper();
 
-                    var mapper = config.CreateMapper();
+                        LocationSearch obj = mapper.Map<LocationSearch>(loc);
 
-                    LocationSearch obj = mapper.Map<LocationSearch>(loc);
-
-                    obj.FirstName = CommonHelper.GetDecryptedData(loc.FirstName);
-                    obj.LastName = CommonHelper.GetDecryptedData(loc.LastName);
-                    decimal miles = obj.Miles;
-                    obj.Miles = decimal.Parse(miles > 0 ? miles.ToString("###.####") : "000.0000");
-                    obj.Photo = loc.Photo;
-                    obj.MemberId = loc.MemberId.ToString();
-                    list1.Add(obj);
+                        obj.FirstName = CommonHelper.GetDecryptedData(loc.FirstName);
+                        obj.LastName = CommonHelper.GetDecryptedData(loc.LastName);
+                        decimal miles = obj.Miles;
+                        obj.Miles = decimal.Parse(miles > 0 ? miles.ToString("###.##") : "000.00");
+                        obj.Photo = loc.Photo;
+                        obj.MemberId = loc.MemberId.ToString();
+                        list1.Add(obj);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error("MDA -> GetLocationSearch FAILED - Exception: [" + ex + "]");
+                    }
                 }
+
                 return list1;
             }
             catch (Exception ex)
@@ -3556,8 +3563,7 @@ namespace Nooch.DataAccess
                             else
                             {
                                 // EXPECTED OUTCOME for most users creating a new Synapse Account.
-                                Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 SUCCESS - Email: [" + userEmail + "], user_id: [" + createSynapseUserResult.user_id +
-                                            "]. Now about to attempt to send SSN info to Synapse.");
+                                Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - User was Created SUCCESSFULLY - Email: [" + userEmail + "], user_id: [" + createSynapseUserResult.user_id + "]");
                             }
 
                             createUserV3Result_oauth oath = new createUserV3Result_oauth();
