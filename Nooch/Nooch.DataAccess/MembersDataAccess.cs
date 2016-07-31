@@ -6150,12 +6150,12 @@ namespace Nooch.DataAccess
 
 
         public string MySettings(string memberId, string firstName, string lastName, string password,
-            string secondaryMail, string recoveryMail, string tertiaryMail, string facebookAcctLogin,
-            bool useFacebookPicture, string fileContent, int contentLength, string fileExtension,
+            string secondaryMail, string recoveryMail, string facebookAcctLogin,
+            string fileContent, int contentLength, string fileExtension,
             string contactNumber, string address, string city, string state, string zipCode, string country,
-            string timeZoneKey, byte[] Picture, bool showinSearchb)
+            byte[] Picture, bool showinSearchb)
         {
-            Logger.Info("MDA -> MySettings (Updating User's Profile) - [MemberID: " + memberId + "]");
+            Logger.Info("MDA -> MySettings (Updating User's Profile) - MemberID: [" + memberId + "]");
 
             string folderPath = Utility.GetValueFromConfig("PhotoPath");
             string fileName = memberId;
@@ -6172,53 +6172,36 @@ namespace Nooch.DataAccess
                     member.FirstName = CommonHelper.GetEncryptedData(firstName.Split(' ')[0]);
 
                     if (firstName.IndexOf(' ') > 0)
-                    {
                         member.LastName = CommonHelper.GetEncryptedData(firstName.Split(' ')[1]);
-                    }
 
                     if (member.Password != null && member.Password == "")
-                    {
                         member.Password = CommonHelper.GetEncryptedData(CommonHelper.GetDecryptedData(password)
                                                       .Replace(" ", "+"));
-                    }
 
                     if (!String.IsNullOrEmpty(secondaryMail))
-                    {
                         member.SecondaryEmail = CommonHelper.GetEncryptedData(secondaryMail);
-                    }
 
                     if (!String.IsNullOrEmpty(recoveryMail))
-                    {
                         member.RecoveryEmail = CommonHelper.GetEncryptedData(recoveryMail);
-                    }
-
-                    if (!String.IsNullOrEmpty(tertiaryMail))
-                    {
-                        member.TertiaryEmail = CommonHelper.GetEncryptedData(tertiaryMail);
-                    }
 
                     if (contentLength > 0)
-                    {
                         member.Photo = Utility.UploadPhoto(folderPath, fileName, fileExtension, fileContent, contentLength);
-                    }
 
                     if (!String.IsNullOrEmpty(facebookAcctLogin))
-                    {
                         member.FacebookAccountLogin = facebookAcctLogin;
-                    }
 
                     if (!String.IsNullOrEmpty(address))
-                    {
                         member.Address = CommonHelper.GetEncryptedData(address);
-                    }
+
                     if (!String.IsNullOrEmpty(city))
-                    {
                         member.City = CommonHelper.GetEncryptedData(city);
-                    }
+
                     if (!String.IsNullOrEmpty(state))
-                    {
                         member.State = CommonHelper.GetEncryptedData(state);
-                    }
+
+                    if (!String.IsNullOrEmpty(country))
+                        member.Country = country;
+
                     if (!String.IsNullOrEmpty(zipCode))
                     {
                         member.Zipcode = CommonHelper.GetEncryptedData(zipCode);
@@ -6231,16 +6214,11 @@ namespace Nooch.DataAccess
                         if (!String.IsNullOrEmpty(stateAbbrev)) member.State = CommonHelper.GetEncryptedData(stateAbbrev);
                         if (!String.IsNullOrEmpty(stateAbbrev)) member.City = CommonHelper.GetEncryptedData(cityFromGoogle);
                     }
-                    if (!String.IsNullOrEmpty(country))
-                    {
-                        member.Country = country;
-                    }
-                    if (!string.IsNullOrEmpty(timeZoneKey))
-                    {
-                        member.TimeZoneKey = CommonHelper.GetEncryptedData(timeZoneKey);
-                    }
 
                     #endregion Encrypt each piece of data
+
+                    if (showinSearchb != null)
+                        member.ShowInSearch = showinSearchb;
 
                     if (!String.IsNullOrEmpty(contactNumber) &&
                         (String.IsNullOrEmpty(member.ContactNumber) ||
@@ -6293,14 +6271,7 @@ namespace Nooch.DataAccess
                     {
                         // check if image is already there
                         if (member.Photo == null)
-                        {
                             member.Photo = Utility.GetValueFromConfig("PhotoUrl") + "gv_no_photo.png";
-                        }
-                    }
-
-                    if (showinSearchb != null)
-                    {
-                        member.ShowInSearch = showinSearchb;
                     }
 
                     member.DateModified = DateTime.Now;

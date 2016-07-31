@@ -34,7 +34,7 @@ namespace Nooch.API.Controllers
     // Malkit (23 July 2016)
     // Make sure to not push code to production server with CORS line uncommented 
     // CORS exposes api's for cross site scripting, added these to use on dev server only for the purpose of testing ionic app in browser
-   // [EnableCors(origins: "*", headers: "*", methods: "*")] 
+    // [EnableCors(origins: "*", headers: "*", methods: "*")]
     public class NoochServicesController : ApiController
     {
 
@@ -64,18 +64,23 @@ namespace Nooch.API.Controllers
 
         [HttpPost]
         [ActionName("ForgotPassword")]
-        public StringResult ForgotPassword(StringInput userName)
+        public AppLogin ForgotPassword(StringInput userName)
         {
+            AppLogin res = new AppLogin();
+            res.success = false;
+
             try
             {
-                Logger.Info("Service Cntrlr -> ForgotPassword - [userName: " + userName + "]");
-                return new StringResult { Result = CommonHelper.ForgotPassword(userName.Input) };
+                Logger.Info("Service Cntrlr -> ForgotPassword - UserName: [" + userName + "]");
+                res = CommonHelper.ForgotPassword(userName.Input);
             }
             catch (Exception ex)
             {
                 Logger.Info("Service Cntrlr -> ForgotPassword FAILED - UserName: [" + userName + "], Exception: [" + ex + "]");
-                return new StringResult() { Result = "" };
+                res.msg = "Server Exception: [" + ex.Message + "]";
             }
+
+            return res;
         }
 
 
@@ -436,7 +441,6 @@ namespace Nooch.API.Controllers
                         LastLocationLng = memberEntity.LastLocationLng,
                         IsRequiredImmediatley = memberEntity.IsRequiredImmediatley.ToString(),
                         FacebookAccountLogin = memberEntity.FacebookAccountLogin != null ? CommonHelper.GetDecryptedData(memberEntity.FacebookAccountLogin) : "",
-                        //IsKnoxBankAdded = b, // Why is the Knox & Synapse value both equal to the same thing?
                         IsSynapseBankAdded = b,
                         SynapseBankStatus = accountstatus,
                         IsVerifiedPhone = (memberEntity.IsVerifiedPhone != null) && Convert.ToBoolean(memberEntity.IsVerifiedPhone),
@@ -2604,7 +2608,7 @@ namespace Nooch.API.Controllers
 
 
         // made it post type beacuse access token might generate white spaces which can
-        //be encoded to plus by web request, which will create problem for validating access token.
+        // be encoded to plus by web request, which will create problem for validating access token.
         [HttpPost]
         [ActionName("SaveMemberSSN")]
         public StringResult SaveMemberSSN(SaveMemberSSN_Input input)
@@ -4500,36 +4504,38 @@ namespace Nooch.API.Controllers
             {
                 try
                 {
-                    //Logger.LogDebugMessage("Service Layer -> GetMyDetails Initiated - MemberId: [" + memberId + "]");
+                    // Logger.LogDebugMessage("Service Layer -> GetMyDetails Initiated - MemberId: [" + memberId + "]");
 
                     var myDetails = CommonHelper.GetMemberDetails(memberId);
 
-                    //Check address, city, cell phone to check whether the profile is a valid profile or not
+                    // Check address, city, cell phone to check whether the profile is a valid profile or not
                     bool isvalidprofile = !string.IsNullOrEmpty(myDetails.Address) &&
                                           !string.IsNullOrEmpty(myDetails.City) &&
                                           !string.IsNullOrEmpty(myDetails.Zipcode) &&
                                           !string.IsNullOrEmpty(myDetails.ContactNumber) &&
-                                          myDetails.IsVerifiedPhone == true &&
                                           !string.IsNullOrEmpty(myDetails.SSN) &&
+                                          myDetails.IsVerifiedPhone == true &&
                                           myDetails.DateOfBirth != null;
 
                     var settings = new MySettingsInput
                     {
                         UserName = !String.IsNullOrEmpty(myDetails.UserName) ? CommonHelper.GetDecryptedData(myDetails.UserName) : "",
                         FirstName = !String.IsNullOrEmpty(myDetails.FirstName) ? CommonHelper.GetDecryptedData(myDetails.FirstName) : "",
-
                         LastName = !String.IsNullOrEmpty(myDetails.LastName) ? CommonHelper.GetDecryptedData(myDetails.LastName) : "",
-                        Password = myDetails.Password,
-                        ContactNumber = myDetails.ContactNumber,
-                        SecondaryMail = myDetails.SecondaryEmail,
-                        RecoveryMail = myDetails.RecoveryEmail,
+                        DateOfBirth = myDetails.DateOfBirth != null ? Convert.ToDateTime(myDetails.DateOfBirth).ToString("MM/dd/yyyy") : "",
+
+                        //Password = myDetails.Password,
+                        ContactNumber = !String.IsNullOrEmpty(myDetails.ContactNumber) ? CommonHelper.FormatPhoneNumber(myDetails.ContactNumber) : myDetails.ContactNumber,
+                        SecondaryMail = !String.IsNullOrEmpty(myDetails.SecondaryEmail) ? CommonHelper.GetDecryptedData(myDetails.SecondaryEmail) : "",
+                        RecoveryMail = !String.IsNullOrEmpty(myDetails.RecoveryEmail) ? CommonHelper.GetDecryptedData(myDetails.RecoveryEmail) : "",
                         ShowInSearch = Convert.ToBoolean(myDetails.ShowInSearch),
-                        //Address = myDetails.Address,
+
                         Address = !String.IsNullOrEmpty(myDetails.Address) ? CommonHelper.GetDecryptedData(myDetails.Address) : "",
-                        //City = myDetails.City,
+                        Address2 = !String.IsNullOrEmpty(myDetails.Address2) ? CommonHelper.GetDecryptedData(myDetails.Address2) : "",
                         City = !String.IsNullOrEmpty(myDetails.City) ? CommonHelper.GetDecryptedData(myDetails.City) : "",
-                        State = myDetails.State,
-                        Zipcode = myDetails.Zipcode,
+                        State = !String.IsNullOrEmpty(myDetails.State) ? CommonHelper.GetDecryptedData(myDetails.State) : "",
+                        Zipcode = !String.IsNullOrEmpty(myDetails.Zipcode) ? CommonHelper.GetDecryptedData(myDetails.Zipcode) : "",
+                        Country = !String.IsNullOrEmpty(myDetails.Country) ? CommonHelper.GetDecryptedData(myDetails.Country) : "",
                         IsVerifiedPhone = myDetails.IsVerifiedPhone ?? false,
                         IsValidProfile = isvalidprofile,
 
@@ -4537,10 +4543,6 @@ namespace Nooch.API.Controllers
                         //AllowPushNotifications = Convert.ToBoolean(myDetails.AllowPushNotifications), // Don't need to send this to the app
                         //Photo = (myDetails.Photo == null) ? Utility.GetValueFromConfig("PhotoUrl") : myDetails.Photo, //CLIFF: this is already being sent in the GetMemberDetails service
                         //FacebookAcctLogin = myDetails.FacebookAccountLogin, //CLIFF: this is already being sent in the GetMemberDetails service
-                        //UseFacebookPicture = Convert.ToBoolean(myDetails.UseFacebookPicture),
-                        //Country = myDetails.Country,
-                        //ClearTransactionHistory = Convert.ToBoolean(myDetails.ClearTransactionHistory),
-                        //TimeZoneKey = CommonHelper.GetDecryptedData(myDetails.TimeZoneKey),
                         //IsBankVerified = bankVerified
                     };
 
@@ -4567,7 +4569,7 @@ namespace Nooch.API.Controllers
             {
                 try
                 {
-                    Logger.Info("Service Controller -> MySettings Initiated - [MemberId: " + mySettings.MemberId + "]");
+                    Logger.Info("Service Cntrlr -> MySettings Initiated - MemberID: [" + mySettings.MemberId + "]");
 
                     var mda = new MembersDataAccess();
                     string fileContent = null;
@@ -4584,15 +4586,15 @@ namespace Nooch.API.Controllers
                     return new StringResult
                     {
                         Result = mda.MySettings(mySettings.MemberId, mySettings.FirstName.ToLower(), mySettings.LastName.ToLower(),
-                            mySettings.Password, mySettings.SecondaryMail, mySettings.RecoveryMail, mySettings.TertiaryMail,
-                            mySettings.FacebookAcctLogin, mySettings.UseFacebookPicture, fileContent, contentLength, fileExtension,
-                            mySettings.ContactNumber, mySettings.Address, mySettings.City, mySettings.State,
-                            mySettings.Zipcode, mySettings.Country, mySettings.TimeZoneKey, mySettings.Picture, mySettings.ShowInSearch)
+                            mySettings.Password, mySettings.SecondaryMail, mySettings.RecoveryMail, mySettings.FacebookAcctLogin,
+                            fileContent, contentLength, fileExtension, mySettings.ContactNumber,
+                            mySettings.Address, mySettings.City, mySettings.State, mySettings.Zipcode, mySettings.Country,
+                            mySettings.Picture, mySettings.ShowInSearch)
                     };
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Controller -> MySettings FAILED - [MemberId: " + mySettings.MemberId + "], [Exception: " + ex + "]");
+                    Logger.Error("Service Cntrlr -> MySettings FAILED - MemberID: [" + mySettings.MemberId + "], Exception: [" + ex + "]");
                     return new StringResult();
                 }
             }
@@ -4611,13 +4613,13 @@ namespace Nooch.API.Controllers
             {
                 try
                 {
-                    Logger.Info("Service Controller - ValidatePinNumber [memberId: " + memberId + "]");
+                    Logger.Info("Service Cntrlr - ValidatePinNumber MemberID: [" + memberId + "]");
 
                     return new StringResult { Result = CommonHelper.ValidatePinNumber(memberId, pinNo.Replace(" ", "+")) };
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Controller - ValidatePinNumber FAILED [memberId: " + memberId + "]. Exception: [" + ex + "]");
+                    Logger.Error("Service Cntrlr - ValidatePinNumber FAILED MemberID: [" + memberId + "], Exception: [" + ex + "]");
 
                 }
                 return new StringResult();
