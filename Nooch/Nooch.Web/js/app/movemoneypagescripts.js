@@ -26,22 +26,25 @@ var isIdVerified = false;
 
 var COMPANY = "Nooch";
 var supportEmail = "support@nooch.com";
-if (FOR_RENTSCENE == "true") {
+if (FOR_RENTSCENE == "true")
+{
     COMPANY = "Rent Scene"
     supportEmail = "payments@rentscene.com"
 }
 
 $(document).ready(function () {
     // For large scrns, animate payment info to left side to be visible under the ID Ver Modal
-    if ($(window).width() < 768) {
+    if ($(window).width() < 768)
+    {
         isSmScrn = true;
 
-		// CC (5/24/16): Attempt to change the input to show a number pad for smartphones - setting
-		// these originally in the HTML would break the input-mask for 4-char max, and hasn't worked successfully on an iPhone test anyway so far.
-		$("#idVer-ssn").attr("type","number");
-		$("#idVer-ssn").attr("pattern","/\d*");
+        // CC (5/24/16): Attempt to change the input to show a number pad for smartphones - setting
+        // these originally in the HTML would break the input-mask for 4-char max, and hasn't worked successfully on an iPhone test anyway so far.
+        $("#idVer-ssn").attr("type", "number");
+        $("#idVer-ssn").attr("pattern", "/\d*");
     }
-    else if ($(window).width() > 1000) {
+    else if ($(window).width() > 1000)
+    {
         isLrgScrn = true;
     }
 
@@ -51,8 +54,7 @@ $(document).ready(function () {
     if (FOR_RENTSCENE == "true")
     {
         alertBodyOpening = "Rent Scene offers a quick, secure way to " + verb + " without having to enter a credit card.";
-        //$('.landingHeaderLogo').attr('href', 'http://www.rentscene.com');
-        //$('.landingHeaderLogo img').attr('src', '../Assets/Images/rentscene.png');
+
         if (isLrgScrn)
             $('.landingHeaderLogo img').css('width', '170px');
 
@@ -64,12 +66,15 @@ $(document).ready(function () {
     {
         if (checkIfStillPending() == true)
         {
-            if (isLrgScrn == true && USERTYPE != "NonRegistered" && USERTYPE != "Existing") {
+            if (isLrgScrn == true && USERTYPE != "NonRegistered" && USERTYPE != "Existing")
+            {
                 var targetWdth = '30%';
                 var ms = 1250;
-                if ($(window).width() > 1100) {
+                if ($(window).width() > 1100)
+                {
                     targetWdth = '33%';
-                    if ($(window).width() > 1200) {
+                    if ($(window).width() > 1200)
+                    {
                         targetWdth = '34%';
                         ms = 1000;
                     }
@@ -227,14 +232,6 @@ $(document).ready(function () {
 });
 
 
-function getParameterByName(name) {
-    name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
-    var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
-        results = regex.exec(location.search);
-    return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
-}
-
-
 function runIdWizard() {
     $('#idVer').modal({
         backdrop: 'static',
@@ -274,6 +271,10 @@ function runIdWizard() {
 
         /* Events */
         onInit: function (event, currentIndex) {
+
+            if (CIP == "vendor") // Vendors only need to receive $, so Synapse doesn't require an ID, so Step 4 doesn't get displayed
+                $(".wizard > .steps > ul > li").css("width", "33%");
+
             var heightToUse = isSmScrn ? "21em" : "22em";
 
             $('#idVerWiz > .content').animate({ height: heightToUse }, 300)
@@ -313,7 +314,8 @@ function runIdWizard() {
         },
         onStepChanging: function (event, currentIndex, newIndex) {
 
-            if (newIndex == 0) {
+            if (newIndex == 0)
+            {
                 $('#idVerWiz > .content').animate({ height: "22em" }, 600)
             }
 
@@ -341,28 +343,31 @@ function runIdWizard() {
                             // Finally, check the phone number's length
                             console.log($('#idVer-phone').cleanVal());
 
-								console.log("CHECKPOINT PAYREQUEST #1");
+                            if ($('#idVer-phone').cleanVal().length == 10)
+                            {
+                                updateValidationUi("phone", true);
 
-                                if ($('#idVer-phone').cleanVal().length == 10) {
-                                    updateValidationUi("phone", true);
-
-                                    // Great, we can finally go to the next step of the wizard :-D
-                                    $('#idVerWiz > .content').animate({ height: "19em" }, 600)
-                                    return true;
-                                }
-                                else {
-                                    updateValidationUi("phone", false);
-                                }
+                                // Great, we can finally go to the next step of the wizard :-D
+                                $('#idVerWiz > .content').animate({ height: "19em" }, 600)
+                                return true;
+                            }
+                            else
+                            {
+                                updateValidationUi("phone", false);
+                            }
                         }
-                        else {
+                        else
+                        {
                             updateValidationUi("email", false);
                         }
                     }
-                    else {
+                    else
+                    {
                         updateValidationUi("name", false);
                     }
                 }
-                else {
+                else
+                {
                     updateValidationUi("name", false);
                 }
 
@@ -390,7 +395,6 @@ function runIdWizard() {
                         updateValidationUi("zip", true);
 
                         // Great, go to the next step of the wizard :-]
-
                         $('#idVerWiz > .content').animate({ height: "25em" }, 500)
                         return true;
                     }
@@ -406,109 +410,15 @@ function runIdWizard() {
             // IF going to Step 4
             if (newIndex == 3)
             {
-                // Check DOB field
-                if ($('#idVer-dob').val().length == 10)
+                if (transType != "send")
                 {
-                    // Double check that DOB is not still "01/01/1980", which is the default and probably not the user's B-Day...
-                    if ($('#idVer-dob').val() != "01/01/1980") {
-                        updateValidationUi("dob", true);
-
-                        var ssnVal = $('#idVer-ssn').val().trim();
-                        ssnVal = ssnVal.replace(/ /g, "").replace(/-/g, "");
-                        // Check SSN field
-                        if (ssnVal.length == 9 || FBID != "not connected") {
-                            updateValidationUi("ssn", true);
-
-                            if (window.location.href.indexOf('depositmoney') > 0) {
-
-                                if ($('#idVer-phone').cleanVal().length == 10) {
-                                    updateValidationUi("phone", true);
-
-                                    // Great, we can finally go to the next step of the wizard :-D
-                                    $('#idVerWiz > .content').animate({ height: "19em" }, 600)
-                                    return true;
-                                }
-                                else {
-                                    updateValidationUi("phone", false);
-                                    return false;
-                                }
-                            }
-
-
-                            // Great, go to the next step of the wizard :-]
-                            // FILE INPUT DOCUMENTATION: http://plugins.krajee.com/file-input#options
-                            $("#idVer_idDoc").fileinput({
-                                allowedFileTypes: ['image'],
-                                initialPreview: [
-                                    "<img src='../Assets/Images/securityheader.png' class='file-preview-image' alt='' id='IdWizIdDocPreview'>"
-                                ],
-                                initialPreviewShowDelete: false,
-                                layoutTemplates: {
-                                    icon: '<span class="fa fa-photo m-r-10 kv-caption-icon"></span>',
-                                },
-                                fileActionSettings: {
-                                    showZoom: false,
-                                    indicatorNew: '',
-                                },
-                                maxFileCount: 1,
-                                maxFileSize: 2050,
-                                msgSizeTooLarge: "<strong>'{name}' ({size} KB)</strong> is a bit too large! Max allowed file size is <strong>{maxSize} KB</strong>. &nbsp;Please try a smaller picture!",
-                                showCaption: false,
-                                showUpload: false,
-                                showPreview: true,
-                                resizeImage: true,
-                                maxImageWidth: 500,
-                                maxImageHeight: 500,
-                                resizePreference: 'width'
-                            });
-
-                            $('#idVer_idDoc').on('fileerror', function (event, data, msg) {
-                                $('#idVerWiz > .content').animate({ height: "28em" }, 600)
-                            });
-
-                            $('#idVer_idDoc').on('fileloaded', function (event, file, previewId, index, reader) {
-                                $('#idVerWiz > .content').animate({ height: "26em" }, 500)
-
-                                isFileAdded = "1";
-                                var readerN = new FileReader();
-
-                                readerN.readAsDataURL(file);
-                                readerN.onload = function (e) {
-                                    // browser completed reading file - display it
-                                    var splittable = e.target.result.split(',');
-                                    var string2 = splittable[1];
-                                    FileData = string2;
-                                };
-                            });
-
-                            $('#idVer_idDoc').on('fileclear', function (event) {
-                                isFileAdded = "0";
-                                FileData = null;
-                            });
-
-                            $('#idVer_idDoc').on('filecleared', function (event) {
-                                isFileAdded = "0";
-                                FileData = null;
-                            });
-
-                            $('#idVerWiz > .content').animate({ height: "26em" }, 800)
-                            return true;
-                        }
-                        else {
-                            updateValidationUi("ssn", false);
-                        }
-                    }
-                    else {
-                        updateValidationUi("dob-default", false);
-                    }
-                }
-                else {
-                    updateValidationUi("dob", false);
+                    checkStepThree();
                 }
             }
 
-            // Allways allow previous action even if the current form is not valid!
-            if (currentIndex > newIndex) {
+            // Allways allow going backwards even if the current step is not valid
+            if (currentIndex > newIndex)
+            {
                 return true;
             }
         },
@@ -521,8 +431,16 @@ function runIdWizard() {
             cancelIdVer();
         },
         onFinishing: function (event, currentIndex) {
-			// Finish the Wizard...
-			return true;
+
+            if (transType == "send" && CIP == "vendor")
+            {
+                return checkStepThree();
+            }
+            else
+            {
+                // Finish the Wizard...
+                return true;
+            }
         },
         onFinished: function (event, currentIndex) {
 
@@ -533,6 +451,109 @@ function runIdWizard() {
             createRecord();
         }
     });
+}
+
+
+function checkStepThree() {
+    console.log("CheckStepThree Fired\n");
+
+    // Check DOB field
+    if ($('#idVer-dob').val().length == 10)
+    {
+        // Double check that DOB is not still "01/01/1980", which is the default and probably not the user's B-Day...
+        if ($('#idVer-dob').val() != "01/01/1980")
+        {
+            updateValidationUi("dob", true);
+
+            // Check SSN field
+            var ssnVal = $('#idVer-ssn').val().trim();
+            ssnVal = ssnVal.replace(/ /g, "").replace(/-/g, "");
+
+            if (ssnVal.length == 9 || FBID != "not connected")
+            {
+                updateValidationUi("ssn", true);
+
+                // If a transfer (i.e. on /DepositMoney page), don't need ID, so skip that
+                if (transType == "send" && CIP == "vendor")
+                {
+                    return true;
+                }
+
+                // For users paying a request... setup File Picker for uploading ID image
+                // FILE INPUT DOCUMENTATION: http://plugins.krajee.com/file-input#options
+                $("#idVer_idDoc").fileinput({
+                    allowedFileTypes: ['image'],
+                    initialPreview: [
+                        "<img src='../Assets/Images/securityheader.png' class='file-preview-image' alt='' id='IdWizIdDocPreview'>"
+                    ],
+                    initialPreviewShowDelete: false,
+                    layoutTemplates: {
+                        icon: '<span class="fa fa-photo m-r-10 kv-caption-icon"></span>',
+                    },
+                    fileActionSettings: {
+                        showZoom: false,
+                        indicatorNew: '',
+                    },
+                    maxFileCount: 1,
+                    maxFileSize: 2500,
+                    msgSizeTooLarge: "<strong>'{name}' ({size} KB)</strong> is a bit too large! Max allowed file size is <strong>{maxSize} KB</strong>. &nbsp;Please try a smaller picture!",
+                    showCaption: false,
+                    showUpload: false,
+                    showPreview: true,
+                    resizeImage: true,
+                    maxImageWidth: 500,
+                    maxImageHeight: 500,
+                    resizePreference: 'width'
+                });
+
+                $('#idVer_idDoc').on('fileerror', function (event, data, msg) {
+                    $('#idVerWiz > .content').animate({ height: "28em" }, 600)
+                });
+
+                $('#idVer_idDoc').on('fileloaded', function (event, file, previewId, index, reader) {
+                    $('#idVerWiz > .content').animate({ height: "26em" }, 500)
+
+                    isFileAdded = "1";
+                    var readerN = new FileReader();
+
+                    readerN.readAsDataURL(file);
+                    readerN.onload = function (e) {
+                        // browser completed reading file - display it
+                        var splittable = e.target.result.split(',');
+                        var string2 = splittable[1];
+                        FileData = string2;
+                    };
+                });
+
+                $('#idVer_idDoc').on('fileclear', function (event) {
+                    isFileAdded = "0";
+                    FileData = null;
+                });
+
+                $('#idVer_idDoc').on('filecleared', function (event) {
+                    isFileAdded = "0";
+                    FileData = null;
+                });
+
+                $('#idVerWiz > .content').animate({ height: "26em" }, 800)
+                return true;
+            }
+            else
+            {
+                updateValidationUi("ssn", false);
+            }
+        }
+        else
+        {
+            updateValidationUi("dob-default", false);
+        }
+    }
+    else
+    {
+        updateValidationUi("dob", false);
+    }
+
+    return false;
 }
 
 
@@ -555,19 +576,23 @@ function updateValidationUi(field, success) {
         });
     }
 
-    if (success == true) {
+    if (success == true)
+    {
         $('#' + field + 'Grp .form-group').removeClass('has-error').addClass('has-success');
         $('#' + field + 'Grp .help-block').slideUp();
 
         // Show the success checkmark
-        if (!$('#' + field + 'Grp .iconFeedback').length) {
+        if (!$('#' + field + 'Grp .iconFeedback').length)
+        {
             $('#' + field + 'Grp .form-group .fg-line').append('<i class="fa fa-check text-success iconFeedback animated bounceIn"></i>');
         }
-        else {
+        else
+        {
             $('#' + field + 'Grp .iconFeedback').removeClass('bounceOut').addClass('bounceIn');
         }
     }
-    else {
+    else
+    {
         $('#' + field + 'Grp .form-group').removeClass('has-success').addClass('has-error');
 
         // Hide the success checkmark if present
@@ -577,7 +602,7 @@ function updateValidationUi(field, success) {
 
         var helpBlockTxt = "";
         if (field == "name") {
-            helpBlockTxt = "Please enter <strong style='text-decoration:underline;'>your</strong> full <strong>legal name</strong>.";
+            helpBlockTxt = "Please enter <strong><span style='text-decoration:underline;'>your</span> full legal name</strong>.";
         }
         else if (field == "dob") {
             helpBlockTxt = "Please enter your date of birth. &nbsp;Only needed to verify your ID!"
@@ -615,7 +640,6 @@ function updateValidationUi(field, success) {
             $('#' + field + 'Grp input').focus();
         }, 200)
     }
-
 }
 
 
@@ -712,7 +736,7 @@ function createRecord() {
 				", dob: " + dobVal + ", fngprnt: " + fngprntVal +
 				", ip: " + ipVal + ", isIdImage: " + isImageAdded +
 				", CIP: " + CIP + ", FBID: " + FBID +
-                ", isRentScene: " + isRentScene + "}");//", idImagedata: " + imageData + "}");
+                ", isRentScene: " + isRentScene + "}");
 
     var urlToUse = "";
     if (transType == "send")
@@ -723,7 +747,7 @@ function createRecord() {
     { 
         urlToUse = "RegisterUserWithSynpForPayRequest";
     }
-    console.log("URL to use: " + urlToUse);
+    //console.log("URL to use: " + urlToUse);
 
     var dataToSend = "";
 
@@ -1045,9 +1069,6 @@ function idVerifiedSuccess() {
                                                          : redUrlForAddBank + ",false";
 
             console.log("redUrlForAddBank IS: [" + redUrlForAddBank + "]"); 
-
-            //$("#frame").attr("src", "Nooch/Add-Bank.aspx?MemberId=" + memIdGen +
-            //                        "&redUrl=" + redUrlForAddBank);
 
             $("#frame").attr("src", $('#addBank_Url').val()+ "?memberid=" + memIdGen +
                                           "&redUrl=" + redUrlForAddBank);

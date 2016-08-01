@@ -47,15 +47,15 @@
         <div class="clearfix">
             @if (pgData.rs == true)
             {
-                <a class="landingHeaderLogo center-block" href="https://www.rentscene.com/">
-                    <img src="../Assets/Images/rentscene.png" class="center-block" alt="Rent Scene Logo" />
-                </a>
+            <a class="landingHeaderLogo center-block" href="https://www.rentscene.com/">
+                <img src="../Assets/Images/rentscene.png" class="center-block" alt="Rent Scene Logo" />
+            </a>
             }
             else
             {
-                <a class="landingHeaderLogo center-block" href="https://www.nooch.com/">
-                    <img src="../Assets/Images/nooch-logo2.svg" class="center-block" alt="Nooch Logo" />
-                </a>
+            <a class="landingHeaderLogo center-block" href="https://www.nooch.com/">
+                <img src="../Assets/Images/nooch-logo2.svg" class="center-block" alt="Nooch Logo" />
+            </a>
             }
         </div>
     </nav>
@@ -85,7 +85,7 @@
                 <div>
                     @if (pgData.transMemo != null)
                     {
-                        <label id="transMemo">@pgData.transMemo</label>
+                    <label id="transMemo">@pgData.transMemo</label>
                     }
                 </div>
             </div>
@@ -96,16 +96,16 @@
 
             @if (pgData.nonRegUsrContainer == true && @pgData.pymnt_status == "pending" && @pgData.bnkName != "no bank found")
             {
-                <div id="nonRegUsrContainer" class="clearfix">
+            <div id="nonRegUsrContainer" class="clearfix">
 
-                    <p class="depositInstructions animated fadeIn" style="margin: 12px auto 25px;"></p>
+                <p class="depositInstructions animated fadeIn" style="margin: 12px auto 25px;"></p>
 
-                    <div class="text-center col-xs-12 col-sm-6 col-sm-offset-3 col-lg-4 col-lg-offset-4 m-t-10">
-                        <button id="payBtn" class="btn btn-default btn-lg center-block" onclick="payBtnClicked()"><i class="fa fa-fw fa-check-square-o m-r-10 text-success"></i>Make Payment</button>
-                        <button id="rejectBtn" class="btn btn-link center-block m-t-20" onclick="rejectBtnClicked()">Reject</button>
-                    </div>
-
+                <div class="text-center col-xs-12 col-sm-6 col-sm-offset-3 col-lg-4 col-lg-offset-4 m-t-10">
+                    <button id="payBtn" class="btn btn-default btn-lg center-block" onclick="payBtnClicked()"><i class="fa fa-fw fa-check-square-o m-r-10 text-success"></i>Make Payment</button>
+                    <button id="rejectBtn" class="btn btn-link center-block m-t-20" onclick="rejectBtnClicked()">Reject</button>
                 </div>
+
+            </div>
             }
 
         </div>
@@ -220,19 +220,19 @@
             <ul class="list-inline">
                 @if (pgData.rs == true)
                 {
-                    <li><a href="https://www.rentscene.com" target="_blank">About</a></li>
-                    <li><a href="https://www.nooch.com/safe" target="_blank">Security</a></li>
-                    <li><a href="http://support.nooch.com" target="_blank">Support Center</a></li>
-                    <li><a href="https://www.nooch.com/tos" target="_blank">Legal Stuff</a></li>
-                    <li><a href="https://www.rentscene.com/faq" target="_blank">FAQ</a></li>
+                <li><a href="https://www.rentscene.com" target="_blank">About</a></li>
+                <li><a href="https://www.nooch.com/safe" target="_blank">Security</a></li>
+                <li><a href="http://support.nooch.com" target="_blank">Support Center</a></li>
+                <li><a href="https://www.nooch.com/tos" target="_blank">Legal Stuff</a></li>
+                <li><a href="https://www.rentscene.com/faq" target="_blank">FAQ</a></li>
                 }
                 else
                 {
-                    <li><a href="https://www.nooch.com/overview" target="_blank">About</a></li>
-                    <li><a href="https://www.nooch.com/safe" target="_blank">Security</a></li>
-                    <li><a href="http://support.nooch.com/" target="_blank">Support Center</a></li>
-                    <li><a href="https://www.nooch.com/tos" target="_blank">Legal Stuff</a></li>
-                    <li><a href="https://www.nooch.com/blog/" target="_blank">Blog</a></li>
+                <li><a href="https://www.nooch.com/overview" target="_blank">About</a></li>
+                <li><a href="https://www.nooch.com/safe" target="_blank">Security</a></li>
+                <li><a href="http://support.nooch.com/" target="_blank">Support Center</a></li>
+                <li><a href="https://www.nooch.com/tos" target="_blank">Legal Stuff</a></li>
+                <li><a href="https://www.nooch.com/blog/" target="_blank">Blog</a></li>
                 }
             </ul>
         </div>
@@ -342,16 +342,13 @@
                                     <div class="text-center m-b-5" style="font-size: 16px;">To prevent identity theft, please:</div>
                                     <ol style="font-size:14.5px; font-weight:normal; letter-spacing: .3px; margin-bottom: 4px;">
                                         <li style="margin-bottom: 3px;">Enter your <span>date of birth</span></li>
-                                        <!--<li>
-                                                Then do <span style="text-decoration:underline;font-weight:bold;">ONE</span> of the following:
-                                                <ol type="A">
-                                                 -->
                                         <li>
-                                            Enter your SSN
-                                            <!--, OR...</li>
-                                                       <li>connect to your Facebook account.</li>
-                                                   </ol>
-                                            -->
+                                            Then do <span style="text-decoration:underline;font-weight:bold;">ONE</span> of the following:
+                                            <ol type="A">
+                                                <li>Enter your SSN, OR...</li>
+                                                <li>connect to your Facebook account.</li>
+                                            </ol>
+
                                         </li>
                                     </ol>
                                 </div>
@@ -372,8 +369,8 @@
                                 </dl>
 
                                 <div class="row m-t-20">
-                                    <!--<div class="col-xs-5 p-r-10" id="ssnGrp">-->
-                                    <div class="col-xs-10 col-sm-8 col-xs-push-1 col-sm-push-2 col-md-6 col-md-push-3" id="ssnGrp">
+                                    <div class="col-xs-5 p-r-10" id="ssnGrp">
+                                        <!--<div class="col-xs-10 col-sm-8 col-xs-push-1 col-sm-push-2 col-md-6 col-md-push-3" id="ssnGrp">-->
                                         <div class="form-group m-b-5">
                                             <label for="idVer-ssn">SSN</label>
                                             <input id="idVer-ssn" type="text" class="form-control" value="" placeholder="XXX - XX - XXXX" />
@@ -381,14 +378,14 @@
                                         <span><button class="btn btn-link btn-sm p-0" onclick="ssnWhy()">Why?</button></span>
                                     </div>
 
-                                    <!--<div class="col-xs-2 p-0">
-                                            <div class="orDiv">OR</div>
-                                        </div>
+                                    <div class="col-xs-2 p-0">
+                                        <div class="orDiv">OR</div>
+                                    </div>
 
-                                        <div class="col-xs-5 p-l-10">
-                                            <button id="fbLoginBtn" class="btn btn-fb m-t-10" type="button" onclick="checkLoginState()"><i class="fa fa-facebook-square"></i><span>Connect with Facebook</span></button>
-                                            <div id="fbResult" class="animated text-center hidden m-t-5"></div>
-                                        </div>-->
+                                    <div class="col-xs-5 p-l-10">
+                                        <button id="fbLoginBtn" class="btn btn-fb m-t-10" type="button" onclick="checkLoginState()"><i class="fa fa-facebook-square"></i><span>Connect with Facebook</span></button>
+                                        <div id="fbResult" class="animated text-center hidden m-t-5"></div>
+                                    </div>
                                 </div>
 
                             </section>
@@ -396,8 +393,11 @@
                             <h3><i class="fa fa-fw fa-picture-o"></i><br />ID Doc<span class="hide-sm">ument</span></h3>
                             <section>
 
-                                <div class="well well-sm m-b-15">
-                                    <div>Please upload a picture of any government-issued <strong>photo ID</strong> with your name<span class="hide-sm"> on it</span>.</div>
+                                <div class="well p-15 m-b-15">
+                                    <div>
+                                        Please upload a copy of your <span class="text-primary">photo ID</span> (driver's license, passport, etc.) <span class="f-400">&nbsp;Please make sure your name and picture are<span class="hide-sm"> clearly</span> legible.</span>
+                                        <i class="fa fa-thumbs-up" style="color: #bbb; margin-left: 6px; text-shadow: 0 -1px 0 rgba(40,40,40,.6)"></i>
+                                    </div>
                                 </div>
 
                                 <div id="idDocWrap">
