@@ -11,4 +11,11 @@ namespace Nooch.Common.Entities.MobileAppOutputEnities
         public string UserName { get; set; }
         public string Status { get; set; }
     }
+
+    public class AppLogin
+    {
+        public bool success { get; set; }
+        public string msg { get; set; }
+        public string note { get; set; }
+    }
 }
