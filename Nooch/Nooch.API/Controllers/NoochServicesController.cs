@@ -509,6 +509,43 @@ namespace Nooch.API.Controllers
                 throw new Exception("Invalid OAuth 2 Access");
             }
         }
+        [HttpGet]
+        [ActionName("GetMemberStatsGeneric")]
+        public StatsForMember GetMemberStatsGeneric(string MemberId, string accesstoken)
+        {
+            if (CommonHelper.IsValidRequest(accesstoken, MemberId))
+               
+            {
+                try
+                {
+                    StatsForMember sm = new StatsForMember();
+                    //Logger.LogDebugMessage("Service layer - GetMemberStats - MemberId].");
+                    var memberDataAccess = new MembersDataAccess();
+                    sm.Largest_received_transfer = memberDataAccess.GetMemberStats(MemberId, "Largest_received_transfer");
+                    sm.Largest_sent_transfer = memberDataAccess.GetMemberStats(MemberId, "Largest_sent_transfer");
+                    sm.Total_Friends_Invited = memberDataAccess.GetMemberStats(MemberId, "Total_Friends_Invited");
+                    sm.Total_Friends_Joined = memberDataAccess.GetMemberStats(MemberId, "Total_Friends_Joined");
+                    sm.Total_no_of_transfer_Received = memberDataAccess.GetMemberStats(MemberId, "Total_no_of_transfer_Received");
+                    sm.Total_no_of_transfer_Sent = memberDataAccess.GetMemberStats(MemberId, "Total_no_of_transfer_Sent");
+                    sm.Total_P2P_transfers = memberDataAccess.GetMemberStats(MemberId, "Total_P2P_transfers");
+                    sm.Total_Sent = memberDataAccess.GetMemberStats(MemberId, "Total_$_Sent");
+                    sm.Total_Received = memberDataAccess.GetMemberStats(MemberId, "Total_$_Received");
+                  
+                    sm.Total_Posts_To_TW = memberDataAccess.GetMemberStats(MemberId, "Total_Posts_To_TW");
+                    return sm;
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Controller -> GetMemberStats FAILED - [Exception: " + ex + "]");
+
+                    throw new Exception("Invalid OAuth 2 Access");
+                }
+            }
+            else
+            {
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
 
 
         [HttpPost]
