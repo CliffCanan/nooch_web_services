@@ -92,18 +92,19 @@ namespace Nooch.Common
             return System.Convert.ToBase64String(plainTextBytes);
         }
 
-        public static string ForgotPassword(string userName)
+        public static AppLogin ForgotPassword(string userName)
         {
-            Logger.Info("Common Helper -> ForgotPassword - [userName: " + userName + "]");
+            Logger.Info("Common Helper -> ForgotPassword - UserName: [" + userName + "]");
 
-            var memberObj = GetMemberDetailsByUserName(userName);
+            AppLogin res = new AppLogin();
+            res.success = false;
 
             try
             {
+                var memberObj = GetMemberDetailsByUserName(userName);
+
                 if (memberObj != null)
                 {
-                    bool status = false;
-
                     var fromAddress = Utility.GetValueFromConfig("adminMail");
 
                     var tokens = new Dictionary<string, string>
@@ -123,28 +124,37 @@ namespace Nooch.Common
                     PasswordResetRequest prr = new PasswordResetRequest();
                     prr.RequestedOn = DateTime.Now;
                     prr.MemberId = memberObj.MemberId;
+
                     _dbContext.PasswordResetRequests.Add(prr);
                     int i = _dbContext.SaveChanges();
 
                     if (i > 0)
                     {
                         _dbContext.Entry(prr).Reload();
-                        status = true;
+
                         Utility.SendEmail(Constants.TEMPLATE_FORGOT_PASSWORD, fromAddress, GetDecryptedData(memberObj.UserName),
                                           null, "Reset your Nooch password", null, tokens, null, null, null);
-                    }
 
-                    return status
-                        ? "Your reset password link has been sent to your mail successfully."
-                        : "Problem occured while sending mail.";
+                        res.success = true;
+                        res.msg = "Your reset password link has been sent to your mail successfully.";
+                    }
+                    else
+                    {
+                        res.msg = "Problem occured while sending email.";
+                    }
                 }
-                return "Problem occured while sending mail.";
+                else
+                {
+                    res.msg = "Email address not found.";
+                }
             }
             catch (Exception ex)
             {
-                Logger.Error("Common Helper -> ForgotPassword FAILED - Exception: [" + ex.Message + "]");
-                return "Problem occured while sending mail.";
+                Logger.Error("Common Helper -> ForgotPassword FAILED - Exception: [" + ex + "]");
+                res.msg = "Server Exception: [" + ex.Message + "]";
             }
+
+            return res;
         }
 
 
