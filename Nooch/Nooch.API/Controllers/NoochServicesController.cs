@@ -143,7 +143,7 @@ namespace Nooch.API.Controllers
             {
                 try
                 {
-                    //Logger.LogDebugMessage("Service layer -> GetMemberPendingTransctionsCount - MemberId: [" + MemberId + "]");
+                    //Logger.LogDebugMessage("Service Cntlr -> GetMemberPendingTransctionsCount - MemberId: [" + MemberId + "]");
                     var transactionDataAccess = new TransactionsDataAccess();
 
                     PendingTransCoutResult trans = transactionDataAccess.GetMemberPendingTransCount(MemberId);
@@ -187,48 +187,54 @@ namespace Nooch.API.Controllers
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Controller - GetMemberUsernameByMemberId FAILED - [memberId: " + memberId +
-                                       "], Exception: [" + ex + "]");
+                Logger.Error("Service Cntlr - GetMemberUsernameByMemberId FAILED - MemberID: [" + memberId +
+                             "], Exception: [" + ex + "]");
             }
             return new StringResult();
         }
+
 
         [HttpGet]
         [ActionName("GetPhoneNumberByMemberId")]
         public StringResult GetPhoneNumberByMemberId(string memberId)
         {
+            StringResult res = new StringResult();
+
             try
             {
-                Logger.Info("Service Controller -> GetPhoneNumberByMemberId Initiated - [MemberID: " + memberId + "]");
-
-                return new StringResult
-                {
-                    Result = CommonHelper.GetPhoneNumberByMemberId(memberId)
-                };
+                Logger.Info("Service Cntlr -> GetPhoneNumberByMemberId Fired - MemberID: [" + memberId + "]");
+                res.Result = CommonHelper.GetPhoneNumberByMemberId(memberId);
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Controller -> GetPhoneNumberByMemberId FAILED - [Exception: " + ex + "]");
-                return new StringResult();
+                Logger.Error("Service Cntlr -> GetPhoneNumberByMemberId FAILED - Exception: [" + ex + "]");
+                res.Result = ex.Message;
             }
+
+            return res;
         }
+
 
         [HttpGet]
         [ActionName("GetMemberIdByPhone")]
         public StringResult GetMemberIdByPhone(string phoneNo, string accessToken)
         {
+            StringResult res = new StringResult();
+
             try
             {
-                Logger.Info("Service Controller - GetMemberByPhone - phoneNo: [" + phoneNo + "]");
-
-                return new StringResult { Result = CommonHelper.GetMemberIdByPhone(phoneNo) };
+                Logger.Info("Service Cntlr -> GetMemberByPhone Fired - Phone #: [" + phoneNo + "]");
+                res.Result = CommonHelper.GetMemberIdByPhone(phoneNo);
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Controller - GetMemberByPhone - FAILED - [Exception: " + ex + "]");
+                Logger.Error("Service Cntlr -> GetMemberByPhone FAILED - Exception: [" + ex + "]");
+                res.Result = ex.Message;
             }
-            return new StringResult();
+
+            return res;
         }
+
 
         [HttpPost]
         [ActionName("GetMemberIds")]
@@ -236,98 +242,119 @@ namespace Nooch.API.Controllers
         {
             try
             {
-                //Logger.LogDebugMessage("Service layer - GetMemberIds - userName: [" + phoneEmailListDto + "]");
+                //Logger.LogDebugMessage("Service Cntlr - GetMemberIds Fired - userName: [" + phoneEmailListDto + "]");
                 var mda = new MembersDataAccess();
                 return mda.GetMemberIds(phoneEmailListDto);
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Cntrlr - GetMemberIds - FAILED - [Exception: " + ex + "]");
+                Logger.Error("Service Cntlr -> GetMemberIds FAILED - Exception: [" + ex + "]");
                 return new PhoneEmailListDto();
             }
         }
+
 
         [HttpGet]
         [ActionName("GetMemberNameByUserName")]
         public StringResult GetMemberNameByUserName(string userName)
         {
+            StringResult res = new StringResult();
+
             try
             {
-                return new StringResult { Result = CommonHelper.GetMemberNameByUserName(userName) };
+                res.Result = CommonHelper.GetMemberNameByUserName(userName);
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Controller - GetMemberUsernameByMemberId FAILED - [GetMemberNameByUserName : " + userName +
+                Logger.Error("Service Cntlr -> GetMemberUsernameByMemberId FAILED - [GetMemberNameByUserName : " + userName +
                              "], Exception: [" + ex + "]");
+                res.Result = ex.Message;
             }
-            return new StringResult();
+
+            return res;
         }
+
 
         [HttpGet]
         [ActionName("MemberActivation")]
         public BoolResult MemberActivation(string tokenId)
         {
+            BoolResult res = new BoolResult();
+
             try
             {
-                Logger.Info("Service Controller -> MemberActivation Initiated - [tokenId: " + tokenId + "]");
+                Logger.Info("Service Cntlr -> MemberActivation Fired - TokenId: [" + tokenId + "]");
                 var mda = new MembersDataAccess();
-                return new BoolResult { Result = mda.MemberActivation(tokenId) };
+                res.Result = mda.MemberActivation(tokenId);
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Controller -> MemberActivation Failed - [tokenId: " + tokenId + "]. Exception -> " + ex);
-                return new BoolResult();
+                Logger.Error("Service Cntlr -> MemberActivation FAILED - TokenID: [" + tokenId + "], Exception: [" + ex + "]");
+                res.Result = false;
             }
+
+            return res;
         }
+
 
         [HttpGet]
         [ActionName("IsMemberActivated")]
         public BoolResult IsMemberActivated(string tokenId)
         {
+            BoolResult res = new BoolResult();
+
             try
             {
-                return new BoolResult { Result = CommonHelper.IsMemberActivated(tokenId) };
+                res.Result = CommonHelper.IsMemberActivated(tokenId);
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Controller -> IsMemberActivated Failed - [tokenId: " + tokenId + "]. Exception -> " + ex);
-                return new BoolResult();
+                Logger.Error("Service Cntlr -> IsMemberActivated FAILED - TokenID: [" + tokenId + "], Exception: [" + ex + "]");
+                res.Result = false;
             }
+
+            return res;
         }
+
 
         [HttpGet]
         [ActionName("IsNonNoochMemberActivated")]
         public BoolResult IsNonNoochMemberActivated(string emailId)
         {
+            BoolResult res = new BoolResult();
+
             try
             {
-                Logger.Info("Service Controller - IsNonNoochMemberActivated - Email ID: [" + emailId + "]");
-
-                return new BoolResult { Result = CommonHelper.IsNonNoochMemberActivated(emailId) };
+                Logger.Info("Service Cntlr -> IsNonNoochMemberActivated Fired - Email ID: [" + emailId + "]");
+                res.Result = CommonHelper.IsNonNoochMemberActivated(emailId);
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Controller -> IsNonNoochMemberActivated Failed - [tokenId: " + emailId + "]. Exception -> " + ex);
-                return new BoolResult();
+                Logger.Error("Service Cntlr -> IsNonNoochMemberActivated FAILED - tokenId: [" + emailId + "]. Exception: [" + ex + "]");
+                res.Result = false;
             }
+
+            return res;
         }
+
 
         [HttpGet]
         [ActionName("IsDuplicateMember")]
         public StringResult IsDuplicateMember(string userName)
         {
-            StringResult result = new StringResult();
+            StringResult res = new StringResult();
+
             try
             {
-                Logger.Info("Service Controller - IsDuplicateMember - userName: [" + userName + "]");
-
-                return new StringResult { Result = CommonHelper.IsDuplicateMember(userName) };
+                Logger.Info("Service Cntlr - IsDuplicateMember Fired - userName: [" + userName + "]");
+                res.Result = CommonHelper.IsDuplicateMember(userName);
             }
             catch (Exception ex)
             {
-                result.Result = ex.ToString();
+                res.Result = ex.ToString();
             }
-            return result;
+
+            return res;
         }
 
         public static string Base64Encode(string plainText)
@@ -355,7 +382,7 @@ namespace Nooch.API.Controllers
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Controller - GetEncryptedData FAILED - sourceData: [" + data + "]. Exception: [" + ex + "]");
+                Logger.Error("Service Cntlr - GetEncryptedData FAILED - sourceData: [" + data + "], Exception: [" + ex + "]");
                 return new MemberDto();
             }
         }
@@ -364,7 +391,7 @@ namespace Nooch.API.Controllers
         {
             try
             {
-                //Logger.LogDebugMessage("Service Layer - GetDecryptedData - sourceData [" + sourceData + "]");
+                //Logger.LogDebugMessage("Service Cntlr - GetDecryptedData - sourceData [" + sourceData + "]");
 
                 var aesAlgorithm = new AES();
                 string decryptedData = aesAlgorithm.Decrypt(sourceData.Replace(" ", "+"), string.Empty);
@@ -375,7 +402,7 @@ namespace Nooch.API.Controllers
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Controller - GetDecryptedData FAILED - sourceData: [" + sourceData + "]. Exception: [" + ex + "]");
+                Logger.Error("Service Cntlr - GetDecryptedData FAILED - sourceData: [" + sourceData + "]. Exception: [" + ex + "]");
                 return new MemberDto();
             }
         }
@@ -388,7 +415,7 @@ namespace Nooch.API.Controllers
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Cntrlr - GetServerCurrentTime FAILED - Exception: [" + ex + "]");
+                Logger.Error("Service Cntlr - GetServerCurrentTime FAILED - Exception: [" + ex + "]");
                 return new StringResult { Result = "" };
             }
         }
@@ -398,7 +425,7 @@ namespace Nooch.API.Controllers
         [ActionName("GetMemberDetails")]
         public MemberDto GetMemberDetails(string memberId, string accessToken)
         {
-            Logger.Info("Service Cntrlr -> GetMemberDetails - MemberID: [" + memberId + "]");
+            Logger.Info("Service Cntlr -> GetMemberDetails - MemberID: [" + memberId + "]");
 
             if (CommonHelper.IsValidRequest(accessToken, memberId))
             {
@@ -415,13 +442,9 @@ namespace Nooch.API.Controllers
                         // Now check this bank's status. 
                         // CLIFF (10/7/15): If the user's ID is verified (after sending SSN info to Synapse), then consider the bank Verified as well
                         if (memberEntity.IsVerifiedWithSynapse == true)
-                        {
                             accountstatus = "Verified";
-                        }
                         else
-                        {
                             accountstatus = synapseBank.Status;
-                        }
                     }
 
                     bool b = (synapseBank != null) ? true : false;
@@ -456,7 +479,7 @@ namespace Nooch.API.Controllers
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Cntrlr -> GetMemberDetails FAILED - [MemberId: " + memberId + "], [Exception: " + ex.InnerException + "]");
+                    Logger.Error("Service Cntlr -> GetMemberDetails FAILED - MemberID: [" + memberId + "], Exception: [" + ex.InnerException + "]");
                     throw new Exception("Server Error");
                 }
             }
@@ -480,7 +503,7 @@ namespace Nooch.API.Controllers
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Cntrlr -> GetMostFrequentFriends FAILED - Exception: [" + ex + "]");
+                    Logger.Error("Service Cntlr -> GetMostFrequentFriends FAILED - Exception: [" + ex + "]");
                     throw new Exception("Error");
                 }
             }
@@ -499,13 +522,13 @@ namespace Nooch.API.Controllers
             {
                 try
                 {
-                    //Logger.LogDebugMessage("Service layer - GetMemberStats - MemberId].");
+                    //Logger.LogDebugMessage("Service Cntlr - GetMemberStats - MemberId].");
                     var mda = new MembersDataAccess();
                     return new StringResult { Result = mda.GetMemberStats(MemberId, query) };
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Cntrlr -> GetMemberStats FAILED - [Exception: " + ex + "]");
+                    Logger.Error("Service Cntlr -> GetMemberStats FAILED - [Exception: " + ex + "]");
 
                     throw new Exception("Invalid OAuth 2 Access");
                 }
@@ -515,17 +538,18 @@ namespace Nooch.API.Controllers
                 throw new Exception("Invalid OAuth 2 Access");
             }
         }
+
+
         [HttpGet]
         [ActionName("GetMemberStatsGeneric")]
         public StatsForMember GetMemberStatsGeneric(string MemberId, string accesstoken)
         {
             if (CommonHelper.IsValidRequest(accesstoken, MemberId))
-               
             {
                 try
                 {
                     StatsForMember sm = new StatsForMember();
-                    //Logger.LogDebugMessage("Service layer - GetMemberStats - MemberId].");
+                    //Logger.LogDebugMessage("Service Cntlr - GetMemberStats - MemberId].");
                     var memberDataAccess = new MembersDataAccess();
                     sm.Largest_received_transfer = memberDataAccess.GetMemberStats(MemberId, "Largest_received_transfer");
                     sm.Largest_sent_transfer = memberDataAccess.GetMemberStats(MemberId, "Largest_sent_transfer");
@@ -536,7 +560,7 @@ namespace Nooch.API.Controllers
                     sm.Total_P2P_transfers = memberDataAccess.GetMemberStats(MemberId, "Total_P2P_transfers");
                     sm.Total_Sent = memberDataAccess.GetMemberStats(MemberId, "Total_$_Sent");
                     sm.Total_Received = memberDataAccess.GetMemberStats(MemberId, "Total_$_Received");
-                  
+
                     sm.Total_Posts_To_TW = memberDataAccess.GetMemberStats(MemberId, "Total_Posts_To_TW");
                     return sm;
                 }
@@ -592,22 +616,19 @@ namespace Nooch.API.Controllers
                     }
                     catch (Exception ex)
                     {
-                        Logger.Error("Service Cntrlr -> SaveMemberDeviceToken FAILED - MemberId: [" + memberId + "]. Exception: [" + ex + "]");
-
+                        Logger.Error("Service Cntlr -> SaveMemberDeviceToken FAILED - MemberId: [" + memberId + "]. Exception: [" + ex + "]");
                         throw new Exception("Server Error.");
                     }
                 }
                 else
-                {
                     res.Result = "No DeviceToken was sent!";
-                }
 
                 res.Result = "Failed to save DeviceToken";
                 return res;
             }
             else
             {
-                Logger.Error("Service Cntrlr -> SaveMemberDeviceToken FAILED - MemberId: [" + memberId + "]. INVALID OAUTH 2 ACCESS.");
+                Logger.Error("Service Cntlr -> SaveMemberDeviceToken FAILED - MemberID: [" + memberId + "]. INVALID OAUTH 2 ACCESS.");
                 throw new Exception("Invalid OAuth 2 Access");
             }
         }
@@ -627,56 +648,50 @@ namespace Nooch.API.Controllers
         public StringResult LoginRequest(string userName, string pwd, Boolean rememberMeEnabled, decimal lat,
             decimal lng, string udid, string devicetoken)
         {
+            StringResult res = new StringResult();
+
             try
             {
-                Logger.Info("Service Cntrlr -> LoginRequest - userName: [" + userName + "], UDID: [" + udid + "], DeviceToken: [" + devicetoken + "]");
+                Logger.Info("Service Cntlr -> LoginRequest - userName: [" + userName + "], UDID: [" + udid + "], DeviceToken: [" + devicetoken + "]");
 
                 var mda = new MembersDataAccess();
                 string cookie = mda.LoginRequest(userName, pwd, rememberMeEnabled, lat, lng, udid, devicetoken);
 
-                if (string.IsNullOrEmpty(cookie))
+                if (cookie == "Success")
+                {
+                    string state = GenerateAccessToken();
+                    CommonHelper.UpdateAccessToken(userName, state);
+                    res.Result = state;
+                }
+                else if (string.IsNullOrEmpty(cookie))
                 {
                     cookie = "Authentication failed.";
-                    return new StringResult { Result = "Invalid Login or Password" };
-                }
-                else if (cookie == "Temporarily_Blocked")
-                {
-                    return new StringResult { Result = "Temporarily_Blocked" };
-                }
-                else if (cookie == "Suspended")
-                {
-                    return new StringResult { Result = "Suspended" };
+                    res.Result = "Invalid Login or Password";
                 }
                 else if (cookie == "Registered")
                 {
                     string state = GenerateAccessToken();
                     CommonHelper.UpdateAccessToken(userName, state);
-                    return new StringResult { Result = state };
+                    res.Result = state;
                 }
+                else if (cookie == "Temporarily_Blocked")
+                    res.Result = "Temporarily_Blocked";
+                else if (cookie == "Suspended")
+                    res.Result = "Suspended";
                 else if (cookie == "Invalid user id or password.")
-                {
-                    return new StringResult { Result = "Invalid user id or password." };
-                }
+                    res.Result = "Invalid user id or password.";
                 else if (cookie == "The password you have entered is incorrect.")
-                {
-                    return new StringResult { Result = "The password you have entered is incorrect." };
-                }
-                else if (cookie == "Success")
-                {
-                    string state = GenerateAccessToken();
-                    CommonHelper.UpdateAccessToken(userName, state);
-                    return new StringResult { Result = state };
-                }
+                    res.Result = "The password you have entered is incorrect.";
                 else
-                {
-                    return new StringResult { Result = cookie };
-                }
+                    res.Result = cookie;
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Cntrlr -> LoginRequest FAILED - userName: [" + userName + "], Exception: [" + ex + "]");
-                throw new Exception("Server Error");
+                Logger.Error("Service Cntlr -> LoginRequest FAILED - userName: [" + userName + "], Exception: [" + ex + "]");
+                res.Result = ex.Message;
             }
+
+            return res;
         }
 
 
@@ -742,7 +757,6 @@ namespace Nooch.API.Controllers
             }
             throw new Exception("Invalid OAuth 2 Access");
         }
-
 
 
         [HttpGet]
@@ -1121,7 +1135,7 @@ namespace Nooch.API.Controllers
         [ActionName("RequestMoneyToExistingUserForRentScene")]
         public requestFromRentScene RequestMoneyToExistingUserForRentScene(string from, string name, string email, string amount, string memo, string pin, string ip, bool isRequest, string memberId, string nameFromServer)
         {
-            Logger.Info("Service Controller - RequestMoneyToExistingUserForRentScene Initiated - From: [" + from + ", Name: [" + name +
+            Logger.Info("Service Cntlr - RequestMoneyToExistingUserForRentScene Initiated - From: [" + from + ", Name: [" + name +
                         "], Email: [" + email + "], Amount: [" + amount +
                         "], Memo: [" + memo + "], PIN: [" + pin +
                         "], IP: [" + ip + "], isRequest: [" + isRequest + "]" +
@@ -1166,7 +1180,7 @@ namespace Nooch.API.Controllers
 
                 if (isMissingData)
                 {
-                    Logger.Error("Service Controller -> RequestMoneyForRentScene FAILED - Missing required data - Msg: [" + res.msg + "]");
+                    Logger.Error("Service Cntlr -> RequestMoneyForRentScene FAILED - Missing required data - Msg: [" + res.msg + "]");
                     return res;
                 }
 
@@ -1191,6 +1205,13 @@ namespace Nooch.API.Controllers
                     zip = "19102";
                     memIdOfRequester = "852987e8-d5fe-47e7-a00b-58a80dd15b49";
                 }
+                else if (from == "habitat")
+                {
+                    memIdOfRequester = CommonHelper.GetMemberIdByUserName("andrew@tryhabitat.com");
+                    address = "1856 N. Willington St.";
+                    city = "Philadelphia";
+                    zip = "19121";
+                }
                 else
                 {
                     address = "3 Scarlet Oak Dr";
@@ -1199,7 +1220,7 @@ namespace Nooch.API.Controllers
                     memIdOfRequester = "00bd3972-d900-429d-8a0d-28a5ac4a75d7"; // team@nooch.com
                 }
 
-                Logger.Info("Service Controller - RequestMoneyToExistingUserForRentScene - Checkpoint - address: [" + address +
+                Logger.Info("Service Cntlr - RequestMoneyToExistingUserForRentScene - Checkpoint - address: [" + address +
                             "], city: [" + city + "], ZIP: [" + zip + "], memIdOfRequest: [" + memIdOfRequester + "]");
 
                 string requestId = string.Empty;
@@ -1236,7 +1257,7 @@ namespace Nooch.API.Controllers
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Cntrlr - RequestMoneyToExistingUserForRentScene FAILED - [Email: " + email + "]. Exception: [" + ex + "]");
+                Logger.Error("Service Cntlr - RequestMoneyToExistingUserForRentScene FAILED - [Email: " + email + "]. Exception: [" + ex + "]");
 
                 res.msg = ex.Message;
                 res.note = "Outer exception in Service Layer (RequestMoneyToExistingUserForRentScene)!";
@@ -1244,8 +1265,6 @@ namespace Nooch.API.Controllers
 
             return res;
         }
-
-
 
 
 
@@ -1260,7 +1279,7 @@ namespace Nooch.API.Controllers
         {
             try
             {
-                Logger.Info("Service Cntrlr - RejectMoneyRequestForExistingNoochUser - [TransactionId: " + transactionId + "]");
+                Logger.Info("Service Cntlr - RejectMoneyRequestForExistingNoochUser - [TransactionId: " + transactionId + "]");
 
                 var tda = new TransactionsDataAccess();
                 string result = tda.RejectMoneyRequestForExistingNoochUser(transactionId);
@@ -1268,8 +1287,8 @@ namespace Nooch.API.Controllers
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Cntrlr - RejectMoneyRequestForExistingNoochUser FAILED - [TransactionId: " + transactionId +
-                             "], [Exception: " + ex.Message + "]");
+                Logger.Error("Service Cntlr - RejectMoneyRequestForExistingNoochUser FAILED - TransID: [" + transactionId +
+                             "], Exception: [" + ex.Message + "]");
 
                 throw new Exception("Server Error");
             }
@@ -1343,10 +1362,9 @@ namespace Nooch.API.Controllers
             {
                 try
                 {
-                    Logger.Info("Service Controller - CancelRejectTransaction - [MemberId: " + memberId + "]");
+                    Logger.Info("Service Cntlr - CancelRejectTransaction Fired - MemberID: [" + memberId + "]");
                     var tda = new TransactionsDataAccess();
-                    string result = tda.CancelRejectTransaction(transactionId, userResponse);
-                    return result;
+                    return tda.CancelRejectTransaction(transactionId, userResponse);
                 }
                 catch (Exception ex)
                 {
@@ -1385,13 +1403,13 @@ namespace Nooch.API.Controllers
             {
                 try
                 {
-                    Logger.Info("Service Cntrlr - SaveSocialMediaPost - MemberId: [" + MemberId + "],  Posted To: [" + PostTo + "]");
+                    Logger.Info("Service Cntlr - SaveSocialMediaPost Fired - MemberID: [" + MemberId + "],  Posted To: [" + PostTo + "]");
                     var mda = new MembersDataAccess();
                     return new StringResult { Result = mda.SaveMediaPosts(MemberId, PostTo, PostContent) };
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Cntrlr - SaveSocialMediaPost FAILED - MemberID: [" + MemberId + "], Exception: [" + ex.Message + "]");
+                    Logger.Error("Service Cntlr - SaveSocialMediaPost FAILED - MemberID: [" + MemberId + "], Exception: [" + ex.Message + "]");
                     throw new Exception("Server Error");
                 }
             }
@@ -1516,7 +1534,7 @@ namespace Nooch.API.Controllers
             {
                 try
                 {
-                    //Logger.LogDebugMessage("Service Layer - GetTransactionsList Initiated - MemberID: [" + member + "]");
+                    //Logger.LogDebugMessage("Service Cntlr - GetTransactionsList Initiated - MemberID: [" + member + "]");
 
                     var tda = new TransactionsDataAccess();
 
@@ -1647,7 +1665,7 @@ namespace Nooch.API.Controllers
                 var receivedTransaction = new TransactionDto();
                 try
                 {
-                    Logger.Info("Service Controller - GetLatestReceivedTransaction - [MemberId: " + member + "]");
+                    Logger.Info("Service Cntlr - GetLatestReceivedTransaction - MemberID: [" + member + "]");
 
                     var tda = new TransactionsDataAccess();
                     var transObj = tda.GetLatestReceivedTransaction(member);
@@ -1815,7 +1833,7 @@ namespace Nooch.API.Controllers
             {
                 try
                 {
-                    Logger.Info("Service Controller - GetTransactionDetail - [MemberId: " + memberId + "]");
+                    Logger.Info("Service Cntlr -> GetTransactionDetail - MemberID: [" + memberId + "]");
 
                     var transactionDataAccess = new TransactionsDataAccess();
 
@@ -2361,7 +2379,7 @@ namespace Nooch.API.Controllers
         [ActionName("GetMemberDetailsForLandingPage")]
         public MemberDto GetMemberDetailsForLandingPage(string memberId)
         {
-            Logger.Info("Service Controller -> GetMemberDetailsForLandingPage Initiated - [MemberId: " + memberId + "]");
+            Logger.Info("Service Cntlr -> GetMemberDetailsForLandingPage Fired - MemberID: [" + memberId + "]");
 
             try
             {
@@ -2425,17 +2443,14 @@ namespace Nooch.API.Controllers
                                          ? CommonHelper.GetDecryptedData(landlordEntity.CompanyName)
                                          : "NA";
 
-                    if (member.companyName.ToLower() == "realty mark llc")
-                    {
-                        member.companyName = "Realty Mark LLC";
-                    }
+                    if (member.companyName.ToLower() == "realty mark llc") member.companyName = "Realty Mark LLC";
                 }
 
                 return member;
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Controller -> GetMemberDetailsForLandingPage FAILED - [MemberId: " + memberId + "], [Exception: " + ex + "]");
+                Logger.Error("Service Cntlr -> GetMemberDetailsForLandingPage FAILED - MemberID: [" + memberId + "], Exception: [" + ex + "]");
             }
 
             return null;
@@ -2565,7 +2580,7 @@ namespace Nooch.API.Controllers
         {
             try
             {
-                Logger.Info("Service Controller - CreateNonNoochUserPasswordForPhoneInvitations - [TransId: " + TransId + "]");
+                Logger.Info("Service Cntlr - CreateNonNoochUserPasswordForPhoneInvitations - TransID: [" + TransId + "]");
 
                 var mda = new MembersDataAccess();
                 string result = mda.CreateNonNoochUserPasswordForPhoneInvitations(TransId, password, EmailId);
@@ -2587,7 +2602,7 @@ namespace Nooch.API.Controllers
         {
             try
             {
-                Logger.Info("Service Controller - CreateNonNoochUserAccountAfterRejectMoney - [TransId: " + TransId + "], [UserName: " + UserName + "]");
+                Logger.Info("Service Cntlr - CreateNonNoochUserAccountAfterRejectMoney - TransID: [" + TransId + "], UserName: [" + UserName + "]");
 
                 var mda = new MembersDataAccess();
                 string result = mda.CreateNonNoochUserAccountAfterRejectMoney(TransId, password, EmailId, UserName);
@@ -2597,6 +2612,7 @@ namespace Nooch.API.Controllers
             {
                 Utility.ThrowFaultException(ex);
             }
+
             return new StringResult { Result = "Error in Service Layer!" };
         }
 
@@ -2630,7 +2646,7 @@ namespace Nooch.API.Controllers
 
             try
             {
-                Logger.Info("Service Controller -> RejectMoneyCommon Initiated - Transaction ID: [" + TransactionId + "], " +
+                Logger.Info("Service Cntlr -> RejectMoneyCommon Initiated - TransID: [" + TransactionId + "], " +
                             "TransType: [" + TransType + "], UserType: [" + UserType + "]");
 
                 var tda = new TransactionsDataAccess();
@@ -2656,7 +2672,7 @@ namespace Nooch.API.Controllers
             {
                 try
                 {
-                    Logger.Info("Service Controller - SaveMemberSSN - [MemberId: " + input.memberId + "]");
+                    Logger.Info("Service Cntlr - SaveMemberSSN - MemberID: [" + input.memberId + "]");
                     MembersDataAccess mda = new MembersDataAccess();
                     return new StringResult()
                     {
@@ -2665,13 +2681,13 @@ namespace Nooch.API.Controllers
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Controller - Operation FAILED: SaveMemberSSN - [MemberId: " + input.memberId + "]. Exception: [" + ex + "]");
+                    Logger.Error("Service Cntlr - Operation FAILED: SaveMemberSSN - MemberID: [" + input.memberId + "], Exception: [" + ex + "]");
                     throw new Exception("Server Error.");
                 }
             }
             else
             {
-                Logger.Error("Service Controller - Operation FAILED: SaveMemberSSN - memberId: [" + input.memberId + "]. INVALID OAUTH 2 ACCESS.");
+                Logger.Error("Service Cntlr - Operation FAILED: SaveMemberSSN - MemberID: [" + input.memberId + "]. INVALID OAUTH 2 ACCESS.");
                 throw new Exception("Invalid OAuth 2 Access");
             }
         }
@@ -2685,7 +2701,7 @@ namespace Nooch.API.Controllers
             {
                 try
                 {
-                    Logger.Info("Service Controller - SaveDOBForMember - [MemberId: " + input.memberId + "]");
+                    Logger.Info("Service Cntlr - SaveDOBForMember - MemberID: [" + input.memberId + "]");
 
                     MembersDataAccess mda = new MembersDataAccess();
                     return new StringResult()
@@ -2695,13 +2711,13 @@ namespace Nooch.API.Controllers
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Cntrlr - SaveDOBForMember FAILED - MemberId: [" + input.memberId + "]. [Exception: " + ex + "]");
+                    Logger.Error("Service Cntlr - SaveDOBForMember FAILED - MemberID: [" + input.memberId + "], Exception: [" + ex + "]");
                     throw new Exception("Server Error.");
                 }
             }
             else
             {
-                Logger.Error("Service Cntrlr - SaveDOBForMember FAILED - MemberId: [" + input.memberId + "]. INVALID OAUTH 2 ACCESS.");
+                Logger.Error("Service Cntlr - SaveDOBForMember FAILED - MemberID: [" + input.memberId + "]. INVALID OAUTH 2 ACCESS.");
                 throw new Exception("Invalid OAuth 2 Access");
             }
         }
@@ -2713,7 +2729,7 @@ namespace Nooch.API.Controllers
         {
             try
             {
-                Logger.Info("Service Cntrlr -> GetTransactionDetailById - [TransactionId: " + TransactionId + "]");
+                Logger.Info("Service Cntlr -> GetTransactionDetailById - TransID: [" + TransactionId + "]");
 
                 var tda = new TransactionsDataAccess();
                 Transaction tr = tda.GetTransactionById(TransactionId);
@@ -2746,19 +2762,12 @@ namespace Nooch.API.Controllers
                 if (tr.IsPhoneInvitation == true)
                 {
                     if (CommonHelper.GetDecryptedData(tr.PhoneNumberInvited).Length == 10)
-                    {
-                        trans.PhoneNumberInvited =
-                            CommonHelper.FormatPhoneNumber(CommonHelper.GetDecryptedData(tr.PhoneNumberInvited));
-                    }
+                        trans.PhoneNumberInvited = CommonHelper.FormatPhoneNumber(CommonHelper.GetDecryptedData(tr.PhoneNumberInvited));
                     else
-                    {
                         trans.PhoneNumberInvited = "";
-                    }
                 }
                 else
-                {
                     trans.PhoneNumberInvited = "";
-                }
 
                 return trans;
             }
@@ -2807,7 +2816,7 @@ namespace Nooch.API.Controllers
         {
             try
             {
-                Logger.Info("Service Cntrlr -> RegisterExistingUserWithSynapseV3 Initiated - MemberID: [" + input.memberId +
+                Logger.Info("Service Cntlr -> RegisterExistingUserWithSynapseV3 Initiated - MemberID: [" + input.memberId +
                             "], Name: [" + input.fullname + "], Email: [" + input.email +
                             "], Is ID Img Sent: [" + input.isIdImageAdded + "], CIP: [" + input.cip +
                             "], FBID: [" + input.fbid + "], isRentScene: [" + input.isRentScene + "]");
@@ -2839,14 +2848,14 @@ namespace Nooch.API.Controllers
                     nc.reason = res.reason;
                 }
 
-                Logger.Info("Service Cntrlr -> RegisterExistingUserWithSynapseV3 - Returning Payload - Reason: [" + nc.reason +
+                Logger.Info("Service Cntlr -> RegisterExistingUserWithSynapseV3 - Returning Payload - Reason: [" + nc.reason +
                             "], Error Msg: [" + nc.errorMsg + "]");
 
                 return nc;
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Cntrlr -> RegisterExistingUserWithSynapsev3 FAILED - [MemberID: " + input.memberId + "], [Name: " + input.fullname +
+                Logger.Error("Service Cntlr -> RegisterExistingUserWithSynapsev3 FAILED - MemberID: [" + input.memberId + "], [Name: " + input.fullname +
                              "], Email of New User: [" + input.email + "], Exception: [" + ex + "]");
                 return null;
             }
@@ -2905,7 +2914,7 @@ namespace Nooch.API.Controllers
 
             try
             {
-                Logger.Info("Service Controller - submitDocumentToSynapseV3 Fired - [MemberId: " + DocumentDetails.MemberId + "]");
+                Logger.Info("Service Cntlr - submitDocumentToSynapseV3 Fired - MemberID: [" + DocumentDetails.MemberId + "]");
 
                 var mda = new MembersDataAccess();
 
@@ -2916,21 +2925,17 @@ namespace Nooch.API.Controllers
                 {
                     // Make  image from bytes
                     filename = HttpContext.Current.Server.MapPath("../../UploadedPhotos") + "/Photos/" +
-                                      DocumentDetails.MemberId + ".png";
+                                                                  DocumentDetails.MemberId + ".png";
                     using (MemoryStream inStream = new MemoryStream(DocumentDetails.Picture))
                     {
                         using (ImageFactory imageFactory = new ImageFactory())
                         {
-                            imageFactory.Load(inStream)
-                                .Quality(25)
-                                .Save(filename);
+                            imageFactory.Load(inStream).Quality(25).Save(filename);
                         }
-
                     }
                     //fs.Write(DocumentDetails.Picture, 0, (int)DocumentDetails.Picture.Length);
 
                     ImageUrlMade = Utility.GetValueFromConfig("PhotoUrl") + DocumentDetails.MemberId + ".png";
-
                 }
                 else
                 {
@@ -2939,13 +2944,9 @@ namespace Nooch.API.Controllers
                     Member memberObj = mda.GetMemberByGuid(memGuid);
 
                     if (!String.IsNullOrEmpty(memberObj.VerificationDocumentPath))
-                    {
                         ImageUrlMade = memberObj.VerificationDocumentPath;
-                    }
                     else
-                    {
                         ImageUrlMade = Utility.GetValueFromConfig("PhotoUrl") + "gv_no_photo.png";
-                    }
                 }
 
                 var mdaResult = mda.submitDocumentToSynapseV3(DocumentDetails.MemberId, ImageUrlMade);
@@ -2957,7 +2958,7 @@ namespace Nooch.API.Controllers
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Controller - submitDocumentToSynapseV3 FAILED - [userName: " + DocumentDetails.MemberId + "]. Exception: [" + ex + "]");
+                Logger.Error("Service Cntlr -> submitDocumentToSynapseV3 FAILED - userName: [" + DocumentDetails.MemberId + "], Exception: [" + ex + "]");
 
                 throw new Exception("Server Error.");
             }
@@ -3334,7 +3335,7 @@ namespace Nooch.API.Controllers
                     else
                     {
                         // Synapse response for 'success' was not true
-                        Logger.Error("Service Cntrlr -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber ERROR - Synapse response for 'success' was not true - [MemberID: " + MemberId + "]");
+                        Logger.Error("Service Cntrlr -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber ERROR - Synapse response for 'success' was not true - MemberID: [" + MemberId + "]");
                         res.errorMsg = "Synapse response for success was not true";
                     }
 
@@ -4159,7 +4160,7 @@ namespace Nooch.API.Controllers
         [ActionName("getIdVerificationQuestionsV3")]
         public synapseIdVerificationQuestionsForDisplay getIdVerificationQuestionsV3(string memberid)
         {
-            Logger.Info("Service Controller -> getIdVerificationQuestionsV3 Initiated - [MemberId: " + memberid + "]");
+            Logger.Info("Service Cntlr -> getIdVerificationQuestionsV3 Fired - MemberId: [" + memberid + "]");
             synapseIdVerificationQuestionsForDisplay res = new synapseIdVerificationQuestionsForDisplay();
             res.memberId = memberid;
 
@@ -4170,7 +4171,7 @@ namespace Nooch.API.Controllers
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Controller -> getVerificationQuestionsV2 FAILED. [Exception: " + ex.InnerException + "]");
+                Logger.Error("Service Cntlr -> getVerificationQuestionsV2 FAILED - Exception: [" + ex.InnerException + "]");
 
                 res.success = false;
                 res.msg = "Service layer exception :-(";
@@ -4184,7 +4185,7 @@ namespace Nooch.API.Controllers
         [ActionName("submitIdVerificationAswersV3")]
         public synapseV3GenericResponse submitIdVerificationAswersV3(string MemberId, string questionSetId, string quest1id, string quest2id, string quest3id, string quest4id, string quest5id, string answer1id, string answer2id, string answer3id, string answer4id, string answer5id)
         {
-            Logger.Info("Service Controller -> submitIdVerificationAswersV2 Initiated - [MemberId: " + MemberId + "]");
+            Logger.Info("Service Cntlr -> submitIdVerificationAswersV2 Fired - MemberID: [" + MemberId + "]");
 
             synapseV3GenericResponse res = new synapseV3GenericResponse();
             res.isSuccess = false;
@@ -4199,7 +4200,7 @@ namespace Nooch.API.Controllers
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Controller -> submitIdVerificationAswersV2 FAILED. [Exception: " + ex + "]");
+                Logger.Error("Service Cntlr -> submitIdVerificationAswersV2 FAILED - Exception: [" + ex + "]");
 
                 res.msg = "Exception in service layer";
 
@@ -4218,20 +4219,18 @@ namespace Nooch.API.Controllers
             {
                 try
                 {
-                    Logger.Info("Service Controller - RemoveSynapseBankAccount - [MemberId: " + user.MemberID + "], [Bank ID: " + user.BankAccountId + "]");
+                    Logger.Info("Service Cntlr - RemoveSynapseBankAccount - MemberID: [" + user.MemberID + "], Bank ID: [" + user.BankAccountId + "]");
                     var mda = new MembersDataAccess();
                     return new StringResult { Result = mda.RemoveSynapseBankAccount(user.MemberID, user.BankAccountId) };
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Controller Error- RemoveSynapseBankAccount - memberId: [" + user.MemberID + "] Error : [" + ex + " ].");
+                    Logger.Error("Service Cntlr Error- RemoveSynapseBankAccount - MemberID: [" + user.MemberID + "], Error: [" + ex + " ].");
                     throw new Exception("Server Error.");
                 }
             }
             else
-            {
                 return new StringResult() { Result = "Invalid Access Token." };
-            }
         }
 
 
@@ -4244,7 +4243,7 @@ namespace Nooch.API.Controllers
 
             try
             {
-                Logger.Info("Service Cntrlr -> Submit2FAPin Initiated - [MemberID: " + memberId + "], [PIN: " + pin + "]");
+                Logger.Info("Service Cntrlr -> Submit2FAPin Fired - MemberID: [" + memberId + "], PIN: [" + pin + "]");
 
                 #region Initial Data Checks
 
@@ -4287,19 +4286,15 @@ namespace Nooch.API.Controllers
                         }
                     }
                     else
-                    {
                         res.msg = "Users Synapse record not found in DB";
-                    }
                 }
                 else
-                {
                     res.msg = "Member not found in DB";
-                }
             }
             catch (Exception ex)
             {
-                Logger.Info("Service Cntrlr -> Submit2FAPin FAILED - Exception - [MemberID: " + memberId +
-                            "], [PIN: " + pin + "], Exception: [" + ex.Message + "]");
+                Logger.Info("Service Cntlr -> Submit2FAPin FAILED - Exception - MemberID: [" + memberId +
+                            "], PIN: [" + pin + "], Exception: [" + ex.Message + "]");
                 res.msg = ex.Message;
             }
 
@@ -4318,7 +4313,7 @@ namespace Nooch.API.Controllers
         [ActionName("VerifySynapseAccount")]
         public BoolResult VerifySynapseAccount(string tokenId)
         {
-            Logger.Info("Service Controller -> VerifySynapseAccount Initiated - Bank TokenID: [" + tokenId + "]");
+            Logger.Info("Service Cntlr -> VerifySynapseAccount Fired - Bank TokenID: [" + tokenId + "]");
 
             if (!String.IsNullOrEmpty(tokenId))
             {
@@ -4335,7 +4330,7 @@ namespace Nooch.API.Controllers
             }
             else
             {
-                Logger.Error("Service Controller -> VerifySynapseAccount FAILED - TokenID was null or empty! - TokenID: [" + tokenId + "]");
+                Logger.Error("Service Cntlr -> VerifySynapseAccount FAILED - TokenID was null or empty! - TokenID: [" + tokenId + "]");
             }
 
             return new BoolResult();
@@ -4346,7 +4341,7 @@ namespace Nooch.API.Controllers
         [ActionName("GetSynapseBankAccountDetails")]
         public SynapseAccoutDetailsInput GetSynapseBankAccountDetails(string memberId, string accessToken)
         {
-            // Logger.LogDebugMessage("Service layer -> GetSynapseBankAccountDetails Initiated - memberId: [" + memberId + "]");
+            // Logger.LogDebugMessage("Service Cntlr -> GetSynapseBankAccountDetails Initiated - memberId: [" + memberId + "]");
 
             if (CommonHelper.IsValidRequest(accessToken, memberId))
             {
@@ -4466,7 +4461,7 @@ namespace Nooch.API.Controllers
 
             try
             {
-                Logger.Info("Service Cntrlr - GetMemberInfoForMicroDepositPage Initiated - MemberId: [" + memberId + "]");
+                Logger.Info("Service Cntlr - GetMemberInfoForMicroDepositPage Initiated - MemberID: [" + memberId + "]");
 
                 var memberObj = CommonHelper.GetMemberDetails(memberId);
 
@@ -4497,18 +4492,14 @@ namespace Nooch.API.Controllers
                         }
                     }
                     else
-                    {
                         res.errorMsg = "Synapse bank details not found";
-                    }
                 }
                 else
-                {
                     res.errorMsg = "Member not found";
-                }
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Cntrlr - GetMemberInfoForMicroDepositPage FAILED - MemberId: [" + memberId +
+                Logger.Error("Service Cntlr - GetMemberInfoForMicroDepositPage FAILED - MemberID: [" + memberId +
                              "], Exception: [" + ex + "]");
                 res.errorMsg = "Server exception: [" + ex.Message + "]";
             }
@@ -4523,13 +4514,13 @@ namespace Nooch.API.Controllers
         {
             try
             {
-                //Logger.LogDebugMessage("Service layer -> SaveMembersFBId - MemberId: [" + MemberId + "]");
+                //Logger.LogDebugMessage("Service Cntlr -> SaveMembersFBId - MemberID: [" + MemberId + "]");
 
                 return new StringResult { Result = CommonHelper.SaveMemberFBId(MemberId, MemberfaceBookId, IsConnect) };
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Controller -> SaveMembersFBId Error - MemberId: [" + MemberId + "] Error -> " + ex);
+                Logger.Error("Service Cntlr -> SaveMembersFBId Error - MemberID: [" + MemberId + "], Exception: [" + ex + "]");
                 return new StringResult { Result = ex.Message };
             }
         }
@@ -4543,7 +4534,7 @@ namespace Nooch.API.Controllers
             {
                 try
                 {
-                    // Logger.LogDebugMessage("Service Layer -> GetMyDetails Initiated - MemberId: [" + memberId + "]");
+                    // Logger.LogDebugMessage("Service Cntlr -> GetMyDetails Initiated - MemberID: [" + memberId + "]");
 
                     var myDetails = CommonHelper.GetMemberDetails(memberId);
 
@@ -4589,7 +4580,7 @@ namespace Nooch.API.Controllers
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Cntrlr - GetMyDetails FAILED - MemberID: [" + memberId + "], Exception: [" + ex.Message + "]");
+                    Logger.Error("Service Cntlr - GetMyDetails FAILED - MemberID: [" + memberId + "], Exception: [" + ex.Message + "]");
                     throw new Exception("Server Error.");
                 }
             }
@@ -4608,7 +4599,7 @@ namespace Nooch.API.Controllers
             {
                 try
                 {
-                    Logger.Info("Service Cntrlr -> MySettings Initiated - MemberID: [" + mySettings.MemberId + "]");
+                    Logger.Info("Service Cntlr -> MySettings Initiated - MemberID: [" + mySettings.MemberId + "]");
 
                     var mda = new MembersDataAccess();
                     string fileContent = null;
@@ -4633,7 +4624,7 @@ namespace Nooch.API.Controllers
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Cntrlr -> MySettings FAILED - MemberID: [" + mySettings.MemberId + "], Exception: [" + ex + "]");
+                    Logger.Error("Service Cntlr -> MySettings FAILED - MemberID: [" + mySettings.MemberId + "], Exception: [" + ex + "]");
                     return new StringResult();
                 }
             }
@@ -4652,21 +4643,20 @@ namespace Nooch.API.Controllers
             {
                 try
                 {
-                    Logger.Info("Service Cntrlr - ValidatePinNumber MemberID: [" + memberId + "]");
+                    Logger.Info("Service Cntlr - ValidatePinNumber MemberID: [" + memberId + "]");
 
                     return new StringResult { Result = CommonHelper.ValidatePinNumber(memberId, pinNo.Replace(" ", "+")) };
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Cntrlr - ValidatePinNumber FAILED MemberID: [" + memberId + "], Exception: [" + ex + "]");
+                    Logger.Error("Service Cntlr - ValidatePinNumber FAILED MemberID: [" + memberId + "], Exception: [" + ex + "]");
 
                 }
+
                 return new StringResult();
             }
             else
-            {
                 throw new Exception("Invalid OAuth 2 Access");
-            }
         }
 
 
@@ -4676,13 +4666,13 @@ namespace Nooch.API.Controllers
         {
             try
             {
-                Logger.Info("Service Cntrlr - ValidatePinNumberForPasswordForgotPage - MemberID: [" + memberId + "]");
+                Logger.Info("Service Cntlr - ValidatePinNumberForPasswordForgotPage Fired - MemberID: [" + memberId + "]");
                 var mda = new MembersDataAccess();
                 return new StringResult { Result = CommonHelper.ValidatePinNumber(memberId, pinNo.Replace(" ", "+")) };
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Cntrlr - ValidatePinNumberForPasswordForgotPage FAILED MemberID: [" + memberId + "], Exception: [" + ex + "]");
+                Logger.Error("Service Cntlr - ValidatePinNumberForPasswordForgotPage FAILED - MemberID: [" + memberId + "], Exception: [" + ex + "]");
 
             }
             return new StringResult();
@@ -4697,21 +4687,20 @@ namespace Nooch.API.Controllers
             {
                 try
                 {
-                    Logger.Info("Service Controller - ValidatePinNumberToEnterForEnterForeground [memberId: " + memberId + "]");
+                    Logger.Info("Service Cntlr - ValidatePinNumberToEnterForEnterForeground - MemberID: [" + memberId + "]");
 
                     return new StringResult { Result = CommonHelper.ValidatePinNumberToEnterForEnterForeground(memberId, pinNo.Replace(" ", "+")) };
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Controller - ValidatePinNumberToEnterForEnterForeground FAILED [memberId: " + memberId + "]. Exception: [" + ex + "]");
+                    Logger.Error("Service Cntlr - ValidatePinNumberToEnterForEnterForeground FAILED - MemberID: [" + memberId + "], Exception: [" + ex + "]");
 
                 }
+
                 return new StringResult();
             }
             else
-            {
                 throw new Exception("Invalid OAuth 2 Access");
-            }
         }
 
 
@@ -4723,20 +4712,18 @@ namespace Nooch.API.Controllers
             {
                 try
                 {
-                    Logger.Info("Service Cntrlr - ResetPin - MemberId: [" + memberId + "]");
+                    Logger.Info("Service Cntlr -> ResetPin - MemberID: [" + memberId + "]");
                     var mda = new MembersDataAccess();
                     return new StringResult { Result = mda.ResetPin(memberId, oldPin, newPin) };
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Cntrlr - ResetPin - MemberId: [" + memberId + "], Exception: [" + ex.Message + "]");
+                    Logger.Error("Service Cntlr -> ResetPin FAILED - MemberID: [" + memberId + "], Exception: [" + ex.Message + "]");
                     return new StringResult() { Result = "Server Error." };
                 }
             }
             else
-            {
                 return new StringResult() { Result = "Invalid oAuth Access Token." };
-            }
         }
 
 
@@ -4754,7 +4741,7 @@ namespace Nooch.API.Controllers
             {
                 try
                 {
-                    Logger.Info("Service Controller - GetMemberNotificationSettings - memberId: [" + memberId + "]");
+                    Logger.Info("Service Cntlr -> GetMemberNotificationSettings - MemberID: [" + memberId + "]");
                     var notification = new MembersDataAccess().GetMemberNotificationSettings(memberId);
 
                     if (notification != null)
@@ -4788,20 +4775,16 @@ namespace Nooch.API.Controllers
                         };
                     }
                     else
-                    {
                         return null;
-                    }
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Controller Error- GetMemberNotificationSettings - memberId: [" + memberId + "] Error : [" + ex + " ].");
+                    Logger.Error("Service Cntlr -> GetMemberNotificationSettings FAILED- MemberID: [" + memberId + "], Exception: [" + ex + " ]");
                     throw new Exception("Server Error.");
                 }
             }
             else
-            {
                 throw new Exception("Invalid OAuth 2 Access");
-            }
         }
 
 
@@ -4819,7 +4802,7 @@ namespace Nooch.API.Controllers
             {
                 try
                 {
-                    Logger.Info("Service Controller - MemberEmailNotificationSettings - memberId: [" + memberNotificationSettings.MemberId + "]");
+                    Logger.Info("Service Cntlr -> MemberEmailNotificationSettings - MemberId: [" + memberNotificationSettings.MemberId + "]");
 
                     return new StringResult
                     {
@@ -4833,15 +4816,13 @@ namespace Nooch.API.Controllers
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Controller Error- MemberEmailNotificationSettings - memberId: [" + memberNotificationSettings.MemberId + "] Error : [" + ex + " ].");
+                    Logger.Error("Service Cntlr -> MemberEmailNotificationSettings FAILED - MemberId: [" + memberNotificationSettings.MemberId + "], Exception: [" + ex + " ]");
                     throw new Exception("Server Error.");
                 }
 
             }
             else
-            {
                 throw new Exception("Invalid OAuth 2 Access");
-            }
         }
 
 
@@ -4853,7 +4834,7 @@ namespace Nooch.API.Controllers
             {
                 try
                 {
-                    Logger.Info("Service Controller - MemberPushNotificationSettings - [MemberId: " + memberNotificationSettings.MemberId + "]");
+                    Logger.Info("Service Cntlr -> MemberPushNotificationSettings - MemberID: [" + memberNotificationSettings.MemberId + "]");
                     return new StringResult
                     {
                         Result = new MembersDataAccess().MemberPushNotificationSettings(memberNotificationSettings.NotificationId,
@@ -4864,14 +4845,12 @@ namespace Nooch.API.Controllers
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Controller Error- MemberPushNotificationSettings - memberId: [" + memberNotificationSettings.MemberId + "] Error : [" + ex + " ].");
+                    Logger.Error("Service Cntlr -> MemberPushNotificationSettings FAILED - MemberId: [" + memberNotificationSettings.MemberId + "], Exception: [" + ex + " ]");
                     throw new Exception("Server Error.");
                 }
             }
             else
-            {
                 throw new Exception("Invalid OAuth 2 Access");
-            }
         }
 
 
@@ -4881,13 +4860,13 @@ namespace Nooch.API.Controllers
         {
             try
             {
-                Logger.Info("Service Controller - SetShowInSearch Initiated - MemberId: [" + memberId + "]");
+                Logger.Info("Service Cntlr -> SetShowInSearch Fired - MemberID: [" + memberId + "]");
                 var mda = new MembersDataAccess();
                 return new StringResult { Result = mda.SetShowInSearch(memberId, search) };
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Controller Error- SetShowInSearch - memberId: [" + memberId + "] Error : [" + ex + " ].");
+                Logger.Error("Service Cntlr -> SetShowInSearch FAILED - MemberID: [" + memberId + "], Exception: [" + ex + " ]");
                 throw new Exception("Server Error.");
             }
         }
@@ -4897,32 +4876,33 @@ namespace Nooch.API.Controllers
         [ActionName("MemberRegistration")]
         public StringResult MemberRegistration(MemberRegistrationInputDto MemberDetails)
         {
+            StringResult res = new StringResult();
+
             try
             {
-                Logger.Info("Service Controller - MemberRegistration Initiated - NEW USER'S INFO: Name: [" + MemberDetails.UserName +
-                                       "], Email: [" + MemberDetails.UserName + "],  Type: [" + MemberDetails.type +
-                                       "],  Invite Code: [" + MemberDetails.inviteCode + "], SendEmail: [" + MemberDetails.sendEmail + "], ");
+                Logger.Info("Service Cntlr -> MemberRegistration Initiated - NEW USER'S INFO: Name: [" + MemberDetails.UserName +
+                            "], Email: [" + MemberDetails.UserName + "], Type: [" + MemberDetails.type +
+                            "], Invite Code: [" + MemberDetails.inviteCode + "], SendEmail: [" + MemberDetails.sendEmail + "]");
 
                 var mda = new MembersDataAccess();
 
                 string type = String.IsNullOrEmpty(MemberDetails.type) ? "Personal" : MemberDetails.type;
 
-                return new StringResult
-                {
-                    Result =
-                        mda.MemberRegistration(MemberDetails.Picture, MemberDetails.UserName, MemberDetails.FirstName.ToLower(),
+                res.Result = mda.MemberRegistration(MemberDetails.Picture, MemberDetails.UserName, MemberDetails.FirstName.ToLower(),
                                                MemberDetails.LastName.ToLower(), MemberDetails.PinNumber, MemberDetails.Password,
                                                MemberDetails.SecondaryMail, MemberDetails.RecoveryMail, MemberDetails.UdId,
                                                MemberDetails.friendRequestId, MemberDetails.invitedFriendFacebookId,
-                                               MemberDetails.facebookAccountLogin, MemberDetails.inviteCode, MemberDetails.sendEmail, type, null, null, null, null, null)
-                };
+                                               MemberDetails.facebookAccountLogin, MemberDetails.inviteCode, MemberDetails.sendEmail, type, null, null, null, null, null);
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Controller -> MemberRegistration FAILED: [Name: " + MemberDetails.UserName + "], Exception: [" + ex + "]");
-                Utility.ThrowFaultException(ex);
+                var error = "Service Cntlr -> MemberRegistration FAILED: Name: [" + MemberDetails.UserName + "], Exception: [" + ex + "]";
+                Logger.Error(error);
+                CommonHelper.notifyCliffAboutError(error);
+                res.Result = ex.Message;
             }
-            return new StringResult();
+
+            return res;
         }
 
 
@@ -4931,8 +4911,8 @@ namespace Nooch.API.Controllers
         public StringResult sendLandlordLeadEmailTemplate(string template, string email, string firstName,
             string tenantFName, string tenantLName, string propAddress, string subject)
         {
-            Logger.Info("Service Layer - sendEmailTemplate Initiated - Template: [" + template +
-                                   "], Email: [" + email + "], First Name: [" + firstName + "], Subject: {" + subject + "]");
+            Logger.Info("Service Cntlr -> sendEmailTemplate Fired - Template: [" + template +
+                        "], Email: [" + email + "], First Name: [" + firstName + "], Subject: {" + subject + "]");
 
             StringResult res = new StringResult();
 
@@ -4959,22 +4939,14 @@ namespace Nooch.API.Controllers
             else
             {
                 if (String.IsNullOrEmpty(subject) || subject.Length < 1)
-                {
                     subject = " ";
-                }
                 else
-                {
                     subject = CommonHelper.UppercaseFirst(subject);
-                }
 
                 if (String.IsNullOrEmpty(firstName) || firstName.Length < 1)
-                {
                     firstName = " ";
-                }
                 else
-                {
                     firstName = CommonHelper.UppercaseFirst(firstName);
-                }
 
                 try
                 {
@@ -4987,16 +4959,15 @@ namespace Nooch.API.Controllers
                         };
 
                     Utility.SendEmail(template, "landlords@rentscene.com", email,
-                                                null, subject, null, tokens, null, null, null);
+                                      null, subject, null, tokens, null, null, null);
 
                     res.Result = "Email Template [" + template + "] sent successfully to [" + email + "]";
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Layer - sendEmailTemplate FAILED - Exception: [" + ex.Message + "]");
+                    Logger.Error("Service Cntlr -> sendEmailTemplate FAILED - Exception: [" + ex.Message + "]");
 
                     res.Result = "Server exception!";
-
                 }
             }
 
@@ -5019,9 +4990,11 @@ namespace Nooch.API.Controllers
         public StringResult LoginWithFacebook(string userEmail, string FBId, Boolean rememberMeEnabled, decimal lat,
             decimal lng, string udid, string devicetoken)
         {
+            StringResult res = new StringResult();
+
             try
             {
-                Logger.Info("Service Layer -> LoginWithFacebook [userEmail: " + userEmail + "],  [FB ID: " + FBId + "]");
+                Logger.Info("Service Cntlr -> LoginWithFacebook - userEmail: [" + userEmail + "], FB ID: [" + FBId + "]");
 
                 var mda = new MembersDataAccess();
                 string cookie = mda.LoginwithFB(userEmail, FBId, rememberMeEnabled, lat, lng, udid, devicetoken);
@@ -5029,35 +5002,33 @@ namespace Nooch.API.Controllers
                 if (string.IsNullOrEmpty(cookie))
                 {
                     cookie = "Authentication failed.";
-                    return new StringResult { Result = "Invalid Login or Password" };
+                    res.Result = "Invalid Login or Password";
                 }
                 else if (cookie == "Temporarily_Blocked")
                 {
-                    return new StringResult { Result = "Temporarily_Blocked" };
+                    res.Result = "Temporarily_Blocked";
                 }
                 else if (cookie == "FBID or EmailId not registered with Nooch")
                 {
-                    return new StringResult { Result = "FBID or EmailId not registered with Nooch" };
+                    res.Result = "FBID or EmailId not registered with Nooch";
                 }
                 else if (cookie == "Suspended")
                 {
-                    return new StringResult { Result = "Suspended" };
+                    res.Result = "Suspended";
                 }
                 else if (cookie == "Registered")
                 {
-
                     string state = GenerateAccessToken();
                     CommonHelper.UpdateAccessToken(userEmail, state);
-                    return new StringResult { Result = state };
-
+                    res.Result = state;
                 }
                 else if (cookie == "Invalid user id or password.")
                 {
-                    return new StringResult { Result = "Invalid user id or password." };
+                    res.Result = "Invalid user id or password.";
                 }
                 else if (cookie == "The password you have entered is incorrect.")
                 {
-                    return new StringResult { Result = "The password you have entered is incorrect." };
+                    res.Result = "The password you have entered is incorrect.";
                 }
                 else if (cookie == "Success")
                 {
@@ -5072,20 +5043,18 @@ namespace Nooch.API.Controllers
 
                     string state = GenerateAccessToken();
                     CommonHelper.UpdateAccessToken(userEmail, state);
-                    return new StringResult { Result = state };
+                    res.Result = state;
                 }
                 else
-                {
-                    return new StringResult { Result = cookie };
-                }
-
+                    res.Result = cookie;
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Layer -> LoginWithFacebook FAILED - [userEmail: " + userEmail + "], [Exception: " + ex + "]");
-
+                Logger.Error("Service Cntlr -> LoginWithFacebook FAILED - userEmail: [" + userEmail + "], Exception: [" + ex + "]");
+                res.Result = ex.Message;
             }
-            return new StringResult();
+
+            return res;
         }
 
 
@@ -5093,34 +5062,32 @@ namespace Nooch.API.Controllers
         [ActionName("LogOutRequest")]
         public StringResult LogOutRequest(string accessToken, string memberId)
         {
+            StringResult res = new StringResult();
+
             if (CommonHelper.IsValidRequest(accessToken, memberId))
             {
                 try
                 {
-                    Logger.Info("Service Cntrlr -> LogOutRequest - [MemberId: " + memberId + "]");
+                    Logger.Info("Service Cntlr -> LogOutRequest - MemberID: [" + memberId + "]");
+
                     var mda = new MembersDataAccess();
                     string cookie = mda.LogOut(memberId);
+
                     if (string.IsNullOrEmpty(cookie))
-                    {
-                        cookie = "LogOut failed.";
-                        return new StringResult { Result = "LogOut failed." };
-                    }
+                        res.Result = "LogOut failed.";
                     else
-                    {
-                        return new StringResult { Result = "Success." };
-                    }
+                        res.Result = "Success.";
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Cntrlr -> LogOutRequest FAILED - MemberId: [" + memberId + "], Exception: [" + ex + "]");
+                    Logger.Error("Service Cntlr -> LogOutRequest FAILED - MemberID: [" + memberId + "], Exception: [" + ex + "]");
+                    res.Result = ex.Message;
                 }
-
-                return new StringResult();
             }
             else
-            {
-                throw new Exception("Invalid OAuth 2 Access");
-            }
+                res.Result = "Invalid OAuth 2 Access";
+
+            return res;
         }
 
 
@@ -5135,7 +5102,7 @@ namespace Nooch.API.Controllers
 
             try
             {
-                Logger.Info("Service Layer - MemberRegistrationGET Initiated - NEW USER'S INFO: Name: [" + name +
+                Logger.Info("Service Cntlr -> MemberRegistrationGET Fired - NEW USER'S INFO: Name: [" + name +
                                        "], Email: [" + email + "],  Type: [" + type +
                                        "], Phone: [" + phone + "], Address: [" + address +
                                        "], ZIP: [" + zip + "], DOB: [" + dob +
@@ -5207,8 +5174,8 @@ namespace Nooch.API.Controllers
                     }
                     catch (Exception ex)
                     {
-                        Logger.Error("Service Layer -> MemberRegistrationGET FAILED - MemberID: [" + memId +
-                                               "], Exception: [" + ex + "]");
+                        Logger.Error("Service Cntlr -> MemberRegistrationGET FAILED - MemberID: [" + memId +
+                                     "], Exception: [" + ex + "]");
                     }
 
                     #endregion Set IP Address
@@ -5219,7 +5186,7 @@ namespace Nooch.API.Controllers
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Layer -> MemberRegistrationGET FAILED - Name: [" + name + "], Email: [" + email + "], Exception: [" + ex + "]");
+                Logger.Error("Service Cntlr -> MemberRegistrationGET FAILED - Name: [" + name + "], Email: [" + email + "], Exception: [" + ex + "]");
                 res.msg = "MemberRegistrationGet Exception";
             }
 
@@ -5231,28 +5198,32 @@ namespace Nooch.API.Controllers
         [ActionName("MemberPrivacySettings")]
         public StringResult MemberPrivacySettings(PrivacySettings privacySettings, string accessToken)
         {
+            StringResult res = new StringResult();
+
             if (CommonHelper.IsValidRequest(accessToken, privacySettings.MemberId))
             {
                 try
                 {
-                    Logger.Info("Service Layer - MemberPrivacySettings Initiated - MemberId: [" + privacySettings.MemberId + "]");
+                    Logger.Info("Service Cntlr -> MemberPrivacySettings Fired - MemberID: [" + privacySettings.MemberId + "]");
                     var mda = new MembersDataAccess();
-                    return new StringResult
-                    {
-                        Result = mda.MemberPrivacySettings(privacySettings.MemberId,
-                            (bool)privacySettings.ShowInSearch, (bool)privacySettings.AllowSharing, (bool)privacySettings.RequireImmediately)
-                    };
+
+                    res.Result = mda.MemberPrivacySettings(privacySettings.MemberId,
+                                 (bool)privacySettings.ShowInSearch,
+                                 (bool)privacySettings.AllowSharing,
+                                 (bool)privacySettings.RequireImmediately);
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Layer -> MemberPrivacySettings FAILED - MemberId: [" + privacySettings.MemberId + "], Exception: [" + ex + "]");
+                    Logger.Error("Service Cntlr -> MemberPrivacySettings FAILED - MemberID: [" + privacySettings.MemberId + "], Exception: [" + ex + "]");
+                    res.Result = ex.Message;
                 }
-                return new StringResult();
             }
             else
             {
-                throw new Exception("Invalid OAuth 2 Access");
+                res.Result = "Invalid OAuth 2 Access";
             }
+
+            return res;
         }
 
 
@@ -5262,36 +5233,36 @@ namespace Nooch.API.Controllers
         {
             if (CommonHelper.IsValidRequest(accessToken, memberId))
             {
+                var privacySettings = new PrivacySettings();
+
                 try
                 {
-                    Logger.Info("Service Layer - GetMemberPrivacySettings Initiated - MemberId: [" + memberId + "]");
+                    Logger.Info("Service Cntlr -> GetMemberPrivacySettings Fired - MemberID: [" + memberId + "]");
 
                     var mda = new MembersDataAccess();
                     var memberPrivacySettings = mda.GetMemberPrivacySettings(memberId);
-                    var privacySettings = new PrivacySettings();
 
                     if (memberPrivacySettings != null)
                     {
-                        var r = _dbContext.MemberPrivacySettings.FirstOrDefault(m => m.MemberId == memberPrivacySettings.MemberId);  // Malkit : I doubt here for here
+                        var r = _dbContext.MemberPrivacySettings.FirstOrDefault(m => m.MemberId == memberPrivacySettings.MemberId);
                         privacySettings.MemberId = r.Member.MemberId.ToString();
                         privacySettings.ShowInSearch = r.ShowInSearch ?? false;
                         privacySettings.AllowSharing = r.AllowSharing ?? false;
                         privacySettings.RequireImmediately = r.RequireImmediately ?? false;
                     }
-                    return privacySettings;
+
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Layer -> GetMemberPrivacySettings FAILED - MemberId: [" + memberId + "], Exception: [" + ex + "]");
-
+                    Logger.Error("Service Cntlr -> GetMemberPrivacySettings FAILED - MemberId: [" + memberId + "], Exception: [" + ex + "]");
                 }
-                return null;
+
+                return privacySettings;
             }
             else
             {
                 throw new Exception("Invalid OAuth 2 Access");
             }
-
         }
 
 
@@ -5299,17 +5270,21 @@ namespace Nooch.API.Controllers
         [ActionName("SetAllowSharing")]
         public StringResult SetAllowSharing(string memberId, bool allow, string accessToken)
         {
+            StringResult res = new StringResult();
+
             try
             {
-                Logger.Info("Service Layer - SetAllowSharing Initiated - MemberId: [" + memberId + "]");
+                Logger.Info("Service Cntlr -> SetAllowSharing Initiated - MemberID: [" + memberId + "]");
                 var mda = new MembersDataAccess();
-                return new StringResult { Result = mda.SetAllowSharing(memberId, allow) };
+                res.Result = mda.SetAllowSharing(memberId, allow);
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Layer -> SetAllowSharing FAILED - MemberId: [" + memberId + "], Exception: [" + ex + "]");
+                Logger.Error("Service Cntlr -> SetAllowSharing FAILED - MemberID: [" + memberId + "], Exception: [" + ex + "]");
+                res.Result = ex.Message;
             }
-            return new StringResult();
+
+            return res;
         }
 
 
@@ -5317,33 +5292,34 @@ namespace Nooch.API.Controllers
         [ActionName("SaveImmediateRequire")]
         public StringResult SaveImmediateRequire(string memberId, Boolean IsRequiredImmediatley, string accesstoken)
         {
+            StringResult res = new StringResult();
+
             if (CommonHelper.IsValidRequest(accesstoken, memberId))
             {
                 try
                 {
-                    Logger.Info("Service Layer - SaveImmediateRequire Initiated- MemberId: [" + memberId + "]");
+                    Logger.Info("Service Cntlr -> SaveImmediateRequire Fired - MemberID: [" + memberId + "]");
 
                     var mda = new MembersDataAccess();
                     string s = mda.SaveImmediateRequire(memberId, IsRequiredImmediatley);
+
                     if (s == "success")
-                    {
-                        return new StringResult { Result = "success" };
-                    }
+                        res.Result = "success";
                     else
-                    {
-                        return new StringResult { Result = "Member not found" };
-                    }
+                        res.Result = "Member not found";
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Layer -> SaveImmediateRequire FAILED - [Exception: " + ex + "]");
-                    throw new Exception("Error");
+                    Logger.Error("Service Cntlr -> SaveImmediateRequire FAILED - Exception: [" + ex + "]");
+                    res.Result = ex.Message;
                 }
             }
             else
             {
-                throw new Exception("Invalid OAuth 2 Access");
+                res.Result = "Invalid OAuth 2 Access";
             }
+
+            return res;
         }
 
 
@@ -5351,34 +5327,32 @@ namespace Nooch.API.Controllers
         [ActionName("UpDateLatLongOfUser")]
         public StringResult UpDateLatLongOfUser(string memberId, string accesstoken, string Lat, string Long)
         {
+            Logger.Info("Service Cntlr -> UpDateLatLongOfUser Fired - MemberID: [" + memberId + "]");
+
+            StringResult res = new StringResult();
+
             if (CommonHelper.IsValidRequest(accesstoken, memberId))
             {
                 try
                 {
-                    Logger.Info("Service Layer - UpDateLatLongOfUser - [MemberId: " + memberId + "]");
-
                     var mda = new MembersDataAccess();
                     string s = mda.UpdateUserLocation(memberId, Lat, Long);
 
                     if (s == "success")
-                    {
-                        return new StringResult { Result = "success" };
-                    }
+                        res.Result = "success";
                     else
-                    {
-                        return new StringResult { Result = "Member not found" };
-                    }
+                        res.Result = "Member not found";
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Layer - FAILED: UpDateLatLongOfUser - MemberId: [" + memberId + "], Exception: [" + ex + "]");
-                    throw new Exception("Error");
+                    Logger.Error("Service Cntlr -> UpDateLatLongOfUser FAILED - MemberId: [" + memberId + "], Exception: [" + ex + "]");
+                    res.Result = ex.Message;
                 }
             }
             else
-            {
-                throw new Exception("Invalid OAuth 2 Access");
-            }
+                res.Result = "Invalid OAuth 2 Access";
+
+            return res;
         }
 
 
@@ -5386,19 +5360,22 @@ namespace Nooch.API.Controllers
         [ActionName("ResendVerificationLink")]
         public StringResult ResendVerificationLink(string UserName)
         {
+            StringResult res = new StringResult();
+
             try
             {
-                Logger.Info("Service Layer - ResendVerificationLink - [UserName: " + UserName + "]");
+                Logger.Info("Service Cntlr -> ResendVerificationLink - UserName: [" + UserName + "]");
 
                 var mda = new MembersDataAccess();
-                return new StringResult { Result = mda.ResendVerificationLink(UserName) };
+                res.Result = mda.ResendVerificationLink(UserName);
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Layer - ResendVerificationLink FAILED - UserName: [" + UserName + "], [Exception: " + ex.Message + "]");
-
+                Logger.Error("Service Cntlr -> ResendVerificationLink FAILED - UserName: [" + UserName + "], Exception: [" + ex.Message + "]");
+                res.Result = ex.Message;
             }
-            return new StringResult();
+
+            return res;
         }
 
 
@@ -5406,19 +5383,22 @@ namespace Nooch.API.Controllers
         [ActionName("ResendVerificationSMS")]
         public StringResult ResendVerificationSMS(string UserName)
         {
+            StringResult res = new StringResult();
+
             try
             {
-                Logger.Info("Service Layer - ResendVerificationSMS - [UserName: " + UserName + "]");
+                Logger.Info("Service Cntlr -> ResendVerificationSMS - UserName: [" + UserName + "]");
 
                 var mda = new MembersDataAccess();
-                return new StringResult { Result = mda.ResendVerificationSMS(UserName) };
+                res.Result = mda.ResendVerificationSMS(UserName);
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Layer - ResendVerificationSMS FAILED - UserName: [" + UserName + "], [Exception: " + ex.Message + "]");
-
+                Logger.Error("Service Cntlr -> ResendVerificationSMS FAILED - UserName: [" + UserName + "], Exception: [" + ex.Message + "]");
+                res.Result = ex.Message;
             }
-            return new StringResult();
+
+            return res;
         }
 
 
@@ -5426,18 +5406,21 @@ namespace Nooch.API.Controllers
         [ActionName("ResetPassword")]
         public BoolResult ResetPassword(string memberId, string newPassword, string newUser)
         {
+            BoolResult res = new BoolResult();
+
             try
             {
-                Logger.Info("Service Layer - ResetPassword Initiated - [MemberId: " + memberId + "]");
+                Logger.Info("Service Cntlr -> ResetPassword Fired - MemberID: [" + memberId + "]");
                 var mda = new MembersDataAccess();
-                return new BoolResult { Result = mda.ResetPassword(memberId, newPassword, newUser) };
+                res.Result = mda.ResetPassword(memberId, newPassword, newUser);
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Layer - ResetPassword FAILED - MemberId: [" + memberId + "], [Exception: " + ex.Message + "]");
-
+                Logger.Error("Service Cntlr -> ResetPassword FAILED - MemberID: [" + memberId + "], Exception: [" + ex.Message + "]");
+                res.Result = false;
             }
-            return new BoolResult();
+
+            return res;
         }
 
 
@@ -5445,18 +5428,21 @@ namespace Nooch.API.Controllers
         [ActionName("resetlinkvalidationcheck")]
         public BoolResult resetlinkvalidationcheck(string memberId)
         {
+            BoolResult res = new BoolResult();
+
             try
             {
-                Logger.Info("Service Layer - resetlinkvalidationcheck Initiated - MemberId: [" + memberId + "]");
+                Logger.Info("Service Cntlr -> resetlinkvalidationcheck Fired - MemberID: [" + memberId + "]");
                 var mda = new MembersDataAccess();
-                return new BoolResult { Result = mda.resetlinkvalidationcheck(memberId) };
+                res.Result = mda.resetlinkvalidationcheck(memberId);
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Layer - resetlinkvalidationcheck FAILED - MemberId: [" + memberId + "], [Exception: " + ex.Message + "]");
-
+                Logger.Error("Service Cntlr -> resetlinkvalidationcheck FAILED - MemberID: [" + memberId + "], Exception: [" + ex.Message + "]");
+                res.Result = false;
             }
-            return new BoolResult();
+
+            return res;
         }
 
 
@@ -5468,7 +5454,7 @@ namespace Nooch.API.Controllers
             {
                 try
                 {
-                    Logger.Info("Service Layer - GetRecentMembers - [MemberId: " + memberId + "]");
+                    Logger.Info("Service Cntlr -> GetRecentMembers Fired - MemberID: [" + memberId + "]");
 
                     var tda = new TransactionsDataAccess();
                     var noochFriendEntities = tda.GetRecentMembers(memberId);
@@ -5549,14 +5535,14 @@ namespace Nooch.API.Controllers
                             }
                         }
 
-                        Logger.Info("Service Layer - GetRecentMembers RecentMembersCollection COUNT: [" + recentMembersCollection.Count + "], [MemberID: " + memberId + "]");
+                        Logger.Info("Service Cntlr -> GetRecentMembers RecentMembersCollection COUNT: [" + recentMembersCollection.Count + "], MemberID: [" + memberId + "]");
 
                         return recentMembersCollection;
                     }
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Layer - GetRecentMembers FAILED - [MemberID: " + memberId + "], Exception: [" + ex + "]");
+                    Logger.Error("Service Cntlr -> GetRecentMembers FAILED - MemberID: [" + memberId + "], Exception: [" + ex + "]");
 
                 }
                 return new Collection<MemberClass>();
@@ -5572,25 +5558,26 @@ namespace Nooch.API.Controllers
         [ActionName("HandleRequestMoney")]
         public StringResult HandleRequestMoney(RequestDto handleRequestInput, string accessToken)
         {
+            StringResult res = new StringResult();
+
             if (CommonHelper.IsValidRequest(accessToken, handleRequestInput.MemberId))
             {
                 try
                 {
-                    Logger.Info("Service Layer - HandleRequestMoney - MemberId: [" + handleRequestInput.MemberId + "]");
+                    Logger.Info("Service Cntlr -> HandleRequestMoney - MemberID: [" + handleRequestInput.MemberId + "]");
                     var tda = new TransactionsDataAccess();
-                    return new StringResult { Result = tda.HandleRequestMoney(handleRequestInput) };
+                    res.Result = tda.HandleRequestMoney(handleRequestInput);
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service layer - HandleRequestMoney FAILED - MemberId: [" + handleRequestInput.MemberId + "]. Exception: [" + ex + "]");
-
+                    Logger.Error("Service Cntlr -> HandleRequestMoney FAILED - MemberID: [" + handleRequestInput.MemberId + "], Exception: [" + ex + "]");
+                    res.Result = ex.Message;
                 }
-                return new StringResult();
             }
             else
-            {
-                throw new Exception("Invalid OAuth 2 Access");
-            }
+                res.Result = "Invalid OAuth 2 Access";
+
+            return res;
         }
 
 
@@ -5599,25 +5586,26 @@ namespace Nooch.API.Controllers
         public string PayBackTransaction(string memberId, string accessToken, string transactionId, string userResponse,
             GeoLocation location)
         {
+            string res = "";
+
             if (CommonHelper.IsValidRequest(accessToken, memberId))
             {
                 try
                 {
-                    Logger.Info("Service Layer - PayBackTransaction - [MemberId: " + memberId + "],  [TransactionId: " + transactionId + "]");
-                    var transactionDataAccess = new TransactionsDataAccess();
-                    string result = transactionDataAccess.PayBackTransaction(transactionId, userResponse, location);
-                    return result;
+                    Logger.Info("Service Cntlr -> PayBackTransaction Fired - MemberID: [" + memberId + "], TransID: [" + transactionId + "]");
+                    var tda = new TransactionsDataAccess();
+                    res = tda.PayBackTransaction(transactionId, userResponse, location);
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Layer - PayBackTransaction  failed - [MemberId: " + memberId + "],  [TransactionId: " + transactionId + "], [Exception : " + ex + " ]");
+                    Logger.Error("Service Cntlr -> PayBackTransaction FAILED - MemberID: [" + memberId + "], TransID: [" + transactionId + "], Exception: [" + ex + " ]");
+                    res = ex.Message;
                 }
-                return "";
             }
             else
-            {
-                throw new Exception("Invalid OAuth 2 Access");
-            }
+                res = "Invalid OAuth 2 Access";
+
+            return res;
         }
 
 
@@ -5625,55 +5613,61 @@ namespace Nooch.API.Controllers
         [ActionName("CreateNonNoochUserPassword")]
         public StringResult CreateNonNoochUserPassword(string TransId, string password)
         {
+            StringResult res = new StringResult();
+
             try
             {
-                Logger.Info("Service Layer - CreateNonNoochUserPassword - [TransId: " + TransId + "]");
+                Logger.Info("Service Cntlr -> CreateNonNoochUserPassword - TransID: [" + TransId + "]");
 
                 var mda = new MembersDataAccess();
-                string result = mda.CreateNonNoochUserPassword(TransId, password);
-
-                return new StringResult { Result = result };
+                res.Result = mda.CreateNonNoochUserPassword(TransId, password);
             }
             catch (Exception ex)
             {
-                Logger.Info("Service Layer - CreateNonNoochUserPassword - Failure [TransId: " + TransId + "], [ Exception : " + ex + " ]");
+                Logger.Error("Service Cntlr -> CreateNonNoochUserPassword FAILED - TransID: [" + TransId + "], Exception: [" + ex + " ]");
+                res.Result = ex.Message;
             }
-            return new StringResult { Result = "" };
+
+            return res;
         }
+
 
         [HttpGet]
         [ActionName("SetAutoPayStatusForTenant")]
         public StringResult SetAutoPayStatusForTenant(bool statustoSet, string tenantId)
         {
+            StringResult res = new StringResult();
+
             try
             {
-                Logger.Info("Service Cntrlr -> SetAutoPayStatusForTenant Initiated - [ tenantId:" + tenantId + "]");
+                Logger.Info("Service Cntlr -> SetAutoPayStatusForTenant Fired - TenantID: [" + tenantId + "]");
 
                 var mda = new MembersDataAccess();
-                return new StringResult
-                {
-                    Result = mda.SetAutoPayStatusForTenant(statustoSet, tenantId)
-                };
+                res.Result = mda.SetAutoPayStatusForTenant(statustoSet, tenantId);
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Cntrlr -> SetAutoPayStatusForTenant EXCEPTION - [tenantId:" + tenantId + "], Exception: [" + ex.Message + "]");
-
+                Logger.Error("Service Cntlr -> SetAutoPayStatusForTenant EXCEPTION - TenantID: [" + tenantId + "], Exception: [" + ex + "]");
+                res.Result = ex.Message;
             }
 
-            return new StringResult();
+            return res;
         }
+
 
         [HttpPost]
         [ActionName("TransferMoneyUsingSynapse")]
         public StringResult TransferMoneyUsingSynapse(TransactionDto transInput, string accessToken)
         {
-            Logger.Info("Service Layer -> TransferMoneyUsingSynapse Initiated - Trans.MemberID: [" + transInput.MemberId +
+            Logger.Info("Service Cntlr -> TransferMoneyUsingSynapse Fired - MemberID: [" + transInput.MemberId +
                         "], RecipientID: [" + transInput.RecepientId +
                         "], Amount: [" + transInput.Amount.ToString("n2") +
                         "], doNotSendEmails: [" + transInput.doNotSendEmails + "]");
 
-            if (transInput.isRentScene == true || transInput.isRentAutoPayment == true ||
+            StringResult res = new StringResult();
+
+            if (transInput.isRentScene == true |
+                transInput.isRentAutoPayment == true ||
                 CommonHelper.IsValidRequest(accessToken, transInput.MemberId))
             {
                 string trnsactionId = string.Empty;
@@ -5684,22 +5678,22 @@ namespace Nooch.API.Controllers
 
                     var tda = new TransactionsDataAccess();
 
-                    return new StringResult { Result = tda.TransferMoneyUsingSynapse(transactionEntity) };
+                    res.Result = tda.TransferMoneyUsingSynapse(transactionEntity);
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Layer -> TransferMoneyUsingSynapse FAILED - MemberID: [" + transInput.MemberId + "], Exception: [" + ex + "]");
-                    //UtilityService.ThrowFaultException(ex);
+                    Logger.Error("Service Cntlr -> TransferMoneyUsingSynapse FAILED - MemberID: [" + transInput.MemberId + "], Exception: [" + ex + "]");
+                    res.Result = ex.Message;
                 }
-
-                return new StringResult();
             }
             else
             {
-                Logger.Error("Service Layer -> TransferMoneyUsingSynapse FAILED. AccessToken invalid or not found - " +
+                Logger.Error("Service Cntlr -> TransferMoneyUsingSynapse FAILED - AccessToken invalid or not found - " +
                              "MemberID: [" + transInput.MemberId + "]");
-                throw new Exception("Invalid OAuth 2 Access");
+                res.Result = "Invalid OAuth 2 Access";
             }
+
+            return res;
         }
 
 
@@ -5742,6 +5736,7 @@ namespace Nooch.API.Controllers
                     ZipCode = transactionInput.ZipCode
                 }
             };
+
             return transactionEntity;
         }
 
@@ -5764,7 +5759,7 @@ namespace Nooch.API.Controllers
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Cntrlr -> TransferMoneyToNonNoochUserUsingSynapse FAILED - Exception: [" + ex + "]");
+                    Logger.Error("Service Cntlr -> TransferMoneyToNonNoochUserUsingSynapse FAILED - Exception: [" + ex + "]");
                     res.Result = ex.Message;
                 }
 
@@ -5772,7 +5767,7 @@ namespace Nooch.API.Controllers
             }
             else
             {
-                Logger.Error("Service Cntrlr -> TransferMoneyToNonNoochUserUsingSynapse FAILED - AccessToken Not Found or Invalid - " +
+                Logger.Error("Service Cntlr -> TransferMoneyToNonNoochUserUsingSynapse FAILED - AccessToken Not Found or Invalid - " +
                              "MemberID: [" + transactionInput.MemberId + "], Receiver Email: [" + receiverEmailId + "]");
                 throw new Exception("Invalid OAuth 2 Access");
             }
@@ -5784,30 +5779,33 @@ namespace Nooch.API.Controllers
         public StringResult TransferMoneyToNonNoochUserThroughPhoneUsingsynapse(TransactionDto transactionInput,
              string accessToken, string inviteType, string receiverPhoneNumer)
         {
+            StringResult res = new StringResult();
+
             if (CommonHelper.IsValidRequest(accessToken, transactionInput.MemberId))
             {
                 string trnsactionId = string.Empty;
                 try
                 {
-                    Logger.Info("Service Layer - TransferMoneyToNonNoochUserThroughPhoneUsingsynapse - [Sender: " + transactionInput.MemberId + "], [TransID: " + trnsactionId + "], [InviteType: " + inviteType + "]");
+                    Logger.Info("Service Cntlr - TransferMoneyToNonNoochUserThroughPhoneUsingsynapse - Sender: [" + transactionInput.MemberId + "], TransID: [" + trnsactionId + "], InviteType: [" + inviteType + "]");
 
                     var tda = new TransactionsDataAccess();
                     TransactionEntity transactionEntity = GetTransactionEntity(transactionInput);
 
-                    return new StringResult { Result = tda.TransferMoneyToNonNoochUserThroughPhoneUsingsynapse(inviteType, receiverPhoneNumer, transactionEntity) };
+                    res.Result = tda.TransferMoneyToNonNoochUserThroughPhoneUsingsynapse(inviteType, receiverPhoneNumer, transactionEntity);
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Layer -> TransferMoneyToNonNoochUserThroughPhoneUsingsynapse FAILED. [Exception: " + ex + "]");
-
+                    Logger.Error("Service Cntlr -> TransferMoneyToNonNoochUserThroughPhoneUsingsynapse FAILED - Exception: [" + ex + "]");
+                    res.Result = ex.Message;
                 }
-                return new StringResult();
             }
             else
             {
-                Logger.Error("Service Layer -> TransferMoneyToNonNoochUserThroughPhoneUsingsynapse FAILED. AccessToken not found or not valid.");
-                throw new Exception("Invalid OAuth 2 Access");
+                Logger.Error("Service Cntlr -> TransferMoneyToNonNoochUserThroughPhoneUsingsynapse FAILED - AccessToken not found or not valid.");
+                res.Result = "Invalid OAuth 2 Access";
             }
+
+            return res;
         }
 
 
@@ -5821,7 +5819,7 @@ namespace Nooch.API.Controllers
 
             try
             {
-                Logger.Info("Service Layer -> addRowToSynapseCreateUsersTable Initiated - MemberId: [" + input.memberId + "], New OAuth_Key: [" + input.access_token + "]");
+                Logger.Info("Service Cntlr -> addRowToSynapseCreateUsersTable Fired - MemberId: [" + input.memberId + "], New OAuth_Key: [" + input.access_token + "]");
 
                 using (var noochConnection = new NOOCHEntities())
                 {
@@ -5842,8 +5840,8 @@ namespace Nooch.API.Controllers
 
                             if (synapseRes != null)
                             {
-                                Logger.Info("Service Layer -> addRowToSynapseCreateUsersTable - Old record found, about to delete - MemberId: [" +
-                                                        input.memberId + "], Old Oauth_Key: [" + synapseRes.access_token + "]");
+                                Logger.Info("Service Cntlr -> addRowToSynapseCreateUsersTable - Old record found, about to delete - MemberID: [" +
+                                            input.memberId + "], Old Oauth_Key: [" + synapseRes.access_token + "]");
 
                                 synapseRes.IsDeleted = true;
                                 synapseRes.ModifiedOn = DateTime.Now;
@@ -5870,22 +5868,21 @@ namespace Nooch.API.Controllers
 
                                 if (addRecordToSynapseCreateUserTable > 0)
                                 {
-                                    Logger.Info("Service Layer -> addRowToSynapseCreateUsersTable - New Record Added Successfully - MemberId: [" + input.memberId + "], New Oauth_Key: [" + input.access_token + "]");
+                                    Logger.Info("Service Cntlr -> addRowToSynapseCreateUsersTable - New Record Added Successfully - MemberID: [" + input.memberId + "], New Oauth_Key: [" + input.access_token + "]");
 
                                     res.success = true;
                                     res.msg = "New record added to SynapseCreateUserResults successfully.";
                                 }
                                 else
                                 {
-                                    Logger.Error("Service Layer -> addRowToSynapseCreateUsersTable FAILED - Error Adding New Record To Database - MemberId: [" + input.memberId + "], New Oauth_Key: [" + input.access_token + "]");
-
+                                    Logger.Error("Service Cntlr -> addRowToSynapseCreateUsersTable FAILED - Error Adding New Record To Database - MemberID: [" + input.memberId + "], New Oauth_Key: [" + input.access_token + "]");
                                     res.msg = "Failed to save new record in DB.";
                                 }
                             }
                             catch (Exception ex)
                             {
-                                Logger.Error("Service Layer -> addRowToSynapseCreateUsersTable FAILED - Exception on Adding New Record To Database - MemberId: [" +
-                                                        input.memberId + "], Exception: [" + ex + "]");
+                                Logger.Error("Service Cntlr -> addRowToSynapseCreateUsersTable FAILED - Exception on Adding New Record To Database - MemberId: [" +
+                                             input.memberId + "], Exception: [" + ex + "]");
 
                                 res.msg = "Service layer exception - inner 1.";
                             }
@@ -5894,23 +5891,19 @@ namespace Nooch.API.Controllers
                         }
                         catch (Exception ex)
                         {
-                            Logger.Error("Service Layer -> addRowToSynapseCreateUsersTable FAILED (Exception #5118)- [MemberID: " +
-                                                    input.memberId + "], [Exception: " + ex.Message + "]");
+                            Logger.Error("Service Cntlr -> addRowToSynapseCreateUsersTable FAILED - MemberID: [" +
+                                         input.memberId + "], [Exception: " + ex.Message + "]");
 
                             res.msg = ex.InnerException.Message;
                         }
                     }
                     else
-                    {
                         res.msg = "Member not found.";
-                    }
                 }
             }
             catch (Exception ex)
             {
-                res.msg = "Service Layer exception -> " + ex.Message.ToString();
-                Logger.Error("Service Layer -> addRowToSynapseCreateUsersTable FAILED (Outer Exception) - MemberId: [" + input.memberId + "], Exception: [" + ex + "]");
-
+                Logger.Error("Service Cntlr -> addRowToSynapseCreateUsersTable FAILED (Outer Exception) - MemberID: [" + input.memberId + "], Exception: [" + ex + "]");
                 res.msg = "Service layer outer exception - Msg: [" + ex.Message.ToString() + "]";
             }
 
@@ -5931,12 +5924,13 @@ namespace Nooch.API.Controllers
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Controller -> GetStateNameByZipcode FAILED - ZipCode: [" + zipCode + "], Exception: [" + ex + "]");
+                Logger.Error("Service Cntlr -> GetStateNameByZipcode FAILED - ZipCode: [" + zipCode + "], Exception: [" + ex + "]");
                 res.ErrorMessage = "Server Error.";
             }
 
             return res;
         }
+
 
         [HttpPost]
         [ActionName("CancelTransactionAtSynapse")]
@@ -5947,34 +5941,33 @@ namespace Nooch.API.Controllers
 
             try
             {
-                if ((IsRentScene != true) || (IsRentScene == null))
+                if (IsRentScene != true)
                 {
-                    Logger.Error("CancelTransactionAtSynapse CodeBehind  -> Page_load - IsRentScene: [" + IsRentScene + "]");
+                    Logger.Error("Service Cntlr -> CancelTransactionAtSynapse CodeBehind - IsRentScene: [" + IsRentScene + "]");
                     CancelTransaction.errorMsg = "Missing IsRentScene or its false";
                 }
 
                 if (String.IsNullOrEmpty(TransationId))
                 {
-                    Logger.Error("CancelTransactionAtSynapse CodeBehind -> Page_load - TransationId: [" + TransationId + "]");
+                    Logger.Error("Service Cntlr -> CancelTransactionAtSynapse CodeBehind - TransID: [" + TransationId + "]");
                     CancelTransaction.errorMsg = "Missing TransationId";
                 }
 
                 if (string.IsNullOrEmpty(MemberId))
                 {
-                    Logger.Error("CancelTransactionAtSynapse CodeBehind -> Page_load - MemberID: [" + MemberId + "]");
+                    Logger.Error("Service Cntlr -> CancelTransactionAtSynapse CodeBehind - MemberID: [" + MemberId + "]");
                     CancelTransaction.errorMsg = "Missing Id";
                 }
 
                 if (String.IsNullOrEmpty(CancelTransaction.errorMsg))
-                {
                     CancelTransaction = CommonHelper.CancelTransactionAtSynapse(TransationId, MemberId);
-                }
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Controller -> CancelTransactionAtSynapse FAILED - TransationId: [" + TransationId + "], Exception: [" + ex + "]");
+                Logger.Error("Service Cntlr -> CancelTransactionAtSynapse FAILED - TransID: [" + TransationId + "], Exception: [" + ex + "]");
                 CancelTransaction.errorMsg = "Server Error.";
             }
+
             return CancelTransaction;
         }
     }

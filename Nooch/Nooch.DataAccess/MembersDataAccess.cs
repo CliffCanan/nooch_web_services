@@ -3096,18 +3096,28 @@ namespace Nooch.DataAccess
             string memberIdFromEmail = CommonHelper.GetMemberIdByUserName(userEmail);
             if (!String.IsNullOrEmpty(memberIdFromEmail))
             {
-                res.reason = "Given email already registered.";
-                Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 FAILED - EMAIL Already Registered: [" + userEmail + "]");
+                // CC (8/4/16): We really shouldn't abort in this case. Instead, we should verify that the user actually is the owner
+                //              of the email by sending a 5-digit numeric code to the email address and prompting the user to input it
+                //              on the page (which could be CreateAccount, PayRequest or DepositMoney)
+                var error = "MDA -> RegisterNonNoochUserWithSynapseV3 FAILED - EMAIL Already Registered: [" + userEmail + "] - ABORTING";
+                CommonHelper.notifyCliffAboutError(error);
+                Logger.Error(error);
 
+                res.reason = "Given email already registered.";
                 return res;
             }
 
             string memberIdFromPhone = CommonHelper.GetMemberIdByContactNumber(userPhone);
             if (!String.IsNullOrEmpty(memberIdFromPhone))
             {
-                res.reason = "Given phone number already registered.";
-                Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 FAILED - PHONE Already Registered: [" + userPhone + "]");
+                // CC (8/4/16): We really shouldn't abort in this case. Instead, we should verify that the user actually is the owner
+                //              of the Phone # by sending  a 5-digit numeric code to the Phone # and prompting the user to input it
+                //              on the page (which could be CreateAccount, PayRequest or DepositMoney)
+                var error = "MDA -> RegisterNonNoochUserWithSynapseV3 FAILED - PHONE Already Registered: [" + userEmail + "] - ABORTING";
+                CommonHelper.notifyCliffAboutError(error);
+                Logger.Error(error);
 
+                res.reason = "Given phone number already registered.";
                 return res;
             }
 
