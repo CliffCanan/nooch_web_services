@@ -5796,7 +5796,7 @@ namespace Nooch.DataAccess
                 if ((sender.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49" ||
                     senderBankOid == "5759005795062906e1359a8e" ||
                     senderBankOid == "574f45d79506295ff7a81db8") &&
-                    requester.cipTag == "Vendor")
+                    requester.cipTag.ToLower() == "vendor")
                 {
                     // Sender is Rent Scene and recipient is a 'Vendor'
                     senderBankOid = "575ad909950629625ca88262";
@@ -5807,7 +5807,7 @@ namespace Nooch.DataAccess
                          (requester.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49" ||
                           recipBankOid == "574f45d79506295ff7a81db8" ||
                           recipBankOid == "5759005795062906e1359a8e") &&
-                          sender.cipTag == "Client")
+                         (sender.cipTag.ToLower() == "renter" || sender.cipTag.ToLower() == "client"))
                 {
                     // Recipient is Rent Scene AND Sender is a Client AND Amount is < $200 (so it's probably an application fee)
                     // So use RS's Corporate Checking account.
@@ -6379,7 +6379,7 @@ namespace Nooch.DataAccess
             if ((senderNoochDetails.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49" ||
                 senderBankOid == "5759005795062906e1359a8e" ||
                 senderBankOid == "574f45d79506295ff7a81db8") &&
-                recipientNoochDetails.cipTag == "Vendor")
+                recipientNoochDetails.cipTag.ToLower() == "vendor")
             {
                 // Sender is Rent Scene and recipient is a 'Vendor'
                 senderBankOid = "575ad909950629625ca88262";
@@ -6390,7 +6390,7 @@ namespace Nooch.DataAccess
                      (recipientNoochDetails.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49" ||
                       recipBankOid == "574f45d79506295ff7a81db8" ||
                       recipBankOid == "5759005795062906e1359a8e") &&
-                      senderNoochDetails.cipTag == "Client")
+                     (senderNoochDetails.cipTag.ToLower() == "renter" || senderNoochDetails.cipTag.ToLower() == "client"))
             {
                 // Recipient is Rent Scene AND Sender is a Client AND Amount is < $200 (so it's probably an application fee)
                 // So use RS's Corporate Checking account.

@@ -2063,8 +2063,8 @@ namespace Nooch.DataAccess
                     var cipTag = noochMember.cipTag.ToLower();
 
                     if (cipTag == "renter" || cipTag == "1") { extra.cip_tag = 1; }
-                    else if (cipTag == "landlord" || cipTag == "2") { extra.cip_tag = 2; }
-                    else if (cipTag == "vendor" || cipTag == "3") { extra.cip_tag = 3; }
+                    else if (cipTag == "vendor" || cipTag == "2") { extra.cip_tag = 2; }
+                    else if (cipTag == "landlord" || cipTag == "3") { extra.cip_tag = 3; }
                     else extra.cip_tag = 1; // default
                 }
                 else
@@ -3217,8 +3217,8 @@ namespace Nooch.DataAccess
                 if (!String.IsNullOrEmpty(cip))
                 {
                     if (cip == "1") cip = "renter";
-                    else if (cip == "2") cip = "landlord";
-                    else if (cip == "3") cip = "vendor";
+                    else if (cip == "2") cip = "vendor";
+                    else if (cip == "3") cip = "landlord";
                 }
 
                 #endregion Parse And Format Data To Save
@@ -5727,7 +5727,7 @@ namespace Nooch.DataAccess
                                 if ((sender.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49" ||
                                     senderBankOid == "5759005795062906e1359a8e" ||
                                     senderBankOid == "574f45d79506295ff7a81db8") &&
-                                    recipient.cipTag == "Vendor")
+                                    recipient.cipTag.ToLower() == "vendor")
                                 {
                                     // Sender is Rent Scene and recipient is a 'Vendor'
                                     senderBankOid = "575ad909950629625ca88262";
@@ -5738,7 +5738,7 @@ namespace Nooch.DataAccess
                                          (recipient.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49" ||
                                           recipBankOid == "574f45d79506295ff7a81db8" ||
                                           recipBankOid == "5759005795062906e1359a8e") &&
-                                          sender.cipTag == "Client")
+                                         (sender.cipTag.ToLower() == "renter" || sender.cipTag.ToLower() == "client")) // CC (8/5/16): Should be "renter" now as of updating to Synapse's KYC 2.0, used to be "Client"
                                 {
                                     // Recipient is Rent Scene AND Sender is a Client AND Amount is < $200 (so it's probably an application fee)
                                     // So use RS's Corporate Checking account.
