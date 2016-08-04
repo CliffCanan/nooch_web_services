@@ -477,12 +477,22 @@ namespace Nooch.API.Controllers
             {
                 try
                 {
+                    List<GetMostFrequentFriends_Result> listMostFrequentFriends = new List<GetMostFrequentFriends_Result>();
                     MembersDataAccess obj = new MembersDataAccess();
-                    return obj.GetMostFrequentFriends(MemberId);
+                    listMostFrequentFriends = obj.GetMostFrequentFriends(MemberId);
+                    foreach (var friends in listMostFrequentFriends)
+                    {
+                        Member m = CommonHelper.GetMemberDetails(friends.RecepientId);
+                        friends.FirstName = CommonHelper.GetDecryptedData(m.FirstName).ToString();
+                        friends.LastName = CommonHelper.GetDecryptedData(m.LastName).ToString();
+                        friends.Photo = m.Photo;
+                    }
+                    return listMostFrequentFriends;
+
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Cntrlr -> GetMostFrequentFriends FAILED - Exception: [" + ex + "]");
+                    Logger.Error("Service Controller -> GetMostFrequentFriends FAILED - [Exception: " + ex + "]");
                     throw new Exception("Error");
                 }
             }
