@@ -400,14 +400,12 @@ namespace Nooch.API.Controllers
         [ActionName("GetMemberDetails")]
         public MemberDto GetMemberDetails(string memberId, string accessToken)
         {
-            Logger.Info("Service Controller -> GetMemberDetails - [MemberId: " + memberId + "]");
+            Logger.Info("Service Cntrlr -> GetMemberDetails - MemberID: [" + memberId + "]");
 
             if (CommonHelper.IsValidRequest(accessToken, memberId))
             {
                 try
                 {
-                    // Get the Member's Account Info
-
                     var memberEntity = CommonHelper.GetMemberDetails(memberId);
 
                     // Get Synapse Bank Account Info
@@ -434,6 +432,7 @@ namespace Nooch.API.Controllers
                     var member = new MemberDto
                     {
                         MemberId = memberEntity.MemberId.ToString(),
+                        DateCreated = memberEntity.DateCreated,
                         UserName = CommonHelper.GetDecryptedData(memberEntity.UserName),
                         Status = memberEntity.Status,
                         FirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberEntity.FirstName)),
@@ -445,18 +444,21 @@ namespace Nooch.API.Controllers
                         FacebookAccountLogin = memberEntity.FacebookAccountLogin != null ? CommonHelper.GetDecryptedData(memberEntity.FacebookAccountLogin) : "",
                         IsSynapseBankAdded = b,
                         SynapseBankStatus = accountstatus,
-                        IsVerifiedPhone = (memberEntity.IsVerifiedPhone != null) && Convert.ToBoolean(memberEntity.IsVerifiedPhone),
-                        IsSSNAdded = (memberEntity.SSN != null),
-                        DateCreated = memberEntity.DateCreated,
-                        DateOfBirth = (memberEntity.DateOfBirth == null) ? "" : Convert.ToDateTime(memberEntity.DateOfBirth).ToString("MM/dd/yyyy"),
-                        DeviceToken = memberEntity.DeviceToken
+                        IsVerifiedWithSynapse = memberEntity.IsVerifiedWithSynapse,
+                        IsVerifiedPhone = memberEntity.IsVerifiedPhone == true ? true : false,
+                        IsSSNAdded = memberEntity.SSN != null,
+
+                        // CC (8/1/16): Commenting out these fields since they aren't needed in the mobile app (but can't delete the fields in MemberDTO
+                        //              b/c they are used for landing page services.
+                        //DateOfBirth = (memberEntity.DateOfBirth == null) ? "" : Convert.ToDateTime(memberEntity.DateOfBirth).ToString("MM/dd/yyyy"),
+                        //DeviceToken = memberEntity.DeviceToken
                     };
 
                     return member;
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Controller -> GetMemberDetails FAILED - [MemberId: " + memberId + "], [Exception: " + ex.InnerException + "]");
+                    Logger.Error("Service Cntrlr -> GetMemberDetails FAILED - [MemberId: " + memberId + "], [Exception: " + ex.InnerException + "]");
                     throw new Exception("Server Error");
                 }
             }
@@ -480,7 +482,7 @@ namespace Nooch.API.Controllers
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Controller -> GetMostFrequentFriends FAILED - [Exception: " + ex + "]");
+                    Logger.Error("Service Cntrlr -> GetMostFrequentFriends FAILED - Exception: [" + ex + "]");
                     throw new Exception("Error");
                 }
             }
@@ -506,6 +508,43 @@ namespace Nooch.API.Controllers
                 catch (Exception ex)
                 {
                     Logger.Error("Service Cntrlr -> GetMemberStats FAILED - [Exception: " + ex + "]");
+
+                    throw new Exception("Invalid OAuth 2 Access");
+                }
+            }
+            else
+            {
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
+        [HttpGet]
+        [ActionName("GetMemberStatsGeneric")]
+        public StatsForMember GetMemberStatsGeneric(string MemberId, string accesstoken)
+        {
+            if (CommonHelper.IsValidRequest(accesstoken, MemberId))
+               
+            {
+                try
+                {
+                    StatsForMember sm = new StatsForMember();
+                    //Logger.LogDebugMessage("Service layer - GetMemberStats - MemberId].");
+                    var memberDataAccess = new MembersDataAccess();
+                    sm.Largest_received_transfer = memberDataAccess.GetMemberStats(MemberId, "Largest_received_transfer");
+                    sm.Largest_sent_transfer = memberDataAccess.GetMemberStats(MemberId, "Largest_sent_transfer");
+                    sm.Total_Friends_Invited = memberDataAccess.GetMemberStats(MemberId, "Total_Friends_Invited");
+                    sm.Total_Friends_Joined = memberDataAccess.GetMemberStats(MemberId, "Total_Friends_Joined");
+                    sm.Total_no_of_transfer_Received = memberDataAccess.GetMemberStats(MemberId, "Total_no_of_transfer_Received");
+                    sm.Total_no_of_transfer_Sent = memberDataAccess.GetMemberStats(MemberId, "Total_no_of_transfer_Sent");
+                    sm.Total_P2P_transfers = memberDataAccess.GetMemberStats(MemberId, "Total_P2P_transfers");
+                    sm.Total_Sent = memberDataAccess.GetMemberStats(MemberId, "Total_$_Sent");
+                    sm.Total_Received = memberDataAccess.GetMemberStats(MemberId, "Total_$_Received");
+                  
+                    sm.Total_Posts_To_TW = memberDataAccess.GetMemberStats(MemberId, "Total_Posts_To_TW");
+                    return sm;
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Controller -> GetMemberStats FAILED - [Exception: " + ex + "]");
 
                     throw new Exception("Invalid OAuth 2 Access");
                 }
