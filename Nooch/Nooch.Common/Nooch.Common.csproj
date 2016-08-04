@@ -110,6 +110,7 @@
     <Compile Include="Entities\MobileAppOutputEnities\MostFrequentFriends.cs" />
     <Compile Include="Entities\MobileAppOutputEnities\PendingTransCoutResult.cs" />
     <Compile Include="Entities\MobileAppOutputEnities\PhoneEmailListDto.cs" />
+    <Compile Include="Entities\MobileAppOutputEnities\StatsForMember.cs" />
     <Compile Include="Entities\MobileAppOutputEnities\TransactionDto.cs" />
     <Compile Include="Entities\ResultActivation.cs" />
     <Compile Include="Entities\ResultCancelRequest.cs" />
