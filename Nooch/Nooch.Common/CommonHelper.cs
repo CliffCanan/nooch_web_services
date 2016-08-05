@@ -1825,7 +1825,7 @@ namespace Nooch.Common
             else
             {
                 // Member not found in Nooch DB
-                Logger.Info("Common Helper -> sendUserSsnInfoToSynapseV3 FAILED: Member not found - [MemberId: " + MemberId + "]");
+                Logger.Info("Common Helper -> sendUserSsnInfoToSynapseV3 FAILED: Member not found - MemberID: [" + MemberId + "]");
                 res.message = "Member not found";
             }
 
@@ -1841,7 +1841,7 @@ namespace Nooch.Common
         /// <returns></returns>
         public static submitIdVerificationInt sendDocsToSynapseV3(string MemberId)
         {
-            Logger.Info("Common Helper -> sendDocsToSynapseV3 Initiated - [MemberId: " + MemberId + "]");
+            Logger.Info("Common Helper -> sendDocsToSynapseV3 Fired - MemberID: [" + MemberId + "]");
 
             submitIdVerificationInt res = new submitIdVerificationInt();
             res.success = false;
@@ -1854,11 +1854,6 @@ namespace Nooch.Common
             {
                 var userNameDecrypted = GetDecryptedData(memberEntity.UserName);
 
-                // Cliff (6/2/16): commenting out the check if the user already has isVerifiedWithSynapse = true.
-                //                 Even verified users might need to send another document, so we might as well
-                //                 run this methond fully for any user - unless there is missing data.
-                //if (memberEntity.IsVerifiedWithSynapse != true)
-                //{
                 #region Check User For All Required Data
 
                 string usersFirstName = UppercaseFirst(GetDecryptedData(memberEntity.FirstName));
@@ -1889,6 +1884,8 @@ namespace Nooch.Common
 
                 try
                 {
+                    #region Initial Data Checks
+
                     bool isMissingSomething = false;
                     // Member found, now check that they have added
                     // • full Address (including city, zip),
@@ -1903,9 +1900,17 @@ namespace Nooch.Common
                         res.message = " - Missing UDID";
                     }
                     else
-                    {
                         usersFingerprint = memberEntity.UDID1; // (Not Encrypted)
+
+                    // Check for Phone
+                    if (String.IsNullOrEmpty(memberEntity.ContactNumber))
+                    {
+                        isMissingSomething = true;
+                        res.message += " - Missing Phone";
                     }
+                    else
+                        usersPhone = memberEntity.ContactNumber; // (Not Encrypted)
+
                     // Check for Address
                     if (String.IsNullOrEmpty(memberEntity.Address))
                     {
@@ -1913,9 +1918,10 @@ namespace Nooch.Common
                         res.message += " - Missing Address";
                     }
                     else
-                    {
                         usersAddress = GetDecryptedData(memberEntity.Address); // (Encrypted)
-                    }
+
+                    #region Set City, State, ZIP
+
                     // Check for ZIP
                     if (String.IsNullOrEmpty(memberEntity.Zipcode))
                     {
@@ -1923,9 +1929,8 @@ namespace Nooch.Common
                         res.message += " - Missing ZIP";
                     }
                     else
-                    {
                         usersZip = GetDecryptedData(memberEntity.Zipcode); // (Encrypted)
-                    }
+
                     // Check for City
                     if (String.IsNullOrEmpty(memberEntity.City))
                     {
@@ -1947,39 +1952,33 @@ namespace Nooch.Common
                         else
                         {
                             isMissingSomething = true;
-                            res.message += " - Missing City";
+                            res.message += " - Missing City and ZIP";
                         }
                     }
                     else
-                    {
                         usersCity = GetDecryptedData(memberEntity.City); // (Encrypted)
-                    }
-                    if (String.IsNullOrEmpty(memberEntity.State) && String.IsNullOrEmpty(usersState))
+
+                    if (String.IsNullOrEmpty(usersState))
                     {
-                        // Missing State, so if user does have a ZIP, try getting the City & States from Google
-                        if (!String.IsNullOrEmpty(usersZip))
+                        if (String.IsNullOrEmpty(memberEntity.State))
                         {
-                            var googleMapsRes = GetCityAndStateFromZip(usersZip);
-                            if (googleMapsRes != null && !String.IsNullOrEmpty(googleMapsRes.stateAbbrev))
-                                usersState = googleMapsRes.stateAbbrev;
+                            // Missing State, so if user does have a ZIP, try getting the City & States from Google
+                            if (!String.IsNullOrEmpty(usersZip))
+                            {
+                                var googleMapsRes = GetCityAndStateFromZip(usersZip);
+                                if (googleMapsRes != null && !String.IsNullOrEmpty(googleMapsRes.stateAbbrev))
+                                    usersState = googleMapsRes.stateAbbrev;
+                            }
                         }
-                        // isMissingSomething = true; Don't abort if missing state.
+                        else
+                            usersState = GetDecryptedData(memberEntity.State);
                     }
-                    else
-                    {
-                        usersState = GetDecryptedData(memberEntity.State);
-                    }
-                    // Check for Phone
-                    if (string.IsNullOrEmpty(memberEntity.ContactNumber))
-                    {
-                        isMissingSomething = true;
-                        res.message += " - Missing Phone";
-                    }
-                    else
-                    {
-                        usersPhone = memberEntity.ContactNumber; // (Not Encrypted)
-                    }
-                    // Check for Date Of Birth
+
+                    #endregion Set City, State
+
+
+                    #region Set Date Of Birth
+
                     if (memberEntity.DateOfBirth == null)
                     {
                         isMissingSomething = true;
@@ -1994,12 +1993,10 @@ namespace Nooch.Common
                         usersDobYear = usersDob.Year;
                     }
 
-                    // Check for SSN & FBID - need at least 1
-                    if (String.IsNullOrEmpty(memberEntity.SSN) && String.IsNullOrEmpty(memberEntity.FacebookUserId))
-                    {
-                        isMissingSomething = true;
-                        res.message += " - Missing SSN and FBID";
-                    }
+                    #endregion Set Date Of Birth
+
+
+                    #region Check for SSN & FBID
                     if (!String.IsNullOrEmpty(memberEntity.SSN))
                     {
                         usersSsn = GetDecryptedData(memberEntity.SSN); // (Encrypted)
@@ -2010,6 +2007,9 @@ namespace Nooch.Common
                         usersFBID = memberEntity.FacebookUserId; // (Not Encrypted)
                         hasFBID = true;
                     }
+
+                    #endregion Check for SSN & FBID
+
                     // Now check for ID verification document (Checking the one in the Members Table here -
                     // could also be an ID img in SynapseCreateUserResults table, which is checked for later in this method)
                     if (!String.IsNullOrEmpty(memberEntity.VerificationDocumentPath))
@@ -2017,17 +2017,20 @@ namespace Nooch.Common
                         usersPhotoIDurl = memberEntity.VerificationDocumentPath;
                         hasPhotoID = true;
                     }
+
                     // Return if any data was missing in previous block
                     if (isMissingSomething)
                     {
-                        Logger.Error("Common Helper -> sendDocsToSynapseV3 ABORTED: Member has no DoB. [Username: " + userNameDecrypted + "], [Message: " + res.message + "]");
+                        Logger.Error("Common Helper -> sendDocsToSynapseV3 ABORTED: Member missing required info - Username: [" + userNameDecrypted + "], Message: [" + res.message + "]");
                         return res;
                     }
+
+                    #endregion Initial Data Checks
 
                     // Update Member's DB record from NULL to false (update to true later on if Verification from Synapse is completely successful)
                     if (memberEntity.IsVerifiedWithSynapse == null)
                     {
-                        Logger.Info("Common Helper -> sendDocsToSynapseV3 - Setting IsVerifiedWithSynapse to FALSE since it was NULL: [Username: " + userNameDecrypted + "]");
+                        Logger.Info("Common Helper -> sendDocsToSynapseV3 - Setting IsVerifiedWithSynapse to FALSE since it was NULL: Username: [" + userNameDecrypted + "]");
                         memberEntity.IsVerifiedWithSynapse = false;
                     }
 
@@ -2035,17 +2038,7 @@ namespace Nooch.Common
                     var usersSynapseDetails = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == id &&
                                                                                                       m.IsDeleted == false);
 
-                    if (usersSynapseDetails == null)
-                    {
-                        var error = "Common Helper -> sendDocsToSynapseV3 ABORTED: Member's Synapse User Details not found - Username: [" + userNameDecrypted +
-                                     "], MemberID: [" + MemberId + "]";
-                        Logger.Error(error);
-                        notifyCliffAboutError(error);
-
-                        res.message = "Users synapse details not found";
-                        return res;
-                    }
-                    else
+                    if (usersSynapseDetails != null)
                     {
                         _dbContext.Entry(usersSynapseDetails).Reload();
                         usersSynapseOauthKey = GetDecryptedData(usersSynapseDetails.access_token);
@@ -2058,11 +2051,21 @@ namespace Nooch.Common
                             hasPhotoID = true;
                         }
                     }
+                    else
+                    {
+                        var error = "Common Helper -> sendDocsToSynapseV3 ABORTED: Member's Synapse User Details not found - Username: [" + userNameDecrypted +
+                                     "], MemberID: [" + MemberId + "]";
+                        Logger.Error(error);
+                        notifyCliffAboutError(error);
+
+                        res.message = "Users synapse details not found";
+                        return res;
+                    }
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Common Helper -> sendDocsToSynapseV3 FAILED on checking for all required data - [Username: " +
-                                  userNameDecrypted + "], [Exception: " + ex + "]");
+                    Logger.Error("Common Helper -> sendDocsToSynapseV3 FAILED on checking for all required data - Username: [" +
+                                  userNameDecrypted + "], Exception: [" + ex + "]");
                 }
 
                 Logger.Info("Common Helper -> sendDocsToSynapseV3 - Completed all initial data checks - All Data Found!");
@@ -2115,11 +2118,9 @@ namespace Nooch.Common
                         documents.virtual_docs = new synapseAddDocsV3InputClass_user_docs_doc[1];
                         documents.virtual_docs[0] = virtualDocObj;
 
+                        // If user has no SSN, still need to send an empty array to Synapse or else we get an error
                         if (!hasSSN)
-                        {
-                            // If user has no SSN, still need to send an empty array to Synapse or else we get an error
                             documents.virtual_docs = documents.virtual_docs.Where(val => val.document_value != virtualDocObj.document_value).ToArray();
-                        }
 
                         // SOCIAL DOCS: Send Facebook Profile URL by appending user's FBID to base FB URL
                         synapseAddDocsV3InputClass_user_docs_doc socialDocObj = new synapseAddDocsV3InputClass_user_docs_doc();
@@ -2129,11 +2130,9 @@ namespace Nooch.Common
                         documents.social_docs = new synapseAddDocsV3InputClass_user_docs_doc[1];
                         documents.social_docs[0] = socialDocObj;
 
+                        // If user has no FBID, still need to send an empty array to Synapse or else we get an error
                         if (!hasFBID)
-                        {
-                            // If user has no FBID, still need to send an empty array to Synapse or else we get an error
                             documents.social_docs = documents.social_docs.Where(val => val.document_value != socialDocObj.document_value).ToArray();
-                        }
 
                         // PHYSICAL DOCS: Send User's Photo ID if available
                         if (hasPhotoID)
@@ -2202,7 +2201,7 @@ namespace Nooch.Common
                     }
                     catch (Exception ex)
                     {
-                        Logger.Error("Common Helper -> sendDocsToSynapseV3 - Couldn't log Synapse SSN Payload. [Exception: " + ex + "]");
+                        Logger.Error("Common Helper -> sendDocsToSynapseV3 - Couldn't log Synapse SSN Payload. Exception: [" + ex + "]");
                     }
 
                     #endregion For Testing & Logging
@@ -2268,23 +2267,75 @@ namespace Nooch.Common
                                     synapseRes.virtual_doc = synapseResponse.user.doc_status != null ? synapseResponse.user.doc_status.virtual_doc : null;
                                     synapseRes.extra_security = synapseResponse.user.extra.extra_security != null ? synapseResponse.user.extra.extra_security.ToString() : null;
 
+                                    if (synapseResponse.user.documents != null &&
+                                        synapseResponse.user.documents.Length > 0)
+                                    {
+                                        #region Loop Through Outer Documents Object (Should Only Be 1)
+
+                                        foreach (addDocsResFromSynapse_user_docs doc in synapseResponse.user.documents)
+                                        {
+                                            // Check VIRTUAL_DOCS
+                                            if (doc.virtual_docs != null && doc.virtual_docs.Length > 0)
+                                            {
+                                                short n = 0;
+                                                foreach (addDocsResFromSynapse_user_docs_virtualdoc docObject in doc.virtual_docs)
+                                                {
+                                                    n += 1;
+                                                    Logger.Info("Common Helper -> sendDocsToSynapseV3 - VIRTUAL_DOC #[" + n + "] - Type: [" + docObject.document_type + "], Status: [" + docObject.status + "]");
+                                                    if (docObject.document_type == "SSN")
+                                                        synapseRes.virtual_doc = docObject.status;
+                                                }
+                                            }
+
+                                            // Check PHYSICAL_DOCS
+                                            if (doc.physical_docs != null && doc.physical_docs.Length > 0)
+                                            {
+                                                short n = 0;
+                                                foreach (addDocsResFromSynapse_user_docs_doc docObject in doc.physical_docs)
+                                                {
+                                                    n += 1;
+                                                    Logger.Info("Common Helper -> sendDocsToSynapseV3 - PHYSICAL_DOC #[" + n + "] - Type: [" + docObject.document_type + "], Status: [" + docObject.status + "]");
+                                                    if (docObject.document_type == "GOVT_ID")
+                                                        synapseRes.physical_doc = docObject.status;
+                                                }
+                                            }
+
+                                            // Check SOCIAL_DOCS
+                                            if (doc.social_docs != null && doc.social_docs.Length > 0)
+                                            {
+                                                short n = 0;
+                                                foreach (addDocsResFromSynapse_user_docs_doc docObject in doc.social_docs)
+                                                {
+                                                    n += 1;
+                                                    Logger.Info("Common Helper -> sendDocsToSynapseV3 - SOCIAL_DOC #[" + n + "] - Type: [" + docObject.document_type + "], Status: [" + docObject.status + "]");
+                                                    if (docObject.document_type == "FACEBOOK")
+                                                    {
+                                                        // CC (8/5/16): Need to add DB fields to handle new Document Type of "Social"
+                                                        //              Also for all 3 document types (Social, Virtual, Phsyical), we also need to store the "last updated" field to display in Admin Panel as a readable DateTime
+                                                        //synCreateUserObject.virtual_doc = docObject.status;
+                                                    }
+                                                }
+                                            }
+
+                                        }
+
+                                        #endregion Loop Through Outer Documents Object (Should Only Be 1)
+                                    }
+
+
                                     int save = _dbContext.SaveChanges();
                                     _dbContext.Entry(synapseRes).Reload();
 
                                     if (save > 0)
-                                    {
                                         Logger.Info("Common Helper -> sendDocsToSynapseV3 - SUCCESS response form Synapse - And Successfully updated user's record in SynapseCreateUserRes Table");
-                                    }
                                     else
-                                    {
                                         Logger.Error("Common Helper -> sendDocsToSynapseV3 - SUCCESS response form Synapse - But FAILED to update user's record in SynapseCreateUserRes Table");
-                                    }
                                 }
                             }
                             catch (Exception ex)
                             {
                                 Logger.Error("Common Helper -> sendDocsToSynapseV3 - EXCEPTION on trying to update User's record in CreateSynapseUserResults Table - " +
-                                             "[MemberID: " + MemberId + "], [Exception: " + ex + "]");
+                                             "MemberID: [" + MemberId + "], Exception: [" + ex + "]");
                             }
 
                             #endregion Update Permission in CreateSynapseUserResults Table
@@ -2491,29 +2542,16 @@ namespace Nooch.Common
                 int saveMember = _dbContext.SaveChanges();
 
                 if (saveMember > 0)
-                {
                     Logger.Info("Common Helper -> sendDocsToSynapseV3 - Successfully updated user's record in Members Table");
-                }
                 else
-                {
                     Logger.Error("Common Helper -> sendDocsToSynapseV3 - FAILED to update user's record in Members Table");
-                }
 
                 #endregion Send All Docs To Synapse
-                //}
-                //else
-                //{
-                //    var validatedDate = Convert.ToDateTime(memberEntity.ValidatedDate).ToString("MMM dd yyyy");
-                //    Logger.Info("Common Helper -> sendDocsToSynapseV3 - User Already Verified With Synapse - [Username: " + userNameDecrypted +
-                //                "], [Validated On: " + validatedDate + "]");
-                //    res.message = "Already Verified on " + validatedDate;
-                //    res.success = true;
-                //}
             }
             else
             {
                 // Member not found in Nooch DB
-                Logger.Info("Common Helper -> sendDocsToSynapseV3 FAILED: Member not found - [MemberId: " + MemberId + "]");
+                Logger.Info("Common Helper -> sendDocsToSynapseV3 FAILED: Member not found - MemberID: [" + MemberId + "]");
                 res.message = "Member not found";
             }
 

@@ -440,7 +440,7 @@ namespace Nooch.Common
                 outResponse.StatusCode = HttpStatusCode.InternalServerError;
                 outResponse.StatusDescription = exception.Message;
 
-                Logger.Info("Status Code: [ " + outResponse.StatusCode + "], Status Description: [" + outResponse.StatusDescription + "]");
+                Logger.Info("Utility -> ThrowFaultException - Status Code: [ " + outResponse.StatusCode + "], Status Description: [" + outResponse.StatusDescription + "]");
 
                 throw new WebException(exception.Message);
             }

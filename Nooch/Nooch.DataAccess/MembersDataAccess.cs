@@ -702,7 +702,7 @@ namespace Nooch.DataAccess
             return "";
         }
 
-          
+
 
 
         public List<Member> getInvitedMemberList(string memberId)
@@ -1755,7 +1755,7 @@ namespace Nooch.DataAccess
         /// <returns></returns>
         public synapseCreateUserV3Result_int RegisterUserWithSynapseV3(string memberId)
         {
-            Logger.Info("MDA -> RegisterUserWithSynapseV3 Initiated - Member: [" + memberId + "]");
+            Logger.Info("MDA -> RegisterUserWithSynapseV3 Fired - Member: [" + memberId + "]");
 
             synapseCreateUserV3Result_int res = new synapseCreateUserV3Result_int();
             res.success = false;
@@ -1848,23 +1848,29 @@ namespace Nooch.DataAccess
                                 }
 
                                 // Now check if the user has provided an SSN or FBID or Photo ID.  If yes, call sendDocsToSynapseV3()
-                                else if ((!String.IsNullOrEmpty(noochMember.SSN) && noochMember.SSN.Length > 4) ||
-                                         (!String.IsNullOrEmpty(noochMember.FacebookUserId) && noochMember.FacebookUserId.Length > 5) ||
-                                          !String.IsNullOrEmpty(noochMember.VerificationDocumentPath))
+                                else
                                 {
-                                    Logger.Info("MDA -> RegisterUserWithSynapseV3 - Found at least 1 document for Synapse (SSN, FBID, or ID Img in Members Table), " +
-                                                "attempting to send SSN info to SynapseV3 - MemberID: [" + memberId + "]");
-
                                     try
                                     {
+                                        if ((!String.IsNullOrEmpty(noochMember.SSN) && noochMember.SSN.Length > 4) ||
+                                             (!String.IsNullOrEmpty(noochMember.FacebookUserId) && noochMember.FacebookUserId.Length > 5) ||
+                                              !String.IsNullOrEmpty(noochMember.VerificationDocumentPath))
+                                        {
+                                            Logger.Info("MDA -> RegisterUserWithSynapseV3 - Found at least 1 document for Synapse (SSN, FBID, or ID Img in Members Table), " +
+                                                        "attempting to send SSN info to SynapseV3 - MemberID: [" + memberId + "]");
+                                        }
+
                                         // (CC - 6/1/16): UPDATED TO USE NEW METHOD FOR SENDING *ALL* DOCS AT THE SAME TIME
                                         // (CC - 6/5/16): Synapse hasn't finished adding the new /user/docs/add service onto their Production environment,
                                         //                only on the Sandbox. So they told me to just use the 'old' methods for sending the SSN and then the
                                         //                photoID for another 2 weeks until they finish adding the new 'all-in-one' service to Production.
                                         // (CC - 7/19/16): Synapse is finally ready for us to update this to the NEW (KYC 2.0) API which includes FB and full SSN
+                                        // (CC - 8/05/16): I set this up initially to only query senDocsToSynapseV3 if the user had submitted one of: SSN, FB, ID Img...
+                                        //                 However, we need to ALWAYS submit this API to Synapse, even if the user hasn't provided any of those.
 
                                         //submitIdVerificationInt submitAllDocs = CommonHelper.sendUserSsnInfoToSynapseV3(memberId); // OLD - using till Synapse tells us to use the new one (6/5/16)
-                                        submitIdVerificationInt submitAllDocs = CommonHelper.sendDocsToSynapseV3(memberId);      // NEW for KYC 2.0
+
+                                        submitIdVerificationInt submitAllDocs = CommonHelper.sendDocsToSynapseV3(memberId);          // NEW for KYC 2.0
                                         res.ssn_verify_status = submitAllDocs.message;
                                         res.errorMsg = submitAllDocs.message;
 
@@ -3562,7 +3568,7 @@ namespace Nooch.DataAccess
 
                         if (createSynapseUserResult.success == true && !String.IsNullOrEmpty(createSynapseUserResult.oauth.oauth_key))
                         {
-                            Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - Synapse User created SUCCESSFULLY (LN: 3462) - " +
+                            Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - Synapse User created SUCCESSFULLY - " +
                                         "oauth_consumer_key: [" + createSynapseUserResult.oauth.oauth_key + "]. Now attempting to save in Nooch DB.");
 
                             res = createSynapseUserResult;
@@ -3643,9 +3649,7 @@ namespace Nooch.DataAccess
                             #endregion Create Synapse User Response -> Reason: 'Email Already Registered'
 
                             else
-                            {
                                 res.reason = createSynapseUserResult.reason;
-                            }
                         }
                     }
                     else
