@@ -656,7 +656,7 @@ namespace Nooch.API.Controllers
         [HttpGet]
         [ActionName("LoginRequest")]
         public StringResult LoginRequest(string userName, string pwd, Boolean rememberMeEnabled, decimal lat,
-            decimal lng, string udid, string devicetoken)
+                                         decimal lng, string udid, string devicetoken)
         {
             StringResult res = new StringResult();
 

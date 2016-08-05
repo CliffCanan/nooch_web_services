@@ -2421,20 +2421,15 @@ namespace Nooch.Web.Controllers
                         res.classForPinButton = "";
                     }
                     else
-                    {
                         res.from = "nooch";
-                    }
                 }
-                else
-                {
-                    // Set Nooch as the default
+                else // Set Nooch as the default
                     res.from = "nooch";
-                }
             }
             catch (Exception ex)
             {
                 res.errorId = "1";
-                Logger.Error("Make Payment CodeBehind -> page_load OUTER EXCEPTION - [Exception: " + ex.Message + "]");
+                Logger.Error("Make Payment CodeBehind -> page_load OUTER EXCEPTION - Exception: [" + ex.Message + "]");
             }
 
             ViewData["OnLoadData"] = res;
@@ -2457,7 +2452,7 @@ namespace Nooch.Web.Controllers
         /// <returns></returns>
         public ActionResult submitPayment(string from, bool isRequest, string amount, string name, string email, string memo, string pin, string ip, string cip)
         {
-            Logger.Info("Make Payment Code Behind -> submitPayment Initiated - From: [" + from + "], isRequest: [" + isRequest +
+            Logger.Info("Make Payment Code Behind -> submitPayment Fired - From: [" + from + "], isRequest: [" + isRequest +
                         "], Name: [" + name + "], Email: [" + email +
                         "], Amount: [" + amount + "], memo: [" + memo +
                         "], PIN: [" + pin + "], IP: [" + ip + "], CIP: [" + cip + "]");
@@ -2507,24 +2502,16 @@ namespace Nooch.Web.Controllers
             {
                 #region Lookup PIN
 
-                pin = (String.IsNullOrEmpty(pin) || pin.Length != 4) ? "0000" : pin;
+                pin = String.IsNullOrEmpty(pin) || pin.Length != 4 ? "0000" : pin;
 
                 if (from == "rentscene")
-                {
                     pin = CommonHelper.GetMemberPinByUserName("payments@rentscene.com");
-                }
                 else if (from == "habitat")
-                {
                     pin = CommonHelper.GetMemberPinByUserName("andrew@tryhabitat.com");
-                }
                 else if (from == "nooch")
-                {
                     pin = CommonHelper.GetMemberPinByUserName("team@nooch.com");
-                }
                 else if (from == "appjaxx")
-                {
                     pin = CommonHelper.GetMemberPinByUserName("josh@appjaxx.com");
-                }
 
                 if (String.IsNullOrEmpty(pin))
                 {
@@ -2557,36 +2544,37 @@ namespace Nooch.Web.Controllers
                     string memIdToUse = "";
                     string accessToken = "";
 
+                    var userName = "";
+
                     if (from.ToLower() == "rentscene")
-                    {
-                        Member member = CommonHelper.GetMemberDetailsByUserName("payments@rentscene.com");
-
-                        memIdToUse = member.MemberId.ToString();
-                        accessToken = member.AccessToken.ToString();
-                    }
+                        userName = "payments@rentscene.com";
                     else if (from.ToLower() == "habitat")
-                    {
-                        Member member = CommonHelper.GetMemberDetailsByUserName("andrew@tryhabitat.com");
-                        memIdToUse = member.MemberId.ToString();
-                        accessToken = member.AccessToken.ToString();
-                    }
+                        userName = "andrew@tryhabitat.com";
                     else if (from.ToLower() == "nooch")
-                    {
-                        Member member = CommonHelper.GetMemberDetailsByUserName("team@nooch.com");
-                        memIdToUse = member.MemberId.ToString();
-                        accessToken = member.AccessToken.ToString();
-                    }
+                        userName = "team@nooch.com";
                     else if (from.ToLower() == "appjaxx")
-                    {
-                        Member member = CommonHelper.GetMemberDetailsByUserName("josh@appjaxx.com");
-                        memIdToUse = member.MemberId.ToString();
-                        accessToken = member.AccessToken.ToString();
-                    }
+                        userName = "josh@appjaxx.com";
 
-                    if (String.IsNullOrEmpty(memIdToUse))
+
+                    Member member = CommonHelper.GetMemberDetailsByUserName(userName);
+
+                    if (member.MemberId != null)
+                    {
+                        memIdToUse = member.MemberId.ToString();
+                    }
+                    else
                     {
                         Logger.Error("Service Cntlr -> RequestMoneyForRentScene FAILED - unable to get MemberID based on given username - ['from' param: " + from + "]");
                         res.msg = "Unable to get MemberID based on given username";
+                    }
+
+                    if (!String.IsNullOrEmpty(member.AccessToken))
+                        accessToken = member.AccessToken;
+                    else
+                    {
+                        string newToken = GenerateAccessToken();
+                        CommonHelper.UpdateAccessToken(userName, newToken);
+                        accessToken = newToken;
                     }
 
                     TransactionDto transactionDto = new TransactionDto();
@@ -2901,6 +2889,13 @@ namespace Nooch.Web.Controllers
         #endregion MakePayment Page
 
 
+        private string GenerateAccessToken()
+        {
+            byte[] time = BitConverter.GetBytes(DateTime.UtcNow.ToBinary());
+            byte[] key = Guid.NewGuid().ToByteArray();
+            string token = Convert.ToBase64String(time.Concat(key).ToArray());
+            return CommonHelper.GetEncryptedData(token);
+        }
 
         // Not complete code problem with JS file and GetPayeeDetails method
         #region PayAnyone Page

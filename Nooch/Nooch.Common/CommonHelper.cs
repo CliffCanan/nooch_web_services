@@ -837,8 +837,11 @@ namespace Nooch.Common
             try
             {
                 userName = GetEncryptedData(userName);
+                var userNameLowerCase = GetEncryptedData(userName.ToLower());
 
-                var noochMember = _dbContext.Members.FirstOrDefault(m => m.UserName == userName && m.IsDeleted == false);
+                var noochMember = _dbContext.Members.FirstOrDefault(m => (m.UserName == userName ||
+                                                                          m.UserNameLowerCase == userNameLowerCase) &&
+                                                                          m.IsDeleted == false);
 
                 if (noochMember != null)
                 {
@@ -850,7 +853,7 @@ namespace Nooch.Common
             }
             catch (Exception ex)
             {
-                Logger.Error("Common Helper -> UpdateAccessToken FAILED - [Exception: " + ex + "]");
+                Logger.Error("Common Helper -> UpdateAccessToken FAILED - Exception: [" + ex + "]");
                 return false;
             }
         }
