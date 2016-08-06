@@ -3028,25 +3028,15 @@ namespace Nooch.DataAccess
                 string missingData = "";
 
                 if (String.IsNullOrEmpty(userName))
-                {
                     missingData = missingData + "Users' Name";
-                }
                 if (String.IsNullOrEmpty(userEmail))
-                {
                     missingData = missingData + " Email";
-                }
                 if (String.IsNullOrEmpty(userPhone))
-                {
                     missingData = missingData + " Phone";
-                }
                 if (String.IsNullOrEmpty(zip))
-                {
                     missingData = missingData + " ZIP";
-                }
                 if (String.IsNullOrEmpty(fngprnt))
-                {
                     missingData = missingData + " Fingerprint";
-                }
 
                 Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 FAILED - Missing Critical Data: [" + missingData.Trim() + "]");
 
@@ -3060,25 +3050,15 @@ namespace Nooch.DataAccess
                 string missingData2 = "";
 
                 if (String.IsNullOrEmpty(ssn))
-                {
                     missingData2 = missingData2 + "SSN";
-                }
                 if (String.IsNullOrEmpty(dob))
-                {
                     missingData2 = missingData2 + " DOB";
-                }
                 if (String.IsNullOrEmpty(address))
-                {
                     missingData2 = missingData2 + "Address";
-                }
                 if (String.IsNullOrEmpty(fngprnt))
-                {
                     missingData2 = missingData2 + " Fingerprint";
-                }
                 if (String.IsNullOrEmpty(ip))
-                {
                     missingData2 = missingData2 + " IP";
-                }
 
                 Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 - Missing Non-Critical Data: [" + missingData2.Trim() + "]. Continuing on...");
             }
@@ -3304,7 +3284,7 @@ namespace Nooch.DataAccess
                     catch (Exception ex)
                     {
                         Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 EXCEPTION on trying to save new Member's IP Address - " +
-                                     "MemberID: [" + NewUsersNoochMemId + "], [Exception: " + ex + "]");
+                                     "MemberID: [" + NewUsersNoochMemId + "], Exception: [" + ex + "]");
                     }
 
                     #region Save Notification & Privacy Settings
@@ -3509,7 +3489,7 @@ namespace Nooch.DataAccess
                                               "<tr><td><strong>MemberID:</strong></td><td>" + member.MemberId + "</td></tr>" +
                                               "<tr><td><strong>Nooch_ID:</strong></td><td>" + member.Nooch_ID + "</td></tr>" +
                                               "<tr><td><strong>Email Address:</strong></td><td>" + userEmail + "</td></tr>" +
-                                              "<tr><td><strong>Phone #:</strong></td><td>" + userPhone + "</td></tr>" +
+                                              "<tr><td><strong>Phone #:</strong></td><td>" + CommonHelper.FormatPhoneNumber(userPhone) + "</td></tr>" +
                                               "<tr><td><strong>Address:</strong></td><td>" + address + ", " + cityFromGoogle + ", " + stateAbbrev + ", " + zip + "</td></tr>" +
                                               "<tr><td><strong>SSN:</strong></td><td>" + ssn + "</td></tr>" +
                                               "<tr><td><strong>isIdImageAdded:</strong></td><td>" + isIdImageAdded +
