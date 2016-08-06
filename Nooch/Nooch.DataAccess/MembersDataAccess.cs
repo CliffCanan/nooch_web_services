@@ -907,19 +907,20 @@ namespace Nooch.DataAccess
 
         public string LoginRequest(string userName, string password, Boolean rememberMeEnabled, decimal lat, decimal lng, string udid, string devicetoken)
         {
-            Logger.Info("MDA -> LoginRequest Initiated - [UserName: " + userName + "], [UDID: " + udid + "]");
+            Logger.Info("MDA -> LoginRequest Fired - UserName: [" + userName + "], UDID: [" + udid + "]");
 
             var userEmail = userName;
             var userNameLowerCase = CommonHelper.GetEncryptedData(userName.ToLower());
             userName = CommonHelper.GetEncryptedData(userName);
 
 
-            var memberEntity =
-                _dbContext.Members.FirstOrDefault(m => m.UserNameLowerCase == userNameLowerCase && m.IsDeleted == false);
+            var memberEntity = _dbContext.Members.FirstOrDefault(m => m.UserNameLowerCase == userNameLowerCase &&
+                                                                      m.IsDeleted == false);
 
             if (memberEntity != null)
             {
                 _dbContext.Entry(memberEntity).Reload();
+
                 var memberNotifications = CommonHelper.GetMemberNotificationSettingsByUserName(userEmail);
 
                 switch (memberEntity.Status)
@@ -946,9 +947,9 @@ namespace Nooch.DataAccess
                                 memberEntity.IsOnline == true &&
                                 memberEntity.UDID1.ToLower() != udid.ToLower())
                             {
-                                Logger.Info("MDA -> LoginRequest - Sending Automatic Logout Notification - [UserName: " + userEmail +
-                                                       "], [UDID: " + udid +
-                                                       "], [AccessToken: " + memberEntity.AccessToken + "]");
+                                Logger.Info("MDA -> LoginRequest - Sending Automatic Logout Notification - UserName: [" + userEmail +
+                                            "], UDID: [" + udid +
+                                            "], AccessToken: [" + memberEntity.AccessToken + "]");
 
                                 var fromAddress = Utility.GetValueFromConfig("adminMail");
                                 var toAddress = userEmail;
@@ -960,12 +961,12 @@ namespace Nooch.DataAccess
                                 try
                                 {
                                     Utility.SendEmail("", fromAddress, toAddress, null,
-                                        "Nooch Automatic Logout", null, null, null, null, msg);
+                                                      "Nooch Automatic Logout", null, null, null, null, msg);
 
                                     Logger.Info("MDA -> LoginRequest - Automatic Log Out Email sent to [" + toAddress + "] successfully.");
 
                                     // Checking if phone exists and isVerified before sending SMS to user
-                                    if (memberEntity.ContactNumber != null && memberEntity.IsVerifiedPhone == true)
+                                    /*if (memberEntity.ContactNumber != null && memberEntity.IsVerifiedPhone == true)
                                     {
                                         try
                                         {
@@ -980,26 +981,22 @@ namespace Nooch.DataAccess
                                             Logger.Error("MDA -> LoginRequest - Automatic Log Out SMS NOT sent to [" + memberEntity.ContactNumber + "], " +
                                                                    "Exception: [" + ex.Message + "]");
                                         }
-                                    }
+                                    }*/
                                 }
                                 catch (Exception ex)
                                 {
-                                    Logger.Error("MDA -> LoginRequest - Automatic Log Out email NOT sent to [" + toAddress + "] - Exception: [" + ex.Message + "]");
+                                    Logger.Error("MDA -> LoginRequest - Automatic Log Out email NOT sent to: [" + toAddress + "] - Exception: [" + ex.Message + "]");
                                 }
-
                             }
 
                             #endregion Check If User Is Already Logged In
 
                             // Update UDID of device from which the user has logged in.
                             if (!String.IsNullOrEmpty(udid))
-                            {
                                 memberEntity.UDID1 = udid;
-                            }
+
                             if (!String.IsNullOrEmpty(devicetoken))
-                            {
                                 memberEntity.DeviceToken = devicetoken;
-                            }
 
                             memberEntity.LastLocationLat = lat;
                             memberEntity.LastLocationLng = lng;
@@ -1007,12 +1004,12 @@ namespace Nooch.DataAccess
 
                             var currentTimeMinus24Hours = DateTime.Now.AddHours(-24);
                             int loginRetryCountInDb = memberEntity.InvalidLoginAttemptCount.Equals(null)
-                                ? 0
-                                : memberEntity.InvalidLoginAttemptCount.Value;
+                                                      ? 0
+                                                      : memberEntity.InvalidLoginAttemptCount.Value;
 
                             // Check (FPTime || InvalidLoginAttemptTime) > CurrentTime - 24 hrs { if true, delete past records and insert new}                    
                             bool isInvalidLoginTimeOver = new InvalidAttemptDurationSpecification().IsSatisfiedBy(memberEntity.InvalidLoginTime,
-                                currentTimeMinus24Hours);
+                                                                                                                  currentTimeMinus24Hours);
 
                             if (isInvalidLoginTimeOver)
                             {
@@ -1021,18 +1018,16 @@ namespace Nooch.DataAccess
                                 //Reset attempt count
                                 memberEntity.InvalidLoginTime = null;
                                 memberEntity.InvalidLoginAttemptCount = null;
-                                //membersRepository.UpdateEntity(memberEntity);                               
+
                                 _dbContext.SaveChanges();
                                 _dbContext.Entry(memberEntity).Reload();
 
                                 loginRetryCountInDb = memberEntity.InvalidLoginAttemptCount.Equals(null)
-                                    ? 0
-                                    : memberEntity.InvalidLoginAttemptCount.Value;
+                                                      ? 0
+                                                      : memberEntity.InvalidLoginAttemptCount.Value;
 
                                 if (!memberEntity.Password.Equals(password.Replace(" ", "+")))
-                                {
                                     return CommonHelper.IncreaseInvalidLoginAttemptCount(memberEntity.MemberId.ToString(), loginRetryCountInDb);
-                                }
                             }
 
                             if (loginRetryCountInDb < 4 && memberEntity.Password.Equals(password.Replace(" ", "+")))
@@ -1046,14 +1041,12 @@ namespace Nooch.DataAccess
                                 memberEntity.Status = Constants.STATUS_ACTIVE;
                                 _dbContext.SaveChanges();
 
-                                //membersRepository.UpdateEntity(memberEntity);
-
                                 _dbContext.Entry(memberEntity).Reload();
                                 return "Success"; // active nooch member  
                             }
 
                             if (memberEntity.InvalidLoginAttemptCount == null ||
-                                    memberEntity.InvalidLoginAttemptCount == 0)
+                                memberEntity.InvalidLoginAttemptCount == 0)
                             {
                                 // This is the first invalid try
                                 Logger.Info("MDA -> LoginRequest FAILED - User's PW was incorrect - 1st Invalid Attempt - UserName: [" + userName + "]");
@@ -1078,8 +1071,8 @@ namespace Nooch.DataAccess
                                 memberEntity.InvalidLoginTime = DateTime.Now;
                                 memberEntity.InvalidLoginAttemptCount = loginRetryCountInDb + 1;
                                 memberEntity.Status = Constants.STATUS_TEMPORARILY_BLOCKED;
+
                                 _dbContext.SaveChanges();
-                                //membersRepository.UpdateEntity(memberEntity);
                                 _dbContext.Entry(memberEntity).Reload();
 
                                 // email to user after 3 invalid login attemt
@@ -1123,15 +1116,11 @@ namespace Nooch.DataAccess
                             #endregion
                         }
                         else
-                        {
                             return "Invalid user id or password.";
-                        }
                 }
             }
             else
-            {
                 return "Invalid user id or password.";
-            }
         }
 
 
