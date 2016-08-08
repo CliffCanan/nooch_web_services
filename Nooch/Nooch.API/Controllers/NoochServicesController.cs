@@ -4613,19 +4613,25 @@ namespace Nooch.API.Controllers
                 {
                     Logger.Info("Service Cntlr -> MySettings Initiated - MemberID: [" + mySettings.MemberId + "]");
 
-                    mySettings.Picture = System.Convert.FromBase64String(mySettings.Photo);
+
 
                     var mda = new MembersDataAccess();
                     string fileContent = null;
                     int contentLength = 0;
                     string fileExtension = null;
 
+
+                    // Malkit : 08 Aug 2016 -  Not in use anymore
                     if (mySettings.AttachmentFile != null)
                     {
                         fileContent = mySettings.AttachmentFile.FileContent;
                         contentLength = mySettings.AttachmentFile.FileContent.Length;
                         fileExtension = mySettings.AttachmentFile.FileExtension;
                     }
+
+
+                    if (!String.IsNullOrEmpty(mySettings.Photo))
+                        mySettings.Picture = System.Convert.FromBase64String(mySettings.Photo);
 
                     return new StringResult
                     {
