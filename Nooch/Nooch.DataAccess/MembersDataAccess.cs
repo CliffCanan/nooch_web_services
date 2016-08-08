@@ -2481,17 +2481,11 @@ namespace Nooch.DataAccess
                 string missingData = "";
 
                 if (String.IsNullOrEmpty(userName))
-                {
                     missingData = missingData + "Users' Name";
-                }
                 if (String.IsNullOrEmpty(userEmail))
-                {
                     missingData = missingData + " Email";
-                }
                 if (String.IsNullOrEmpty(userPhone))
-                {
                     missingData = missingData + " Phone";
-                }
 
                 Logger.Error("MDA -> RegisterExistingUserWithSynapseV2 FAILED - Missing Critical Data: [" + missingData.Trim() + "]");
 
@@ -2506,29 +2500,17 @@ namespace Nooch.DataAccess
                 string missingData2 = "";
 
                 if (String.IsNullOrEmpty(ssn))
-                {
                     missingData2 = missingData2 + "SSN";
-                }
                 if (String.IsNullOrEmpty(dob))
-                {
                     missingData2 = missingData2 + " DOB";
-                }
                 if (String.IsNullOrEmpty(address))
-                {
                     missingData2 = missingData2 + "Address";
-                }
                 if (String.IsNullOrEmpty(zip))
-                {
                     missingData2 = missingData2 + " ZIP";
-                }
                 if (String.IsNullOrEmpty(fngprnt))
-                {
                     missingData2 = missingData2 + " Fingerprint";
-                }
                 if (String.IsNullOrEmpty(ip))
-                {
                     missingData2 = missingData2 + " IP";
-                }
 
                 Logger.Error("MDA -> RegisterExistingUserWithSynapseV2 - Missing Non-Critical Data: [" + missingData2.Trim() + "]");
             }
@@ -2572,9 +2554,7 @@ namespace Nooch.DataAccess
 
                 // Add member details based on given name, email, phone, & other parameters
                 if (userName.IndexOf('+') > -1)
-                {
                     userName.Replace("+", " ");
-                }
                 string[] namearray = userName.Split(' ');
                 string FirstName = CommonHelper.GetEncryptedData(namearray[0]);
                 string LastName = " ";
@@ -2585,21 +2565,14 @@ namespace Nooch.DataAccess
 
                 if (namearray.Length > 1)
                 {
-                    if (namearray.Length == 2)
-                    {
-                        // For regular First & Last name: Charles Smith
+                    if (namearray.Length == 2) // For regular First & Last name: Charles Smith
                         LastName = CommonHelper.GetEncryptedData(namearray[1]);
-                    }
                     else if (namearray.Length == 3)
-                    {
                         // For 3 names, could be a middle name or middle initial: Charles H. Smith or Charles Andrew Smith
                         LastName = CommonHelper.GetEncryptedData(namearray[2]);
-                    }
                     else
-                    {
                         // For more than 3 names (some people have 2 or more middle names)
                         LastName = CommonHelper.GetEncryptedData(namearray[namearray.Length - 1]);
-                    }
                 }
 
                 // Convert string Date of Birth to DateTime
@@ -2610,36 +2583,27 @@ namespace Nooch.DataAccess
                 }
                 DateTime dateofbirth;
                 if (!DateTime.TryParse(dob, out dateofbirth))
-                {
                     Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 - DOB was NULL - [Name: " + userName + "], [TransId: " + transId + "]");
-                }
 
                 //Rajat Puri 14/6/2016 The following region is a kind of duplicate as the same work will get done at line number 2845 
                 // in the region *saving user image if provided* This will  upload same image again on the server.
+
                 #region
+
                 if (isIdImageAdded == "1" && !String.IsNullOrEmpty(idImageData))
                 {
                     // We have ID Doc image... Now save on server and get URL to save
                     try
                     {
                         Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 -> Image Was Passed, About to Query SaveBase64AsImage() -> " +
-                                    "[Email: " + userEmail + "], [Member_Id: " + memberObj.MemberId.ToString() + "]");
+                                    "Email: [" + userEmail + "], MemberID: [" + memberObj.MemberId.ToString() + "]");
 
                         var saveImageOnServer = SaveBase64AsImage(memberObj.MemberId.ToString(), idImageData);
 
                         if (saveImageOnServer.success && !String.IsNullOrEmpty(saveImageOnServer.msg))
-                        {
-                            // Malkit (04 June 2016) : We won't use this method, from now on we will be using Cliff's
-                            //                         method from Common helper sendDocsToSynapseV3()
-                            // submitDocumentToSynapseV3(memberObj.MemberId.ToString(), saveImageOnServer.msg);
-
                             memberObj.VerificationDocumentPath = saveImageOnServer.msg;
-                        }
                         else
-                        {
-                            Logger.Error("MDA -> RegisterExistingUserWithSynapseV3 -> Attempted to Save ID Doc on server but failed - SaveBase64AsImage Msg: [" +
-                                         saveImageOnServer.msg + "]");
-                        }
+                            Logger.Error("MDA -> RegisterExistingUserWithSynapseV3 -> Attempted to Save ID Doc on server but failed - SaveBase64AsImage Msg: [" + saveImageOnServer.msg + "]");
                     }
                     catch (Exception ex)
                     {
@@ -2647,7 +2611,9 @@ namespace Nooch.DataAccess
                                      "], [Email: " + userEmail + "], [Member_Id: " + res.memberIdGenerated + "]");
                     }
                 }
+
                 #endregion
+
                 string pinNumber = Utility.GetRandomPinNumber();
                 pinNumber = CommonHelper.GetEncryptedData(pinNumber);
                 memberObj.SecondaryEmail = memberObj.UserName; // In case the supplied email is different than what the Landlord used to invite, saving the original email here as secondary, and updating UserName in next line
@@ -2668,17 +2634,12 @@ namespace Nooch.DataAccess
                 memberObj.cipTag = !String.IsNullOrEmpty(cip) ? cip : memberObj.cipTag;
                 memberObj.FacebookUserId = !String.IsNullOrEmpty(fbid) ? fbid : memberObj.FacebookUserId;
                 if (memberObj.isRentScene == null)
-                {
                     memberObj.isRentScene = isRentScene == true ? true : false;
-                }
                 else
-                {
                     memberObj.isRentScene = isRentScene == true ? true : memberObj.isRentScene;
-                }
+
                 if (!String.IsNullOrEmpty(pw))
-                {
                     memberObj.Password = CommonHelper.GetEncryptedData(pw);
-                }
 
                 int save = 0;
                 try
@@ -2879,7 +2840,7 @@ namespace Nooch.DataAccess
                     // We have ID Doc image... saving it on Nooch's Server and making entry in Members table.
                     try
                     {
-                        Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 -> About to save ID Doc on Nooch's server ->  [Email: " + userEmail + "], [Member_Id: " + memberObj.MemberId + "]");
+                        Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 -> About to save ID Doc on Nooch's server -> Email: [" + userEmail + "], MemberID: [" + memberObj.MemberId + "]");
 
                         var saveImageOnServer = SaveBase64AsImage(memberObj.MemberId.ToString(), idImageData);
 
@@ -2889,14 +2850,12 @@ namespace Nooch.DataAccess
                             _dbContext.SaveChanges();
                             _dbContext.Entry(memberObj).Reload();
 
-                            Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 -> Successfully saved ID Doc in Members.VerificationDocumentPath: [" +
+                            Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 -> Successfully saved ID Doc at: [" +
                                         memberObj.VerificationDocumentPath + "]");
                         }
                         else
-                        {
                             Logger.Error("MDA -> RegisterExistingUserWithSynapseV3 -> Attempted to Save ID Doc on server but failed - " +
                                          "SaveBase64AsImage Msg: [" + saveImageOnServer.msg + "]");
-                        }
                     }
                     catch (Exception ex)
                     {
@@ -2905,9 +2864,7 @@ namespace Nooch.DataAccess
                     }
                 }
                 else
-                {
                     Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 - NO IMAGE SENT");
-                }
 
                 #endregion Saving ID Image If Provided
 
@@ -3028,25 +2985,15 @@ namespace Nooch.DataAccess
                 string missingData = "";
 
                 if (String.IsNullOrEmpty(userName))
-                {
                     missingData = missingData + "Users' Name";
-                }
                 if (String.IsNullOrEmpty(userEmail))
-                {
                     missingData = missingData + " Email";
-                }
                 if (String.IsNullOrEmpty(userPhone))
-                {
                     missingData = missingData + " Phone";
-                }
                 if (String.IsNullOrEmpty(zip))
-                {
                     missingData = missingData + " ZIP";
-                }
                 if (String.IsNullOrEmpty(fngprnt))
-                {
                     missingData = missingData + " Fingerprint";
-                }
 
                 Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 FAILED - Missing Critical Data: [" + missingData.Trim() + "]");
 
@@ -3060,25 +3007,15 @@ namespace Nooch.DataAccess
                 string missingData2 = "";
 
                 if (String.IsNullOrEmpty(ssn))
-                {
                     missingData2 = missingData2 + "SSN";
-                }
                 if (String.IsNullOrEmpty(dob))
-                {
                     missingData2 = missingData2 + " DOB";
-                }
                 if (String.IsNullOrEmpty(address))
-                {
                     missingData2 = missingData2 + "Address";
-                }
                 if (String.IsNullOrEmpty(fngprnt))
-                {
                     missingData2 = missingData2 + " Fingerprint";
-                }
                 if (String.IsNullOrEmpty(ip))
-                {
                     missingData2 = missingData2 + " IP";
-                }
 
                 Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 - Missing Non-Critical Data: [" + missingData2.Trim() + "]. Continuing on...");
             }
@@ -3304,7 +3241,7 @@ namespace Nooch.DataAccess
                     catch (Exception ex)
                     {
                         Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 EXCEPTION on trying to save new Member's IP Address - " +
-                                     "MemberID: [" + NewUsersNoochMemId + "], [Exception: " + ex + "]");
+                                     "MemberID: [" + NewUsersNoochMemId + "], Exception: [" + ex + "]");
                     }
 
                     #region Save Notification & Privacy Settings
@@ -3509,7 +3446,7 @@ namespace Nooch.DataAccess
                                               "<tr><td><strong>MemberID:</strong></td><td>" + member.MemberId + "</td></tr>" +
                                               "<tr><td><strong>Nooch_ID:</strong></td><td>" + member.Nooch_ID + "</td></tr>" +
                                               "<tr><td><strong>Email Address:</strong></td><td>" + userEmail + "</td></tr>" +
-                                              "<tr><td><strong>Phone #:</strong></td><td>" + userPhone + "</td></tr>" +
+                                              "<tr><td><strong>Phone #:</strong></td><td>" + CommonHelper.FormatPhoneNumber(userPhone) + "</td></tr>" +
                                               "<tr><td><strong>Address:</strong></td><td>" + address + ", " + cityFromGoogle + ", " + stateAbbrev + ", " + zip + "</td></tr>" +
                                               "<tr><td><strong>SSN:</strong></td><td>" + ssn + "</td></tr>" +
                                               "<tr><td><strong>isIdImageAdded:</strong></td><td>" + isIdImageAdded +

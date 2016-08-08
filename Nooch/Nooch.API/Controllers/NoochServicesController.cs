@@ -4613,6 +4613,8 @@ namespace Nooch.API.Controllers
                 {
                     Logger.Info("Service Cntlr -> MySettings Initiated - MemberID: [" + mySettings.MemberId + "]");
 
+                    mySettings.Picture = System.Convert.FromBase64String(mySettings.Photo);
+
                     var mda = new MembersDataAccess();
                     string fileContent = null;
                     int contentLength = 0;

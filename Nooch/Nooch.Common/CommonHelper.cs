@@ -2000,12 +2000,13 @@ namespace Nooch.Common
 
 
                     #region Check for SSN & FBID
+
                     if (!String.IsNullOrEmpty(memberEntity.SSN))
                     {
                         usersSsn = GetDecryptedData(memberEntity.SSN); // (Encrypted)
                         hasSSN = true;
                     }
-                    if (!String.IsNullOrEmpty(memberEntity.FacebookUserId))
+                    if (!String.IsNullOrEmpty(memberEntity.FacebookUserId) && memberEntity.FacebookUserId != "not connected")
                     {
                         usersFBID = memberEntity.FacebookUserId; // (Not Encrypted)
                         hasFBID = true;
@@ -2128,7 +2129,7 @@ namespace Nooch.Common
                         // SOCIAL DOCS: Send Facebook Profile URL by appending user's FBID to base FB URL
                         synapseAddDocsV3InputClass_user_docs_doc socialDocObj = new synapseAddDocsV3InputClass_user_docs_doc();
                         socialDocObj.document_type = "FACEBOOK";
-                        socialDocObj.document_value = "https://www.facebook.com/" + usersFBID;
+                        socialDocObj.document_value = hasFBID ? "https://www.facebook.com/" + usersFBID : "-";
 
                         documents.social_docs = new synapseAddDocsV3InputClass_user_docs_doc[1];
                         documents.social_docs[0] = socialDocObj;

@@ -315,9 +315,7 @@ function runIdWizard() {
         onStepChanging: function (event, currentIndex, newIndex) {
 
             if (newIndex == 0)
-            {
                 $('#idVerWiz > .content').animate({ height: "22em" }, 600)
-            }
 
             // IF going to Step 2
             if (currentIndex == 0)
@@ -352,24 +350,16 @@ function runIdWizard() {
                                 return true;
                             }
                             else
-                            {
                                 updateValidationUi("phone", false);
-                            }
                         }
                         else
-                        {
                             updateValidationUi("email", false);
-                        }
                     }
                     else
-                    {
                         updateValidationUi("name", false);
-                    }
                 }
                 else
-                {
                     updateValidationUi("name", false);
-                }
 
                 return false;
             }
@@ -398,34 +388,27 @@ function runIdWizard() {
                         $('#idVerWiz > .content').animate({ height: "25em" }, 500)
                         return true;
                     }
-                    else {
+                    else
                         updateValidationUi("zip", false);
-                    }
                 }
-                else {
+                else
                     updateValidationUi("address", false);
-                }
             }
 
             // IF going to Step 4
             if (newIndex == 3)
             {
                 if (transType != "send")
-                {
-                    checkStepThree();
-                }
+                    return checkStepThree();
             }
 
             // Allways allow going backwards even if the current step is not valid
             if (currentIndex > newIndex)
-            {
                 return true;
-            }
         },
         onStepChanged: function (event, currentIndex, priorIndex) {
-            if (currentIndex == 1) {
+            if (currentIndex == 1)
                 $('#idVer-address').focus();
-            }
         },
         onCanceled: function (event) {
             cancelIdVer();
@@ -433,14 +416,9 @@ function runIdWizard() {
         onFinishing: function (event, currentIndex) {
 
             if (transType == "send" && CIP == "vendor")
-            {
                 return checkStepThree();
-            }
-            else
-            {
-                // Finish the Wizard...
+            else // Finish the Wizard...
                 return true;
-            }
         },
         onFinished: function (event, currentIndex) {
 
@@ -475,9 +453,7 @@ function checkStepThree() {
 
                 // If a transfer (i.e. on /DepositMoney page), don't need ID, so skip that
                 if (transType == "send" && CIP == "vendor")
-                {
                     return true;
-                }
 
                 // For users paying a request... setup File Picker for uploading ID image
                 // FILE INPUT DOCUMENTATION: http://plugins.krajee.com/file-input#options
@@ -539,19 +515,13 @@ function checkStepThree() {
                 return true;
             }
             else
-            {
                 updateValidationUi("ssn", false);
-            }
         }
         else
-        {
             updateValidationUi("dob-default", false);
-        }
     }
     else
-    {
         updateValidationUi("dob", false);
-    }
 
     return false;
 }
