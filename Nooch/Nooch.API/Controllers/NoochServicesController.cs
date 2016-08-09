@@ -4904,6 +4904,9 @@ namespace Nooch.API.Controllers
                             "], Email: [" + MemberDetails.UserName + "], Type: [" + MemberDetails.type +
                             "], Invite Code: [" + MemberDetails.inviteCode + "], SendEmail: [" + MemberDetails.sendEmail + "]");
 
+                if (!String.IsNullOrEmpty(MemberDetails.Photo))
+                    MemberDetails.Picture = System.Convert.FromBase64String(MemberDetails.Photo);
+
                 var mda = new MembersDataAccess();
 
                 string type = String.IsNullOrEmpty(MemberDetails.type) ? "Personal" : MemberDetails.type;

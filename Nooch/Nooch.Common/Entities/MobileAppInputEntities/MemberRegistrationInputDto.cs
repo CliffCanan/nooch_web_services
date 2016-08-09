@@ -9,6 +9,7 @@ namespace Nooch.Common.Entities.MobileAppInputEntities
     public class MemberRegistrationInputDto
     {
         public byte[] Picture { get; set; }
+        public string Photo { get; set; }
         public string UdId { get; set; }
         public string UserName { get; set; }
         public string FirstName { get; set; }

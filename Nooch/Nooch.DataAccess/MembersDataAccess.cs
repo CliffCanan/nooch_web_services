@@ -6602,7 +6602,7 @@ namespace Nooch.DataAccess
                     if (Picture != null)
                     {
                         // Make  image from bytes
-                        string filename = HttpContext.Current.Server.MapPath("UploadedPhotos") + "/Photos/" +
+                        string filename = HttpContext.Current.Server.MapPath("~/UploadedPhotos") + "/Photos/" +
                                           member.MemberId + ".png";
                         using (FileStream fs = new FileStream(filename, FileMode.Create, FileAccess.ReadWrite))
                         {
