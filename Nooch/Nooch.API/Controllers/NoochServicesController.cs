@@ -4743,7 +4743,7 @@ namespace Nooch.API.Controllers
                 }
             }
             else
-                return new StringResult() { Result = "Invalid oAuth Access Token." };
+                return new StringResult() { Result = "Invalid OAuth 2 Access" };
         }
 
 
