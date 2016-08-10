@@ -433,6 +433,11 @@
           <Property Name="physical_doc" Type="varchar(max)" />
           <Property Name="virtual_doc" Type="varchar(max)" />
           <Property Name="extra_security" Type="varchar(max)" />
+          <Property Name="cip_tag" Type="varchar(max)" />
+          <Property Name="social_doc" Type="varchar(max)" />
+          <Property Name="phys_doc_lastupdated" Type="datetime" />
+          <Property Name="virt_doc_lastupdated" Type="datetime" />
+          <Property Name="soc_doc_lastupdated" Type="datetime" />
         </EntityType>
         <EntityType Name="SynapseIdVerificationQuestions">
           <Key>
@@ -1289,6 +1294,11 @@
           <Property Name="physical_doc" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
           <Property Name="virtual_doc" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
           <Property Name="extra_security" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
+          <Property Name="cip_tag" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
+          <Property Name="social_doc" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
+          <Property Name="phys_doc_lastupdated" Type="DateTime" Precision="3" />
+          <Property Name="virt_doc_lastupdated" Type="DateTime" Precision="3" />
+          <Property Name="soc_doc_lastupdated" Type="DateTime" Precision="3" />
         </EntityType>
         <EntityType Name="SynapseIdVerificationQuestion">
           <Key>
@@ -1382,6 +1392,9 @@
           <Property Type="Int32" Name="Frequency" Nullable="true" />
           <Property Type="String" Name="SenderId" Nullable="true" MaxLength="50" />
           <Property Type="String" Name="RecepientId" Nullable="true" MaxLength="50" />
+          <Property Type="String" Name="FirstName" Nullable="true" />
+          <Property Type="String" Name="LastName" Nullable="true" />
+          <Property Type="String" Name="Photo" Nullable="true" />
         </ComplexType>
         <ComplexType Name="GetLocationSearch_Result">
           <Property Type="Int32" Name="LocationId" Nullable="true" />
@@ -1951,6 +1964,11 @@
           <EntitySetMapping Name="SynapseCreateUserResults">
             <EntityTypeMapping TypeName="NOOCHModel.SynapseCreateUserResult">
               <MappingFragment StoreEntitySet="SynapseCreateUserResults">
+                <ScalarProperty Name="soc_doc_lastupdated" ColumnName="soc_doc_lastupdated" />
+                <ScalarProperty Name="virt_doc_lastupdated" ColumnName="virt_doc_lastupdated" />
+                <ScalarProperty Name="phys_doc_lastupdated" ColumnName="phys_doc_lastupdated" />
+                <ScalarProperty Name="social_doc" ColumnName="social_doc" />
+                <ScalarProperty Name="cip_tag" ColumnName="cip_tag" />
                 <ScalarProperty Name="extra_security" ColumnName="extra_security" />
                 <ScalarProperty Name="virtual_doc" ColumnName="virtual_doc" />
                 <ScalarProperty Name="physical_doc" ColumnName="physical_doc" />
@@ -2066,6 +2084,9 @@
                 <ScalarProperty Name="Frequency" ColumnName="Frequency" />
                 <ScalarProperty Name="SenderId" ColumnName="SenderId" />
                 <ScalarProperty Name="RecepientId" ColumnName="RecepientId" />
+                <ScalarProperty Name="FirstName" ColumnName="FirstName" />
+                <ScalarProperty Name="LastName" ColumnName="LastName" />
+                <ScalarProperty Name="Photo" ColumnName="Photo" />
               </ComplexTypeMapping>
             </ResultMapping>
           </FunctionImportMapping>
