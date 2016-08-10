@@ -22,9 +22,7 @@ var isSmScrn = false;
 
 $(document).ready(function () {
     if ($(window).width() < 768)
-    {
         isSmScrn = true;
-    }
 
     function getParameterByName(name) {
         name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
@@ -34,8 +32,7 @@ $(document).ready(function () {
     }
 
     isUpgradeToV3 = getParameterByName('update');
-
-    console.log("isUpgradeToV3 is: [" + isUpgradeToV3 + "]");
+    //console.log("isUpgradeToV3 is: [" + isUpgradeToV3 + "]");
 
     if (RENTSCENE == "true")
     {
@@ -44,22 +41,15 @@ $(document).ready(function () {
         var w = isSmScrn ? '90px' : '130px'
         $('.landingHeaderLogo img').css('width', w);
 
-        if (ISNEW == "true")
-        {
-            document.title = "Create Account | Rent Scene Payments";
-        }
-        else
-        {
-            document.title = "Update Account | Rent Scene Payments";
-        }
+        document.title = (ISNEW == "true") ? "Create Account | Rent Scene Payments" : "Update Account | Rent Scene Payments"
+
         changeFavicon('../Assets/favicon2.ico');
     }
     else if (ISNEW != "true")
-    {
         document.title = "Upgrade Account | Nooch Payments";
-    }
 
-    if ((TYPE == "personal" || TYPE == "2") && memid == "")
+
+    if (typeof memid == "undefined" || memid == "")
     {
         var fontSize = isSmScrn ? '18px' : '20px';
 
@@ -70,6 +60,7 @@ $(document).ready(function () {
         })
         $('#nameInNav').hide();
     }
+
 
     if (areThereErrors() == false)
     {
@@ -112,15 +103,11 @@ $(document).ready(function () {
                 html: true
             }, function (isConfirm) {
                 if (isConfirm)
-                {
                     setTimeout(function () {
                         $('input#idVer-name').focus();
                     }, 500)
-                }
                 else
-                {
                     window.open("https://www.nooch.com/safe");
-                }
             });
         }
         else
@@ -144,15 +131,11 @@ $(document).ready(function () {
                 html: true
             }, function (isConfirm) {
                 if (isConfirm)
-                {
                     setTimeout(function () {
                         $('input#idVer-name').focus();
                     }, 500)
-                }
                 else
-                {
                     window.open("https://www.nooch.com/safe");
-                }
             });
         }
 
@@ -173,9 +156,7 @@ $(document).ready(function () {
         });
     }
     else
-    {
         console.log("93. There was an error! :-(");
-    }
 });
 
 
@@ -199,7 +180,7 @@ function runIdWizard() {
         /* Events */
         onInit: function (event, currentIndex) {
 
-            if (TYPE == "2") // Vendors only need to receive $, so Synapse doesn't require an ID, so Step 4 doesn't get displayed
+            if (TYPE == "vendor" || TYPE == "2") // Vendors only need to receive $, so Synapse doesn't require an ID, so Step 4 doesn't get displayed
                 $(".wizard > .steps > ul > li").css("width", "33%");
 
             $('#idVerWiz > .content').animate({ height: "27em" }, 300)
@@ -685,7 +666,7 @@ function createRecord() {
     var zipVal = $('#idVer-zip').val().trim();
     var fngprntVal = fingprint;
     var ipVal = ipusr;
-    var cip = TYPE.length > 0 ? TYPE : "1";
+    var cip = TYPE.length > 0 ? TYPE : "renter";
 
     console.log("SAVE MEMBER INFO -> {memId: " + memId +
                                    ", Name: " + userNameVal +
