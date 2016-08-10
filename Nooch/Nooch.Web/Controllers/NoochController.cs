@@ -1431,7 +1431,7 @@ namespace Nooch.Web.Controllers
                 inputClass.transId = transId;
                 inputClass.zip = zip;
                 inputClass.cip = !String.IsNullOrEmpty(cip) ? cip : "renter";
-                inputClass.fbid = fbid;
+                inputClass.fbid = fbid != "not connected" ? fbid : null;
                 inputClass.isRentScene = isRentScene != null ? isRentScene : false;
 
                 if (!String.IsNullOrEmpty(memberId) && memberId.Length > 30)
@@ -1441,11 +1441,8 @@ namespace Nooch.Web.Controllers
                     // Member must already exist, so use RegisterEXISTINGUserWithSynapseV3()
                     serviceMethod = "RegisterExistingUserWithSynapseV3";
                 }
-                else
-                {
-                    // Member DOES NOT already exist, so use RegisterNONNOOCHUserWithSynapse()
+                else // Member DOES NOT already exist, so use RegisterNONNOOCHUserWithSynapse()
                     serviceMethod = "RegisterNonNoochUserWithSynapse";
-                }
 
                 string json = scriptSerializer.Serialize(inputClass);
 
@@ -1468,6 +1465,7 @@ namespace Nooch.Web.Controllers
                 else
                 {
                     Logger.Error("PayRequest Page -> RegisterUserWithSynpForPayRequest FAILED - UNKNOWN ERROR FROM SERVER - TransID: [" + transId + "]");
+                    res.reason = regUserResponse.reason;
                 }
 
                 res.ssn_verify_status = regUserResponse.ssn_verify_status;
@@ -1700,12 +1698,21 @@ namespace Nooch.Web.Controllers
                     rca.isNewUser = true;
 
                     if (!String.IsNullOrEmpty(rs))
-                    {
-                        Logger.Info("CreateAccount Page -> Loaded - Is a RentScene Payment: [" + rs + "]");
                         rca.rs = (rs.ToLower() == "true" || rs.ToLower() == "yes") ? "true" : "false";
+
+                    if (!String.IsNullOrEmpty(type))
+                    {
+                        if (type.Length == 1)
+                        {
+                            if (type == "2") rca.type = "vendor";
+                            else if (type == "3") rca.type = "landlord";
+                            else rca.type = "renter";
+                        }
+                        else
+                            rca.type = type;
                     }
 
-                    rca.type = !String.IsNullOrEmpty(type) ? type : "1";
+                    Logger.Info("CreateAccount Page -> Loaded - Is RentScene Payment: [" + rs + "], Type: [" + rca.type + "]");
                 }
             }
             catch (Exception ex)
@@ -1869,7 +1876,7 @@ namespace Nooch.Web.Controllers
                 inputClass.memberId = userData.memId;
                 inputClass.transId = userData.transId;
                 inputClass.isRentScene = userData.rs == "true" ? true : false;
-                inputClass.cip = userData.cip.Length == 1 ? userData.cip : "renter";
+                inputClass.cip = !String.IsNullOrEmpty(userData.cip) ? userData.cip : "renter";
 
                 var scriptSerializer = new JavaScriptSerializer();
                 string json = scriptSerializer.Serialize(inputClass);

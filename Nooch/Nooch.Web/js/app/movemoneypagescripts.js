@@ -708,15 +708,10 @@ function createRecord() {
 				", CIP: " + CIP + ", FBID: " + FBID +
                 ", isRentScene: " + isRentScene + "}");
 
-    var urlToUse = "";
-    if (transType == "send")
-    {
-        urlToUse = "RegisterUserWithSynpForDepositMoney";
-    }
-    else // must be a Request or Rent payment (which also uses the payRequest page)
-    { 
-        urlToUse = "RegisterUserWithSynpForPayRequest";
-    }
+    var urlToUse = transType == "send"
+                 ? "RegisterUserWithSynpForDepositMoney"
+                 : "RegisterUserWithSynpForPayRequest"; // must be a Request or Rent payment (which also uses the payRequest page)
+
     //console.log("URL to use: " + urlToUse);
 
     var dataToSend = "";
@@ -1619,9 +1614,8 @@ function fbLogin() {
             $('#fbResult').html('<strong>Facebook Connected Successfully! <i class="fa fa-smile-o m-l-5"></i></strong>')
 						  .addClass('bounceIn text-success').removeClass('hidden');
         }
-        else {
+        else
             FBID = "not connected";
-        }
     });
 }
 

@@ -2025,11 +2025,12 @@ namespace Nooch.Common
                     // Return if any data was missing in previous block
                     if (isMissingSomething)
                     {
-                        Logger.Error("Common Helper -> sendDocsToSynapseV3 ABORTED: Member missing required info - Username: [" + userNameDecrypted + "], Message: [" + res.message + "]");
+                        var error = "Common Helper -> sendDocsToSynapseV3 ABORTED: Member missing required info - Username: [" + userNameDecrypted +
+                                    "], Message: [" + res.message + "], MemberID: [" + MemberId + "]";
+                        Logger.Error(error);
+                        notifyCliffAboutError(error);
                         return res;
                     }
-
-                    #endregion Initial Data Checks
 
                     // Update Member's DB record from NULL to false (update to true later on if Verification from Synapse is completely successful)
                     if (memberEntity.IsVerifiedWithSynapse == null)
@@ -2038,7 +2039,9 @@ namespace Nooch.Common
                         memberEntity.IsVerifiedWithSynapse = false;
                     }
 
-                    // Now check if user already has a Synapse User account (would have a record in SynapseCreateUserResults.dbo)
+                    #endregion Initial Data Checks
+
+                    // Now confirm the user has a Synapse User account (would have a record in SynapseCreateUserResults.dbo)
                     var usersSynapseDetails = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == id &&
                                                                                                       m.IsDeleted == false);
 
@@ -2072,7 +2075,7 @@ namespace Nooch.Common
                                   userNameDecrypted + "], Exception: [" + ex + "]");
                 }
 
-                Logger.Info("Common Helper -> sendDocsToSynapseV3 - Completed all initial data checks - All Data Found!");
+                Logger.Info("Common Helper -> sendDocsToSynapseV3 - Completed all initial data checks - All Data Found! MemberID: [" + MemberId + "]");
 
                 #endregion Check User For All Required Data
 
@@ -2114,7 +2117,7 @@ namespace Nooch.Common
                                     " hasSSN: [" + hasSSN + "], hasFBID: [" + hasFBID + "], hasPhotoID: [" + hasPhotoID + "], MemberID: [" + MemberId + "]");
 
                         // VIRTUAL DOCS: Synapse lists 6 acceptable "virtual_docs" types: SSN, PASSPORT #, DRIVERS_LICENSE #, PERSONAL_IDENTIFICATION # (not sure what this is), TIN #, DUNS #
-                        //               But we are only going to use SSN. For any business users, we will also need to use TIN (Tax ID) #.
+                        //               But we are only going to use SSN. For BUSINESS users, we will also need to use TIN (Tax ID) #.
                         synapseAddDocsV3InputClass_user_docs_doc virtualDocObj = new synapseAddDocsV3InputClass_user_docs_doc();
                         virtualDocObj.document_type = "SSN"; // This can also be "PASSPORT" or "DRIVERS_LICENSE"... we need to eventually support all 3 options (Rent Scene has international clients that don't have SSN but do have a Passport)
                         virtualDocObj.document_value = usersSsn; // Can also be the user's Passport # or DL #
@@ -2248,18 +2251,17 @@ namespace Nooch.Common
 
                     if (synapseResponse != null)
                     {
-                        JObject refreshResponse = JObject.Parse(content);
-                        Logger.Info("Common Helper -> sendDocsToSynapseV3 - SYNAPSE RESPONSE IS: [" + refreshResponse + "]");
-
                         if (synapseResponse.success == true)
                         {
-                            // Great, we have at least partial success
-
-                            #region Update Permission in SynapseCreateUserResults Table
-
                             try
                             {
-                                // Update values in SynapseCreateUserResults table
+                                // Great, we have at least partial success
+                                Logger.Info("Common Helper -> sendDocsToSynapseV3 - RESPONSE SUCCESSFUL: Name: [" + synapseResponse.user.documents[0].name +
+                                            "], Permission: [" + synapseResponse.user.permission + "], CIP_TAG: [" + synapseResponse.user.extra.cip_tag +
+                                            "], Phys Doc: [" + synapseResponse.user.doc_status.physical_doc + "], Virt Doc: [" + synapseResponse.user.doc_status.virtual_doc + "]");
+
+                                #region Update Permission in SynapseCreateUserResults Table
+
                                 // Get existing record from dbo.SynapseCreateUserResults
                                 var synapseRes = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == id &&
                                                                                                          m.IsDeleted == false);
@@ -2286,8 +2288,12 @@ namespace Nooch.Common
                                                 {
                                                     n += 1;
                                                     Logger.Info("Common Helper -> sendDocsToSynapseV3 - VIRTUAL_DOC #[" + n + "] - Type: [" + docObject.document_type + "], Status: [" + docObject.status + "]");
+
                                                     if (docObject.document_type == "SSN")
+                                                    {
                                                         synapseRes.virtual_doc = docObject.status;
+                                                        // CC (8/10/16): SAVE DATE/TIME FOR "virt_doc_lastupdated" ONCE IT'S ADDED TO THE DB
+                                                    }
                                                 }
                                             }
 
@@ -2299,8 +2305,12 @@ namespace Nooch.Common
                                                 {
                                                     n += 1;
                                                     Logger.Info("Common Helper -> sendDocsToSynapseV3 - PHYSICAL_DOC #[" + n + "] - Type: [" + docObject.document_type + "], Status: [" + docObject.status + "]");
+
                                                     if (docObject.document_type == "GOVT_ID")
+                                                    {
                                                         synapseRes.physical_doc = docObject.status;
+                                                        // CC (8/10/16): SAVE DATE/TIME FOR "phys_doc_lastupdated" ONCE IT'S ADDED TO THE DB
+                                                    }
                                                 }
                                             }
 
@@ -2312,11 +2322,13 @@ namespace Nooch.Common
                                                 {
                                                     n += 1;
                                                     Logger.Info("Common Helper -> sendDocsToSynapseV3 - SOCIAL_DOC #[" + n + "] - Type: [" + docObject.document_type + "], Status: [" + docObject.status + "]");
+
                                                     if (docObject.document_type == "FACEBOOK")
                                                     {
                                                         // CC (8/5/16): Need to add DB fields to handle new Document Type of "Social"
                                                         //              Also for all 3 document types (Social, Virtual, Phsyical), we also need to store the "last updated" field to display in Admin Panel as a readable DateTime
                                                         //synCreateUserObject.virtual_doc = docObject.status;
+                                                        // CC (8/10/16): SAVE DATE/TIME FOR "soc_doc_lastupdated" ONCE IT'S ADDED TO THE DB
                                                     }
                                                 }
                                             }
@@ -2331,10 +2343,12 @@ namespace Nooch.Common
                                     _dbContext.Entry(synapseRes).Reload();
 
                                     if (save > 0)
-                                        Logger.Info("Common Helper -> sendDocsToSynapseV3 - SUCCESS response form Synapse - And Successfully updated user's record in SynapseCreateUserRes Table");
+                                        Logger.Info("Common Helper -> sendDocsToSynapseV3 - SUCCESS response from Synapse - And Successfully updated user's record in SynapseCreateUserRes Table");
                                     else
-                                        Logger.Error("Common Helper -> sendDocsToSynapseV3 - SUCCESS response form Synapse - But FAILED to update user's record in SynapseCreateUserRes Table");
+                                        Logger.Error("Common Helper -> sendDocsToSynapseV3 - SUCCESS response from Synapse - But FAILED to update user's record in SynapseCreateUserRes Table");
                                 }
+
+                                #endregion Update Permission in CreateSynapseUserResults Table
                             }
                             catch (Exception ex)
                             {
@@ -2342,7 +2356,6 @@ namespace Nooch.Common
                                              "MemberID: [" + MemberId + "], Exception: [" + ex + "]");
                             }
 
-                            #endregion Update Permission in CreateSynapseUserResults Table
 
                             // Now check if further verification is needed by checking if Synapse returned a 'question_set' object.
                             Logger.Info("Common Helper -> sendDocsToSynapseV3 - Synapse returned SUCCESS = TRUE. Now checking if additional Verification questions are required...");
@@ -2429,8 +2442,10 @@ namespace Nooch.Common
                         {
                             // Response from Synapse had 'success' != true
                             // SHOULDN'T EVER GET HERE B/C IF SYNAPSE CAN'T VERIFY THE USER, IT RETURNS A 400 BAD REQUEST HTTP ERROR WITH A MESSAGE...SEE WEB EX BELOW
+                            JObject refreshResponse = JObject.Parse(content);
                             var error = "Common Helper -> sendDocsToSynapseV3 FAILED: Synapse Result \"success != true\" - Username: [" + userNameDecrypted +
-                                         "], MemberID: [" + MemberId + "]... SHOULDN'T EVER GET HERE B/C IF SYNAPSE CAN'T VERIFY THE USER, IT RETURNS A 400 BAD REQUEST HTTP ERROR WITH A MESSAGE...";
+                                         "], MemberID: [" + MemberId + "] ... SHOULDN'T EVER GET HERE B/C IF SYNAPSE CAN'T VERIFY THE USER, IT RETURNS A 400 BAD REQUEST HTTP ERROR WITH A MESSAGE. - " +
+                                         "Full Synapse Response: [" + refreshResponse + "]";
                             Logger.Error(error);
                             notifyCliffAboutError(error);
 
@@ -2441,7 +2456,7 @@ namespace Nooch.Common
                     {
                         // Response from Synapse was null
                         var error = "Common Helper -> sendDocsToSynapseV3 FAILED: Synapse Result was NULL - Username: [" + userNameDecrypted +
-                                    "], MemberID : [" + MemberId + "]";
+                                    "], MemberID: [" + MemberId + "]";
                         Logger.Error(error);
                         notifyCliffAboutError(error);
 

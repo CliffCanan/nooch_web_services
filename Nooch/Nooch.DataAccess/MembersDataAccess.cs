@@ -1841,41 +1841,24 @@ namespace Nooch.DataAccess
                                 {
                                     try
                                     {
-                                        if ((!String.IsNullOrEmpty(noochMember.SSN) && noochMember.SSN.Length > 4) ||
-                                             (!String.IsNullOrEmpty(noochMember.FacebookUserId) && noochMember.FacebookUserId.Length > 5) ||
-                                              !String.IsNullOrEmpty(noochMember.VerificationDocumentPath))
+                                        if (!String.IsNullOrEmpty(noochMember.SSN) ||
+                                            !String.IsNullOrEmpty(noochMember.FacebookUserId) ||
+                                            !String.IsNullOrEmpty(noochMember.VerificationDocumentPath))
                                         {
                                             Logger.Info("MDA -> RegisterUserWithSynapseV3 - Found at least 1 document for Synapse (SSN, FBID, or ID Img in Members Table), " +
                                                         "attempting to send SSN info to SynapseV3 - MemberID: [" + memberId + "]");
                                         }
 
                                         // (CC - 6/1/16): UPDATED TO USE NEW METHOD FOR SENDING *ALL* DOCS AT THE SAME TIME
-                                        // (CC - 6/5/16): Synapse hasn't finished adding the new /user/docs/add service onto their Production environment,
-                                        //                only on the Sandbox. So they told me to just use the 'old' methods for sending the SSN and then the
-                                        //                photoID for another 2 weeks until they finish adding the new 'all-in-one' service to Production.
                                         // (CC - 7/19/16): Synapse is finally ready for us to update this to the NEW (KYC 2.0) API which includes FB and full SSN
+
                                         // (CC - 8/05/16): I set this up initially to only query senDocsToSynapseV3 if the user had submitted one of: SSN, FB, ID Img...
                                         //                 However, we need to ALWAYS submit this API to Synapse, even if the user hasn't provided any of those.
 
                                         //submitIdVerificationInt submitAllDocs = CommonHelper.sendUserSsnInfoToSynapseV3(memberId); // OLD - using till Synapse tells us to use the new one (6/5/16)
-
                                         submitIdVerificationInt submitAllDocs = CommonHelper.sendDocsToSynapseV3(memberId);          // NEW for KYC 2.0
                                         res.ssn_verify_status = submitAllDocs.message;
                                         res.errorMsg = submitAllDocs.message;
-
-                                        // Now check if user has an ID image and send to Synapse (SEE NOTE ABOVE FROM 6/5/16)
-                                        // CC (7/19/16): Commenting out this block, not needed for KYC 2.0 since ID Doc is submitted in sendDocsToSynapseV3() above
-                                        /*if (!String.IsNullOrEmpty(noochMember.VerificationDocumentPath))
-                                        {
-                                            try
-                                            {
-                                                submitDocumentToSynapseV3(memberId, noochMember.VerificationDocumentPath);
-                                            }
-                                            catch (Exception ex)
-                                            {
-                                                Logger.Error("MDA -> RegisterUserWithSynapseV3 - Failed to submit ID Doc to Synapse - Exception: [" + ex + "]");
-                                            }
-                                        }*/
 
                                         #region Logging
 
@@ -2003,7 +1986,7 @@ namespace Nooch.DataAccess
 
                 createUser_login logins = new createUser_login();
                 logins.email = CommonHelper.GetDecryptedData(noochMember.UserName);
-                logins.read_only = false; // CLIFF (10/10/12) - I think we might want to keep this false (which is default) - will ask Synapse to clarify
+                logins.read_only = false;
 
                 payload.client = client;
 
@@ -2225,7 +2208,7 @@ namespace Nooch.DataAccess
                     catch (Exception ex)
                     {
                         Logger.Error("MDA -> RegisterUserWithSynapseV3 - Failed To Delete Existing 'Synapse Create User Results' Table - " +
-                                     "[MemberID: " + memberId + "], [Exception: " + ex.InnerException + "]");
+                                     "MemberID: [" + memberId + "], Exception: [" + ex + "]");
                     }
 
                     #endregion Delete Any Old DB Records & Create New Record
@@ -2259,6 +2242,9 @@ namespace Nooch.DataAccess
                         newSynapseUser.virtual_doc = res.user.doc_status.virtual_doc;
                         newSynapseUser.extra_security = res.user.extra != null ? res.user.extra.extra_security.ToString() : null;
 
+                        // CC (Need to add "cip_tag" to DB, then un-comment the next line
+                        //newSynapseUser.cip_tag = res.user.extra.cip_tag;
+
                         // Now add the new record to the DB
                         _dbContext.SynapseCreateUserResults.Add(newSynapseUser);
                         _dbContext.SaveChanges();
@@ -2267,8 +2253,10 @@ namespace Nooch.DataAccess
                     }
                     catch (Exception ex)
                     {
-                        Logger.Error("MDA -> RegisterUserWithSynapseV3 - FAILED To Save New Record in 'Synapse Create User Results' Table - " +
-                                     "[MemberID: " + memberId + "], [Exception: " + ex + "]");
+                        var error = "MDA -> RegisterUserWithSynapseV3 - FAILED To Save New Record in 'Synapse Create User Results' Table - " +
+                                     "MemberID: [" + memberId + "], Exception: [" + ex + "]";
+                        Logger.Error(error);
+                        CommonHelper.notifyCliffAboutError(error);
                         save = false;
                     }
 
@@ -2289,7 +2277,7 @@ namespace Nooch.DataAccess
 
                             try
                             {
-                                Logger.Info("MDA -> RegisterUserWithSynapseV3 - ** ID Already Verified (Case 2) ** - MemberID: [" + memberId + "]");
+                                Logger.Info("MDA -> RegisterUserWithSynapseV3 - ** ID Already Verified b/c Synapse returned 'Permission' of [" + res.user.permission + "] ** - MemberID: [" + memberId + "]");
 
                                 noochMember.IsVerifiedWithSynapse = true;
                                 noochMember.TransferLimit = "5000";
@@ -2309,73 +2297,49 @@ namespace Nooch.DataAccess
                         {
                             try
                             {
-                                Logger.Info("MDA -> RegisterUserWithSynapseV3 - ID NOT Already Verified - Checking if user submitted SSN or FB Login - MemberID: [" + memberId + "]");
+                                Logger.Info("MDA -> RegisterUserWithSynapseV3 - ID NOT Already Verified (Expected) - About to send ALL DOCS to SynapseV3 - SSN: [" + noochMember.SSN +
+                                            "], FBID: [" + noochMember.FacebookUserId + "], VerificationDocPath: [" + noochMember.VerificationDocumentPath + "], MemberID: [" + memberId + "]");
 
                                 // Check whether the user provided an SSN or Facebook Login
-                                if ((!String.IsNullOrEmpty(noochMember.SSN) && CommonHelper.GetDecryptedData(noochMember.SSN).Length > 4) ||
-                                    (!String.IsNullOrEmpty(noochMember.FacebookUserId) && noochMember.FacebookUserId.Length > 5) ||
-                                     !String.IsNullOrEmpty(noochMember.VerificationDocumentPath))
-                                {
-                                    Logger.Info("MDA -> RegisterUserWithSynapseV3 - About to send Docs (SSN, FBID, and/or ID Img) to SynapseV3 - SSN: [" + noochMember.SSN +
-                                                "], FBID: [" + noochMember.FacebookUserId + "], VerificationDocPath: [" + noochMember.VerificationDocumentPath + "]");
-
-                                    // (CC - 6/1/16): UPDATED TO USE NEW METHOD FOR SENDING *ALL* DOCS AT THE SAME TIME
-                                    // (CC - 6/5/16): Synapse hasn't finished adding the new /user/docs/add service onto their Production environment,
-                                    //                only on the Sandbox. So they told me to just use the 'old' methods for sending the SSN and then the
-                                    //                photoID for another 2 weeks until they finish adding the new 'all-in-one' service to Production.
-                                    // (CC - 7/19/16): Synapse is finally ready for us to update this to the NEW (KYC 2.0) API which includes FB and full SSN
-
-                                    //submitIdVerificationInt submitAllDocs = CommonHelper.sendUserSsnInfoToSynapseV3(memberId); // OLD - using till Synapse tells us to use the new one (6/5/16)
-                                    submitIdVerificationInt submitAllDocs = CommonHelper.sendDocsToSynapseV3(memberId);      // NEW
-                                    res.ssn_verify_status = submitAllDocs.message;
-                                    res.errorMsg = submitAllDocs.message;
-
-                                    // Now check if user has an ID image and send to Synapse (SEE NOTE ABOVE FROM 6/5/16)
-                                    // CC (7/19/16): Commenting out this block, not needed for KYC 2.0 since ID Doc is submitted in sendDocsToSynapseV3() above
-                                    /*if (!String.IsNullOrEmpty(noochMember.VerificationDocumentPath))
-                                    {
-                                        try
-                                        {
-                                            submitDocumentToSynapseV3(memberId, noochMember.VerificationDocumentPath);
-                                        }
-                                        catch (Exception ex)
-                                        {
-                                            Logger.Error("MDA -> RegisterUserWithSynapseV3 - Failed to submit ID Doc to Synapse - Exception: [" + ex + "]");
-                                        }
-                                    }*/
-
-                                    #region Logging
-
-                                    if (submitAllDocs.success == true)
-                                    {
-                                        if (!String.IsNullOrEmpty(submitAllDocs.message) &&
-                                            submitAllDocs.message.IndexOf("additional") > -1)
-                                        {
-                                            Logger.Info("MDA -> RegisterUserWithSynapseV3 - SSN Info Verified, but have additional questions - Email: [" + logins.email +
-                                                        "], submitSsn.message: [" + submitAllDocs.message + "]");
-                                        }
-                                        else
-                                        {
-                                            Logger.Info("MDA -> RegisterUserWithSynapseV3 - SSN Info Verified completely :-) - Email: [" + logins.email +
-                                                        "], submitSsn.message: [" + submitAllDocs.message + "]");
-                                        }
-                                    }
-                                    else
-                                    {
-                                        Logger.Error("MDA -> RegisterUserWithSynapseV3 - SSN Info Verified FAILED :-(  Email: [" + logins.email +
-                                                     "], submitSsn.message: [" + submitAllDocs.message + "]");
-                                    }
-
-                                    #endregion Logging
-                                }
-                                else
+                                if (noochMember.cipTag != "vendor" &&
+                                     String.IsNullOrEmpty(noochMember.SSN) &&
+                                    (String.IsNullOrEmpty(noochMember.FacebookUserId) || noochMember.FacebookUserId != "not connected") &&
+                                     String.IsNullOrEmpty(noochMember.VerificationDocumentPath))
                                 {
                                     // User doesn't have any SSN or FB ID saved
                                     var error = "MDA -> RegisterUserWithSynapseV3 - User has no SSN or FB ID to submit to Synapse! SSN: [" + noochMember.SSN +
-                                                 "], FB ID: [" + noochMember.FacebookUserId + "]";
+                                                 "], FB ID: [" + noochMember.FacebookUserId + "], CIP Tag: [" + noochMember.cipTag + "] - CONTINUING ON...";
                                     Logger.Error(error);
                                     CommonHelper.notifyCliffAboutError(error);
                                 }
+
+                                // (CC - 6/1/16): UPDATED TO USE NEW METHOD FOR SENDING *ALL* DOCS AT THE SAME TIME
+                                // (CC - 7/19/16): Synapse is finally ready for us to update this to the NEW (KYC 2.0) API which includes FB and full SSN
+
+                                // (CC - 8/05/16): I set this up initially to only query senDocsToSynapseV3 if the user had submitted one of: SSN, FB, ID Img...
+                                //                 However, we need to ALWAYS submit this API to Synapse, even if the user hasn't provided any of those.
+
+                                //submitIdVerificationInt submitAllDocs = CommonHelper.sendUserSsnInfoToSynapseV3(memberId); // OLD - using till Synapse tells us to use the new one (6/5/16)
+                                submitIdVerificationInt submitAllDocs = CommonHelper.sendDocsToSynapseV3(memberId);      // NEW
+                                res.ssn_verify_status = submitAllDocs.message;
+                                res.errorMsg = submitAllDocs.message;
+
+                                #region Logging
+
+                                if (submitAllDocs.success == true)
+                                {
+                                    if (!String.IsNullOrEmpty(submitAllDocs.message) &&
+                                        submitAllDocs.message.IndexOf("additional") > -1)
+                                        Logger.Info("MDA -> RegisterUserWithSynapseV3 - SSN Info Verified, but have additional questions - Email: [" + logins.email +
+                                                    "], submitSsn.message: [" + submitAllDocs.message + "]");
+                                    else
+                                        Logger.Info("MDA -> RegisterUserWithSynapseV3 - SSN Info Verified completely :-) - Email: [" + logins.email +
+                                                    "], submitSsn.message: [" + submitAllDocs.message + "]");
+                                }
+                                else
+                                    Logger.Error("MDA -> RegisterUserWithSynapseV3 - SSN Info Verified FAILED :-(  Email: [" + logins.email + "], submitSsn.message: [" + submitAllDocs.message + "]");
+
+                                #endregion Logging
                             }
                             catch (Exception ex)
                             {
@@ -3002,7 +2966,7 @@ namespace Nooch.DataAccess
             }
 
             if (String.IsNullOrEmpty(ssn) || String.IsNullOrEmpty(dob) ||
-                String.IsNullOrEmpty(address) || String.IsNullOrEmpty(ip))
+                String.IsNullOrEmpty(address) || String.IsNullOrEmpty(ip) || String.IsNullOrEmpty(fngprnt))
             {
                 string missingData2 = "";
 
@@ -3194,14 +3158,13 @@ namespace Nooch.DataAccess
                     UDID1 = !String.IsNullOrEmpty(fngprnt) ? fngprnt : null,
                     IsVerifiedWithSynapse = false,
                     cipTag = !String.IsNullOrEmpty(cip) ? cip : "renter",
-                    FacebookUserId = !String.IsNullOrEmpty(fbid) ? fbid : null,
+                    FacebookUserId = fbid,
+                    FacebookAccountLogin = fbid,
                     isRentScene = isRentScene == true ? true : false,
                 };
 
                 if (inviteCode.Length > 0)
-                {
                     member.InviteCodeIdUsed = Utility.ConvertToGuid(inviteCode);
-                }
 
                 NewUsersNoochMemId = member.MemberId.ToString();
 
@@ -3216,8 +3179,10 @@ namespace Nooch.DataAccess
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 - FAILED to save new member in DB - Email: [" + userEmail +
-                                 "], Exception: [" + ex + "]");
+                    var error = "MDA -> RegisterNonNoochUserWithSynapseV3 - FAILED to save new member in DB - Email: [" + userEmail +
+                                 "], MemberID: [" + NewUsersNoochMemId + "], Exception: [" + ex + "]";
+                    Logger.Error(error);
+                    CommonHelper.notifyCliffAboutError(error);
                     throw ex;
                 }
 
@@ -3398,7 +3363,7 @@ namespace Nooch.DataAccess
                         // We have ID Doc image... saving it on Nooch's Server and making entry in Members table.
                         try
                         {
-                            Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 -> About to save ID Doc on Nooch's server - [Email: " + userEmail + "], [Member_Id: " + member.MemberId + "]");
+                            Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 -> About to save ID Doc on Nooch's server - Email: [" + userEmail + "], MemberID: [" + member.MemberId + "]");
 
                             var saveImageOnServer = SaveBase64AsImage(member.MemberId.ToString(), idImageData);
 
@@ -3408,25 +3373,19 @@ namespace Nooch.DataAccess
                                 _dbContext.SaveChanges();
                                 _dbContext.Entry(member).Reload();
 
-                                Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 -> Successfully saved ID Doc in Members.VerificationDocumentPath: [" +
-                                            member.VerificationDocumentPath + "]");
+                                Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 -> Successfully saved ID Doc in Members.VerificationDocumentPath: [" + member.VerificationDocumentPath + "]");
                             }
                             else
-                            {
-                                Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 -> Attempted to Save ID Doc on server but failed - " +
-                                             "SaveBase64AsImage Msg: [" + saveImageOnServer.msg + "]");
-                            }
+                                Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 -> Attempted to Save ID Doc on server but FAILED - SaveBase64AsImage Msg: [" + saveImageOnServer.msg + "]");
                         }
                         catch (Exception ex)
                         {
-                            Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 -> Attempted to Save ID Doc on server but failed -> [Exception: " + ex.Message +
-                                         "], [Email: " + userEmail + "], [Member_Id: " + member.MemberId + "]");
+                            Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 -> Attempted to Save ID Doc on server but failed -> Email: [" + userEmail +
+                                         "], MemberID: [" + member.MemberId + "], Exception: [" + ex.Message + "]");
                         }
                     }
                     else
-                    {
-                        Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - NO IMAGE SENT");
-                    }
+                        Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - NO IMAGE SENT - MemberID [" + member.MemberId + "]");
 
                     #endregion Save User ID Image If Provided
 
@@ -3656,7 +3615,7 @@ namespace Nooch.DataAccess
 
         public string GetNonNoochUserTempRegisterIdFromTransId(string TransId)
         {
-            Logger.Info("MDA -> GetNonNoochUserTempRegisterIdFromTransId Initiated - [TransID: " + TransId + "]");
+            Logger.Info("MDA -> GetNonNoochUserTempRegisterIdFromTransId Fired - TransID: [" + TransId + "]");
 
             string nonNoochUserId = "";
 
@@ -3676,9 +3635,7 @@ namespace Nooch.DataAccess
                         string memberIdFromPhone = CommonHelper.GetMemberIdByContactNumber(CommonHelper.GetDecryptedData(theTransaction.PhoneNumberInvited));
 
                         if (!String.IsNullOrEmpty(memberIdFromPhone))
-                        {
                             nonNoochUserId = memberIdFromPhone;
-                        }
                     }
                     if ((theTransaction.IsPhoneInvitation == null || theTransaction.IsPhoneInvitation == false) &&
                          theTransaction.InvitationSentTo != null)
@@ -3686,17 +3643,15 @@ namespace Nooch.DataAccess
                         string memberIdFromEmail = CommonHelper.GetMemberIdByUserName(CommonHelper.GetDecryptedData(theTransaction.InvitationSentTo));
 
                         if (!String.IsNullOrEmpty(memberIdFromEmail))
-                        {
                             nonNoochUserId = memberIdFromEmail;
-                        }
                     }
-
                 }
             }
             catch (Exception ex)
             {
                 Logger.Error("MDA -> GetNonNoochUserTempRegisterIdFromTransId FAILED - [TransID: " + TransId + "], [Exception: " + ex.Message + "]");
             }
+
             return nonNoochUserId;
         }
 
@@ -3760,6 +3715,12 @@ namespace Nooch.DataAccess
         }
 
 
+        /// <summary>
+        /// CC (8/9/16): THIS METHOD SHOULD NOT BE USED ANYMORE - IT IS DEPRECATED W/ SYNAPSE.  USE CommonHelper.sendDocsToSynapseV3() INSTEAD.
+        /// </summary>
+        /// <param name="MemberId"></param>
+        /// <param name="ImageUrl"></param>
+        /// <returns></returns>
         public GenericInternalResponseForSynapseMethods submitDocumentToSynapseV3(string MemberId, string ImageUrl)
         {
             Logger.Info("MDA -> submitDocumentToSynapseV3 Initialized - [MemberId: " + MemberId +
