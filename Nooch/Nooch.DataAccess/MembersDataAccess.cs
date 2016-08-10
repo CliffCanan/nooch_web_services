@@ -2241,9 +2241,7 @@ namespace Nooch.DataAccess
                         newSynapseUser.physical_doc = res.user.doc_status.physical_doc;
                         newSynapseUser.virtual_doc = res.user.doc_status.virtual_doc;
                         newSynapseUser.extra_security = res.user.extra != null ? res.user.extra.extra_security.ToString() : null;
-
-                        // CC (Need to add "cip_tag" to DB, then un-comment the next line
-                        //newSynapseUser.cip_tag = res.user.extra.cip_tag;
+                        newSynapseUser.cip_tag = res.user.extra.cip_tag;
 
                         // Now add the new record to the DB
                         _dbContext.SynapseCreateUserResults.Add(newSynapseUser);

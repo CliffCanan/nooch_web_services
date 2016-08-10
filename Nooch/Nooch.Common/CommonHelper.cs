@@ -2292,7 +2292,7 @@ namespace Nooch.Common
                                                     if (docObject.document_type == "SSN")
                                                     {
                                                         synapseRes.virtual_doc = docObject.status;
-                                                        // CC (8/10/16): SAVE DATE/TIME FOR "virt_doc_lastupdated" ONCE IT'S ADDED TO THE DB
+                                                        synapseRes.virt_doc_lastupdated = DateTime.Now;
                                                     }
                                                 }
                                             }
@@ -2309,7 +2309,7 @@ namespace Nooch.Common
                                                     if (docObject.document_type == "GOVT_ID")
                                                     {
                                                         synapseRes.physical_doc = docObject.status;
-                                                        // CC (8/10/16): SAVE DATE/TIME FOR "phys_doc_lastupdated" ONCE IT'S ADDED TO THE DB
+                                                        synapseRes.phys_doc_lastupdated = DateTime.Now;
                                                     }
                                                 }
                                             }
@@ -2325,10 +2325,8 @@ namespace Nooch.Common
 
                                                     if (docObject.document_type == "FACEBOOK")
                                                     {
-                                                        // CC (8/5/16): Need to add DB fields to handle new Document Type of "Social"
-                                                        //              Also for all 3 document types (Social, Virtual, Phsyical), we also need to store the "last updated" field to display in Admin Panel as a readable DateTime
-                                                        //synCreateUserObject.virtual_doc = docObject.status;
-                                                        // CC (8/10/16): SAVE DATE/TIME FOR "soc_doc_lastupdated" ONCE IT'S ADDED TO THE DB
+                                                        synapseRes.social_doc = docObject.status;
+                                                        synapseRes.soc_doc_lastupdated = DateTime.Now;
                                                     }
                                                 }
                                             }
