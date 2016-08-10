@@ -1674,8 +1674,7 @@ namespace Nooch.Web.Controllers
 
         public ActionResult createAccount(string rs, string TransId, string type, string memId)
         {
-            var jsonResult = new JsonResult();
-            string js = jsonResult.MaxJsonLength.ToString();
+           
             ResultcreateAccount rca = new ResultcreateAccount();
 
             try
