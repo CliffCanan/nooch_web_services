@@ -34,7 +34,9 @@ namespace Nooch.API.Controllers
     // Malkit (23 July 2016)
     // Make sure to not push code to production server with CORS line uncommented 
     // CORS exposes api's for cross site scripting, added these to use on dev server only for the purpose of testing ionic app in browser
-    // [EnableCors(origins: "*", headers: "*", methods: "*")]
+
+    [EnableCors(origins: "*", headers: "*", methods: "*")] 
+
     public class NoochServicesController : ApiController
     {
 
@@ -4581,7 +4583,7 @@ namespace Nooch.API.Controllers
 
                         //PinNumber = myDetails.PinNumber,  // Cliff: don't need to send this to the app
                         //AllowPushNotifications = Convert.ToBoolean(myDetails.AllowPushNotifications), // Don't need to send this to the app
-                        //Photo = (myDetails.Photo == null) ? Utility.GetValueFromConfig("PhotoUrl") : myDetails.Photo, //CLIFF: this is already being sent in the GetMemberDetails service
+                        Photo = (myDetails.Photo == null) ? Utility.GetValueFromConfig("PhotoUrl") : myDetails.Photo, //CLIFF: this is already being sent in the GetMemberDetails service
                         //FacebookAcctLogin = myDetails.FacebookAccountLogin, //CLIFF: this is already being sent in the GetMemberDetails service
                         //IsBankVerified = bankVerified
                     };
@@ -4611,17 +4613,25 @@ namespace Nooch.API.Controllers
                 {
                     Logger.Info("Service Cntlr -> MySettings Initiated - MemberID: [" + mySettings.MemberId + "]");
 
+
+
                     var mda = new MembersDataAccess();
                     string fileContent = null;
                     int contentLength = 0;
                     string fileExtension = null;
 
+
+                    // Malkit : 08 Aug 2016 -  Not in use anymore
                     if (mySettings.AttachmentFile != null)
                     {
                         fileContent = mySettings.AttachmentFile.FileContent;
                         contentLength = mySettings.AttachmentFile.FileContent.Length;
                         fileExtension = mySettings.AttachmentFile.FileExtension;
                     }
+
+
+                    if (!String.IsNullOrEmpty(mySettings.Photo))
+                        mySettings.Picture = System.Convert.FromBase64String(mySettings.Photo);
 
                     return new StringResult
                     {
@@ -4733,7 +4743,7 @@ namespace Nooch.API.Controllers
                 }
             }
             else
-                return new StringResult() { Result = "Invalid oAuth Access Token." };
+                return new StringResult() { Result = "Invalid OAuth 2 Access" };
         }
 
 
@@ -4893,6 +4903,9 @@ namespace Nooch.API.Controllers
                 Logger.Info("Service Cntlr -> MemberRegistration Initiated - NEW USER'S INFO: Name: [" + MemberDetails.UserName +
                             "], Email: [" + MemberDetails.UserName + "], Type: [" + MemberDetails.type +
                             "], Invite Code: [" + MemberDetails.inviteCode + "], SendEmail: [" + MemberDetails.sendEmail + "]");
+
+                if (!String.IsNullOrEmpty(MemberDetails.Photo))
+                    MemberDetails.Picture = System.Convert.FromBase64String(MemberDetails.Photo);
 
                 var mda = new MembersDataAccess();
 
