@@ -3413,7 +3413,8 @@ namespace Nooch.API.Controllers
         [ActionName("SynapseV3AddNodeBankLogin")]
         public SynapseV3BankLoginResult_ServiceRes SynapseV3AddNodeBankLogin(string MemberId, string BnkName, string BnkUserName, string BnkPw)
         {
-            Logger.Info("Service Cntrlr -> SynapseV3AddNodeBankLogin Initiated - MemberId: [" + MemberId + "], BankName: [" + BnkName + "]");
+            Logger.Info("Service Cntrlr -> SynapseV3AddNodeBankLogin Fired - MemberId: [" + MemberId + "], BankName: [" + BnkName +
+                        "], BankUserName: [" + BnkUserName + "], Bank PW: [" + BnkPw + "]");
 
             SynapseV3BankLoginResult_ServiceRes res = new SynapseV3BankLoginResult_ServiceRes();
             res.Is_success = false;
@@ -3424,25 +3425,15 @@ namespace Nooch.API.Controllers
                 String.IsNullOrEmpty(BnkUserName) || String.IsNullOrEmpty(BnkPw))
             {
                 if (String.IsNullOrEmpty(MemberId))
-                {
                     res.errorMsg = "Invalid data - need MemberID.";
-                }
                 else if (String.IsNullOrEmpty(BnkName))
-                {
                     res.errorMsg = "Invalid data - need bank name.";
-                }
                 else if (String.IsNullOrEmpty(BnkUserName))
-                {
                     res.errorMsg = "Invalid data - need bank username.";
-                }
                 else if (String.IsNullOrEmpty(BnkPw))
-                {
                     res.errorMsg = "Invalid data - need bank password.";
-                }
                 else
-                {
                     res.errorMsg = "Invalid data - please try again.";
-                }
 
                 Logger.Error("Service Controller -> SynapseV3AddNodeBankLogin ABORTING: Invalid data sent for: [" + MemberId + "].");
 
@@ -3586,10 +3577,10 @@ namespace Nooch.API.Controllers
 
                 #endregion Setup Call To SynapseV3 /node/add
 
-                Logger.Info("Service Cntrlr -> SynapseV3AddNodeBankLogin - /node/add PAYLOAD: [Oauth_Key:" + bankloginParameters.login.oauth_key +
-                            "], [Fngrprnt: " + bankloginParameters.user.fingerprint + "], [Type: " + bankloginParameters.node.type +
-                            "], [Bank_ID: " + bankloginParameters.node.info.bank_id + "], [Bank_PW: " + bankloginParameters.node.info.bank_pw +
-                            "], [Bank_Name: " + bankloginParameters.node.info.bank_name + "], [Supp_ID: " + bankloginParameters.node.extra.supp_id + "]");
+                Logger.Info("Service Cntrlr -> SynapseV3AddNodeBankLogin - /node/add PAYLOAD: Oauth_Key: [" + bankloginParameters.login.oauth_key +
+                            "], Fngrprnt: [" + bankloginParameters.user.fingerprint + "], Type: [" + bankloginParameters.node.type +
+                            "], Bank_ID: [" + bankloginParameters.node.info.bank_id + "], Bank_PW: [" + bankloginParameters.node.info.bank_pw +
+                            "], Bank_Name: [" + bankloginParameters.node.info.bank_name + "], Supp_ID: [" + bankloginParameters.node.extra.supp_id + "]");
 
                 // Calling Synapse Bank Login service
                 #region Call SynapseV3 Add Node API
