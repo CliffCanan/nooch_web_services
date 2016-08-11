@@ -2898,14 +2898,14 @@ namespace Nooch.DataAccess
                                 if (nodePermCheckRes.PermissionType == "CREDIT-AND-DEBIT") // Sender must have CREDIT-AND-DEBIT
                                 {
                                     Logger.Info("TDA -> AddTransSynapseV3Reusable - Success! Found Sender's Bank with \"CREDIT-AND-DEBIT\" Permissions - " +
-                                                "[OID: " + sender_bank_node_id + "]");
+                                                "OID: [" + sender_bank_node_id + "]");
                                     SenderSynapsePermissionOK = true;
                                     break;
                                 }
                                 else
                                 {
                                     var error = "TDA -> AddTransSynapseV3Reusable FAILED - Sender's Bank Permission returned by Synapse was: [" +
-                                                 nodePermCheckRes.PermissionType + "] for [Sender_bank_node_id: " + sender_bank_node_id + "]";
+                                                 nodePermCheckRes.PermissionType + "] for Sender_bank_node_id: [" + sender_bank_node_id + "]";
                                     Logger.Error(error);
                                     CommonHelper.notifyCliffAboutError(error);
                                     res.ErrorMessage = "Sender's bank has insufficient permission: [" + nodePermCheckRes.PermissionType + "] to complete this payment";
@@ -2933,11 +2933,11 @@ namespace Nooch.DataAccess
                                 res.ErrorMessage = "No banks found for Sender (TDA - 2948)";
                                 return res;
                             }
-                            else // More users in the list to check, so continue iterating
-                            {
+                            //else // More users in the list to check, so continue iterating
+                            //{
                                 //Logger.Error("TDA -> AddTransSynapseV3Reusable - No Bank Found for this Sender User - Username: [" + senderUserName +
                                 //             "], [SenderUser OID:" + senderUser._id.oid + "] - More users in list from Synapse, continuing to iterate...");
-                            }
+                            //}
                         }
                     }
 
@@ -3058,7 +3058,10 @@ namespace Nooch.DataAccess
                     bool isTesting = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox"));
 
                     var senderMemberDetails = CommonHelper.GetMemberDetailsByUserName(senderUserName);
-                    var companyName = senderMemberDetails.isRentScene == true ? "RENT SCENE" : "NOOCH";
+                    var companyName = "NOOCH";
+                    if (senderMemberDetails.isRentScene == true) companyName = "RENT SCENE";
+                    else if (senderUserName == "andrew@tryhabitat.com") companyName = "HABITAT";
+
                     if (receiverUserName == "payments@rentscene.com") recipientLastName = ""; // Blank for the Bank memo since the company will already be in it.
 
                     SynapseV3AddTransInput transParamsForSynapse = new SynapseV3AddTransInput();
@@ -3100,17 +3103,20 @@ namespace Nooch.DataAccess
                     transMain.amount = amountMain;
 
                     if (String.IsNullOrEmpty(iPForTransaction) || iPForTransaction.Length < 6)
-                    {
                         iPForTransaction = "54.148.37.21"; // Nooch's Server IP as default
-                    }
-                    string webhooklink = Utility.GetValueFromConfig("NoochWebHookURL") + suppID_or_transID;
+
+                    var webhooklink = Utility.GetValueFromConfig("NoochWebHookURL") + suppID_or_transID;
+
+                    var noteTxt = companyName + " / " + senderLastName + " / " + recipientLastName;
+                    if (!String.IsNullOrEmpty(memo) && memo.Length > 1)
+                        noteTxt += memo.Substring(0, 9);
 
                     SynapseV3AddTransInput_trans_extra extraMain = new SynapseV3AddTransInput_trans_extra()
                     {
                         // This is where we put the ACH memo (customized for Landlords, but just the same template for regular P2P transfers: "Nooch Payment {LNAME SENDER} / {LNAME RECIPIENT})
                         // maybe we should set this in whichever function calls this function because we don't have the names here...
                         // yes modifying this method to add 3 new parameters....sender IP, sender last name, recepient last name... this would be helpfull in keeping this method clean.
-                        note = companyName + " PAYMENT / " + senderLastName + " / " + recipientLastName,
+                        note = noteTxt,
                         supp_id = suppID_or_transID,
                         process_on = 0, // CLIFF: This is an optional parameter, but we always want it to process immediately, so it should always be 0
                         ip = iPForTransaction, // CLIFF:  This is actually required. It should be the most recent IP address of the SENDER, or if none found, then '54.148.37.21'
@@ -3149,7 +3155,6 @@ namespace Nooch.DataAccess
                         http.Accept = "application/json";
                         http.ContentType = "application/json";
                         http.Method = "POST";
-
 
                         Logger.Info("TDA -> AddTransSynapseV3Reusable - Payload to send to /v3/trans/add API: From Bank ID: [" + transParamsForSynapse.trans.from.id +
                                     "], To Bank ID: [" + transParamsForSynapse.trans.to.id + "], Amount: [" + transParamsForSynapse.trans.amount +

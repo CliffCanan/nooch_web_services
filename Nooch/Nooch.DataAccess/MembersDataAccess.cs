@@ -5617,7 +5617,10 @@ namespace Nooch.DataAccess
 
                                 var transId = Transaction.TransactionId.ToString();
                                 var amount = Transaction.Amount.ToString();
-                                string memoForSyn = !string.IsNullOrEmpty(Transaction.Memo) ? Transaction.Memo : "";
+                                string memoForSyn = !String.IsNullOrEmpty(Transaction.Memo) ? Transaction.Memo : "";
+                                var log = "";
+
+                                #region Rent Scene Custom Checks
 
                                 // Cliff (6/14/16): Adding this to check: a.) is this a payment to Rent Scene?
                                 //                  and b.) what kind of user the recipient is: Client or Vendor, which determines which Node ID to use for Rent Scene
@@ -5648,27 +5651,97 @@ namespace Nooch.DataAccess
                                                 "Substituting Receiver_Bank_NodeID to use RS's Corporate Checking account");
                                 }
 
-                                var log = "MDA -> GetTokensAndTransferMoneyToNewUser - About to call AddTransSynapseV3Reusable() in TDA - " +
-                                          "TransID: [" + transId + "], Amount: [" + amount + "], Sender Name: [" + moneySenderFirstName + " " + moneySenderLastName +
-                                          "], Sender BankOID: [" + senderBankOid + "], Recip Name: [" + moneyRecipientFirstName + " " + moneyRecipientLastName +
-                                          "], Recip BankOID: [" + recipBankOid + "]";
-                                Logger.Info(log);
+                                #endregion Rent Scene Custom Checks
 
                                 TransactionsDataAccess tda = new TransactionsDataAccess();
+                                SynapseV3AddTrans_ReusableClass Call_Synapse_Order_API_Result = new SynapseV3AddTrans_ReusableClass();
 
-                                SynapseV3AddTrans_ReusableClass Call_Synapse_Order_API_Result = tda.AddTransSynapseV3Reusable(access_token,
-                                    senderFingerprint,
-                                    senderBankOid,
-                                    amount,
-                                    recipSynapseUserId,
-                                    recipFingerprint,
-                                    recipBankOid,
-                                    transId,
-                                    senderEmail,
-                                    recipEmail,
-                                    CommonHelper.GetRecentOrDefaultIPOfMember(sender.MemberId),
-                                    moneySenderLastName,
-                                    moneyRecipientLastName, memoForSyn);
+
+                                #region Habitat Custom Checks
+
+                                if (sender.MemberId.ToString().ToLower() == "45357cf0-e651-40e7-b825-e1ff48bf44d2" &&
+                                    recipient.cipTag == "vendor")
+                                {
+                                    Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser - HABITAT Payment!!");
+
+                                    // Need to create 2 transactions with Synapse: 1 from Habitat to Rent Scene, & 1 from Rent Scene to the Vendor
+
+                                    moneySenderFirstName = "Habitat";
+                                    moneySenderLastName = "";
+
+                                    var recipBankOid2 = "574f45d79506295ff7a81db8";
+                                    var recipSynapseUserId2 = "57436f4395062947f21bbcb5";
+                                    var recipFingerprint2 = "6d441f70cc6891e7831432baac2e50d7";
+                                    var recipEmail2 = "payments@rentscene.com";
+                                    var moneyRecipientLastName2 = "Rent Scene";
+
+                                    log = "MDA -> GetTokensAndTransferMoneyToNewUser - About to call AddTransSynapseV3Reusable() in TDA - " +
+                                                "TransID: [" + transId + "], Amount: [" + amount + "], Sender Name: [" + moneySenderFirstName + " " + moneySenderLastName +
+                                                "], Sender BankOID: [" + senderBankOid + "], Recip Name: [" + moneyRecipientFirstName + " " + moneyRecipientLastName +
+                                                "], Recip BankOID: [" + recipBankOid2 + "]";
+                                    Logger.Info(log);
+
+                                    Call_Synapse_Order_API_Result = tda.AddTransSynapseV3Reusable(access_token,
+                                        senderFingerprint, senderBankOid, amount,
+                                        recipSynapseUserId2, recipFingerprint2, recipBankOid2,
+                                        transId, senderEmail, recipEmail2,
+                                        CommonHelper.GetRecentOrDefaultIPOfMember(sender.MemberId),
+                                        moneySenderLastName, moneyRecipientLastName2, memoForSyn);
+
+
+                                    if (Call_Synapse_Order_API_Result.success)
+                                    {
+                                        #region 2nd Synapse Payment (RS to Vendor)
+
+                                        // 1st Payment was successful, now do the 2nd one (from RS -> original recipient)
+                                        Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser - 1st HABITAT Payment Successful (to RS) - Response From SYNAPSE's /order/add API - " +
+                                                    "OrderID: [" + Call_Synapse_Order_API_Result.responseFromSynapse.trans._id.oid + "]");
+
+                                        moneySenderFirstName = "Rent Scene";
+                                        moneySenderLastName = "";
+
+                                        access_token = "";
+
+                                        senderBankOid = "574f45d79506295ff7a81db8";
+                                        senderFingerprint = "6d441f70cc6891e7831432baac2e50d7";
+                                        var senderIP = CommonHelper.GetRecentOrDefaultIPOfMember(new Guid("852987e8-d5fe-47e7-a00b-58a80dd15b49")); // Rent Scene's MemberID
+                                        var senderEmail2 = "payments@rentscene.com";
+
+                                        log = "MDA -> GetTokensAndTransferMoneyToNewUser - About to call 2nd HABITAT Payment (to the Vendor) - " +
+                                                    "TransID: [" + transId + "], Amount: [" + amount + "], Sender Name: [" + moneySenderFirstName + " " + moneySenderLastName +
+                                                    "], Sender BankOID: [" + senderBankOid + "], Recip Name: [" + moneyRecipientFirstName + " " + moneyRecipientLastName +
+                                                    "], Recip BankOID: [" + recipBankOid + "]";
+
+                                        Logger.Info(log);
+
+                                        Call_Synapse_Order_API_Result = tda.AddTransSynapseV3Reusable(access_token,
+                                            senderFingerprint, senderBankOid, amount,
+                                            recipSynapseUserId, recipFingerprint, recipBankOid,
+                                            transId, senderEmail2, recipEmail,
+                                            senderIP, moneySenderLastName, moneyRecipientLastName, memoForSyn);
+
+                                        #endregion 2nd Synapse Payment (RS to Vendor)
+                                    }
+                                }
+
+                                #endregion Habitat Custom Checks
+
+                                else
+                                {
+                                    // Expected path for all Payments except for Habitat
+                                    log = "MDA -> GetTokensAndTransferMoneyToNewUser - About to call AddTransSynapseV3Reusable() in TDA - " +
+                                              "TransID: [" + transId + "], Amount: [" + amount + "], Sender Name: [" + moneySenderFirstName + " " + moneySenderLastName +
+                                              "], Sender BankOID: [" + senderBankOid + "], Recip Name: [" + moneyRecipientFirstName + " " + moneyRecipientLastName +
+                                              "], Recip BankOID: [" + recipBankOid + "]";
+                                    Logger.Info(log);
+
+                                    Call_Synapse_Order_API_Result = tda.AddTransSynapseV3Reusable(access_token,
+                                        senderFingerprint, senderBankOid, amount,
+                                        recipSynapseUserId, recipFingerprint, recipBankOid,
+                                        transId, senderEmail, recipEmail,
+                                        CommonHelper.GetRecentOrDefaultIPOfMember(sender.MemberId),
+                                        moneySenderLastName, moneyRecipientLastName, memoForSyn);
+                                }
 
                                 #endregion Call Synapse Order API
 
@@ -5745,18 +5818,12 @@ namespace Nooch.DataAccess
                                             newUserNameForEmail = moneyRecipientFirstName;
 
                                             if (!String.IsNullOrEmpty(moneyRecipientLastName))
-                                            {
                                                 newUserNameForEmail = newUserNameForEmail + " " + moneyRecipientLastName;
-                                            }
                                         }
                                         else if (newUsersEmail.Length > 2)
-                                        {
                                             newUserNameForEmail = newUsersEmail;
-                                        }
                                         else if (newUserPhone.Length > 2)
-                                        {
                                             newUserNameForEmail = newUserPhone;
-                                        }
 
                                         string wholeAmount = Transaction.Amount.ToString("n2");
                                         string[] s3 = wholeAmount.Split('.');
@@ -5772,18 +5839,12 @@ namespace Nooch.DataAccess
                                                 bool startsWithFor = firstThreeChars.Equals("for");
 
                                                 if (startsWithFor)
-                                                {
                                                     memo = Transaction.Memo.ToString();
-                                                }
                                                 else
-                                                {
                                                     memo = "For: " + Transaction.Memo.ToString();
-                                                }
                                             }
                                             else
-                                            {
                                                 memo = "For: " + Transaction.Memo.ToString();
-                                            }
                                         }
 
                                         #endregion Setup Email Placeholders
@@ -6007,7 +6068,7 @@ namespace Nooch.DataAccess
                                     var error = "MDA -> GetTokensAndTransferMoneyToNewUser FAILED - " +
                                                  "Error Message: [" + Call_Synapse_Order_API_Result.ErrorMessage + "], Synapse Response: [" + Call_Synapse_Order_API_Result.responseFromSynapse + "]";
                                     Logger.Error(error);
-                                    CommonHelper.notifyCliffAboutError(error + "\n\n  Trans Info: " + log);
+                                    CommonHelper.notifyCliffAboutError(error + "\n\n  Trans Info: \n" + log);
                                     return !String.IsNullOrEmpty(Call_Synapse_Order_API_Result.ErrorMessage)
                                                 ? Call_Synapse_Order_API_Result.ErrorMessage
                                                 : "Error from syn";
@@ -6015,23 +6076,29 @@ namespace Nooch.DataAccess
                             }
                             else
                             {
-                                Logger.Error("MDA - GetTokensAndTransferMoneyToNewUser FAILED -> Couldn't find Synapse User or Bank " +
-                                             "Details for Recipient - [TransID: " + TransactionId + "]");
+                                var error = "MDA - GetTokensAndTransferMoneyToNewUser FAILED -> Couldn't find Synapse User or Bank " +
+                                             "Details for Recipient - TransID: [" + TransactionId + "]";
+                                Logger.Error(error);
+                                CommonHelper.notifyCliffAboutError(error);
                                 return "Request payor bank account details not found or syn user id not found";
                             }
                         }
                         else
                         {
-                            Logger.Error("MDA - GetTokensAndTransferMoneyToNewUser FAILED -> MemberIdAfterSynapseAccountCreation " +
-                                         "was Null or empty - [TransID: " + TransactionId + "]");
+                            var error = "MDA - GetTokensAndTransferMoneyToNewUser FAILED -> MemberIdAfterSynapseAccountCreation " +
+                                         "was Null or empty - TransID: [" + TransactionId + "]";
+                            Logger.Error(error);
+                            CommonHelper.notifyCliffAboutError(error);
                             return "Request payor bank account details not found or syn user id not found";
                         }
                     }
                     else
                     {
-                        Logger.Error("MDA - GetTokensAndTransferMoneyToNewUser FAILED -> Couldn't find Synapse User or Bank " +
-                                     "Details for EXISTING user (which is bad...) - [TransID: " + TransactionId + "]");
-                        return "Missing 'MemberIdAfterSynapseAccountCreation' [6058]";
+                        var error = "MDA - GetTokensAndTransferMoneyToNewUser FAILED -> Couldn't find Synapse User or Bank " +
+                                     "Details for EXISTING user (which is bad...) - TransID: [" + TransactionId + "]";
+                        Logger.Error(error);
+                        CommonHelper.notifyCliffAboutError(error);
+                        return "Missing 'MemberIdAfterSynapseAccountCreation' [6101]";
                     }
                 }
                 else
@@ -6043,7 +6110,7 @@ namespace Nooch.DataAccess
             }
             catch (Exception ex)
             {
-                Logger.Error("MDA -> GetTokensAndTransferMoneyToNewUser FAILED - [TransId: " + TransactionId + "],  [Exception: " + ex + "]");
+                Logger.Error("MDA -> GetTokensAndTransferMoneyToNewUser FAILED - TransId: [" + TransactionId + "],  Outer Exception: [" + ex + "]");
             }
 
             return "Unkown Failure";
