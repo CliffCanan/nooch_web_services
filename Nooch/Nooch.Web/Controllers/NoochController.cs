@@ -956,9 +956,9 @@ namespace Nooch.Web.Controllers
 
         public ActionResult DepositMoneyComplete()
         {
-            ResultDepositMoneyComplete rdmc = new ResultDepositMoneyComplete();
-            rdmc.paymentSuccess = false;
-            rdmc.payinfobar = true;
+            ResultMoveMoneyFromLandingPageComplete res = new ResultMoveMoneyFromLandingPageComplete();
+            res.paymentSuccess = false;
+            res.payinfobar = true;
 
             Logger.Info("DepositMoneyComplete Page -> Loaded - 'mem_id' Param In URL: [" + Request.QueryString["mem_id"] + "]");
 
@@ -980,14 +980,14 @@ namespace Nooch.Web.Controllers
                         if (isForRentScene == "true")
                         {
                             Logger.Info("DepositMoneyComplete Page -> RENT SCENE Transaction Detected - TransID: [" + tr_id + "]");
-                            rdmc.rs = "true";
+                            res.rs = "true";
                         }
 
                         // Getting transaction details to check if transaction is still pending
-                        rdmc = GetTransDetailsForDepositMoneyComplete(tr_id, rdmc);
+                        res = GetTransDetailsForDepositMoneyComplete(tr_id, res);
 
-                        if (rdmc.IsTransactionStillPending)
-                            rdmc = finishTransaction(mem_id, tr_id, rdmc);
+                        if (res.IsTransactionStillPending)
+                            res = finishTransaction(mem_id, tr_id, res);
                     }
                     else
                     {
@@ -1006,19 +1006,19 @@ namespace Nooch.Web.Controllers
             {
                 Logger.Error("depositMoneyComplete Page -> OUTER EXCEPTION - mem_id Parameter: [" + Request.QueryString["mem_id"] +
                              "], [Exception: " + ex + "]");
-                rdmc.payinfobar = false;
+                res.payinfobar = false;
                 Response.Write("<script>var errorFromCodeBehind = '1';</script>");
             }
 
-            ViewData["OnLoaddata"] = rdmc;
+            ViewData["OnLoaddata"] = res;
 
             return View();
         }
 
 
-        public ResultDepositMoneyComplete GetTransDetailsForDepositMoneyComplete(string TransactionId, ResultDepositMoneyComplete resultDepositMoneyComplete)
+        public ResultMoveMoneyFromLandingPageComplete GetTransDetailsForDepositMoneyComplete(string TransactionId, ResultMoveMoneyFromLandingPageComplete resultDepositMoneyComplete)
         {
-            ResultDepositMoneyComplete rdmc = resultDepositMoneyComplete;
+            ResultMoveMoneyFromLandingPageComplete rdmc = resultDepositMoneyComplete;
             string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
             string serviceMethod = "GetTransactionDetailByIdForRequestPayPage?TransactionId=" + TransactionId;
 
@@ -1073,36 +1073,32 @@ namespace Nooch.Web.Controllers
         }
 
 
-        private ResultDepositMoneyComplete finishTransaction(string MemberIdAfterSynapseAccountCreation, string TransactionId, ResultDepositMoneyComplete resultDepositMoneyComplete)
+        private ResultMoveMoneyFromLandingPageComplete finishTransaction(string MemberIdAfterSynapseAccountCreation, string TransactionId, ResultMoveMoneyFromLandingPageComplete resultDepositMoneyComplete)
         {
-            ResultDepositMoneyComplete rdmc = resultDepositMoneyComplete;
-            rdmc.paymentSuccess = false;
+            ResultMoveMoneyFromLandingPageComplete res = resultDepositMoneyComplete;
+            res.paymentSuccess = false;
 
             try
             {
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
                 string serviceMethod = "GetTransactionDetailByIdAndMoveMoneyForNewUserDeposit?TransactionId=" + TransactionId +
                                        "&MemberIdAfterSynapseAccountCreation=" + MemberIdAfterSynapseAccountCreation +
-                                       "&TransactionType=SentToNewUser";
+                                       "&TransactionType=SentToNewUser&recipMemId=";
 
-                if ((rdmc.usrTyp == "Existing" || rdmc.usrTyp == "Tenant") &&
-                     rdmc.payeeMemId.Length > 5)
-                {
-                    serviceMethod = serviceMethod + "&recipMemId=" + rdmc.payeeMemId;
-                }
-                else
-                {
-                    serviceMethod = serviceMethod + "&recipMemId=";
-                }
+                if ((res.usrTyp == "Existing" || res.usrTyp == "Tenant") &&
+                     res.payeeMemId.Length > 5)
+                    serviceMethod = serviceMethod + res.payeeMemId;
+
+
                 Logger.Info("DepositMoneyComplete Page -> finishTransaction - About to Query Nooch Service to move money - URL: [" +
-                            String.Concat(serviceUrl, serviceMethod) + "]");
+                             String.Concat(serviceUrl, serviceMethod) + "]");
 
-                TransactionDto transaction = ResponseConverter<TransactionDto>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+                TransactionDto moveMoneyResult = ResponseConverter<TransactionDto>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
 
-                if (transaction != null)
+                if (moveMoneyResult != null)
                 {
-                    if (transaction.synapseTransResult == "Success")
-                        rdmc.paymentSuccess = true;
+                    if (moveMoneyResult.synapseTransResult == "Success")
+                        res.paymentSuccess = true;
                     else
                     {
                         Logger.Error("DepositMoneyComplete Page -> completeTrans FAILED - TransId: [" + TransactionId + "]");
@@ -1116,7 +1112,7 @@ namespace Nooch.Web.Controllers
                              "], Exception: [" + ex + "]");
             }
 
-            return rdmc;
+            return res;
         }
 
         #endregion DepositMoneyComplete Page
@@ -1487,7 +1483,7 @@ namespace Nooch.Web.Controllers
 
         public ActionResult PayRequestComplete()
         {
-            ResultPayRequestComplete rpc = new ResultPayRequestComplete();
+            ResultMoveMoneyFromLandingPageComplete rpc = new ResultMoveMoneyFromLandingPageComplete();
 
             Logger.Info("PayRequestComplete Page -> Loaded - 'mem_id' Param In URL: [" + Request.QueryString["mem_id"] + "]");
 
@@ -1550,27 +1546,21 @@ namespace Nooch.Web.Controllers
         }
 
 
-        private ResultPayRequestComplete completeTrans(string MemberIdAfterSynapseAccountCreation, string TransactionId, ResultPayRequestComplete resultPayComplete)
+        private ResultMoveMoneyFromLandingPageComplete completeTrans(string MemberIdAfterSynapseAccountCreation, string TransactionId, ResultMoveMoneyFromLandingPageComplete resultPayComplete)
         {
-            ResultPayRequestComplete rpc = resultPayComplete;
-            rpc.paymentSuccess = false;
+            ResultMoveMoneyFromLandingPageComplete res = resultPayComplete;
+            res.paymentSuccess = false;
 
             try
             {
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
                 string serviceMethod = "GetTransactionDetailByIdAndMoveMoneyForNewUserDeposit?TransactionId=" + TransactionId +
                                        "&MemberIdAfterSynapseAccountCreation=" + MemberIdAfterSynapseAccountCreation +
-                                       "&TransactionType=RequestToNewUser";
+                                       "&TransactionType=RequestToNewUser&recipMemId=";
 
-                if ((rpc.usrTyp == "Existing" || rpc.usrTyp == "Tenant") &&
-                     rpc.payeeMemId.Length > 5)
-                {
-                    serviceMethod = serviceMethod + "&recipMemId=" + rpc.payeeMemId;
-                }
-                else
-                {
-                    serviceMethod = serviceMethod + "&recipMemId=";
-                }
+                if ((res.usrTyp == "Existing" || res.usrTyp == "Tenant") &&
+                     res.payeeMemId.Length > 5)
+                    serviceMethod = serviceMethod + res.payeeMemId;
 
                 Logger.Info("PayRequestComplete Page -> completeTrans - About to Query Nooch Service to move money - URL: [" +
                              String.Concat(serviceUrl, serviceMethod) + "]");
@@ -1580,7 +1570,7 @@ namespace Nooch.Web.Controllers
                 if (moveMoneyResult != null)
                 {
                     if (moveMoneyResult.synapseTransResult == "Success")
-                        rpc.paymentSuccess = true;
+                        res.paymentSuccess = true;
                     else
                     {
                         Logger.Error("PayRequestComplete Page -> completeTrans FAILED - TransID: [" + TransactionId + "]");
@@ -1594,15 +1584,15 @@ namespace Nooch.Web.Controllers
                              "], Exception: [" + ex + "]");
             }
 
-            return rpc;
+            return res;
         }
 
 
-        public ResultPayRequestComplete GetTransDetailsForPayRequestComplete(string TransactionId, ResultPayRequestComplete resultPayRequestComplt)
+        public ResultMoveMoneyFromLandingPageComplete GetTransDetailsForPayRequestComplete(string TransactionId, ResultMoveMoneyFromLandingPageComplete resultPayRequestComplt)
         {
             Logger.Info("payRequestComplete Page -> GetTransDetailsForPayRequestComplete Fired - TransID: [" + TransactionId + "]");
 
-            ResultPayRequestComplete rpc = resultPayRequestComplt;
+            ResultMoveMoneyFromLandingPageComplete rpc = resultPayRequestComplt;
             string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
             string serviceMethod = "GetTransactionDetailByIdForRequestPayPage?TransactionId=" + TransactionId;
 

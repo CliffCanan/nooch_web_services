@@ -115,7 +115,6 @@
     <Compile Include="Entities\ResultActivation.cs" />
     <Compile Include="Entities\ResultCancelRequest.cs" />
     <Compile Include="Entities\ResultcreateAccount.cs" />
-    <Compile Include="Entities\ResultDepositMoneyComplete.cs" />
     <Compile Include="Entities\ResultpayAnyone.cs" />
     <Compile Include="Entities\ResultPayRequest.cs" />
     <Compile Include="Entities\ResultPayRequestComplete.cs" />
