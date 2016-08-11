@@ -2142,27 +2142,26 @@ namespace Nooch.Common
                             documents.social_docs = documents.social_docs.Where(val => val.document_value != socialDocObj.document_value).ToArray();
 
                         // PHYSICAL DOCS: Send User's Photo ID if available
-                        if (hasPhotoID)
-                        {
-                            synapseAddDocsV3InputClass_user_docs_doc physicalDocObj = new synapseAddDocsV3InputClass_user_docs_doc();
-                            physicalDocObj.document_type = "GOVT_ID";
-                            physicalDocObj.document_value = "data:text/csv;base64," + ConvertImageURLToBase64(usersPhotoIDurl).Replace("\\", "");
+                        var dataType = "image/png";
 
-                            documents.physical_docs = new synapseAddDocsV3InputClass_user_docs_doc[1];
-                            documents.physical_docs[0] = physicalDocObj;
+                        if (hasPhotoID && !String.IsNullOrEmpty(usersPhotoIDurl))
+                        {
+                            if (usersPhotoIDurl.IndexOf(".jpg") > 10)
+                                dataType = "image/jpg";
+                            else if (usersPhotoIDurl.IndexOf(".jpeg") > 10)
+                                dataType = "image/jpeg";
+                            else if (usersPhotoIDurl.IndexOf(".pdf") > 10)
+                                dataType = "application/pdf";
                         }
-                        else
-                        {
-                            synapseAddDocsV3InputClass_user_docs_doc physicalDocObj = new synapseAddDocsV3InputClass_user_docs_doc();
-                            physicalDocObj.document_type = "GOVT_ID";
-                            physicalDocObj.document_value = "data:text/csv;base64," + ConvertImageURLToBase64(usersPhotoIDurl).Replace("\\", "");
 
-                            documents.physical_docs = new synapseAddDocsV3InputClass_user_docs_doc[1];
-                            documents.physical_docs[0] = physicalDocObj;
+                        synapseAddDocsV3InputClass_user_docs_doc physicalDocObj = new synapseAddDocsV3InputClass_user_docs_doc();
+                        physicalDocObj.document_type = "GOVT_ID";
+                        physicalDocObj.document_value = "data:" + dataType + ";base64," + ConvertImageURLToBase64(usersPhotoIDurl).Replace("\\", "");
+                        documents.physical_docs = new synapseAddDocsV3InputClass_user_docs_doc[1];
+                        documents.physical_docs[0] = physicalDocObj;
 
+                        if (!hasPhotoID)
                             documents.physical_docs = documents.physical_docs.Where(val => val.document_value != physicalDocObj.document_value).ToArray();
-                        }
-
                     }
                     catch (Exception ex)
                     {
