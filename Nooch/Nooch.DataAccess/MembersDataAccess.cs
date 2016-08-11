@@ -2851,11 +2851,11 @@ namespace Nooch.DataAccess
                 {
                     res = createSynapseUserResult;
 
-                    #region Created Synapse User Successfully
-
                     if (createSynapseUserResult.success == true &&
                         !String.IsNullOrEmpty(createSynapseUserResult.oauth.oauth_key))
                     {
+                        #region Created Synapse User Successfully
+
                         if (!String.IsNullOrEmpty(res.reason) &&
                             res.reason.IndexOf("Email already registered") > -1)
                         {
@@ -2883,14 +2883,13 @@ namespace Nooch.DataAccess
                         res.errorMsg = createSynapseUserResult.errorMsg;
 
                         res.success = true;
+
+                        #endregion Created Synapse User Successfully
                     }
-
-                    #endregion Created Synapse User Successfully
-
                     else
                     {
                         Logger.Error("MDA -> RegisterExistingUserWithSynapseV3 FAILED - Synapse Create user service failed (but wasn't null) - " +
-                                     "Reason: [" + res.reason + "], MemberID: [" + memberId + "]");
+                                     "Reason: [" + res.reason + "], ErrorMsg: [" + res.errorMsg + "], MemberID: [" + memberId + "]");
                         res.reason = createSynapseUserResult.reason;
                     }
                 }
@@ -6160,7 +6159,7 @@ namespace Nooch.DataAccess
                         // make  image from bytes
                         string filename = HttpContext.Current.Server.MapPath("~/UploadedPhotos") + "/Photos/" +
                                           member.MemberId.ToString() + ".png";
-                        
+
                         using (FileStream fs = new FileStream(filename, FileMode.Create, FileAccess.ReadWrite))
                         {
                             fs.Write(Picture, 0, (int)Picture.Length);

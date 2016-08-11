@@ -35,7 +35,7 @@ namespace Nooch.API.Controllers
     // Make sure to not push code to production server with CORS line uncommented 
     // CORS exposes api's for cross site scripting, added these to use on dev server only for the purpose of testing ionic app in browser
 
-    [EnableCors(origins: "*", headers: "*", methods: "*")] 
+    [EnableCors(origins: "*", headers: "*", methods: "*")]
 
     public class NoochServicesController : ApiController
     {
@@ -2842,23 +2842,15 @@ namespace Nooch.API.Controllers
                                                                                           input.ip, input.cip, input.fbid, input.isRentScene,
                                                                                           input.isIdImageAdded, input.idImageData);
 
-                if (res.success == true)
-                {
-                    nc.success = "true";
-                    nc.access_token = res.oauth.oauth_key;
-                    nc.expires_in = res.oauth.expires_in;
-                    nc.reason = res.reason;
-                    nc.refresh_token = res.oauth.refresh_token;
-                    nc.user_id = res.user_id;
-                    nc.memberIdGenerated = res.memberIdGenerated;
-                    nc.ssn_verify_status = res.ssn_verify_status;
-                    nc.errorMsg = res.errorMsg;
-                }
-                else
-                {
-                    nc.success = "false";
-                    nc.reason = res.reason;
-                }
+                nc.success = res.success == true ? "true" : "false";
+                nc.access_token = res.oauth.oauth_key;
+                nc.expires_in = res.oauth.expires_in;
+                nc.refresh_token = res.oauth.refresh_token;
+                nc.user_id = res.user_id;
+                nc.memberIdGenerated = res.memberIdGenerated;
+                nc.ssn_verify_status = res.ssn_verify_status;
+                nc.reason = res.reason;
+                nc.errorMsg = res.errorMsg;
 
                 Logger.Info("Service Cntlr -> RegisterExistingUserWithSynapseV3 - Returning Payload - Reason: [" + nc.reason +
                             "], Error Msg: [" + nc.errorMsg + "]");
@@ -2867,7 +2859,7 @@ namespace Nooch.API.Controllers
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Cntlr -> RegisterExistingUserWithSynapsev3 FAILED - MemberID: [" + input.memberId + "], [Name: " + input.fullname +
+                Logger.Error("Service Cntlr -> RegisterExistingUserWithSynapsev3 FAILED - MemberID: [" + input.memberId + "], Name: [" + input.fullname +
                              "], Email of New User: [" + input.email + "], Exception: [" + ex + "]");
                 return null;
             }
