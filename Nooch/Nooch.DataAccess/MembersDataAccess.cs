@@ -2341,7 +2341,8 @@ namespace Nooch.DataAccess
                             }
                             catch (Exception ex)
                             {
-                                var error = "MDA -> RegisterUserWithSynapseV3 FAILED - Attempted sendUserSsnInfoToSynapseV3 but got Exception: [" + ex + "]";
+                                var error = "MDA -> RegisterUserWithSynapseV3 FAILED - Attempted CommonHelper.sendDocsToSynapseV3() but got Exception: [" + ex +
+                                            "], MemberID: [" + memberId + "]";
                                 Logger.Error(error);
                                 CommonHelper.notifyCliffAboutError(error);
                             }

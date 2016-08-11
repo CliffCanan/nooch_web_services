@@ -3150,9 +3150,12 @@ namespace Nooch.DataAccess
                         http.ContentType = "application/json";
                         http.Method = "POST";
 
-                        string parsedContent = JsonConvert.SerializeObject(transParamsForSynapse);
 
-                        Logger.Info("TDA -> AddTransSynapseV3Reusable - Payload to send to /v3/trans/add API: " + JObject.Parse(parsedContent));
+                        Logger.Info("TDA -> AddTransSynapseV3Reusable - Payload to send to /v3/trans/add API: From Bank ID: [" + transParamsForSynapse.trans.from.id +
+                                    "], To Bank ID: [" + transParamsForSynapse.trans.to.id + "], Amount: [" + transParamsForSynapse.trans.amount +
+                                    "], Note: [" + transParamsForSynapse.trans.extra.note + "]");
+
+                        string parsedContent = JsonConvert.SerializeObject(transParamsForSynapse);
 
                         ASCIIEncoding encoding = new ASCIIEncoding();
                         Byte[] bytes = encoding.GetBytes(parsedContent);

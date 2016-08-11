@@ -2204,7 +2204,7 @@ namespace Nooch.Common
                                     "], City: [" + documents.address_city + "], State: [" + documents.address_subdivision +
                                     "], country_code: [" + documents.address_country_code + "], Fingerprint: [" + user.fingerprint +
                                     "], HasSSN?: [" + hasSSN + "], SSN: [" + usersSsn + "], HasFBID?: [" + hasFBID +
-                                    "], FBID: " + usersFBID + "], HasPhotoID?: " + hasPhotoID + "], BASE_ADDRESS: [" + baseAddress + "].");
+                                    "], FBID: [" + usersFBID + "], HasPhotoID?: [" + hasPhotoID + "], BASE_ADDRESS: [" + baseAddress + "].");
                     }
                     catch (Exception ex)
                     {
@@ -2555,14 +2555,20 @@ namespace Nooch.Common
                 }
 
                 // Save changes to Members DB
-                memberEntity.DateModified = DateTime.Now;
-                int saveMember = _dbContext.SaveChanges();
+                try
+                {
+                    memberEntity.DateModified = DateTime.Now;
+                    int saveMember = _dbContext.SaveChanges();
 
-                if (saveMember > 0)
-                    Logger.Info("Common Helper -> sendDocsToSynapseV3 - Successfully updated user's record in Members Table");
-                else
-                    Logger.Error("Common Helper -> sendDocsToSynapseV3 - FAILED to update user's record in Members Table");
-
+                    if (saveMember > 0)
+                        Logger.Info("Common Helper -> sendDocsToSynapseV3 - Successfully updated user's record in Members Table");
+                    else
+                        Logger.Error("Common Helper -> sendDocsToSynapseV3 - FAILED to update user's record in Members Table");
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Common Helper -> sendDocsToSynapseV3 - EXCEPTION when saving user's record in MEMBERS Table: [" + ex + "]");
+                }
                 #endregion Send All Docs To Synapse
             }
             else
@@ -2813,7 +2819,7 @@ namespace Nooch.Common
                 string UrlToHit = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/search"
                                                                                                       : "https://synapsepay.com/api/v3/user/search";
 
-                Logger.Info("Common Helper -> getUserPermissionsForSynapseV3 - About to query Synapse's /user/search API - [UrlToHit: " + UrlToHit + "]");
+                //Logger.Info("Common Helper -> getUserPermissionsForSynapseV3 - About to query Synapse's /user/search API - UrlToHit: [" + UrlToHit + "]");
 
                 var http = (HttpWebRequest)WebRequest.Create(new Uri(UrlToHit));
                 http.Accept = "application/json";
