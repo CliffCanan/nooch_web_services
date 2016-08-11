@@ -2935,8 +2935,8 @@ namespace Nooch.DataAccess
                             }
                             //else // More users in the list to check, so continue iterating
                             //{
-                                //Logger.Error("TDA -> AddTransSynapseV3Reusable - No Bank Found for this Sender User - Username: [" + senderUserName +
-                                //             "], [SenderUser OID:" + senderUser._id.oid + "] - More users in list from Synapse, continuing to iterate...");
+                            //Logger.Error("TDA -> AddTransSynapseV3Reusable - No Bank Found for this Sender User - Username: [" + senderUserName +
+                            //             "], [SenderUser OID:" + senderUser._id.oid + "] - More users in list from Synapse, continuing to iterate...");
                             //}
                         }
                     }
@@ -3108,8 +3108,8 @@ namespace Nooch.DataAccess
                     var webhooklink = Utility.GetValueFromConfig("NoochWebHookURL") + suppID_or_transID;
 
                     var noteTxt = companyName + " / " + senderLastName + " / " + recipientLastName;
-                    if (!String.IsNullOrEmpty(memo) && memo.Length > 1)
-                        noteTxt += memo.Substring(0, 9);
+                    //if (!String.IsNullOrEmpty(memo) && memo.Length > 1)
+                    //    noteTxt += memo.Substring(0, 9);
 
                     SynapseV3AddTransInput_trans_extra extraMain = new SynapseV3AddTransInput_trans_extra()
                     {
@@ -3219,17 +3219,13 @@ namespace Nooch.DataAccess
 
                         JToken token = jsonFromSynapse["error"]["en"];
 
+                        // CLIFF (5/16/16): Synapse's error msg could be:
+                        //                  1.) "You do not have sufficient balance for this transfer"
+                        //                  2.) "Sender is not authorizied to send payments. Make the user go through our KYC widget to enable sending function"
                         if (token != null)
-                        {
-                            // CLIFF (5/16/16): Synapse's error msg could be:
-                            //                  1.) "You do not have sufficient balance for this transfer"
-                            //                  2.) "Sender is not authorizied to send payments. Make the user go through our KYC widget to enable sending function"
                             res.ErrorMessage = token.ToString();
-                        }
                         else
-                        {
                             res.ErrorMessage = "Server Error (TDA 3239) in AddTransSynapseV3Reusable.";
-                        }
                     }
 
                     #endregion Calling Synapse V3 TRANSACTION ADD
