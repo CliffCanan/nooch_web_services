@@ -1674,6 +1674,7 @@ namespace Nooch.Web.Controllers
 
         public ActionResult createAccount(string rs, string TransId, string type, string memId)
         {
+           
             ResultcreateAccount rca = new ResultcreateAccount();
 
             try
@@ -1836,6 +1837,7 @@ namespace Nooch.Web.Controllers
         [ActionName("saveMemberInfo")]
         public ActionResult saveMemberInfo(ResultcreateAccount userData)
         {
+           
             Logger.Info("Create Account Page -> saveMemberInfo Fired - MemberID: [" + userData.memId +
                         "], Name: [" + userData.name + "], Email: [" + userData.email +
                         "], Phone: [" + userData.phone + "], DOB: [" + userData.dob +

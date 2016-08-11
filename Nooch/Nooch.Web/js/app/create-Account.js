@@ -352,7 +352,7 @@ function runIdWizard() {
                                     indicatorNew: '',
                                 },
                                 maxFileCount: 1,
-                                maxFileSize: 3000,
+                                maxFileSize: 30000,
                                 msgSizeTooLarge: "<strong>'{name}' ({size} KB)</strong> is a bit too large! Max allowed file size is <strong>{maxSize} KB</strong>. &nbsp;Please try a smaller picture!",
                                 showCaption: false,
                                 showUpload: false,
@@ -373,13 +373,18 @@ function runIdWizard() {
                                 isFileAdded = "1";
                                 var readerN = new FileReader();
 
-                                readerN.readAsDataURL(file);
-                                readerN.onload = function (e) {
-                                    // browser completed reading file - display it
-                                    var splittable = e.target.result.split(',');
+                               // readerN.readAsDataURL(file);
+                                resizeImages(file, function (dataUrl) {
+
+                                    var splittable = dataUrl.split(',');
                                     var string2 = splittable[1];
                                     FileData = string2;
-                                };
+                                     
+                                   
+                                    
+                                });
+
+                               
                             });
 
                             $('#idVer_idDoc').on('fileclear', function (event) {
@@ -444,6 +449,41 @@ function runIdWizard() {
             createRecord();
         }
     });
+}
+
+function resizeImages(file, complete) {
+    // read file as dataUrl
+    ////////  2. Read the file as a data Url
+    var reader = new FileReader();
+    // file read
+    reader.onload = function(e) {
+        // create img to store data url
+        ////// 3 - 1 Create image object for canvas to use
+        var img = new Image();
+        img.onload = function() {
+            /////////// 3-2 send image object to function for manipulation
+            complete(resizeInCanvas(img));
+        };
+        img.src = e.target.result;
+    }
+    // read file
+    reader.readAsDataURL(file);
+   
+}
+
+ 
+
+function resizeInCanvas(img){
+    /////////  3-3 manipulate image
+    var perferedWidth = 127;
+    var ratio = perferedWidth / img.width;
+    var canvas = $("<canvas>")[0];
+    canvas.width = img.width * ratio;
+    canvas.height = img.height * ratio;
+    var ctx = canvas.getContext("2d");
+    ctx.drawImage(img, 0,0,canvas.width, canvas.height);
+    //////////4. export as dataUrl
+    return canvas.toDataURL();
 }
 
 
