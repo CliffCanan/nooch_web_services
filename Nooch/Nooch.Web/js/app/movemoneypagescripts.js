@@ -564,8 +564,10 @@ function resizeInCanvas(img) {
     var perferedWidth = 127;
     var ratio = perferedWidth / img.width;
     var canvas = $("<canvas>")[0];
-    canvas.width = img.width * ratio;
-    canvas.height = img.height * ratio;
+    //canvas.width = img.width * ratio;
+    //canvas.height = img.height * ratio;
+    canvas.width = 500;
+    canvas.height = 500;
     var ctx = canvas.getContext("2d");
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
     //////////4. export as dataUrl
