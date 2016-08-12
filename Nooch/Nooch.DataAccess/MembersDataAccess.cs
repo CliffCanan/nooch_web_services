@@ -2907,7 +2907,7 @@ namespace Nooch.DataAccess
             }
             else
             {
-                Logger.Error("MDA -> RegisterExistingUserWithSynapseV2 - FAILED - MemberID not found in DB - [MemberID: " + memberId + "]");
+                Logger.Error("MDA -> RegisterExistingUserWithSynapseV3 - FAILED - MemberID not found in DB - MemberID: [" + memberId + "]");
                 res.reason = "MemberID not found in DB.";
             }
 
@@ -2990,15 +2990,36 @@ namespace Nooch.DataAccess
             string memberIdFromEmail = CommonHelper.GetMemberIdByUserName(userEmail);
             if (!String.IsNullOrEmpty(memberIdFromEmail))
             {
-                // CC (8/4/16): We really shouldn't abort in this case. Instead, we should verify that the user actually is the owner
-                //              of the email by sending a 5-digit numeric code to the email address and prompting the user to input it
-                //              on the page (which could be CreateAccount, PayRequest or DepositMoney)
-                var error = "MDA -> RegisterNonNoochUserWithSynapseV3 FAILED - EMAIL Already Registered: [" + userEmail + "] - ABORTING";
-                CommonHelper.notifyCliffAboutError(error);
-                Logger.Error(error);
+                // Check if the user was created w/in the last 60 minutes... then we can assume it's the same person
+                Member memberObj = CommonHelper.GetMemberDetails(memberIdFromEmail);
 
-                res.reason = "Given email already registered.";
-                return res;
+                //if (memberObj.DateCreated > )
+                DateTime todaysDateTime = DateTime.Now;
+                TimeSpan span = todaysDateTime.Subtract(Convert.ToDateTime(memberObj.DateCreated));
+                double totalMins = span.TotalMinutes;
+
+                if (totalMins < 60)
+                {
+                    Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - Email already registered, but user created < 60 mins ago [" +
+                                totalMins + "], so sending to RegisterExistingUserWithSynapseV3()");
+
+                    // Consider the user valid, send to RegisterExistingUserWithSynapseV3()
+                    return RegisterExistingUserWithSynapseV3(transId, memberObj.MemberId.ToString(), userEmail,
+                                                             userPhone, userName, pw, ssn, dob, address, zip, fngprnt,
+                                                             ip, cip, fbid, isRentScene, isIdImageAdded, idImageData);
+                }
+                else
+                {
+                    // CC (8/4/16): We really shouldn't abort in this case. Instead, we should verify that the user actually is the owner
+                    //              of the email by sending a 5-digit numeric code to the email address and prompting the user to input it
+                    //              on the page (which could be CreateAccount, PayRequest or DepositMoney)
+                    var error = "MDA -> RegisterNonNoochUserWithSynapseV3 FAILED - EMAIL Already Registered: [" + userEmail + "] - ABORTING";
+                    CommonHelper.notifyCliffAboutError(error);
+                    Logger.Error(error);
+
+                    res.reason = "Given email already registered.";
+                    return res;
+                }
             }
 
             string memberIdFromPhone = CommonHelper.GetMemberIdByContactNumber(userPhone);
