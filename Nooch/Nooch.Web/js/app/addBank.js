@@ -454,6 +454,14 @@ function submitBnkLgn() {
 					$('#bankLogin_errorMsg').append("<div><p class='parsley-errors-list filled'>The password provided was not correct.</p></div>");
 					$('#bankUsername').focus();
 				}
+				else if (bnkLoginResult.ERROR_MSG.indexOf("locked your account to keep it safe") > -1)
+				{
+				    $('#modal-OtherError #par1').html("Looks like that " + BANK_NAME + " has locked your account to keep it safe. &nbsp;Please visit " + BANK_NAME + "'s website to see if there is any further information there.");
+				    $('#modal-OtherError #par2').html("");
+				    $('#modal-OtherError').modal({
+				        backdrop: 'static'
+				    });
+				}
 				else if (bnkLoginResult.ERROR_MSG.indexOf('user phone not verified') > -1)
 				{
 				    $('#bankLogin_errorMsg').append("<div><p class='parsley-errors-list filled'>For security, your phone number must be verified before you can link your bank. Go to your profile to verify.</p></div>");
@@ -461,7 +469,8 @@ function submitBnkLgn() {
 				    $('#bankUsername').focus();
 				}
 				else if (bnkLoginResult.ERROR_MSG.indexOf('Currently we are unable to login to') > -1 ||
-				         bnkLoginResult.ERROR_MSG.indexOf('Please try again later') > -1)
+				         bnkLoginResult.ERROR_MSG.indexOf('Please try again later') > -1 ||
+                         bnkLoginResult.ERROR_MSG.indexOf('Please make sure that your bank account isnt locked and then try again'))
 				{
 				    // ADD PROMPT FOR MANUAL ROUNTING/ACCOUNT #
 				    bankLoginErrorAlert();
@@ -1175,6 +1184,7 @@ function sendToRedUrl() {
         }
     }
 }
+
 
 function showLoadingHUD(msg)
 {

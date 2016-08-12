@@ -2807,6 +2807,7 @@ namespace Nooch.API.Controllers
         {
             synapseCreateUserV3Result_int res = new synapseCreateUserV3Result_int();
             res.success = false;
+            res.errorMsg = "Service Cntrlr - Initial";
 
             try
             {
@@ -2828,7 +2829,7 @@ namespace Nooch.API.Controllers
         {
             try
             {
-                Logger.Info("Service Cntlr -> RegisterExistingUserWithSynapseV3 Initiated - MemberID: [" + input.memberId +
+                Logger.Info("Service Cntlr -> RegisterExistingUserWithSynapseV3 Fired - MemberID: [" + input.memberId +
                             "], Name: [" + input.fullname + "], Email: [" + input.email +
                             "], Is ID Img Sent: [" + input.isIdImageAdded + "], CIP: [" + input.cip +
                             "], FBID: [" + input.fbid + "], isRentScene: [" + input.isRentScene + "]");
@@ -2875,7 +2876,7 @@ namespace Nooch.API.Controllers
 
             try
             {
-                Logger.Info("Service Cntrlr -> RegisterNonNoochUserWithSynapse Initiated - MemberID: [" + input.memberId +
+                Logger.Info("Service Cntrlr -> RegisterNonNoochUserWithSynapse Fired - MemberID: [" + input.memberId +
                             "], Name: [" + input.fullname + "], Email: [" + input.email +
                             "], Is ID Img Sent: [" + input.isIdImageAdded + "], CIP: [" + input.cip +
                             "], FBID: [" + input.fbid + "], isRentScene: [" + input.isRentScene + "]");
@@ -2888,20 +2889,25 @@ namespace Nooch.API.Controllers
                                                                                              input.isRentScene, input.isIdImageAdded, input.idImageData);
 
                 res.success = mdaRes.success.ToString().ToLower();
-                res.access_token = mdaRes.oauth.oauth_key;
-                res.expires_in = mdaRes.oauth.expires_in;
                 res.reason = mdaRes.reason;
-                res.refresh_token = mdaRes.oauth.refresh_token;
                 res.user_id = mdaRes.user_id;
-                res.username = mdaRes.user.logins[0].email;
                 res.memberIdGenerated = mdaRes.memberIdGenerated;
                 res.ssn_verify_status = mdaRes.ssn_verify_status;
+                res.errorMsg = mdaRes.errorMsg;
+                if (mdaRes.oauth != null)
+                {
+                    res.access_token = mdaRes.oauth.oauth_key;
+                    res.expires_in = mdaRes.oauth.expires_in;
+                    res.refresh_token = mdaRes.oauth.refresh_token;
+                }
+                //if (mdaRes.user != null && mdaRes.user.logins != null && mdaRes.user.logins.Length > 0)
+                //    res.username = mdaRes.user.logins[0].email;
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Cntrlr -> RegisterNonNoochUserWithSynapse FAILED. [New Usr Name: " + input.fullname +
-                             "], Email of New User: [" + input.email + "], TransactionID: [" + input.transId +
-                             "], Exception: [" + ex.Message + "]");
+                Logger.Error("Service Cntrlr -> RegisterNonNoochUserWithSynapse FAILED - New User Name: [" + input.fullname +
+                             "], Email: [" + input.email + "], TransID: [" + input.transId +
+                             "], Exception: [" + ex + "]");
             }
 
             return res;
@@ -3827,7 +3833,6 @@ namespace Nooch.API.Controllers
 
                     var error = "Service Cntrlr -> SynapseV3AddNodeBankLogin FAILED - MemberID: [" + MemberId +
                                 "], Synapse Response JSON: [" + jsonFromSynapse.ToString() + "]";
-                    Logger.Error(error);
                     CommonHelper.notifyCliffAboutError(error);
 
                     if (jsonFromSynapse["error"] != null)
@@ -3837,8 +3842,7 @@ namespace Nooch.API.Controllers
                     }
                     else
                     {
-                        Logger.Error("Service Cntrlr -> SynapseV3AddNodeBankLogin FAILED - HTTP ErrorCode: [" + errorCode.ToString() +
-                                     "], WebException: [" + we.ToString() + "]");
+                        Logger.Error(error);
                         res.errorMsg = we.Message;
                     }
 

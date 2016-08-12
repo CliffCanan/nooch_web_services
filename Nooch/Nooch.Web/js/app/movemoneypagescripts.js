@@ -834,9 +834,7 @@ function createRecord() {
 			    }
 
 			    else // No ID questions needed
-			    {
 			        idVerifiedSuccess();
-			    }
             }
 			else 
 			{
@@ -846,7 +844,8 @@ function createRecord() {
 			    {
 			        console.log(resultReason);
 
-			        if (resultReason.indexOf('Validation PIN sent') > -1) {
+			        if (resultReason.indexOf('Validation PIN sent') > -1)
+			        {
 			            $('#idVer').modal('toggle');
 
 			            swal({
@@ -866,11 +865,13 @@ function createRecord() {
 
 			                if (inputTxt === false) return false;
 
-			                if (inputTxt === "") {
+			                if (inputTxt === "")
+			                {
 			                    swal.showInputError("Please enter the PIN sent to your phone.");
 			                    return false
 			                }
-			                if (inputTxt.length < 4) {
+			                if (inputTxt.length < 4)
+			                {
 			                    swal.showInputError("Double check you entered the entire PIN!");
 			                    return false
 			                }
@@ -881,7 +882,7 @@ function createRecord() {
 			            });
 			        }
 
-			       else if (resultReason.indexOf("email already registered") > -1)
+			        else if (resultReason.indexOf("email already registered") > -1)
 			        {
 			            console.log("Error: email already registered");
 			            showErrorAlert('20');
@@ -897,14 +898,10 @@ function createRecord() {
 			            showErrorAlert('2');
 			        }
 			        else
-			        {
 			            showErrorAlert('2');
-			        }
 			    }
 			    else
-			    {
 			        showErrorAlert('2');
-			    }
             }
             
         },

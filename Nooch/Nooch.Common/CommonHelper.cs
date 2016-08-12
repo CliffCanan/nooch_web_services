@@ -1411,9 +1411,7 @@ namespace Nooch.Common
                         res.message = " Common Helper - Missing UDID";
                     }
                     else
-                    {
                         usersFingerprint = memberEntity.UDID1;
-                    }
 
                     // Check for Address
                     if (String.IsNullOrEmpty(memberEntity.Address))
@@ -1422,9 +1420,7 @@ namespace Nooch.Common
                         res.message += " Common Helper - Missing Address";
                     }
                     else
-                    {
                         usersAddress = GetDecryptedData(memberEntity.Address);
-                    }
 
                     // Check for ZIP
                     if (String.IsNullOrEmpty(memberEntity.Zipcode))
@@ -1433,9 +1429,7 @@ namespace Nooch.Common
                         res.message += " MDA - Missing ZIP";
                     }
                     else
-                    {
                         usersZip = GetDecryptedData(memberEntity.Zipcode);
-                    }
 
                     // Check for SSN
                     if (string.IsNullOrEmpty(memberEntity.SSN))
@@ -4753,7 +4747,7 @@ namespace Nooch.Common
 
         public static suggestedUsers GetSuggestedUsers(string memberId)
         {
-            Logger.Info("Common Helper -> GetSuggestedUsers - MemberID: [" + memberId + "]");
+            //Logger.Info("Common Helper -> GetSuggestedUsers Fired - MemberID: [" + memberId + "]");
 
             suggestedUsers suggestedUsers = new suggestedUsers();
             suggestedUsers.success = false;

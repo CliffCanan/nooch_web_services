@@ -1784,7 +1784,8 @@ namespace Nooch.DataAccess
                             }
                             else
                             {
-                                // Refresh was successful - No 2FA
+                                #region Refresh was successful - No 2FA
+
                                 res.oauth = new createUserV3Result_oauth()
                                 {
                                     expires_at = synapseCreateUserObjIfExists.expires_at,
@@ -1895,19 +1896,21 @@ namespace Nooch.DataAccess
                                 //                  The user may be adding a bank and might still need to answer the ID Verification questions afterwards,
                                 //                  or it could be a Rent Scene user who don't use the iOS app, so we can deal with fixing their Permissions after they connect a bank.
                                 res.success = true;
+
+                                #endregion Refresh was successful - No 2FA
                             }
                         }
                         else
                         {
-                            res.errorMsg = refreshTokenResult.msg;
                             Logger.Error("MDA -> RegisterUserWithSynapseV3 FAILED - Error from Refresh Oauth Key service - Msg: [" + res.errorMsg + "]");
+                            res.errorMsg = refreshTokenResult.msg;
                         }
                     }
                     catch (Exception ex)
                     {
-                        res.errorMsg = ex.Message;
                         Logger.Error("MDA -> RegisterUserWithSynapseV3 FAILED - User already had Synapse Create User record, but got Exception - " +
                                      "MemberID: [" + memberId + "], Exception: [" + res.errorMsg + "]");
+                        res.errorMsg = ex.Message;
                     }
 
                     return res;
@@ -2421,7 +2424,7 @@ namespace Nooch.DataAccess
                                                                                string zip, string fngprnt, string ip, string cip, string fbid,
                                                                                bool isRentScene, string isIdImageAdded = "0", string idImageData = "")
         {
-            Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 Initiated - Name: [" + userName +
+            Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 Fired - Name: [" + userName +
                         "], Email: [" + userEmail + "], Phone: [" + userPhone +
                         "], DOB: [" + dob + "], SSN: [" + ssn +
                         "], Address: [" + address + "], ZIP: [" + zip +
@@ -4489,7 +4492,7 @@ namespace Nooch.DataAccess
 
         public SynapseBankLoginV3_Response_Int SynapseV3MFABankVerify(string MemberId, string BankName, string MfaResponse, string BankId)
         {
-            Logger.Info("MDA -> SynapseV3MFABankVerify Initiated. [MemberId: " + MemberId + "], [BankName: " + BankName + "], [MFA Response: " + MfaResponse + "]");
+            Logger.Info("MDA -> SynapseV3MFABankVerify Fired - MemberID: [" + MemberId + "], BankName: [" + BankName + "], MFA Answer: [" + MfaResponse + "]");
 
             SynapseBankLoginV3_Response_Int res = new SynapseBankLoginV3_Response_Int();
             res.Is_success = false;
@@ -4502,27 +4505,17 @@ namespace Nooch.DataAccess
                 String.IsNullOrEmpty(BankId))
             {
                 if (String.IsNullOrEmpty(BankName))
-                {
                     res.errorMsg = "Invalid data - need Bank Name";
-                }
                 else if (String.IsNullOrEmpty(MemberId))
-                {
                     res.errorMsg = "Invalid data - need MemberId";
-                }
                 else if (String.IsNullOrEmpty(MfaResponse))
-                {
                     res.errorMsg = "Invalid data - need MFA answer";
-                }
                 else if (String.IsNullOrEmpty(BankId))
-                {
                     res.errorMsg = "Invalid data - need BankAccessToken";
-                }
                 else
-                {
                     res.errorMsg = "Invalid data sent";
-                }
 
-                Logger.Info("MDA -> SynapseV3MFABankVerify ERROR: " + res.errorMsg + " for: [" + MemberId + "]");
+                Logger.Info("MDA -> SynapseV3MFABankVerify ERROR: [" + res.errorMsg + "] for: [" + MemberId + "]");
                 res.Is_success = false;
                 return res;
             }
@@ -4543,7 +4536,7 @@ namespace Nooch.DataAccess
                     var noochMemberResultFromSynapseAuth = CommonHelper.GetSynapseCreateaUserDetails(id.ToString());
                     if (noochMemberResultFromSynapseAuth == null)
                     {
-                        Logger.Info("MDA - SynapseV3MFABankVerify -> could not locate Synapse Auth Token for Member: [" + MemberId + "]");
+                        Logger.Info("MDA - SynapseV3MFABankVerify -> could not locate Synapse Auth Token for MemberID: [" + MemberId + "]");
                         res.errorMsg = "No Synapse Authentication code found for given user.";
                         return res;
                     }
@@ -4577,14 +4570,14 @@ namespace Nooch.DataAccess
                         bankLoginPars.login = log;
                         bankLoginPars.node = node;
 
-                        string UrlToHit = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/node/verify" : "https://synapsepay.com/api/v3/node/verify";
+                        string UrlToHit = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/node/verify"
+                                                                                                              : "https://synapsepay.com/api/v3/node/verify";
 
-                        Logger.Info("MDA -> SynapseV3MFABankVerify - /node/verify PAYLOAD IS: [Oauth_Key:" + bankLoginPars.login.oauth_key +
-                                    "], [Fngrprnt: " + bankLoginPars.user.fingerprint + "], [Node OID: " + bankLoginPars.node._id.oid +
-                                    "], [Bank_PW: " + bankLoginPars.node.verify.mfa + "], [URL: " + UrlToHit + "]");
+                        Logger.Info("MDA -> SynapseV3MFABankVerify - /node/verify PAYLOAD IS: Oauth_Key: [" + bankLoginPars.login.oauth_key +
+                                    "], Fngrprnt: [" + bankLoginPars.user.fingerprint + "], Node OID: [" + bankLoginPars.node._id.oid +
+                                    "], Bank_PW: [" + bankLoginPars.node.verify.mfa + "], URL: [" + UrlToHit + "]");
 
-
-                        // Calling Synapse Bank Login service (Link a Bank Account)
+                        // Calling Synapse V3.0 Bank Login service (Link a Bank Account)
                         try
                         {
                             var http = (HttpWebRequest)WebRequest.Create(new Uri(UrlToHit));
@@ -4662,7 +4655,7 @@ namespace Nooch.DataAccess
                                     res.SynapseNodesList = rObj;
                                     res.mfaMessage = bankLoginRespFromSynapse["nodes"][0]["extra"]["mfa"]["message"].ToString();
 
-                                    Logger.Info("MDA -> SynapseV3MFABankVerify - Got another MFA Question - [Question: " + bankLoginRespFromSynapse["nodes"][0]["extra"]["mfa"]["message"] + "]");
+                                    Logger.Info("MDA -> SynapseV3MFABankVerify - Got another MFA Question - Question: [" + bankLoginRespFromSynapse["nodes"][0]["extra"]["mfa"]["message"] + "]");
 
                                     return res;
                                 }

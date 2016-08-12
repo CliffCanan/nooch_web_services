@@ -283,15 +283,9 @@ namespace Nooch.Web.Controllers
                     res.success = true;
                     res.isRs = memberObj.isRentScene ?? false;
                 }
-                else
-                {
-                    res.msg = "Member not found";
-                }
+                else res.msg = "Member not found";
             }
-            else
-            {
-                res.msg = "Missing MemberID param";
-            }
+            else res.msg = "Missing MemberID param";
 
             ViewData["OnLoadData"] = res;
             return View();
@@ -342,7 +336,7 @@ namespace Nooch.Web.Controllers
 
         public BankLoginResult RegisterUserWithSynapse(string memberid)
         {
-            Logger.Info("Add Bank Page -> RegisterUserWithSynapse Fired - MemberID: [" + memberid + "]");
+            Logger.Info("Add Bank Page -> RegisterUserWithSynapse() Fired - MemberID: [" + memberid + "]");
 
             BankLoginResult res = new BankLoginResult();
             res.IsSuccess = false;
@@ -353,26 +347,25 @@ namespace Nooch.Web.Controllers
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
                 string serviceMethod = "RegisterUserWithSynapseV3?memberId=" + memberid;
 
-                synapseCreateUserV3Result_int transaction = ResponseConverter<synapseCreateUserV3Result_int>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+                synapseCreateUserV3Result_int regResponse = ResponseConverter<synapseCreateUserV3Result_int>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
 
-                if (transaction.success == true)
+                if (regResponse.success == true)
                 {
                     res.IsSuccess = true;
-                    res.Message = (!String.IsNullOrEmpty(transaction.errorMsg) && transaction.errorMsg.IndexOf("Missing ") > -1) ? transaction.errorMsg : "OK";
+                    res.Message = (!String.IsNullOrEmpty(regResponse.errorMsg) && regResponse.errorMsg.IndexOf("Missing ") > -1) ? regResponse.errorMsg : "OK";
                 }
                 else
                 {
-                    Logger.Error("Add Bank Page -> RegisterUserWithSynapse FAILED - Success was False, errorMsg: [" + transaction.errorMsg + "]");
-                    res.Message = transaction.errorMsg;
+                    Logger.Error("Add Bank Page -> RegisterUserWithSynapse FAILED - Success was False, errorMsg: [" + regResponse.errorMsg + "]");
+                    res.Message = !String.IsNullOrEmpty(regResponse.reason) ? regResponse.reason : regResponse.errorMsg;
                 }
 
-                res.ssn_verify_status = transaction.ssn_verify_status;
+                res.ssn_verify_status = regResponse.ssn_verify_status;
             }
             catch (Exception we)
             {
                 res.Message = "RegisterUser Web Exception - local";
-                Logger.Error("Add Bank Page -> RegisterUserWithSynapse FAILED - MemberID: [" + memberid +
-                             "], Exception: [" + we.InnerException + "]");
+                Logger.Error("Add Bank Page -> RegisterUserWithSynapse FAILED - MemberID: [" + memberid + "], Exception: [" + we.InnerException + "]");
             }
 
             return res;
@@ -383,8 +376,7 @@ namespace Nooch.Web.Controllers
         [ActionName("BankLogin")]
         public ActionResult BankLogin(bankLoginInputFormClass inp)
         {
-            Logger.Info("Add Bank Page -> BankLogin Initiated - MemberID: [" + inp.memberid +
-                        "], Bank Name: [" + inp.bankname + "]");
+            Logger.Info("Add Bank Page -> BankLogin Initiated - MemberID: [" + inp.memberid + "], Bank Name: [" + inp.bankname + "]");
 
             SynapseBankLoginRequestResult res = new SynapseBankLoginRequestResult();
             res.Is_success = false;
@@ -1358,7 +1350,7 @@ namespace Nooch.Web.Controllers
                                                               string ip, string cip, string fbid, bool isRentScene, string isIdImage = "0", string idImagedata = "")
         {
             Logger.Info("PayRequest Page -> RegisterUserWithSynpForPayRequest Fired - Email: [" + userEm +
-                        "], TransID: [" + transId + "], MemberID: [" + memberId + "], CIP: [" + cip + "], FBID: [" + fbid + "]");
+                        "], TransID: [" + transId + "], MemberID: [" + memberId + "]");
 
             RegisterUserSynapseResultClassExt res = new RegisterUserSynapseResultClassExt();
             res.success = "false";
@@ -1370,42 +1362,27 @@ namespace Nooch.Web.Controllers
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
                 userPh = CommonHelper.RemovePhoneNumberFormatting(userPh);
 
-                Logger.Info("payRequest Page -> RegisterUserWithSynp -> PARAMETERS to send to Server: transId: " + transId +
-                            ", memberId (If existing user): [" + memberId + "], userEm: [" + userEm +
-                            "], userPh: [" + userPh + "], userPw: [" + userPw +
-                            "], ssn: [" + ssn + "], dob: [" + dob +
-                            "], address: [" + address + "], zip: [" + zip +
-                            "], Has ID Img: [" + isIdImage + "], CIP: [" + cip +
-                            "], FBID: [" + fbid + "], isRentScene: [" + isRentScene + "]");
+                Logger.Info("PayRequest Page -> RegisterUserWithSynp -> PARAMETERS to send to Server: transId: " + transId +
+                            ", memberId (If existing user): [" + memberId + "], userEm: [" + userEm + "], userPh: [" + userPh +
+                            "], userPw: [" + userPw + "], ssn: [" + ssn + "], dob: [" + dob + "], address: [" + address +
+                            "], zip: [" + zip + "], Has ID Img: [" + isIdImage + "], CIP: [" + cip + "], Fngprnt: [" + fngprnt +
+                            "] FBID: [" + fbid + "], isRentScene: [" + isRentScene + "]");
 
 
                 #region Initial Checks
 
                 if (String.IsNullOrEmpty(userEm))
-                {
                     res.reason = "Missing user's email address";
-                    return Json(res);
-                }
                 if (String.IsNullOrEmpty(userPh))
-                {
                     res.reason = "Missing user's phone";
-                    return Json(res);
-                }
                 if (String.IsNullOrEmpty(dob))
-                {
                     res.reason = "Missing user's date of birth";
-                    return Json(res);
-                }
                 if (String.IsNullOrEmpty(address))
-                {
                     res.reason = "Missing user's address";
-                    return Json(res);
-                }
                 if (String.IsNullOrEmpty(zip))
-                {
                     res.reason = "Missing user's ZIP";
-                    return Json(res);
-                }
+
+                if (res.reason != "Unknown") return Json(res);
 
                 #endregion Initial Checks
 
@@ -1570,7 +1547,10 @@ namespace Nooch.Web.Controllers
                 if (moveMoneyResult != null)
                 {
                     if (moveMoneyResult.synapseTransResult == "Success")
+                    {
+                        Logger.Info("PayRequestComplete Page -> PAYMENT COMPLETED SUCCESSFULLY - TransID: [" + TransactionId + "]");
                         res.paymentSuccess = true;
+                    }
                     else
                     {
                         Logger.Error("PayRequestComplete Page -> completeTrans FAILED - TransID: [" + TransactionId + "]");
@@ -1664,7 +1644,7 @@ namespace Nooch.Web.Controllers
 
         public ActionResult createAccount(string rs, string TransId, string type, string memId)
         {
-           
+
             ResultcreateAccount rca = new ResultcreateAccount();
 
             try
@@ -1827,7 +1807,7 @@ namespace Nooch.Web.Controllers
         [ActionName("saveMemberInfo")]
         public ActionResult saveMemberInfo(ResultcreateAccount userData)
         {
-           
+
             Logger.Info("Create Account Page -> saveMemberInfo Fired - MemberID: [" + userData.memId +
                         "], Name: [" + userData.name + "], Email: [" + userData.email +
                         "], Phone: [" + userData.phone + "], DOB: [" + userData.dob +
