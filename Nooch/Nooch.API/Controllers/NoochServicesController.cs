@@ -5938,6 +5938,13 @@ namespace Nooch.API.Controllers
         }
 
 
+        /// <summary>
+        /// For cancelling a transaction with Synapse V3.0
+        /// </summary>
+        /// <param name="IsRentScene">Bool indicating if the payment was for Rent Scene (just for logging).</param>
+        /// <param name="TransationId">TransID of the payment to be cancelled.</param>
+        /// <param name="MemberId">MemberID of the SENDER.</param>
+        /// <returns></returns>
         [HttpPost]
         [ActionName("CancelTransactionAtSynapse")]
         public CancelTransactionAtSynapseResult CancelTransactionAtSynapse(bool IsRentScene, string TransationId, string MemberId)

@@ -4502,21 +4502,20 @@ namespace Nooch.Common
         public static CancelTransactionAtSynapseResult CancelTransactionAtSynapse(string TransationId, string MemberId)
         {
             Logger.Info("CancelTransactionAtSynapse -> - TransationId: [" + TransationId + "]");
+            CancelTransactionAtSynapseResult res = new CancelTransactionAtSynapseResult();
 
-            TransactionsStatusAtSynapse transactionsStatusAtSynapse = new TransactionsStatusAtSynapse();
-
-            CancelTransactionAtSynapseResult CancelTransaction = new CancelTransactionAtSynapseResult();
+            TransactionsStatusAtSynapse transSynapseStatus = new TransactionsStatusAtSynapse();
 
             try
             {
-                transactionsStatusAtSynapse = getTransationDetailsAtSynapse(TransationId);
+                transSynapseStatus = getTransationDetailsAtSynapse(TransationId);
 
-                if (transactionsStatusAtSynapse == null)
-                {
-                    CancelTransaction.errorMsg = "Transation Not Found";
-                    return CancelTransaction;
-                }
-                if ((transactionsStatusAtSynapse.status == "QUEUED-BY-SYNAPSE") || (transactionsStatusAtSynapse.status == "QUEUED-BY-RECEIVER") || (transactionsStatusAtSynapse.status == "CREATED"))
+                if (transSynapseStatus == null)
+                    res.errorMsg = "Transation Not Found";
+
+                else if (transSynapseStatus.status == "CREATED" || transSynapseStatus.status_id == "1" ||
+                         transSynapseStatus.status == "QUEUED-BY-SYNAPSE" || transSynapseStatus.status_id == "-1" ||
+                         transSynapseStatus.status == "QUEUED-BY-RECEIVER")
                 {
                     var MemberObj = GetMemberDetails(MemberId);
                     var OauthObj = GetSynapseCreateaUserDetails(MemberId);
@@ -4527,7 +4526,7 @@ namespace Nooch.Common
                     CancelTransactionClass rootObject = new CancelTransactionClass
                     {
                         login = new Login1 { oauth_key = GetDecryptedData(OauthObj.access_token) },
-                        trans = new Trans { _id = new _ID { oid = transactionsStatusAtSynapse.Transaction_oid } },
+                        trans = new Trans { _id = new _ID { oid = transSynapseStatus.Transaction_oid } },
                         user = new User1 { fingerprint = MemberObj.UDID1 }
                     };
 
@@ -4556,38 +4555,31 @@ namespace Nooch.Common
                         if (checkPermissionResponse["success"] != null &&
                             Convert.ToBoolean(checkPermissionResponse["success"]) == true)
                         {
-                            CancelTransaction.IsSuccess = true;
-                            CancelTransaction.Message = "Transation cancelled successfully.";
+                            res.IsSuccess = true;
+                            res.Message = "Transation cancelled successfully.";
                         }
                         else
                         {
-                            CancelTransaction.IsSuccess = false;
-                            CancelTransaction.Message = checkPermissionResponse["success"]["error"]["en"].ToString();
+                            res.IsSuccess = false;
+                            res.Message = checkPermissionResponse["success"]["error"]["en"].ToString();
                         }
                     }
                     catch (WebException we)
                     {
-                        Logger.Error("Common Helper -> CancelTransactionAtSynapse - TransationId: [" + TransationId + "] - Error: [" + we + "]");
-                        CancelTransaction.IsSuccess = false;
-                        CancelTransaction.Message = "Error cancelling Transation.";
+                        Logger.Error("Common Helper -> CancelTransactionAtSynapse - TransID: [" + TransationId + "] - Error: [" + we + "]");
+                        res.IsSuccess = false;
+                        res.Message = "Error cancelling Transation.";
                     }
                 }
                 else
-                {
-                    CancelTransaction.errorMsg = "Transation can't be cancelled, its no more in cancellable state.";
-                    return CancelTransaction;
-                }
-
-
+                    res.errorMsg = "Transation cannot be cancelled, its not in a cancellable state: [" + transSynapseStatus.status + "]";
             }
             catch (Exception ex)
             {
-
-                Logger.Error("CancelTransactionAtSynapse CodeBehind -> OUTER EXCEPTION - [Exception: " + ex.Message + "]");
+                Logger.Error("CancelTransactionAtSynapse CodeBehind -> OUTER EXCEPTION - Exception: [" + ex.Message + "]");
             }
 
-            return CancelTransaction;
-
+            return res;
         }
 
 
@@ -4597,7 +4589,9 @@ namespace Nooch.Common
 
             try
             {
-                transactionsStatusAtSynapse = _dbContext.TransactionsStatusAtSynapses.OrderByDescending(m => m.Id).FirstOrDefault(m => m.Nooch_Transaction_Id == TransationId);
+                transactionsStatusAtSynapse = _dbContext.TransactionsStatusAtSynapses.OrderByDescending(m => m.Id)
+                                                                                     .FirstOrDefault(m => m.Nooch_Transaction_Id == TransationId);
+
                 if (transactionsStatusAtSynapse != null)
                 {
                     _dbContext.Entry(transactionsStatusAtSynapse).Reload();
@@ -4606,7 +4600,7 @@ namespace Nooch.Common
             }
             catch (Exception ex)
             {
-                Logger.Error("Common Helper -> getTransationDetailsAtSynapse FAILED - Exception: [" + ex.Message + "]");
+                Logger.Error("Common Helper -> getTransationDetailsAtSynapse FAILED - TransID: [" + TransationId + "] Exception: [" + ex.Message + "]");
             }
 
             return null;
