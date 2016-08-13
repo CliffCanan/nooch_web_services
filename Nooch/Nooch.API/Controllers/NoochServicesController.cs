@@ -5479,9 +5479,11 @@ namespace Nooch.API.Controllers
                         foreach (var member in noochFriendEntities)
                         {
                             string photo = member.Member1.Photo != null
-                                           ? string.Concat(Utility.GetValueFromConfig("PhotoUrl"), "/", member.Member1.Photo.Substring(member.Member1.Photo.IndexOf("Photos") + 14)) : null;
+                                           ? string.Concat(Utility.GetValueFromConfig("PhotoUrl"), "/", member.Member1.Photo.Substring(member.Member1.Photo.IndexOf("Photos") + 14))
+                                           : "https://www.noochme.com/noochweb/Assets/Images/userpic-default.png";
                             string photoRec = member.Member.Photo != null
-                                              ? string.Concat(Utility.GetValueFromConfig("PhotoUrl"), "/", member.Member.Photo.Substring(member.Member.Photo.IndexOf("Photos") + 14)) : null;
+                                              ? string.Concat(Utility.GetValueFromConfig("PhotoUrl"), "/", member.Member.Photo.Substring(member.Member.Photo.IndexOf("Photos") + 14))
+                                              : "https://www.noochme.com/noochweb/Assets/Images/userpic-default.png";
 
                             if (member.Member.MemberId.ToString().Equals(memberId.ToLower())) // Sent Collection
                             {
@@ -5497,7 +5499,7 @@ namespace Nooch.API.Controllers
                                     MemberId = member.Member1.MemberId.ToString(),
                                     NoochId = member.Member1.Nooch_ID,
                                     Status = member.Member1.Status,
-                                    Photo = !String.IsNullOrEmpty(photo) ? photo : "",
+                                    Photo = !String.IsNullOrEmpty(photo) ? photo : "https://www.noochme.com/noochweb/Assets/Images/userpic-default.png",
                                     TransferStatus = "Sent"
                                 };
                                 var userName = adminUserName != member.Member1.UserName
@@ -5527,7 +5529,7 @@ namespace Nooch.API.Controllers
                                     MemberId = member.Member.MemberId.ToString(),
                                     NoochId = member.Member.Nooch_ID,
                                     Status = member.Member.Status,
-                                    Photo = !String.IsNullOrEmpty(photoRec) ? photoRec : "",
+                                    Photo = !String.IsNullOrEmpty(photoRec) ? photoRec : "https://www.noochme.com/noochweb/Assets/Images/userpic-default.png",
                                     TransferStatus = "Received"
                                 };
                                 var userName = (adminUserName != member.Member.UserName)
@@ -5553,7 +5555,6 @@ namespace Nooch.API.Controllers
                 catch (Exception ex)
                 {
                     Logger.Error("Service Cntlr -> GetRecentMembers FAILED - MemberID: [" + memberId + "], Exception: [" + ex + "]");
-
                 }
                 return new Collection<MemberClass>();
             }
