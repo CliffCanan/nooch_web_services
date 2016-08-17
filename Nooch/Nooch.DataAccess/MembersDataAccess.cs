@@ -117,24 +117,16 @@ namespace Nooch.DataAccess
                             var resetRequestTime = noochConnection.PasswordResetRequests.OrderByDescending(m => m.Id).Take(1)
                                                                                         .FirstOrDefault(m => m.MemberId == id);
 
-                            if (resetRequestTime == null)
-                            {
-                                return false;
-                            }
+                            if (resetRequestTime == null) return false;
 
                             DateTime req = Convert.ToDateTime(resetRequestTime.RequestedOn == null
                                                               ? DateTime.Now
                                                               : resetRequestTime.RequestedOn);
 
-                            if (DateTime.Now < req.AddHours(3))
-                            {
-                                shouldReset = true;
-                            }
+                            if (DateTime.Now < req.AddHours(3)) shouldReset = true;
                         }
                         else if (newUser.ToLower().Trim() == "true")
-                        {
                             shouldReset = true;
-                        }
 
                         if (shouldReset)
                         {
@@ -147,9 +139,7 @@ namespace Nooch.DataAccess
                             // Cliff (1/21/16): Only send the confirmation email if it's truly a Reset... as opposed to a new user setting their PW
                             // from one of the browser pages, which also uses this service to set the pw after linking a bank.
                             if (!String.IsNullOrEmpty(newUser) && newUser.ToLower().Trim() != "true")
-                            {
                                 SendPasswordUpdatedMail(noochMember, emailAddress);
-                            }
 
                             if (noochConnection.SaveChanges() > 0)
                             {
@@ -159,9 +149,7 @@ namespace Nooch.DataAccess
                             }
                         }
                         else
-                        {
                             return false;
-                        }
                     }
                 }
             }
@@ -209,14 +197,8 @@ namespace Nooch.DataAccess
 
                     if (memberEntity != null)
                     {
-                        if (memberEntity.Status == "Temporarily_Blocked")
-                        {
-                            return "Temporarily_Blocked";
-                        }
-                        else if (memberEntity.Status == "Suspended")
-                        {
-                            return "Suspended";
-                        }
+                        if (memberEntity.Status == "Temporarily_Blocked") return "Temporarily_Blocked";
+                        else if (memberEntity.Status == "Suspended") return "Suspended";
 
                         else// if (memberEntity.Status == "Active" || memberEntity.Status == "Registered")
                         {
@@ -230,30 +212,17 @@ namespace Nooch.DataAccess
                                 return "Success";
                             }
                             else if (memberEntity.ContactNumber != null && (memberEntity.IsVerifiedPhone == true))
-                            {
                                 return "Already Verified.";
-                            }
                             else
-                            {
                                 return "Failure";
-                            }
                         }
-                        //else
-                        //{
-                        //    return "Failure";
-                        //}
                     }
                     else
-                    {
                         return "Not a Nooch member.";
-                    }
                 }
             }
-            else
-            {
-                // Member doesn't exists
+            else // Member doesn't exists
                 return "Not a Nooch member.";
-            }
         }
 
         public string ResendVerificationLink(string Username)
@@ -277,8 +246,6 @@ namespace Nooch.DataAccess
                     var authToken =
                         noochConnection.AuthenticationTokens.FirstOrDefault(
                             m => m.MemberId == MemId && m.IsActivated == false);
-
-
 
                     if (authToken != null)
                     {
@@ -310,19 +277,13 @@ namespace Nooch.DataAccess
                             return "Failure";
                         }
                     }
-                    else
-                    {
-                        // Already activated
+                    else // Already activated
                         return "Already Activated.";
-                    }
                 }
 
             }
-            else
-            {
-                // Member doesn't exist
+            else // Member doesn't exist
                 return "Not a nooch member.";
-            }
         }
 
 
@@ -341,10 +302,7 @@ namespace Nooch.DataAccess
 
                     return "success";
                 }
-                else
-                {
-                    return "Member not found";
-                }
+                else return "Member not found";
             }
         }
 
@@ -363,10 +321,7 @@ namespace Nooch.DataAccess
 
                     return "success";
                 }
-                else
-                {
-                    return "Member not found";
-                }
+                else return "Member not found";
             }
         }
 
@@ -389,7 +344,6 @@ namespace Nooch.DataAccess
                 {
                     var privacySettings = new MemberPrivacySetting
                     {
-
                         MemberId = id,
                         AllowSharing = allowSharing,
                         DateCreated = DateTime.Now
@@ -424,7 +378,6 @@ namespace Nooch.DataAccess
 
                 var memberPrivacySettings = noochConnection.MemberPrivacySettings.FirstOrDefault(m => m.MemberId == id);
 
-
                 return memberPrivacySettings;
             }
         }
@@ -432,7 +385,7 @@ namespace Nooch.DataAccess
 
         public string getReferralCode(String memberId)
         {
-            Logger.Info("MDA -> getReferralCode Initiated - [MemberId: " + memberId + "]");
+            Logger.Info("MDA -> getReferralCode Fired - MemberId: [" + memberId + "]");
 
             var id = Utility.ConvertToGuid(memberId);
 
@@ -446,10 +399,8 @@ namespace Nooch.DataAccess
 
                     var inviteMember = _dbContext.InviteCodes.FirstOrDefault(m => m.InviteCodeId == v);
                     if (inviteMember != null)
-                    {
                         return inviteMember.code;
-                    }
-                    return "";
+                    else return "";
                 }
                 //No referal code
                 return "";
@@ -639,12 +590,11 @@ namespace Nooch.DataAccess
 
         public PhoneEmailListDto GetMemberIds(PhoneEmailListDto phoneEmailListDto)
         {
-            Logger.Info("MDA -> GetMemberIds Initiated - phoneEmailList is: [" + phoneEmailListDto.phoneEmailList + "]");
+            Logger.Info("MDA -> GetMemberIds Fired - phoneEmailList: [" + phoneEmailListDto.phoneEmailList + "]");
 
             foreach (PhoneEmailMemberPair phoneEmailObj in phoneEmailListDto.phoneEmailList)
             {
                 // First check for a PHONE match
-
                 var noochMember = _dbContext.Members.FirstOrDefault(m => m.ContactNumber == phoneEmailObj.phoneNo && m.IsDeleted == false);
 
                 if (noochMember != null)
@@ -655,9 +605,7 @@ namespace Nooch.DataAccess
                 else
                 {
                     // Then check for an EMAIL match
-
                     var tempEmailEnc = CommonHelper.GetEncryptedData(phoneEmailObj.emailAddy.ToLower());
-
 
                     noochMember = _dbContext.Members.FirstOrDefault(m => m.UserName == tempEmailEnc || m.FacebookAccountLogin == tempEmailEnc && m.IsDeleted == false);
 
@@ -678,7 +626,6 @@ namespace Nooch.DataAccess
             try
             {
                 //Logger.Info("Service layer -> GetMostFrequentFriends - MemberId: [" + MemberId + "]");
-
                 return _dbContext.GetMostFrequentFriends(MemberId).ToList();
             }
             catch (Exception ex)
@@ -704,10 +651,9 @@ namespace Nooch.DataAccess
 
 
 
-
         public List<Member> getInvitedMemberList(string memberId)
         {
-            Logger.Info("MDA -> getInvitedMemberList - memberId: [" + memberId + "]");
+            Logger.Info("MDA -> getInvitedMemberList Fired - MemberId: [" + memberId + "]");
 
             var id = Utility.ConvertToGuid(memberId);
             //Get the member details
@@ -722,20 +668,13 @@ namespace Nooch.DataAccess
                     _dbContext.Members.Where(m => m.InviteCodeId == noochMember.InviteCodeId).ToList();
                 return allnoochMember;
             }
-            else
-            {
-                return null;
-            }
-
+            else return null;
         }
 
 
         public string SaveMemberDeviceToken(string MemberId, string DeviceToken)
         {
-            if (DeviceToken.Length < 10)
-            {
-                return "Invalid Device Token passed - too short.";
-            }
+            if (DeviceToken.Length < 10) return "Invalid Device Token passed - too short.";
 
             Guid MemId = Utility.ConvertToGuid(MemberId);
 
@@ -750,18 +689,14 @@ namespace Nooch.DataAccess
                 return "DeviceToken saved successfully.";
             }
             else
-            {
                 return "Member ID not found or Member status deleted.";
-            }
         }
 
 
         private static void ChangeStatus(Member member, Boolean rememberMeEnabled)
         {
             if (member.Status == Constants.STATUS_TEMPORARILY_BLOCKED)
-            {
                 member.Status = Constants.STATUS_ACTIVE;
-            }
             member.RememberMeEnabled = rememberMeEnabled;
         }
 
@@ -784,14 +719,9 @@ namespace Nooch.DataAccess
 
             using (var noochConnection = new NOOCHEntities())
             {
-
-
-
                 var memberEntity =
                     noochConnection.Members.FirstOrDefault(
                         m => m.FacebookAccountLogin.Equals(FBId) && m.IsDeleted == false);
-
-
 
                 if (memberEntity == null)
                 {
@@ -807,14 +737,9 @@ namespace Nooch.DataAccess
                     //var memberNotifications = GetMemberNotificationSettingsByUserName(emailFromServerForGivenFbId);
 
                     if (memberEntity.Status == "Temporarily_Blocked")
-                    {
                         return "Temporarily_Blocked";
-                    }
                     else if (memberEntity.Status == "Suspended")
-                    {
                         return "Suspended";
-                    }
-
                     else if (memberEntity.Status == "Active" || memberEntity.Status == "Registered")
                     {
                         #region
@@ -896,10 +821,7 @@ namespace Nooch.DataAccess
 
                         #endregion
                     }
-                    else
-                    {
-                        return "Invalid user id or password.";
-                    }
+                    else return "Invalid user id or password.";
                 }
             }
         }
@@ -1172,13 +1094,12 @@ namespace Nooch.DataAccess
 
         public Boolean validateInvitationCode(String invitationCode)
         {
-            Logger.Info("MDA -> validateInvitationCode - invitationCode: [" + invitationCode + "]");
+            Logger.Info("MDA -> validateInvitationCode Fired - InvitationCode: [" + invitationCode + "]");
 
             var noochInviteMember = _dbContext.InviteCodes.FirstOrDefault(m => m.code == invitationCode && m.count < m.totalAllowed);
+
             if (noochInviteMember != null)
-            {
                 _dbContext.Entry(noochInviteMember).Reload();
-            }
 
             return noochInviteMember != null;
         }
@@ -1186,7 +1107,7 @@ namespace Nooch.DataAccess
 
         public bool getTotalReferralCode(String referalCode)
         {
-            Logger.Info("MDA -> getReferralCode Initiated - referalCode: [" + referalCode + "]");
+            Logger.Info("MDA -> getReferralCode Fired - referalCode: [" + referalCode + "]");
 
             var inviteMember = _dbContext.InviteCodes.FirstOrDefault(m => m.code == referalCode);
 
@@ -1219,9 +1140,7 @@ namespace Nooch.DataAccess
                 _dbContext.Entry(member).Reload();
 
                 return result > 0 ? "Success" : "Error";
-
             }
-
             catch
             {
                 return "Error";
@@ -1269,20 +1188,10 @@ namespace Nooch.DataAccess
                              inviteTemp.ContactNumber == NumAltOne || inviteTemp.ContactNumber == NumAltTwo) &&
                              inviteTemp.IsDeleted == false &&
                              inviteTemp.ContactNumber != BlankNumCase).FirstOrDefault();
-                if (MemberSerachedWithPhone == null)
-                {
-                    return false;
-                }
-                else
-                {
-                    return true;
-                }
-
+                if (MemberSerachedWithPhone == null) return false;
+                else return true;
             }
-            else
-            {
-                return false;
-            }
+            else return false;
         }
 
 
@@ -1328,10 +1237,9 @@ namespace Nooch.DataAccess
                 var bankDetails = _dbContext.SynapseBanksOfMembers.Where(bank =>
                                     (bank.MemberId.Value == id &&
                                      bank.IsDefault == true)).FirstOrDefault();
+
                 if (bankDetails != null)
-                {
                     _dbContext.Entry(bankDetails).Reload();
-                }
                 return bankDetails;
             }
             catch (Exception ex)
@@ -1631,10 +1539,7 @@ namespace Nooch.DataAccess
 
                         #endregion Username Not Already Registered
                     }
-                    else
-                    {
-                        return "User already exists";
-                    }
+                    else return "User already exists";
                 }
                 else
                 {
@@ -1722,10 +1627,9 @@ namespace Nooch.DataAccess
                         .ToArray());
 
                 var memberEntity = _dbContext.Members.FirstOrDefault(memberTemp => memberTemp.Nooch_ID.Equals(randomId));
+
                 if (memberEntity == null)
-                {
                     return randomId;
-                }
 
                 j += i + 1;
             }
@@ -2252,7 +2156,9 @@ namespace Nooch.DataAccess
                         _dbContext.Entry(newSynapseUser).Reload();
                         save = true;
 
-
+                        // CC (8/17/16): I DON'T THINK WE NEED TO CREATE A NEW SUBSCRIPTION FOR EVERY BANK.
+                        //               I THINK WE JUST CREATE THE SUBSCRIPTION *ONCE* (...EVER) AND THAT APPLIES TO
+                        //               *ALL* USERS/BANKS/TRANSACTIONS CREATED USING OUR CLIENT ID/SECRET
                         // subscripe this user on synapse
                         setSubcriptionToUser(newSynapseUser.user_id.ToString(), guid.ToString());
                     }
@@ -5303,9 +5209,7 @@ namespace Nooch.DataAccess
             try
             {
                 if (String.IsNullOrEmpty(ssn) || ssn.Length != 4)
-                {
                     return "Invalid SSN passed.";
-                }
 
                 var noochMember = CommonHelper.GetMemberDetails(MemberId);
 
@@ -5318,10 +5222,7 @@ namespace Nooch.DataAccess
 
                     return "SSN saved successfully.";
                 }
-                else
-                {
-                    return "Member Id not found or Member status deleted.";
-                }
+                else return "Member Id not found or Member status deleted.";
             }
             catch (Exception ex)
             {
@@ -7272,7 +7173,7 @@ namespace Nooch.DataAccess
         {
             try
             {
-                Logger.Info("MemberDataAccess - Operation:SetAutoPayStatusForTenant[ tenantId:" + tenantId + "].");
+                Logger.Info("MDA -> SetAutoPayStatusForTenant - TenantId: [" + tenantId + "]");
 
                 using (var noochConnection = new NOOCHEntities())
                 {
@@ -7285,15 +7186,10 @@ namespace Nooch.DataAccess
                         noochMember.IsAutopayOn = statustoSet;
                         noochConnection.SaveChanges();
 
-                        if (statustoSet == true)
-                            return "Autopay turned ON successfully.";
-                        else
-                            return "Autopay turned OFF successfully.";
+                        if (statustoSet == true) return "Autopay turned ON successfully.";
+                        else return "Autopay turned OFF successfully.";
                     }
-                    else
-                    {
-                        return "No such tenant found.";
-                    }
+                    else return "No such tenant found.";
                 }
             }
             catch (Exception ex)
@@ -7304,23 +7200,18 @@ namespace Nooch.DataAccess
         }
 
 
-
         public void setSubcriptionToUser(string oid, string memberId)
         {
-
             List<string> clientIds = CommonHelper.getClientSecretId(memberId);
 
             string SynapseClientId = clientIds[0];
             string SynapseClientSecret = clientIds[1];
-
-
 
             synapseSetSubscription_int payload = new synapseSetSubscription_int();
 
             client client = new client();
             client.client_id = SynapseClientId;
             client.client_secret = SynapseClientSecret;
-
 
             payload.client = client;
 
@@ -7330,7 +7221,6 @@ namespace Nooch.DataAccess
             payload.scope[0] = "USERS|" + oid + "|PATCH";
             payload.scope[1] = "USERS|" + oid + "|DELETE";
             synapseSetSubscription_out res_synapseSetSubscription_out = new synapseSetSubscription_out();
-
 
             try
             {
@@ -7360,13 +7250,9 @@ namespace Nooch.DataAccess
             }
             catch (WebException we)
             {
-
-                Logger.Error("MDA -> setSubcriptionToUser - synapse subscription to user  having user_id [" + oid + "] Exception: [" + we.Message + "]");
-
-
+                Logger.Error("MDA -> setSubcriptionToUser FAILED - User Oid: [" + oid + "], Exception: [" + we.Message + "]");
             }
         }
-
 
     }
 

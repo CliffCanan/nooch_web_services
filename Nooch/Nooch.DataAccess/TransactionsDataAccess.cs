@@ -3125,7 +3125,7 @@ namespace Nooch.DataAccess
                     transMain.extra = extraMain;
 
                     SynapseV3AddTransInput_trans_fees feeMain = new SynapseV3AddTransInput_trans_fees();
-                    feeMain.note = "Negative " + companyName + " Fee";
+                    feeMain.note = companyName == "RENT SCENE" ? "Negative Rent Scene Fee" : "Negative Nooch Fee";
                     feeMain.fee = "-0.10"; // to offset the Synapse fee so the user doesn't pay it
 
                     SynapseV3AddTransInput_trans_fees_to tomain = new SynapseV3AddTransInput_trans_fees_to()
@@ -7837,7 +7837,7 @@ namespace Nooch.DataAccess
 
         public void setSubcriptionToTrans(string oid, string userName)
         {
-            string memberId =CommonHelper.GetMemberIdByUserName(userName);
+            string memberId = CommonHelper.GetMemberIdByUserName(userName);
             List<string> clientIds = CommonHelper.getClientSecretId(memberId);
 
             string SynapseClientId = clientIds[0];

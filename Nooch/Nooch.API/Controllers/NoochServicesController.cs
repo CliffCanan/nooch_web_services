@@ -3444,8 +3444,8 @@ namespace Nooch.API.Controllers
             {
                 #region Get the Member's Details
 
-                Guid id = Utility.ConvertToGuid(MemberId);
-                var noochMember = _dbContext.Members.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
+                Guid memGuid = Utility.ConvertToGuid(MemberId);
+                var noochMember = _dbContext.Members.FirstOrDefault(m => m.MemberId == memGuid && m.IsDeleted == false);
 
                 if (noochMember == null)
                 {
@@ -3488,7 +3488,7 @@ namespace Nooch.API.Controllers
 
                 // Check if the user already has Synapse User credentials (would have a record in SynapseCreateUserResults.dbo)
 
-                var createSynapseUserDetails = CommonHelper.GetSynapseCreateaUserDetails(id.ToString());
+                var createSynapseUserDetails = CommonHelper.GetSynapseCreateaUserDetails(memGuid.ToString());
 
                 if (createSynapseUserDetails == null) // No Synapse user details were found, so need to create a new Synapse User
                 {
@@ -3500,7 +3500,7 @@ namespace Nooch.API.Controllers
 
                     if (registerSynapseUserResult.success)
                     {
-                        createSynapseUserDetails = CommonHelper.GetSynapseCreateaUserDetails(id.ToString());
+                        createSynapseUserDetails = CommonHelper.GetSynapseCreateaUserDetails(memGuid.ToString());
 
                         // Check again if it's still null (which it shouldn't be because we just created a new Synapse user above if it was null.
                         if (createSynapseUserDetails == null)
@@ -3609,14 +3609,14 @@ namespace Nooch.API.Controllers
                         bankLoginRespFromSynapse["nodes"] != null)
                     {
                         // Marking Any Existing Synapse Bank Login Entries as Deleted
-                        var removeExistingSynapseBankLoginResult = CommonHelper.RemoveSynapseBankLoginResults(id.ToString());
+                        var removeExistingSynapseBankLoginResult = CommonHelper.RemoveSynapseBankLoginResults(memGuid.ToString());
 
                         #region Save New Record In SynapseBankLoginResults
 
                         try
                         {
                             SynapseBankLoginResult sbr = new SynapseBankLoginResult();
-                            sbr.MemberId = id;
+                            sbr.MemberId = memGuid;
                             sbr.IsSuccess = true;
                             sbr.dateCreated = DateTime.Now;
                             sbr.IsDeleted = false;
@@ -3666,13 +3666,13 @@ namespace Nooch.API.Controllers
                                 // Return if MFA, otherwise continue on and parse the banks
                                 if (res.Is_MFA)
                                 {
-                                    Logger.Info("Service Cntrlr -> SynapseV3AddNodeBankLogin SUCCESS - Added record to synapseBankLoginResults Table - Got MFA from Synapse - [UserName: " +
-                                                CommonHelper.GetDecryptedData(noochMember.UserName) + "], [MFA Question: " + res.mfaQuestion + "]");
+                                    Logger.Info("Service Cntrlr -> SynapseV3AddNodeBankLogin SUCCESS - Added record to synapseBankLoginResults Table - Got MFA from Synapse - UserName: [" +
+                                                CommonHelper.GetDecryptedData(noochMember.UserName) + "], MFA Question: [" + res.mfaQuestion + "]");
                                     res.Is_success = true;
                                     return res;
                                 }
 
-                                Logger.Info("Service Cntrlr -> SynapseV3AddNodeBankLogin SUCCESS - Added record to synapseBankLoginResults Table - NO MFA found - UserName: [" + CommonHelper.GetDecryptedData(noochMember.UserName) + "]");
+                                //Logger.Info("Service Cntrlr -> SynapseV3AddNodeBankLogin SUCCESS - Added record to synapseBankLoginResults Table - NO MFA found - UserName: [" + CommonHelper.GetDecryptedData(noochMember.UserName) + "]");
                             }
                             else
                             {
@@ -3710,61 +3710,67 @@ namespace Nooch.API.Controllers
 
                             foreach (nodes bank in allNodesParsedResult.nodes)
                             {
-                                SynapseIndividualNodeClass b = new SynapseIndividualNodeClass();
-                                b.oid = bank._id.oid;
-                                b.account_class = bank.info._class;
-                                b.bank_name = bank.info.bank_name;
-                                b.is_active = bank.is_active;
-                                b.name_on_account = bank.info.name_on_account;
-                                b.nickname = bank.info.nickname;
-                                b.account_num = (bank.info.account_num);
-
-                                bankslistextint.Add(b);
-
-
-                                #region Save Each Bank In Nodes Array From Synapse
-
-                                // saving these banks ("nodes) in DB, later one of these banks will be set as default bank
                                 try
                                 {
-                                    SynapseBanksOfMember sbm = new SynapseBanksOfMember();
+                                    SynapseIndividualNodeClass b = new SynapseIndividualNodeClass();
+                                    b.oid = bank._id.oid;
+                                    b.account_class = bank.info._class;
+                                    b.bank_name = bank.info.bank_name;
+                                    b.is_active = bank.is_active;
+                                    b.name_on_account = bank.info.name_on_account;
+                                    b.nickname = bank.info.nickname;
+                                    b.account_num = (bank.info.account_num);
 
-                                    sbm.AddedOn = DateTime.Now;
-                                    sbm.IsDefault = false;
-                                    sbm.MemberId = Utility.ConvertToGuid(MemberId);
+                                    bankslistextint.Add(b);
+
+
+                                    #region Save Each Bank In Nodes Array From Synapse
+
+                                    // saving these banks ("nodes) in DB, later one of these banks will be set as default bank
+
+                                    SynapseBanksOfMember bnkAccnt = new SynapseBanksOfMember();
+
+                                    bnkAccnt.AddedOn = DateTime.Now;
+                                    bnkAccnt.IsDefault = false;
+                                    bnkAccnt.MemberId = Utility.ConvertToGuid(MemberId);
 
                                     // Holdovers from V2
-                                    sbm.account_number_string = !String.IsNullOrEmpty(bank.info.account_num) ? CommonHelper.GetEncryptedData(bank.info.account_num) : null;
-                                    sbm.bank_name = !String.IsNullOrEmpty(bank.info.bank_name) ? CommonHelper.GetEncryptedData(bank.info.bank_name) : null;
-                                    sbm.name_on_account = !String.IsNullOrEmpty(bank.info.name_on_account) ? CommonHelper.GetEncryptedData(bank.info.name_on_account) : null;
-                                    sbm.nickname = !String.IsNullOrEmpty(bank.info.nickname) ? CommonHelper.GetEncryptedData(bank.info.nickname) : null;
-                                    sbm.routing_number_string = !String.IsNullOrEmpty(bank.info.routing_num) ? CommonHelper.GetEncryptedData(bank.info.routing_num) : null;
-                                    sbm.is_active = bank.is_active;
-                                    sbm.Status = "Not Verified";
-                                    sbm.mfa_verifed = false;
+                                    bnkAccnt.account_number_string = !String.IsNullOrEmpty(bank.info.account_num) ? CommonHelper.GetEncryptedData(bank.info.account_num) : null;
+                                    bnkAccnt.bank_name = !String.IsNullOrEmpty(bank.info.bank_name) ? CommonHelper.GetEncryptedData(bank.info.bank_name) : null;
+                                    bnkAccnt.name_on_account = !String.IsNullOrEmpty(bank.info.name_on_account) ? CommonHelper.GetEncryptedData(bank.info.name_on_account) : null;
+                                    bnkAccnt.nickname = !String.IsNullOrEmpty(bank.info.nickname) ? CommonHelper.GetEncryptedData(bank.info.nickname) : null;
+                                    bnkAccnt.routing_number_string = !String.IsNullOrEmpty(bank.info.routing_num) ? CommonHelper.GetEncryptedData(bank.info.routing_num) : null;
+                                    bnkAccnt.is_active = bank.is_active;
+                                    bnkAccnt.Status = "Not Verified";
+                                    bnkAccnt.mfa_verifed = false;
 
                                     // New in V3
-                                    sbm.oid = !String.IsNullOrEmpty(bank._id.oid) ? CommonHelper.GetEncryptedData(bank._id.oid) : null;
-                                    sbm.allowed = !String.IsNullOrEmpty(bank.allowed) ? bank.allowed : "UNKNOWN";
-                                    sbm.@class = !String.IsNullOrEmpty(bank.info._class) ? bank.info._class : "UNKNOWN";
-                                    sbm.supp_id = !String.IsNullOrEmpty(bank.extra.supp_id) ? bank.extra.supp_id : null;
-                                    sbm.type_bank = !String.IsNullOrEmpty(bank.info.type) ? bank.info.type : "UNKNOWN";
-                                    sbm.type_synapse = "ACH-US";
+                                    bnkAccnt.oid = !String.IsNullOrEmpty(bank._id.oid) ? CommonHelper.GetEncryptedData(bank._id.oid) : null;
+                                    bnkAccnt.allowed = !String.IsNullOrEmpty(bank.allowed) ? bank.allowed : "UNKNOWN";
+                                    bnkAccnt.@class = !String.IsNullOrEmpty(bank.info._class) ? bank.info._class : "UNKNOWN";
+                                    bnkAccnt.supp_id = !String.IsNullOrEmpty(bank.extra.supp_id) ? bank.extra.supp_id : null;
+                                    bnkAccnt.type_bank = !String.IsNullOrEmpty(bank.info.type) ? bank.info.type : "UNKNOWN";
+                                    bnkAccnt.type_synapse = "ACH-US";
 
-                                    _dbContext.SynapseBanksOfMembers.Add(sbm);
+                                    _dbContext.SynapseBanksOfMembers.Add(bnkAccnt);
                                     int addBankToDB = _dbContext.SaveChanges();
-                                    _dbContext.Entry(sbm).Reload();
+                                    _dbContext.Entry(bnkAccnt).Reload();
 
+                                    // HERE
                                     if (addBankToDB == 1)
                                     {
                                         Logger.Info("Service Cntrlr -> SynapseV3AddNodeBankLogin - SUCCESSFULLY Added Bank to DB - Bank OID: [" + bank._id.oid +
                                                     "], MemberID: [" + MemberId + "]");
                                         numOfBanksSavedSuccessfully += 1;
+
+                                        // CC (8/17/16): I DON'T THINK WE NEED TO CREATE A NEW SUBSCRIPTION FOR EVERY BANK.
+                                        //               I THINK WE JUST CREATE THE SUBSCRIPTION *ONCE* (...EVER) AND THAT APPLIES TO
+                                        //               *ALL* USERS/BANKS/TRANSACTIONS CREATED USING OUR CLIENT ID/SECRET
+                                        // subscribe this node on synapse
+                                        //setSubcriptionToNode(res.bankOid.ToString(), MemberId);
                                     }
                                     else
-                                    {
                                         Logger.Error("Service Cntrlr -> SynapseV3AddNodeBankLogin - Failed to save new BANK in SynapseBanksOfMembers Table in DB - MemberID: [" + MemberId + "]");
-                                    }
                                 }
                                 catch (Exception ex)
                                 {
@@ -3775,7 +3781,7 @@ namespace Nooch.API.Controllers
                                     res.errorMsg = "Error occured while saving banks from Synapse.";
                                 }
 
-                                #endregion Save Each Bank In Nodes Array From Synapse
+                                    #endregion Save Each Bank In Nodes Array From Synapse
                             }
                             nodesList.nodes = bankslistextint;
                             nodesList.success = true;
@@ -3804,13 +3810,6 @@ namespace Nooch.API.Controllers
                             Logger.Info(error);
                             CommonHelper.notifyCliffAboutError(error);
                             res.errorMsg = "Error occured while parsing banks list.";
-                        }
-
-                        if (res.bankOid != null)
-                        { 
-                        // subscribe this node on synapse
-                            setSubcriptionToNode(res.bankOid.ToString(), MemberId);
-                        
                         }
 
                         return res;
@@ -4460,7 +4459,7 @@ namespace Nooch.API.Controllers
 
             try
             {
-                Logger.Info("Service Cntlr - GetMemberInfoForMicroDepositPage Initiated - MemberID: [" + memberId + "]");
+                Logger.Info("Service Cntlr - GetMemberInfoForMicroDepositPage Fired - MemberID: [" + memberId + "]");
 
                 var memberObj = CommonHelper.GetMemberDetails(memberId);
 
@@ -4486,9 +4485,7 @@ namespace Nooch.API.Controllers
                             res.errorMsg = "Bank already verified on [" + Convert.ToDateTime(synapseBankDetails.VerifiedOn).ToString("MM/dd/yyyy") + "]";
                         }
                         else
-                        {
                             res.success = true;
-                        }
                     }
                     else
                         res.errorMsg = "Synapse bank details not found";
@@ -4927,25 +4924,15 @@ namespace Nooch.API.Controllers
             StringResult res = new StringResult();
 
             if (String.IsNullOrEmpty(email))
-            {
                 res.Result = "Missing email address to send to!";
-            }
             else if (String.IsNullOrEmpty(template))
-            {
                 res.Result = "Have an email, but missing a Template to send!";
-            }
             else if (String.IsNullOrEmpty(tenantFName))
-            {
                 res.Result = "Missing a Tenant First Name!";
-            }
             else if (String.IsNullOrEmpty(tenantLName))
-            {
                 res.Result = "Missing a Tenant Last Name!";
-            }
             else if (String.IsNullOrEmpty(propAddress))
-            {
                 res.Result = "Missing a Property Address";
-            }
             else
             {
                 if (String.IsNullOrEmpty(subject) || subject.Length < 1)
@@ -4976,7 +4963,6 @@ namespace Nooch.API.Controllers
                 catch (Exception ex)
                 {
                     Logger.Error("Service Cntlr -> sendEmailTemplate FAILED - Exception: [" + ex.Message + "]");
-
                     res.Result = "Server exception!";
                 }
             }
@@ -5009,36 +4995,10 @@ namespace Nooch.API.Controllers
                 var mda = new MembersDataAccess();
                 string cookie = mda.LoginwithFB(userEmail, FBId, rememberMeEnabled, lat, lng, udid, devicetoken);
 
-                if (string.IsNullOrEmpty(cookie))
+                if (String.IsNullOrEmpty(cookie))
                 {
                     cookie = "Authentication failed.";
                     res.Result = "Invalid Login or Password";
-                }
-                else if (cookie == "Temporarily_Blocked")
-                {
-                    res.Result = "Temporarily_Blocked";
-                }
-                else if (cookie == "FBID or EmailId not registered with Nooch")
-                {
-                    res.Result = "FBID or EmailId not registered with Nooch";
-                }
-                else if (cookie == "Suspended")
-                {
-                    res.Result = "Suspended";
-                }
-                else if (cookie == "Registered")
-                {
-                    string state = GenerateAccessToken();
-                    CommonHelper.UpdateAccessToken(userEmail, state);
-                    res.Result = state;
-                }
-                else if (cookie == "Invalid user id or password.")
-                {
-                    res.Result = "Invalid user id or password.";
-                }
-                else if (cookie == "The password you have entered is incorrect.")
-                {
-                    res.Result = "The password you have entered is incorrect.";
                 }
                 else if (cookie == "Success")
                 {
@@ -5055,6 +5015,22 @@ namespace Nooch.API.Controllers
                     CommonHelper.UpdateAccessToken(userEmail, state);
                     res.Result = state;
                 }
+                else if (cookie == "Registered")
+                {
+                    string state = GenerateAccessToken();
+                    CommonHelper.UpdateAccessToken(userEmail, state);
+                    res.Result = state;
+                }
+                else if (cookie == "Temporarily_Blocked")
+                    res.Result = "Temporarily_Blocked";
+                else if (cookie == "FBID or EmailId not registered with Nooch")
+                    res.Result = "FBID or EmailId not registered with Nooch";
+                else if (cookie == "Suspended")
+                    res.Result = "Suspended";
+                else if (cookie == "Invalid user id or password.")
+                    res.Result = "Invalid user id or password.";
+                else if (cookie == "The password you have entered is incorrect.")
+                    res.Result = "The password you have entered is incorrect.";
                 else
                     res.Result = cookie;
             }
@@ -5990,39 +5966,33 @@ namespace Nooch.API.Controllers
         }
 
 
-    
+
         public void setSubcriptionToNode(string oid, string memberId)
         {
-
-            List<string> clientIds = CommonHelper.getClientSecretId(memberId);
-
-            string SynapseClientId = clientIds[0];
-            string SynapseClientSecret = clientIds[1];
-
-
-
-            synapseSetSubscription_int payload = new synapseSetSubscription_int();
-
-            client client = new client();
-            client.client_id = SynapseClientId;
-            client.client_secret = SynapseClientSecret;
-
-
-            payload.client = client;
-
-            payload.url = "https://www.nooch.info/noochservice/api/webhook/ViewSubscriptionForNodeFromSynapse?oid=" + oid;
-
-            payload.scope = new string[2];
-            payload.scope[0] = "NODES|" + oid + "|PATCH";
-            payload.scope[1] = "NODES|" + oid + "|DELETE"; 
-            synapseSetSubscription_out res_synapseSetSubscription_out = new synapseSetSubscription_out();
-           
-
             try
             {
-                var baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/subscription/add" : "https://synapsepay.com/api/v3/subscription/add";
+                List<string> clientIds = CommonHelper.getClientSecretId(memberId);
 
-                Logger.Info("MDA -> setSubcription - Payload to send to Synapse /v3/subscription/add: [" + JsonConvert.SerializeObject(payload) + "]");
+                string SynapseClientId = clientIds[0];
+                string SynapseClientSecret = clientIds[1];
+
+                synapseSetSubscription_int payload = new synapseSetSubscription_int();
+
+                client client = new client();
+                client.client_id = SynapseClientId;
+                client.client_secret = SynapseClientSecret;
+
+                payload.client = client;
+                payload.url = "https://www.nooch.info/noochservice/api/webhook/ViewSubscriptionForNodeFromSynapse?oid=" + oid;
+
+                payload.scope = new string[2];
+                payload.scope[0] = "NODES|" + oid + "|PATCH";
+                payload.scope[1] = "NODES|" + oid + "|DELETE";
+
+                var baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/subscription/add"
+                                                                                                      : "https://synapsepay.com/api/v3/subscription/add";
+
+                Logger.Info("Service Cntlr -> setSubcription - Payload to send to Synapse /v3/subscription/add: [" + JsonConvert.SerializeObject(payload) + "]");
 
                 var http = (HttpWebRequest)WebRequest.Create(new Uri(baseAddress));
                 http.Accept = "application/json";
@@ -6042,16 +6012,16 @@ namespace Nooch.API.Controllers
                 var sr = new StreamReader(stream);
                 var content = sr.ReadToEnd();
 
+                synapseSetSubscription_out res_synapseSetSubscription_out = new synapseSetSubscription_out();
                 res_synapseSetSubscription_out = JsonConvert.DeserializeObject<synapseSetSubscription_out>(content);
             }
             catch (WebException we)
             {
-
-
-
+                Logger.Error("Service Cntlr -> setSubcription FAILED - MemberID: [" + memberId +
+                            "], Bnk OID: [" + oid + "], Exception: [" + we + "]");
 
             }
         }
-    
+
     }
 }

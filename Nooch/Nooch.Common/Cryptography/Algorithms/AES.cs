@@ -119,7 +119,6 @@ namespace Nooch.Common.Cryptography.Algorithms
                     {
                         using (var cryptoStream = new CryptoStream(memStream, decryptor, CryptoStreamMode.Read))
                         {
-
                             byteCount = cryptoStream.Read(plainTextBytes, 0, plainTextBytes.Length);
                             memStream.Close();
                             cryptoStream.Close();
