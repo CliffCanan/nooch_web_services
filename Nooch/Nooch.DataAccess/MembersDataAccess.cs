@@ -5536,10 +5536,10 @@ namespace Nooch.DataAccess
         }
 
 
-        public string GetTokensAndTransferMoneyToNewUser(string TransactionId, string MemberIdAfterSynapseAccountCreation, string TransactionType, string recipMemId)
+        public string GetTokensAndTransferMoneyToNewUser(string TransactionId, string memberId, string TransactionType, string recipMemId)
         {
             Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser Initiated - TransType: [" + TransactionType +
-                        "], TransID: [" + TransactionId + "], New User Member ID: [" + MemberIdAfterSynapseAccountCreation +
+                        "], TransID: [" + TransactionId + "], New User Member ID: [" + memberId +
                         "], Recip MemberID: [" + recipMemId + "]");
 
             // If a REQUEST, TransactionType will be "RequestToNewUser" & MemberIdAfterSynapseAccountCreation is the Request Recipient, 
@@ -5557,9 +5557,9 @@ namespace Nooch.DataAccess
                 {
                     _dbContext.Entry(Transaction).Reload();
 
-                    if (!string.IsNullOrEmpty(MemberIdAfterSynapseAccountCreation))
+                    if (!string.IsNullOrEmpty(memberId))
                     {
-                        var newUserObj = GetMemberDetails(MemberIdAfterSynapseAccountCreation);
+                        var newUserObj = GetMemberDetails(memberId);
                         string newUsersEmail = CommonHelper.GetDecryptedData(newUserObj.UserName);
 
                         // Check if this is a TEST transaction
@@ -5570,29 +5570,21 @@ namespace Nooch.DataAccess
                         if (TransactionType == "RequestToNewUser")
                         {
                             // The "SENDER" is the person PAYING this request (so the "new" user)
-                            SenderId = new Guid(MemberIdAfterSynapseAccountCreation);
+                            SenderId = new Guid(memberId);
 
                             if (!String.IsNullOrEmpty(recipMemId))
-                            {
                                 RecipientId = new Guid(recipMemId);
-                            }
                             else
-                            {
                                 RecipientId = Transaction.Member.MemberId;
-                            }
                         }
                         else
                         {
-                            RecipientId = new Guid(MemberIdAfterSynapseAccountCreation);
+                            RecipientId = new Guid(memberId);
 
                             if (!String.IsNullOrEmpty(recipMemId))
-                            {
                                 SenderId = new Guid(recipMemId);
-                            }
                             else
-                            {
                                 SenderId = Transaction.Member.MemberId;
-                            }
                         }
 
                         Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser - SENDER MemberID: [" + SenderId +
@@ -5642,10 +5634,9 @@ namespace Nooch.DataAccess
                                 // 575ad909950629625ca88262 - Corp Checking - USE FOR ALL NON-PASSTHROUGH PAYMENTS, i.e.: Payments TO Vendors, and Application fees from Clients to RS
                                 // 574f45d79506295ff7a81db8 - Passthrough (Linked to Rent Scene's parent account - USE FOR RENT PAYMENTS - ANYTHING OVER $1,000)
                                 // 5759005795062906e1359a8e - Passthrough (Linked to Marvis Burn's Nooch account - NEVER USE)
-                                if ((sender.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49" ||
-                                    senderBankOid == "5759005795062906e1359a8e" ||
-                                    senderBankOid == "574f45d79506295ff7a81db8") &&
-                                    recipient.cipTag.ToLower() == "vendor")
+                                if (recipient.cipTag.ToLower() == "vendor" &&
+                                    (sender.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49" ||
+                                     senderBankOid == "5759005795062906e1359a8e" || senderBankOid == "574f45d79506295ff7a81db8"))
                                 {
                                     // Sender is Rent Scene and recipient is a 'Vendor'
                                     senderBankOid = "575ad909950629625ca88262";
@@ -5654,8 +5645,7 @@ namespace Nooch.DataAccess
                                 }
                                 else if (Transaction.Amount < 200 &&
                                          (recipient.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49" ||
-                                          recipBankOid == "574f45d79506295ff7a81db8" ||
-                                          recipBankOid == "5759005795062906e1359a8e") &&
+                                          recipBankOid == "574f45d79506295ff7a81db8" || recipBankOid == "5759005795062906e1359a8e") &&
                                          (sender.cipTag.ToLower() == "renter" || sender.cipTag.ToLower() == "client")) // CC (8/5/16): Should be "renter" now as of updating to Synapse's KYC 2.0, used to be "Client"
                                 {
                                     // Recipient is Rent Scene AND Sender is a Client AND Amount is < $200 (so it's probably an application fee)
@@ -5683,6 +5673,7 @@ namespace Nooch.DataAccess
                                     moneySenderFirstName = "Habitat";
                                     moneySenderLastName = "";
 
+                                    // Insert RENT SCENE values
                                     var recipBankOid2 = "574f45d79506295ff7a81db8";
                                     var recipSynapseUserId2 = "57436f4395062947f21bbcb5";
                                     var recipFingerprint2 = "6d441f70cc6891e7831432baac2e50d7";
@@ -5695,6 +5686,7 @@ namespace Nooch.DataAccess
                                                 "], Recip BankOID: [" + recipBankOid2 + "]";
                                     Logger.Info(log);
 
+                                    // 1st payment - from Habitat -> Rent Scene
                                     Call_Synapse_Order_API_Result = tda.AddTransSynapseV3Reusable(access_token,
                                         senderFingerprint, senderBankOid, amount,
                                         recipSynapseUserId2, recipFingerprint2, recipBankOid2,
@@ -5735,6 +5727,13 @@ namespace Nooch.DataAccess
                                             senderIP, moneySenderLastName, moneyRecipientLastName, memoForSyn);
 
                                         #endregion 2nd Synapse Payment (RS to Vendor)
+                                    }
+                                    else
+                                    {
+                                        var error = "MDA -> GetTokensAndTransferMoneyToNewUser - 1st HABITAT Payment (to RS) FAILED - Response From SYNAPSE's /order/add API - " +
+                                                    "ErrorMessage: [" + Call_Synapse_Order_API_Result.ErrorMessage + "], Synapse Error: [" + Call_Synapse_Order_API_Result.responseFromSynapse.error.en + "]";
+                                        Logger.Error(error);
+                                        CommonHelper.notifyCliffAboutError(error);
                                     }
                                 }
 
@@ -6069,7 +6068,7 @@ namespace Nooch.DataAccess
                                     }
                                     else
                                     {
-                                        var error = "MDA -> GetTokensAndTransferMoneyToNewUser FAILED - Success from Call Synapse Create Order API, but" +
+                                        var error = "MDA -> GetTokensAndTransferMoneyToNewUser FAILED - Success from Call Synapse Create Order API, but " +
                                                     "unable to save transaction status in DB - Error Message: [" + Call_Synapse_Order_API_Result.ErrorMessage +
                                                     "], Response From Synapse: [" + Call_Synapse_Order_API_Result.responseFromSynapse + "]";
                                         Logger.Error(error);
@@ -6117,8 +6116,7 @@ namespace Nooch.DataAccess
                 }
                 else
                 {
-                    Logger.Error("MDA - GetTokensAndTransferMoneyToNewUser FAILED -> Couldn't find this Transaction - " +
-                                 "[TransID: " + TransactionId + "]");
+                    Logger.Error("MDA - GetTokensAndTransferMoneyToNewUser FAILED -> Couldn't find this Transaction - TransID: [" + TransactionId + "]");
                     return "Either transaction already paid or transaction not found";
                 }
             }

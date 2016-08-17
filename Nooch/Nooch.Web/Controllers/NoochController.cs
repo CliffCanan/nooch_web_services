@@ -964,22 +964,22 @@ namespace Nooch.Web.Controllers
                     {
                         Response.Write("<script>var errorFromCodeBehind = '0';</script>");
 
-                        string mem_id = allQueryStrings[0];
-                        string tr_id = allQueryStrings[1];
+                        string memberId = allQueryStrings[0];
+                        string transId = allQueryStrings[1];
                         string isForRentScene = allQueryStrings[2];
 
                         // Check if this payment is for Rent Scene
                         if (isForRentScene == "true")
                         {
-                            Logger.Info("DepositMoneyComplete Page -> RENT SCENE Transaction Detected - TransID: [" + tr_id + "]");
+                            Logger.Info("DepositMoneyComplete Page -> RENT SCENE Transaction Detected - TransID: [" + transId + "]");
                             res.rs = "true";
                         }
 
                         // Getting transaction details to check if transaction is still pending
-                        res = GetTransDetailsForDepositMoneyComplete(tr_id, res);
+                        res = GetTransDetailsForDepositMoneyComplete(transId, res);
 
                         if (res.IsTransactionStillPending)
-                            res = finishTransaction(mem_id, tr_id, res);
+                            res = finishTransaction(memberId, transId, res);
                     }
                     else
                     {
@@ -997,7 +997,7 @@ namespace Nooch.Web.Controllers
             catch (Exception ex)
             {
                 Logger.Error("depositMoneyComplete Page -> OUTER EXCEPTION - mem_id Parameter: [" + Request.QueryString["mem_id"] +
-                             "], [Exception: " + ex + "]");
+                             "], Exception: [" + ex + "]");
                 res.payinfobar = false;
                 Response.Write("<script>var errorFromCodeBehind = '1';</script>");
             }
@@ -1065,7 +1065,7 @@ namespace Nooch.Web.Controllers
         }
 
 
-        private ResultMoveMoneyFromLandingPageComplete finishTransaction(string MemberIdAfterSynapseAccountCreation, string TransactionId, ResultMoveMoneyFromLandingPageComplete resultDepositMoneyComplete)
+        private ResultMoveMoneyFromLandingPageComplete finishTransaction(string memId, string transId, ResultMoveMoneyFromLandingPageComplete resultDepositMoneyComplete)
         {
             ResultMoveMoneyFromLandingPageComplete res = resultDepositMoneyComplete;
             res.paymentSuccess = false;
@@ -1073,8 +1073,8 @@ namespace Nooch.Web.Controllers
             try
             {
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-                string serviceMethod = "GetTransactionDetailByIdAndMoveMoneyForNewUserDeposit?TransactionId=" + TransactionId +
-                                       "&MemberIdAfterSynapseAccountCreation=" + MemberIdAfterSynapseAccountCreation +
+                string serviceMethod = "GetTransactionDetailByIdAndMoveMoneyForNewUserDeposit?TransactionId=" + transId +
+                                       "&MemberIdAfterSynapseAccountCreation=" + memId +
                                        "&TransactionType=SentToNewUser&recipMemId=";
 
                 if ((res.usrTyp == "Existing" || res.usrTyp == "Tenant") &&
@@ -1093,15 +1093,14 @@ namespace Nooch.Web.Controllers
                         res.paymentSuccess = true;
                     else
                     {
-                        Logger.Error("DepositMoneyComplete Page -> completeTrans FAILED - TransId: [" + TransactionId + "]");
+                        Logger.Error("DepositMoneyComplete Page -> completeTrans FAILED - TransId: [" + transId + "]");
                         Response.Write("<script>errorFromCodeBehind = 'failed';</script>");
                     }
                 }
             }
             catch (Exception ex)
             {
-                Logger.Error("depositMoneyComplete Page -> completeTrans FAILED - TransId: [" + TransactionId +
-                             "], Exception: [" + ex + "]");
+                Logger.Error("depositMoneyComplete Page -> completeTrans FAILED - TransId: [" + transId + "], Exception: [" + ex + "]");
             }
 
             return res;
