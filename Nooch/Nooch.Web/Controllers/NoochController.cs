@@ -964,22 +964,22 @@ namespace Nooch.Web.Controllers
                     {
                         Response.Write("<script>var errorFromCodeBehind = '0';</script>");
 
-                        string mem_id = allQueryStrings[0];
-                        string tr_id = allQueryStrings[1];
+                        string memberId = allQueryStrings[0];
+                        string transId = allQueryStrings[1];
                         string isForRentScene = allQueryStrings[2];
 
                         // Check if this payment is for Rent Scene
                         if (isForRentScene == "true")
                         {
-                            Logger.Info("DepositMoneyComplete Page -> RENT SCENE Transaction Detected - TransID: [" + tr_id + "]");
+                            Logger.Info("DepositMoneyComplete Page -> RENT SCENE Transaction Detected - TransID: [" + transId + "]");
                             res.rs = "true";
                         }
 
                         // Getting transaction details to check if transaction is still pending
-                        res = GetTransDetailsForDepositMoneyComplete(tr_id, res);
+                        res = GetTransDetailsForDepositMoneyComplete(transId, res);
 
                         if (res.IsTransactionStillPending)
-                            res = finishTransaction(mem_id, tr_id, res);
+                            res = finishTransaction(memberId, transId, res);
                     }
                     else
                     {
@@ -997,7 +997,7 @@ namespace Nooch.Web.Controllers
             catch (Exception ex)
             {
                 Logger.Error("depositMoneyComplete Page -> OUTER EXCEPTION - mem_id Parameter: [" + Request.QueryString["mem_id"] +
-                             "], [Exception: " + ex + "]");
+                             "], Exception: [" + ex + "]");
                 res.payinfobar = false;
                 Response.Write("<script>var errorFromCodeBehind = '1';</script>");
             }
@@ -1065,7 +1065,7 @@ namespace Nooch.Web.Controllers
         }
 
 
-        private ResultMoveMoneyFromLandingPageComplete finishTransaction(string MemberIdAfterSynapseAccountCreation, string TransactionId, ResultMoveMoneyFromLandingPageComplete resultDepositMoneyComplete)
+        private ResultMoveMoneyFromLandingPageComplete finishTransaction(string memId, string transId, ResultMoveMoneyFromLandingPageComplete resultDepositMoneyComplete)
         {
             ResultMoveMoneyFromLandingPageComplete res = resultDepositMoneyComplete;
             res.paymentSuccess = false;
@@ -1073,8 +1073,8 @@ namespace Nooch.Web.Controllers
             try
             {
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-                string serviceMethod = "GetTransactionDetailByIdAndMoveMoneyForNewUserDeposit?TransactionId=" + TransactionId +
-                                       "&MemberIdAfterSynapseAccountCreation=" + MemberIdAfterSynapseAccountCreation +
+                string serviceMethod = "GetTransactionDetailByIdAndMoveMoneyForNewUserDeposit?TransactionId=" + transId +
+                                       "&MemberIdAfterSynapseAccountCreation=" + memId +
                                        "&TransactionType=SentToNewUser&recipMemId=";
 
                 if ((res.usrTyp == "Existing" || res.usrTyp == "Tenant") &&
@@ -1093,15 +1093,14 @@ namespace Nooch.Web.Controllers
                         res.paymentSuccess = true;
                     else
                     {
-                        Logger.Error("DepositMoneyComplete Page -> completeTrans FAILED - TransId: [" + TransactionId + "]");
+                        Logger.Error("DepositMoneyComplete Page -> completeTrans FAILED - TransId: [" + transId + "]");
                         Response.Write("<script>errorFromCodeBehind = 'failed';</script>");
                     }
                 }
             }
             catch (Exception ex)
             {
-                Logger.Error("depositMoneyComplete Page -> completeTrans FAILED - TransId: [" + TransactionId +
-                             "], Exception: [" + ex + "]");
+                Logger.Error("depositMoneyComplete Page -> completeTrans FAILED - TransId: [" + transId + "], Exception: [" + ex + "]");
             }
 
             return res;
@@ -2340,7 +2339,7 @@ namespace Nooch.Web.Controllers
                     {
                         res.from = "appjaxx";
 
-                        // Only requiring the PIN for AppJaxx (for now), which is why the classForPinButton is 'hidden' by default but not classForForm
+                        // Requiring PIN for AppJaxx (for now), which is why the classForPinButton is 'hidden' by default but not classForForm
                         res.classForForm = "hidden";
                         res.classForPinButton = "";
                     }
@@ -2426,16 +2425,20 @@ namespace Nooch.Web.Controllers
             {
                 #region Lookup PIN
 
-                pin = String.IsNullOrEmpty(pin) || pin.Length != 4 ? "0000" : pin;
+                var userName = "";
 
-                if (from == "rentscene")
-                    pin = CommonHelper.GetMemberPinByUserName("payments@rentscene.com");
-                else if (from == "habitat")
-                    pin = CommonHelper.GetMemberPinByUserName("andrew@tryhabitat.com");
-                else if (from == "nooch")
-                    pin = CommonHelper.GetMemberPinByUserName("team@nooch.com");
-                else if (from == "appjaxx")
-                    pin = CommonHelper.GetMemberPinByUserName("josh@appjaxx.com");
+                if (from.ToLower() == "rentscene")
+                    userName = "payments@rentscene.com";
+                else if (from.ToLower() == "habitat")
+                    userName = "andrew@tryhabitat.com";
+                else if (from.ToLower() == "nooch")
+                    userName = "team@nooch.com";
+                else if (from.ToLower() == "appjaxx")
+                    userName = "josh@appjaxx.com";
+
+                if (!String.IsNullOrEmpty(userName))
+                    pin = CommonHelper.GetMemberPinByUserName(userName);
+
 
                 if (String.IsNullOrEmpty(pin))
                 {
@@ -2467,18 +2470,6 @@ namespace Nooch.Web.Controllers
                 {
                     string memIdToUse = "";
                     string accessToken = "";
-
-                    var userName = "";
-
-                    if (from.ToLower() == "rentscene")
-                        userName = "payments@rentscene.com";
-                    else if (from.ToLower() == "habitat")
-                        userName = "andrew@tryhabitat.com";
-                    else if (from.ToLower() == "nooch")
-                        userName = "team@nooch.com";
-                    else if (from.ToLower() == "appjaxx")
-                        userName = "josh@appjaxx.com";
-
 
                     Member member = CommonHelper.GetMemberDetailsByUserName(userName);
 
@@ -2534,23 +2525,17 @@ namespace Nooch.Web.Controllers
                     if (response.success == true)
                     {
                         if (response.isEmailAlreadyReg == true)
-                        {
                             // CLIFF (5/15/16): shouldn't ever get here since I added the block above to check if the email
                             //                  is already registered (so it shouldn't even call /RequestMoneyForRentScene).
                             Logger.Info("Make Payment Page -> submitPayment Success - Email address already registered to an Existing User - " +
                                         "Name: [" + response.name + "], Email: [" + email + "], Status: [" + response.memberStatus + "], MemberID: [" + response.memberId + "]");
-                        }
                         else
-                        {
                             Logger.Info("Make Payment Page -> submitPayment Success - Payment Request submitted to NEW user successfully - " +
                                         "Recipient: [" + name + "], Email: [" + email + "], Amount: [" + amount + "], Memo: [" + memo + "]");
-                        }
                     }
                     else
-                    {
                         Logger.Error("Make Payment Page -> submitPayment FAILED - Server response for RequestMoneyForRentScene() was NOT successful - " +
                                      "Recipient: [" + name + "], Email: [" + email + "], Amount: [" + amount + "], Memo: [" + memo + "]");
-                    }
 
                     #endregion Logging For Debugging
                 }
@@ -2606,17 +2591,13 @@ namespace Nooch.Web.Controllers
             pin = (String.IsNullOrEmpty(pin) || pin.Length != 4) ? "0000" : pin;
 
             if (from == "rentscene")
-            {
                 pin = CommonHelper.GetMemberPinByUserName("payments@rentscene.com");
-            }
+            else if (from == "habitat")
+                pin = CommonHelper.GetMemberPinByUserName("andrew@tryhabitat.com");
             else if (from == "nooch")
-            {
                 pin = CommonHelper.GetMemberPinByUserName("team@nooch.com");
-            }
             else if (from == "appjaxx")
-            {
                 pin = CommonHelper.GetMemberPinByUserName("josh@appjaxx.com");
-            }
 
             if (String.IsNullOrEmpty(pin))
             {
@@ -2654,6 +2635,12 @@ namespace Nooch.Web.Controllers
                         memIdToUse = member.MemberId.ToString();
                         accessToken = member.AccessToken.ToString();
                     }
+                    else if (from.ToLower() == "habitat")
+                    {
+                        Member member = CommonHelper.GetMemberDetailsByUserName("andrew@tryhabitat.com");
+                        memIdToUse = member.MemberId.ToString();
+                        accessToken = member.AccessToken.ToString();
+                    }
                     else if (from.ToLower() == "nooch")
                     {
                         Member member = CommonHelper.GetMemberDetailsByUserName("team@nooch.com");
@@ -2669,8 +2656,9 @@ namespace Nooch.Web.Controllers
 
                     if (String.IsNullOrEmpty(memIdToUse))
                     {
-                        Logger.Error("Make Payment Page -> SubmitRequestToExistingUser FAILED - unable to get MemberID based on given username - ['from' param: " + from + "]");
+                        Logger.Error("Make Payment Page -> SubmitRequestToExistingUser FAILED - unable to get MemberID based on given username - 'from' param: [" + from + "]");
                         res.msg = "Unable to get MemberID based on given username";
+                        return Json(res);
                     }
 
                     string RecepientId = CommonHelper.GetMemberIdByUserName(email.ToString());
@@ -2697,8 +2685,7 @@ namespace Nooch.Web.Controllers
 
                 Logger.Info("Make Payment Page -> submitRequestToExistingUser - URL To Query: [" + urlToUse + "], IsRequest: [" + isRequest + "]");
 
-                Logger.Info("Make Payment Page -> submitRequestToExistingUser - Server Response for RequestMoneyToExistingUserForRentScene: " +
-                            "Success: [" + response.success + "], Msg: [" + response.msg + "]");
+                Logger.Info("Make Payment Page -> submitRequestToExistingUser - Server Response: Success: [" + response.success + "], Msg: [" + response.msg + "]");
 
                 if (response != null)
                 {
@@ -2707,22 +2694,16 @@ namespace Nooch.Web.Controllers
                     #region Logging For Debugging
 
                     if (response.success == true)
-                    {
                         Logger.Info("Make Payment Page -> submitRequestToExistingUser Success - Payment" + textLoggerHelper + " submitted successfully - " +
                                     "ServiceMethod: [" + serviceMethod + "], Recipient: [" + name + "], Email: [" + email + "], Amount: [" + amount + "], Memo: [" + memo + "]");
-                    }
                     else
-                    {
                         Logger.Error("Make Payment Page -> submitRequestToExistingUser FAILED - Server response for ServiceMethod: [" + serviceMethod +
                                      "] was NOT successful - Recipient: [" + name + "], Email: [" + email + "], Amount: [" + amount + "], Memo: [" + memo + "]");
-                    }
 
                     #endregion Logging For Debugging
                 }
                 else
-                {
                     res.msg = "Unknown server error - Server's response was null.";
-                }
             }
             catch (Exception ex)
             {
@@ -3196,9 +3177,7 @@ namespace Nooch.Web.Controllers
                     res.usersPhoto = !String.IsNullOrEmpty(memberObj.Photo) ? memberObj.Photo : "https://www.noochme.com/noochweb/Assets/Images/userpic-default.png";
 
                     if (user != "rentscene" && !String.IsNullOrEmpty(memberObj.LastName))
-                    {
                         res.usersName += " " + CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.LastName));
-                    }
 
                     res.usersEmail = CommonHelper.GetDecryptedData(memberObj.UserName);
                 }

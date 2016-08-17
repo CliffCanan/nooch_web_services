@@ -2783,7 +2783,7 @@ namespace Nooch.Common
 
         public static synapseSearchUserResponse getUserPermissionsForSynapseV3(string userEmail)
         {
-            Logger.Info("Common Helper -> getUserPermissionsForSynapseV3 Initiated - [Email: " + userEmail + "]");
+            Logger.Info("Common Helper -> getUserPermissionsForSynapseV3 Fired - Email: [" + userEmail + "]");
 
             synapseSearchUserResponse res = new synapseSearchUserResponse();
             res.success = false;
@@ -2845,9 +2845,7 @@ namespace Nooch.Common
                         if (res.page != res.page_count || res.page == res.page_count)
                         {
                             if (SEARCHUSER_CURRENT_PAGE == 1)
-                            {
                                 SEARCHED_USERS = res.users.ToList<synapseSearchUserResponse_User>();
-                            }
                             else
                             {
                                 List<synapseSearchUserResponse_User> temp = res.users.ToList<synapseSearchUserResponse_User>();
@@ -2865,7 +2863,8 @@ namespace Nooch.Common
                     }
                     else
                     {
-                        Logger.Error("Common Helper -> getUserPermissionsForSynapseV3 FAILED - Got response from Synapse /user/search, but 'success' was null or not 'true'");
+                        var error = "Common Helper -> getUserPermissionsForSynapseV3 FAILED - Got response from Synapse /user/search, but 'success' was null or not 'true'";
+                        Logger.Error(error);
                         res.error_code = "Service error.";
                     }
                 }
@@ -3066,7 +3065,7 @@ namespace Nooch.Common
         // oAuth token needs to be in encrypted format
         public static synapseV3checkUsersOauthKey refreshSynapseV3OautKey(string oauthKey)
         {
-            Logger.Info("Common Helper -> refreshSynapseV3OautKey Initiated - User's Original OAuth Key (enc): [" + oauthKey + "]");
+            Logger.Info("Common Helper -> refreshSynapseV3OautKey Fired - User's Original OAuth Key (Encr): [" + oauthKey + "]");
 
             synapseV3checkUsersOauthKey res = new synapseV3checkUsersOauthKey();
             res.success = false;
@@ -3243,22 +3242,28 @@ namespace Nooch.Common
                                     else
                                     {
                                         res.msg = "Phone number not found from synapse";
-                                        Logger.Error("Common Helper -> refreshSynapseV3OautKey FAILED - No Phone # Array returned from Synapse - " +
-                                                     "Can't attempt 2FA flow - ABORTING");
+                                        var error = "Common Helper -> refreshSynapseV3OautKey FAILED - No Phone # Array returned from Synapse - " +
+                                                     "Can't attempt 2FA flow - ABORTING";
+                                        Logger.Error(error);
+                                        notifyCliffAboutError(error);
                                     }
                                 }
                                 else
                                 {
                                     res.msg = "Error from Synapse, but didn't includ 'fingerprint not verified'";
-                                    Logger.Error("Common Helper -> refreshSynapseV3OautKey FAILED - Synapse Returned Error other than - " +
-                                                 "'fingerprint not verified' - Can't attempt 2FA flow - ABORTING");
+                                    var error = "Common Helper -> refreshSynapseV3OautKey FAILED - Synapse Returned Error other than - " +
+                                                 "'fingerprint not verified' - Can't attempt 2FA flow - ABORTING";
+                                    Logger.Error(error);
+                                    notifyCliffAboutError(error);
                                 }
                             }
                         }
                         else
                         {
-                            Logger.Error("Common Helper -> refreshSynapseV3OautKey FAILED - Attempted to Sign user into Synapse, but got " +
-                                         "error from Synapse service, no 'success' key found - Orig. Oauth Key: [" + oauthKey + "]");
+                            var error = "Common Helper -> refreshSynapseV3OautKey FAILED - Attempted to Sign user into Synapse, but got " +
+                                         "error from Synapse service, no 'success' key found - Orig. Oauth Key: [" + oauthKey + "]";
+                            Logger.Error(error);
+                            notifyCliffAboutError(error);
                             res.msg = "Service error.";
                         }
                     }
@@ -3272,25 +3277,13 @@ namespace Nooch.Common
                         var response = new StreamReader(we.Response.GetResponseStream()).ReadToEnd();
                         JObject jsonFromSynapse = JObject.Parse(response);
 
-                        var error_code = jsonFromSynapse["error_code"].ToString();
-                        res.msg = jsonFromSynapse["error"]["en"].ToString();
+                        var error_code = jsonFromSynapse["error_code"] != null ? jsonFromSynapse["error_code"].ToString() : "NOT FOUND";
+                        res.msg = jsonFromSynapse["error"]["en"] != null ? jsonFromSynapse["error"]["en"].ToString() : "NO ERROR MSG FROM SYNAPSE FOUND";
 
-                        if (!String.IsNullOrEmpty(error_code))
-                        {
-                            Logger.Error("Common Helper -> refreshSynapseV3OautKey FAILED (Exception)- [Synapse Error Code: " + error_code +
-                                         "], [Error Msg: " + res.msg + "]");
-                        }
-
-                        if (!String.IsNullOrEmpty(res.msg))
-                        {
-                            Logger.Error("Common Helper -> synapseV3checkUsersOauthKey FAILED (Exception) - HTTP Code: [" + http_code +
-                                         "], Error Msg: [" + res.msg + "]");
-                        }
-                        else
-                        {
-                            Logger.Error("Common Helper -> synapseV3checkUsersOauthKey FAILED (Exception) - Synapse Error msg was null or not found - [Original Oauth Key (enc): " +
-                                         oauthKey + "], [Exception: " + we.Message + "]");
-                        }
+                        var error = "Common Helper -> refreshSynapseV3OautKey FAILED - Synapse Error Code: [" + error_code +
+                                     "], Error Msg: [" + res.msg + "], HTTP Code: [" + http_code + "], WebException: [" + we.Message + "]";
+                        Logger.Error(error);
+                        notifyCliffAboutError(error);
 
                         #endregion Synapse V3 Signin Exception
                     }
@@ -3299,18 +3292,21 @@ namespace Nooch.Common
                 }
                 else
                 {
-                    // no record found for given oAuth token in synapse createuser results table
-                    Logger.Error("Common Helper -> refreshSynapseV3OautKey FAILED - no record found for given oAuth key found - " +
-                                 "Orig. Oauth Key: (enc) [" + oauthKey + "]");
+                    // no record found for given oAuth token in SynapseCreateUserResults results table
+                    var error = "Common Helper -> refreshSynapseV3OautKey FAILED - no record found for given oAuth key found - " +
+                                "Orig. Oauth Key: (enc) [" + oauthKey + "]";
+                    Logger.Error(error);
+                    notifyCliffAboutError(error);
                     res.msg = "Service error - no record found for give OAuth Key.";
                 }
             }
             catch (Exception ex)
             {
-                Logger.Error("Common Helper -> refreshSynapseV3OautKey FAILED: Outer Catch Error - Orig. OAuth Key (enc): [" + oauthKey +
-                             "], [Exception: " + ex + "]");
-
-                res.msg = "Nooch Server Error: Outer Exception #2326.";
+                var error = "Common Helper -> refreshSynapseV3OautKey FAILED: Outer Catch Error - Orig. OAuth Key (enc): [" + oauthKey +
+                             "], Exception: [" + ex + "]";
+                Logger.Error(error);
+                notifyCliffAboutError(error);
+                res.msg = "Nooch Server Error: Outer Exception #3319";
             }
 
             return res;
@@ -3331,9 +3327,7 @@ namespace Nooch.Common
         {
             bool isPinIncluded = false;
             if (String.IsNullOrEmpty(validationPin))
-            {
                 Logger.Info("Common Helper -> SynapseV3SignIn Initiated - Oauth Key (enc): [" + oauthKey + "] - No ValidationPIN Passed.");
-            }
             else
             {
                 isPinIncluded = true;
@@ -3610,8 +3604,8 @@ namespace Nooch.Common
             }
             catch (Exception ex)
             {
-                Logger.Error("Common Helper -> SynapseV3SignIn FAILED: Outer Catch Error - Orig. OAuth Key (enc): [" + oauthKey + "], [Exception: " + ex + "]");
-                res.msg = "Nooch Server Error: Outer Exception #3330.";
+                Logger.Error("Common Helper -> SynapseV3SignIn FAILED: Outer Catch Error - Orig. OAuth Key (enc): [" + oauthKey + "], Exception: [" + ex + "]");
+                res.msg = "Nooch Server Error: Outer Exception #3614.";
             }
 
             return res;
@@ -3620,7 +3614,7 @@ namespace Nooch.Common
 
         public static SynapseBankSetDefaultResult SetSynapseDefaultBank(string MemberId, string BankName, string BankOId)
         {
-            Logger.Info("Common Helper -> SetSynapseDefaultBank Fired - MemberId: [" + MemberId + "], Bank Name: [" +
+            Logger.Info("Common Helper -> SetSynapseDefaultBank Fired - MemberID: [" + MemberId + "], Bank Name: [" +
                         BankName + "], BankOId: [" + BankOId + "]");
 
             SynapseBankSetDefaultResult res = new SynapseBankSetDefaultResult();
@@ -4047,7 +4041,7 @@ namespace Nooch.Common
 
                 else
                 {
-                    Logger.Error("Common Helper -> SetSynapseDefaultBank ERROR: Member not found in Nooch DB - MemberId: [" + MemberId + "]; BankId: [" + BankOId + "]");
+                    Logger.Error("Common Helper -> SetSynapseDefaultBank ERROR: Member not found in Nooch DB - MemberID: [" + MemberId + "]; BankID: [" + BankOId + "]");
                     res.Message = "Member not found";
                 }
             }
@@ -4073,8 +4067,7 @@ namespace Nooch.Common
         {
             var object_context = GetObjectContextFromEntity(entity);
 
-            if (object_context == null)
-                return null;
+            if (object_context == null) return null;
 
             return new DbContext(object_context, false);
         }
@@ -4084,8 +4077,7 @@ namespace Nooch.Common
         {
             var field = entity.GetType().GetField("_entityWrapper");
 
-            if (field == null)
-                return null;
+            if (field == null) return null;
 
             var wrapper = field.GetValue(entity);
             var property = wrapper.GetType().GetProperty("Context");
@@ -4099,10 +4091,7 @@ namespace Nooch.Common
         {
             //Logger.Info("Common Helper -> UpdateMemberIPAddressAndDeviceId Initiated - MemberID: [" + MemberId + "], IP: [" + IP + "], DeviceID: [" + DeviceId + "]");
 
-            if (String.IsNullOrEmpty(MemberId))
-            {
-                return "MemberId not supplied.";
-            }
+            if (String.IsNullOrEmpty(MemberId)) return "MemberId not supplied.";
 
             Guid memId = Utility.ConvertToGuid(MemberId);
 
@@ -4137,9 +4126,7 @@ namespace Nooch.Common
                             ipSavedSuccessfully = true;
                         }
                         else
-                        {
                             Logger.Error("Common Helper -> UpdateMemberIPAddressAndDeviceId FAILED Trying To Saving IP Address (1) in DB - MemberID: [" + MemberId + "]");
-                        }
                     }
                     else
                     {
@@ -4160,9 +4147,7 @@ namespace Nooch.Common
                             ipSavedSuccessfully = true;
                         }
                         else
-                        {
                             Logger.Error("Common Helper -> UpdateMemberIPAddressAndDeviceId FAILED Trying To Saving IP Address (2) in DB - MemberID: [" + MemberId + "]");
-                        }
                     }
                 }
                 catch (Exception ex)
@@ -4171,9 +4156,7 @@ namespace Nooch.Common
                 }
             }
             else
-            {
                 Logger.Info("Common Helper -> UpdateMemberIPAddressAndDeviceId - No IP Address Passed - MemberID: [" + MemberId + "]");
-            }
 
             #endregion Save IP Address
 
@@ -4193,8 +4176,8 @@ namespace Nooch.Common
                         member.UDID1 = DeviceId;
                         member.DateModified = DateTime.Now;
                     }
-                    int c = _dbContext.SaveChanges();
 
+                    int c = _dbContext.SaveChanges();
                     if (c > 0)
                     {
                         _dbContext.Entry(member).Reload();
@@ -4202,9 +4185,7 @@ namespace Nooch.Common
                         udidIdSavedSuccessfully = true;
                     }
                     else
-                    {
                         Logger.Error("Common Helper -> UpdateMemberIPAddressAndDeviceId FAILED Trying To Saving Device ID in DB - MemberID: [" + MemberId + "]");
-                    }
                 }
                 catch (Exception ex)
                 {
@@ -4212,24 +4193,16 @@ namespace Nooch.Common
                 }
             }
             else
-            {
                 Logger.Info("Common Helper -> UpdateMemberIPAddressAndDeviceId - No Device ID Passed - MemberID: [" + MemberId + "]");
-            }
 
             #endregion Save Device ID
 
             if (ipSavedSuccessfully && udidIdSavedSuccessfully)
-            {
                 return "Both IP and DeviceID saved successfully.";
-            }
             else if (ipSavedSuccessfully)
-            {
                 return "Only IP address saved successfully, not DeviceID.";
-            }
             else if (udidIdSavedSuccessfully)
-            {
                 return "Only DeviceID saved successfully, not IP Address.";
-            }
 
             return "Neither IP address nor DeviceID were saved.";
         }
@@ -4237,7 +4210,7 @@ namespace Nooch.Common
 
         public static string GetMemberIdByContactNumber(string userContactNumber)
         {
-            Logger.Info("Common Helper -> GetMemberIdByContactNumber Initiated - ContactNumber: [" + userContactNumber + "]");
+            Logger.Info("Common Helper -> GetMemberIdByContactNumber Fired - ContactNumber: [" + userContactNumber + "]");
 
             string trimmedContactNum = RemovePhoneNumberFormatting(userContactNumber);
 
@@ -4275,26 +4248,21 @@ namespace Nooch.Common
         }
 
 
-        public static string SaveMemberFBId(string MemberId, string MemberFBId, string IsConnect)
+        public static string SaveMemberFBId(string MemberId, string fbid, string IsConnect)
         {
-            Logger.Info("Common Helper -> SaveMembersFBId - MemberId: [" + MemberId + "]");
+            Logger.Info("Common Helper -> SaveMembersFBId Fired - MemberID: [" + MemberId + "], FBID: [" + fbid + "]");
 
             try
             {
-                MemberFBId = GetEncryptedData(MemberFBId.ToLower());
+                fbid = GetEncryptedData(fbid.ToLower());
 
                 var noochMember = GetMemberDetails(MemberId);
 
                 if (noochMember != null)
                 {
-                    if (IsConnect == "YES")
-                    {
-                        noochMember.FacebookAccountLogin = MemberFBId.Replace(" ", "+");
-                    }
-                    else
-                    {
-                        noochMember.FacebookAccountLogin = null;
-                    }
+                    if (IsConnect == "YES") noochMember.FacebookAccountLogin = fbid.Replace(" ", "+");
+                    else noochMember.FacebookAccountLogin = null;
+
                     noochMember.DateModified = DateTime.Now;
 
                     DbContext dbc = GetDbContextFromEntity(noochMember);
@@ -4303,9 +4271,7 @@ namespace Nooch.Common
                     return i > 0 ? "Success" : "Failure";
                 }
                 else
-                {
                     return "Failure";
-                }
             }
             catch (Exception)
             {
@@ -4318,7 +4284,7 @@ namespace Nooch.Common
         {
             RemoveNodeGenricResult res = new RemoveNodeGenricResult();
             res.IsSuccess = false;
-            Logger.Info("Common Helper -> RemoveBankNodeFromSynapse - MemberId: [" + MemberId + "] - NodeId: [" + nodeIdToRemove + "]");
+            Logger.Info("Common Helper -> RemoveBankNodeFromSynapse Fired - MemberId: [" + MemberId + "] - NodeId: [" + nodeIdToRemove + "]");
 
             try
             {
@@ -4431,20 +4397,13 @@ namespace Nooch.Common
 
                             // Also get the CITY
                             if (item["types"][0].ToString() == "locality")
-                            {
                                 res.city = item["short_name"].ToString();
-                            }
                         }
 
-                        if (res.IsSuccess)
-                        {
-                            res.CompleteAddress = jsonFromSynapse["results"][0]["formatted_address"].ToString();
-                        }
+                        if (res.IsSuccess) res.CompleteAddress = jsonFromSynapse["results"][0]["formatted_address"].ToString();
                     }
                     else
-                    {
                         res.ErrorMessage = "Error with Google Maps API.";
-                    }
                 }
                 catch (Exception ex)
                 {
@@ -4493,16 +4452,16 @@ namespace Nooch.Common
         }
 
 
-        public static CancelTransactionAtSynapseResult CancelTransactionAtSynapse(string TransationId, string MemberId)
+        public static CancelTransactionAtSynapseResult CancelTransactionAtSynapse(string transId, string memberId)
         {
-            Logger.Info("CancelTransactionAtSynapse -> - TransationId: [" + TransationId + "]");
+            Logger.Info("CommonHelper -> CancelTransactionAtSynapse Fired - TransID: [" + transId + "]");
             CancelTransactionAtSynapseResult res = new CancelTransactionAtSynapseResult();
 
             TransactionsStatusAtSynapse transSynapseStatus = new TransactionsStatusAtSynapse();
 
             try
             {
-                transSynapseStatus = getTransationDetailsAtSynapse(TransationId);
+                transSynapseStatus = getTransationDetailsAtSynapse(transId);
 
                 if (transSynapseStatus == null)
                     res.errorMsg = "Transation Not Found";
@@ -4511,8 +4470,8 @@ namespace Nooch.Common
                          transSynapseStatus.status == "QUEUED-BY-SYNAPSE" || transSynapseStatus.status_id == "-1" ||
                          transSynapseStatus.status == "QUEUED-BY-RECEIVER")
                 {
-                    var MemberObj = GetMemberDetails(MemberId);
-                    var OauthObj = GetSynapseCreateaUserDetails(MemberId);
+                    var MemberObj = GetMemberDetails(memberId);
+                    var OauthObj = GetSynapseCreateaUserDetails(memberId);
 
                     string baseAddress = "";
                     baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/trans/cancel" : "https://synapsepay.com/api/v3/trans/cancel";
@@ -4560,7 +4519,7 @@ namespace Nooch.Common
                     }
                     catch (WebException we)
                     {
-                        Logger.Error("Common Helper -> CancelTransactionAtSynapse - TransID: [" + TransationId + "] - Error: [" + we + "]");
+                        Logger.Error("Common Helper -> CancelTransactionAtSynapse - TransID: [" + transId + "] - Error: [" + we + "]");
                         res.IsSuccess = false;
                         res.Message = "Error cancelling Transation.";
                     }
@@ -4639,10 +4598,8 @@ namespace Nooch.Common
                     var memGuid = Utility.ConvertToGuid(MemberId);
 
                     var memberObj = GetMemberDetails(MemberId);
-                    if (memberObj == null)
-                    {
-                        return "Member not found.";
-                    }
+
+                    if (memberObj == null) return "Member not found.";
 
                     var bankAccountDetails = db.SynapseBanksOfMembers.FirstOrDefault(b =>
                                                                                      b.IsDefault == true &&
@@ -4651,10 +4608,7 @@ namespace Nooch.Common
                                                                                      b.MemberId == memGuid &&
                                                                                      b.Status == "Not Verified");
 
-                    if (bankAccountDetails == null)
-                    {
-                        return "Bank account not found.";
-                    }
+                    if (bankAccountDetails == null) return "Bank account not found.";
 
                     if (memberObj != null && bankAccountDetails != null)
                     {
@@ -4730,10 +4684,9 @@ namespace Nooch.Common
                                          select statusObj).OrderByDescending(n => n.Id).FirstOrDefault();
 
                     if (lastStatusObj != null)
-                    {
                         return lastStatusObj.status_note;
-                    }
-                    else return "No status note";
+                    else
+                        return "No status note";
                 }
             }
             catch (Exception ex)
@@ -4781,13 +4734,9 @@ namespace Nooch.Common
                                 Member otherUser = new Member();
 
                                 if (trans.SenderId == id && trans.SenderId != trans.RecipientId) // Sent to existing user, get recipient
-                                {
                                     otherUser = _dbContext.Members.FirstOrDefault(m => m.MemberId == trans.RecipientId && m.IsDeleted == false);
-                                }
                                 else if (trans.SenderId != id && trans.SenderId != trans.RecipientId) // Received from existing user, get sender
-                                {
                                     otherUser = _dbContext.Members.FirstOrDefault(m => m.MemberId == trans.SenderId && m.IsDeleted == false);
-                                }
                                 else if (trans.SenderId == id && trans.InvitationSentTo != null) // Sent to non-Nooch user, get recipient by email
                                 {
                                     var invitedUsersEmailEnc = GetEncryptedData(trans.InvitationSentTo);
@@ -4841,20 +4790,16 @@ namespace Nooch.Common
 
                         #endregion Loop Through Transaction List
 
-                        Logger.Info("Common Helper -> GetSuggestedUsers SUCCESS - COUNT: [" + suggestedUsers.suggestions.Count + "], MemberID: [" + memberId + "]");
+                        //Logger.Info("Common Helper -> GetSuggestedUsers SUCCESS - COUNT: [" + suggestedUsers.suggestions.Count + "], MemberID: [" + memberId + "]");
 
                         suggestedUsers.success = true;
                         suggestedUsers.msg = "Found [" + suggestedUsers.suggestions.Count.ToString() + "]";
                     }
                     else
-                    {
                         suggestedUsers.msg = "No transactions found";
-                    }
                 }
                 else
-                {
                     suggestedUsers.msg = "Member not found";
-                }
             }
             catch (Exception ex)
             {

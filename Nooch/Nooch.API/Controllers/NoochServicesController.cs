@@ -4074,7 +4074,7 @@ namespace Nooch.API.Controllers
             {
                 try
                 {
-                    Logger.Info("Service Controller - RemoveSynapseV3BankAccount - MemberId: [" + memberId + "]");
+                    Logger.Info("Service Cntlr - RemoveSynapseV3BankAccount - MemberId: [" + memberId + "]");
 
                     var memdataAccess = new MembersDataAccess();
 
@@ -4087,7 +4087,7 @@ namespace Nooch.API.Controllers
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Controller - RemoveSynapseV3BankAccount FAILED - MemberId: [" + memberId + "]. Exception: [" + ex + "]");
+                    Logger.Error("Service Cntlr - RemoveSynapseV3BankAccount FAILED - MemberId: [" + memberId + "]. Exception: [" + ex + "]");
 
                     res.msg = "Service layer catch exception";
 
@@ -4095,9 +4095,7 @@ namespace Nooch.API.Controllers
                 }
             }
             else
-            {
                 res.msg = "Invalid OAuth 2 Access";
-            }
 
             return res;
         }
@@ -4105,13 +4103,12 @@ namespace Nooch.API.Controllers
 
         [HttpGet]
         [ActionName("GetTransactionDetailByIdAndMoveMoneyForNewUserDeposit")]
-        public TransactionDto GetTransactionDetailByIdAndMoveMoneyForNewUserDeposit(string TransactionId, string MemberIdAfterSynapseAccountCreation, string TransactionType, string recipMemId)
+        public TransactionDto GetTransactionDetailByIdAndMoveMoneyForNewUserDeposit(string TransactionId, string MemberId, string TransactionType, string recipMemId)
         {
             try
             {
-                Logger.Info("Service Controller - GetTransactionDetailByIdAndMoveMoneyForNewUserDeposit Initiated - TransType: [" + TransactionType +
-                            "], TransId: [" + TransactionId + "],  MemberIdAfterSynapseAccountCreation: [" + MemberIdAfterSynapseAccountCreation +
-                            "], RecipientMemberID: [" + recipMemId + "]");
+                Logger.Info("Service Cntlr - GetTransactionDetailByIdAndMoveMoneyForNewUserDeposit Fired - TransType: [" + TransactionType +
+                            "], TransID: [" + TransactionId + "],  MemberID: [" + MemberId + "], RecipientMemberID: [" + recipMemId + "]");
 
                 var tda = new TransactionsDataAccess();
                 Transaction tr = tda.GetTransactionById(TransactionId);
@@ -4139,14 +4136,10 @@ namespace Nooch.API.Controllers
                     trans.InvitationSentTo = (tr.InvitationSentTo != null) ? CommonHelper.GetDecryptedData(tr.InvitationSentTo) : "";
                     trans.Amount = tr.Amount;
 
+                    if (String.IsNullOrEmpty(recipMemId)) recipMemId = "";
+
                     MembersDataAccess mda = new MembersDataAccess();
-
-                    if (String.IsNullOrEmpty(recipMemId))
-                    {
-                        recipMemId = "";
-                    }
-
-                    string mdaRes = mda.GetTokensAndTransferMoneyToNewUser(TransactionId, MemberIdAfterSynapseAccountCreation, TransactionType, recipMemId);
+                    string mdaRes = mda.GetTokensAndTransferMoneyToNewUser(TransactionId, MemberId, TransactionType, recipMemId);
 
                     trans.synapseTransResult = mdaRes;
 
@@ -4155,7 +4148,7 @@ namespace Nooch.API.Controllers
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Controller -> GetTransactionDetailByIdAndMoveMoneyForNewUserDeposit FAILED - [Exception: " + ex + "]");
+                Logger.Error("Service Cntlr -> GetTransactionDetailByIdAndMoveMoneyForNewUserDeposit FAILED - Exception: [" + ex + "]");
             }
 
             return null;
