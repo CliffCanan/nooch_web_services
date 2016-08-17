@@ -3195,6 +3195,10 @@ namespace Nooch.DataAccess
 
                             _dbContext.SynapseAddTransactionResults.Add(satr);
                             _dbContext.SaveChanges();
+
+                            //subscribe this Transaction on synapse
+                            setSubcriptionToTrans(satr.OidFromSynapse.ToString(), senderUserName);
+
                         }
                         else
                         {
@@ -7829,6 +7833,69 @@ namespace Nooch.DataAccess
             }
 
             return "Failure";
+        }
+
+        public void setSubcriptionToTrans(string oid, string userName)
+        {
+            string memberId =CommonHelper.GetMemberIdByUserName(userName);
+            List<string> clientIds = CommonHelper.getClientSecretId(memberId);
+
+            string SynapseClientId = clientIds[0];
+            string SynapseClientSecret = clientIds[1];
+
+
+
+            synapseSetSubscription_int payload = new synapseSetSubscription_int();
+
+            client client = new client();
+            client.client_id = SynapseClientId;
+            client.client_secret = SynapseClientSecret;
+
+
+            payload.client = client;
+
+            payload.url = "https://www.nooch.info/noochservice/api/webhook/ViewSubscriptionForTransFromSynapse?oid=" + oid;
+
+            payload.scope = new string[3];
+            payload.scope[0] = "TRANS|" + oid + "|PATCH";
+            payload.scope[1] = "TRANS|" + oid + "|DELETE";
+            payload.scope[2] = "TRANS|" + oid + "|POST";
+            StringBuilder res = new StringBuilder();
+
+            try
+            {
+                var baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/subscription/add" : "https://synapsepay.com/api/v3/subscription/add";
+
+                Logger.Info("MDA -> setSubcription - Payload to send to Synapse /v3/subscription/add: [" + JsonConvert.SerializeObject(payload) + "]");
+
+                var http = (HttpWebRequest)WebRequest.Create(new Uri(baseAddress));
+                http.Accept = "application/json";
+                http.ContentType = "application/json";
+                http.Method = "POST";
+
+                string parsedContent = JsonConvert.SerializeObject(payload);
+                ASCIIEncoding encoding = new ASCIIEncoding();
+                Byte[] bytes = encoding.GetBytes(parsedContent);
+
+                Stream newStream = http.GetRequestStream();
+                newStream.Write(bytes, 0, bytes.Length);
+                newStream.Close();
+
+                var response = http.GetResponse();
+                var stream = response.GetResponseStream();
+                var sr = new StreamReader(stream);
+                var content = sr.ReadToEnd();
+
+                res = JsonConvert.DeserializeObject<StringBuilder>(content);
+            }
+            catch (WebException we)
+            {
+
+                Logger.Error("MDA -> setSubcriptionToUser - synapse subscription to trans  having trans_id [" + oid + "] Exception: [" + we.Message + "]");
+
+
+
+            }
         }
     }
 }

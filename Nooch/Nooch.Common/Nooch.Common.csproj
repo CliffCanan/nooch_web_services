@@ -131,6 +131,8 @@
     <Compile Include="Entities\SynapseRelatedEntities\SynapseBankSetDefaultResult.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\synapseIdVerificationQuestionsForDisplay.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\SynapseRemoveBankV3_Input.cs" />
+    <Compile Include="Entities\SynapseRelatedEntities\synapseSetSubscription_int.cs" />
+    <Compile Include="Entities\SynapseRelatedEntities\synapseSetSubscription_out.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\SynapseV3AddTrans_ReusableClass.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\SaveVerificationIdDocument.cs" />
     <Compile Include="Entities\SynapseRelatedEntities\submitDocToSynapseV3Class.cs" />

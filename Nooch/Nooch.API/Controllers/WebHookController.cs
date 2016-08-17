@@ -177,5 +177,46 @@ namespace Nooch.API.Controllers
             }
         }
 
+        [HttpPost]
+        [ActionName("ViewSubscriptionForUserFromSynapse")]
+        public void ViewSubscriptionForUserFromSynapse(string oid)
+        {
+            HttpContent requestContent = Request.Content;
+            string jsonContent = requestContent.ReadAsStringAsync().Result;
+            Logger.Info("WEBHOOK -> ViewSubscriptionForUserFromSynapse Fired - user_id: [ " + oid +
+                            " ], Content: [ " + jsonContent + " ]");
+
+
+            
+        }
+
+        [HttpPost]
+        [ActionName("ViewSubscriptionForTransFromSynapse")]
+        public void ViewSubscriptionForTransFromSynapse(string oid)
+        {
+            HttpContent requestContent = Request.Content;
+            string jsonContent = requestContent.ReadAsStringAsync().Result;
+            Logger.Info("WEBHOOK -> ViewSubscriptionForTransFromSynapse Fired - trans_id: [ " + oid +
+                            " ], Content: [ " + jsonContent + " ]");
+
+
+
+        }
+
+        [HttpPost]
+        [ActionName("ViewSubscriptionForNodeFromSynapse")]
+        public void ViewSubscriptionForUserNodeSynapse(string oid)
+        {
+            HttpContent requestContent = Request.Content;
+            string jsonContent = requestContent.ReadAsStringAsync().Result;
+            Logger.Info("WEBHOOK -> ViewSubscriptionForNodeFromSynapse Fired - node_id: [ " + oid +
+                            " ], Content: [ " + jsonContent + " ]");
+
+
+
+        }
+
+        
+        
     }
 }

@@ -2251,6 +2251,10 @@ namespace Nooch.DataAccess
                         _dbContext.SaveChanges();
                         _dbContext.Entry(newSynapseUser).Reload();
                         save = true;
+
+
+                        // subscripe this user on synapse
+                        setSubcriptionToUser(newSynapseUser.user_id.ToString(), guid.ToString());
                     }
                     catch (Exception ex)
                     {
@@ -7301,5 +7305,71 @@ namespace Nooch.DataAccess
             }
         }
 
+
+
+        public void setSubcriptionToUser(string oid, string memberId)
+        {
+
+            List<string> clientIds = CommonHelper.getClientSecretId(memberId);
+
+            string SynapseClientId = clientIds[0];
+            string SynapseClientSecret = clientIds[1];
+
+
+
+            synapseSetSubscription_int payload = new synapseSetSubscription_int();
+
+            client client = new client();
+            client.client_id = SynapseClientId;
+            client.client_secret = SynapseClientSecret;
+
+
+            payload.client = client;
+
+            payload.url = "https://www.nooch.info/noochservice/api/webhook/ViewSubscriptionForUserFromSynapse?oid=" + oid;
+
+            payload.scope = new string[2];
+            payload.scope[0] = "USERS|" + oid + "|PATCH";
+            payload.scope[1] = "USERS|" + oid + "|DELETE";
+            synapseSetSubscription_out res_synapseSetSubscription_out = new synapseSetSubscription_out();
+
+
+            try
+            {
+                var baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/subscription/add" : "https://synapsepay.com/api/v3/subscription/add";
+
+                Logger.Info("MDA -> setSubcription - Payload to send to Synapse /v3/subscription/add:   [" + JsonConvert.SerializeObject(payload) + "]");
+
+                var http = (HttpWebRequest)WebRequest.Create(new Uri(baseAddress));
+                http.Accept = "application/json";
+                http.ContentType = "application/json";
+                http.Method = "POST";
+
+                string parsedContent = JsonConvert.SerializeObject(payload);
+                ASCIIEncoding encoding = new ASCIIEncoding();
+                Byte[] bytes = encoding.GetBytes(parsedContent);
+
+                Stream newStream = http.GetRequestStream();
+                newStream.Write(bytes, 0, bytes.Length);
+                newStream.Close();
+
+                var response = http.GetResponse();
+                var stream = response.GetResponseStream();
+                var sr = new StreamReader(stream);
+                var content = sr.ReadToEnd();
+
+                res_synapseSetSubscription_out = JsonConvert.DeserializeObject<synapseSetSubscription_out>(content);
+            }
+            catch (WebException we)
+            {
+
+                Logger.Error("MDA -> setSubcriptionToUser - synapse subscription to user  having user_id [" + oid + "] Exception: [" + we.Message + "]");
+
+
+            }
+        }
+
+
     }
+
 }
