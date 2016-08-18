@@ -1831,7 +1831,7 @@ namespace Nooch.Common
 
 
         /// <summary>
-        /// For sending all user 'Documents' (Virtual, Physical, Social) to Synapse.
+        /// For sending ALL user 'Documents' (Virtual, Physical, Social) to Synapse.
         /// Added 5/31/16 by CC.
         /// </summary>
         /// <param name="MemberId"></param>
