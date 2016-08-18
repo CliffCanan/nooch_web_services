@@ -2842,11 +2842,10 @@ namespace Nooch.DataAccess
 
 
         public SynapseV3AddTrans_ReusableClass AddTransSynapseV3Reusable(string sender_oauth, string sender_fingerPrint,
-            string sender_bank_node_id, string amount, string receiver_oauth, string receiver_fingerprint,
-            string receiver_bank_node_id, string suppID_or_transID, string senderUserName, string receiverUserName,
-            string iPForTransaction, string senderLastName, string recipientLastName, string memo)
+            string sender_bank_node_id, string amount, string receiver_bank_node_id, string suppID_or_transID, string senderUserName,
+            string receiverUserName, string iPForTransaction, string senderLastName, string recipientLastName, string memo)
         {
-            Logger.Info("TDA -> AddTransSynapseV3Reusable Initiated - Sender Last Name: [" + senderLastName +
+            Logger.Info("TDA -> AddTransSynapseV3Reusable Fired - Sender Last Name: [" + senderLastName +
                         "], Sender Username: " + senderUserName + "], Recip Last Name: [" + recipientLastName +
                         "], Recipient Username: [" + receiverUserName + "], Amount: [" + amount + "]");
 
@@ -3200,7 +3199,7 @@ namespace Nooch.DataAccess
                             //               I THINK WE JUST CREATE THE SUBSCRIPTION *ONCE* (...EVER) AND THAT APPLIES TO
                             //               *ALL* USERS/BANKS/TRANSACTIONS CREATED USING OUR CLIENT ID/SECRET
                             //subscribe this Transaction on synapse
-                            setSubcriptionToTrans(satr.OidFromSynapse.ToString(), senderUserName);
+                            //setSubcriptionToTrans(satr.OidFromSynapse.ToString(), senderUserName);
                         }
                         else
                         {
@@ -5790,7 +5789,6 @@ namespace Nooch.DataAccess
 
 
                 string recipBankOid = recipientSynDetails.BankDetails.bank_oid; // This is not actually needed for the transaction to happen, we can remove this check later
-                string receiver_oauth = recipientSynDetails.UserDetails.access_token;
 
                 Logger.Info("TDA -> HandleRequestMoney - Recipient's Synapse Permission: [" + recipientSynDetails.UserDetails.permission + "], " +
                             "Bank-Allowed: [" + recipientSynDetails.BankDetails.allowed + "] - Continuing On...");
@@ -5844,7 +5842,6 @@ namespace Nooch.DataAccess
 
                 string sender_fingerPrint = sender.UDID1;
                 string amount = request.Amount.ToString();
-                string receiver_fingerprint = requester.UDID1;
                 string suppID_or_transID = request.TransactionId.ToString();
                 string senderUserName = CommonHelper.GetDecryptedData(sender.UserName).ToLower();
                 string receiverUserName = CommonHelper.GetDecryptedData(requester.UserName).ToLower();
@@ -5856,7 +5853,7 @@ namespace Nooch.DataAccess
                 #endregion SYNAPSE V3
 
                 SynapseV3AddTrans_ReusableClass transactionResultFromSynapseAPI = AddTransSynapseV3Reusable(sender_oauth, sender_fingerPrint,
-                                                senderBankOid, amount, receiver_oauth, receiver_fingerprint, recipBankOid, suppID_or_transID,
+                                                senderBankOid, amount, recipBankOid, suppID_or_transID,
                                                 senderUserName, receiverUserName, iPForTransaction, senderLastName, recipientLastName, memoForSyn);
 
                 if (transactionResultFromSynapseAPI.success == true)
@@ -6232,7 +6229,7 @@ namespace Nooch.DataAccess
             // Check to make sure sender and recipient are not the same user
             if (transInput.MemberId == transInput.RecipientId)
             {
-                Logger.Error("TDA -> TransferMoneyUsingSynapse - ABORTING - Sender and recipient MemberIDs were the same - [MemberId: " +
+                Logger.Error("TDA -> TransferMoneyUsingSynapse - ABORTING - Sender and recipient MemberIDs were the same - MemberId: [" +
                              transInput.MemberId + "]");
                 return "Not allowed for send money to the same user.";
             }
@@ -6242,7 +6239,7 @@ namespace Nooch.DataAccess
 
             if (validPinNumberResult != "Success")
             {
-                Logger.Error("TDA -> TransferMoneyUsingSynapse - ABORTING - Sender's PIN was incorrect - [MemberId: " +
+                Logger.Error("TDA -> TransferMoneyUsingSynapse - ABORTING - Sender's PIN was incorrect - MemberId: [" +
                                        transInput.MemberId + "]");
                 return validPinNumberResult;
             }
@@ -6263,8 +6260,7 @@ namespace Nooch.DataAccess
                     if (transactionAmount > thisUserTransLimit)
                     {
                         Logger.Error("TDA -> TransferMoneyUsingSynapse FAILED - OVER PERSONAL TRANS LIMIT - Amount Requested: [" + transactionAmount.ToString() +
-                                               "], Indiv. Limit: [" + thisUserTransLimit + "], MemberId: [" + transInput.MemberId + "]");
-
+                                     "], Indiv. Limit: [" + thisUserTransLimit + "], MemberId: [" + transInput.MemberId + "]");
                         return "Whoa now big spender! To keep Nooch safe, the maximum amount you can send at a time is $" + thisUserTransLimit.ToString("F2");
                     }
                 }
@@ -6313,7 +6309,6 @@ namespace Nooch.DataAccess
             {
                 Logger.Error("TDA -> TransferMoneyUsingSynapse FAILED - Sender's Synapse Permission is INSUFFICIENT: [" + senderSynDetails.UserDetails.permission +
                              "] MemberID: [" + transInput.MemberId + "]");
-                //return "Sender does not have any bank added";
                 return "Sender has insufficient permissions: [" + senderSynDetails.UserDetails.permission + "]";
             }
             if (senderSynDetails.BankDetails.allowed != "CREDIT-AND-DEBIT")
@@ -6321,7 +6316,6 @@ namespace Nooch.DataAccess
                 Logger.Error("TDA -> TransferMoneyUsingSynapse - Transfer ABORTED: " +
                             "Sender's Synapse bank not verified - Bank-Allowed: [" + senderSynDetails.BankDetails.allowed + "], " +
                             "MemberID: [" + transInput.MemberId + "], TransactionId: [" + transInput.TransactionId + "]");
-                //return "Sender does not have any verified bank account.";
                 return "Sender's bank has insufficient permissions: [" + senderSynDetails.BankDetails.allowed + "]";
             }
 
@@ -6336,7 +6330,6 @@ namespace Nooch.DataAccess
             #region Get Recipient Synapse Details
 
             string recipBankOid = ""; // This is not actually needed for the transaction to happen, we can remove this check later
-            string receiver_oauth = "";
 
             var recipientNoochDetails = CommonHelper.GetMemberDetails(transInput.RecipientId);
             var recipientSynapseDetails = CommonHelper.GetSynapseBankAndUserDetailsforGivenMemberId(transInput.RecipientId);
@@ -6373,12 +6366,13 @@ namespace Nooch.DataAccess
 
 
             recipBankOid = recipientSynapseDetails.BankDetails.bank_oid;
-            receiver_oauth = recipientSynapseDetails.UserDetails.access_token;
 
             Logger.Info("TDA -> TransferMoneyUsingSynapse - Recipient's Synapse Permission: [" + recipientSynapseDetails.UserDetails.permission + "], " +
                         "Bank-Allowed: [" + recipientSynapseDetails.BankDetails.allowed + "] - Continuing On...");
 
             #endregion Get Recipient Synapse Details
+
+            #region Rent Scene Custom Checks
 
             // Cliff (6/14/16): Adding this to check: a.) is this a payment to Rent Scene?
             //                  and b.) what kind of user the recipient is: Client or Vendor, which determines which Node ID to use for Rent Scene
@@ -6408,6 +6402,8 @@ namespace Nooch.DataAccess
                 Logger.Info("TDA -> TransferMoneyUsingSynapse - RENT SCENE Payment Detected Under $200 - " +
                             "Substituting Receiver_Bank_NodeID to use RS's Corporate Checking account");
             }
+
+            #endregion Rent Scene Custom Checks
 
             #endregion Initial checks
 
@@ -6454,19 +6450,10 @@ namespace Nooch.DataAccess
                             string firstThreeChars = transInput.Memo.Substring(0, 3).ToLower();
                             bool startsWithFor = firstThreeChars.Equals("for");
 
-                            if (startsWithFor)
-                            {
-                                memo = transInput.Memo.ToString();
-                            }
-                            else
-                            {
-                                memo = "For: " + transInput.Memo.ToString();
-                            }
+                            if (startsWithFor) memo = transInput.Memo.ToString();
+                            else memo = "For: " + transInput.Memo.ToString();
                         }
-                        else
-                        {
-                            memo = "For: " + transInput.Memo.ToString();
-                        }
+                        else memo = "For: " + transInput.Memo.ToString();
                     }
 
                     string senderPic = "https://www.noochme.com/noochweb/Assets/Images/userpic-default.png";
@@ -6516,16 +6503,100 @@ namespace Nooch.DataAccess
                     Transaction transactionDetail = new Transaction();
                     transactionDetail = SetTransactionDetails(transInput, Constants.TRANSACTION_TYPE_TRANSFER, 0);
 
-                    string sender_fingerPrint = senderNoochDetails.UDID1;
+                    string senderFingerprint = senderNoochDetails.UDID1;
                     string amount = transInput.Amount.ToString();
-                    string receiver_fingerprint = recipientNoochDetails.UDID1;
                     string iPForTransaction = CommonHelper.GetRecentOrDefaultIPOfMember(SenderGuid);
                     string memoForSyn = !string.IsNullOrEmpty(transInput.Memo) ? transInput.Memo : "";
                     string suppID_or_transID = transactionDetail.TransactionId.ToString();
 
-                    SynapseV3AddTrans_ReusableClass transactionResultFromSynapseAPI = AddTransSynapseV3Reusable(sender_oauth, sender_fingerPrint,
-                                                    senderBankOid, amount, receiver_oauth, receiver_fingerprint, recipBankOid, suppID_or_transID,
-                                                    senderUserName, receiverUserName, iPForTransaction, senderLastName, recipientLastName, memoForSyn);
+                    SynapseV3AddTrans_ReusableClass transactionResultFromSynapseAPI = new SynapseV3AddTrans_ReusableClass();
+
+                    #region Habitat Custom Checks
+
+                    if (transInput.MemberId.ToString().ToLower() == "45357cf0-e651-40e7-b825-e1ff48bf44d2" &&
+                        recipientNoochDetails.cipTag == "vendor")
+                    {
+                        Logger.Info("MDA -> TransferMoneyUsingSynapse - HABITAT Payment!!");
+
+                        // Need to create 2 transactions with Synapse: 1 from Habitat to Rent Scene, & 1 from Rent Scene to the Vendor
+
+                        senderFirstName = "Habitat";
+                        senderLastName = "";
+
+                        // Insert RENT SCENE values
+                        var recipBankOid2 = "574f45d79506295ff7a81db8";
+                        var recipEmail2 = "payments@rentscene.com";
+                        var moneyRecipientLastName2 = "Rent Scene";
+
+                        var log = "TDA -> TransferMoneyUsingSynapse - About to call AddTransSynapseV3Reusable() in TDA - " +
+                                    "TransID: [" + suppID_or_transID + "], Amount: [" + amount + "], Sender Name: [" + senderFirstName + " " + senderLastName +
+                                    "], Sender BankOID: [" + senderBankOid + "], Recip Name: [" + recipientFirstName + " " + recipientLastName +
+                                    "], Recip BankOID: [" + recipBankOid2 + "]";
+                        Logger.Info(log);
+
+                        // 1st payment - from Habitat -> Rent Scene
+                        transactionResultFromSynapseAPI = AddTransSynapseV3Reusable(sender_oauth, senderFingerprint,
+                            senderBankOid, amount, recipBankOid2, suppID_or_transID, senderUserName, recipEmail2,
+                            CommonHelper.GetRecentOrDefaultIPOfMember(senderNoochDetails.MemberId),
+                            senderLastName, moneyRecipientLastName2, memoForSyn);
+
+
+                        if (transactionResultFromSynapseAPI.success)
+                        {
+                            #region 2nd Synapse Payment (RS to Vendor)
+
+                            // 1st Payment was successful, now do the 2nd one (from RS -> original recipient)
+                            Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser - 1st HABITAT Payment Successful (to RS) - Response From SYNAPSE's /order/add API - " +
+                                        "OrderID: [" + transactionResultFromSynapseAPI.responseFromSynapse.trans._id.oid + "]");
+
+                            senderFirstName = "Rent Scene";
+                            senderLastName = "";
+
+                            var rentSceneMemId = "852987e8-d5fe-47e7-a00b-58a80dd15b49"; // Rent Scene's MemberID
+                            var rentSceneMemGuid = Utility.ConvertToGuid(rentSceneMemId);
+
+                            var createSynapseUserObj = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == rentSceneMemGuid &&
+                                                                                                               m.IsDeleted == false);
+                            sender_oauth = createSynapseUserObj.access_token;
+
+                            senderBankOid = "574f45d79506295ff7a81db8";
+                            senderFingerprint = "6d441f70cc6891e7831432baac2e50d7";
+                            var senderIP = CommonHelper.GetRecentOrDefaultIPOfMember(new Guid(rentSceneMemId));
+                            var senderEmail2 = "payments@rentscene.com";
+
+
+                            log = "TDA -> GetTokensAndTransferMoneyToNewUser - About to call 2nd HABITAT Payment (to the Vendor) - " +
+                                        "TransID: [" + suppID_or_transID + "], Amount: [" + amount + "], Sender Name: [" + senderFirstName + " " + senderLastName +
+                                        "], Sender BankOID: [" + senderBankOid + "], Recip Name: [" + recipientFirstName + " " + recipientLastName +
+                                        "], Recip BankOID: [" + recipBankOid + "]";
+
+                            Logger.Info(log);
+
+                            transactionResultFromSynapseAPI = AddTransSynapseV3Reusable(sender_oauth, senderFingerprint,
+                                senderBankOid, amount, recipBankOid, suppID_or_transID, senderEmail2, receiverUserName,
+                                senderIP, senderLastName, recipientLastName, memoForSyn);
+
+                            #endregion 2nd Synapse Payment (RS to Vendor)
+                        }
+                        else
+                        {
+                            var error = "MDA -> GetTokensAndTransferMoneyToNewUser - 1st HABITAT Payment (to RS) FAILED - Response From SYNAPSE's /order/add API - " +
+                                        "ErrorMessage: [" + transactionResultFromSynapseAPI.ErrorMessage + "], Synapse Error: [" + transactionResultFromSynapseAPI.responseFromSynapse.error.en + "]";
+                            Logger.Error(error);
+                            CommonHelper.notifyCliffAboutError(error);
+                        }
+                    }
+
+                    #endregion Habitat Custom Checks
+
+                    else
+                    {
+                        // Expected path for all Payments except for Habitat
+                        transactionResultFromSynapseAPI = AddTransSynapseV3Reusable(sender_oauth, senderFingerprint, senderBankOid, amount,
+                                                                                    recipBankOid, suppID_or_transID, senderUserName, receiverUserName,
+                                                                                    iPForTransaction, senderLastName, recipientLastName, memoForSyn);
+                    }
+
 
                     short shouldSendFailureNotifications = 0;
 
@@ -6798,11 +6869,8 @@ namespace Nooch.DataAccess
                                 #endregion Send Notifications to Recipient on transfer success
                             }
                             else
-                            {
                                 Logger.Info("TDA -> TransferMoneyUsigSynapse - shouldSendEmail flag is [" + transInput.doNotSendEmails +
-                                            "] - SO NOT SENDING TRANSFER SENT EMAIL TO SENDER: [" + senderUserName +
-                                            "] OR RECIPIENT: [" + receiverUserName + "]");
-                            }
+                                            "] - SO NOT SENDING TRANSFER SENT EMAIL TO SENDER: [" + senderUserName + "] OR RECIPIENT: [" + receiverUserName + "]");
 
                             return "Your cash was sent successfully";
                         }
@@ -6914,18 +6982,9 @@ namespace Nooch.DataAccess
                             #endregion Notify Sender about failure
                         }
 
-                        if (shouldSendFailureNotifications == 1)
-                        {
-                            return "There was a problem updating Nooch DB tables.";
-                        }
-                        else if (shouldSendFailureNotifications == 2)
-                        {
-                            return "There was a problem with Synapse.";
-                        }
-                        else
-                        {
-                            return "Unknown Failure";
-                        }
+                        if (shouldSendFailureNotifications == 1) return "There was a problem updating Nooch DB tables.";
+                        else if (shouldSendFailureNotifications == 2) return "There was a problem with Synapse.";
+                        else return "Unknown Failure";
                     }
 
                     #endregion Failure Sections

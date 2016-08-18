@@ -5522,8 +5522,6 @@ namespace Nooch.DataAccess
                                 string moneyRecipientFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(recipient.FirstName));
                                 string moneyRecipientLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(recipient.LastName));
 
-                                var recipSynapseUserId = RecipientUserAndBankDetails.UserDetails.user_id;
-                                var recipFingerprint = RecipientUserAndBankDetails.UserDetails.user_fingerprints;
                                 var recipBankOid = RecipientUserAndBankDetails.BankDetails.bank_oid;
 
                                 var transId = Transaction.TransactionId.ToString();
@@ -5580,22 +5578,18 @@ namespace Nooch.DataAccess
 
                                     // Insert RENT SCENE values
                                     var recipBankOid2 = "574f45d79506295ff7a81db8";
-                                    var recipSynapseUserId2 = "57436f4395062947f21bbcb5";
-                                    var recipFingerprint2 = "6d441f70cc6891e7831432baac2e50d7";
                                     var recipEmail2 = "payments@rentscene.com";
                                     var moneyRecipientLastName2 = "Rent Scene";
 
                                     log = "MDA -> GetTokensAndTransferMoneyToNewUser - About to call AddTransSynapseV3Reusable() in TDA - " +
-                                                "TransID: [" + transId + "], Amount: [" + amount + "], Sender Name: [" + moneySenderFirstName + " " + moneySenderLastName +
-                                                "], Sender BankOID: [" + senderBankOid + "], Recip Name: [" + moneyRecipientFirstName + " " + moneyRecipientLastName +
-                                                "], Recip BankOID: [" + recipBankOid2 + "]";
+                                          "TransID: [" + transId + "], Amount: [" + amount + "], Sender Name: [" + moneySenderFirstName + " " + moneySenderLastName +
+                                          "], Sender BankOID: [" + senderBankOid + "], Recip Name: [" + moneyRecipientFirstName + " " + moneyRecipientLastName +
+                                          "], Recip BankOID: [" + recipBankOid2 + "]";
                                     Logger.Info(log);
 
                                     // 1st payment - from Habitat -> Rent Scene
                                     Call_Synapse_Order_API_Result = tda.AddTransSynapseV3Reusable(access_token,
-                                        senderFingerprint, senderBankOid, amount,
-                                        recipSynapseUserId2, recipFingerprint2, recipBankOid2,
-                                        transId, senderEmail, recipEmail2,
+                                        senderFingerprint, senderBankOid, amount, recipBankOid2, transId, senderEmail, recipEmail2,
                                         CommonHelper.GetRecentOrDefaultIPOfMember(sender.MemberId),
                                         moneySenderLastName, moneyRecipientLastName2, memoForSyn);
 
@@ -5611,25 +5605,28 @@ namespace Nooch.DataAccess
                                         moneySenderFirstName = "Rent Scene";
                                         moneySenderLastName = "";
 
-                                        access_token = "";
+                                        var rentSceneMemId = "852987e8-d5fe-47e7-a00b-58a80dd15b49"; // Rent Scene's MemberID
+                                        var rentSceneMemGuid = Utility.ConvertToGuid(rentSceneMemId);
+
+                                        var createSynapseUserObj = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == rentSceneMemGuid &&
+                                                                                                                           m.IsDeleted == false);
+                                        access_token = createSynapseUserObj.access_token;
 
                                         senderBankOid = "574f45d79506295ff7a81db8";
                                         senderFingerprint = "6d441f70cc6891e7831432baac2e50d7";
-                                        var senderIP = CommonHelper.GetRecentOrDefaultIPOfMember(new Guid("852987e8-d5fe-47e7-a00b-58a80dd15b49")); // Rent Scene's MemberID
+                                        var senderIP = CommonHelper.GetRecentOrDefaultIPOfMember(new Guid(rentSceneMemId));
                                         var senderEmail2 = "payments@rentscene.com";
 
                                         log = "MDA -> GetTokensAndTransferMoneyToNewUser - About to call 2nd HABITAT Payment (to the Vendor) - " +
-                                                    "TransID: [" + transId + "], Amount: [" + amount + "], Sender Name: [" + moneySenderFirstName + " " + moneySenderLastName +
-                                                    "], Sender BankOID: [" + senderBankOid + "], Recip Name: [" + moneyRecipientFirstName + " " + moneyRecipientLastName +
-                                                    "], Recip BankOID: [" + recipBankOid + "]";
+                                              "TransID: [" + transId + "], Amount: [" + amount + "], Sender Name: [" + moneySenderFirstName + " " + moneySenderLastName +
+                                              "], Sender BankOID: [" + senderBankOid + "], Recip Name: [" + moneyRecipientFirstName + " " + moneyRecipientLastName +
+                                              "], Recip BankOID: [" + recipBankOid + "]";
 
                                         Logger.Info(log);
 
                                         Call_Synapse_Order_API_Result = tda.AddTransSynapseV3Reusable(access_token,
-                                            senderFingerprint, senderBankOid, amount,
-                                            recipSynapseUserId, recipFingerprint, recipBankOid,
-                                            transId, senderEmail2, recipEmail,
-                                            senderIP, moneySenderLastName, moneyRecipientLastName, memoForSyn);
+                                            senderFingerprint, senderBankOid, amount, recipBankOid, transId,
+                                            senderEmail2, recipEmail, senderIP, moneySenderLastName, moneyRecipientLastName, memoForSyn);
 
                                         #endregion 2nd Synapse Payment (RS to Vendor)
                                     }
@@ -5653,10 +5650,8 @@ namespace Nooch.DataAccess
                                               "], Recip BankOID: [" + recipBankOid + "]";
                                     Logger.Info(log);
 
-                                    Call_Synapse_Order_API_Result = tda.AddTransSynapseV3Reusable(access_token,
-                                        senderFingerprint, senderBankOid, amount,
-                                        recipSynapseUserId, recipFingerprint, recipBankOid,
-                                        transId, senderEmail, recipEmail,
+                                    Call_Synapse_Order_API_Result = tda.AddTransSynapseV3Reusable(access_token, senderFingerprint,
+                                        senderBankOid, amount, recipBankOid, transId, senderEmail, recipEmail,
                                         CommonHelper.GetRecentOrDefaultIPOfMember(sender.MemberId),
                                         moneySenderLastName, moneyRecipientLastName, memoForSyn);
                                 }
@@ -5781,18 +5776,18 @@ namespace Nooch.DataAccess
                                                 // Send SMS notification to Nooch Recipient (the NEW user)
 
                                                 string SMSContent = "You accepted $" + wholeAmount + " sent by " + moneySenderFirstName + " " + moneySenderLastName +
-                                                                    ". Amount will be credited to your bank account within 2-4 biz days.";
+                                                                    ". Amount will be credited to your bank account within 2-3 biz days.";
                                                 try
                                                 {
                                                     Utility.SendSMS(newUserPhone, SMSContent);
 
-                                                    Logger.Info("MDA - GetTokensAndTransferMoneyToNewUser SUCCESS - SMS sent to recipient - [Phone: " +
+                                                    Logger.Info("MDA - GetTokensAndTransferMoneyToNewUser SUCCESS - SMS sent to recipient - Phone: [" +
                                                         CommonHelper.FormatPhoneNumber(newUserPhone) + "] successfully.");
                                                 }
                                                 catch (Exception ex)
                                                 {
                                                     Logger.Error("MDA - GetTokensAndTransferMoneyToNewUser SUCCESS - But Failure sending SMS to recipient " +
-                                                        "- [Phone: " + CommonHelper.FormatPhoneNumber(newUserPhone) + "],  [Exception: " + ex.ToString() + "]");
+                                                        "- Phone: [" + CommonHelper.FormatPhoneNumber(newUserPhone) + "], Exception: [" + ex.ToString() + "]");
                                                 }
                                             }
 
@@ -5818,15 +5813,15 @@ namespace Nooch.DataAccess
                                                                      : "Nooch payment from " + moneySenderFirstName + " " + moneySenderLastName + " accepted - $" + wholeAmount;
 
                                                     Utility.SendEmail("transferAcceptedToRecipient", fromAddress, newUsersEmail,
-                                                                                null, subject, null, tokens, null, null, null);
+                                                                      null, subject, null, tokens, null, null, null);
 
                                                     Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser - transferAcceptedToRecipient Email sent to [" +
-                                                                           newUsersEmail + "] successfully.");
+                                                                newUsersEmail + "] successfully.");
                                                 }
                                                 catch (Exception ex)
                                                 {
                                                     Logger.Error("MDA -> GetTokensAndTransferMoneyToNewUser -> transferAcceptedToRecipient Email NOT sent to [" +
-                                                                           newUsersEmail + "], Exception: [" + ex.Message + "]");
+                                                                 newUsersEmail + "], Exception: [" + ex.Message + "]");
                                                 }
                                             }
 
