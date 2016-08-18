@@ -2327,10 +2327,9 @@ namespace Nooch.API.Controllers
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Controller - RaiseDispute FAILED - transactionId: " + raiseDisputeInput.TransactionId + "]. Exception: [" + ex + "]");
+                    Logger.Error("Service Controller - RaiseDispute FAILED - TransID: [" + raiseDisputeInput.TransactionId + "]. Exception: [" + ex + "]");
                     throw ex;
                 }
-
             }
             else
             {
@@ -2361,13 +2360,9 @@ namespace Nooch.API.Controllers
                     Logger.Info("TransactionHistorySent - TransactionHistorySent status mail sent to [" + toAddress + "].");
 
                     if (b)
-                    {
                         return new StringResult { Result = "1" };
-                    }
                     else
-                    {
                         return new StringResult { Result = "0" };
-                    }
                 }
                 catch
                 {
@@ -2375,9 +2370,7 @@ namespace Nooch.API.Controllers
                 }
             }
             else
-            {
                 throw new Exception("Invalid OAuth 2 Access");
-            }
         }
 
         #endregion History Related Methods
@@ -2402,12 +2395,10 @@ namespace Nooch.API.Controllers
 
                 string accountstatus = "";
 
+                // Now check this bank's status.
+                // CC (10/7/15): If the user's ID is verified (after sending SSN info to Synapse), then consider the bank Verified as well
                 if (synapseBank != null)
-                {
-                    // Now check this bank's status. 
-                    // CC (10/7/15): If the user's ID is verified (after sending SSN info to Synapse), then consider the bank Verified as well
                     accountstatus = memberEntity.IsVerifiedWithSynapse == true ? "Verified" : synapseBank.Status;
-                }
 
                 // Create MemberDTO Object to return to the app
                 var member = new MemberDto
@@ -2454,8 +2445,6 @@ namespace Nooch.API.Controllers
                     member.companyName = !String.IsNullOrEmpty(landlordEntity.CompanyName)
                                          ? CommonHelper.GetDecryptedData(landlordEntity.CompanyName)
                                          : "NA";
-
-                    if (member.companyName.ToLower() == "realty mark llc") member.companyName = "Realty Mark LLC";
                 }
 
                 return member;

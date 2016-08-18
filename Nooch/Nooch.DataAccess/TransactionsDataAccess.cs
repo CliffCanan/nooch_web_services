@@ -3196,9 +3196,11 @@ namespace Nooch.DataAccess
                             _dbContext.SynapseAddTransactionResults.Add(satr);
                             _dbContext.SaveChanges();
 
+                            // CC (8/17/16): I DON'T THINK WE NEED TO CREATE A NEW SUBSCRIPTION FOR EVERY BANK.
+                            //               I THINK WE JUST CREATE THE SUBSCRIPTION *ONCE* (...EVER) AND THAT APPLIES TO
+                            //               *ALL* USERS/BANKS/TRANSACTIONS CREATED USING OUR CLIENT ID/SECRET
                             //subscribe this Transaction on synapse
                             setSubcriptionToTrans(satr.OidFromSynapse.ToString(), senderUserName);
-
                         }
                         else
                         {
@@ -7835,6 +7837,7 @@ namespace Nooch.DataAccess
             return "Failure";
         }
 
+
         public void setSubcriptionToTrans(string oid, string userName)
         {
             string memberId = CommonHelper.GetMemberIdByUserName(userName);
@@ -7843,14 +7846,11 @@ namespace Nooch.DataAccess
             string SynapseClientId = clientIds[0];
             string SynapseClientSecret = clientIds[1];
 
-
-
             synapseSetSubscription_int payload = new synapseSetSubscription_int();
 
             client client = new client();
             client.client_id = SynapseClientId;
             client.client_secret = SynapseClientSecret;
-
 
             payload.client = client;
 
@@ -7890,11 +7890,7 @@ namespace Nooch.DataAccess
             }
             catch (WebException we)
             {
-
                 Logger.Error("MDA -> setSubcriptionToUser - synapse subscription to trans  having trans_id [" + oid + "] Exception: [" + we.Message + "]");
-
-
-
             }
         }
     }

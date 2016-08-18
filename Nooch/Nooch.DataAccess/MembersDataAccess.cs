@@ -2160,7 +2160,7 @@ namespace Nooch.DataAccess
                         //               I THINK WE JUST CREATE THE SUBSCRIPTION *ONCE* (...EVER) AND THAT APPLIES TO
                         //               *ALL* USERS/BANKS/TRANSACTIONS CREATED USING OUR CLIENT ID/SECRET
                         // subscripe this user on synapse
-                        setSubcriptionToUser(newSynapseUser.user_id.ToString(), guid.ToString());
+                        //setSubcriptionToUser(newSynapseUser.user_id.ToString(), guid.ToString());
                     }
                     catch (Exception ex)
                     {
