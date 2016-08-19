@@ -828,7 +828,7 @@ namespace Nooch.DataAccess
 
         public string LoginwithFBGeneric(string userEmail, string FBId, Boolean rememberMeEnabled, decimal lat, decimal lng, string udid, string devicetoken)
         {
-            Logger.Info("MDA -> LoginwithFB Initiated - [UserEmail: " + userEmail + "],  [FBId: " + FBId + "]");
+            Logger.Info("MDA -> LoginwithFBGeneric Initiated - [UserEmail: " + userEmail + "],  [FBId: " + FBId + "]");
 
             FBId = CommonHelper.GetEncryptedData(FBId.ToLower());
 
@@ -862,8 +862,8 @@ namespace Nooch.DataAccess
                     Zipcode = CommonHelper.GetEncryptedData(" "),
                     SSN = CommonHelper.GetEncryptedData(" "),
                     DateOfBirth = null,
-                    Password = CommonHelper.GetEncryptedData("jibb3r;jawn"),
-                    PinNumber = CommonHelper.GetEncryptedData("1234"),
+                    Password = CommonHelper.GetEncryptedData("jibb3r;jawn"), // Malkit 19 Aug 2016 -- Not sure if we need to set some password for users signingup wih FB
+                    PinNumber = CommonHelper.GetEncryptedData(Utility.GetRandomPinNumber()),
                     Status = Constants.STATUS_ACTIVE,
                     IsDeleted = false,
                     DateCreated = DateTime.Now,
@@ -925,6 +925,29 @@ namespace Nooch.DataAccess
                         NewMemberEntity.InvalidPinAttemptCount = null;
                         NewMemberEntity.InvalidPinAttemptTime = null;
                         noochConnection.SaveChanges();
+
+
+                        // email newly generated pin number
+                        #region Send Temp PIN Email
+                        try
+                        {
+                            var tokens2 = new Dictionary<string, string>
+                                        {
+                                            {Constants.PLACEHOLDER_FIRST_NAME,CommonHelper.GetDecryptedData( NewMemberEntity.FirstName)},
+                                            {Constants.PLACEHOLDER_PINNUMBER, CommonHelper.GetDecryptedData(NewMemberEntity.PinNumber)}
+                                        };
+
+                            Utility.SendEmail("pinSetForNewUser",
+                                "support@nooch.com", CommonHelper.GetDecryptedData(NewMemberEntity.UserName), null, "Your temporary Nooch PIN",
+                                null, tokens2, null, null, null);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Error("MDA -> CreateNonNoochUserPasswordForPhoneInvitations EXCEPTION - Member Temp PIN email NOT sent to [" +
+                                                  CommonHelper.GetDecryptedData(NewMemberEntity.UserName) + "], [Exception: " + ex + "]");
+                        }
+                        #endregion Send Temp PIN Email
+
                         return "Success";
                         #endregion                  
                    
@@ -1017,6 +1040,7 @@ namespace Nooch.DataAccess
                         memberEntity.InvalidPinAttemptTime = null;
                         noochConnection.SaveChanges();
 
+                       
 
                         return "Success";
 
