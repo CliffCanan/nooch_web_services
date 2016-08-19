@@ -4266,7 +4266,7 @@ namespace Nooch.Common
                     noochMember.DateModified = DateTime.Now;
 
                     DbContext dbc = GetDbContextFromEntity(noochMember);
-                    _dbContext.Entry(dbc).Reload();
+                    //_dbContext.Entry(dbc).Reload();
                     int i = dbc.SaveChanges();
                     return i > 0 ? "Success" : "Failure";
                 }

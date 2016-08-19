@@ -5034,6 +5034,68 @@ namespace Nooch.API.Controllers
 
 
         [HttpGet]
+        [ActionName("LoginWithFacebookGeneric")]
+        public StringResult LoginWithFacebookGeneric(string userEmail, string FBId, Boolean rememberMeEnabled, decimal lat,
+            decimal lng, string udid, string devicetoken)
+        {
+            StringResult res = new StringResult();
+
+            try
+            {
+                Logger.Info("Service Cntlr -> LoginWithFacebook - userEmail: [" + userEmail + "], FB ID: [" + FBId + "]");
+
+                var mda = new MembersDataAccess();
+                string cookie = mda.LoginwithFBGeneric(userEmail, FBId, rememberMeEnabled, lat, lng, udid, devicetoken);
+
+                if (String.IsNullOrEmpty(cookie))
+                {
+                    cookie = "Authentication failed.";
+                    res.Result = "Invalid Login or Password";
+                }
+                else if (cookie == "Success")
+                {
+                    HttpCookie cUname = new HttpCookie("nooch_username", FBId.ToLowerInvariant());
+                    HttpCookie cAuth = new HttpCookie("nooch_auth", cookie);
+                    cUname.Secure = true;
+                    cUname.HttpOnly = true;
+                    cAuth.Secure = true;
+                    cAuth.HttpOnly = true;
+                    HttpContext.Current.Response.SetCookie(cUname);
+                    HttpContext.Current.Response.SetCookie(cAuth);
+
+                    string state = GenerateAccessToken();
+                    CommonHelper.UpdateAccessToken(userEmail, state);
+                    res.Result = state;
+                }
+                else if (cookie == "Registered")
+                {
+                    string state = GenerateAccessToken();
+                    CommonHelper.UpdateAccessToken(userEmail, state);
+                    res.Result = state;
+                }
+                else if (cookie == "Temporarily_Blocked")
+                    res.Result = "Temporarily_Blocked";
+                else if (cookie == "FBID or EmailId not registered with Nooch")
+                    res.Result = "FBID or EmailId not registered with Nooch";
+                else if (cookie == "Suspended")
+                    res.Result = "Suspended";
+                else if (cookie == "Invalid user id or password.")
+                    res.Result = "Invalid user id or password.";
+                else if (cookie == "The password you have entered is incorrect.")
+                    res.Result = "The password you have entered is incorrect.";
+                else
+                    res.Result = cookie;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Cntlr -> LoginWithFacebook FAILED - userEmail: [" + userEmail + "], Exception: [" + ex + "]");
+                res.Result = ex.Message;
+            }
+
+            return res;
+        }
+
+        [HttpGet]
         [ActionName("LogOutRequest")]
         public StringResult LogOutRequest(string accessToken, string memberId)
         {
