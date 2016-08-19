@@ -47,7 +47,7 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
     public class RemoveBankNodeRootClass
     {
         public Login login { get; set; }
-        public User user { get; set; }
+        public SynSub_Trans_User user { get; set; }
         public Node node { get; set; }
     }
 
@@ -56,7 +56,7 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
         public string oauth_key { get; set; }
     }
 
-    public class User
+    public class SynSub_Trans_User
     {
         public string fingerprint { get; set; }
     }

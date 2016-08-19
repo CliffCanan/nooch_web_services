@@ -4295,7 +4295,7 @@ namespace Nooch.Common
                 {
                     login = new Login { oauth_key = userOAuth },
                     node = new Node { _id = new _Id { oid = nodeIdToRemove } },
-                    user = new Entities.SynapseRelatedEntities.User { fingerprint = userFingerPrint }
+                    user = new Entities.SynapseRelatedEntities.SynSub_Trans_User { fingerprint = userFingerPrint }
                 };
 
                 var http = (HttpWebRequest)WebRequest.Create(new Uri(baseAddress));
@@ -4809,5 +4809,8 @@ namespace Nooch.Common
 
             return suggestedUsers;
         }
+
+
+        
     }
 }
