@@ -33,7 +33,7 @@ namespace Nooch.API
             // Make sure to not push code to production server with CORS line uncommented 
             // CORS exposes api's for cross site scripting, added these to use on dev server only for the purpose of testing ionic app in browser
 
-            config.EnableCors(new EnableCorsAttribute("*", "*", "*"));
+            //config.EnableCors(new EnableCorsAttribute("*", "*", "*"));
 
         }
     }
