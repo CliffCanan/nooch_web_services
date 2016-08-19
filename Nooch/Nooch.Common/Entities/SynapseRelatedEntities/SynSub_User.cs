@@ -178,6 +178,7 @@ public SynSub_Trans_Users user { get; set; }
 
 public class Id
 {
+    [JsonProperty(PropertyName = "$oid")]
 public string oid { get; set; }
 }
 
@@ -234,6 +235,7 @@ public _Id1 _id { get; set; }
 
 public class _Id1
 {
+    [JsonProperty(PropertyName = "$oid")]
 public string oid { get; set; }
 }
 
@@ -251,6 +253,7 @@ public string name { get; set; }
 
 public class _Id2
 {
+    [JsonProperty(PropertyName = "$oid")]
 public string oid { get; set; }
 }
 

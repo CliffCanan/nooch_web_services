@@ -471,8 +471,7 @@ namespace Nooch.API.Controllers
         {
             HttpContent requestContent = Request.Content;
             string jsonContent = requestContent.ReadAsStringAsync().Result;
-
-
+           
             Logger.Info("WEBHOOK -> ViewSubscriptionForTransFromSynapse Fired - JSON: [ " + jsonContent + " ]");
             var noochTransId = string.Empty;
 
@@ -636,17 +635,18 @@ namespace Nooch.API.Controllers
                     nodeObj = JsonConvert.DeserializeObject<SynSub_Node>(jsonContent);
                     if (nodeObj!=null && nodeObj._id.oid != null)
                     {
-                        var synapseRes = obj.SynapseBanksOfMembers.FirstOrDefault(node => node.oid == CommonHelper.GetDecryptedData(nodeObj._id.oid) && node.IsDefault == true);
+                        string bankOidEncrypted = CommonHelper.GetEncryptedData(nodeObj._id.oid);
+                        var synapseRes = obj.SynapseBanksOfMembers.FirstOrDefault(node => node.oid == bankOidEncrypted && node.IsDefault == true);
                         if (synapseRes != null) {
 
                             // Great, we have found the Node!
                             Logger.Info("Common Helper -> sendDocsToSynapseV3 - RESPONSE SUCCESSFUL:Bank Name: [" + nodeObj.info.bank_name +
-                                        "], Permission: [" + nodeObj.allowed + "] ");
+                                        "], Permission: [" + nodeObj.allowed + "] and is active:[" + nodeObj.is_active+"]");
 
                             #region Update Permission in SynapseBanksOfMembers Table
                             synapseRes.is_active = nodeObj.is_active;
                             synapseRes.allowed = nodeObj.allowed;
-                            
+                            obj.SaveChanges();
                             #endregion Update Permission in SynapseBanksOfMembers Table
 
                         }
