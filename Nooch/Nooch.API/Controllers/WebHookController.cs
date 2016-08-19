@@ -634,7 +634,7 @@ namespace Nooch.API.Controllers
 
                     SynSub_Node nodeObj = new SynSub_Node();
                     nodeObj = JsonConvert.DeserializeObject<SynSub_Node>(jsonContent);
-                    if (nodeObj==null && nodeObj._id.oid != null)
+                    if (nodeObj!=null && nodeObj._id.oid != null)
                     {
                         var synapseRes = obj.SynapseBanksOfMembers.FirstOrDefault(node => node.oid == CommonHelper.GetDecryptedData(nodeObj._id.oid) && node.IsDefault == true);
                         if (synapseRes != null) {
