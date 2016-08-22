@@ -1641,7 +1641,7 @@ namespace Nooch.Web.Controllers
 
         #region CreateAccount Page
 
-        public ActionResult createAccount(string rs, string TransId, string type, string memId)
+        public ActionResult createAccount(string TransId, string type, string memId, string by)
         {
 
             ResultcreateAccount rca = new ResultcreateAccount();
@@ -1666,11 +1666,11 @@ namespace Nooch.Web.Controllers
                     // No MemberID in URL, so must be creating a brand NEW user
                     rca.errorId = "0";
                     rca.isNewUser = true;
+                    rca.rs = by;
 
-                    if (!String.IsNullOrEmpty(rs))
-                        rca.rs = (rs.ToLower() == "true" || rs.ToLower() == "yes") ? "true" : "false";
-
-                    if (!String.IsNullOrEmpty(type))
+                    if (by == "habitat")
+                        rca.type = "vendor";
+                    else if (!String.IsNullOrEmpty(type))
                     {
                         if (type.Length == 1)
                         {
@@ -1682,15 +1682,13 @@ namespace Nooch.Web.Controllers
                             rca.type = type;
                     }
 
-                    Logger.Info("CreateAccount Page -> Loaded - Is RentScene Payment: [" + rs + "], Type: [" + rca.type + "]");
+                    Logger.Info("CreateAccount Page -> Loaded - For: [" + by + "], Type: [" + rca.type + "]");
                 }
             }
             catch (Exception ex)
             {
                 rca.errorId = "1";
-
-                Logger.Error("CreateAccount Page -> OUTER EXCEPTION - MemberID: [" + memId +
-                             "], Exception: [" + ex.Message + "]");
+                Logger.Error("CreateAccount Page -> OUTER EXCEPTION - MemberID: [" + memId + "], Exception: [" + ex.Message + "]");
             }
 
             ViewData["OnLoaddata"] = rca;
@@ -1772,11 +1770,6 @@ namespace Nooch.Web.Controllers
                     {
                         rca.nameInNav = member.companyName;
                         rca.nameInNavContainer = true;
-
-                        if (rca.nameInNav == "Realty Mark llc")
-                        {
-                            rca.nameInNav = "Realty Mark LLC";
-                        }
                     }
                     else if (rca.name.Length > 2)
                     {
@@ -2991,19 +2984,20 @@ namespace Nooch.Web.Controllers
             {
                 if (!String.IsNullOrEmpty(user))
                 {
-                    if (user.ToLower() == "rentscene")
+                    res.msg = user.ToLower();
+                    if (res.msg == "rentscene")
                         memId = "852987e8-d5fe-47e7-a00b-58a80dd15b49";
-                    else if (user == "habitat")
+                    else if (res.msg == "habitat")
                         memId = "45357cf0-e651-40e7-b825-e1ff48bf44d2";
-                    else if (user.ToLower() == "appjaxx")
+                    else if (res.msg == "appjaxx")
                         memId = "8b4b4983-f022-4289-ba6e-48d5affb5484";
-                    else if (user == "cliff")
+                    else if (res.msg == "cliff")
                         memId = "b3a6cf7b-561f-4105-99e4-406a215ccf60";
                 }
 
                 res.memId = memId;
 
-                Logger.Info("History Page -> Loaded - MemberID: [" + memId + "]");
+                Logger.Info("History Page -> Loaded - User: [" + res.msg + "], MemberID: [" + memId + "]");
 
                 List<TransactionClass> Transactions = new List<TransactionClass>();
 
@@ -3024,9 +3018,9 @@ namespace Nooch.Web.Controllers
 
                             try
                             {
-                                if (trans.Memo.ToLower().IndexOf("test") == 0)
+                                if (trans.Memo.ToLower().IndexOf("test") == 0 && user != "habitat")
                                 {
-                                    // Exclude transactions where the Memo begins with "test"
+                                    // Exclude transactions where the Memo begins with "test" (except for Habitat)
                                 }
                                 else
                                 {
@@ -3065,84 +3059,85 @@ namespace Nooch.Web.Controllers
 
                                     #region Set Correct Sender/Recipient Info
 
-                                    if (obj.TransactionType == "Transfer" || obj.TransactionType == "Disputed" ||
-                                        obj.TransactionType == "Reward" || obj.TransactionType == "Invite" ||
-                                        obj.TransactionType == "Rent" || obj.TransactionType == "Request")
+                                    //if (obj.TransactionType == "Transfer" || obj.TransactionType == "Disputed" ||
+                                    //    obj.TransactionType == "Reward" || obj.TransactionType == "Invite" ||
+                                    //    obj.TransactionType == "Rent" || obj.TransactionType == "Request")
+                                    //{
+                                    if (String.IsNullOrEmpty(trans.InvitationSentTo) && trans.IsPhoneInvitation != true)
                                     {
-                                        if (String.IsNullOrEmpty(trans.InvitationSentTo) && trans.IsPhoneInvitation != true)
+                                        // Payment Request or Transfer to an EXISTING Nooch user... straight forward.
+                                        obj.SenderId = trans.SenderId;
+                                        obj.SenderName = user == "habitat" ? "Habitat LLC"
+                                                                           : CommonHelper.GetDecryptedData(trans.Member.FirstName) + " " + CommonHelper.GetDecryptedData(trans.Member.LastName);
+                                        obj.SenderNoochId = trans.Member.Nooch_ID;
+
+                                        obj.RecipientId = trans.RecipientId;
+                                        obj.RecipientName = CommonHelper.GetDecryptedData(trans.Member1.FirstName) + " " + CommonHelper.GetDecryptedData(trans.Member1.LastName);
+                                        obj.RecepientNoochId = trans.Member1.Nooch_ID;
+                                    }
+                                    else // REQUEST OR INVITE TO NON-NOOCH USER
+                                    {
+                                        var existingMembersName = CommonHelper.GetDecryptedData(trans.Member.FirstName) + " " +
+                                                                  CommonHelper.GetDecryptedData(trans.Member.LastName);
+
+                                        // Request/Invite via Email
+                                        if (trans.TransactionStatus == "Success")
                                         {
-                                            // Payment Request or Transfer to an EXISTING Nooch user... straight forward.
+                                            #region New User Has Accepted & Has A Nooch Account
+
+                                            Member newMember = new Member();
+
+                                            if (!String.IsNullOrEmpty(trans.InvitationSentTo)) // Payment was Accepted, so the invited member must have created a Nooch account.
+                                                newMember = CommonHelper.GetMemberDetailsByUserName(CommonHelper.GetDecryptedData(trans.InvitationSentTo));
+                                            else if (!String.IsNullOrEmpty(trans.PhoneNumberInvited))
+                                                newMember = CommonHelper.GetMemberByContactNumber(CommonHelper.GetDecryptedData(trans.PhoneNumberInvited));
+
+                                            if (newMember != null)
+                                            {
+                                                var invitedMembersName = CommonHelper.GetDecryptedData(newMember.FirstName) + " " +
+                                                                         CommonHelper.GetDecryptedData(newMember.LastName);
+
+                                                if (obj.TransactionType == "Request")
+                                                {
+                                                    obj.SenderName = invitedMembersName;
+                                                    obj.SenderId = newMember.MemberId;
+                                                    obj.SenderNoochId = newMember.Nooch_ID;
+
+                                                    obj.RecipientName = existingMembersName;
+                                                    obj.RecipientId = trans.RecipientId;
+                                                    obj.RecepientNoochId = trans.Member.Nooch_ID;
+                                                }
+                                                else
+                                                {
+                                                    obj.SenderName = existingMembersName;
+                                                    obj.SenderId = trans.SenderId;
+                                                    obj.SenderNoochId = trans.Member.Nooch_ID;
+
+                                                    obj.RecipientName = invitedMembersName;
+                                                    obj.RecipientId = newMember.MemberId;
+                                                    obj.RecepientNoochId = newMember.Nooch_ID;
+                                                }
+                                            }
+
+                                            #endregion New User Has Accepted & Has A Nooch Account
+                                        }
+                                        else
+                                        {
+                                            // Payment was not (yet) Accepted, so the invited member does NOT have a Nooch account,
+                                            // so use the invited email / phone
+
+                                            obj.SenderName = existingMembersName;
                                             obj.SenderId = trans.SenderId;
-                                            obj.SenderName = CommonHelper.GetDecryptedData(trans.Member.FirstName) + " " + CommonHelper.GetDecryptedData(trans.Member.LastName);
                                             obj.SenderNoochId = trans.Member.Nooch_ID;
 
-                                            obj.RecipientId = trans.RecipientId;
-                                            obj.RecipientName = CommonHelper.GetDecryptedData(trans.Member1.FirstName) + " " + CommonHelper.GetDecryptedData(trans.Member1.LastName);
-                                            obj.RecepientNoochId = trans.Member1.Nooch_ID;
-                                        }
-                                        else // REQUEST OR INVITE TO NON-NOOCH USER
-                                        {
-                                            var existingMembersName = CommonHelper.GetDecryptedData(trans.Member.FirstName) + " " +
-                                                                      CommonHelper.GetDecryptedData(trans.Member.LastName);
-
-                                            // Request/Invite via Email
-                                            if (trans.TransactionStatus == "Success")
-                                            {
-                                                #region New User Has Accepted & Has A Nooch Account
-
-                                                Member newMember = new Member();
-
-                                                if (!String.IsNullOrEmpty(trans.InvitationSentTo)) // Payment was Accepted, so the invited member must have created a Nooch account.
-                                                    newMember = CommonHelper.GetMemberDetailsByUserName(CommonHelper.GetDecryptedData(trans.InvitationSentTo));
-                                                else if (!String.IsNullOrEmpty(trans.PhoneNumberInvited))
-                                                    newMember = CommonHelper.GetMemberByContactNumber(CommonHelper.GetDecryptedData(trans.PhoneNumberInvited));
-
-                                                if (newMember != null)
-                                                {
-                                                    var invitedMembersName = CommonHelper.GetDecryptedData(newMember.FirstName) + " " +
-                                                                             CommonHelper.GetDecryptedData(newMember.LastName);
-
-                                                    if (obj.TransactionType == "Request")
-                                                    {
-                                                        obj.SenderName = invitedMembersName;
-                                                        obj.SenderId = newMember.MemberId;
-                                                        obj.SenderNoochId = newMember.Nooch_ID;
-
-                                                        obj.RecipientName = existingMembersName;
-                                                        obj.RecipientId = trans.RecipientId;
-                                                        obj.RecepientNoochId = trans.Member.Nooch_ID;
-                                                    }
-                                                    else
-                                                    {
-                                                        obj.SenderName = existingMembersName;
-                                                        obj.SenderId = trans.SenderId;
-                                                        obj.SenderNoochId = trans.Member.Nooch_ID;
-
-                                                        obj.RecipientName = invitedMembersName;
-                                                        obj.RecipientId = newMember.MemberId;
-                                                        obj.RecepientNoochId = newMember.Nooch_ID;
-                                                    }
-                                                }
-
-                                                #endregion New User Has Accepted & Has A Nooch Account
-                                            }
-                                            else
-                                            {
-                                                // Payment was not (yet) Accepted, so the invited member does NOT have a Nooch account,
-                                                // so use the invited email / phone
-
-                                                obj.SenderName = existingMembersName;
-                                                obj.SenderId = trans.SenderId;
-                                                obj.SenderNoochId = trans.Member.Nooch_ID;
-
-                                                obj.RecipientName = !String.IsNullOrEmpty(trans.PhoneNumberInvited)
-                                                                    ? CommonHelper.FormatPhoneNumber(CommonHelper.GetDecryptedData(trans.PhoneNumberInvited))
-                                                                    : CommonHelper.GetDecryptedData(trans.InvitationSentTo);
-                                                obj.RecipientId = null;
-                                                obj.RecepientNoochId = null;
-                                            }
+                                            obj.RecipientName = !String.IsNullOrEmpty(trans.PhoneNumberInvited)
+                                                                ? CommonHelper.FormatPhoneNumber(CommonHelper.GetDecryptedData(trans.PhoneNumberInvited))
+                                                                : CommonHelper.GetDecryptedData(trans.InvitationSentTo);
+                                            obj.RecipientId = null;
+                                            obj.RecepientNoochId = null;
                                         }
                                     }
+                                    //}
 
                                     #endregion Set Correct Sender/Recipient Info
 
@@ -3170,16 +3165,27 @@ namespace Nooch.Web.Controllers
                 }
 
                 // Now get the user's Name
-                var memberObj = CommonHelper.GetMemberDetails(memId);
-                if (memberObj != null && !String.IsNullOrEmpty(memberObj.FirstName))
+                if (user == "habitat")
                 {
-                    res.usersName = user == "rentscene" ? "Rent Scene" : CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName));
-                    res.usersPhoto = !String.IsNullOrEmpty(memberObj.Photo) ? memberObj.Photo : "https://www.noochme.com/noochweb/Assets/Images/userpic-default.png";
+                    res.usersName = "Habitat LLC";
+                    res.usersPhoto = "https://noochme.com/noochweb/Assets/Images/habitat-logo.png";
+                    res.usersEmail = "andrew@tryhabitat.com";
+                }
+                else
+                {
+                    var memberObj = CommonHelper.GetMemberDetails(memId);
+                    if (memberObj != null && !String.IsNullOrEmpty(memberObj.FirstName))
+                    {
+                        res.usersName = user == "rentscene" ? "Rent Scene"
+                                                            : CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName));
+                        res.usersPhoto = !String.IsNullOrEmpty(memberObj.Photo) ? memberObj.Photo
+                                                                                : "https://www.noochme.com/noochweb/Assets/Images/userpic-default.png";
 
-                    if (user != "rentscene" && !String.IsNullOrEmpty(memberObj.LastName))
-                        res.usersName += " " + CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.LastName));
+                        if (user != "rentscene" && !String.IsNullOrEmpty(memberObj.LastName))
+                            res.usersName += " " + CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.LastName));
 
-                    res.usersEmail = CommonHelper.GetDecryptedData(memberObj.UserName);
+                        res.usersEmail = CommonHelper.GetDecryptedData(memberObj.UserName);
+                    }
                 }
             }
 

@@ -1,4 +1,7 @@
 ﻿// unblock when ajax activity stops 
+
+var COMPANY = "Nooch";
+
 $(document).ajaxStop($.unblockUI);
 
 $(document).ready(function (e)
@@ -8,13 +11,15 @@ $(document).ready(function (e)
     var user = getParameterByName("user");
 
     if (user == "rentscene") {
-        $('.landingHeaderLogo').attr('href', 'http://www.rentscene.com');
-        $('.landingHeaderLogo img').attr('src', '../Assets/Images/rentscene.png');
-        $('.landingHeaderLogo img').attr('alt', 'Rent Scene Logo');
         if (isLrgScrn)
             $('.landingHeaderLogo img').css('width', '160px');
 
         changeFavicon('../Assets/favicon2.ico')
+    }
+    else if (user == "habitat")
+    {
+        COMPANY = "Habitat";
+        changeFavicon('../Assets/favicon-habitat.png')
     }
 
     $('[data-toggle="tooltip"]').tooltip();
@@ -103,9 +108,8 @@ $(document).ready(function (e)
                         $("#" + transId).html("<span class='text-danger'><strong>Cancelled</strong></span>");
                         $("#" + transId + " ~ .actions").html("");
                     }
-                    else {
+                    else
                         toastr.error(result.resultMsg, 'Error');
-                    }
                 });
             }
         });
@@ -151,15 +155,13 @@ $(document).ready(function (e)
                 });
 
                 $.post(url, data, function (result) {
-                    if (result.success == true) {
+                    if (result.success == true)
+                    {
                         toastr.success('Reminder sent successfully');
                         swal("Reminder Sent", result.resultMsg, "success");
-                                                
-                        //$("#" + transId + " ~ .actions").html("");
                     }
-                    else {
+                    else
                         toastr.error(result.resultMsg, 'Error');
-                    }
                 });
             }
         });
@@ -185,15 +187,12 @@ function getParameterByName(name)
     return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
 }
 
-function changeFavicon(src)
-{
+function changeFavicon(src) {
     var link = document.createElement('link'),
      oldLink = document.getElementById('dynamic-favicon');
     link.id = 'dynamic-favicon';
     link.rel = 'shortcut icon';
     link.href = src;
-    if (oldLink) {
-        document.head.removeChild(oldLink);
-    }
+    if (oldLink) document.head.removeChild(oldLink);
     document.head.appendChild(link);
 }

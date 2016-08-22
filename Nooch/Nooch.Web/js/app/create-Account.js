@@ -21,8 +21,7 @@ var isIdVerified = false;
 var isSmScrn = false;
 
 $(document).ready(function () {
-    if ($(window).width() < 768)
-        isSmScrn = true;
+    if ($(window).width() < 768) isSmScrn = true;
 
     function getParameterByName(name) {
         name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
@@ -34,16 +33,27 @@ $(document).ready(function () {
     isUpgradeToV3 = getParameterByName('update');
     //console.log("isUpgradeToV3 is: [" + isUpgradeToV3 + "]");
 
-    if (RENTSCENE == "true")
+    if (RENTSCENE == "rentscene")
     {
         COMPANY = "Rent Scene";
 
-        var w = isSmScrn ? '90px' : '130px'
+        var w = isSmScrn ? '90px' : '140px'
         $('.landingHeaderLogo img').css('width', w);
 
         document.title = (ISNEW == "true") ? "Create Account | Rent Scene Payments" : "Update Account | Rent Scene Payments"
 
         changeFavicon('../Assets/favicon2.ico');
+    }
+    else if (RENTSCENE == "habitat")
+    {
+        COMPANY = "Habitat";
+
+        var w = isSmScrn ? '90px' : '150px'
+        $('.landingHeaderLogo img').css('width', w);
+
+        document.title = "Create Account | Habitat Payments";
+
+        changeFavicon('../Assets/favicon-habitat.png')
     }
     else if (ISNEW != "true")
         document.title = "Upgrade Account | Nooch Payments";
@@ -56,7 +66,7 @@ $(document).ready(function () {
         $('#nameInNavContainer h4').removeClass('m-t-5').css({
             'font-size': fontSize,
             'font-weight': '600',
-            'margin-top': '25px'
+            'margin-top': '16px'
         })
         $('#nameInNav').hide();
     }
@@ -180,7 +190,7 @@ function runIdWizard() {
         /* Events */
         onInit: function (event, currentIndex) {
 
-            if (TYPE == "vendor" || TYPE == "2") // Vendors only need to receive $, so Synapse doesn't require an ID, so Step 4 doesn't get displayed
+            if (TYPE == "vendor") // Vendors only need to receive $, so Synapse doesn't require an ID, so Step 4 doesn't get displayed
                 $(".wizard > .steps > ul > li").css("width", "33%");
 
             $('#idVerWiz > .content').animate({ height: "27em" }, 300)
@@ -218,15 +228,9 @@ function runIdWizard() {
         },
         onStepChanging: function (event, currentIndex, newIndex) {
 
-            if (newIndex == 0)
-            {
-                $('#idVerWiz > .content').animate({ height: "26em" }, 600)
-            }
+            if (newIndex == 0) $('#idVerWiz > .content').animate({ height: "26em" }, 600)
 
-            if (currentIndex == 1)
-            {
-                $('.createAccountPg #idVerWiz').css('overflow', 'hidden');
-            }
+            if (currentIndex == 1) $('.createAccountPg #idVerWiz').css('overflow', 'hidden');
 
             // IF going to Step 2
             if (currentIndex == 0)
@@ -258,25 +262,13 @@ function runIdWizard() {
                                 $('#idVerWiz > .content').animate({ height: "19em" }, 600)
                                 return true;
                             }
-                            else
-                            {
-                                updateValidationUi("phone", false);
-                            }
+                            else updateValidationUi("phone", false);
                         }
-                        else
-                        {
-                            updateValidationUi("email", false);
-                        }
+                        else updateValidationUi("email", false);
                     }
-                    else
-                    {
-                        updateValidationUi("name", false);
-                    }
+                    else updateValidationUi("name", false);
                 }
-                else
-                {
-                    updateValidationUi("name", false);
-                }
+                else updateValidationUi("name", false);
 
                 return false;
             }
@@ -297,7 +289,6 @@ function runIdWizard() {
                     var trimmedZip = $('#idVer-zip').val().trim();
                     $('#idVer-zip').val(trimmedZip);
 
-                    //if ($('#idVer-zip').val().length == 5)
                     if ($('#idVer-zip').val().length > 4)
                     {
                         updateValidationUi("zip", true);
@@ -307,122 +298,20 @@ function runIdWizard() {
                         $('#idVerWiz > .content').animate({ height: "26.5em" }, 500)
                         return true;
                     }
-                    else
-                    {
-                        updateValidationUi("zip", false);
-                    }
+                    else updateValidationUi("zip", false);
                 }
-                else
-                {
-                    updateValidationUi("address", false);
-                }
+                else updateValidationUi("address", false);
             }
 
             // IF going to Step 4
             if (newIndex == 3)
             {
-                // Check DOB field
-                if ($('#idVer-dob').val().length == 10)
-                {
-                    // Double check that DOB is not still "01/01/1980", which is the default and probably not the user's B-Day...
-                    if ($('#idVer-dob').val() != "01/01/1980")
-                    {
-                        updateValidationUi("dob", true);
-
-                        var ssnVal = $('#idVer-ssn').val().trim();
-                        ssnVal = ssnVal.replace(/ /g, "").replace(/-/g, "");
-                        // Check SSN field
-                        if (ssnVal.length == 9 || FBID != "not connected")
-                        {
-                            updateValidationUi("ssn", true);
-
-                            // Great, go to the next step of the wizard :-]
-                            // FILE INPUT DOCUMENTATION: http://plugins.krajee.com/file-input#options
-                            $("#idVer_idDoc").fileinput({
-                                allowedFileTypes: ['image'],
-                                initialPreview: [
-                                    "<img src='../Assets/Images/securityheader.png' class='file-preview-image' alt='' id='IdWizIdDocPreview'>"
-                                ],
-                                initialPreviewShowDelete: false,
-                                layoutTemplates: {
-                                    icon: '<span class="fa fa-photo m-r-10 kv-caption-icon"></span>',
-                                },
-                                fileActionSettings: {
-                                    showZoom: false,
-                                    indicatorNew: '',
-                                },
-                                maxFileCount: 1,
-                                maxFileSize: 30000,
-                                msgSizeTooLarge: "<strong>'{name}' ({size} KB)</strong> is a bit too large! Max allowed file size is <strong>{maxSize} KB</strong>. &nbsp;Please try a smaller picture!",
-                                showCaption: false,
-                                showUpload: false,
-                                showPreview: true,
-                                resizeImage: true,
-                                maxImageWidth: 1000,
-                                maxImageHeight: 1000,
-                                resizePreference: 'width'
-                            });
-
-                            $('#idVer_idDoc').on('fileerror', function (event, data, msg) {
-                                $('#idVerWiz > .content').animate({ height: "31em" }, 700)
-                            });
-
-                            $('#idVer_idDoc').on('fileloaded', function (event, file, previewId, index, reader) {
-                                $('#idVerWiz > .content').animate({ height: "29em" }, 700)
-
-                                isFileAdded = "1";
-                                var readerN = new FileReader();
-
-                               // readerN.readAsDataURL(file);
-                                resizeImages(file, function (dataUrl) {
-
-                                    var splittable = dataUrl.split(',');
-                                    var string2 = splittable[1];
-                                    FileData = string2;
-                                     
-                                   
-                                    
-                                });
-
-                               
-                            });
-
-                            $('#idVer_idDoc').on('fileclear', function (event) {
-                                $('#idVerWiz > .content').animate({ height: "23em" }, 800)
-                                isFileAdded = "0";
-                                FileData = null;
-                            });
-
-                            $('#idVer_idDoc').on('filecleared', function (event) {
-                                $('#idVerWiz > .content').animate({ height: "23em" }, 800)
-                                isFileAdded = "0";
-                                FileData = null;
-                            });
-
-                            $('#idVerWiz > .content').animate({ height: "29em" }, 800)
-                            return true;
-                        }
-                        else
-                        {
-                            updateValidationUi("ssn", false);
-                        }
-                    }
-                    else
-                    {
-                        updateValidationUi("dob-default", false);
-                    }
-                }
-                else
-                {
-                    updateValidationUi("dob", false);
-                }
+                if (TYPE != "vendor")
+                    return checkStepThree();
             }
 
             // Allways allow previous action even if the current form is not valid!
-            if (currentIndex > newIndex)
-            {
-                return true;
-            }
+            if (currentIndex > newIndex) return true;
         },
         onStepChanged: function (event, currentIndex, priorIndex) {
             if (currentIndex == 1)
@@ -430,51 +319,137 @@ function runIdWizard() {
                 $('.createAccountPg #idVerWiz').css('overflow', 'visible');
                 $('#idVer-address').focus();
             }
-            else if (currentIndex == 2)
-            {
-                $('#idVer-email').focus();
-            }
+            else if (currentIndex == 2) $('#idVer-email').focus();
         },
         onCanceled: function (event) {
             cancelIdVer();
         },
         onFinishing: function (event, currentIndex) {
+            if (TYPE == "vendor")
+                return checkStepThree();
+
             // Finish the Wizard...
             return true;
         },
         onFinished: function (event, currentIndex) {
-
             // SUBMIT DATA TO NOOCH SERVER
-            console.log("New user, so calling createRecord()")
             createRecord();
         }
     });
 }
 
+
+function checkStepThree() {
+    console.log("CheckStepThree Fired\n");
+
+    // Check DOB field
+    if ($('#idVer-dob').val().length == 10)
+    {
+        // Double check that DOB is not still "01/01/1980", which is the default and probably not the user's B-Day...
+        if ($('#idVer-dob').val() != "01/01/1980")
+        {
+            updateValidationUi("dob", true);
+
+            // Check SSN field
+            var ssnVal = $('#idVer-ssn').val().trim();
+            ssnVal = ssnVal.replace(/ /g, "").replace(/-/g, "");
+
+            if (ssnVal.length == 9 || FBID != "not connected")
+            {
+                updateValidationUi("ssn", true);
+
+                // Great, go to the next step of the wizard :-]
+                // FILE INPUT DOCUMENTATION: http://plugins.krajee.com/file-input#options
+                $("#idVer_idDoc").fileinput({
+                    allowedFileTypes: ['image'],
+                    initialPreview: [
+                        "<img src='../Assets/Images/securityheader.png' class='file-preview-image' alt='' id='IdWizIdDocPreview'>"
+                    ],
+                    initialPreviewShowDelete: false,
+                    layoutTemplates: {
+                        icon: '<span class="fa fa-photo m-r-10 kv-caption-icon"></span>',
+                    },
+                    fileActionSettings: {
+                        showZoom: false,
+                        indicatorNew: '',
+                    },
+                    maxFileCount: 1,
+                    maxFileSize: 20000,
+                    msgSizeTooLarge: "<strong>'{name}' ({size} KB)</strong> is a bit too large! Max allowed file size is <strong>{maxSize} KB</strong>. &nbsp;Please try a smaller picture!",
+                    showCaption: false,
+                    showUpload: false,
+                    showPreview: true,
+                    resizeImage: true,
+                    maxImageWidth: 1000,
+                    maxImageHeight: 1000,
+                    resizePreference: 'width'
+                });
+
+                $('#idVer_idDoc').on('fileerror', function (event, data, msg) {
+                    $('#idVerWiz > .content').animate({ height: "31em" }, 700)
+                });
+
+                $('#idVer_idDoc').on('fileloaded', function (event, file, previewId, index, reader) {
+                    $('#idVerWiz > .content').animate({ height: "29em" }, 700)
+
+                    isFileAdded = "1";
+                    var readerN = new FileReader();
+
+                    // readerN.readAsDataURL(file);
+                    resizeImages(file, function (dataUrl) {
+                        var splittable = dataUrl.split(',');
+                        var string2 = splittable[1];
+                        FileData = string2;
+                    });
+                });
+
+                $('#idVer_idDoc').on('fileclear', function (event) {
+                    $('#idVerWiz > .content').animate({ height: "23em" }, 800)
+                    isFileAdded = "0";
+                    FileData = null;
+                });
+
+                $('#idVer_idDoc').on('filecleared', function (event) {
+                    $('#idVerWiz > .content').animate({ height: "23em" }, 800)
+                    isFileAdded = "0";
+                    FileData = null;
+                });
+
+                $('#idVerWiz > .content').animate({ height: "29em" }, 800)
+                return true;
+            }
+            else updateValidationUi("ssn", false);
+        }
+        else updateValidationUi("dob-default", false);
+    }
+    else updateValidationUi("dob", false);
+
+    return false;
+}
+
+
 function resizeImages(file, complete) {
     // read file as dataUrl
-    ////////  2. Read the file as a data Url
+    //  2. Read the file as a data Url
     var reader = new FileReader();
     // file read
     reader.onload = function(e) {
         // create img to store data url
-        ////// 3 - 1 Create image object for canvas to use
+        // 3 - 1 Create image object for canvas to use
         var img = new Image();
         img.onload = function() {
-            /////////// 3-2 send image object to function for manipulation
+            // 3-2 send image object to function for manipulation
             complete(resizeInCanvas(img));
         };
         img.src = e.target.result;
     }
     // read file
     reader.readAsDataURL(file);
-   
 }
 
- 
 
 function resizeInCanvas(img){
-    /////////  3-3 manipulate image
+    //  3-3 manipulate image
     var perferedWidth = 500;
     var ratio = perferedWidth / img.width;
     var canvas = $("<canvas>")[0];
@@ -484,7 +459,7 @@ function resizeInCanvas(img){
     console.log(canvas);
     var ctx = canvas.getContext("2d");
     ctx.drawImage(img, 0,0,canvas.width, canvas.height);
-    //////////4. export as dataUrl
+    // 4. export as dataUrl
     return canvas.toDataURL();
 }
 
@@ -516,13 +491,9 @@ function updateValidationUi(field, success) {
 
         // Show the success checkmark
         if (!$('#' + field + 'Grp .iconFeedback').length)
-        {
             $('#' + field + 'Grp .form-group .fg-line').append('<i class="fa fa-check text-success iconFeedback animated bounceIn"></i>');
-        }
         else
-        {
             $('#' + field + 'Grp .iconFeedback').removeClass('bounceOut').addClass('bounceIn');
-        }
     }
     else
     {
@@ -530,19 +501,13 @@ function updateValidationUi(field, success) {
 
         // Hide the success checkmark if present
         if ($('#' + field + 'Grp .iconFeedback').length)
-        {
             $('#' + field + 'Grp .iconFeedback').addClass('bounceOut');
-        }
 
         var helpBlockTxt = "";
         if (field == "name")
-        {
             helpBlockTxt = "Please enter your full <strong>legal name</strong>.";
-        }
         else if (field == "dob")
-        {
             helpBlockTxt = "Please enter your date of birth. &nbsp;Only needed to verify your ID!"
-        }
         else if (field == "ssn")
         {
             $('#idVerWiz > .content').animate({ height: "28em" }, 600)
@@ -550,9 +515,7 @@ function updateValidationUi(field, success) {
                                     : "<strong>Please enter your full SSN.</strong>"// or connect with FB." // CC (6/7/16): Un-comment once Synapse finishes adding /user/docs/add to V3.0
 
             if (isSmScrn)
-            {
                 $('#idVerWiz > .content').animate({ height: "27em" }, 300)
-            }
         }
         else if (field == "address")
         {
@@ -565,13 +528,9 @@ function updateValidationUi(field, success) {
             $('#idVerWiz > .content').animate({ height: "21em" }, 600);
         }
         else if (field == "email")
-        {
             helpBlockTxt = "Please enter a valid email address that you own."
-        }
         else if (field == "phone")
-        {
             helpBlockTxt = "<strong>Please enter a valid 10-digit phone number.</strong>"
-        }
 
         if (!$('#' + field + 'Grp .help-block').length)
         {
@@ -579,14 +538,13 @@ function updateValidationUi(field, success) {
             $('#' + field + 'Grp .help-block').slideDown();
         }
         else
-        { $('#' + field + 'Grp .help-block').show() }
+            $('#' + field + 'Grp .help-block').show();
 
         // Now focus on the element that failed validation
         setTimeout(function () {
             $('#' + field + 'Grp input').focus();
         }, 200)
     }
-
 }
 
 
@@ -597,40 +555,19 @@ function ValidateEmail(str) {
     var lstr = str.length
     var ldot = str.indexOf(dot)
 
-    if (lstr < 5)
-    {
-        return false;
-    }
+    if (lstr < 5) return false;
 
-    if (lat == -1 || lat == 0 || lat == lstr)
-    {
-        return false
-    }
+    if (lat == -1 || lat == 0 || lat == lstr) return false
 
-    if (ldot == -1 || ldot == 0 || ldot > lstr - 3)
-    {
-        return false
-    }
+    if (ldot == -1 || ldot == 0 || ldot > lstr - 3) return false
 
-    if (str.indexOf(at, (lat + 1)) != -1)
-    {
-        return false
-    }
+    if (str.indexOf(at, (lat + 1)) != -1) return false
 
-    if (str.substring(lat - 1, lat) == dot || str.substring(lat + 1, lat + 2) == dot)
-    {
-        return false
-    }
+    if (str.substring(lat - 1, lat) == dot || str.substring(lat + 1, lat + 2) == dot) return false
 
-    if (str.indexOf(dot, (lat + 2)) == -1)
-    {
-        return false
-    }
+    if (str.indexOf(dot, (lat + 2)) == -1) return false
 
-    if (str.indexOf(" ") != -1)
-    {
-        return false
-    }
+    if (str.indexOf(" ") != -1) return false
 
     return true
 };
@@ -743,16 +680,10 @@ function createRecord() {
                             $("#idVerContainer").addClass("bounceIn").removeClass("hidden");
                         }, 750);
                     }
-                    else
-                    {
-                        // No KBA Questions returned, go straight to AddBank iFrame
+                    else // No KBA Questions returned, go straight to AddBank iFrame
                         idVerifiedSuccess();
-                    }
                 }
-                else
-                {
-                    idVerifiedSuccess();
-                }
+                else idVerifiedSuccess();
             }
             else
             {
@@ -812,10 +743,7 @@ function createRecord() {
                         console.log("Error: missing critical data");
                         showErrorAlert('2');
                     }
-                    else
-                    {
-                        showErrorAlert('2');
-                    }
+                    else showErrorAlert('2');
                 }
                 else
                 {
@@ -981,10 +909,7 @@ function submitPin(pin) {
                         console.log("Error: missing critical data");
                         showErrorAlert('2');
                     }
-                    else
-                    {
-                        showErrorAlert('2');
-                    }
+                    else showErrorAlert('2');
                 }
                 else
                 {
@@ -1016,19 +941,14 @@ $('body').bind('complete', function () {
 
     console.log("Callback from ID Quest - success was: [" + result + "]");
 
-    if (result == true)
-    {
-        idVerifiedSuccess();
-    }
+    if (result == true) idVerifiedSuccess();
     else
     {
         // Hide the ID Questions iFrame
         $("#idVerContainer").addClass("hidden");
 
         // Show error msg
-        {
-            showErrorAlert('25');
-        }
+        showErrorAlert('25');
     }
 });
 
@@ -1070,13 +990,9 @@ $('body').bind('addBankComplete', function () {
         });
 
         //if (ISNEW == "true")
-        //{
         //    $('#checkEmailMsg').removeClass('hidden');
-        //}
         //else
-        //{
         $('.resultDiv').removeClass('hidden');
-        //}
 
     }, 500);
 
@@ -1120,9 +1036,7 @@ $('body').bind('addBankComplete', function () {
                            "', 'memId':'" + memIdGen + "'}";
           }
           else
-          {
               return false;
-          }
 
           // ADD THE LOADING BOX
           $('#idWizContainer').block({
@@ -1143,13 +1057,9 @@ $('body').bind('addBankComplete', function () {
 
           var urlToUse = "";
           if (transType == "send")
-          {
               urlToUse = "depositMoney.aspx/setPw";
-          }
           else // must be a Request or Rent payment (which also uses the payRequest page)
-          {
               urlToUse = "payRequest.aspx/setPw";
-          }
 
           $.ajax({
               type: "POST",
@@ -1180,9 +1090,7 @@ $('body').bind('addBankComplete', function () {
                       html: true
                   }, function (isConfirm) {
                       if (isConfirm)
-                      {
                           window.location = "https://geo.itunes.apple.com/us/app/nooch/id917955306?mt=8";
-                      }
                   });
               },
               Error: function (x, e)
@@ -1230,10 +1138,7 @@ function showErrorAlert(errorNum) {
     var shouldShowErrorDiv = true;
 
     var supportEmail = "support@nooch.com";
-    if (COMPANY == "Rent Scene")
-    {
-        supportEmail = "payments@rentscene.com"
-    }
+    if (COMPANY == "Rent Scene") supportEmail = "payments@rentscene.com"
 
     console.log("ShowError -> errorNum is: [" + errorNum + "], resultReason is: [" + resultReason + "]");
 
@@ -1283,9 +1188,7 @@ function showErrorAlert(errorNum) {
         $(".errorMessage a").addClass("btn btn-default m-t-20 animated bounceIn");
     }
     else
-    {
         $(".errorMessage").addClass('hidden');
-    }
 
     swal({
         title: alertTitle,
@@ -1300,18 +1203,9 @@ function showErrorAlert(errorNum) {
         allowEscapeKey: false,
         html: true
     }, function (isConfirm) {
-        if (!isConfirm)
-        {
-            window.open("mailto:" + supportEmail);
-        }
-        else if (shouldFocusOnEmail)
-        {
-            updateValidationUi("email", false);
-        }
-        else if (shouldFocusOnPhone)
-        {
-            updateValidationUi("phone", false);
-        }
+        if (!isConfirm) window.open("mailto:" + supportEmail);
+        else if (shouldFocusOnEmail) updateValidationUi("email", false);
+        else if (shouldFocusOnPhone) updateValidationUi("phone", false);
     });
 }
 
@@ -1330,21 +1224,14 @@ $('body').on('blur', '.form-control', function () {
     if (fgrp.hasClass('fg-float'))
     {
         if (val.length == 0)
-        {
             $(this).closest('.fg-line').removeClass('fg-toggled');
-        }
     }
     else if (ipgrp.hasClass('fg-float'))
     {
         if (val2.length == 0)
-        {
             $(this).closest('.fg-line').removeClass('fg-toggled');
-        }
     }
-    else
-    {
-        $(this).closest('.fg-line').removeClass('fg-toggled');
-    }
+    else $(this).closest('.fg-line').removeClass('fg-toggled');
 });
 
 function ssnWhy() {
@@ -1368,10 +1255,7 @@ function changeFavicon(src) {
     link.id = 'dynamic-favicon';
     link.rel = 'shortcut icon';
     link.href = src;
-    if (oldLink)
-    {
-        document.head.removeChild(oldLink);
-    }
+    if (oldLink) document.head.removeChild(oldLink);
     document.head.appendChild(link);
 }
 
@@ -1382,9 +1266,7 @@ function scrollToAddBank() {
     var scroll_to = $('#frame').offset().top - 75;
 
     if ($(window).scrollTop() != scroll_to)
-    {
         $('html, body').stop().animate({ scrollTop: scroll_to }, 1000, null);
-    }
 }
 
 // -------------------
@@ -1423,11 +1305,8 @@ function checkLoginState() {
             $('#fbResult').html('<strong>Facebook Connected Successfully! <i class="fa fa-smile-o m-l-5"></i></strong>')
 						  .addClass('bounceIn text-success').removeClass('hidden');
         }
-        else
-        {
-            // Not logged in, so attempt to Login to FB
+        else // Not logged in, so attempt to Login to FB
             fbLogin();
-        }
     });
 }
 
@@ -1442,9 +1321,6 @@ function fbLogin() {
             $('#fbResult').html('<strong>Facebook Connected Successfully! <i class="fa fa-smile-o m-l-5"></i></strong>')
 						  .addClass('bounceIn text-success').removeClass('hidden');
         }
-        else
-        {
-            FBID = "not connected";
-        }
+        else FBID = "not connected";
     });
 }

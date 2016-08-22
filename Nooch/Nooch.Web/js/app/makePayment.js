@@ -13,9 +13,7 @@ var pinVerified = false;
 $(document).ready(function () {
     var isSmScrn = false;
     if ($(window).width() < 768)
-    {
         isSmScrn = true;
-    }
 
     if (FROM == "rentscene")
     {
@@ -49,9 +47,7 @@ $(document).ready(function () {
     }
 
     if (askForPin)
-    {
         showPinPrompt("initial", FROM);
-    }
     else
     {
         setTimeout(function () {
@@ -74,9 +70,7 @@ $(document).ready(function () {
         if ($('input[name="userType"]:checked').val() == 'vendor')
         {
             if ($('input[name="type"]:checked').val() == 'request')
-            {
                 return false;
-            }
         }
     });
 
@@ -192,9 +186,7 @@ function checkFormData() {
 
 function submitPayment() {
     if (askForPin && !pinVerified)
-    {
         return;
-    }
 
     var transType = $('input[name="type"]:checked').val();
     isRequest = transType == "send" ? false : true;
@@ -1039,10 +1031,7 @@ function changeFavicon(src) {
     link.id = 'dynamic-favicon';
     link.rel = 'shortcut icon';
     link.href = src;
-    if (oldLink)
-    {
-        document.head.removeChild(oldLink);
-    }
+    if (oldLink) document.head.removeChild(oldLink);
     document.head.appendChild(link);
 }
 

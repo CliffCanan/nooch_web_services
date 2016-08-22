@@ -314,8 +314,7 @@ function runIdWizard() {
         },
         onStepChanging: function (event, currentIndex, newIndex) {
 
-            if (newIndex == 0)
-                $('#idVerWiz > .content').animate({ height: "22em" }, 600)
+            if (newIndex == 0) $('#idVerWiz > .content').animate({ height: "22em" }, 600)
 
             // IF going to Step 2
             if (currentIndex == 0)
@@ -349,17 +348,13 @@ function runIdWizard() {
                                 $('#idVerWiz > .content').animate({ height: "19em" }, 600)
                                 return true;
                             }
-                            else
-                                updateValidationUi("phone", false);
+                            else updateValidationUi("phone", false);
                         }
-                        else
-                            updateValidationUi("email", false);
+                        else updateValidationUi("email", false);
                     }
-                    else
-                        updateValidationUi("name", false);
+                    else updateValidationUi("name", false);
                 }
-                else
-                    updateValidationUi("name", false);
+                else updateValidationUi("name", false);
 
                 return false;
             }
@@ -388,11 +383,9 @@ function runIdWizard() {
                         $('#idVerWiz > .content').animate({ height: "25em" }, 500)
                         return true;
                     }
-                    else
-                        updateValidationUi("zip", false);
+                    else updateValidationUi("zip", false);
                 }
-                else
-                    updateValidationUi("address", false);
+                else updateValidationUi("address", false);
             }
 
             // IF going to Step 4
@@ -403,8 +396,7 @@ function runIdWizard() {
             }
 
             // Allways allow going backwards even if the current step is not valid
-            if (currentIndex > newIndex)
-                return true;
+            if (currentIndex > newIndex) return true;
         },
         onStepChanged: function (event, currentIndex, priorIndex) {
             if (currentIndex == 1)
@@ -414,7 +406,6 @@ function runIdWizard() {
             cancelIdVer();
         },
         onFinishing: function (event, currentIndex) {
-
             if (transType == "send" && CIP == "vendor")
                 return checkStepThree();
             else // Finish the Wizard...
@@ -471,14 +462,14 @@ function checkStepThree() {
                         indicatorNew: '',
                     },
                     maxFileCount: 1,
-                    maxFileSize: 250000,
+                    maxFileSize: 20000,
                     msgSizeTooLarge: "<strong>'{name}' ({size} KB)</strong> is a bit too large! Max allowed file size is <strong>{maxSize} KB</strong>. &nbsp;Please try a smaller picture!",
                     showCaption: false,
                     showUpload: false,
                     showPreview: true,
                     resizeImage: true,
-                    maxImageWidth: 500,
-                    maxImageHeight: 500,
+                    maxImageWidth: 1000,
+                    maxImageHeight: 1000,
                     resizePreference: 'width'
                 });
 
@@ -524,14 +515,11 @@ function checkStepThree() {
                 $('#idVerWiz > .content').animate({ height: "26em" }, 800)
                 return true;
             }
-            else
-                updateValidationUi("ssn", false);
+            else updateValidationUi("ssn", false);
         }
-        else
-            updateValidationUi("dob-default", false);
+        else updateValidationUi("dob-default", false);
     }
-    else
-        updateValidationUi("dob", false);
+    else updateValidationUi("dob", false);
 
     return false;
 }
@@ -698,33 +686,19 @@ function ValidateEmail(str) {
     var lstr = str.length
     var ldot = str.indexOf(dot)
 
-    if (lstr < 5) {
-        return false;
-    }
+    if (lstr < 5) return false;
 
-    if (lat == -1 || lat == 0 || lat == lstr) {
-        return false
-    }
+    if (lat == -1 || lat == 0 || lat == lstr) return false
 
-    if (ldot == -1 || ldot == 0 || ldot > lstr - 3) {
-        return false
-    }
+    if (ldot == -1 || ldot == 0 || ldot > lstr - 3) return false
 
-    if (str.indexOf(at, (lat + 1)) != -1) {
-        return false
-    }
+    if (str.indexOf(at, (lat + 1)) != -1) return false
 
-    if (str.substring(lat - 1, lat) == dot || str.substring(lat + 1, lat + 2) == dot) {
-        return false
-    }
+    if (str.substring(lat - 1, lat) == dot || str.substring(lat + 1, lat + 2) == dot) return false
 
-    if (str.indexOf(dot, (lat + 2)) == -1) {
-        return false
-    }
+    if (str.indexOf(dot, (lat + 2)) == -1) return false
 
-    if (str.indexOf(" ") != -1) {
-        return false
-    }
+    if (str.indexOf(" ") != -1) return false
 
     return true
 };
@@ -1242,9 +1216,7 @@ function showErrorAlert(errorNum) {
 function checkIfStillPending() 
 {
     if (transStatus == "pending") // Set on Code Behind page
-    {
         return true;
-    }
     else
     {
         var alertTitle = "";
@@ -1417,15 +1389,11 @@ function payBtnClicked()
     var msg = "You are about to make a <strong>$" + amount + "</strong> payment to <strong>" + senderName + "</strong>";
 
     if (bnkNicknam == "manual") // This flag is sent by the user when the bank has a blank 'bank_name' b/c it was added via routing/account #
-    {
         msg += " using your bank account ending in:" +
-              "<span class='show m-t-10'><strong>" + bnkName + "</strong></span>";
-    }
+               "<span class='show m-t-10'><strong>" + bnkName + "</strong></span>";
     else
-    {
         msg += " using the following bank account:" +
-              "<span class='show m-t-15'><strong>" + bnkName + "</strong> &nbsp;" + bnkNicknam + "</span>";
-    }
+               "<span class='show m-t-15'><strong>" + bnkName + "</strong> &nbsp;" + bnkNicknam + "</span>";
 
     msg += "<span class='show m-t-15'>By clicking confirm, you are authorizing a one-time transfer from your bank account to " + senderName + ".</span>"
     
@@ -1591,9 +1559,8 @@ function scrollToAddBank()
 {
     var scroll_to = $('#frame').offset().top - 75;
 
-    if ($(window).scrollTop() != scroll_to) {
+    if ($(window).scrollTop() != scroll_to)
         $('html, body').stop().animate({ scrollTop: scroll_to }, 1000, null);
-    }
 }
 
 function changeFavicon(src) {
@@ -1642,10 +1609,8 @@ function checkLoginState() {
             $('#fbResult').html('<strong>Facebook Connected Successfully! <i class="fa fa-smile-o m-l-5"></i></strong>')
 						  .addClass('bounceIn text-success').removeClass('hidden');
         }
-        else {
-            // Not logged in, so attempt to Login to FB
+        else // Not logged in, so attempt to Login to FB
             fbLogin();
-        }
     });
 }
 
