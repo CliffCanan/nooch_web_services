@@ -19,6 +19,7 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
     {
         public bool success { get; set; }
         public bool isAlreadyVerified { get; set; }
+        public bool isRs { get; set; }
         public string verifiedDate { get; set; }
         public string userFirstName { get; set; }
         public string userLastName { get; set; }
@@ -29,7 +30,6 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
         public string microDespositTwo { get; set; }
         public string bankId { get; set; }
         public string errorMsg { get; set; }
-        public string IsRs { get; set; }
         public string NodeId1 { get; set; }
         public List<PendingTransaction> PendingTransactionList{ get; set; }
     }

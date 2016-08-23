@@ -2,9 +2,7 @@
 @{
     Layout = null;
     SynapseV3VerifyNodeWithMicroDeposits_ServiceInput MicroDeposit = (SynapseV3VerifyNodeWithMicroDeposits_ServiceInput)ViewData["OnLoadData"];
-    
 }
-
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 
@@ -77,17 +75,17 @@
     <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
         <div class="clearfix">
             <div class="m-l-15">
-                @if (MicroDeposit.IsRs!=null && MicroDeposit.IsRs.ToLower() == "true")
+                @if (MicroDeposit.isRs)
                 {
-                <a class="landingHeaderLogo" href="https://www.rentscene.com/" style="float:left;">
-                    <img src="../Assets/Images/rentscene.png" class="center-block" alt="Rent Scene Logo" />
-                </a>
+                    <a class="landingHeaderLogo" href="https://www.rentscene.com/" style="float:left;">
+                        <img src="../Assets/Images/rentscene.png" class="center-block" alt="Rent Scene Logo" />
+                    </a>
                 }
                 else
                 {
-                <a class="landingHeaderLogo" href="https://www.nooch.com/" style="float:left;">
-                    <img src="../Assets/Images/nooch-logo2.svg" class="center-block" alt="Nooch Logo" />
-                </a>
+                    <a class="landingHeaderLogo" href="https://www.nooch.com/" style="float:left;">
+                        <img src="../Assets/Images/nooch-logo2.svg" class="center-block" alt="Nooch Logo" />
+                    </a>
                 }
                 <div id="nameInNavContainer" class="text-center" style="position:absolute; left:10%; width:80%; top: 8px;">
                     <label id="nameInNav" class="m-t-5 m-b-0 center-block f-600 h4">@MicroDeposit.userFirstName @MicroDeposit.userLastName</label>
@@ -156,91 +154,78 @@
                 </div>
             </div>
         </div>
-        
-        
-        
-          
     }
     else
     {
-        if (MicroDeposit.PendingTransactionList != null) { 
-          <div class="row m-0">
-            <div id="idWizContainer" class="" style="width:96%; max-width:530px; margin: 25px auto;">
-                <div class="row animated bounceIn">
+        if (MicroDeposit.PendingTransactionList != null)
+        {
+            <div class="row m-0">
+                <div id="idWizContainer" class="" style="width:96%; max-width:530px; margin: 25px auto;">
+                    <div class="row animated bounceIn">
 
-                    <div>
+                        <div>
 
-                        <div class="well text-center f-15">
-                            <span class="show f-19 m-b-5 text-primary">Hi @MicroDeposit.userFirstName,</span>You have Pending Requests from    
-                        </div>
-
-                        <form id="microVerPayRequestForm" class="form-horizontal" role="form">
-                           @foreach (var tran in MicroDeposit.PendingTransactionList)
-                           { 
-                           
-                          
-                            <div class="form-group" id="micro1Grp">
-                                <div>
-                                    <div class="input-group">
-                                        <span class="input-group-addon">Amount :@tran.Amount </span>
-                                        <div class="fg-line">
-                                          @tran.userName
-                                          
-                                        </div>
-                                        <div class="col-sm-offset-2 col-sm-8">
-                                            <button type="button" class="btn btn-primary  btnpayRequest @tran.TransactionId  " onclick='SubmitPay("@tran.TransactionId","@tran.RecipientId")'>Pay   </button>
-                                        </div>
-                                    </div>
-                                    <span class="glyphicon glyphicon-ok form-control-feedback hidden" aria-hidden="true"></span>
-                                    <div id="errorMsg1"></div>
-                                </div>
+                            <div class="well text-center f-15">
+                                <span class="show f-19 m-b-5 text-primary">Hi @MicroDeposit.userFirstName,</span>You have Pending Requests from
                             </div>
 
-                           }
+                            <form id="microVerPayRequestForm" class="form-horizontal" role="form">
+                                @foreach (var tran in MicroDeposit.PendingTransactionList)
+                                {
+                                    <div class="form-group" id="micro1Grp">
+                                        <div>
+                                            <div class="input-group">
+                                                <span class="input-group-addon">Amount: @tran.Amount</span>
+                                                <div class="fg-line">@tran.userName</div>
+                                                <div class="col-sm-offset-2 col-sm-8">
+                                                    <button type="button" class="btn btn-primary btnpayRequest @tran.TransactionId" onclick='SubmitPay("@tran.TransactionId","@tran.RecipientId")'>Pay</button>
+                                                </div>
+                                            </div>
+                                            <span class="glyphicon glyphicon-ok form-control-feedback hidden" aria-hidden="true"></span>
+                                            <div id="errorMsg1"></div>
+                                        </div>
+                                    </div>
+                                }
+                            </form>
 
-                           
-
-                        </form>
-
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
         }
-        
+
         <div class="resultDiv col-sm-6 col-sm-offset-3 col-lg-4 col-lg-offset-4">
             <i class="fa fa-bank"></i>
             <h3>Account Already Verified</h3>
             <p>Looks like you're already good to go! &nbsp;This bank account was verified on <strong>@MicroDeposit.verifiedDate</strong>.</p>
             <p>You may use this bank account to send or receive funds.</p>
         </div>
-      
     }
 
     <div class="footer footer-landing" style="position:fixed; bottom:1%;">
         <div>
             <ul class="list-inline">
-                @if (MicroDeposit.IsRs.ToLower() == "true")
+                @if (MicroDeposit.isRs)
                 {
-                <li><a href="https://www.rentscene.com" target="_blank">About</a></li>
-                <li><a href="https://www.nooch.com/safe" target="_blank">Security</a></li>
-                <li><a href="https://www.nooch.com/tos" target="_blank">Legal Stuff</a></li>
-                <li><a href="https://www.rentscene.com/faq" target="_blank">FAQ</a></li>
+                    <li><a href="https://www.rentscene.com" target="_blank">About</a></li>
+                    <li><a href="https://www.nooch.com/safe" target="_blank">Security</a></li>
+                    <li><a href="https://www.nooch.com/tos" target="_blank">Legal Stuff</a></li>
+                    <li><a href="https://www.rentscene.com/faq" target="_blank">FAQ</a></li>
                 }
                 else
                 {
-                <li><a href="https://www.nooch.com/overview" target="_blank">About</a></li>
-                <li><a href="https://www.nooch.com/safe" target="_blank">Security</a></li>
-                <li><a href="http://support.nooch.com/" target="_blank">Support Center</a></li>
-                <li><a href="https://www.nooch.com/tos" target="_blank">Legal Stuff</a></li>
-                <li><a href="https://www.nooch.com/blog/" target="_blank">Blog</a></li>
+                    <li><a href="https://www.nooch.com/overview" target="_blank">About</a></li>
+                    <li><a href="https://www.nooch.com/safe" target="_blank">Security</a></li>
+                    <li><a href="http://support.nooch.com/" target="_blank">Support Center</a></li>
+                    <li><a href="https://www.nooch.com/tos" target="_blank">Legal Stuff</a></li>
+                    <li><a href="https://www.nooch.com/blog/" target="_blank">Blog</a></li>
                 }
             </ul>
         </div>
     </div>
 
     <form id="form1">
-        <input type="hidden" id="IsRs" value="@MicroDeposit.IsRs.ToLower()" />
+        <input type="hidden" id="IsRs" value="@MicroDeposit.isRs" />
         <input type="hidden" id="MemberId" value="@MicroDeposit.MemberId" />
         <input type="hidden" id="NodeId1" value="@MicroDeposit.NodeId1" />
         <input type="hidden" id="errorMsg" value="@MicroDeposit.errorMsg" />

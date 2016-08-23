@@ -3300,12 +3300,11 @@ namespace Nooch.Web.Controllers
 
         #region Micro-Deposit Verification Page
 
-        // MemberId here is plane memberId =- non encrypted
         // NodeId is Id from SynapseBanksOfMembers table - non encrypted
-        public ActionResult MicroDepositsVerification(string mid, string NodeId, bool? IsRs)
+        public ActionResult MicroDepositsVerification(string mid, string NodeId)
         {
-            Logger.Info("MicroDepositsVerification Page -> Page Loaded - MemberID: [" + mid +
-                        "], NodeID: [" + NodeId + "], IsRentScene: [" + IsRs + "]");
+            Logger.Info("MicroDepositsVerification Page -> Page Load - MemberID: [" + mid +
+                        "], NodeID: [" + NodeId + "]");
 
             SynapseV3VerifyNodeWithMicroDeposits_ServiceInput MicroDeposit = new SynapseV3VerifyNodeWithMicroDeposits_ServiceInput();
             MicroDeposit.errorMsg = string.Empty;
@@ -3313,22 +3312,13 @@ namespace Nooch.Web.Controllers
             try
             {
                 if (String.IsNullOrEmpty(mid))
-                {
-                    Logger.Error("MicroDepositsVerification Page -> Page_load - MemberID is: [" + mid + "]");
                     MicroDeposit.errorMsg = "Missing MemberID";
-                }
 
-                if (String.IsNullOrEmpty(MicroDeposit.errorMsg))
-                {
-                    // Get Bank Info from server
+                else // Get Bank Info from server
                     MicroDeposit = GetBankDetailsForMicroDepositVerification(mid.Trim());
-                }
 
-                if (IsRs == true) // if this flag is in the URL, then force RS branding, regardless of server response
-                {
-                    MicroDeposit.IsRs = "true";
-                    Logger.Info("MicroDepositsVerification Page -> Page_load - RENT SCENE USER Detected");
-                }
+                if (MicroDeposit.isRs == true)
+                    Logger.Info("MicroDepositsVerification Page -> Page Load - RENT SCENE USER Detected");
             }
             catch (Exception ex)
             {
@@ -3357,7 +3347,7 @@ namespace Nooch.Web.Controllers
 
                 if (details == null)
                 {
-                    Logger.Error("MicroDepositsVerification Page -> GetTransDetails FAILED - Transaction Not Found - TransId: [" + memberId + "]");
+                    Logger.Error("MicroDepositsVerification Page -> GetTransDetails FAILED - Transaction Not Found - TransID: [" + memberId + "]");
                     rpr.errorMsg = "Unable to find bank record";
                 }
                 else
@@ -3365,7 +3355,7 @@ namespace Nooch.Web.Controllers
             }
             catch (Exception ex)
             {
-                Logger.Error("MicroDepositsVerification Page -> GetTransDetails Failed - TransacationID: [" + memberId +
+                Logger.Error("MicroDepositsVerification Page -> GetTransDetails FAILED - TransID: [" + memberId +
                              "], Exception: [" + ex + "]");
                 rpr.errorMsg = "Exception: [" + ex.Message + "]";
             }

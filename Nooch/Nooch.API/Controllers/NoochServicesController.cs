@@ -4456,38 +4456,42 @@ namespace Nooch.API.Controllers
                 {
                     res.userFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName));
                     res.userLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.LastName));
-                    res.IsRs = memberObj.isRentScene.ToString().ToLower() ?? "false";
+                    res.isRs = memberObj.isRentScene ?? false;
 
                     var synapseBankDetails = CommonHelper.GetSynapseBankDetails(memberId);
                     var mid = Utility.ConvertToGuid(memberId);
 
-                    // find any pending request 22/8/16 
-                 
-                    var pendingRequestTrans = _dbContext.Transactions.Where(t => t.SenderId == mid && t.TransactionStatus=="Pending"
-                        && t.TransactionType == "T3EMY1WWZ9IscHIj3dbcNw==" || t.InvitationSentTo == memberObj.UserName).ToList();
+                    // Added 8/22/16
+                    #region Find Any Pending Requests
+
+                    var pendingRequestTrans = _dbContext.Transactions.Where(t => t.TransactionStatus == "Pending" && //t.TransactionType == "T3EMY1WWZ9IscHIj3dbcNw==" || //t.SenderId == mid &&
+                                                                                (t.InvitationSentTo == memberObj.UserName ||
+                                                                                 t.InvitationSentTo == memberObj.UserNameLowerCase ||
+                                                                                 t.InvitationSentTo == memberObj.SecondaryEmail)).ToList();
                     res.PendingTransactionList = new List<PendingTransaction>();
 
-                    foreach (var transaction in pendingRequestTrans) { 
-                    PendingTransaction pt = new PendingTransaction();
-                    pt.TransactionId = transaction.TransactionId;
-                    pt.userName= CommonHelper.GetDecryptedData(transaction.Member1.FirstName)+" "+CommonHelper.GetDecryptedData(transaction.Member1.LastName);
-                    pt.Amount = transaction.Amount;
-                   
-                    pt.RecipientId = transaction.RecipientId;
-                    pt.SenderId = transaction.SenderId;
-                    if (pt.SenderId == pt.RecipientId)
+                    foreach (var transaction in pendingRequestTrans)
                     {
-                        pt.InvitationSentTo = transaction.InvitationSentTo;
-                        pt.TransactionType = "RequestToNewUser";
-                        pt.RecipientId = transaction.SenderId;
-                    }
-                    res.PendingTransactionList.Add(pt);
-                       
+                        PendingTransaction pt = new PendingTransaction();
+                        pt.TransactionId = transaction.TransactionId;
+                        pt.userName = CommonHelper.GetDecryptedData(transaction.Member1.FirstName) + " " +
+                                      CommonHelper.GetDecryptedData(transaction.Member1.LastName);
+                        pt.Amount = transaction.Amount;
+                        pt.RecipientId = transaction.RecipientId;
+                        pt.SenderId = transaction.SenderId;
 
+                        if (pt.SenderId == pt.RecipientId)
+                        {
+                            pt.InvitationSentTo = transaction.InvitationSentTo;
+                            pt.TransactionType = "RequestToNewUser";
+                            pt.RecipientId = transaction.SenderId;
+                        }
+
+                        res.PendingTransactionList.Add(pt);
                     }
-                    
-                    
-                    
+
+                    #endregion Find any pending request
+
                     if (synapseBankDetails != null)
                     {
                         res.bankName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(synapseBankDetails.bank_name));
@@ -6043,10 +6047,6 @@ namespace Nooch.API.Controllers
 
             return CancelTransaction;
         }
-
-
-
-      
 
     }
 }
