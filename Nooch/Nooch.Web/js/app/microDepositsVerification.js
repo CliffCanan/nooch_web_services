@@ -178,9 +178,8 @@ function SubmitPay(transId,recipId) {
 
         $.ajax({
             type: "GET",
-            url: "http://localhost:40972/api/NoochServices/GetTransactionDetailByIdAndMoveMoneyForNewUserDeposit?TransactionId=" + transId + "&MemberId=" + MemberId + "&TransactionType=RequestToNewUser&recipMemId=" + recipId,
+            url: "http://www.nooch.info/noochservice/api/NoochServices/GetTransactionDetailByIdAndMoveMoneyForNewUserDeposit?TransactionId=" + transId + "&MemberId=" + MemberId + "&TransactionType=RequestToNewUser&recipMemId=" + recipId,
           
-            
             dataType: "json",
             cache: false,
             crossDomain: true ,
