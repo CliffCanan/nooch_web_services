@@ -4432,6 +4432,8 @@ namespace Nooch.Common
                 {
                     string SynapseClientId = Utility.GetValueFromConfig("SynapseClientIdRentScene");
                     string SynapseClientSecret = Utility.GetValueFromConfig("SynapseClientSecretRentScene");
+                    
+                  
                     clientIds.Add(SynapseClientId);
                     clientIds.Add(SynapseClientSecret);
                 }

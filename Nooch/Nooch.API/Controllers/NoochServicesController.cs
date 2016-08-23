@@ -35,7 +35,7 @@ namespace Nooch.API.Controllers
     // Make sure to not push code to production server with CORS line uncommented 
     // CORS exposes api's for cross site scripting, added these to use on dev server only for the purpose of testing ionic app in browser
 
-    //[EnableCors(origins: "*", headers: "*", methods: "*")]
+    [EnableCors(origins: "*", headers: "*", methods: "*")]
 
     public class NoochServicesController : ApiController
     {
@@ -4459,7 +4459,35 @@ namespace Nooch.API.Controllers
                     res.IsRs = memberObj.isRentScene.ToString().ToLower() ?? "false";
 
                     var synapseBankDetails = CommonHelper.GetSynapseBankDetails(memberId);
+                    var mid = Utility.ConvertToGuid(memberId);
 
+                    // find any pending request 22/8/16 
+                 
+                    var pendingRequestTrans = _dbContext.Transactions.Where(t => t.SenderId == mid && t.TransactionStatus=="Pending"
+                        && t.TransactionType == "T3EMY1WWZ9IscHIj3dbcNw==" || t.InvitationSentTo == memberObj.UserName).ToList();
+                    res.PendingTransactionList = new List<PendingTransaction>();
+
+                    foreach (var transaction in pendingRequestTrans) { 
+                    PendingTransaction pt = new PendingTransaction();
+                    pt.TransactionId = transaction.TransactionId;
+                    pt.userName= CommonHelper.GetDecryptedData(transaction.Member1.FirstName)+" "+CommonHelper.GetDecryptedData(transaction.Member1.LastName);
+                    pt.Amount = transaction.Amount;
+                   
+                    pt.RecipientId = transaction.RecipientId;
+                    pt.SenderId = transaction.SenderId;
+                    if (pt.SenderId == pt.RecipientId)
+                    {
+                        pt.InvitationSentTo = transaction.InvitationSentTo;
+                        pt.TransactionType = "RequestToNewUser";
+                        pt.RecipientId = transaction.SenderId;
+                    }
+                    res.PendingTransactionList.Add(pt);
+                       
+
+                    }
+                    
+                    
+                    
                     if (synapseBankDetails != null)
                     {
                         res.bankName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(synapseBankDetails.bank_name));

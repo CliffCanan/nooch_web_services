@@ -54,6 +54,8 @@ $(document).ready(function () {
 
 
 function SubmitInfo() {
+    
+
     console.log('SubmitInfo fired');
 
     if ($('#MicroDepositOne').val().length == 2)
@@ -167,6 +169,66 @@ function SubmitInfo() {
     }
 }
 
+
+function SubmitPay(transId,recipId) {
+    $.blockUI();
+    console.log('SubmitPay fired' + recipId);
+    var MemberId = $('#MemberId').val().trim();
+   
+
+        $.ajax({
+            type: "GET",
+            url: "http://localhost:40972/api/NoochServices/GetTransactionDetailByIdAndMoveMoneyForNewUserDeposit?TransactionId=" + transId + "&MemberId=" + MemberId + "&TransactionType=RequestToNewUser&recipMemId=" + recipId,
+          
+            
+            dataType: "json",
+            cache: false,
+            crossDomain: true ,
+             
+        
+             
+            success: function (data) {
+                console.log(data);
+                $.unblockUI();
+               if (data.synapseTransResult == 'Success')
+                   
+                {
+
+                    swal({
+                        title: "Payed",
+                        text: "Request Payed Successfully.",
+                        type: "success",
+                        showCancelButton: false,
+                        confirmButtonColor: "#3fabe1",
+                        confirmButtonText: "Ok",
+                        closeOnConfirm: true,
+                        customClass: "idVerSuccessAlert"
+                    });
+                }
+               else if (data.synapseTransResult == 'Request payor bank account details not found or syn user id not found')
+                {
+                    swal({
+                        title: "Error",
+                        text: "User not found or Bank not attached",
+                        type: "error",
+                        showCancelButton: false,
+                        confirmButtonColor: "#3fabe1",
+                        confirmButtonText: "Ok",
+                        closeOnConfirm: true,
+                        customClass: "idVerSuccessAlert"
+                    });
+                }
+                 
+            },
+            Error: function (data) {
+                $.UnblockUI();
+            }
+        });
+    }
+
+function logResults(json) {
+    console.log(json);
+}
 
 $('body').on('focus', '.form-control', function () {
     $(this).closest('.fg-line').addClass('fg-toggled');

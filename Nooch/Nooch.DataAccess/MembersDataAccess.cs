@@ -5761,7 +5761,7 @@ namespace Nooch.DataAccess
                                 // 575ad909950629625ca88262 - Corp Checking - USE FOR ALL NON-PASSTHROUGH PAYMENTS, i.e.: Payments TO Vendors, and Application fees from Clients to RS
                                 // 574f45d79506295ff7a81db8 - Passthrough (Linked to Rent Scene's parent account - USE FOR RENT PAYMENTS - ANYTHING OVER $1,000)
                                 // 5759005795062906e1359a8e - Passthrough (Linked to Marvis Burn's Nooch account - NEVER USE)
-                                if (recipient.cipTag.ToLower() == "vendor" &&
+                                if (recipient.cipTag!=null && recipient.cipTag.ToLower() == "vendor" &&
                                     (sender.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49" ||
                                      senderBankOid == "5759005795062906e1359a8e" || senderBankOid == "574f45d79506295ff7a81db8"))
                                 {
