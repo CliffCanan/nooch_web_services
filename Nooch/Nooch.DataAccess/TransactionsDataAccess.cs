@@ -33,37 +33,28 @@ namespace Nooch.DataAccess
 
         public List<Transaction> GetRecentMembers(string memberId)
         {
-            Logger.Info("TDA -> GetRecentMembers [MemberId: " + memberId + "]");
+            Logger.Info("TDA -> GetRecentMembers FIRED - MemberID: [" + memberId + "]");
 
             int totalRecordsCount = 0;
 
             List<Transaction> transactionsList = GetTransactionsList(memberId, "ALL", 0, 0, "", out totalRecordsCount);
 
-            transactionsList = transactionsList.Where(q =>
-                                q.TransactionType != "Q4/89kfM4OTNoiR0sbFJzA==" &&
-                                q.Member1.UserName != "2ZRTd3kKj+XXubomAsLDugMyJgcHiM7Z2YYR5qfRY30=" &&
-                                q.Member.UserName != "2ZRTd3kKj+XXubomAsLDugMyJgcHiM7Z2YYR5qfRY30=").ToList();
-
             if (transactionsList != null && transactionsList.Count > 0)
-            {
                 return transactionsList;
-            }
 
             return new List<Transaction>();
         }
 
 
-
         public PendingTransCoutResult GetMemberPendingTransCount(string MemberId)
         {
-            Logger.Info("TDA -> GetMemberPendingTransCount - [MemberId: " + MemberId + "]");
+            Logger.Info("TDA -> GetMemberPendingTransCount - MemberID: [" + MemberId + "]");
 
             try
             {
                 PendingTransCoutResult r = new PendingTransCoutResult();
 
                 var memberId = Utility.ConvertToGuid(MemberId);
-
 
                 // Get all transactions where Transaction Type could be Transfer, Request or disputed AND
                 // Transaction Status is Pending and
@@ -74,7 +65,6 @@ namespace Nooch.DataAccess
                 // 'DISPUTED' :  +C1+zhVafHdXQXCIqjU/Zg==
                 // 'RESOLVED' :  RZKgHECeAxJW/E+/IRj3Dg==
                 // 'INVITE'   :  DrRr1tU1usk7nNibjtcZkA==
-
 
                 List<Transaction> allPendingRequestsResult = _dbContext.Transactions.Where(
                     t => t.Member1.MemberId == memberId &&
@@ -89,12 +79,9 @@ namespace Nooch.DataAccess
                 int pendingDisputesTotal = 0;
 
                 if (allPendingRequestsResult != null)
-                {
                     pendingRequestsSent = allPendingRequestsResult.Count;
-                }
 
                 // Getting count OF REQUESTS where member is RECIPIENT
-
                 var allPendingRequestsReceivedResult = _dbContext.Transactions.Where(
                     t => t.Member.MemberId == memberId &&
                          t.TransactionType == "T3EMY1WWZ9IscHIj3dbcNw==" &&
@@ -103,41 +90,28 @@ namespace Nooch.DataAccess
                          (t.DisputeStatus != "RZKgHECeAxJW/E+/IRj3Dg==" || t.DisputeStatus == null)).ToList();
 
                 // Getting count of TRANSFERS/INVITES to new users
-
-
-                var allPendingInvitesCount = _dbContext.Transactions.Where(
-                    t => t.Member.MemberId == memberId &&
+                var allPendingInvitesCount = _dbContext.Transactions.Where(t => t.Member.MemberId == memberId &&
                          t.TransactionStatus == "Pending" &&
                          t.InvitationSentTo != null &&
                          (t.TransactionType == "DrRr1tU1usk7nNibjtcZkA==" ||
                           t.TransactionType == " 5dt4HUwCue532sNmw3LKDQ==") &&
                          (t.DisputeStatus != "RZKgHECeAxJW/E+/IRj3Dg==" || t.DisputeStatus == null)).ToList();
+
                 if (allPendingInvitesCount != null)
-                {
                     pendingInvitesCount = allPendingInvitesCount.Count;
-                }
 
                 // Getting count of DISPUTES that are still pending (not 'Resolved')
-
-
-                var allDisputeResult = _dbContext.Transactions.Where(
-                    t =>
+                var allDisputeResult = _dbContext.Transactions.Where(t =>
                         (t.Member1.MemberId == memberId || t.Member.MemberId == memberId) &&
                         t.TransactionType == "+C1+zhVafHdXQXCIqjU/Zg==" &&
                         t.TransactionStatus == "Pending" &&
                         t.DisputeStatus != "RZKgHECeAxJW/E+/IRj3Dg==").ToList();
-                if (allDisputeResult != null)
-                {
-                    pendingDisputesTotal = allDisputeResult.Count;
-                }
 
+                if (allDisputeResult != null)
+                    pendingDisputesTotal = allDisputeResult.Count;
 
                 if (allPendingRequestsReceivedResult != null)
-                {
                     pendingRequestsReceived = allPendingRequestsReceivedResult.Count;
-                }
-
-
 
                 r.pendingRequestsSent = pendingRequestsSent.ToString();
                 r.pendingRequestsReceived = pendingRequestsReceived.ToString();
@@ -145,7 +119,6 @@ namespace Nooch.DataAccess
                 r.pendingDisputesNotSolved = pendingDisputesTotal.ToString();
 
                 return r;
-
             }
             catch (Exception ex)
             {
@@ -153,7 +126,6 @@ namespace Nooch.DataAccess
                 return null;
             }
         }
-
 
 
         #region Transaction and money matters
@@ -1150,7 +1122,7 @@ namespace Nooch.DataAccess
 
         public string RejectMoneyRequestForExistingNoochUser(string TrannsactionId)
         {
-            Logger.Info("TDA -> RejectMoneyRequestForExistingNoochUser - transactionId: [" + TrannsactionId + "]");
+            Logger.Info("TDA -> RejectMoneyRequestForExistingNoochUser - TransID: [" + TrannsactionId + "]");
 
             try
             {
@@ -1165,7 +1137,7 @@ namespace Nooch.DataAccess
 
                 if (transactionDetail != null)
                 {
-                    #region IfSomethingFound
+                    #region If Something Found
 
                     transactionDetail.TransactionStatus = "Rejected";
                     _dbContext.SaveChanges();
@@ -1188,18 +1160,12 @@ namespace Nooch.DataAccess
                             bool startWithFor = firstThreeChars.Equals("for");
 
                             if (startWithFor)
-                            {
                                 memo = transactionDetail.Memo.ToString();
-                            }
                             else
-                            {
                                 memo = "For " + transactionDetail.Memo.ToString();
-                            }
                         }
                         else
-                        {
                             memo = "For " + transactionDetail.Memo.ToString();
-                        }
                     }
 
                     #region Push Notification to Request Sender
@@ -1287,9 +1253,7 @@ namespace Nooch.DataAccess
                     #endregion
                 }
                 else
-                {
                     return "";
-                }
             }
             catch (Exception ex)
             {
@@ -1302,26 +1266,24 @@ namespace Nooch.DataAccess
         /// <summary>
         /// To Get Transaction By Transaction Id.
         /// </summary>
-        public Transaction GetTransactionById(string transactionId)
+        public Transaction GetTransactionById(string transId)
         {
-            Logger.Info("TDA -> GetTransactionById Fired - TransactionID: [" + transactionId + "]");
+            Logger.Info("TDA -> GetTransactionById Fired - TransactionID: [" + transId + "]");
 
             try
             {
-                var transId = Utility.ConvertToGuid(transactionId);
+                var transGuid = Utility.ConvertToGuid(transId);
 
-                var transactionDetail = _dbContext.Transactions.Where(c => c.TransactionId == transId).FirstOrDefault();
+                var transactionDetail = _dbContext.Transactions.Where(c => c.TransactionId == transGuid).FirstOrDefault();
 
                 if (transactionDetail != null)
-                {
                     _dbContext.Entry(transactionDetail).Reload();
-                }
 
                 return transactionDetail;
             }
             catch (Exception ex)
             {
-                Logger.Error("TDA -> GetTransactionById EXCEPTION - TransactionID: [" + transactionId + "], Exception: [" + ex + "]");
+                Logger.Error("TDA -> GetTransactionById EXCEPTION - TransactionID: [" + transId + "], Exception: [" + ex + "]");
             }
 
             return null;
@@ -1334,9 +1296,7 @@ namespace Nooch.DataAccess
                         "], SubListType: [" + SubListType + "]");
 
             if (pageSize == null || pageSize < 100)
-            {
                 pageSize = 50;
-            }
 
             totalRecordsCount = 0;
             _dbContext = new NOOCHEntities();
@@ -1473,18 +1433,12 @@ namespace Nooch.DataAccess
 
                     // This is making some problem.
                     if (pageSize == 0 && pageIndex == 0)
-                    {
                         transactions = transactions.Take(1000).ToList();
-                    }
                     else
-                    {
                         transactions = transactions.Skip(pageSize * (pageIndex - 1)).Take(pageSize).ToList();
-                    }
 
                     if (transactions.Count > 0)
-                    {
                         return new List<Transaction>(transactions);
-                    }
                 }
             }
             catch (Exception ex)
@@ -1502,9 +1456,8 @@ namespace Nooch.DataAccess
 
             var id = Utility.ConvertToGuid(memberId);
 
-            //ClearTransactionHistory functionality 
-
             var member = _dbContext.Members.Where(u => u.MemberId == id).FirstOrDefault();
+
             if (member != null)
             {
                 _dbContext.Entry(member).Reload();
@@ -1525,14 +1478,10 @@ namespace Nooch.DataAccess
                     transaction = disputedTransaction.DisputeDate > receivedTransaction.TransactionDate ? disputedTransaction : receivedTransaction;
                 }
                 else
-                {
                     transaction = receivedTransaction;
-                }
 
                 if (transaction != null)
-                {
                     return transaction;
-                }
             }
 
             return new Transaction();
@@ -1543,15 +1492,13 @@ namespace Nooch.DataAccess
         {
             try
             {
-                Logger.Info("TDA -> GetTransactionSearchList Initiated - [MemberId: " + memberId + "]");
+                Logger.Info("TDA -> GetTransactionSearchList Initiated - MemberID: [" + memberId + "]");
 
                 var id = Utility.ConvertToGuid(memberId);
 
                 var member = _dbContext.Members.Where(u => u.MemberId == id).FirstOrDefault();
                 if (member != null)
-                {
                     _dbContext.Entry(member).Reload();
-                }
 
                 string adminUserName = Utility.GetValueFromConfig("adminMail");
 
@@ -1764,13 +1711,9 @@ namespace Nooch.DataAccess
                 }
 
                 if (pageSize == 0 && pageIndex == 0)
-                {
                     transactions = transactions.Take(1000).ToList();
-                }
                 else
-                {
                     transactions = transactions.Skip(pageSize * pageIndex).Take(pageSize).ToList();
-                }
 
                 return transactions;
             }
@@ -1798,23 +1741,15 @@ namespace Nooch.DataAccess
             var transactions = new Transaction();
 
             if (listType.ToUpper().Equals("SENT"))
-            {
                 transactions = _dbContext.Transactions.FirstOrDefault(entity => entity.Member.MemberId == id && entity.TransactionId == txnId);
-            }
             else if (listType.ToUpper().Equals("RECEIVED"))
-            {
                 transactions = _dbContext.Transactions.FirstOrDefault(entity => entity.Member1.MemberId == id && entity.TransactionId == txnId);
-            }
             else if (listType.ToUpper().Equals("DISPUTED"))
-            {
                 transactions = _dbContext.Transactions.FirstOrDefault(entity => (entity.Member.MemberId == id || entity.Member1.MemberId == id)
                                                                        && entity.DisputeStatus != null && entity.TransactionId == txnId);
-            }
             else // for withdraw
-            {
                 transactions = _dbContext.Transactions.FirstOrDefault(entity => (entity.Member1.MemberId == id || entity.Member.MemberId == id) &&
                                                                                 entity.TransactionId == txnId);
-            }
 
             return transactions != null ? transactions : new Transaction();
         }
@@ -7895,8 +7830,5 @@ namespace Nooch.DataAccess
 
             return "Failure";
         }
-
-
- 
     }
 }

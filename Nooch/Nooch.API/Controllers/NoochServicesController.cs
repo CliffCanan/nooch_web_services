@@ -501,17 +501,18 @@ namespace Nooch.API.Controllers
                 try
                 {
                     List<GetMostFrequentFriends_Result> listMostFrequentFriends = new List<GetMostFrequentFriends_Result>();
-                    MembersDataAccess obj = new MembersDataAccess();
-                    listMostFrequentFriends = obj.GetMostFrequentFriends(MemberId);
+                    MembersDataAccess mda = new MembersDataAccess();
+                    listMostFrequentFriends = mda.GetMostFrequentFriends(MemberId);
+
                     foreach (var friends in listMostFrequentFriends)
                     {
                         Member m = CommonHelper.GetMemberDetails(friends.RecepientId);
-                        friends.FirstName = CommonHelper.GetDecryptedData(m.FirstName).ToString();
-                        friends.LastName = CommonHelper.GetDecryptedData(m.LastName).ToString();
+                        friends.FirstName = !String.IsNullOrEmpty(m.FirstName) ? CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(m.FirstName)) : "";
+                        friends.LastName = !String.IsNullOrEmpty(m.LastName) ? CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(m.LastName)) : "";
                         friends.Photo = m.Photo;
                     }
-                    return listMostFrequentFriends;
 
+                    return listMostFrequentFriends;
                 }
                 catch (Exception ex)
                 {
@@ -4470,24 +4471,30 @@ namespace Nooch.API.Controllers
                                                                                  t.InvitationSentTo == memberObj.SecondaryEmail)).ToList();
                     res.PendingTransactionList = new List<PendingTransaction>();
 
-                    foreach (var transaction in pendingRequestTrans)
+                    if (pendingRequestTrans != null && pendingRequestTrans.Count > 0)
                     {
-                        PendingTransaction pt = new PendingTransaction();
-                        pt.TransactionId = transaction.TransactionId;
-                        pt.userName = CommonHelper.GetDecryptedData(transaction.Member1.FirstName) + " " +
-                                      CommonHelper.GetDecryptedData(transaction.Member1.LastName);
-                        pt.Amount = transaction.Amount;
-                        pt.RecipientId = transaction.RecipientId;
-                        pt.SenderId = transaction.SenderId;
-
-                        if (pt.SenderId == pt.RecipientId)
+                        foreach (var transaction in pendingRequestTrans)
                         {
-                            pt.InvitationSentTo = transaction.InvitationSentTo;
-                            pt.TransactionType = "RequestToNewUser";
-                            pt.RecipientId = transaction.SenderId;
+                            PendingTransaction pt = new PendingTransaction();
+                            pt.TransactionId = transaction.TransactionId;
+                            pt.userName = CommonHelper.GetDecryptedData(transaction.Member1.FirstName) + " " +
+                                          CommonHelper.GetDecryptedData(transaction.Member1.LastName);
+                            pt.Amount = transaction.Amount;
+                            pt.RecipientId = transaction.RecipientId;
+                            pt.SenderId = transaction.SenderId;
+
+                            if (pt.SenderId == pt.RecipientId)
+                            {
+                                pt.InvitationSentTo = transaction.InvitationSentTo;
+                                pt.TransactionType = "RequestToNewUser";
+                                pt.RecipientId = transaction.SenderId;
+                            }
+
+                            res.PendingTransactionList.Add(pt);
                         }
 
-                        res.PendingTransactionList.Add(pt);
+                        if (res.PendingTransactionList.Count > 0) res.hasPendingPymnt = true;
+                        else res.hasPendingPymnt = false;
                     }
 
                     #endregion Find any pending request
@@ -5523,90 +5530,97 @@ namespace Nooch.API.Controllers
             {
                 try
                 {
-                    Logger.Info("Service Cntlr -> GetRecentMembers Fired - MemberID: [" + memberId + "]");
+                    //Logger.Info("Service Cntlr -> GetRecentMembers Fired - MemberID: [" + memberId + "]");
 
                     var tda = new TransactionsDataAccess();
-                    var noochFriendEntities = tda.GetRecentMembers(memberId);
+                    var recentTrans = tda.GetRecentMembers(memberId);
+
                     var recentMembersCollection = new Collection<MemberClass>();
 
-                    if (noochFriendEntities != null && noochFriendEntities.Count > 0)
+                    if (recentTrans != null && recentTrans.Count > 0)
                     {
                         string adminUserName = Utility.GetValueFromConfig("adminMail");
 
                         int i = 0;
 
-                        foreach (var member in noochFriendEntities)
+                        foreach (var trans in recentTrans)
                         {
-                            string photo = member.Member1.Photo != null
-                                           ? string.Concat(Utility.GetValueFromConfig("PhotoUrl"), "/", member.Member1.Photo.Substring(member.Member1.Photo.IndexOf("Photos") + 14))
+                            string photo = trans.Member1.Photo != null
+                                           ? string.Concat(Utility.GetValueFromConfig("PhotoUrl"), "/", trans.Member1.Photo.Substring(trans.Member1.Photo.IndexOf("Photos") + 14))
                                            : "https://www.noochme.com/noochweb/Assets/Images/userpic-default.png";
-                            string photoRec = member.Member.Photo != null
-                                              ? string.Concat(Utility.GetValueFromConfig("PhotoUrl"), "/", member.Member.Photo.Substring(member.Member.Photo.IndexOf("Photos") + 14))
+                            string photoRec = trans.Member.Photo != null
+                                              ? string.Concat(Utility.GetValueFromConfig("PhotoUrl"), "/", trans.Member.Photo.Substring(trans.Member.Photo.IndexOf("Photos") + 14))
                                               : "https://www.noochme.com/noochweb/Assets/Images/userpic-default.png";
 
-                            if (member.Member.MemberId.ToString().Equals(memberId.ToLower())) // Sent Collection
+                            if (trans.Member.MemberId.ToString().Equals(memberId.ToLower())) // Sent Collection
                             {
-                                var memberItem = new MemberClass
+                                if (trans.Member1.Status == "Active")
                                 {
-                                    UserName = CommonHelper.GetDecryptedData(member.Member1.UserName),
-                                    FirstName = !String.IsNullOrEmpty(member.Member1.FirstName)
-                                                ? CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(member.Member1.FirstName))
-                                                : "",
-                                    LastName = !String.IsNullOrEmpty(member.Member1.LastName)
-                                               ? CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(member.Member1.LastName))
-                                               : "",
-                                    MemberId = member.Member1.MemberId.ToString(),
-                                    NoochId = member.Member1.Nooch_ID,
-                                    Status = member.Member1.Status,
-                                    Photo = !String.IsNullOrEmpty(photo) ? photo : "https://www.noochme.com/noochweb/Assets/Images/userpic-default.png",
-                                    TransferStatus = "Sent"
-                                };
-                                var userName = adminUserName != member.Member1.UserName
-                                               ? CommonHelper.GetDecryptedData(member.Member1.UserName)
-                                               : member.Member1.UserName;
+                                    var memberItem = new MemberClass
+                                    {
+                                        UserName = CommonHelper.GetDecryptedData(trans.Member1.UserName),
+                                        FirstName = !String.IsNullOrEmpty(trans.Member1.FirstName)
+                                                    ? CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member1.FirstName))
+                                                    : "",
+                                        LastName = !String.IsNullOrEmpty(trans.Member1.LastName)
+                                                   ? CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member1.LastName))
+                                                   : "",
+                                        MemberId = trans.Member1.MemberId.ToString(),
+                                        NoochId = trans.Member1.Nooch_ID,
+                                        Status = trans.Member1.Status,
+                                        Photo = !String.IsNullOrEmpty(photo) ? photo : "https://www.noochme.com/noochweb/Assets/Images/userpic-default.png",
+                                        TransferStatus = "Sent"
+                                    };
+                                    var userName = adminUserName != trans.Member1.UserName
+                                                   ? CommonHelper.GetDecryptedData(trans.Member1.UserName)
+                                                   : trans.Member1.UserName;
 
-                                if (recentMembersCollection.All(x => x.MemberId != member.Member1.MemberId.ToString()) &&
-                                    member.Member1.MemberId.ToString() != memberId && !userName.Equals(adminUserName))
-                                {
-                                    if (i == 20)
-                                        break;
-                                    i++;
-                                    recentMembersCollection.Add(memberItem);
+                                    if (recentMembersCollection.All(x => x.MemberId != trans.Member1.MemberId.ToString()) &&
+                                        trans.Member1.MemberId.ToString() != memberId && !userName.Equals(adminUserName))
+                                    {
+                                        if (i == 20)
+                                            break;
+                                        i++;
+                                        recentMembersCollection.Add(memberItem);
+                                    }
                                 }
                             }
-                            else if (member.Member1.MemberId.ToString().Equals(memberId.ToLower())) // Received Collection
+                            else if (trans.Member1.MemberId.ToString().Equals(memberId.ToLower())) // Received Collection
                             {
-                                var memberItem = new MemberClass()
+                                if (trans.Member.Status == "Active")
                                 {
-                                    UserName = CommonHelper.GetDecryptedData(member.Member.UserName),
-                                    FirstName = !String.IsNullOrEmpty(member.Member.FirstName)
-                                                ? CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(member.Member.FirstName))
-                                                : "",
-                                    LastName = !String.IsNullOrEmpty(member.Member.LastName)
-                                               ? CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(member.Member.LastName))
-                                               : "",
-                                    MemberId = member.Member.MemberId.ToString(),
-                                    NoochId = member.Member.Nooch_ID,
-                                    Status = member.Member.Status,
-                                    Photo = !String.IsNullOrEmpty(photoRec) ? photoRec : "https://www.noochme.com/noochweb/Assets/Images/userpic-default.png",
-                                    TransferStatus = "Received"
-                                };
-                                var userName = (adminUserName != member.Member.UserName)
-                                               ? CommonHelper.GetDecryptedData(member.Member.UserName)
-                                               : member.Member.UserName;
+                                    var memberItem = new MemberClass()
+                                    {
+                                        UserName = CommonHelper.GetDecryptedData(trans.Member.UserName),
+                                        FirstName = !String.IsNullOrEmpty(trans.Member.FirstName)
+                                                    ? CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member.FirstName))
+                                                    : "",
+                                        LastName = !String.IsNullOrEmpty(trans.Member.LastName)
+                                                   ? CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member.LastName))
+                                                   : "",
+                                        MemberId = trans.Member.MemberId.ToString(),
+                                        NoochId = trans.Member.Nooch_ID,
+                                        Status = trans.Member.Status,
+                                        Photo = !String.IsNullOrEmpty(photoRec) ? photoRec : "https://www.noochme.com/noochweb/Assets/Images/userpic-default.png",
+                                        TransferStatus = "Received"
+                                    };
+                                    var userName = (adminUserName != trans.Member.UserName)
+                                                   ? CommonHelper.GetDecryptedData(trans.Member.UserName)
+                                                   : trans.Member.UserName;
 
-                                if (!recentMembersCollection.Any(x => x.MemberId == member.Member.MemberId.ToString()) &&
-                                    member.Member.MemberId.ToString() != memberId && !userName.Equals(adminUserName))
-                                {
-                                    if (i == 20)
-                                        break;
-                                    i++;
-                                    recentMembersCollection.Add(memberItem);
+                                    if (!recentMembersCollection.Any(x => x.MemberId == trans.Member.MemberId.ToString()) &&
+                                        trans.Member.MemberId.ToString() != memberId && !userName.Equals(adminUserName))
+                                    {
+                                        if (i == 20)
+                                            break;
+                                        i++;
+                                        recentMembersCollection.Add(memberItem);
+                                    }
                                 }
                             }
                         }
 
-                        Logger.Info("Service Cntlr -> GetRecentMembers RecentMembersCollection COUNT: [" + recentMembersCollection.Count + "], MemberID: [" + memberId + "]");
+                        Logger.Info("Service Cntlr -> GetRecentMembers - RecentMembersCollection COUNT: [" + recentMembersCollection.Count + "], MemberID: [" + memberId + "]");
 
                         return recentMembersCollection;
                     }

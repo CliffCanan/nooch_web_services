@@ -3303,30 +3303,30 @@ namespace Nooch.Web.Controllers
         // NodeId is Id from SynapseBanksOfMembers table - non encrypted
         public ActionResult MicroDepositsVerification(string mid, string NodeId)
         {
-            Logger.Info("MicroDepositsVerification Page -> Page Load - MemberID: [" + mid +
+            Logger.Info("MicroDepositsVerification -> Page Load - MemberID: [" + mid +
                         "], NodeID: [" + NodeId + "]");
 
-            SynapseV3VerifyNodeWithMicroDeposits_ServiceInput MicroDeposit = new SynapseV3VerifyNodeWithMicroDeposits_ServiceInput();
-            MicroDeposit.errorMsg = string.Empty;
+            SynapseV3VerifyNodeWithMicroDeposits_ServiceInput pageData = new SynapseV3VerifyNodeWithMicroDeposits_ServiceInput();
+            pageData.errorMsg = string.Empty;
 
             try
             {
                 if (String.IsNullOrEmpty(mid))
-                    MicroDeposit.errorMsg = "Missing MemberID";
+                    pageData.errorMsg = "Missing MemberID";
 
                 else // Get Bank Info from server
-                    MicroDeposit = GetBankDetailsForMicroDepositVerification(mid.Trim());
+                    pageData = GetBankDetailsForMicroDepositVerification(mid.Trim());
 
-                if (MicroDeposit.isRs == true)
-                    Logger.Info("MicroDepositsVerification Page -> Page Load - RENT SCENE USER Detected");
+                if (pageData.isRs == true)
+                    Logger.Info("MicroDepositsVerification -> Page Load - RENT SCENE USER Detected");
             }
             catch (Exception ex)
             {
                 Response.Write("<script>var errorFromCodeBehind = '1';</script>");
-                Logger.Error("MicroDepositsVerification Page -> page_load OUTER EXCEPTION - Exception: [" + ex.Message + "]");
+                Logger.Error("MicroDepositsVerification -> Page Load OUTER EXCEPTION: [" + ex.Message + "]");
             }
 
-            ViewData["OnLoadData"] = MicroDeposit;
+            ViewData["OnLoadData"] = pageData;
             return View();
         }
 
@@ -3343,15 +3343,15 @@ namespace Nooch.Web.Controllers
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
                 string serviceMethod = "GetMemberInfoForMicroDepositPage?memberId=" + memberId;
 
-                SynapseV3VerifyNodeWithMicroDeposits_ServiceInput details = ResponseConverter<SynapseV3VerifyNodeWithMicroDeposits_ServiceInput>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+                SynapseV3VerifyNodeWithMicroDeposits_ServiceInput serverRes = ResponseConverter<SynapseV3VerifyNodeWithMicroDeposits_ServiceInput>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
 
-                if (details == null)
+                if (serverRes != null)
+                    rpr = serverRes;
+                else
                 {
-                    Logger.Error("MicroDepositsVerification Page -> GetTransDetails FAILED - Transaction Not Found - TransID: [" + memberId + "]");
+                    Logger.Error("MicroDepositsVerification Page -> GetBankDetailsForMicroDepositVerification FAILED - Member Details was NULL - MemberID: [" + memberId + "]");
                     rpr.errorMsg = "Unable to find bank record";
                 }
-                else
-                    rpr = details;
             }
             catch (Exception ex)
             {
@@ -3382,7 +3382,8 @@ namespace Nooch.Web.Controllers
 
             try
             {
-                Logger.Info("NoochController -> MFALoginWithRoutingAndAccountNumber Initiated -> MemberID: [" + memberid + "], NodeID: [" + NodeId1 + "], Bank: [" + bank + "]");
+                Logger.Info("NoochController -> MFALoginWithRoutingAndAccountNumber Fired -> MemberID: [" + memberid + "], NodeID: [" + NodeId1 +
+                            "], Bank: [" + bank + "], Micro1: [" + MicroDepositOne + "], Micro2: [" + MicroDepositTwo + "]");
 
                 SynapseV3VerifyNodeWithMicroDeposits_ServiceInput inpu = new SynapseV3VerifyNodeWithMicroDeposits_ServiceInput();
                 inpu.bankName = bank; // not required..keeping it for just in case we need something to do with it.
@@ -3434,14 +3435,8 @@ namespace Nooch.Web.Controllers
             {
                 if (!String.IsNullOrEmpty(input.DataToWorkOn))
                 {
-                    if (input.OpType == "D")
-                    {
-                        res.DataToWorkOn = CommonHelper.GetDecryptedData(input.DataToWorkOn);
-                    }
-                    if (input.OpType == "E")
-                    {
-                        res.DataToWorkOn = CommonHelper.GetEncryptedData(input.DataToWorkOn);
-                    }
+                    if (input.OpType == "D") res.DataToWorkOn = CommonHelper.GetDecryptedData(input.DataToWorkOn);
+                    if (input.OpType == "E") res.DataToWorkOn = CommonHelper.GetEncryptedData(input.DataToWorkOn);
                 }
             }
             catch (Exception)

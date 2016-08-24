@@ -11,9 +11,7 @@ var askForPin = false;
 var pinVerified = false;
 
 $(document).ready(function () {
-    var isSmScrn = false;
-    if ($(window).width() < 768)
-        isSmScrn = true;
+    var isSmScrn = ($(window).width() < 768) ? true : false;
 
     if (FROM == "rentscene")
     {
@@ -98,23 +96,15 @@ function formatAmount() {
     if (formattedAmount.length > 0)
     {
         if (formattedAmount.length <= 2)
-        {
             $('#amount').val(formattedAmount + '.00');
-        }
 
         if (Number(formattedAmount) < 5 || Number(formattedAmount) > 5000)
-        {
             updateValidationUi("amount", false);
-        }
         else
-        {
             updateValidationUi("amount", true);
-        }
     }
     else
-    {
         updateValidationUi("amount", false);
-    }
 }
 
 
@@ -155,30 +145,16 @@ function checkFormData() {
                         // Great, we can finally submit the payment info
                         submitPayment();
                     }
-                    else
-                    {
-                        updateValidationUi("memo", false);
-                    }
+                    else updateValidationUi("memo", false);
                 }
-                else
-                {
-                    updateValidationUi("email", false);
-                }
+                else updateValidationUi("email", false);
             }
-            else
-            {
-                updateValidationUi("name", false);
-            }
+            else updateValidationUi("name", false);
         }
-        else
-        {
-            updateValidationUi("name", false);
-        }
+        else updateValidationUi("name", false);
     }
     else
-    {
         updateValidationUi("amount", false);
-    }
 
     return;
 }
@@ -579,17 +555,7 @@ function sendRequestToExistingUser() {
                     });
                 }
             }
-            else
-            {
-                if (resultReason != null)
-                {
-                    showErrorAlert('2');
-                }
-                else
-                {
-                    showErrorAlert('2');
-                }
-            }
+            else showErrorAlert('2');
         },
         Error: function (x, e) {
             // Hide the Loading Block
@@ -615,13 +581,9 @@ function updateValidationUi(field, success) {
 
         // Show the success checkmark
         if (!$('#' + field + 'Grp .iconFeedback').length)
-        {
             $('#' + field + 'Grp .fg-line').append('<i class="fa fa-check text-success iconFeedback animated bounceIn"></i>');
-        }
         else
-        {
             $('#' + field + 'Grp .iconFeedback').removeClass('bounceOut').addClass('bounceIn');
-        }
 
         if (field == "name")
             $('#name').addClass('capitalize');
@@ -632,27 +594,17 @@ function updateValidationUi(field, success) {
 
         // Hide the success checkmark if present
         if ($('#' + field + 'Grp .iconFeedback').length)
-        {
             $('#' + field + 'Grp .iconFeedback').addClass('bounceOut');
-        }
 
         var helpBlockTxt = "";
         if (field == "amount")
-        {
             helpBlockTxt = "Please enter an amount between <strong>$5 - $5,000</strong>.";
-        }
         else if (field == "name")
-        {
             helpBlockTxt = "Please enter a name for this recipient."
-        }
         else if (field == "email")
-        {
             helpBlockTxt = "Please enter a valid email."
-        }
         else if (field == "memo")
-        {
             helpBlockTxt = "Please enter a descriptive memo so that the recipient knows what this payment is for."
-        }
 
         if (!$('#' + field + 'Grp .inputContainer .help-block').length)
         {
@@ -660,9 +612,7 @@ function updateValidationUi(field, success) {
             $('#' + field + 'Grp .inputContainer .help-block').slideDown();
         }
         else
-        {
             $('#' + field + 'Grp .inputContainer .help-block').show()
-        }
 
         // Now focus on the element that failed validation
         setTimeout(function () {
@@ -679,40 +629,19 @@ function ValidateEmail(str) {
     var lstr = str.length
     var ldot = str.indexOf(dot)
 
-    if (lstr < 5)
-    {
-        return false;
-    }
+    if (lstr < 5) return false;
 
-    if (lat == -1 || lat == 0 || lat == lstr)
-    {
-        return false
-    }
+    if (lat == -1 || lat == 0 || lat == lstr) return false
 
-    if (ldot == -1 || ldot == 0 || ldot > lstr - 3)
-    {
-        return false
-    }
+    if (ldot == -1 || ldot == 0 || ldot > lstr - 3) return false
 
-    if (str.indexOf(at, (lat + 1)) != -1)
-    {
-        return false
-    }
+    if (str.indexOf(at, (lat + 1)) != -1) return false
 
-    if (str.substring(lat - 1, lat) == dot || str.substring(lat + 1, lat + 2) == dot)
-    {
-        return false
-    }
+    if (str.substring(lat - 1, lat) == dot || str.substring(lat + 1, lat + 2) == dot) return false
 
-    if (str.indexOf(dot, (lat + 2)) == -1)
-    {
-        return false
-    }
+    if (str.indexOf(dot, (lat + 2)) == -1) return false
 
-    if (str.indexOf(" ") != -1)
-    {
-        return false
-    }
+    if (str.indexOf(" ") != -1) return false
 
     return true
 };
@@ -948,24 +877,17 @@ function submitPin(pin) {
                 console.log(result.msg);
 
                 if (result.msg.indexOf("Incorrect") > -1)
-                {
                     showPinPrompt("incorrect", FROM);
-                }
                 else if (result.msg.indexOf("User not found") > -1)
                 {
                     console.log("Error: User not found");
                     showErrorAlert('2');
                 }
                 else
-                {
                     showErrorAlert('2');
-                }
             }
             else
-            {
                 showErrorAlert('2');
-            }
-
         },
         Error: function (x, e) {
             // Hide the Loading Block
@@ -1049,19 +971,13 @@ $('body').on('blur', '.form-control', function () {
     if (fgrp.hasClass('fg-float'))
     {
         if (val.length == 0)
-        {
             $(this).closest('.fg-line').removeClass('fg-toggled');
-        }
     }
     else if (ipgrp.hasClass('fg-float'))
     {
         if (val2.length == 0)
-        {
             $(this).closest('.fg-line').removeClass('fg-toggled');
-        }
     }
     else
-    {
         $(this).closest('.fg-line').removeClass('fg-toggled');
-    }
 });
