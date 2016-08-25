@@ -1640,6 +1640,7 @@ namespace Nooch.API.Controllers
                                 obj.Latitude = (trans.GeoLocation != null && trans.GeoLocation.Latitude != null) ? (float)trans.GeoLocation.Latitude : default(float);
                                 obj.Longitude = (trans.GeoLocation != null && trans.GeoLocation.Longitude != null) ? (float)trans.GeoLocation.Longitude : default(float);
                                 obj.TransactionStatus = trans.TransactionStatus;
+                                obj.Picture = trans.Picture;
 
                                 Transactions.Add(obj);
 
