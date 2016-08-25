@@ -6239,7 +6239,7 @@ namespace Nooch.DataAccess
             string secondaryMail, string recoveryMail, string facebookAcctLogin,
             string fileContent, int contentLength, string fileExtension,
             string contactNumber, string address, string city, string state, string zipCode, string country,
-            byte[] Picture, bool showinSearchb)
+            byte[] Picture, bool showinSearchb, string address2)
         {
             Logger.Info("MDA -> MySettings (Updating User's Profile) - MemberID: [" + memberId + "]");
 
@@ -6278,6 +6278,9 @@ namespace Nooch.DataAccess
 
                     if (!String.IsNullOrEmpty(address))
                         member.Address = CommonHelper.GetEncryptedData(address);
+
+                    if (!String.IsNullOrEmpty(address2))
+                        member.Address2 = CommonHelper.GetEncryptedData(address2);
 
                     if (!String.IsNullOrEmpty(city))
                         member.City = CommonHelper.GetEncryptedData(city);

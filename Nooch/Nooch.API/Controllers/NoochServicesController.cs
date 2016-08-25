@@ -4652,7 +4652,7 @@ namespace Nooch.API.Controllers
                             mySettings.Password, mySettings.SecondaryMail, mySettings.RecoveryMail, mySettings.FacebookAcctLogin,
                             fileContent, contentLength, fileExtension, mySettings.ContactNumber,
                             mySettings.Address, mySettings.City, mySettings.State, mySettings.Zipcode, mySettings.Country,
-                            mySettings.Picture, mySettings.ShowInSearch)
+                            mySettings.Picture, mySettings.ShowInSearch, mySettings.Address2)
                     };
                 }
                 catch (Exception ex)
