@@ -4844,7 +4844,7 @@ namespace Nooch.API.Controllers
                             (memberNotificationSettings.EmailTransferSent == "1") ? true : false, (memberNotificationSettings.EmailTransferReceived == "1") ? true : false, (memberNotificationSettings.EmailTransferAttemptFailure == "1") ? true : false,
                             (memberNotificationSettings.TransferUnclaimed == "1") ? true : false, (memberNotificationSettings.BankToNoochRequested == "1") ? true : false, (memberNotificationSettings.BankToNoochCompleted == "1") ? true : false,
                             (memberNotificationSettings.NoochToBankRequested == "1") ? true : false, (memberNotificationSettings.NoochToBankCompleted == "1") ? true : false, null,
-                            null, null, null, null)
+                            null, null, null, null, (memberNotificationSettings.TransferReceived == "1") ? true : false)
                     };
                 }
                 catch (Exception ex)

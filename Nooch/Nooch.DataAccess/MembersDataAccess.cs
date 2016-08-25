@@ -6430,7 +6430,7 @@ namespace Nooch.DataAccess
             bool? inviteRequestAccept, bool transferSent, bool transferReceived, bool transferAttemptFailure,
             bool transferUnclaimed, bool bankToNoochRequested, bool bankToNoochCompleted, bool? noochToBankRequested,
             bool noochToBankCompleted, bool? inviteReminder, bool? lowBalance, bool? validationRemainder,
-            bool? productUpdates, bool? newAndUpdate)
+            bool? productUpdates, bool? newAndUpdate, bool? mobTransferReceived)
         {
             int i = 0;
             try
@@ -6469,6 +6469,7 @@ namespace Nooch.DataAccess
                         ValidationRemainder = validationRemainder,
                         ProductUpdates = productUpdates,
                         NewAndUpdate = newAndUpdate,
+                        TransferReceived=mobTransferReceived,
                         DateCreated = DateTime.Now
                     };
                     i++;
@@ -6494,6 +6495,7 @@ namespace Nooch.DataAccess
                 memberNotifications.ValidationRemainder = validationRemainder;
                 memberNotifications.ProductUpdates = productUpdates;
                 memberNotifications.NewAndUpdate = newAndUpdate;
+                memberNotifications.TransferReceived = mobTransferReceived;
                 memberNotifications.DateModified = DateTime.Now;
 
 
