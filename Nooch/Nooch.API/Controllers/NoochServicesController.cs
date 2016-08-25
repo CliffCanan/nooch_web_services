@@ -47,22 +47,6 @@ namespace Nooch.API.Controllers
             _dbContext = new NOOCHEntities();
         }
 
-        //public IEnumerable<string> Get()
-        //{
-        //    Logger.Info("came in log");
-
-        //    var config = new MapperConfiguration(cfg => cfg.CreateMap<Member, MemberEnity>());
-        //    var mapper = config.CreateMapper();
-
-        //   MembersDataAccess mda = new MembersDataAccess();
-        //   Guid memGuid = new Guid("ECA52C86-5674-4008-A09B-0003645D2A1A");
-        //    var objtoPam = mda.GetMemberByGuid(memGuid);
-
-        //    MemberEnity me = mapper.Map<Member, MemberEnity>(objtoPam);
-
-        //    return new string[] { "value1", "value2" };
-        //}
-
 
         [HttpPost]
         [ActionName("ForgotPassword")]
@@ -111,6 +95,7 @@ namespace Nooch.API.Controllers
             }
         }
 
+
         [HttpGet]
         [ActionName("GetMemberByUdId")]
         public MemberDto GetMemberByUdId(string udId, string accessToken, string memberId)
@@ -137,6 +122,13 @@ namespace Nooch.API.Controllers
             }
         }
 
+
+        /// <summary>
+        /// Get a user's pending transactions count.
+        /// </summary>
+        /// <param name="MemberId"></param>
+        /// <param name="AccessToken"></param>
+        /// <returns>PendingTransCoutResult [sic] object with values for 4 types of pending transactions: requests sent/received, invites, disputes unresolved.</returns>
         [HttpGet]
         [ActionName("GetMemberPendingTransctionsCount")]
         public PendingTransCoutResult GetMemberPendingTransctionsCount(string MemberId, string AccessToken)
@@ -163,6 +155,7 @@ namespace Nooch.API.Controllers
             }
         }
 
+
         [HttpGet]
         [ActionName("GetMemberIdByUserName")]
         public StringResult GetMemberIdByUserName(string userName)
@@ -178,6 +171,7 @@ namespace Nooch.API.Controllers
             }
             return new StringResult();
         }
+
 
         [HttpGet]
         [ActionName("GetMemberUsernameByMemberId")]
@@ -443,10 +437,8 @@ namespace Nooch.API.Controllers
                     {
                         // Now check this bank's status. 
                         // CLIFF (10/7/15): If the user's ID is verified (after sending SSN info to Synapse), then consider the bank Verified as well
-                        if (memberEntity.IsVerifiedWithSynapse == true)
-                            accountstatus = "Verified";
-                        else
-                            accountstatus = synapseBank.Status;
+                        if (memberEntity.IsVerifiedWithSynapse == true) accountstatus = "Verified";
+                        else accountstatus = synapseBank.Status;
                     }
 
                     bool b = (synapseBank != null) ? true : false;
@@ -485,10 +477,7 @@ namespace Nooch.API.Controllers
                     throw new Exception("Server Error");
                 }
             }
-            else
-            {
-                throw new Exception("Invalid OAuth 2 Access");
-            }
+            else throw new Exception("Invalid OAuth 2 Access");
         }
 
 
@@ -644,67 +633,6 @@ namespace Nooch.API.Controllers
                 Logger.Error("Service Cntlr -> SaveMemberDeviceToken FAILED - MemberID: [" + memberId + "]. INVALID OAUTH 2 ACCESS.");
                 throw new Exception("Invalid OAuth 2 Access");
             }
-        }
-
-
-        private string GenerateAccessToken()
-        {
-            byte[] time = BitConverter.GetBytes(DateTime.UtcNow.ToBinary());
-            byte[] key = Guid.NewGuid().ToByteArray();
-            string token = Convert.ToBase64String(time.Concat(key).ToArray());
-            return CommonHelper.GetEncryptedData(token);
-        }
-
-
-        [HttpGet]
-        [ActionName("LoginRequest")]
-        public StringResult LoginRequest(string userName, string pwd, Boolean rememberMeEnabled, decimal lat,
-                                         decimal lng, string udid, string devicetoken)
-        {
-            StringResult res = new StringResult();
-
-            try
-            {
-                Logger.Info("Service Cntlr -> LoginRequest - userName: [" + userName + "], UDID: [" + udid + "], DeviceToken: [" + devicetoken + "]");
-
-                var mda = new MembersDataAccess();
-                string cookie = mda.LoginRequest(userName, pwd, rememberMeEnabled, lat, lng, udid, devicetoken);
-
-                if (cookie == "Success")
-                {
-                    string state = GenerateAccessToken();
-                    CommonHelper.UpdateAccessToken(userName, state);
-                    res.Result = state;
-                }
-                else if (string.IsNullOrEmpty(cookie))
-                {
-                    cookie = "Authentication failed.";
-                    res.Result = "Invalid Login or Password";
-                }
-                else if (cookie == "Registered")
-                {
-                    string state = GenerateAccessToken();
-                    CommonHelper.UpdateAccessToken(userName, state);
-                    res.Result = state;
-                }
-                else if (cookie == "Temporarily_Blocked")
-                    res.Result = "Temporarily_Blocked";
-                else if (cookie == "Suspended")
-                    res.Result = "Suspended";
-                else if (cookie == "Invalid user id or password.")
-                    res.Result = "Invalid user id or password.";
-                else if (cookie == "The password you have entered is incorrect.")
-                    res.Result = "The password you have entered is incorrect.";
-                else
-                    res.Result = cookie;
-            }
-            catch (Exception ex)
-            {
-                Logger.Error("Service Cntlr -> LoginRequest FAILED - userName: [" + userName + "], Exception: [" + ex + "]");
-                res.Result = ex.Message;
-            }
-
-            return res;
         }
 
 
@@ -1394,21 +1322,6 @@ namespace Nooch.API.Controllers
 
 
         [HttpGet]
-        [ActionName("CheckSDNListing")]
-        public StringResult CheckSDNListing(string MemberId)
-        {
-            var noochMemberN = CommonHelper.GetMemberDetails(MemberId);
-            if (noochMemberN != null)
-            {
-                var b = CommonHelper.IsListedInSDN(CommonHelper.GetDecryptedData(noochMemberN.LastName),
-                    noochMemberN.MemberId);
-                return new StringResult() { Result = b.ToString() };
-            }
-            return new StringResult();
-        }
-
-
-        [HttpGet]
         [ActionName("SaveSocialMediaPost")]
         public StringResult SaveSocialMediaPost(string MemberId, string accesstoken, string PostTo, string PostContent)
         {
@@ -1433,10 +1346,189 @@ namespace Nooch.API.Controllers
         }
 
 
+        /*******************************/
+        /**  PROFILE-RELATED METHODS  **/
+        /*******************************/
+        #region Profile-Related Functions
 
-        /**********************************/
-        /****  HISORY-RELATED METHODS  ****/
-        /**********************************/
+
+        /// <summary>
+        /// This is for getting details for the PROFILE screen of the mobile app. So it only needs to
+        /// return data specifically for that screen and nothing more.
+        /// </summary>
+        /// <param name="memberId"></param>
+        /// <param name="accessToken"></param>
+        /// <returns></returns>
+        [HttpGet]
+        [ActionName("GetMyDetails")]
+        public MySettingsInput GetMyDetails(string memberId, string accessToken)
+        {
+            if (CommonHelper.IsValidRequest(accessToken, memberId))
+            {
+                try
+                {
+                    // Logger.LogDebugMessage("Service Cntlr -> GetMyDetails Initiated - MemberID: [" + memberId + "]");
+
+                    var myDetails = CommonHelper.GetMemberDetails(memberId);
+
+                    // Check address, city, cell phone to check whether the profile is a valid profile or not
+                    bool isvalidprofile = !string.IsNullOrEmpty(myDetails.Address) &&
+                                          !string.IsNullOrEmpty(myDetails.City) &&
+                                          !string.IsNullOrEmpty(myDetails.Zipcode) &&
+                                          !string.IsNullOrEmpty(myDetails.ContactNumber) &&
+                                          !string.IsNullOrEmpty(myDetails.SSN) &&
+                                          myDetails.IsVerifiedPhone == true &&
+                                          myDetails.DateOfBirth != null;
+
+                    var settings = new MySettingsInput
+                    {
+                        UserName = !String.IsNullOrEmpty(myDetails.UserName) ? CommonHelper.GetDecryptedData(myDetails.UserName) : "",
+                        FirstName = !String.IsNullOrEmpty(myDetails.FirstName) ? CommonHelper.GetDecryptedData(myDetails.FirstName) : "",
+                        LastName = !String.IsNullOrEmpty(myDetails.LastName) ? CommonHelper.GetDecryptedData(myDetails.LastName) : "",
+                        DateOfBirth = myDetails.DateOfBirth != null ? Convert.ToDateTime(myDetails.DateOfBirth).ToString("MM/dd/yyyy") : "",
+
+                        //Password = myDetails.Password,
+                        ContactNumber = !String.IsNullOrEmpty(myDetails.ContactNumber) ? CommonHelper.FormatPhoneNumber(myDetails.ContactNumber) : myDetails.ContactNumber,
+                        SecondaryMail = !String.IsNullOrEmpty(myDetails.SecondaryEmail) ? CommonHelper.GetDecryptedData(myDetails.SecondaryEmail) : "",
+                        RecoveryMail = !String.IsNullOrEmpty(myDetails.RecoveryEmail) ? CommonHelper.GetDecryptedData(myDetails.RecoveryEmail) : "",
+                        ShowInSearch = Convert.ToBoolean(myDetails.ShowInSearch),
+
+                        Address = !String.IsNullOrEmpty(myDetails.Address) ? CommonHelper.GetDecryptedData(myDetails.Address) : "",
+                        Address2 = !String.IsNullOrEmpty(myDetails.Address2) ? CommonHelper.GetDecryptedData(myDetails.Address2) : "",
+                        City = !String.IsNullOrEmpty(myDetails.City) ? CommonHelper.GetDecryptedData(myDetails.City) : "",
+                        State = !String.IsNullOrEmpty(myDetails.State) ? CommonHelper.GetDecryptedData(myDetails.State) : "",
+                        Zipcode = !String.IsNullOrEmpty(myDetails.Zipcode) ? CommonHelper.GetDecryptedData(myDetails.Zipcode) : "",
+                        Country = !String.IsNullOrEmpty(myDetails.Country) ? CommonHelper.GetDecryptedData(myDetails.Country) : "",
+                        IsVerifiedPhone = myDetails.IsVerifiedPhone ?? false,
+                        IsValidProfile = isvalidprofile,
+
+                        Photo = (myDetails.Photo == null) ? Utility.GetValueFromConfig("PhotoUrl") : myDetails.Photo, //CLIFF: this is already being sent in the GetMemberDetails service
+                        //FacebookAcctLogin = myDetails.FacebookAccountLogin, //CLIFF: this is already being sent in the GetMemberDetails service
+                        //IsBankVerified = bankVerified
+                    };
+
+                    return settings;
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Cntlr - GetMyDetails FAILED - MemberID: [" + memberId + "], Exception: [" + ex.Message + "]");
+                    throw new Exception("Server Error.");
+                }
+            }
+            else throw new Exception("Invalid OAuth 2 Access");
+        }
+
+
+        // made it post type beacuse access token might generate white spaces which can
+        // be encoded to plus by web request, which will create problem for validating access token.
+        [HttpPost]
+        [ActionName("SaveMemberSSN")]
+        public StringResult SaveMemberSSN(SaveMemberSSN_Input input)
+        {
+            if (CommonHelper.IsValidRequest(input.accessToken, input.memberId))
+            {
+                try
+                {
+                    Logger.Info("Service Cntlr - SaveMemberSSN - MemberID: [" + input.memberId + "]");
+                    MembersDataAccess mda = new MembersDataAccess();
+                    return new StringResult()
+                    {
+                        Result = mda.SaveMemberSSN(input.memberId, input.SSN)
+                    };
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Cntlr - Operation FAILED: SaveMemberSSN - MemberID: [" + input.memberId + "], Exception: [" + ex + "]");
+                    throw new Exception("Server Error.");
+                }
+            }
+            else
+            {
+                Logger.Error("Service Cntlr - Operation FAILED: SaveMemberSSN - MemberID: [" + input.memberId + "]. INVALID OAUTH 2 ACCESS.");
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
+
+
+        [HttpPost]
+        [ActionName("SaveDOBForMember")]
+        public StringResult SaveDOBForMember(SaveMemberDOB_Input input)
+        {
+            if (CommonHelper.IsValidRequest(input.accessToken, input.memberId))
+            {
+                try
+                {
+                    Logger.Info("Service Cntlr - SaveDOBForMember - MemberID: [" + input.memberId + "]");
+
+                    MembersDataAccess mda = new MembersDataAccess();
+                    return new StringResult()
+                    {
+                        Result = mda.SaveDOBForMember(input.memberId, input.DOB)
+                    };
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Cntlr - SaveDOBForMember FAILED - MemberID: [" + input.memberId + "], Exception: [" + ex + "]");
+                    throw new Exception("Server Error.");
+                }
+            }
+            else
+            {
+                Logger.Error("Service Cntlr - SaveDOBForMember FAILED - MemberID: [" + input.memberId + "]. INVALID OAUTH 2 ACCESS.");
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
+
+
+        /// <summary>
+        /// This is for SAVING a user's Profile details - called from the Mobile App.
+        /// </summary>
+        /// <param name="mySettings"></param>
+        /// <param name="accessToken"></param>
+        /// <returns></returns>
+        [HttpPost]
+        [ActionName("MySettings")]
+        public StringResult MySettings(MySettingsInput mySettings, string accessToken)
+        {
+            if (CommonHelper.IsValidRequest(accessToken, mySettings.MemberId))
+            {
+                try
+                {
+                    Logger.Info("Service Cntlr -> MySettings Fired - MemberID: [" + mySettings.MemberId + "]");
+
+                    var mda = new MembersDataAccess();
+                    string fileContent = null;
+                    int contentLength = 0;
+                    string fileExtension = null;
+
+                    if (!String.IsNullOrEmpty(mySettings.Photo))
+                        mySettings.Picture = System.Convert.FromBase64String(mySettings.Photo);
+
+                    return new StringResult
+                    {
+                        Result = mda.MySettings(mySettings.MemberId, mySettings.FirstName.ToLower(), mySettings.LastName.ToLower(),
+                            mySettings.Password, mySettings.SecondaryMail, mySettings.RecoveryMail, mySettings.FacebookAcctLogin,
+                            fileContent, contentLength, fileExtension, mySettings.ContactNumber,
+                            mySettings.Address, mySettings.City, mySettings.State, mySettings.Zipcode, mySettings.Country,
+                            mySettings.Picture, mySettings.ShowInSearch, mySettings.Address2)
+                    };
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Cntlr -> MySettings FAILED - MemberID: [" + mySettings.MemberId + "], Exception: [" + ex + "]");
+                    return new StringResult();
+                }
+            }
+            else throw new Exception("Invalid OAuth 2 Access");
+        }
+
+
+        #endregion Profile-Related Functions
+
+
+        /******************************/
+        /**  HISORY-RELATED METHODS  **/
+        /******************************/
         #region History Related Methods
 
         [HttpGet]
@@ -1447,9 +1539,7 @@ namespace Nooch.API.Controllers
             {
                 try
                 {
-
-                    Logger.Info("Service Controller -> GetSingleTransactionDetail Intiated - " +
-                                           "MemberId: [" + MemberId + "], TransID: [" + transactionId + "]");
+                    Logger.Info("Service Cntlr -> GetSingleTransactionDetail Fired - " + "MemberId: [" + MemberId + "], TransID: [" + transactionId + "]");
 
                     var tda = new TransactionsDataAccess();
 
@@ -1538,6 +1628,7 @@ namespace Nooch.API.Controllers
                 throw new Exception("Invalid OAuth 2 Access");
             }
         }
+
 
         [HttpGet]
         [ActionName("GetTransactionsList")]
@@ -1670,6 +1761,7 @@ namespace Nooch.API.Controllers
             }
         }
 
+
         [HttpGet]
         [ActionName("GetLatestReceivedTransaction")]
         public TransactionDto GetLatestReceivedTransaction(string member, string accessToken)
@@ -1744,6 +1836,7 @@ namespace Nooch.API.Controllers
                 throw new Exception("Invalid OAuth 2 Access");
             }
         }
+
 
         [HttpGet]
         [ActionName("GetTransactionsSearchList")]
@@ -1830,6 +1923,7 @@ namespace Nooch.API.Controllers
                 throw new Exception("Invalid oAuth access token.");
             }
         }
+
 
         /// <summary>
         /// To get a single transaction's details.
@@ -2295,14 +2389,6 @@ namespace Nooch.API.Controllers
             }
         }
 
-        /// Get a user's pending transactions count.
-        /// </summary>
-        /// <param name="MemberId"></param>
-        /// <param name="AccessToken"></param>
-        /// <returns>PendingTransCoutResult [sic] object with values for 4 types of pending transactions: requests sent/received, invites, disputes unresolved.</returns>
-
-
-
 
         /// <summary>
         /// To raise dispute for particular transaction.
@@ -2378,9 +2464,10 @@ namespace Nooch.API.Controllers
         #endregion History Related Methods
 
 
-        /*************************************/
-        /****  METHODS FOR LANDING PAGES  ****/
-        /*************************************/
+        /*********************************/
+        /**  METHODS FOR LANDING PAGES  **/
+        /*********************************/
+        #region Landing Page Functions
 
         [HttpGet]
         [ActionName("GetMemberDetailsForLandingPage")]
@@ -2492,31 +2579,22 @@ namespace Nooch.API.Controllers
                 trans.TransactionType = CommonHelper.GetDecryptedData(tr.TransactionType);
                 trans.TransactionDate = Convert.ToDateTime(tr.TransactionDate).ToString("d MMM, yyyy");
                 trans.IsPhoneInvitation = tr.IsPhoneInvitation ?? false;
-                if (tr.Member.isRentScene == true || tr.Member1.isRentScene == true ||
-                    tr.Member.MemberId.ToString() == "852987E8-D5FE-47E7-A00B-58A80DD15B49" || tr.Member1.MemberId.ToString() == "852987E8-D5FE-47E7-A00B-58A80DD15B49")
-                {
-                    trans.isRentScene = true;
-                }
-                else
-                    trans.isRentScene = false;
+
+                trans.isRentScene = (tr.Member.isRentScene == true ||
+                                     tr.Member1.isRentScene == true ||
+                                     tr.Member.MemberId.ToString() == "852987E8-D5FE-47E7-A00B-58A80DD15B49" ||
+                                     tr.Member1.MemberId.ToString() == "852987E8-D5FE-47E7-A00B-58A80DD15B49")
+                                     ? true : false;
 
                 if (tr.InvitationSentTo != null &&
                     tr.IsPhoneInvitation != true &&
-                    String.IsNullOrEmpty(tr.PhoneNumberInvited))
-                {
-                    // Request via EMAIL
+                    String.IsNullOrEmpty(tr.PhoneNumberInvited)) // Request via EMAIL
                     trans.InvitationSentTo = CommonHelper.GetDecryptedData(tr.InvitationSentTo);
-                }
                 else if ((tr.IsPhoneInvitation == true || tr.InvitationSentTo == null) &&
-                          !String.IsNullOrEmpty(tr.PhoneNumberInvited))
-                {
-                    // Request via PHONE
+                          !String.IsNullOrEmpty(tr.PhoneNumberInvited)) // Request via PHONE
                     trans.InvitationSentTo = CommonHelper.GetDecryptedData(tr.PhoneNumberInvited);
-                }
                 else
-                {
                     trans.InvitationSentTo = "";
-                }
 
                 Logger.Info("Service Cntrlr -> GetTransactionDetailByIdForRequestPayPage - Payer: [" + trans.Name +
                             "], Request Sender: [" + trans.RecepientName + "], InvitationSentTo: [" + trans.InvitationSentTo + "]");
@@ -2578,6 +2656,119 @@ namespace Nooch.API.Controllers
 
 
         [HttpGet]
+        [ActionName("GetMemberInfoForMicroDepositPage")]
+        public SynapseV3VerifyNodeWithMicroDeposits_ServiceInput GetMemberInfoForMicroDepositPage(string memberId)
+        {
+            SynapseV3VerifyNodeWithMicroDeposits_ServiceInput res = new SynapseV3VerifyNodeWithMicroDeposits_ServiceInput();
+            res.success = false;
+            res.MemberId = memberId;
+
+            try
+            {
+                Logger.Info("Service Cntlr - GetMemberInfoForMicroDepositPage Fired - MemberID: [" + memberId + "]");
+
+                var memberObj = CommonHelper.GetMemberDetails(memberId);
+
+                if (memberObj != null)
+                {
+                    res.userFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName));
+                    res.userLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.LastName));
+                    res.isRs = memberObj.isRentScene ?? false;
+
+                    var synapseBankDetails = CommonHelper.GetSynapseBankDetails(memberId);
+                    var mid = Utility.ConvertToGuid(memberId);
+
+                    // Added 8/22/16
+                    #region Find Any Pending Requests
+
+                    var pendingRequestTrans = _dbContext.Transactions.Where(t => t.TransactionStatus == "Pending" && //t.TransactionType == "T3EMY1WWZ9IscHIj3dbcNw==" || //t.SenderId == mid &&
+                                                                                (t.InvitationSentTo == memberObj.UserName ||
+                                                                                 t.InvitationSentTo == memberObj.UserNameLowerCase ||
+                                                                                 t.InvitationSentTo == memberObj.SecondaryEmail)).ToList();
+                    res.PendingTransactionList = new List<PendingTransaction>();
+
+                    if (pendingRequestTrans != null && pendingRequestTrans.Count > 0)
+                    {
+                        foreach (var transaction in pendingRequestTrans)
+                        {
+                            PendingTransaction pt = new PendingTransaction();
+                            pt.TransactionId = transaction.TransactionId;
+                            pt.userName = CommonHelper.GetDecryptedData(transaction.Member1.FirstName) + " " +
+                                          CommonHelper.GetDecryptedData(transaction.Member1.LastName);
+                            pt.Amount = transaction.Amount;
+                            pt.RecipientId = transaction.RecipientId;
+                            pt.SenderId = transaction.SenderId;
+
+                            if (pt.SenderId == pt.RecipientId)
+                            {
+                                pt.InvitationSentTo = transaction.InvitationSentTo;
+                                pt.TransactionType = "RequestToNewUser";
+                                pt.RecipientId = transaction.SenderId;
+                            }
+
+                            res.PendingTransactionList.Add(pt);
+                        }
+
+                        if (res.PendingTransactionList.Count > 0) res.hasPendingPymnt = true;
+                        else res.hasPendingPymnt = false;
+                    }
+
+                    #endregion Find any pending request
+
+                    if (synapseBankDetails != null)
+                    {
+                        res.bankName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(synapseBankDetails.bank_name));
+                        res.bankNickName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(synapseBankDetails.nickname));
+                        res.bankId = synapseBankDetails.oid;
+                        res.NodeId1 = synapseBankDetails.oid;
+
+                        if (synapseBankDetails.Status == "Verified")
+                        {
+                            res.isAlreadyVerified = true;
+                            res.verifiedDate = Convert.ToDateTime(synapseBankDetails.VerifiedOn).ToString("MMM d, yyyy");
+                            res.errorMsg = "Bank already verified on [" + Convert.ToDateTime(synapseBankDetails.VerifiedOn).ToString("MM/dd/yyyy") + "]";
+                        }
+                        else res.success = true;
+                    }
+                    else res.errorMsg = "Synapse bank details not found";
+                }
+                else res.errorMsg = "Member not found";
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Cntlr - GetMemberInfoForMicroDepositPage FAILED - MemberID: [" + memberId +
+                             "], Exception: [" + ex + "]");
+                res.errorMsg = "Server exception: [" + ex.Message + "]";
+            }
+
+            return res;
+        }
+
+
+        [HttpGet]
+        [ActionName("CreateNonNoochUserPassword")]
+        public StringResult CreateNonNoochUserPassword(string TransId, string password)
+        {
+            StringResult res = new StringResult();
+
+            try
+            {
+                Logger.Info("Service Cntlr -> CreateNonNoochUserPassword - TransID: [" + TransId + "]");
+
+                var mda = new MembersDataAccess();
+                res.Result = mda.CreateNonNoochUserPassword(TransId, password);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Cntlr -> CreateNonNoochUserPassword FAILED - TransID: [" + TransId + "], Exception: [" + ex + " ]");
+                res.Result = ex.Message;
+            }
+
+            return res;
+        }
+
+
+        [HttpGet]
         [ActionName("CreateNonNoochUserPasswordForPhoneInvitations")]
         public StringResult CreateNonNoochUserPasswordForPhoneInvitations(string TransId, string password, string EmailId)
         {
@@ -2598,7 +2789,6 @@ namespace Nooch.API.Controllers
         }
 
 
-        // Surya's code (Jan-Mar 2016)
         [HttpPost]
         [ActionName("CreateNonNoochUserAccountAfterRejectMoney")]
         public StringResult CreateNonNoochUserAccountAfterRejectMoney(string TransId, string password, string EmailId, string UserName)
@@ -2618,27 +2808,6 @@ namespace Nooch.API.Controllers
 
             return new StringResult { Result = "Error in Service Layer!" };
         }
-
-
-        /*[HttpGet]
-          [ActionName("RejectMoneyRequestForNonNoochUser")]
-          public StringResult RejectMoneyRequestForNonNoochUser(string transactionId)
-          {
-              try
-              {
-                  Logger.Info("Service Controller - RejectMoneyRequestForNonNoochUser - [TransactionID: " + transactionId + "]");
-
-                  var tda = new TransactionsDataAccess();
-                  string result = tda.RejectMoneyRequestForNonNoochUser(transactionId);
-
-                  return new StringResult { Result = result };
-              }
-              catch (Exception ex)
-              {
-                  Utility.ThrowFaultException(ex);
-              }
-              return new StringResult { Result = "Error in Service Layer (RejectMoneyRequestForNonNoochUser)" };
-          }*/
 
 
         [HttpGet]
@@ -2665,65 +2834,7 @@ namespace Nooch.API.Controllers
         }
 
 
-        // made it post type beacuse access token might generate white spaces which can
-        // be encoded to plus by web request, which will create problem for validating access token.
-        [HttpPost]
-        [ActionName("SaveMemberSSN")]
-        public StringResult SaveMemberSSN(SaveMemberSSN_Input input)
-        {
-            if (CommonHelper.IsValidRequest(input.accessToken, input.memberId))
-            {
-                try
-                {
-                    Logger.Info("Service Cntlr - SaveMemberSSN - MemberID: [" + input.memberId + "]");
-                    MembersDataAccess mda = new MembersDataAccess();
-                    return new StringResult()
-                    {
-                        Result = mda.SaveMemberSSN(input.memberId, input.SSN)
-                    };
-                }
-                catch (Exception ex)
-                {
-                    Logger.Error("Service Cntlr - Operation FAILED: SaveMemberSSN - MemberID: [" + input.memberId + "], Exception: [" + ex + "]");
-                    throw new Exception("Server Error.");
-                }
-            }
-            else
-            {
-                Logger.Error("Service Cntlr - Operation FAILED: SaveMemberSSN - MemberID: [" + input.memberId + "]. INVALID OAUTH 2 ACCESS.");
-                throw new Exception("Invalid OAuth 2 Access");
-            }
-        }
-
-
-        [HttpPost]
-        [ActionName("SaveDOBForMember")]
-        public StringResult SaveDOBForMember(SaveMemberDOB_Input input)
-        {
-            if (CommonHelper.IsValidRequest(input.accessToken, input.memberId))
-            {
-                try
-                {
-                    Logger.Info("Service Cntlr - SaveDOBForMember - MemberID: [" + input.memberId + "]");
-
-                    MembersDataAccess mda = new MembersDataAccess();
-                    return new StringResult()
-                    {
-                        Result = mda.SaveDOBForMember(input.memberId, input.DOB)
-                    };
-                }
-                catch (Exception ex)
-                {
-                    Logger.Error("Service Cntlr - SaveDOBForMember FAILED - MemberID: [" + input.memberId + "], Exception: [" + ex + "]");
-                    throw new Exception("Server Error.");
-                }
-            }
-            else
-            {
-                Logger.Error("Service Cntlr - SaveDOBForMember FAILED - MemberID: [" + input.memberId + "]. INVALID OAUTH 2 ACCESS.");
-                throw new Exception("Invalid OAuth 2 Access");
-            }
-        }
+        #endregion Landing Page Functions
 
 
         [HttpGet]
@@ -2780,6 +2891,278 @@ namespace Nooch.API.Controllers
                 return null;
             }
         }
+
+
+        /********************************/
+        /**  SETTINGS-RELATED METHODS  **/
+        /********************************/
+        #region Settings-Related Functions
+
+
+        /// <summary>
+        /// To get member notification settings
+        /// </summary>
+        /// <param name="memberId"></param>
+        /// <param name="accessToken"></param>
+        /// <returns></returns>
+        [HttpGet]
+        [ActionName("GetMemberNotificationSettings")]
+        public MemberNotificationSettingsInput GetMemberNotificationSettings(string memberId, string accessToken)
+        {
+            if (CommonHelper.IsValidRequest(accessToken, memberId))
+            {
+                try
+                {
+                    Logger.Info("Service Cntlr -> GetMemberNotificationSettings - MemberID: [" + memberId + "]");
+                    var notification = new MembersDataAccess().GetMemberNotificationSettings(memberId);
+
+                    if (notification != null)
+                    {
+                        return new MemberNotificationSettingsInput
+                        {
+                            NotificationId = notification.NotificationId.ToString(),
+                            MemberId = memberId,
+                            FriendRequest = notification.FriendRequest ?? false,
+                            InviteRequestAccept = notification.InviteRequestAccept ?? false,
+                            TransferSent = notification.TransferSent ?? false,
+                            TransferReceived = notification.TransferReceived ?? false,
+                            TransferAttemptFailure = notification.TransferAttemptFailure ?? false,
+                            EmailFriendRequest = notification.EmailFriendRequest ?? false,
+                            EmailInviteRequestAccept = notification.EmailInviteRequestAccept ?? false,
+                            EmailTransferSent = notification.EmailTransferSent ?? false,
+                            EmailTransferReceived = notification.EmailTransferReceived ?? false,
+                            EmailTransferAttemptFailure = notification.EmailTransferAttemptFailure ?? false,
+                            NoochToBank = notification.NoochToBank ?? false,
+                            BankToNooch = notification.BankToNooch ?? false,
+                            TransferUnclaimed = notification.TransferUnclaimed ?? false,
+                            BankToNoochRequested = notification.BankToNoochRequested ?? false,
+                            BankToNoochCompleted = notification.BankToNoochCompleted ?? false,
+                            NoochToBankRequested = notification.NoochToBankRequested ?? false,
+                            NoochToBankCompleted = notification.NoochToBankCompleted ?? false,
+                            InviteReminder = notification.InviteReminder ?? false,
+                            LowBalance = notification.LowBalance ?? false,
+                            ValidationRemainder = notification.ValidationRemainder ?? false,
+                            ProductUpdates = notification.ProductUpdates ?? false,
+                            NewAndUpdate = notification.NewAndUpdate ?? false
+                        };
+                    }
+                    else
+                        return null;
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Cntlr -> GetMemberNotificationSettings FAILED- MemberID: [" + memberId + "], Exception: [" + ex + " ]");
+                    throw new Exception("Server Error.");
+                }
+            }
+            else
+                throw new Exception("Invalid OAuth 2 Access");
+        }
+
+
+        /// <summary>
+        /// To save email notification settings of users
+        /// </summary>
+        /// <param name="memberNotificationSettings"></param>
+        /// <param name="accessToken"></param>
+        /// <returns></returns>
+        [HttpPost]
+        [ActionName("MemberEmailNotificationSettings")]
+        public StringResult MemberEmailNotificationSettings(MemberNotificationsNewStringTypeSettings memberNotificationSettings, string accessToken)
+        {
+            if (CommonHelper.IsValidRequest(accessToken, memberNotificationSettings.MemberId))
+            {
+                try
+                {
+                    Logger.Info("Service Cntlr -> MemberEmailNotificationSettings - MemberId: [" + memberNotificationSettings.MemberId + "]");
+
+                    return new StringResult
+                    {
+                        Result = new MembersDataAccess().MemberEmailNotificationSettings("",
+                            memberNotificationSettings.MemberId, null, null,
+                            (memberNotificationSettings.EmailTransferSent == "1") ? true : false, (memberNotificationSettings.EmailTransferReceived == "1") ? true : false, (memberNotificationSettings.EmailTransferAttemptFailure == "1") ? true : false,
+                            (memberNotificationSettings.TransferUnclaimed == "1") ? true : false, (memberNotificationSettings.BankToNoochRequested == "1") ? true : false, (memberNotificationSettings.BankToNoochCompleted == "1") ? true : false,
+                            (memberNotificationSettings.NoochToBankRequested == "1") ? true : false, (memberNotificationSettings.NoochToBankCompleted == "1") ? true : false, null,
+                            null, null, null, null, (memberNotificationSettings.TransferReceived == "1") ? true : false)
+                    };
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Cntlr -> MemberEmailNotificationSettings FAILED - MemberId: [" + memberNotificationSettings.MemberId + "], Exception: [" + ex + " ]");
+                    throw new Exception("Server Error.");
+                }
+
+            }
+            else
+                throw new Exception("Invalid OAuth 2 Access");
+        }
+
+
+        [HttpPost]
+        [ActionName("MemberPushNotificationSettings")]
+        public StringResult MemberPushNotificationSettings(MemberNotificationsNewStringTypeSettings memberNotificationSettings, string accessToken)
+        {
+            if (CommonHelper.IsValidRequest(accessToken, memberNotificationSettings.MemberId))
+            {
+                try
+                {
+                    Logger.Info("Service Cntlr -> MemberPushNotificationSettings - MemberID: [" + memberNotificationSettings.MemberId + "]");
+                    return new StringResult
+                    {
+                        Result = new MembersDataAccess().MemberPushNotificationSettings(memberNotificationSettings.NotificationId,
+                            memberNotificationSettings.MemberId, (memberNotificationSettings.FriendRequest == "1") ? true : false, (memberNotificationSettings.InviteRequestAccept == "1") ? true : false,
+                            (memberNotificationSettings.TransferReceived == "1") ? true : false, (memberNotificationSettings.TransferAttemptFailure == "1") ? true : false,
+                            (memberNotificationSettings.NoochToBank == "1") ? true : false, (memberNotificationSettings.BankToNooch == "1") ? true : false)
+                    };
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Cntlr -> MemberPushNotificationSettings FAILED - MemberId: [" + memberNotificationSettings.MemberId + "], Exception: [" + ex + " ]");
+                    throw new Exception("Server Error.");
+                }
+            }
+            else
+                throw new Exception("Invalid OAuth 2 Access");
+        }
+
+
+        [HttpGet]
+        [ActionName("SetShowInSearch")]
+        public StringResult SetShowInSearch(string memberId, bool search, string accessToken)
+        {
+            try
+            {
+                Logger.Info("Service Cntlr -> SetShowInSearch Fired - MemberID: [" + memberId + "]");
+                var mda = new MembersDataAccess();
+                return new StringResult { Result = mda.SetShowInSearch(memberId, search) };
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Cntlr -> SetShowInSearch FAILED - MemberID: [" + memberId + "], Exception: [" + ex + " ]");
+                throw new Exception("Server Error.");
+            }
+        }
+
+
+        [HttpPost]
+        [ActionName("MemberPrivacySettings")]
+        public StringResult MemberPrivacySettings(PrivacySettings privacySettings, string accessToken)
+        {
+            StringResult res = new StringResult();
+
+            if (CommonHelper.IsValidRequest(accessToken, privacySettings.MemberId))
+            {
+                try
+                {
+                    Logger.Info("Service Cntlr -> MemberPrivacySettings Fired - MemberID: [" + privacySettings.MemberId + "]");
+                    var mda = new MembersDataAccess();
+
+                    res.Result = mda.MemberPrivacySettings(privacySettings.MemberId,
+                                 (bool)privacySettings.ShowInSearch,
+                                 (bool)privacySettings.AllowSharing,
+                                 (bool)privacySettings.RequireImmediately);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Cntlr -> MemberPrivacySettings FAILED - MemberID: [" + privacySettings.MemberId + "], Exception: [" + ex + "]");
+                    res.Result = ex.Message;
+                }
+            }
+            else res.Result = "Invalid OAuth 2 Access";
+
+            return res;
+        }
+
+
+        [HttpGet]
+        [ActionName("GetMemberPrivacySettings")]
+        public PrivacySettings GetMemberPrivacySettings(string memberId, string accessToken)
+        {
+            if (CommonHelper.IsValidRequest(accessToken, memberId))
+            {
+                var privacySettings = new PrivacySettings();
+
+                try
+                {
+                    Logger.Info("Service Cntlr -> GetMemberPrivacySettings Fired - MemberID: [" + memberId + "]");
+
+                    var mda = new MembersDataAccess();
+                    var memberPrivacySettings = mda.GetMemberPrivacySettings(memberId);
+
+                    if (memberPrivacySettings != null)
+                    {
+                        var r = _dbContext.MemberPrivacySettings.FirstOrDefault(m => m.MemberId == memberPrivacySettings.MemberId);
+                        privacySettings.MemberId = r.Member.MemberId.ToString();
+                        privacySettings.ShowInSearch = r.ShowInSearch ?? false;
+                        privacySettings.AllowSharing = r.AllowSharing ?? false;
+                        privacySettings.RequireImmediately = r.RequireImmediately ?? false;
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Cntlr -> GetMemberPrivacySettings FAILED - MemberId: [" + memberId + "], Exception: [" + ex + "]");
+                }
+
+                return privacySettings;
+            }
+            else throw new Exception("Invalid OAuth 2 Access");
+        }
+
+
+        [HttpGet]
+        [ActionName("SetAllowSharing")]
+        public StringResult SetAllowSharing(string memberId, bool allow, string accessToken)
+        {
+            StringResult res = new StringResult();
+
+            try
+            {
+                Logger.Info("Service Cntlr -> SetAllowSharing Initiated - MemberID: [" + memberId + "]");
+                var mda = new MembersDataAccess();
+                res.Result = mda.SetAllowSharing(memberId, allow);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Cntlr -> SetAllowSharing FAILED - MemberID: [" + memberId + "], Exception: [" + ex + "]");
+                res.Result = ex.Message;
+            }
+
+            return res;
+        }
+
+
+        [HttpGet]
+        [ActionName("SaveImmediateRequire")]
+        public StringResult SaveImmediateRequire(string memberId, Boolean IsRequiredImmediatley, string accesstoken)
+        {
+            StringResult res = new StringResult();
+
+            if (CommonHelper.IsValidRequest(accesstoken, memberId))
+            {
+                try
+                {
+                    Logger.Info("Service Cntlr -> SaveImmediateRequire Fired - MemberID: [" + memberId + "]");
+
+                    var mda = new MembersDataAccess();
+                    string s = mda.SaveImmediateRequire(memberId, IsRequiredImmediatley);
+
+                    if (s == "success") res.Result = "success";
+                    else res.Result = "Member not found";
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Cntlr -> SaveImmediateRequire FAILED - Exception: [" + ex + "]");
+                    res.Result = ex.Message;
+                }
+            }
+            else res.Result = "Invalid OAuth 2 Access";
+
+            return res;
+        }
+
+
+        #endregion Settings-Related Functions
 
 
         /************************************************/
@@ -2903,7 +3286,6 @@ namespace Nooch.API.Controllers
 
             return res;
         }
-
 
 
         [HttpPost]
@@ -4223,6 +4605,265 @@ namespace Nooch.API.Controllers
         }
 
 
+        [HttpPost]
+        [ActionName("TransferMoneyUsingSynapse")]
+        public StringResult TransferMoneyUsingSynapse(TransactionDto transInput, string accessToken)
+        {
+            Logger.Info("Service Cntlr -> TransferMoneyUsingSynapse Fired - MemberID: [" + transInput.MemberId +
+                        "], RecipientID: [" + transInput.RecepientId +
+                        "], Amount: [" + transInput.Amount.ToString("n2") +
+                        "], doNotSendEmails: [" + transInput.doNotSendEmails + "]");
+
+            StringResult res = new StringResult();
+
+            if (transInput.isRentScene == true |
+                transInput.isRentAutoPayment == true ||
+                CommonHelper.IsValidRequest(accessToken, transInput.MemberId))
+            {
+                string trnsactionId = string.Empty;
+
+                try
+                {
+                    TransactionEntity transactionEntity = GetTransactionEntity(transInput);
+
+                    var tda = new TransactionsDataAccess();
+
+                    res.Result = tda.TransferMoneyUsingSynapse(transactionEntity);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Cntlr -> TransferMoneyUsingSynapse FAILED - MemberID: [" + transInput.MemberId + "], Exception: [" + ex + "]");
+                    res.Result = ex.Message;
+                }
+            }
+            else
+            {
+                Logger.Error("Service Cntlr -> TransferMoneyUsingSynapse FAILED - AccessToken invalid or not found - " +
+                             "MemberID: [" + transInput.MemberId + "]");
+                res.Result = "Invalid OAuth 2 Access";
+            }
+
+            return res;
+        }
+
+
+        [HttpPost]
+        [ActionName("TransferMoneyToNonNoochUserUsingSynapse")]
+        public StringResult TransferMoneyToNonNoochUserUsingSynapse(TransactionDto transactionInput, string accessToken, string inviteType, string receiverEmailId)
+        {
+            if (CommonHelper.IsValidRequest(accessToken, transactionInput.MemberId))
+            {
+                StringResult res = new StringResult();
+                string trnsactionId = string.Empty;
+
+                try
+                {
+                    var transactionDataAccess = new TransactionsDataAccess();
+                    TransactionEntity transactionEntity = GetTransactionEntity(transactionInput);
+
+                    res.Result = transactionDataAccess.TransferMoneyToNonNoochUserUsingSynapse(inviteType, receiverEmailId, transactionEntity, transactionInput.cip);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Cntlr -> TransferMoneyToNonNoochUserUsingSynapse FAILED - Exception: [" + ex + "]");
+                    res.Result = ex.Message;
+                }
+
+                return res;
+            }
+            else
+            {
+                Logger.Error("Service Cntlr -> TransferMoneyToNonNoochUserUsingSynapse FAILED - AccessToken Not Found or Invalid - " +
+                             "MemberID: [" + transactionInput.MemberId + "], Receiver Email: [" + receiverEmailId + "]");
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
+
+
+        [HttpPost]
+        [ActionName("TransferMoneyToNonNoochUserThroughPhoneUsingsynapse")]
+        public StringResult TransferMoneyToNonNoochUserThroughPhoneUsingsynapse(TransactionDto transactionInput, string accessToken, string inviteType, string receiverPhoneNumer)
+        {
+            StringResult res = new StringResult();
+
+            if (CommonHelper.IsValidRequest(accessToken, transactionInput.MemberId))
+            {
+                string trnsactionId = string.Empty;
+                try
+                {
+                    Logger.Info("Service Cntlr - TransferMoneyToNonNoochUserThroughPhoneUsingsynapse - Sender: [" + transactionInput.MemberId + "], TransID: [" + trnsactionId + "], InviteType: [" + inviteType + "]");
+
+                    var tda = new TransactionsDataAccess();
+                    TransactionEntity transactionEntity = GetTransactionEntity(transactionInput);
+
+                    res.Result = tda.TransferMoneyToNonNoochUserThroughPhoneUsingsynapse(inviteType, receiverPhoneNumer, transactionEntity);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Cntlr -> TransferMoneyToNonNoochUserThroughPhoneUsingsynapse FAILED - Exception: [" + ex + "]");
+                    res.Result = ex.Message;
+                }
+            }
+            else
+            {
+                Logger.Error("Service Cntlr -> TransferMoneyToNonNoochUserThroughPhoneUsingsynapse FAILED - AccessToken not found or not valid.");
+                res.Result = "Invalid OAuth 2 Access";
+            }
+
+            return res;
+        }
+
+
+        [HttpPost]
+        [ActionName("addRowToSynapseCreateUsersTable")]
+        public genericResponse addRowToSynapseCreateUsersTable(addSynapseCreateUserRecord input)
+        {
+            genericResponse res = new genericResponse();
+            res.success = false;
+            res.msg = "Initial";
+
+            try
+            {
+                Logger.Info("Service Cntlr -> addRowToSynapseCreateUsersTable Fired - MemberId: [" + input.memberId + "], New OAuth_Key: [" + input.access_token + "]");
+
+                using (var noochConnection = new NOOCHEntities())
+                {
+                    var id = Utility.ConvertToGuid(input.memberId);
+
+                    var member = noochConnection.Members.FirstOrDefault(m => m.MemberId == id);
+
+                    if (member != null)
+                    {
+                        try
+                        {
+                            #region Delete Any Old DB Records & Create New Record
+
+                            // Marking any existing Synapse 'Create User' results for this user as Deleted
+
+
+                            var synapseRes = noochConnection.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
+
+                            if (synapseRes != null)
+                            {
+                                Logger.Info("Service Cntlr -> addRowToSynapseCreateUsersTable - Old record found, about to delete - MemberID: [" +
+                                            input.memberId + "], Old Oauth_Key: [" + synapseRes.access_token + "]");
+
+                                synapseRes.IsDeleted = true;
+                                synapseRes.ModifiedOn = DateTime.Now;
+                                noochConnection.SaveChanges();
+                            }
+
+                            try
+                            {
+                                // Now make a new entry in SynapseCreateUserResults.dbo
+                                SynapseCreateUserResult newSynapseUser = new SynapseCreateUserResult();
+                                newSynapseUser.MemberId = id;
+                                newSynapseUser.DateCreated = DateTime.Now;
+                                newSynapseUser.IsDeleted = false;
+                                newSynapseUser.access_token = CommonHelper.GetEncryptedData(input.access_token);
+                                newSynapseUser.success = true;
+                                newSynapseUser.expires_in = input.expires_in;
+                                newSynapseUser.reason = "Manually added by Nooch admin";
+                                newSynapseUser.refresh_token = CommonHelper.GetEncryptedData(input.refresh_token);
+                                newSynapseUser.username = synapseRes.username != null ? synapseRes.username : null;
+                                newSynapseUser.user_id = synapseRes.user_id != null ? synapseRes.user_id : null;
+                                newSynapseUser.IsForNonNoochUser = false;
+                                noochConnection.SynapseCreateUserResults.Add(newSynapseUser);
+                                int addRecordToSynapseCreateUserTable = noochConnection.SaveChanges();
+
+                                if (addRecordToSynapseCreateUserTable > 0)
+                                {
+                                    Logger.Info("Service Cntlr -> addRowToSynapseCreateUsersTable - New Record Added Successfully - MemberID: [" + input.memberId + "], New Oauth_Key: [" + input.access_token + "]");
+
+                                    res.success = true;
+                                    res.msg = "New record added to SynapseCreateUserResults successfully.";
+                                }
+                                else
+                                {
+                                    Logger.Error("Service Cntlr -> addRowToSynapseCreateUsersTable FAILED - Error Adding New Record To Database - MemberID: [" + input.memberId + "], New Oauth_Key: [" + input.access_token + "]");
+                                    res.msg = "Failed to save new record in DB.";
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.Error("Service Cntlr -> addRowToSynapseCreateUsersTable FAILED - Exception on Adding New Record To Database - MemberId: [" +
+                                             input.memberId + "], Exception: [" + ex + "]");
+
+                                res.msg = "Service layer exception - inner 1.";
+                            }
+
+                            #endregion Delete Any Old DB Records & Create New Record
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Error("Service Cntlr -> addRowToSynapseCreateUsersTable FAILED - MemberID: [" +
+                                         input.memberId + "], [Exception: " + ex.Message + "]");
+
+                            res.msg = ex.InnerException.Message;
+                        }
+                    }
+                    else
+                        res.msg = "Member not found.";
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Cntlr -> addRowToSynapseCreateUsersTable FAILED (Outer Exception) - MemberID: [" + input.memberId + "], Exception: [" + ex + "]");
+                res.msg = "Service layer outer exception - Msg: [" + ex.Message.ToString() + "]";
+            }
+
+            return res;
+        }
+
+
+        /// <summary>
+        /// For cancelling a transaction with Synapse V3.0
+        /// </summary>
+        /// <param name="IsRentScene">Bool indicating if the payment was for Rent Scene (just for logging).</param>
+        /// <param name="TransationId">TransID of the payment to be cancelled.</param>
+        /// <param name="MemberId">MemberID of the SENDER.</param>
+        /// <returns></returns>
+        [HttpPost]
+        [ActionName("CancelTransactionAtSynapse")]
+        public CancelTransactionAtSynapseResult CancelTransactionAtSynapse(bool IsRentScene, string TransationId, string MemberId)
+        {
+            CancelTransactionAtSynapseResult CancelTransaction = new CancelTransactionAtSynapseResult();
+            CancelTransaction.IsSuccess = false;
+
+            try
+            {
+                if (IsRentScene != true)
+                {
+                    Logger.Error("Service Cntlr -> CancelTransactionAtSynapse CodeBehind - IsRentScene: [" + IsRentScene + "]");
+                    CancelTransaction.errorMsg = "Missing IsRentScene or its false";
+                }
+
+                if (String.IsNullOrEmpty(TransationId))
+                {
+                    Logger.Error("Service Cntlr -> CancelTransactionAtSynapse CodeBehind - TransID: [" + TransationId + "]");
+                    CancelTransaction.errorMsg = "Missing TransationId";
+                }
+
+                if (string.IsNullOrEmpty(MemberId))
+                {
+                    Logger.Error("Service Cntlr -> CancelTransactionAtSynapse CodeBehind - MemberID: [" + MemberId + "]");
+                    CancelTransaction.errorMsg = "Missing Id";
+                }
+
+                if (String.IsNullOrEmpty(CancelTransaction.errorMsg))
+                    CancelTransaction = CommonHelper.CancelTransactionAtSynapse(TransationId, MemberId);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Cntlr -> CancelTransactionAtSynapse FAILED - TransID: [" + TransationId + "], Exception: [" + ex + "]");
+                CancelTransaction.errorMsg = "Server Error.";
+            }
+
+            return CancelTransaction;
+        }
+
+        // Web-Related Synapse Services
+
         [HttpGet]
         [ActionName("Submit2FAPin")]
         public synapseV3GenericResponse Submit2FAPin(string memberId, string pin)
@@ -4290,8 +4931,6 @@ namespace Nooch.API.Controllers
             return res;
         }
 
-
-        // Web related Services
 
         /// <summary>
         /// For updating a user's Synapse Bank status to 'Verified'. Currently called from a Member Details
@@ -4436,101 +5075,8 @@ namespace Nooch.API.Controllers
             }
         }
 
-
         #endregion Synapse-Related Services
 
-
-        [HttpGet]
-        [ActionName("GetMemberInfoForMicroDepositPage")]
-        public SynapseV3VerifyNodeWithMicroDeposits_ServiceInput GetMemberInfoForMicroDepositPage(string memberId)
-        {
-            SynapseV3VerifyNodeWithMicroDeposits_ServiceInput res = new SynapseV3VerifyNodeWithMicroDeposits_ServiceInput();
-            res.success = false;
-            res.MemberId = memberId;
-
-            try
-            {
-                Logger.Info("Service Cntlr - GetMemberInfoForMicroDepositPage Fired - MemberID: [" + memberId + "]");
-
-                var memberObj = CommonHelper.GetMemberDetails(memberId);
-
-                if (memberObj != null)
-                {
-                    res.userFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName));
-                    res.userLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.LastName));
-                    res.isRs = memberObj.isRentScene ?? false;
-
-                    var synapseBankDetails = CommonHelper.GetSynapseBankDetails(memberId);
-                    var mid = Utility.ConvertToGuid(memberId);
-
-                    // Added 8/22/16
-                    #region Find Any Pending Requests
-
-                    var pendingRequestTrans = _dbContext.Transactions.Where(t => t.TransactionStatus == "Pending" && //t.TransactionType == "T3EMY1WWZ9IscHIj3dbcNw==" || //t.SenderId == mid &&
-                                                                                (t.InvitationSentTo == memberObj.UserName ||
-                                                                                 t.InvitationSentTo == memberObj.UserNameLowerCase ||
-                                                                                 t.InvitationSentTo == memberObj.SecondaryEmail)).ToList();
-                    res.PendingTransactionList = new List<PendingTransaction>();
-
-                    if (pendingRequestTrans != null && pendingRequestTrans.Count > 0)
-                    {
-                        foreach (var transaction in pendingRequestTrans)
-                        {
-                            PendingTransaction pt = new PendingTransaction();
-                            pt.TransactionId = transaction.TransactionId;
-                            pt.userName = CommonHelper.GetDecryptedData(transaction.Member1.FirstName) + " " +
-                                          CommonHelper.GetDecryptedData(transaction.Member1.LastName);
-                            pt.Amount = transaction.Amount;
-                            pt.RecipientId = transaction.RecipientId;
-                            pt.SenderId = transaction.SenderId;
-
-                            if (pt.SenderId == pt.RecipientId)
-                            {
-                                pt.InvitationSentTo = transaction.InvitationSentTo;
-                                pt.TransactionType = "RequestToNewUser";
-                                pt.RecipientId = transaction.SenderId;
-                            }
-
-                            res.PendingTransactionList.Add(pt);
-                        }
-
-                        if (res.PendingTransactionList.Count > 0) res.hasPendingPymnt = true;
-                        else res.hasPendingPymnt = false;
-                    }
-
-                    #endregion Find any pending request
-
-                    if (synapseBankDetails != null)
-                    {
-                        res.bankName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(synapseBankDetails.bank_name));
-                        res.bankNickName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(synapseBankDetails.nickname));
-                        res.bankId = synapseBankDetails.oid;
-                        res.NodeId1 = synapseBankDetails.oid;
-
-                        if (synapseBankDetails.Status == "Verified")
-                        {
-                            res.isAlreadyVerified = true;
-                            res.verifiedDate = Convert.ToDateTime(synapseBankDetails.VerifiedOn).ToString("MMM d, yyyy");
-                            res.errorMsg = "Bank already verified on [" + Convert.ToDateTime(synapseBankDetails.VerifiedOn).ToString("MM/dd/yyyy") + "]";
-                        }
-                        else
-                            res.success = true;
-                    }
-                    else
-                        res.errorMsg = "Synapse bank details not found";
-                }
-                else
-                    res.errorMsg = "Member not found";
-            }
-            catch (Exception ex)
-            {
-                Logger.Error("Service Cntlr - GetMemberInfoForMicroDepositPage FAILED - MemberID: [" + memberId +
-                             "], Exception: [" + ex + "]");
-                res.errorMsg = "Server exception: [" + ex.Message + "]";
-            }
-
-            return res;
-        }
 
 
         [HttpGet]
@@ -4547,123 +5093,6 @@ namespace Nooch.API.Controllers
             {
                 Logger.Error("Service Cntlr -> SaveMembersFBId Error - MemberID: [" + MemberId + "], Exception: [" + ex + "]");
                 return new StringResult { Result = ex.Message };
-            }
-        }
-
-
-        [HttpGet]
-        [ActionName("GetMyDetails")]
-        public MySettingsInput GetMyDetails(string memberId, string accessToken)
-        {
-            if (CommonHelper.IsValidRequest(accessToken, memberId))
-            {
-                try
-                {
-                    // Logger.LogDebugMessage("Service Cntlr -> GetMyDetails Initiated - MemberID: [" + memberId + "]");
-
-                    var myDetails = CommonHelper.GetMemberDetails(memberId);
-
-                    // Check address, city, cell phone to check whether the profile is a valid profile or not
-                    bool isvalidprofile = !string.IsNullOrEmpty(myDetails.Address) &&
-                                          !string.IsNullOrEmpty(myDetails.City) &&
-                                          !string.IsNullOrEmpty(myDetails.Zipcode) &&
-                                          !string.IsNullOrEmpty(myDetails.ContactNumber) &&
-                                          !string.IsNullOrEmpty(myDetails.SSN) &&
-                                          myDetails.IsVerifiedPhone == true &&
-                                          myDetails.DateOfBirth != null;
-
-                    var settings = new MySettingsInput
-                    {
-                        UserName = !String.IsNullOrEmpty(myDetails.UserName) ? CommonHelper.GetDecryptedData(myDetails.UserName) : "",
-                        FirstName = !String.IsNullOrEmpty(myDetails.FirstName) ? CommonHelper.GetDecryptedData(myDetails.FirstName) : "",
-                        LastName = !String.IsNullOrEmpty(myDetails.LastName) ? CommonHelper.GetDecryptedData(myDetails.LastName) : "",
-                        DateOfBirth = myDetails.DateOfBirth != null ? Convert.ToDateTime(myDetails.DateOfBirth).ToString("MM/dd/yyyy") : "",
-
-                        //Password = myDetails.Password,
-                        ContactNumber = !String.IsNullOrEmpty(myDetails.ContactNumber) ? CommonHelper.FormatPhoneNumber(myDetails.ContactNumber) : myDetails.ContactNumber,
-                        SecondaryMail = !String.IsNullOrEmpty(myDetails.SecondaryEmail) ? CommonHelper.GetDecryptedData(myDetails.SecondaryEmail) : "",
-                        RecoveryMail = !String.IsNullOrEmpty(myDetails.RecoveryEmail) ? CommonHelper.GetDecryptedData(myDetails.RecoveryEmail) : "",
-                        ShowInSearch = Convert.ToBoolean(myDetails.ShowInSearch),
-
-                        Address = !String.IsNullOrEmpty(myDetails.Address) ? CommonHelper.GetDecryptedData(myDetails.Address) : "",
-                        Address2 = !String.IsNullOrEmpty(myDetails.Address2) ? CommonHelper.GetDecryptedData(myDetails.Address2) : "",
-                        City = !String.IsNullOrEmpty(myDetails.City) ? CommonHelper.GetDecryptedData(myDetails.City) : "",
-                        State = !String.IsNullOrEmpty(myDetails.State) ? CommonHelper.GetDecryptedData(myDetails.State) : "",
-                        Zipcode = !String.IsNullOrEmpty(myDetails.Zipcode) ? CommonHelper.GetDecryptedData(myDetails.Zipcode) : "",
-                        Country = !String.IsNullOrEmpty(myDetails.Country) ? CommonHelper.GetDecryptedData(myDetails.Country) : "",
-                        IsVerifiedPhone = myDetails.IsVerifiedPhone ?? false,
-                        IsValidProfile = isvalidprofile,
-
-                        //PinNumber = myDetails.PinNumber,  // Cliff: don't need to send this to the app
-                        //AllowPushNotifications = Convert.ToBoolean(myDetails.AllowPushNotifications), // Don't need to send this to the app
-                        Photo = (myDetails.Photo == null) ? Utility.GetValueFromConfig("PhotoUrl") : myDetails.Photo, //CLIFF: this is already being sent in the GetMemberDetails service
-                        //FacebookAcctLogin = myDetails.FacebookAccountLogin, //CLIFF: this is already being sent in the GetMemberDetails service
-                        //IsBankVerified = bankVerified
-                    };
-
-                    return settings;
-                }
-                catch (Exception ex)
-                {
-                    Logger.Error("Service Cntlr - GetMyDetails FAILED - MemberID: [" + memberId + "], Exception: [" + ex.Message + "]");
-                    throw new Exception("Server Error.");
-                }
-            }
-            else
-            {
-                throw new Exception("Invalid OAuth 2 Access");
-            }
-        }
-
-
-        [HttpPost]
-        [ActionName("MySettings")]
-        public StringResult MySettings(MySettingsInput mySettings, string accessToken)
-        {
-            if (CommonHelper.IsValidRequest(accessToken, mySettings.MemberId))
-            {
-                try
-                {
-                    Logger.Info("Service Cntlr -> MySettings Initiated - MemberID: [" + mySettings.MemberId + "]");
-
-
-
-                    var mda = new MembersDataAccess();
-                    string fileContent = null;
-                    int contentLength = 0;
-                    string fileExtension = null;
-
-
-                    // Malkit : 08 Aug 2016 -  Not in use anymore
-                    if (mySettings.AttachmentFile != null)
-                    {
-                        fileContent = mySettings.AttachmentFile.FileContent;
-                        contentLength = mySettings.AttachmentFile.FileContent.Length;
-                        fileExtension = mySettings.AttachmentFile.FileExtension;
-                    }
-
-
-                    if (!String.IsNullOrEmpty(mySettings.Photo))
-                        mySettings.Picture = System.Convert.FromBase64String(mySettings.Photo);
-
-                    return new StringResult
-                    {
-                        Result = mda.MySettings(mySettings.MemberId, mySettings.FirstName.ToLower(), mySettings.LastName.ToLower(),
-                            mySettings.Password, mySettings.SecondaryMail, mySettings.RecoveryMail, mySettings.FacebookAcctLogin,
-                            fileContent, contentLength, fileExtension, mySettings.ContactNumber,
-                            mySettings.Address, mySettings.City, mySettings.State, mySettings.Zipcode, mySettings.Country,
-                            mySettings.Picture, mySettings.ShowInSearch, mySettings.Address2)
-                    };
-                }
-                catch (Exception ex)
-                {
-                    Logger.Error("Service Cntlr -> MySettings FAILED - MemberID: [" + mySettings.MemberId + "], Exception: [" + ex + "]");
-                    return new StringResult();
-                }
-            }
-            else
-            {
-                throw new Exception("Invalid OAuth 2 Access");
             }
         }
 
@@ -4727,13 +5156,11 @@ namespace Nooch.API.Controllers
                 catch (Exception ex)
                 {
                     Logger.Error("Service Cntlr - ValidatePinNumberToEnterForEnterForeground FAILED - MemberID: [" + memberId + "], Exception: [" + ex + "]");
-
                 }
 
                 return new StringResult();
             }
-            else
-                throw new Exception("Invalid OAuth 2 Access");
+            else throw new Exception("Invalid OAuth 2 Access");
         }
 
 
@@ -4757,151 +5184,6 @@ namespace Nooch.API.Controllers
             }
             else
                 return new StringResult() { Result = "Invalid OAuth 2 Access" };
-        }
-
-
-        /// <summary>
-        /// To get member notification settings
-        /// </summary>
-        /// <param name="memberId"></param>
-        /// <param name="accessToken"></param>
-        /// <returns></returns>
-        [HttpGet]
-        [ActionName("GetMemberNotificationSettings")]
-        public MemberNotificationSettingsInput GetMemberNotificationSettings(string memberId, string accessToken)
-        {
-            if (CommonHelper.IsValidRequest(accessToken, memberId))
-            {
-                try
-                {
-                    Logger.Info("Service Cntlr -> GetMemberNotificationSettings - MemberID: [" + memberId + "]");
-                    var notification = new MembersDataAccess().GetMemberNotificationSettings(memberId);
-
-                    if (notification != null)
-                    {
-                        return new MemberNotificationSettingsInput
-                        {
-                            NotificationId = notification.NotificationId.ToString(),
-                            MemberId = memberId,
-                            FriendRequest = notification.FriendRequest ?? false,
-                            InviteRequestAccept = notification.InviteRequestAccept ?? false,
-                            TransferSent = notification.TransferSent ?? false,
-                            TransferReceived = notification.TransferReceived ?? false,
-                            TransferAttemptFailure = notification.TransferAttemptFailure ?? false,
-                            EmailFriendRequest = notification.EmailFriendRequest ?? false,
-                            EmailInviteRequestAccept = notification.EmailInviteRequestAccept ?? false,
-                            EmailTransferSent = notification.EmailTransferSent ?? false,
-                            EmailTransferReceived = notification.EmailTransferReceived ?? false,
-                            EmailTransferAttemptFailure = notification.EmailTransferAttemptFailure ?? false,
-                            NoochToBank = notification.NoochToBank ?? false,
-                            BankToNooch = notification.BankToNooch ?? false,
-                            TransferUnclaimed = notification.TransferUnclaimed ?? false,
-                            BankToNoochRequested = notification.BankToNoochRequested ?? false,
-                            BankToNoochCompleted = notification.BankToNoochCompleted ?? false,
-                            NoochToBankRequested = notification.NoochToBankRequested ?? false,
-                            NoochToBankCompleted = notification.NoochToBankCompleted ?? false,
-                            InviteReminder = notification.InviteReminder ?? false,
-                            LowBalance = notification.LowBalance ?? false,
-                            ValidationRemainder = notification.ValidationRemainder ?? false,
-                            ProductUpdates = notification.ProductUpdates ?? false,
-                            NewAndUpdate = notification.NewAndUpdate ?? false
-                        };
-                    }
-                    else
-                        return null;
-                }
-                catch (Exception ex)
-                {
-                    Logger.Error("Service Cntlr -> GetMemberNotificationSettings FAILED- MemberID: [" + memberId + "], Exception: [" + ex + " ]");
-                    throw new Exception("Server Error.");
-                }
-            }
-            else
-                throw new Exception("Invalid OAuth 2 Access");
-        }
-
-
-        /// <summary>
-        /// To save email notification settings of users
-        /// </summary>
-        /// <param name="memberNotificationSettings"></param>
-        /// <param name="accessToken"></param>
-        /// <returns></returns>
-        [HttpPost]
-        [ActionName("MemberEmailNotificationSettings")]
-        public StringResult MemberEmailNotificationSettings(MemberNotificationsNewStringTypeSettings memberNotificationSettings, string accessToken)
-        {
-            if (CommonHelper.IsValidRequest(accessToken, memberNotificationSettings.MemberId))
-            {
-                try
-                {
-                    Logger.Info("Service Cntlr -> MemberEmailNotificationSettings - MemberId: [" + memberNotificationSettings.MemberId + "]");
-
-                    return new StringResult
-                    {
-                        Result = new MembersDataAccess().MemberEmailNotificationSettings("",
-                            memberNotificationSettings.MemberId, null, null,
-                            (memberNotificationSettings.EmailTransferSent == "1") ? true : false, (memberNotificationSettings.EmailTransferReceived == "1") ? true : false, (memberNotificationSettings.EmailTransferAttemptFailure == "1") ? true : false,
-                            (memberNotificationSettings.TransferUnclaimed == "1") ? true : false, (memberNotificationSettings.BankToNoochRequested == "1") ? true : false, (memberNotificationSettings.BankToNoochCompleted == "1") ? true : false,
-                            (memberNotificationSettings.NoochToBankRequested == "1") ? true : false, (memberNotificationSettings.NoochToBankCompleted == "1") ? true : false, null,
-                            null, null, null, null, (memberNotificationSettings.TransferReceived == "1") ? true : false)
-                    };
-                }
-                catch (Exception ex)
-                {
-                    Logger.Error("Service Cntlr -> MemberEmailNotificationSettings FAILED - MemberId: [" + memberNotificationSettings.MemberId + "], Exception: [" + ex + " ]");
-                    throw new Exception("Server Error.");
-                }
-
-            }
-            else
-                throw new Exception("Invalid OAuth 2 Access");
-        }
-
-
-        [HttpPost]
-        [ActionName("MemberPushNotificationSettings")]
-        public StringResult MemberPushNotificationSettings(MemberNotificationsNewStringTypeSettings memberNotificationSettings, string accessToken)
-        {
-            if (CommonHelper.IsValidRequest(accessToken, memberNotificationSettings.MemberId))
-            {
-                try
-                {
-                    Logger.Info("Service Cntlr -> MemberPushNotificationSettings - MemberID: [" + memberNotificationSettings.MemberId + "]");
-                    return new StringResult
-                    {
-                        Result = new MembersDataAccess().MemberPushNotificationSettings(memberNotificationSettings.NotificationId,
-                            memberNotificationSettings.MemberId, (memberNotificationSettings.FriendRequest == "1") ? true : false, (memberNotificationSettings.InviteRequestAccept == "1") ? true : false,
-                            (memberNotificationSettings.TransferReceived == "1") ? true : false, (memberNotificationSettings.TransferAttemptFailure == "1") ? true : false,
-                            (memberNotificationSettings.NoochToBank == "1") ? true : false, (memberNotificationSettings.BankToNooch == "1") ? true : false)
-                    };
-                }
-                catch (Exception ex)
-                {
-                    Logger.Error("Service Cntlr -> MemberPushNotificationSettings FAILED - MemberId: [" + memberNotificationSettings.MemberId + "], Exception: [" + ex + " ]");
-                    throw new Exception("Server Error.");
-                }
-            }
-            else
-                throw new Exception("Invalid OAuth 2 Access");
-        }
-
-
-        [HttpGet]
-        [ActionName("SetShowInSearch")]
-        public StringResult SetShowInSearch(string memberId, bool search, string accessToken)
-        {
-            try
-            {
-                Logger.Info("Service Cntlr -> SetShowInSearch Fired - MemberID: [" + memberId + "]");
-                var mda = new MembersDataAccess();
-                return new StringResult { Result = mda.SetShowInSearch(memberId, search) };
-            }
-            catch (Exception ex)
-            {
-                Logger.Error("Service Cntlr -> SetShowInSearch FAILED - MemberID: [" + memberId + "], Exception: [" + ex + " ]");
-                throw new Exception("Server Error.");
-            }
         }
 
 
@@ -4943,57 +5225,154 @@ namespace Nooch.API.Controllers
 
 
         [HttpGet]
-        [ActionName("sendLandlordLeadEmailTemplate")]
-        public StringResult sendLandlordLeadEmailTemplate(string template, string email, string firstName,
-            string tenantFName, string tenantLName, string propAddress, string subject)
+        [ActionName("MemberRegistrationGet")]
+        public genericResponse MemberRegistrationGet(string name, string dob, string ssn, string address, string zip,
+             string email, string phone, string fngprnt, string ip, string type, string pw)
         {
-            Logger.Info("Service Cntlr -> sendEmailTemplate Fired - Template: [" + template +
-                        "], Email: [" + email + "], First Name: [" + firstName + "], Subject: {" + subject + "]");
+            genericResponse res = new genericResponse();
+            res.success = false;
+            res.msg = "Initial - Nooch Service";
 
+            try
+            {
+                Logger.Info("Service Cntlr -> MemberRegistrationGET Fired - NEW USER'S INFO: Name: [" + name +
+                                       "], Email: [" + email + "],  Type: [" + type +
+                                       "], Phone: [" + phone + "], Address: [" + address +
+                                       "], ZIP: [" + zip + "], DOB: [" + dob +
+                                       "], SSN: [" + ssn + "], IP: [" + ip +
+                                       "], Fngrprnt: [" + fngprnt + "], PW: [" + pw + "], ");
+
+                #region Parse Name
+
+                var FirstName = string.Empty;
+                var LastName = string.Empty;
+
+                if (!String.IsNullOrEmpty(name))
+                {
+                    string[] namearray = name.Split(' ');
+                    FirstName = namearray[0];
+
+                    // Example Name Formats: Most Common: 1.) Charles Smith
+                    //                       Possible Variations: 2.) Charles   3.) Charles H. Smith
+                    //                       4.) CJ Smith   5.) C.J. Smith   6.)  Charles Andrew Thomas Smith
+
+                    if (namearray.Length > 1)
+                    {
+                        if (namearray.Length == 2) // For regular First & Last name: Charles Smith
+                            LastName = namearray[1];
+                        else if (namearray.Length == 3) // For 3 names, could be a middle name or middle initial: Charles H. Smith or Charles Andrew Smith
+                            LastName = namearray[2];
+                        else // For more than 3 names (some people have 2 or more middle names)
+                            LastName = namearray[namearray.Length - 1];
+                    }
+                }
+
+                #endregion Parse Name
+
+                type = String.IsNullOrEmpty(type) ? "Personal - Browser" : CommonHelper.UppercaseFirst(type.ToLower());
+
+                var password = !String.IsNullOrEmpty(pw) ? CommonHelper.GetEncryptedData(pw)
+                                                         : CommonHelper.GetEncryptedData("jibb3r;jawn-alt");
+
+
+                var mda = new MembersDataAccess();
+
+                var mdaRes = mda.MemberRegistration(null, email, FirstName, LastName, "", password, email, email,
+                                                    fngprnt, "", "", "", "BROWSER", "true", type,
+                                                    phone, address, zip, ssn, dob);
+
+                res.msg = mdaRes;
+
+                if (mdaRes.IndexOf("Thanks for registering") > -1)
+                {
+                    var memId = CommonHelper.GetMemberIdByUserName(email);
+
+                    #region Set IP Address
+
+                    try
+                    {
+                        if (!String.IsNullOrEmpty(ip) && ip.Length > 4)
+                            CommonHelper.UpdateMemberIPAddressAndDeviceId(memId, ip, fngprnt);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error("Service Cntlr -> MemberRegistrationGET FAILED - MemberID: [" + memId +
+                                     "], Exception: [" + ex + "]");
+                    }
+
+                    #endregion Set IP Address
+
+                    res.note = memId;
+                    res.success = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Cntlr -> MemberRegistrationGET FAILED - Name: [" + name + "], Email: [" + email + "], Exception: [" + ex + "]");
+                res.msg = "MemberRegistrationGet Exception";
+            }
+
+            return res;
+        }
+
+
+        #region Login-Related Methods
+
+        private string GenerateAccessToken()
+        {
+            byte[] time = BitConverter.GetBytes(DateTime.UtcNow.ToBinary());
+            byte[] key = Guid.NewGuid().ToByteArray();
+            string token = Convert.ToBase64String(time.Concat(key).ToArray());
+            return CommonHelper.GetEncryptedData(token);
+        }
+
+
+        [HttpGet]
+        [ActionName("LoginRequest")]
+        public StringResult LoginRequest(string userName, string pwd, Boolean rememberMeEnabled, decimal lat,
+                                         decimal lng, string udid, string devicetoken)
+        {
             StringResult res = new StringResult();
 
-            if (String.IsNullOrEmpty(email))
-                res.Result = "Missing email address to send to!";
-            else if (String.IsNullOrEmpty(template))
-                res.Result = "Have an email, but missing a Template to send!";
-            else if (String.IsNullOrEmpty(tenantFName))
-                res.Result = "Missing a Tenant First Name!";
-            else if (String.IsNullOrEmpty(tenantLName))
-                res.Result = "Missing a Tenant Last Name!";
-            else if (String.IsNullOrEmpty(propAddress))
-                res.Result = "Missing a Property Address";
-            else
+            try
             {
-                if (String.IsNullOrEmpty(subject) || subject.Length < 1)
-                    subject = " ";
-                else
-                    subject = CommonHelper.UppercaseFirst(subject);
+                Logger.Info("Service Cntlr -> LoginRequest - userName: [" + userName + "], UDID: [" + udid + "], DeviceToken: [" + devicetoken + "]");
 
-                if (String.IsNullOrEmpty(firstName) || firstName.Length < 1)
-                    firstName = " ";
-                else
-                    firstName = CommonHelper.UppercaseFirst(firstName);
+                var mda = new MembersDataAccess();
+                string cookie = mda.LoginRequest(userName, pwd, rememberMeEnabled, lat, lng, udid, devicetoken);
 
-                try
+                if (cookie == "Success")
                 {
-                    var tokens = new Dictionary<string, string>
-                        {
-                            {Constants.PLACEHOLDER_FIRST_NAME, firstName}, // Landlord's First Name
-                            {"$TenantFName$", tenantFName},
-                            {"$TenantLName$", tenantLName},
-                            {"$PropAddress$", propAddress}
-                        };
-
-                    Utility.SendEmail(template, "landlords@rentscene.com", email,
-                                      null, subject, null, tokens, null, null, null);
-
-                    res.Result = "Email Template [" + template + "] sent successfully to [" + email + "]";
+                    string state = GenerateAccessToken();
+                    CommonHelper.UpdateAccessToken(userName, state);
+                    res.Result = state;
                 }
-                catch (Exception ex)
+                else if (string.IsNullOrEmpty(cookie))
                 {
-                    Logger.Error("Service Cntlr -> sendEmailTemplate FAILED - Exception: [" + ex.Message + "]");
-                    res.Result = "Server exception!";
+                    cookie = "Authentication failed.";
+                    res.Result = "Invalid Login or Password";
                 }
+                else if (cookie == "Registered")
+                {
+                    string state = GenerateAccessToken();
+                    CommonHelper.UpdateAccessToken(userName, state);
+                    res.Result = state;
+                }
+                else if (cookie == "Temporarily_Blocked")
+                    res.Result = "Temporarily_Blocked";
+                else if (cookie == "Suspended")
+                    res.Result = "Suspended";
+                else if (cookie == "Invalid user id or password.")
+                    res.Result = "Invalid user id or password.";
+                else if (cookie == "The password you have entered is incorrect.")
+                    res.Result = "The password you have entered is incorrect.";
+                else
+                    res.Result = cookie;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Cntlr -> LoginRequest FAILED - userName: [" + userName + "], Exception: [" + ex + "]");
+                res.Result = ex.Message;
             }
 
             return res;
@@ -5135,6 +5514,7 @@ namespace Nooch.API.Controllers
             return res;
         }
 
+
         [HttpGet]
         [ActionName("LogOutRequest")]
         public StringResult LogOutRequest(string accessToken, string memberId)
@@ -5161,243 +5541,13 @@ namespace Nooch.API.Controllers
                     res.Result = ex.Message;
                 }
             }
-            else
-                res.Result = "Invalid OAuth 2 Access";
+            else res.Result = "Invalid OAuth 2 Access";
 
             return res;
         }
 
 
-        [HttpGet]
-        [ActionName("MemberRegistrationGet")]
-        public genericResponse MemberRegistrationGet(string name, string dob, string ssn, string address, string zip,
-             string email, string phone, string fngprnt, string ip, string type, string pw)
-        {
-            genericResponse res = new genericResponse();
-            res.success = false;
-            res.msg = "Initial - Nooch Service";
-
-            try
-            {
-                Logger.Info("Service Cntlr -> MemberRegistrationGET Fired - NEW USER'S INFO: Name: [" + name +
-                                       "], Email: [" + email + "],  Type: [" + type +
-                                       "], Phone: [" + phone + "], Address: [" + address +
-                                       "], ZIP: [" + zip + "], DOB: [" + dob +
-                                       "], SSN: [" + ssn + "], IP: [" + ip +
-                                       "], Fngrprnt: [" + fngprnt + "], PW: [" + pw + "], ");
-
-                #region Parse Name
-
-                var FirstName = string.Empty;
-                var LastName = string.Empty;
-
-                if (!String.IsNullOrEmpty(name))
-                {
-                    string[] namearray = name.Split(' ');
-                    FirstName = namearray[0];
-
-                    // Example Name Formats: Most Common: 1.) Charles Smith
-                    //                       Possible Variations: 2.) Charles   3.) Charles H. Smith
-                    //                       4.) CJ Smith   5.) C.J. Smith   6.)  Charles Andrew Thomas Smith
-
-                    if (namearray.Length > 1)
-                    {
-                        if (namearray.Length == 2)
-                        {
-                            // For regular First & Last name: Charles Smith
-                            LastName = namearray[1];
-                        }
-                        else if (namearray.Length == 3)
-                        {
-                            // For 3 names, could be a middle name or middle initial: Charles H. Smith or Charles Andrew Smith
-                            LastName = namearray[2];
-                        }
-                        else
-                        {
-                            // For more than 3 names (some people have 2 or more middle names)
-                            LastName = namearray[namearray.Length - 1];
-                        }
-                    }
-                }
-
-                #endregion Parse Name
-
-                type = String.IsNullOrEmpty(type) ? "Personal - Browser" : CommonHelper.UppercaseFirst(type.ToLower());
-
-                var password = !String.IsNullOrEmpty(pw) ? CommonHelper.GetEncryptedData(pw)
-                                                         : CommonHelper.GetEncryptedData("jibb3r;jawn-alt");
-
-
-                var mda = new MembersDataAccess();
-
-                var mdaRes = mda.MemberRegistration(null, email, FirstName, LastName, "", password, email, email,
-                                                    fngprnt, "", "", "", "BROWSER", "true", type,
-                                                    phone, address, zip, ssn, dob);
-
-                res.msg = mdaRes;
-
-                if (mdaRes.IndexOf("Thanks for registering") > -1)
-                {
-                    var memId = CommonHelper.GetMemberIdByUserName(email);
-
-                    #region Set IP Address
-
-                    try
-                    {
-                        if (!String.IsNullOrEmpty(ip) && ip.Length > 4)
-                        {
-                            var Result = CommonHelper.UpdateMemberIPAddressAndDeviceId(memId, ip, fngprnt);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.Error("Service Cntlr -> MemberRegistrationGET FAILED - MemberID: [" + memId +
-                                     "], Exception: [" + ex + "]");
-                    }
-
-                    #endregion Set IP Address
-
-                    res.note = memId;
-                    res.success = true;
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.Error("Service Cntlr -> MemberRegistrationGET FAILED - Name: [" + name + "], Email: [" + email + "], Exception: [" + ex + "]");
-                res.msg = "MemberRegistrationGet Exception";
-            }
-
-            return res;
-        }
-
-
-        [HttpPost]
-        [ActionName("MemberPrivacySettings")]
-        public StringResult MemberPrivacySettings(PrivacySettings privacySettings, string accessToken)
-        {
-            StringResult res = new StringResult();
-
-            if (CommonHelper.IsValidRequest(accessToken, privacySettings.MemberId))
-            {
-                try
-                {
-                    Logger.Info("Service Cntlr -> MemberPrivacySettings Fired - MemberID: [" + privacySettings.MemberId + "]");
-                    var mda = new MembersDataAccess();
-
-                    res.Result = mda.MemberPrivacySettings(privacySettings.MemberId,
-                                 (bool)privacySettings.ShowInSearch,
-                                 (bool)privacySettings.AllowSharing,
-                                 (bool)privacySettings.RequireImmediately);
-                }
-                catch (Exception ex)
-                {
-                    Logger.Error("Service Cntlr -> MemberPrivacySettings FAILED - MemberID: [" + privacySettings.MemberId + "], Exception: [" + ex + "]");
-                    res.Result = ex.Message;
-                }
-            }
-            else
-            {
-                res.Result = "Invalid OAuth 2 Access";
-            }
-
-            return res;
-        }
-
-
-        [HttpGet]
-        [ActionName("GetMemberPrivacySettings")]
-        public PrivacySettings GetMemberPrivacySettings(string memberId, string accessToken)
-        {
-            if (CommonHelper.IsValidRequest(accessToken, memberId))
-            {
-                var privacySettings = new PrivacySettings();
-
-                try
-                {
-                    Logger.Info("Service Cntlr -> GetMemberPrivacySettings Fired - MemberID: [" + memberId + "]");
-
-                    var mda = new MembersDataAccess();
-                    var memberPrivacySettings = mda.GetMemberPrivacySettings(memberId);
-
-                    if (memberPrivacySettings != null)
-                    {
-                        var r = _dbContext.MemberPrivacySettings.FirstOrDefault(m => m.MemberId == memberPrivacySettings.MemberId);
-                        privacySettings.MemberId = r.Member.MemberId.ToString();
-                        privacySettings.ShowInSearch = r.ShowInSearch ?? false;
-                        privacySettings.AllowSharing = r.AllowSharing ?? false;
-                        privacySettings.RequireImmediately = r.RequireImmediately ?? false;
-                    }
-
-                }
-                catch (Exception ex)
-                {
-                    Logger.Error("Service Cntlr -> GetMemberPrivacySettings FAILED - MemberId: [" + memberId + "], Exception: [" + ex + "]");
-                }
-
-                return privacySettings;
-            }
-            else
-            {
-                throw new Exception("Invalid OAuth 2 Access");
-            }
-        }
-
-
-        [HttpGet]
-        [ActionName("SetAllowSharing")]
-        public StringResult SetAllowSharing(string memberId, bool allow, string accessToken)
-        {
-            StringResult res = new StringResult();
-
-            try
-            {
-                Logger.Info("Service Cntlr -> SetAllowSharing Initiated - MemberID: [" + memberId + "]");
-                var mda = new MembersDataAccess();
-                res.Result = mda.SetAllowSharing(memberId, allow);
-            }
-            catch (Exception ex)
-            {
-                Logger.Error("Service Cntlr -> SetAllowSharing FAILED - MemberID: [" + memberId + "], Exception: [" + ex + "]");
-                res.Result = ex.Message;
-            }
-
-            return res;
-        }
-
-
-        [HttpGet]
-        [ActionName("SaveImmediateRequire")]
-        public StringResult SaveImmediateRequire(string memberId, Boolean IsRequiredImmediatley, string accesstoken)
-        {
-            StringResult res = new StringResult();
-
-            if (CommonHelper.IsValidRequest(accesstoken, memberId))
-            {
-                try
-                {
-                    Logger.Info("Service Cntlr -> SaveImmediateRequire Fired - MemberID: [" + memberId + "]");
-
-                    var mda = new MembersDataAccess();
-                    string s = mda.SaveImmediateRequire(memberId, IsRequiredImmediatley);
-
-                    if (s == "success")
-                        res.Result = "success";
-                    else
-                        res.Result = "Member not found";
-                }
-                catch (Exception ex)
-                {
-                    Logger.Error("Service Cntlr -> SaveImmediateRequire FAILED - Exception: [" + ex + "]");
-                    res.Result = ex.Message;
-                }
-            }
-            else
-            {
-                res.Result = "Invalid OAuth 2 Access";
-            }
-
-            return res;
-        }
+        #endregion Login-Related Methods
 
 
         [HttpGet]
@@ -5666,121 +5816,6 @@ namespace Nooch.API.Controllers
         }
 
 
-        [HttpPost]
-        [ActionName("PayBackTransaction")]
-        public string PayBackTransaction(string memberId, string accessToken, string transactionId, string userResponse,
-            GeoLocation location)
-        {
-            string res = "";
-
-            if (CommonHelper.IsValidRequest(accessToken, memberId))
-            {
-                try
-                {
-                    Logger.Info("Service Cntlr -> PayBackTransaction Fired - MemberID: [" + memberId + "], TransID: [" + transactionId + "]");
-                    var tda = new TransactionsDataAccess();
-                    res = tda.PayBackTransaction(transactionId, userResponse, location);
-                }
-                catch (Exception ex)
-                {
-                    Logger.Error("Service Cntlr -> PayBackTransaction FAILED - MemberID: [" + memberId + "], TransID: [" + transactionId + "], Exception: [" + ex + " ]");
-                    res = ex.Message;
-                }
-            }
-            else
-                res = "Invalid OAuth 2 Access";
-
-            return res;
-        }
-
-
-        [HttpGet]
-        [ActionName("CreateNonNoochUserPassword")]
-        public StringResult CreateNonNoochUserPassword(string TransId, string password)
-        {
-            StringResult res = new StringResult();
-
-            try
-            {
-                Logger.Info("Service Cntlr -> CreateNonNoochUserPassword - TransID: [" + TransId + "]");
-
-                var mda = new MembersDataAccess();
-                res.Result = mda.CreateNonNoochUserPassword(TransId, password);
-            }
-            catch (Exception ex)
-            {
-                Logger.Error("Service Cntlr -> CreateNonNoochUserPassword FAILED - TransID: [" + TransId + "], Exception: [" + ex + " ]");
-                res.Result = ex.Message;
-            }
-
-            return res;
-        }
-
-
-        [HttpGet]
-        [ActionName("SetAutoPayStatusForTenant")]
-        public StringResult SetAutoPayStatusForTenant(bool statustoSet, string tenantId)
-        {
-            StringResult res = new StringResult();
-
-            try
-            {
-                Logger.Info("Service Cntlr -> SetAutoPayStatusForTenant Fired - TenantID: [" + tenantId + "]");
-
-                var mda = new MembersDataAccess();
-                res.Result = mda.SetAutoPayStatusForTenant(statustoSet, tenantId);
-            }
-            catch (Exception ex)
-            {
-                Logger.Error("Service Cntlr -> SetAutoPayStatusForTenant EXCEPTION - TenantID: [" + tenantId + "], Exception: [" + ex + "]");
-                res.Result = ex.Message;
-            }
-
-            return res;
-        }
-
-
-        [HttpPost]
-        [ActionName("TransferMoneyUsingSynapse")]
-        public StringResult TransferMoneyUsingSynapse(TransactionDto transInput, string accessToken)
-        {
-            Logger.Info("Service Cntlr -> TransferMoneyUsingSynapse Fired - MemberID: [" + transInput.MemberId +
-                        "], RecipientID: [" + transInput.RecepientId +
-                        "], Amount: [" + transInput.Amount.ToString("n2") +
-                        "], doNotSendEmails: [" + transInput.doNotSendEmails + "]");
-
-            StringResult res = new StringResult();
-
-            if (transInput.isRentScene == true |
-                transInput.isRentAutoPayment == true ||
-                CommonHelper.IsValidRequest(accessToken, transInput.MemberId))
-            {
-                string trnsactionId = string.Empty;
-
-                try
-                {
-                    TransactionEntity transactionEntity = GetTransactionEntity(transInput);
-
-                    var tda = new TransactionsDataAccess();
-
-                    res.Result = tda.TransferMoneyUsingSynapse(transactionEntity);
-                }
-                catch (Exception ex)
-                {
-                    Logger.Error("Service Cntlr -> TransferMoneyUsingSynapse FAILED - MemberID: [" + transInput.MemberId + "], Exception: [" + ex + "]");
-                    res.Result = ex.Message;
-                }
-            }
-            else
-            {
-                Logger.Error("Service Cntlr -> TransferMoneyUsingSynapse FAILED - AccessToken invalid or not found - " +
-                             "MemberID: [" + transInput.MemberId + "]");
-                res.Result = "Invalid OAuth 2 Access";
-            }
-
-            return res;
-        }
-
 
         /// <summary>
         /// Private method for setting up a Transaction Entity before executing a transfer.
@@ -5826,173 +5861,18 @@ namespace Nooch.API.Controllers
         }
 
 
-        [HttpPost]
-        [ActionName("TransferMoneyToNonNoochUserUsingSynapse")]
-        public StringResult TransferMoneyToNonNoochUserUsingSynapse(TransactionDto transactionInput, string accessToken, string inviteType, string receiverEmailId)
+        [HttpGet]
+        [ActionName("CheckSDNListing")]
+        public StringResult CheckSDNListing(string MemberId)
         {
-            if (CommonHelper.IsValidRequest(accessToken, transactionInput.MemberId))
+            var noochMemberN = CommonHelper.GetMemberDetails(MemberId);
+            if (noochMemberN != null)
             {
-                StringResult res = new StringResult();
-                string trnsactionId = string.Empty;
-
-                try
-                {
-                    var transactionDataAccess = new TransactionsDataAccess();
-                    TransactionEntity transactionEntity = GetTransactionEntity(transactionInput);
-
-                    res.Result = transactionDataAccess.TransferMoneyToNonNoochUserUsingSynapse(inviteType, receiverEmailId, transactionEntity, transactionInput.cip);
-                }
-                catch (Exception ex)
-                {
-                    Logger.Error("Service Cntlr -> TransferMoneyToNonNoochUserUsingSynapse FAILED - Exception: [" + ex + "]");
-                    res.Result = ex.Message;
-                }
-
-                return res;
+                var b = CommonHelper.IsListedInSDN(CommonHelper.GetDecryptedData(noochMemberN.LastName),
+                    noochMemberN.MemberId);
+                return new StringResult() { Result = b.ToString() };
             }
-            else
-            {
-                Logger.Error("Service Cntlr -> TransferMoneyToNonNoochUserUsingSynapse FAILED - AccessToken Not Found or Invalid - " +
-                             "MemberID: [" + transactionInput.MemberId + "], Receiver Email: [" + receiverEmailId + "]");
-                throw new Exception("Invalid OAuth 2 Access");
-            }
-        }
-
-
-        [HttpPost]
-        [ActionName("TransferMoneyToNonNoochUserThroughPhoneUsingsynapse")]
-        public StringResult TransferMoneyToNonNoochUserThroughPhoneUsingsynapse(TransactionDto transactionInput,
-             string accessToken, string inviteType, string receiverPhoneNumer)
-        {
-            StringResult res = new StringResult();
-
-            if (CommonHelper.IsValidRequest(accessToken, transactionInput.MemberId))
-            {
-                string trnsactionId = string.Empty;
-                try
-                {
-                    Logger.Info("Service Cntlr - TransferMoneyToNonNoochUserThroughPhoneUsingsynapse - Sender: [" + transactionInput.MemberId + "], TransID: [" + trnsactionId + "], InviteType: [" + inviteType + "]");
-
-                    var tda = new TransactionsDataAccess();
-                    TransactionEntity transactionEntity = GetTransactionEntity(transactionInput);
-
-                    res.Result = tda.TransferMoneyToNonNoochUserThroughPhoneUsingsynapse(inviteType, receiverPhoneNumer, transactionEntity);
-                }
-                catch (Exception ex)
-                {
-                    Logger.Error("Service Cntlr -> TransferMoneyToNonNoochUserThroughPhoneUsingsynapse FAILED - Exception: [" + ex + "]");
-                    res.Result = ex.Message;
-                }
-            }
-            else
-            {
-                Logger.Error("Service Cntlr -> TransferMoneyToNonNoochUserThroughPhoneUsingsynapse FAILED - AccessToken not found or not valid.");
-                res.Result = "Invalid OAuth 2 Access";
-            }
-
-            return res;
-        }
-
-
-        [HttpPost]
-        [ActionName("addRowToSynapseCreateUsersTable")]
-        public genericResponse addRowToSynapseCreateUsersTable(addSynapseCreateUserRecord input)
-        {
-            genericResponse res = new genericResponse();
-            res.success = false;
-            res.msg = "Initial";
-
-            try
-            {
-                Logger.Info("Service Cntlr -> addRowToSynapseCreateUsersTable Fired - MemberId: [" + input.memberId + "], New OAuth_Key: [" + input.access_token + "]");
-
-                using (var noochConnection = new NOOCHEntities())
-                {
-                    var id = Utility.ConvertToGuid(input.memberId);
-
-                    var member = noochConnection.Members.FirstOrDefault(m => m.MemberId == id);
-
-                    if (member != null)
-                    {
-                        try
-                        {
-                            #region Delete Any Old DB Records & Create New Record
-
-                            // Marking any existing Synapse 'Create User' results for this user as Deleted
-
-
-                            var synapseRes = noochConnection.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
-
-                            if (synapseRes != null)
-                            {
-                                Logger.Info("Service Cntlr -> addRowToSynapseCreateUsersTable - Old record found, about to delete - MemberID: [" +
-                                            input.memberId + "], Old Oauth_Key: [" + synapseRes.access_token + "]");
-
-                                synapseRes.IsDeleted = true;
-                                synapseRes.ModifiedOn = DateTime.Now;
-                                noochConnection.SaveChanges();
-                            }
-
-                            try
-                            {
-                                // Now make a new entry in SynapseCreateUserResults.dbo
-                                SynapseCreateUserResult newSynapseUser = new SynapseCreateUserResult();
-                                newSynapseUser.MemberId = id;
-                                newSynapseUser.DateCreated = DateTime.Now;
-                                newSynapseUser.IsDeleted = false;
-                                newSynapseUser.access_token = CommonHelper.GetEncryptedData(input.access_token);
-                                newSynapseUser.success = true;
-                                newSynapseUser.expires_in = input.expires_in;
-                                newSynapseUser.reason = "Manually added by Nooch admin";
-                                newSynapseUser.refresh_token = CommonHelper.GetEncryptedData(input.refresh_token);
-                                newSynapseUser.username = synapseRes.username != null ? synapseRes.username : null;
-                                newSynapseUser.user_id = synapseRes.user_id != null ? synapseRes.user_id : null;
-                                newSynapseUser.IsForNonNoochUser = false;
-                                noochConnection.SynapseCreateUserResults.Add(newSynapseUser);
-                                int addRecordToSynapseCreateUserTable = noochConnection.SaveChanges();
-
-                                if (addRecordToSynapseCreateUserTable > 0)
-                                {
-                                    Logger.Info("Service Cntlr -> addRowToSynapseCreateUsersTable - New Record Added Successfully - MemberID: [" + input.memberId + "], New Oauth_Key: [" + input.access_token + "]");
-
-                                    res.success = true;
-                                    res.msg = "New record added to SynapseCreateUserResults successfully.";
-                                }
-                                else
-                                {
-                                    Logger.Error("Service Cntlr -> addRowToSynapseCreateUsersTable FAILED - Error Adding New Record To Database - MemberID: [" + input.memberId + "], New Oauth_Key: [" + input.access_token + "]");
-                                    res.msg = "Failed to save new record in DB.";
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                Logger.Error("Service Cntlr -> addRowToSynapseCreateUsersTable FAILED - Exception on Adding New Record To Database - MemberId: [" +
-                                             input.memberId + "], Exception: [" + ex + "]");
-
-                                res.msg = "Service layer exception - inner 1.";
-                            }
-
-                            #endregion Delete Any Old DB Records & Create New Record
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Error("Service Cntlr -> addRowToSynapseCreateUsersTable FAILED - MemberID: [" +
-                                         input.memberId + "], [Exception: " + ex.Message + "]");
-
-                            res.msg = ex.InnerException.Message;
-                        }
-                    }
-                    else
-                        res.msg = "Member not found.";
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.Error("Service Cntlr -> addRowToSynapseCreateUsersTable FAILED (Outer Exception) - MemberID: [" + input.memberId + "], Exception: [" + ex + "]");
-                res.msg = "Service layer outer exception - Msg: [" + ex.Message.ToString() + "]";
-            }
-
-            return res;
+            return new StringResult();
         }
 
 
@@ -6017,51 +5897,108 @@ namespace Nooch.API.Controllers
         }
 
 
-        /// <summary>
-        /// For cancelling a transaction with Synapse V3.0
-        /// </summary>
-        /// <param name="IsRentScene">Bool indicating if the payment was for Rent Scene (just for logging).</param>
-        /// <param name="TransationId">TransID of the payment to be cancelled.</param>
-        /// <param name="MemberId">MemberID of the SENDER.</param>
-        /// <returns></returns>
-        [HttpPost]
-        [ActionName("CancelTransactionAtSynapse")]
-        public CancelTransactionAtSynapseResult CancelTransactionAtSynapse(bool IsRentScene, string TransationId, string MemberId)
+        [HttpGet]
+        [ActionName("SetAutoPayStatusForTenant")]
+        public StringResult SetAutoPayStatusForTenant(bool statustoSet, string tenantId)
         {
-            CancelTransactionAtSynapseResult CancelTransaction = new CancelTransactionAtSynapseResult();
-            CancelTransaction.IsSuccess = false;
+            StringResult res = new StringResult();
 
             try
             {
-                if (IsRentScene != true)
-                {
-                    Logger.Error("Service Cntlr -> CancelTransactionAtSynapse CodeBehind - IsRentScene: [" + IsRentScene + "]");
-                    CancelTransaction.errorMsg = "Missing IsRentScene or its false";
-                }
+                Logger.Info("Service Cntlr -> SetAutoPayStatusForTenant Fired - TenantID: [" + tenantId + "]");
 
-                if (String.IsNullOrEmpty(TransationId))
-                {
-                    Logger.Error("Service Cntlr -> CancelTransactionAtSynapse CodeBehind - TransID: [" + TransationId + "]");
-                    CancelTransaction.errorMsg = "Missing TransationId";
-                }
-
-                if (string.IsNullOrEmpty(MemberId))
-                {
-                    Logger.Error("Service Cntlr -> CancelTransactionAtSynapse CodeBehind - MemberID: [" + MemberId + "]");
-                    CancelTransaction.errorMsg = "Missing Id";
-                }
-
-                if (String.IsNullOrEmpty(CancelTransaction.errorMsg))
-                    CancelTransaction = CommonHelper.CancelTransactionAtSynapse(TransationId, MemberId);
+                var mda = new MembersDataAccess();
+                res.Result = mda.SetAutoPayStatusForTenant(statustoSet, tenantId);
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Cntlr -> CancelTransactionAtSynapse FAILED - TransID: [" + TransationId + "], Exception: [" + ex + "]");
-                CancelTransaction.errorMsg = "Server Error.";
+                Logger.Error("Service Cntlr -> SetAutoPayStatusForTenant EXCEPTION - TenantID: [" + tenantId + "], Exception: [" + ex + "]");
+                res.Result = ex.Message;
             }
 
-            return CancelTransaction;
+            return res;
         }
 
+
+        [HttpGet]
+        [ActionName("sendLandlordLeadEmailTemplate")]
+        public StringResult sendLandlordLeadEmailTemplate(string template, string email, string firstName,
+            string tenantFName, string tenantLName, string propAddress, string subject)
+        {
+            Logger.Info("Service Cntlr -> sendEmailTemplate Fired - Template: [" + template +
+                        "], Email: [" + email + "], First Name: [" + firstName + "], Subject: {" + subject + "]");
+
+            StringResult res = new StringResult();
+
+            if (String.IsNullOrEmpty(email))
+                res.Result = "Missing email address to send to!";
+            else if (String.IsNullOrEmpty(template))
+                res.Result = "Have an email, but missing a Template to send!";
+            else if (String.IsNullOrEmpty(tenantFName))
+                res.Result = "Missing a Tenant First Name!";
+            else if (String.IsNullOrEmpty(tenantLName))
+                res.Result = "Missing a Tenant Last Name!";
+            else if (String.IsNullOrEmpty(propAddress))
+                res.Result = "Missing a Property Address";
+            else
+            {
+                subject = String.IsNullOrEmpty(subject) || subject.Length < 1 ? " " : subject = CommonHelper.UppercaseFirst(subject);
+                firstName = String.IsNullOrEmpty(firstName) || firstName.Length < 1 ? " " : firstName = CommonHelper.UppercaseFirst(firstName);
+
+                try
+                {
+                    var tokens = new Dictionary<string, string>
+                        {
+                            {Constants.PLACEHOLDER_FIRST_NAME, firstName}, // Landlord's First Name
+                            {"$TenantFName$", tenantFName},
+                            {"$TenantLName$", tenantLName},
+                            {"$PropAddress$", propAddress}
+                        };
+
+                    Utility.SendEmail(template, "landlords@rentscene.com", email,
+                                      null, subject, null, tokens, null, null, null);
+
+                    res.Result = "Email Template [" + template + "] sent successfully to [" + email + "]";
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Cntlr -> sendEmailTemplate FAILED - Exception: [" + ex.Message + "]");
+                    res.Result = "Server exception!";
+                }
+            }
+
+            return res;
+        }
+
+
+
+        #region UNUSED METHODS
+
+        [HttpPost]
+        [ActionName("PayBackTransaction")]
+        public string PayBackTransaction(string memberId, string accessToken, string transactionId, string userResponse, GeoLocation location)
+        {
+            string res = "";
+
+            if (CommonHelper.IsValidRequest(accessToken, memberId))
+            {
+                try
+                {
+                    Logger.Info("Service Cntlr -> PayBackTransaction Fired - MemberID: [" + memberId + "], TransID: [" + transactionId + "]");
+                    var tda = new TransactionsDataAccess();
+                    res = tda.PayBackTransaction(transactionId, userResponse, location);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Cntlr -> PayBackTransaction FAILED - MemberID: [" + memberId + "], TransID: [" + transactionId + "], Exception: [" + ex + " ]");
+                    res = ex.Message;
+                }
+            }
+            else res = "Invalid OAuth 2 Access";
+
+            return res;
+        }
+
+        #endregion UNUSED METHODS
     }
 }

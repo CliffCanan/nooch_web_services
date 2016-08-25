@@ -12,12 +12,9 @@ namespace Nooch.Common.Entities.MobileAppInputEntities
         public bool? IsVerifiedPhone { get; set; }
         public bool IsValidProfile { get; set; }
         public bool IsBankVerified { get; set; }
-        public bool AllowPushNotifications { get; set; }
         public bool UseFacebookPicture { get; set; }
         public byte[] Picture { get; set; }
 
-        public AttachmentDto AttachmentFile { get; set; }
-        
         public string Address { get; set; }
         public string Address2 { get; set; }
         public string City { get; set; }
@@ -36,16 +33,5 @@ namespace Nooch.Common.Entities.MobileAppInputEntities
         public string FacebookAcctLogin { get; set; }
         public string Photo { get; set; }
         public string PinNumber { get; set; }
-        public string AuthenticationKey { get; set; }
-    }
-
-    public class AttachmentDto
-    {
-        public int ContentLength { get; set; }
-        public string MemberId { get; set; }
-        public string FileContent { get; set; }
-        public string FileExtension { get; set; }
-        public string DateOfBirth { get; set; }
-        public string AuthenticationKey { get; set; }
     }
 }
