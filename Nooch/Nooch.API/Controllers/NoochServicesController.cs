@@ -418,62 +418,53 @@ namespace Nooch.API.Controllers
 
 
         [HttpGet]
-        [ActionName("GetMemberDetails")]
-        public MemberDto GetMemberDetails(string memberId, string accessToken)
+        [ActionName("GetUserDetailsForApp")]
+        public userDetailsForMobileApp GetUserDetailsForApp(string memberId, string accessToken)
         {
-            Logger.Info("Service Cntlr -> GetMemberDetails - MemberID: [" + memberId + "]");
+            Logger.Info("Service Cntlr -> GetUserDetailsForApp - MemberID: [" + memberId + "]");
 
             if (CommonHelper.IsValidRequest(accessToken, memberId))
             {
                 try
                 {
-                    var memberEntity = CommonHelper.GetMemberDetails(memberId);
+                    var res = new userDetailsForMobileApp();
+
+                    // Get Member's Details
+                    var memberObj = CommonHelper.GetMemberDetails(memberId);
 
                     // Get Synapse Bank Account Info
-                    var synapseBank = CommonHelper.GetSynapseBankDetails(memberId);
+                    var synUserDetails = CommonHelper.GetSynapseCreateaUserDetails(memberId);
+                    var synBankDetails = CommonHelper.GetSynapseBankDetails(memberId);
 
-                    string accountstatus = "";
-                    if (synapseBank != null)
-                    {
-                        // Now check this bank's status. 
-                        // CLIFF (10/7/15): If the user's ID is verified (after sending SSN info to Synapse), then consider the bank Verified as well
-                        if (memberEntity.IsVerifiedWithSynapse == true) accountstatus = "Verified";
-                        else accountstatus = synapseBank.Status;
-                    }
+                    res.memberId = memberObj.MemberId.ToString();
+                    res.status = memberObj.Status;
+                    res.email = CommonHelper.GetDecryptedData(memberObj.UserName);
+                    res.firstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName));
+                    res.lastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.LastName));
+                    res.userPicture = memberObj.Photo ?? Path.GetFileName("gv_no_photo.jpg");
+                    res.pin = memberObj.PinNumber;
 
-                    bool b = (synapseBank != null) ? true : false;
+                    res.hasSynapseUserAccount = (synUserDetails != null && synUserDetails.access_token != null);
+                    res.hasSynapseBank = synBankDetails != null;
+                    res.isBankVerified = synBankDetails != null && synBankDetails.Status == "Verified";
+                    res.bankStatus = synBankDetails != null ? synBankDetails.Status : "Not Attached";
+                    res.synUserPermission = synUserDetails != null ? synUserDetails.permission : "";
+                    res.synBankAllowed = synBankDetails != null ? synBankDetails.allowed : "";
 
-                    // Create Member Object to return to the app
-                    var member = new MemberDto
-                    {
-                        MemberId = memberEntity.MemberId.ToString(),
-                        DateCreated = memberEntity.DateCreated,
-                        UserName = CommonHelper.GetDecryptedData(memberEntity.UserName),
-                        Status = memberEntity.Status,
-                        FirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberEntity.FirstName)),
-                        LastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberEntity.LastName)),
-                        PhotoUrl = memberEntity.Photo ?? Path.GetFileName("gv_no_photo.jpg"),
-                        LastLocationLat = memberEntity.LastLocationLat,
-                        LastLocationLng = memberEntity.LastLocationLng,
-                        IsRequiredImmediatley = memberEntity.IsRequiredImmediatley.ToString(),
-                        FacebookAccountLogin = memberEntity.FacebookAccountLogin != null ? CommonHelper.GetDecryptedData(memberEntity.FacebookAccountLogin) : "",
-                        IsSynapseBankAdded = b,
-                        SynapseBankStatus = accountstatus,
-                        IsVerifiedWithSynapse = memberEntity.IsVerifiedWithSynapse,
-                        IsVerifiedPhone = memberEntity.IsVerifiedPhone == true ? true : false,
-                        IsSSNAdded = memberEntity.SSN != null,
+                    res.isProfileComplete = !string.IsNullOrEmpty(memberObj.Address) &&
+                                            !string.IsNullOrEmpty(memberObj.City) &&
+                                            !string.IsNullOrEmpty(memberObj.Zipcode) &&
+                                            !string.IsNullOrEmpty(memberObj.ContactNumber) &&
+                                            !string.IsNullOrEmpty(memberObj.SSN) &&
+                                            memberObj.DateOfBirth != null;
+                    res.isRequiredImmediately = memberObj.IsRequiredImmediatley ?? false;
+                    res.isVerifiedPhone = memberObj.IsVerifiedPhone == true ? true : false;
 
-                        // CC (8/1/16): Commenting out these fields since they aren't needed in the mobile app (but can't delete the fields in MemberDTO
-                        //              b/c they are used for landing page services.
-                        //DateOfBirth = (memberEntity.DateOfBirth == null) ? "" : Convert.ToDateTime(memberEntity.DateOfBirth).ToString("MM/dd/yyyy"),
-                        //DeviceToken = memberEntity.DeviceToken
-                    };
-
-                    return member;
+                    return res;
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Cntlr -> GetMemberDetails FAILED - MemberID: [" + memberId + "], Exception: [" + ex.InnerException + "]");
+                    Logger.Error("Service Cntlr -> GetUserDetailsForApp FAILED - MemberID: [" + memberId + "], Exception: [" + ex.InnerException + "]");
                     throw new Exception("Server Error");
                 }
             }

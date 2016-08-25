@@ -781,20 +781,17 @@ namespace Nooch.Common
         /// <returns></returns>
         public static SynapseCreateUserResult GetSynapseCreateaUserDetails(string memberId)
         {
-            Logger.Info("Common Helper -> GetSynapseCreateaUserDetails Fired - MemberId: [" + memberId + "]");
+            //Logger.Info("Common Helper -> GetSynapseCreateaUserDetails Fired - MemberId: [" + memberId + "]");
 
             var id = Utility.ConvertToGuid(memberId);
 
-            var memberObj = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
+            var memberObj = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == id &&
+                                                                                    m.IsDeleted == false);
             if (memberObj != null)
-            {
                 _dbContext.Entry(memberObj).Reload();
-            }
             else
-            {
                 Logger.Error("Common Helper -> GetSynapseCreateaUserDetails FAILED - No Synapse Create " +
                              "User Record found for MemberId: [" + memberId + "]");
-            }
 
             return memberObj;
         }
