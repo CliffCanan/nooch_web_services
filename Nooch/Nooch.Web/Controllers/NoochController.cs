@@ -1074,13 +1074,12 @@ namespace Nooch.Web.Controllers
             {
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
                 string serviceMethod = "GetTransactionDetailByIdAndMoveMoneyForNewUserDeposit?TransactionId=" + transId +
-                                       "&MemberIdAfterSynapseAccountCreation=" + memId +
+                                       "&MemberId=" + memId +
                                        "&TransactionType=SentToNewUser&recipMemId=";
 
                 if ((res.usrTyp == "Existing" || res.usrTyp == "Tenant") &&
                      res.payeeMemId.Length > 5)
                     serviceMethod = serviceMethod + res.payeeMemId;
-
 
                 Logger.Info("DepositMoneyComplete Page -> finishTransaction - About to Query Nooch Service to move money - URL: [" +
                              String.Concat(serviceUrl, serviceMethod) + "]");
@@ -1498,23 +1497,22 @@ namespace Nooch.Web.Controllers
                     }
                     else
                     {
-                        Logger.Error("PayRequestComplete Page -> ERROR - 'mem_id' in query string did not have 2 parts as expected - [mem_id Parameter: " + Request.QueryString["mem_id"] + "]");
-                        Response.Write("<script>var errorFromCodeBehind = '2';</script>");
+                        Logger.Error("PayRequestComplete Page -> ERROR - 'mem_id' in query string did not have 2 parts as expected - mem_id Param: [" + Request.QueryString["mem_id"] + "]");
+                        rpc.errorMsg = "2";
                     }
                 }
                 else
                 {
                     // something wrong with query string
-                    Logger.Error("PayRequestComplete Page FAILED -> ERROR - 'mem_id' in query string was NULL or empty - mem_id Parameter: " + rpc.memId + "]");
-                    Response.Write("<script>var errorFromCodeBehind = '1';</script>");
+                    Logger.Error("PayRequestComplete Page FAILED -> ERROR - 'mem_id' in query string was NULL or empty - mem_id Param: [" + rpc.memId + "]");
+                    rpc.errorMsg = "1";
                 }
             }
             catch (Exception ex)
             {
-                Logger.Error("PayRequestComplete Page -> OUTER EXCEPTION - mem_id Param: [" +
-                             rpc.memId + "], Exception: [" + ex + "]");
+                Logger.Error("PayRequestComplete Page -> OUTER EXCEPTION - mem_id Param: [" + rpc.memId + "], Exception: [" + ex + "]");
                 rpc.payinfobar = false;
-                Response.Write("<script>var errorFromCodeBehind = '1';</script>");
+                rpc.errorMsg = "1";
             }
 
             ViewData["OnLoaddata"] = rpc;
@@ -1522,20 +1520,20 @@ namespace Nooch.Web.Controllers
         }
 
 
-        private ResultMoveMoneyFromLandingPageComplete completeTrans(string MemberIdAfterSynapseAccountCreation, string TransactionId, ResultMoveMoneyFromLandingPageComplete resultPayComplete)
+        private ResultMoveMoneyFromLandingPageComplete completeTrans(string MemberIdAfterSynapseAccountCreation, string TransId, ResultMoveMoneyFromLandingPageComplete resultPayComplete)
         {
             ResultMoveMoneyFromLandingPageComplete res = resultPayComplete;
             res.paymentSuccess = false;
+            res.errorMsg = "ok";
 
             try
             {
                 string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-                string serviceMethod = "GetTransactionDetailByIdAndMoveMoneyForNewUserDeposit?TransactionId=" + TransactionId +
-                                       "&MemberIdAfterSynapseAccountCreation=" + MemberIdAfterSynapseAccountCreation +
+                string serviceMethod = "GetTransactionDetailByIdAndMoveMoneyForNewUserDeposit?TransactionId=" + TransId +
+                                       "&MemberId=" + MemberIdAfterSynapseAccountCreation +
                                        "&TransactionType=RequestToNewUser&recipMemId=";
 
-                if ((res.usrTyp == "Existing" || res.usrTyp == "Tenant") &&
-                     res.payeeMemId.Length > 5)
+                if ((res.usrTyp == "Existing" || res.usrTyp == "Tenant") && res.payeeMemId.Length > 5)
                     serviceMethod = serviceMethod + res.payeeMemId;
 
                 Logger.Info("PayRequestComplete Page -> completeTrans - About to Query Nooch Service to move money - URL: [" +
@@ -1547,20 +1545,20 @@ namespace Nooch.Web.Controllers
                 {
                     if (moveMoneyResult.synapseTransResult == "Success")
                     {
-                        Logger.Info("PayRequestComplete Page -> PAYMENT COMPLETED SUCCESSFULLY - TransID: [" + TransactionId + "]");
+                        Logger.Info("PayRequestComplete Page -> PAYMENT COMPLETED SUCCESSFULLY - TransID: [" + TransId + "]");
                         res.paymentSuccess = true;
                     }
                     else
                     {
-                        Logger.Error("PayRequestComplete Page -> completeTrans FAILED - TransID: [" + TransactionId + "]");
-                        Response.Write("<script>errorFromCodeBehind = 'failed';</script>");
+                        Logger.Error("PayRequestComplete Page -> completeTrans FAILED - TransID: [" + TransId + "]");
+                        res.errorMsg = "failed";
                     }
                 }
             }
             catch (Exception ex)
             {
-                Logger.Error("PayRequestComplete Page -> completeTrans FAILED - TransID: [" + TransactionId +
-                             "], Exception: [" + ex + "]");
+                Logger.Error("PayRequestComplete Page -> completeTrans FAILED - TransID: [" + TransId + "], Exception: [" + ex + "]");
+                res.errorMsg = ex.Message;
             }
 
             return res;
@@ -1581,13 +1579,15 @@ namespace Nooch.Web.Controllers
             {
                 Logger.Error("payRequestComplete Page -> getTransDetails FAILED - Transaction was Null - TransID: [" + TransactionId + "]");
 
-                Response.Write("<script>errorFromCodeBehind = '3';</script>");
+                rpc.errorMsg = "3";
                 rpc.IsTransactionStillPending = false;
 
                 return rpc;
             }
             else
             {
+                rpc.errorMsg = "ok";
+
                 rpc.senderImage = transaction.RecepientPhoto;
                 rpc.senderName1 = (!String.IsNullOrEmpty(transaction.RecepientName) && transaction.RecepientName.Length > 2) ?
                                     transaction.RecepientName :

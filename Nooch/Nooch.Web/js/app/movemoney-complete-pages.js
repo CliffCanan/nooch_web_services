@@ -3,34 +3,36 @@ console.log("transType is: [" + TRANS_TYPE + "]");
 var FOR_RENTSCENE = $('#rs').val();
 var COMPANY = FOR_RENTSCENE == "true" ? "Rent Scene" : "Nooch";
 var SUPPORTEMAIL = FOR_RENTSCENE == "true" ? "payments@rentscene.com" : "support@nooch.com";
+var ERROR_MSG = $('#errorMsg').val();
 
 // http://mathiasbynens.be/notes/document-head
 document.head || (document.head = document.getElementsByTagName('head')[0]);
 
-$(document).ready(function ()
-{
+$(document).ready(function () {
     console.log("errorFromCodeBehind is: " + errorFromCodeBehind);
 
-    if (FOR_RENTSCENE == "true") {
-        if ($(window).width() > 1000) {
+    if (FOR_RENTSCENE == "true")
+    {
+        if ($(window).width() > 1000)
             $('.landingHeaderLogo img').css('width', '170px');
-        }
-		
-		changeFavicon('../Assets/favicon2.ico')
+
+        changeFavicon('../Assets/favicon2.ico')
     }
 
-    if (areThereErrors() == false) {
-        if (checkIfStillPending() == true) {
-            //console.log(checkIfStillPending());
-
+    if (areThereErrors() == false)
+    {
+        if (checkIfStillPending() == true)
+        {
             var alertTitle = "";
             var alertBody = "";
-            if (TRANS_TYPE == "request") {
+            if (TRANS_TYPE == "request")
+            {
                 alertTitle = "Request Paid Successfully";
                 alertBody = "<span>Your payment has been submitted successfully and is now being processed. &nbsp;You should see this payment appear on your bank statement within 1-3 business days.</span>" +
                             "<span style=\"display:block; margin-top: 14px;\">Please contact <a href='mailto:" + SUPPORTEMAIL + "'>" + COMPANY + " Support</a> if you have any questions.</span>";
             }
-            else {
+            else
+            {
                 alertTitle = "Payment Accepted Successfully";
                 alertBody = "<span>This payment has been submitted successfully and is now being processed. &nbsp;You should see this money appear on your bank statement within 2-4 business days.</span>" +
                             "<span style=\"display:block; margin-top: 14px;\">If you have any questions, please contact <a href='mailto:" + SUPPORTEMAIL + "'>" + COMPANY + " Support</a> anytime.</span>";
@@ -46,51 +48,47 @@ $(document).ready(function ()
                 html: true
             });
         }
-        else {
-            console.log("Transaction no longer pending!");
-        }
+        else console.log("Transaction no longer pending!");
     }
-    else {
-        console.log("59. There was an error! :-(");
-    }
+    else console.log("59. There was an error! :-(");
 
     // Format the Memo if present
-    if ($("#transMemo").text().length > 0) {
+    if ($("#transMemo").text().length > 0)
         $("#transMemo").prepend("<i class='fa fa-fw fa-comment fa-flip-horizontal'>&nbsp;</i><em>&quot;</em>").append("<em>&quot;</em>");
-    }
 });
 
-function areThereErrors()
-{
-    if (errorFromCodeBehind != '0') 
-	{
+function areThereErrors() {
+    if (ERROR_MSG != 'ok')
+    {
         var alertTitle = "";
         var alertBodyText = "";
 
         console.log('areThereErrors -> YES -> errorFromCodeBehind is: [' + errorFromCodeBehind + "]");
 
-        if (errorFromCodeBehind == '1') {
+        if (errorFromCodeBehind == "1")
+        {
             alertTitle = "Errors Are The Worst!";
             alertBodyText = "We had trouble finding that transaction. &nbsp;Please try again and if you continue to see this message, contact <span style='font-weight:600;'>Nooch Support</span>:" +
                             "<br/><a href='mailto:" + SUPPORTEMAIL + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + SUPPORTEMAIL + "</a>";
         }
-        else if (errorFromCodeBehind == '2') {
+        else if (errorFromCodeBehind == "2")
+        {
             alertTitle = "Errors Are The Worst!";
             alertBodyText = "Terrible sorry, but it looks like we had trouble processing your data. &nbsp;Please refresh this page and try again and if you continue to see this message, contact <span style='font-weight:600;'>" +
 							COMPANY + " Support</span>:<br/><a href='mailto:" + SUPPORTEMAIL + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + SUPPORTEMAIL + "</a>";
         }
-        else if (errorFromCodeBehind == 'failed') {
+        else if (errorFromCodeBehind == "failed")
+        {
             alertTitle = "Errors Are Annoying";
-            if (TRANS_TYPE == "request") {
+            if (TRANS_TYPE == "request")
                 alertBodyText = "Our apologies, but we were not able to complete your payment request. &nbsp;Please refresh this page and try again and if you continue to see this message, contact <span style='font-weight:600;'>" +
 								COMPANY + " Support</span>:<br/><a href='mailto:" + SUPPORTEMAIL + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + SUPPORTEMAIL + "</a>";
-            }
-            else {
+            else
                 alertBodyText = "Our apologies, but we were not able to deposit money in your account. &nbsp;Please refresh this page and try again and if you continue to see this message, contact <span style='font-weight:600;'>" +
 								COMPANY + " Support</span>:<br/><a href='mailto:" + SUPPORTEMAIL + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + SUPPORTEMAIL + "</a>";
-            }
         }
-        else {
+        else
+        {
             alertTitle = "Errors are annoying";
             alertBodyText = "Very sorry about this, but we're having trouble processing your information, but the exact reason is not clear.  Please try again, or if this message persists, contact <a href='" + SUPPORTEMAIL + "' target='_blank'>" + SUPPORTEMAIL + "</a> for additional help.";
         }
@@ -114,9 +112,8 @@ function areThereErrors()
             allowEscapeKey: false,
             html: true
         }, function (isConfirm) {
-            if (!isConfirm) {
+            if (!isConfirm)
                 window.open("mailto:" + SUPPORTEMAIL);
-            }
         });
 
         return true;
@@ -126,8 +123,7 @@ function areThereErrors()
     return false;
 }
 
-function checkIfStillPending()
-{
+function checkIfStillPending() {
     if (isStillPending == false) // Set on Code Behind page
     {
         $("#depositInstructions").html('Looks like this request is no longer pending. &nbsp;Either you already responded by accepting or rejecting, or the sender cancelled it.');
@@ -151,19 +147,15 @@ function checkIfStillPending()
         return false;
     }
     else // The transaction IS still pending
-    {
         return true;
-    }
 }
 
 function changeFavicon(src) {
-  var link = document.createElement('link'),
-   oldLink = document.getElementById('dynamic-favicon');
-  link.id = 'dynamic-favicon';
-  link.rel = 'shortcut icon';
-  link.href = src;
-  if (oldLink) {
-    document.head.removeChild(oldLink);
-  }
-  document.head.appendChild(link);
+    var link = document.createElement('link'),
+     oldLink = document.getElementById('dynamic-favicon');
+    link.id = 'dynamic-favicon';
+    link.rel = 'shortcut icon';
+    link.href = src;
+    if (oldLink) document.head.removeChild(oldLink);
+    document.head.appendChild(link);
 }

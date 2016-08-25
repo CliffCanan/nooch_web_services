@@ -11,6 +11,7 @@ namespace Nooch.Common.Entities
         public bool paymentSuccess { get; set; }
         public bool payinfobar { get; set; }
         public bool IsTransactionStillPending { get; set; }
+        public string errorMsg { get; set; }
         public string memId { get; set; }
         public string rs { get; set; }
         public string senderImage { get; set; }
