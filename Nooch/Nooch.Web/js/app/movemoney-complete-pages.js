@@ -1,23 +1,45 @@
 var TRANS_TYPE = $('#transType').val();
-console.log("transType is: [" + TRANS_TYPE + "]");
-var FOR_RENTSCENE = $('#rs').val();
-var COMPANY = FOR_RENTSCENE == "true" ? "Rent Scene" : "Nooch";
-var SUPPORTEMAIL = FOR_RENTSCENE == "true" ? "payments@rentscene.com" : "support@nooch.com";
+var COMPANY_VAL = $('#company').val();
+var COMPANY_FORMATTED = "";
+var SUPPORT_EMAIL = "";
+if (COMPANY_VAL == "rentscene")
+{
+    COMPANY_FORMATTED = "Rent Scene";
+    SUPPORT_EMAIL = "payments@rentscene.com";
+}
+else if (COMPANY_VAL == "habitat")
+{
+    COMPANY_FORMATTED = "Habitat";
+    SUPPORT_EMAIL = "support@nooch.com";
+}
+else
+{
+    COMPANY_FORMATTED = "Nooch";
+    SUPPORT_EMAIL = "support@nooch.com";
+}
+
 var ERROR_MSG = $('#errorMsg').val();
+var STILL_PENDING = $('#isStillPending').val();
 
 // http://mathiasbynens.be/notes/document-head
 document.head || (document.head = document.getElementsByTagName('head')[0]);
 
 $(document).ready(function () {
-    console.log("errorFromCodeBehind is: " + errorFromCodeBehind);
+    console.log("ERROR_MSG is: [" + ERROR_MSG + "]");
 
-    if (FOR_RENTSCENE == "true")
+    if (COMPANY_VAL == "rentscene")
     {
-        if ($(window).width() > 1000)
-            $('.landingHeaderLogo img').css('width', '170px');
+        if ($(window).width() > 1000) $('.landingHeaderLogo img').css('width', '170px');
 
-        changeFavicon('../Assets/favicon2.ico')
+        document.title = TRANS_TYPE == "request" ? "Request Paid | Rent Scene Payments" : "Payment Accepted | Rent Scene Payments"
+        changeFavicon('../Assets/favicon2.ico');
     }
+    else if (COMPANY_VAL == "habitat")
+    {
+        document.title = TRANS_TYPE == "request" ? "Request Paid | Habitat Payments" : "Payment Accepted | Habitat Payments"
+        changeFavicon('../Assets/favicon-habitat.png')
+    }
+
 
     if (areThereErrors() == false)
     {
@@ -29,13 +51,13 @@ $(document).ready(function () {
             {
                 alertTitle = "Request Paid Successfully";
                 alertBody = "<span>Your payment has been submitted successfully and is now being processed. &nbsp;You should see this payment appear on your bank statement within 1-3 business days.</span>" +
-                            "<span style=\"display:block; margin-top: 14px;\">Please contact <a href='mailto:" + SUPPORTEMAIL + "'>" + COMPANY + " Support</a> if you have any questions.</span>";
+                            "<span style=\"display:block; margin-top: 14px;\">Please contact <a href='mailto:" + SUPPORT_EMAIL + "'>" + COMPANY_FORMATTED + " Support</a> if you have any questions.</span>";
             }
             else
             {
                 alertTitle = "Payment Accepted Successfully";
                 alertBody = "<span>This payment has been submitted successfully and is now being processed. &nbsp;You should see this money appear on your bank statement within 2-4 business days.</span>" +
-                            "<span style=\"display:block; margin-top: 14px;\">If you have any questions, please contact <a href='mailto:" + SUPPORTEMAIL + "'>" + COMPANY + " Support</a> anytime.</span>";
+                            "<span style=\"display:block; margin-top: 14px;\">If you have any questions, please contact <a href='mailto:" + SUPPORT_EMAIL + "'>" + COMPANY_FORMATTED + " Support</a> anytime.</span>";
             }
 
             swal({
@@ -50,7 +72,7 @@ $(document).ready(function () {
         }
         else console.log("Transaction no longer pending!");
     }
-    else console.log("59. There was an error! :-(");
+    else console.log("54. There was an error! :-(");
 
     // Format the Memo if present
     if ($("#transMemo").text().length > 0)
@@ -69,34 +91,35 @@ function areThereErrors() {
         {
             alertTitle = "Errors Are The Worst!";
             alertBodyText = "We had trouble finding that transaction. &nbsp;Please try again and if you continue to see this message, contact <span style='font-weight:600;'>Nooch Support</span>:" +
-                            "<br/><a href='mailto:" + SUPPORTEMAIL + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + SUPPORTEMAIL + "</a>";
+                            "<br/><a href='mailto:" + SUPPORT_EMAIL + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + SUPPORT_EMAIL + "</a>";
         }
         else if (errorFromCodeBehind == "2")
         {
             alertTitle = "Errors Are The Worst!";
             alertBodyText = "Terrible sorry, but it looks like we had trouble processing your data. &nbsp;Please refresh this page and try again and if you continue to see this message, contact <span style='font-weight:600;'>" +
-							COMPANY + " Support</span>:<br/><a href='mailto:" + SUPPORTEMAIL + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + SUPPORTEMAIL + "</a>";
+							COMPANY_FORMATTED + " Support</span>:<br/><a href='mailto:" + SUPPORT_EMAIL + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + SUPPORT_EMAIL + "</a>";
         }
         else if (errorFromCodeBehind == "failed")
         {
             alertTitle = "Errors Are Annoying";
             if (TRANS_TYPE == "request")
-                alertBodyText = "Our apologies, but we were not able to complete your payment request. &nbsp;Please refresh this page and try again and if you continue to see this message, contact <span style='font-weight:600;'>" +
-								COMPANY + " Support</span>:<br/><a href='mailto:" + SUPPORTEMAIL + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + SUPPORTEMAIL + "</a>";
+                alertBodyText = "Our apologies, but we were not able to complete your payment. &nbsp;Please refresh this page and try again and if you continue to see this message, contact <span style='font-weight:600;'>" +
+								COMPANY_FORMATTED + " Support</span>:<br/><a href='mailto:" + SUPPORT_EMAIL + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + SUPPORT_EMAIL + "</a>";
             else
                 alertBodyText = "Our apologies, but we were not able to deposit money in your account. &nbsp;Please refresh this page and try again and if you continue to see this message, contact <span style='font-weight:600;'>" +
-								COMPANY + " Support</span>:<br/><a href='mailto:" + SUPPORTEMAIL + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + SUPPORTEMAIL + "</a>";
+								COMPANY_FORMATTED + " Support</span>:<br/><a href='mailto:" + SUPPORT_EMAIL + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + SUPPORT_EMAIL + "</a>";
         }
         else
         {
             alertTitle = "Errors are annoying";
-            alertBodyText = "Very sorry about this, but we're having trouble processing your information, but the exact reason is not clear.  Please try again, or if this message persists, contact <a href='" + SUPPORTEMAIL + "' target='_blank'>" + SUPPORTEMAIL + "</a> for additional help.";
+            alertBodyText = "Very sorry about this, but we're having trouble processing your information, but the exact reason is not clear. " +
+                            "Please try again, or if this message persists, contact <a href='" + SUPPORT_EMAIL + "' target='_blank'>" + SUPPORT_EMAIL + "</a> for additional help.";
         }
 
         // Position the footer absolutely so it's at the bottom of the screen (it's normally pushed down by the body content)
         $('.footer').css({
             position: 'fixed',
-            bottom: '3%'
+            bottom: '1%'
         })
 
         swal({
@@ -107,13 +130,12 @@ function areThereErrors() {
             confirmButtonColor: "#3fabe1",
             confirmButtonText: "OK",
             cancelButtonText: "Contact Support",
-            closeOnConfirm: true,
             closeOnCancel: false,
             allowEscapeKey: false,
             html: true
         }, function (isConfirm) {
             if (!isConfirm)
-                window.open("mailto:" + SUPPORTEMAIL);
+                window.open("mailto:" + SUPPORT_EMAIL);
         });
 
         return true;
@@ -124,22 +146,21 @@ function areThereErrors() {
 }
 
 function checkIfStillPending() {
-    if (isStillPending == false) // Set on Code Behind page
+    if (STILL_PENDING == "false")
     {
         $("#depositInstructions").html('Looks like this request is no longer pending. &nbsp;Either you already responded by accepting or rejecting, or the sender cancelled it.');
 
-        var bodyText = '<p>Looks like this payment request is no longer pending.</p>' +
+        var bodyText = '<p>Looks like this payment is no longer pending.</p>' +
                        '<p class=\"f-600 m-b-10\">This happened because either:</p>' +
                        '<div><span class="text-primary">•</span> &nbsp;You already responded by accepting or rejecting, or...<br/>' +
                        '<span class="text-primary">•</span> &nbsp;<span class=\"f-500\">' + $('#senderName1').text().trim() + '</span> cancelled it already.</div>';
 
         swal({
-            title: "Request Expired",
+            title: "Payment Expired",
             text: bodyText,
             type: "error",
             confirmButtonColor: "#3fabe1",
             confirmButtonText: "Ok",
-            closeOnConfirm: true,
             allowEscapeKey: false,
             html: true
         });
