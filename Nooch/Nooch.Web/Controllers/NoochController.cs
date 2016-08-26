@@ -972,7 +972,7 @@ namespace Nooch.Web.Controllers
                         if (isForRentScene == "true")
                         {
                             Logger.Info("DepositMoneyComplete Page -> RENT SCENE Transaction Detected - TransID: [" + transId + "]");
-                            res.rs = "true";
+                            res.company = "true";
                         }
 
                         // Getting transaction details to check if transaction is still pending
@@ -1484,7 +1484,7 @@ namespace Nooch.Web.Controllers
                         if (isForRentScene)
                         {
                             Logger.Info("PayRequestComplete Page -> RENT SCENE Transaction Detected - TransID: [" + tr_id + "]");
-                            rpc.rs = "true";
+                            rpc.company = "true";
                         }
 
                         // Getting transaction details to check if transaction is still pending
@@ -1577,7 +1577,7 @@ namespace Nooch.Web.Controllers
 
             if (transaction == null)
             {
-                Logger.Error("payRequestComplete Page -> getTransDetails FAILED - Transaction was Null - TransID: [" + TransactionId + "]");
+                Logger.Error("payRequestComplete Page -> getTransDetails FAILED - Transaction was NULL - TransID: [" + TransactionId + "]");
 
                 rpc.errorMsg = "3";
                 rpc.IsTransactionStillPending = false;
