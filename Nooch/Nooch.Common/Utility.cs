@@ -343,27 +343,75 @@ namespace Nooch.Common
         }
 
 
-        public static string SendNotificationMessage(string alertText, int badge, string sound, string devicetokens, string username, string password)
+        public static string SendNotificationMessage(string alertText, string alertHeading, string devicetoken, string deviceType = "I")
         {
-            // Sample JSON Input...
-            // string json = "{\"aps\":{\"badge\":356,\"alert\":\"this 4 rd post\"},\"device_tokens\":[\"DC59F629CBAF8D88418C9FCD813F240B72311C6EDF27FAED0F5CB4ADB9F4D3C9\"]}";
+
             try
             {
-                string json = new JavaScriptSerializer().Serialize(new
+                var request = WebRequest.Create("https://onesignal.com/api/v1/notifications") as HttpWebRequest;
+                request.KeepAlive = true;
+                request.Method = "POST";
+                request.ContentType = "application/json";
+                string post_auth = "Basic " + Utility.GetValueFromConfig("OneSignalRestKey");
+                request.Headers.Add("authorization", post_auth);
+
+                var serializer = new JavaScriptSerializer();
+
+                byte[] byteArray = new byte[0];
+                if (deviceType == "I")
                 {
-                    app_id = username,
-                    isIos = true,
-                    include_ios_tokens = new string[] { devicetokens },
-                    contents = new GameThriveMsgContent() { en = alertText }
-                });
 
-                var cli = new WebClient();
-                cli.Headers[HttpRequestHeader.ContentType] = "application/json";
+                    var obj = new
+                    {
+                        app_id = Utility.GetValueFromConfig("OneSignalAppId"),
+                        include_ios_tokens = new string[] { devicetoken },
+                        contents = new { en = alertText },
+                        headings = new { en = alertHeading }
+                    };
+                    var param = serializer.Serialize(obj);
+                    byteArray = Encoding.UTF8.GetBytes(param);
 
-                string response = cli.UploadString("https://gamethrive.com/api/v1/notifications", json);
-                GameThriveResponseClass gamethriveresponse = JsonConvert.DeserializeObject<GameThriveResponseClass>(response);
+                }
+                else
+                {
+
+                    var obj = new
+                    {
+                        app_id = Utility.GetValueFromConfig("OneSignalAppId"),
+                        include_android_reg_ids = new string[] { devicetoken },
+                        contents = new { en = alertText },
+                        headings = new { en = alertHeading }
+                    };
+                    var param = serializer.Serialize(obj);
+                    byteArray = Encoding.UTF8.GetBytes(param);
+
+                }
+                string responseContent = null;
+                try
+                {
+                    using (var writer = request.GetRequestStream())
+                    {
+                        writer.Write(byteArray, 0, byteArray.Length);
+                    }
+
+                    using (var response = request.GetResponse() as HttpWebResponse)
+                    {
+                        using (var reader = new StreamReader(response.GetResponseStream()))
+                        {
+                            responseContent = reader.ReadToEnd();
+                        }
+                    }
+                }
+                catch (WebException ex)
+                {
+                    //System.Diagnostics.Debug.WriteLine(ex.Message);
+                    //System.Diagnostics.Debug.WriteLine(new StreamReader(ex.Response.GetResponseStream()).ReadToEnd());
+                    Logger.Info("Utility -> SendNotificationMessage (For SMS) FAILED - Exception: [" + ex.Message + "]");
+                }
 
                 return "1";
+
+
             }
             catch (Exception ex)
             {

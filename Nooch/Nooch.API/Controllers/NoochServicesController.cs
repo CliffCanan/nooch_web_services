@@ -5093,11 +5093,21 @@ namespace Nooch.API.Controllers
             return CommonHelper.GetEncryptedData(token);
         }
 
+        //[HttpGet]
+        //[ActionName("TestPush")]
+        //public void TestPush()
+        //{
+        //    Utility.SendNotificationMessage("alert text", "alert title", "e1451cfc18684704d03437a74a2a2725491a45364d2915a75c516bbf1c0cac31", "I");
 
+        //    Utility.SendNotificationMessage("alert text", "alert title", "APA91bHgOALjYqZ7DLV8jbu6qOdMF0G-v35La0IPuauD87poG9zOFZnXfTVuuj9vTrgrIXBFf3mEyV5Glnl85u-7wuzkJud_qF2uM2i4Rje01aUfoEUSG88fzaeydu6H1m8lAioFCjnA", "A");
+        //}
+
+
+        // added deviceOS parameter to know which operating system user currently using, this will help to send appropriate push message to device
         [HttpGet]
         [ActionName("LoginRequest")]
         public StringResult LoginRequest(string userName, string pwd, Boolean rememberMeEnabled, decimal lat,
-                                         decimal lng, string udid, string devicetoken)
+                                         decimal lng, string udid, string devicetoken,string deviceOS)
         {
             StringResult res = new StringResult();
 
@@ -5106,7 +5116,7 @@ namespace Nooch.API.Controllers
                 Logger.Info("Service Cntlr -> LoginRequest - userName: [" + userName + "], UDID: [" + udid + "], DeviceToken: [" + devicetoken + "]");
 
                 var mda = new MembersDataAccess();
-                string cookie = mda.LoginRequest(userName, pwd, rememberMeEnabled, lat, lng, udid, devicetoken);
+                string cookie = mda.LoginRequest(userName, pwd, rememberMeEnabled, lat, lng, udid, devicetoken, deviceOS);
 
                 if (cookie == "Success")
                 {

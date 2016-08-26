@@ -235,6 +235,7 @@
           <Property Name="GoogleUserId" Type="varchar(max)" />
           <Property Name="cipTag" Type="varchar(max)" />
           <Property Name="isRentScene" Type="bit" />
+          <Property Name="DeviceType" Type="char" MaxLength="1" />
         </EntityType>
         <EntityType Name="MembersIPAddresses">
           <Key>
@@ -925,6 +926,7 @@
           <NavigationProperty Name="Transactions1" Relationship="NOOCHModel.FK_Transactions_Members3" FromRole="Member" ToRole="Transaction" />
           <Property Name="cipTag" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" />
           <Property Name="isRentScene" Type="Boolean" />
+          <Property Name="DeviceType" Type="String" MaxLength="1" FixedLength="true" Unicode="false" />
         </EntityType>
         <EntityType Name="User">
           <Key>
@@ -1639,6 +1641,7 @@
           <EntitySetMapping Name="Members">
             <EntityTypeMapping TypeName="NOOCHModel.Member">
               <MappingFragment StoreEntitySet="Members">
+                <ScalarProperty Name="DeviceType" ColumnName="DeviceType" />
                 <ScalarProperty Name="isRentScene" ColumnName="isRentScene" />
                 <ScalarProperty Name="cipTag" ColumnName="cipTag" />
                 <ScalarProperty Name="MemberId" ColumnName="MemberId" />

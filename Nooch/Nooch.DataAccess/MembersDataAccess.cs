@@ -1037,7 +1037,7 @@ namespace Nooch.DataAccess
             }
         }
 
-        public string LoginRequest(string userName, string password, Boolean rememberMeEnabled, decimal lat, decimal lng, string udid, string devicetoken)
+        public string LoginRequest(string userName, string password, Boolean rememberMeEnabled, decimal lat, decimal lng, string udid, string devicetoken, string deviceOS)
         {
             Logger.Info("MDA -> LoginRequest Fired - UserName: [" + userName + "], UDID: [" + udid + "]");
 
@@ -1129,10 +1129,13 @@ namespace Nooch.DataAccess
 
                             if (!String.IsNullOrEmpty(devicetoken))
                                 memberEntity.DeviceToken = devicetoken;
+                            if (!String.IsNullOrEmpty(deviceOS))
+                                memberEntity.DeviceType = deviceOS;
 
                             memberEntity.LastLocationLat = lat;
                             memberEntity.LastLocationLng = lng;
                             memberEntity.IsOnline = true;
+                            
 
                             var currentTimeMinus24Hours = DateTime.Now.AddHours(-24);
                             int loginRetryCountInDb = memberEntity.InvalidLoginAttemptCount.Equals(null)
