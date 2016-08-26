@@ -30,7 +30,6 @@ $(document).ready(function () {
     if (COMPANY_VAL == "rentscene")
     {
         if ($(window).width() > 1000) $('.landingHeaderLogo img').css('width', '170px');
-
         document.title = TRANS_TYPE == "request" ? "Request Paid | Rent Scene Payments" : "Payment Accepted | Rent Scene Payments"
         changeFavicon('../Assets/favicon2.ico');
     }

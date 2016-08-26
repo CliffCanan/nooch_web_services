@@ -11,7 +11,8 @@ namespace Nooch.Common.Entities
         public bool showPaymentInfo { get; set; }
         public bool PayorInitialInfo { get; set; }
         public bool nonRegUsrContainer { get; set; }
-        public bool rs { get; set; }
+        public string errorMsg { get; set; }
+        public string company { get; set; }
         public string bnkName { get; set; }
         public string bnkNickname { get; set; }
         public string cip { get; set; }
