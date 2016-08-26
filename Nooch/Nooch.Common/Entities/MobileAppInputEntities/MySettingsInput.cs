@@ -28,6 +28,7 @@ namespace Nooch.Common.Entities.MobileAppInputEntities
         public string bankStatus { get; set; }
         public string synUserPermission { get; set; }
         public string synBankAllowed { get; set; }
+        public DateTime DateCreated { get; set; }
     }
 
 
