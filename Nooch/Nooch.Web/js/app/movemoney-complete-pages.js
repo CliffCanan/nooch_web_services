@@ -30,7 +30,6 @@ $(document).ready(function () {
     if (COMPANY_VAL == "rentscene")
     {
         if ($(window).width() > 1000) $('.landingHeaderLogo img').css('width', '170px');
-
         document.title = TRANS_TYPE == "request" ? "Request Paid | Rent Scene Payments" : "Payment Accepted | Rent Scene Payments"
         changeFavicon('../Assets/favicon2.ico');
     }
@@ -85,21 +84,21 @@ function areThereErrors() {
         var alertTitle = "";
         var alertBodyText = "";
 
-        console.log('areThereErrors -> YES -> errorFromCodeBehind is: [' + errorFromCodeBehind + "]");
+        console.log('areThereErrors -> YES -> ERROR_MSG is: [' + ERROR_MSG + "]");
 
-        if (errorFromCodeBehind == "1")
+        if (ERROR_MSG == "1")
         {
             alertTitle = "Errors Are The Worst!";
             alertBodyText = "We had trouble finding that transaction. &nbsp;Please try again and if you continue to see this message, contact <span style='font-weight:600;'>Nooch Support</span>:" +
                             "<br/><a href='mailto:" + SUPPORT_EMAIL + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + SUPPORT_EMAIL + "</a>";
         }
-        else if (errorFromCodeBehind == "2")
+        else if (ERROR_MSG == "2")
         {
             alertTitle = "Errors Are The Worst!";
             alertBodyText = "Terrible sorry, but it looks like we had trouble processing your data. &nbsp;Please refresh this page and try again and if you continue to see this message, contact <span style='font-weight:600;'>" +
 							COMPANY_FORMATTED + " Support</span>:<br/><a href='mailto:" + SUPPORT_EMAIL + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + SUPPORT_EMAIL + "</a>";
         }
-        else if (errorFromCodeBehind == "failed")
+        else if (ERROR_MSG == "failed")
         {
             alertTitle = "Errors Are Annoying";
             if (TRANS_TYPE == "request")
