@@ -11,8 +11,6 @@ var memid = $('#memId').val();
 var ISNEW = $('#isNew').val();
 var FBID = "not connected";
 
-var isUpgradeToV3 = 'false';
-
 // to be used with upload doc related stuff
 var isFileAdded = "0";
 var FileData = null;
@@ -20,18 +18,11 @@ var FileData = null;
 var isIdVerified = false;
 var isSmScrn = false;
 
+// http://mathiasbynens.be/notes/document-head
+document.head || (document.head = document.getElementsByTagName('head')[0]);
+
 $(document).ready(function () {
     if ($(window).width() < 768) isSmScrn = true;
-
-    function getParameterByName(name) {
-        name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
-        var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
-            results = regex.exec(location.search);
-        return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
-    }
-
-    isUpgradeToV3 = getParameterByName('update');
-    //console.log("isUpgradeToV3 is: [" + isUpgradeToV3 + "]");
 
     if (RENTSCENE == "rentscene")
     {
@@ -41,7 +32,6 @@ $(document).ready(function () {
         $('.landingHeaderLogo img').css('width', w);
 
         document.title = (ISNEW == "true") ? "Create Account | Rent Scene Payments" : "Update Account | Rent Scene Payments"
-
         changeFavicon('../Assets/favicon2.ico');
     }
     else if (RENTSCENE == "habitat")
@@ -52,7 +42,6 @@ $(document).ready(function () {
         $('.landingHeaderLogo img').css('width', w);
 
         document.title = "Create Account | Habitat Payments";
-
         changeFavicon('../Assets/favicon-habitat.png')
     }
     else if (ISNEW != "true")
@@ -92,62 +81,31 @@ $(document).ready(function () {
         });
         //console.log(ipusr);
 
-        if (isUpgradeToV3 == 'true')
-        {
-            swal({
-                title: "Security Upgrade Notice",
-                text: "<p>" + COMPANY + " offers a quick, secure way to pay anyone without giving them your sensitive bank or credit card information. &nbsp;Just select your bank and login to your online banking<span class='desk-only'> as you normally do</span>.</p>" +
-                      "<h4><strong class='text-success'>Benefits</strong></h4>" +
-                      "<ul class='fa-ul'><li><i class='fa-li fa fa-check'></i><strong>Faster Payments.</strong>&nbsp; Funds available by the 2nd day.</li>" +
-                      "<li><i class='fa-li fa fa-check'></i><strong>Enhanced Security.</strong>&nbsp; This upgrade includes major under-the-hood updates to keep your money safe.</li>" +
-                      "<li><i class='fa-li fa fa-check'></i><strong>Clearer Statements.</strong>&nbsp; Now the memo on your bank statement will include transaction info.</li></ul>",
-                imageUrl: "../Assets/Images/secure.svg",
-                imageSize: "194x80",
-                showCancelButton: true,
-                cancelButtonText: "Learn More",
-                closeOnCancel: false,
-                confirmButtonColor: "#3fabe1",
-                confirmButtonText: "Let's Go",
-                customClass: "upgradeNotice",
-                allowEscapeKey: false,
-                html: true
-            }, function (isConfirm) {
-                if (isConfirm)
-                    setTimeout(function () {
-                        $('input#idVer-name').focus();
-                    }, 500)
-                else
-                    window.open("https://www.nooch.com/safe");
-            });
-        }
-        else
-        {
-            swal({
-                title: "Secure, Private, & Direct Payments",
-                text: "<p>Send money without having to leave your seat! &nbsp;Secure, direct, and traceable payments when you want them. &nbsp;Please verify your identity as an authorized user of your company's account.</p>" +
-                      "<ul class='fa-ul'>" +
-                      "<li><i class='fa-li fa fa-check'></i>We don't see or store your bank credentials</li>" +
-                      "<li><i class='fa-li fa fa-check'></i>We use <strong>bank-grade encryption</strong> to secure all data</li>" +
-                      "<li><i class='fa-li fa fa-check'></i>The recipient will never see your bank credentials</li></ul>",
-                imageUrl: "../Assets/Images/secure.svg",
-                imageSize: "194x80",
-                showCancelButton: false,
-                cancelButtonText: "Learn More",
-                confirmButtonColor: "#3fabe1",
-                confirmButtonText: "Let's Go",
-                closeOnCancel: false,
-                customClass: "securityAlert",
-                allowEscapeKey: false,
-                html: true
-            }, function (isConfirm) {
-                if (isConfirm)
-                    setTimeout(function () {
-                        $('input#idVer-name').focus();
-                    }, 500)
-                else
-                    window.open("https://www.nooch.com/safe");
-            });
-        }
+        swal({
+            title: "Secure, Private, & Direct Payments",
+            text: "<p>Send money without having to leave your seat! &nbsp;Secure, direct, and traceable payments when you want them. &nbsp;Please verify your identity as an authorized user of your company's account.</p>" +
+                  "<ul class='fa-ul'>" +
+                  "<li><i class='fa-li fa fa-check'></i>We don't see or store your bank credentials</li>" +
+                  "<li><i class='fa-li fa fa-check'></i>We use <strong>bank-grade encryption</strong> to secure all data</li>" +
+                  "<li><i class='fa-li fa fa-check'></i>The recipient will never see your bank credentials</li></ul>",
+            imageUrl: "../Assets/Images/secure.svg",
+            imageSize: "194x80",
+            showCancelButton: false,
+            cancelButtonText: "Learn More",
+            confirmButtonColor: "#3fabe1",
+            confirmButtonText: "Let's Go",
+            closeOnCancel: false,
+            customClass: "securityAlert",
+            allowEscapeKey: false,
+            html: true
+        }, function (isConfirm) {
+            if (isConfirm)
+                setTimeout(function () {
+                    $('input#idVer-name').focus();
+                }, 500)
+            else
+                window.open("https://www.nooch.com/safe");
+        });
 
         // Now show the wizard since there are no errors (hidden on initial page load because it takes
         // a split second to format the Steps plugin, so it was visible as un-formatted code briefly.
@@ -166,7 +124,7 @@ $(document).ready(function () {
         });
     }
     else
-        console.log("93. There was an error! :-(");
+        console.log("124. There was an error! :-(");
 });
 
 
@@ -433,11 +391,11 @@ function resizeImages(file, complete) {
     //  2. Read the file as a data Url
     var reader = new FileReader();
     // file read
-    reader.onload = function(e) {
+    reader.onload = function (e) {
         // create img to store data url
         // 3 - 1 Create image object for canvas to use
         var img = new Image();
-        img.onload = function() {
+        img.onload = function () {
             // 3-2 send image object to function for manipulation
             complete(resizeInCanvas(img));
         };
@@ -448,17 +406,17 @@ function resizeImages(file, complete) {
 }
 
 
-function resizeInCanvas(img){
+function resizeInCanvas(img) {
     //  3-3 manipulate image
     var perferedWidth = 500;
     var ratio = perferedWidth / img.width;
     var canvas = $("<canvas>")[0];
     canvas.width = img.width * ratio;
     canvas.height = img.height * ratio;
-   
+
     console.log(canvas);
     var ctx = canvas.getContext("2d");
-    ctx.drawImage(img, 0,0,canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
     // 4. export as dataUrl
     return canvas.toDataURL();
 }

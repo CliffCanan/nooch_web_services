@@ -10,10 +10,10 @@ namespace Nooch.Common.Entities
     {
         public bool paymentSuccess { get; set; }
         public bool payinfobar { get; set; }
-        public bool IsTransactionStillPending { get; set; }
+        public bool IsTransStillPending { get; set; }
         public string errorMsg { get; set; }
         public string memId { get; set; }
-        public string rs { get; set; }
+        public string company { get; set; }
         public string senderImage { get; set; }
         public string senderName1 { get; set; }
         public string transAmountd { get; set; }

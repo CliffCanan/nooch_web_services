@@ -1531,7 +1531,7 @@ namespace Nooch.API.Controllers
             {
                 try
                 {
-                    Logger.Info("Service Cntlr -> GetSingleTransactionDetail Fired - " + "MemberId: [" + MemberId + "], TransID: [" + transactionId + "]");
+                    Logger.Info("Service Cntlr -> GetSingleTransactionDetail Fired - " + "MemberID: [" + MemberId + "], TransID: [" + transactionId + "]");
 
                     var tda = new TransactionsDataAccess();
 
@@ -1609,16 +1609,12 @@ namespace Nooch.API.Controllers
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Controller - GetsingleTransactionDetail FAILED - MemberId: [" + MemberId + "]. Exception: [" + ex + "]");
+                    Logger.Error("Service Controller - GetsingleTransactionDetail FAILED - MemberID: [" + MemberId + "], Exception: [" + ex + "]");
                     throw (ex);
-
                 }
-
             }
             else
-            {
                 throw new Exception("Invalid OAuth 2 Access");
-            }
         }
 
 
@@ -1935,114 +1931,102 @@ namespace Nooch.API.Controllers
                 {
                     Logger.Info("Service Cntlr -> GetTransactionDetail - MemberID: [" + memberId + "]");
 
-                    var transactionDataAccess = new TransactionsDataAccess();
-
-                    var transactionListEntities = transactionDataAccess.GetTransactionDetail(memberId, category, transactionId);
-                    DateTime transactionDate = Convert.ToDateTime(transactionListEntities.TransactionDate);
-                    string transactionDateString = transactionDate.ToString("MM/dd/yyyy hh:mm:ss tt");
-                    var transactionDateTime = new string[3];
-
-                    DateTime disputeDate;
-                    string disputeDateString = string.Empty;
-                    var disputeDateTime = new string[3];
-
-                    DateTime disputeReviewDate;
-                    string disputeReviewDateString = string.Empty;
-                    var disputeReviewDateTime = new string[3];
-
-                    DateTime disputeResolvedDate;
-                    string disputeResolvedDateString = string.Empty;
-                    var disputeResolvedDateTime = new string[3];
-
+                    var tda = new TransactionsDataAccess();
                     var mda = new MembersDataAccess();
 
-                    if (transactionListEntities.DisputeDate != null)
-                    {
-                        disputeDate = Convert.ToDateTime(transactionListEntities.DisputeDate);
-                        disputeDateString = disputeDate.ToString("MM/dd/yyyy hh:mm:ss tt");
-                        disputeDateTime = disputeDateString.Split(' ');
-                    }
+                    var transList = tda.GetTransactionDetail(memberId, category, transactionId);
 
-                    if (transactionListEntities.ReviewDate != null)
+                    if (transList != null)
                     {
-                        disputeReviewDate = Convert.ToDateTime(transactionListEntities.ReviewDate);
-                        disputeReviewDateString = disputeReviewDate.ToString("MM/dd/yyyy hh:mm:ss tt");
-                        disputeDateTime = disputeReviewDateString.Split(' ');
-                    }
+                        var trans = new TransactionDto();
 
-                    if (transactionListEntities.ResolvedDate != null)
-                    {
-                        disputeResolvedDate = Convert.ToDateTime(transactionListEntities.ResolvedDate);
-                        disputeResolvedDateString = disputeResolvedDate.ToString("MM/dd/yyyy hh:mm:ss tt");
-                        disputeResolvedDateTime = disputeResolvedDateString.Split(' ');
-                    }
+                        DateTime transDate = Convert.ToDateTime(transList.TransactionDate);
+                        string timeZoneDateString = string.Empty;
+                        var transDateTime = new string[3];
+                        string transDateString = transDate.ToString("MM/dd/yyyy hh:mm:ss tt");
+                        transDateTime = transDateString.Split(' ');
 
-                    if (transactionListEntities != null)
-                    {
+                        #region Dispute Checks
+
+                        DateTime disputeDate;
+                        string disputeDateString = string.Empty;
+                        var disputeDateTime = new string[3];
+
+                        DateTime disputeReviewDate;
+                        string disputeReviewDateString = string.Empty;
+                        var disputeReviewDateTime = new string[3];
+
+                        DateTime disputeResolvedDate;
+                        string disputeResolvedDateString = string.Empty;
+                        var disputeResolvedDateTime = new string[3];
+
+                        if (transList.DisputeDate != null)
+                        {
+                            disputeDate = Convert.ToDateTime(transList.DisputeDate);
+                            disputeDateString = disputeDate.ToString("MM/dd/yyyy hh:mm:ss tt");
+                            disputeDateTime = disputeDateString.Split(' ');
+                        }
+
+                        if (transList.ReviewDate != null)
+                        {
+                            disputeReviewDate = Convert.ToDateTime(transList.ReviewDate);
+                            disputeReviewDateString = disputeReviewDate.ToString("MM/dd/yyyy hh:mm:ss tt");
+                            disputeDateTime = disputeReviewDateString.Split(' ');
+                        }
+
+                        if (transList.ResolvedDate != null)
+                        {
+                            disputeResolvedDate = Convert.ToDateTime(transList.ResolvedDate);
+                            disputeResolvedDateString = disputeResolvedDate.ToString("MM/dd/yyyy hh:mm:ss tt");
+                            disputeResolvedDateTime = disputeResolvedDateString.Split(' ');
+                        }
+
+                        trans.DisputeStatus = !string.IsNullOrEmpty(transList.DisputeStatus) ? CommonHelper.GetDecryptedData(transList.DisputeStatus) : null;
+                        trans.DisputeId = transList.DisputeTrackingId;
+                        trans.DisputeReportedDate = transList.DisputeDate.HasValue ? disputeDateString : "";
+                        trans.DisputeReviewDate = transList.ReviewDate.HasValue ? disputeReviewDateString : "";
+                        trans.DisputeResolvedDate = transList.ResolvedDate.HasValue ? disputeResolvedDateString : "";
+
+                        #endregion Dispute Checks
+
+
+                        trans.TransactionId = transList.TransactionId.ToString();
+                        trans.Date = transDateTime[0];
+                        trans.Time = transDateTime[1] + " " + transDateTime[2];
+                        trans.Amount = Math.Round(transList.Amount, 2);
+
+                        if (transList.GeoLocation != null)
+                        {
+                            trans.AddressLine1 = transList.GeoLocation.AddressLine1 != null ? transList.GeoLocation.AddressLine1 : string.Empty;
+                            trans.AddressLine2 = transList.GeoLocation.AddressLine2 != null ? transList.GeoLocation.AddressLine2 : string.Empty;
+                            trans.City = transList.GeoLocation.City != null ? transList.GeoLocation.City : string.Empty;
+                            trans.State = transList.GeoLocation.State != null ? transList.GeoLocation.State : string.Empty;
+                            trans.Country = transList.GeoLocation.Country != null ? transList.GeoLocation.Country : string.Empty;
+                            trans.ZipCode = transList.GeoLocation.ZipCode != null ? transList.GeoLocation.ZipCode : string.Empty;
+                            trans.Latitude = transList.GeoLocation.Latitude != null ? (float)transList.GeoLocation.Latitude : default(float);
+                            trans.Longitude = transList.GeoLocation.Longitude != null ? (float)transList.GeoLocation.Longitude : default(float);
+                        }
+
+                        if (transList.GeoLocation != null)
+                            trans.Location = transList.GeoLocation.Latitude + ", " + transList.GeoLocation.Longitude;
+                        else trans.Location = "- Nil -";
+
+                        trans.Picture = transList.Picture;
+
+
                         if (category.Equals("SENT"))
                         {
                             #region Sent
-                            var sentTransactions = new TransactionDto();
 
-                            string timeZoneDateString = string.Empty;
-
-                            transactionDateTime = transactionDateString.Split(' ');
-
-                            if (!string.IsNullOrEmpty(transactionListEntities.Member.TimeZoneKey))
-                            {
-                                timeZoneDateString = mda.GMTTimeZoneConversion(transactionListEntities.TransactionDate.ToString(), transactionListEntities.Member.TimeZoneKey);
-
-                                timeZoneDateString = Convert.ToDateTime(timeZoneDateString).ToString("MM/dd/yyyy hh:mm:ss tt");
-
-                                transactionDateTime = timeZoneDateString.Split(' ');
-                            }
-
-                            sentTransactions.FirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionListEntities.Member1.FirstName));
-                            sentTransactions.LastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionListEntities.Member1.LastName));
-                            sentTransactions.MemberId = transactionListEntities.Member.MemberId.ToString();
-                            sentTransactions.NoochId = transactionListEntities.Member1.Nooch_ID.ToString();
-                            sentTransactions.RecepientId = transactionListEntities.Member1.MemberId.ToString();
-                            sentTransactions.TransactionId = transactionListEntities.TransactionId.ToString();
-                            sentTransactions.Name = CommonHelper.GetDecryptedData(transactionListEntities.Member1.FirstName) + " " + CommonHelper.GetDecryptedData(transactionListEntities.Member1.LastName);
-                            sentTransactions.TransactionDate = !string.IsNullOrEmpty(transactionListEntities.Member.TimeZoneKey) ? timeZoneDateString : transactionDateString;
-                            sentTransactions.Date = transactionDateTime[0];
-                            sentTransactions.Time = transactionDateTime[1] + " " + transactionDateTime[2];
-                            sentTransactions.Amount = Math.Round(transactionListEntities.Amount, 2);
-                            sentTransactions.DisputeStatus = !string.IsNullOrEmpty(transactionListEntities.DisputeStatus) ? CommonHelper.GetDecryptedData(transactionListEntities.DisputeStatus) : null;
-                            sentTransactions.DisputeId = transactionListEntities.DisputeTrackingId;
-                            sentTransactions.TransactionType = "Sent";
-                            // recipient photo - Sent to,
-                            sentTransactions.Photo = String.Concat(Utility.GetValueFromConfig("PhotoUrl"), transactionListEntities.Member1.Photo != null ? Path.GetFileName(transactionListEntities.Member1.Photo) : Path.GetFileName("gv_no_photo.jpg"));
-                            sentTransactions.DisputeReportedDate = transactionListEntities.DisputeDate.HasValue ? disputeDateString : string.Empty;
-                            sentTransactions.DisputeReviewDate = transactionListEntities.ReviewDate.HasValue ? disputeReviewDateString : string.Empty;
-                            sentTransactions.DisputeResolvedDate = transactionListEntities.ResolvedDate.HasValue ? disputeResolvedDateString : string.Empty;
-
-                            if (transactionListEntities.GeoLocation != null)
-                            {
-                                sentTransactions.AddressLine1 = transactionListEntities.GeoLocation.AddressLine1 != null ? transactionListEntities.GeoLocation.AddressLine1 : string.Empty;
-                                sentTransactions.AddressLine2 = transactionListEntities.GeoLocation.AddressLine2 != null ? transactionListEntities.GeoLocation.AddressLine2 : string.Empty;
-                                sentTransactions.City = transactionListEntities.GeoLocation.City != null ? transactionListEntities.GeoLocation.City : string.Empty;
-                                sentTransactions.State = transactionListEntities.GeoLocation.State != null ? transactionListEntities.GeoLocation.State : string.Empty;
-                                sentTransactions.Country = transactionListEntities.GeoLocation.Country != null ? transactionListEntities.GeoLocation.Country : string.Empty;
-                                sentTransactions.ZipCode = transactionListEntities.GeoLocation.ZipCode != null ? transactionListEntities.GeoLocation.ZipCode : string.Empty;
-
-                                sentTransactions.Latitude = transactionListEntities.GeoLocation.Latitude != null ? (float)transactionListEntities.GeoLocation.Latitude : default(float);
-                                sentTransactions.Longitude = transactionListEntities.GeoLocation.Longitude != null ? (float)transactionListEntities.GeoLocation.Longitude : default(float);
-                            }
-
-                            if (transactionListEntities.GeoLocation != null)
-                            {
-                                sentTransactions.Location = transactionListEntities.GeoLocation.Latitude + ", " +
-                                    transactionListEntities.GeoLocation.Longitude;
-                            }
-                            else
-                            {
-                                sentTransactions.Location = "- Nil -";
-                            }
-
-                            sentTransactions.Picture = transactionListEntities.Picture;
-
-                            return sentTransactions;
+                            trans.FirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transList.Member1.FirstName));
+                            trans.LastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transList.Member1.LastName));
+                            trans.MemberId = transList.Member.MemberId.ToString();
+                            trans.NoochId = transList.Member1.Nooch_ID.ToString();
+                            trans.RecepientId = transList.Member1.MemberId.ToString();
+                            trans.Name = CommonHelper.GetDecryptedData(transList.Member1.FirstName) + " " + CommonHelper.GetDecryptedData(transList.Member1.LastName);
+                            trans.TransactionDate = !string.IsNullOrEmpty(transList.Member.TimeZoneKey) ? timeZoneDateString : transDateString;
+                            trans.TransactionType = "Sent";
+                            trans.Photo = String.Concat(Utility.GetValueFromConfig("PhotoUrl"), transList.Member1.Photo != null ? Path.GetFileName(transList.Member1.Photo) : Path.GetFileName("gv_no_photo.jpg"));
 
                             #endregion Sent
                         }
@@ -2050,280 +2034,75 @@ namespace Nooch.API.Controllers
                         {
                             #region Received
 
-                            var receivedTransactions = new TransactionDto();
-
-                            transactionDateTime = transactionDateString.Split(' ');
-
-                            string timeZoneDateString = string.Empty;
-
-                            if (!string.IsNullOrEmpty(transactionListEntities.Member1.TimeZoneKey))
-                            {
-                                timeZoneDateString = mda.GMTTimeZoneConversion(transactionListEntities.TransactionDate.ToString(), transactionListEntities.Member1.TimeZoneKey);
-
-                                timeZoneDateString = Convert.ToDateTime(timeZoneDateString).ToString("MM/dd/yyyy hh:mm:ss tt");
-
-                                transactionDateTime = timeZoneDateString.Split(' ');
-                            }
-
-                            receivedTransactions.FirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionListEntities.Member.FirstName));
-                            receivedTransactions.LastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionListEntities.Member.LastName));
-                            receivedTransactions.MemberId = transactionListEntities.Member.MemberId.ToString();
-                            receivedTransactions.NoochId = transactionListEntities.Member.Nooch_ID.ToString();
-                            receivedTransactions.RecepientId = transactionListEntities.Member1.MemberId.ToString();
-                            receivedTransactions.TransactionId = transactionListEntities.TransactionId.ToString();
-                            receivedTransactions.Name = CommonHelper.GetDecryptedData(transactionListEntities.Member.FirstName) + " " + CommonHelper.GetDecryptedData(transactionListEntities.Member.LastName);
-                            receivedTransactions.TransactionDate = !string.IsNullOrEmpty(transactionListEntities.Member1.TimeZoneKey) ? timeZoneDateString : transactionDateString;
-                            receivedTransactions.Date = transactionDateTime[0];
-                            receivedTransactions.Time = transactionDateTime[1] + " " + transactionDateTime[2];
-                            receivedTransactions.Amount = Math.Round(transactionListEntities.Amount, 2);
-                            receivedTransactions.DisputeStatus = !string.IsNullOrEmpty(transactionListEntities.DisputeStatus) ? CommonHelper.GetDecryptedData(transactionListEntities.DisputeStatus) : null;
-                            receivedTransactions.DisputeId = transactionListEntities.DisputeTrackingId;
-                            receivedTransactions.TransactionType = "Received";
+                            trans.FirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transList.Member.FirstName));
+                            trans.LastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transList.Member.LastName));
+                            trans.MemberId = transList.Member.MemberId.ToString();
+                            trans.NoochId = transList.Member.Nooch_ID.ToString();
+                            trans.RecepientId = transList.Member1.MemberId.ToString();
+                            trans.Name = CommonHelper.GetDecryptedData(transList.Member.FirstName) + " " + CommonHelper.GetDecryptedData(transList.Member.LastName);
+                            trans.TransactionDate = !string.IsNullOrEmpty(transList.Member1.TimeZoneKey) ? timeZoneDateString : transDateString;
+                            trans.TransactionType = "Received";
                             // sender photo - Received from
-                            receivedTransactions.Photo = String.Concat(Utility.GetValueFromConfig("PhotoUrl"), transactionListEntities.Member.Photo != null ? Path.GetFileName(transactionListEntities.Member.Photo) : Path.GetFileName("gv_no_photo.jpg"));
-                            receivedTransactions.DisputeReportedDate = transactionListEntities.DisputeDate.HasValue ? disputeDateString : string.Empty;
-                            receivedTransactions.DisputeReviewDate = transactionListEntities.ReviewDate.HasValue ? disputeReviewDateString : string.Empty;
-                            receivedTransactions.DisputeResolvedDate = transactionListEntities.ResolvedDate.HasValue ? disputeResolvedDateString : string.Empty;
-
-                            if (transactionListEntities.GeoLocation != null)
-                            {
-                                receivedTransactions.AddressLine1 = transactionListEntities.GeoLocation.AddressLine1 != null ? transactionListEntities.GeoLocation.AddressLine1 : string.Empty;
-                                receivedTransactions.AddressLine2 = transactionListEntities.GeoLocation.AddressLine2 != null ? transactionListEntities.GeoLocation.AddressLine2 : string.Empty;
-                                receivedTransactions.City = transactionListEntities.GeoLocation.City != null ? transactionListEntities.GeoLocation.City : string.Empty;
-                                receivedTransactions.State = transactionListEntities.GeoLocation.State != null ? transactionListEntities.GeoLocation.State : string.Empty;
-                                receivedTransactions.Country = transactionListEntities.GeoLocation.Country != null ? transactionListEntities.GeoLocation.Country : string.Empty;
-                                receivedTransactions.ZipCode = transactionListEntities.GeoLocation.ZipCode != null ? transactionListEntities.GeoLocation.ZipCode : string.Empty;
-
-                                receivedTransactions.Latitude = transactionListEntities.GeoLocation.Latitude != null ? (float)transactionListEntities.GeoLocation.Latitude : default(float);
-                                receivedTransactions.Longitude = transactionListEntities.GeoLocation.Longitude != null ? (float)transactionListEntities.GeoLocation.Longitude : default(float);
-                            }
-
-                            if (transactionListEntities.GeoLocation != null)
-                            {
-                                receivedTransactions.Location = transactionListEntities.GeoLocation.Latitude + ", " +
-                                    transactionListEntities.GeoLocation.Longitude;
-                            }
-                            else
-                            {
-                                receivedTransactions.Location = "- Nil -";
-                            }
-
-                            receivedTransactions.Picture = transactionListEntities.Picture;
-
-                            return receivedTransactions;
+                            trans.Photo = String.Concat(Utility.GetValueFromConfig("PhotoUrl"), transList.Member.Photo != null ? Path.GetFileName(transList.Member.Photo) : Path.GetFileName("gv_no_photo.jpg"));
 
                             #endregion Received
                         }
-                        if (category.Equals("REQUEST"))
+                        else if (category.Equals("REQUEST"))
                         {
                             #region Received
 
-                            var receivedTransactions = new TransactionDto();
-
-                            transactionDateTime = transactionDateString.Split(' ');
-
-                            string timeZoneDateString = string.Empty;
-
-                            if (!string.IsNullOrEmpty(transactionListEntities.Member1.TimeZoneKey))
-                            {
-                                timeZoneDateString = mda.GMTTimeZoneConversion(transactionListEntities.TransactionDate.ToString(), transactionListEntities.Member1.TimeZoneKey);
-
-                                timeZoneDateString = Convert.ToDateTime(timeZoneDateString).ToString("MM/dd/yyyy hh:mm:ss tt");
-
-                                transactionDateTime = timeZoneDateString.Split(' ');
-                            }
-
-                            receivedTransactions.FirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionListEntities.Member.FirstName));
-                            receivedTransactions.LastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionListEntities.Member.LastName));
-                            receivedTransactions.MemberId = transactionListEntities.Member.MemberId.ToString();
-                            receivedTransactions.NoochId = transactionListEntities.Member.Nooch_ID.ToString();
-                            receivedTransactions.RecepientId = transactionListEntities.Member1.MemberId.ToString();
-                            receivedTransactions.TransactionId = transactionListEntities.TransactionId.ToString();
-                            receivedTransactions.Name = CommonHelper.GetDecryptedData(transactionListEntities.Member.FirstName) + " " + CommonHelper.GetDecryptedData(transactionListEntities.Member.LastName);
-                            receivedTransactions.TransactionDate = !string.IsNullOrEmpty(transactionListEntities.Member1.TimeZoneKey) ? timeZoneDateString : transactionDateString;
-                            receivedTransactions.Date = transactionDateTime[0];
-                            receivedTransactions.Time = transactionDateTime[1] + " " + transactionDateTime[2];
-                            receivedTransactions.Amount = Math.Round(transactionListEntities.Amount, 2);
-                            receivedTransactions.DisputeStatus = !string.IsNullOrEmpty(transactionListEntities.DisputeStatus) ? CommonHelper.GetDecryptedData(transactionListEntities.DisputeStatus) : null;
-                            receivedTransactions.DisputeId = transactionListEntities.DisputeTrackingId;
-                            receivedTransactions.TransactionType = "Request";
+                            trans.FirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transList.Member.FirstName));
+                            trans.LastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transList.Member.LastName));
+                            trans.MemberId = transList.Member.MemberId.ToString();
+                            trans.NoochId = transList.Member.Nooch_ID.ToString();
+                            trans.RecepientId = transList.Member1.MemberId.ToString();
+                            trans.Name = CommonHelper.GetDecryptedData(transList.Member.FirstName) + " " + CommonHelper.GetDecryptedData(transList.Member.LastName);
+                            trans.TransactionDate = !string.IsNullOrEmpty(transList.Member1.TimeZoneKey) ? timeZoneDateString : transDateString;
+                            trans.TransactionType = "Request";
                             // sender photo - Received from
-                            receivedTransactions.Photo = String.Concat(Utility.GetValueFromConfig("PhotoUrl"), transactionListEntities.Member.Photo != null ? Path.GetFileName(transactionListEntities.Member.Photo) : Path.GetFileName("gv_no_photo.jpg"));
-                            receivedTransactions.DisputeReportedDate = transactionListEntities.DisputeDate.HasValue ? disputeDateString : string.Empty;
-                            receivedTransactions.DisputeReviewDate = transactionListEntities.ReviewDate.HasValue ? disputeReviewDateString : string.Empty;
-                            receivedTransactions.DisputeResolvedDate = transactionListEntities.ResolvedDate.HasValue ? disputeResolvedDateString : string.Empty;
-
-                            if (transactionListEntities.GeoLocation != null)
-                            {
-                                receivedTransactions.AddressLine1 = transactionListEntities.GeoLocation.AddressLine1 != null ? transactionListEntities.GeoLocation.AddressLine1 : string.Empty;
-                                receivedTransactions.AddressLine2 = transactionListEntities.GeoLocation.AddressLine2 != null ? transactionListEntities.GeoLocation.AddressLine2 : string.Empty;
-                                receivedTransactions.City = transactionListEntities.GeoLocation.City != null ? transactionListEntities.GeoLocation.City : string.Empty;
-                                receivedTransactions.State = transactionListEntities.GeoLocation.State != null ? transactionListEntities.GeoLocation.State : string.Empty;
-                                receivedTransactions.Country = transactionListEntities.GeoLocation.Country != null ? transactionListEntities.GeoLocation.Country : string.Empty;
-                                receivedTransactions.ZipCode = transactionListEntities.GeoLocation.ZipCode != null ? transactionListEntities.GeoLocation.ZipCode : string.Empty;
-
-                                receivedTransactions.Latitude = transactionListEntities.GeoLocation.Latitude != null ? (float)transactionListEntities.GeoLocation.Latitude : default(float);
-                                receivedTransactions.Longitude = transactionListEntities.GeoLocation.Longitude != null ? (float)transactionListEntities.GeoLocation.Longitude : default(float);
-                            }
-
-                            if (transactionListEntities.GeoLocation != null)
-                            {
-                                receivedTransactions.Location = transactionListEntities.GeoLocation.Latitude + ", " +
-                                    transactionListEntities.GeoLocation.Longitude;
-                            }
-                            else
-                            {
-                                receivedTransactions.Location = "- Nil -";
-                            }
-
-                            receivedTransactions.Picture = transactionListEntities.Picture;
-
-                            return receivedTransactions;
+                            trans.Photo = String.Concat(Utility.GetValueFromConfig("PhotoUrl"), transList.Member.Photo != null ? Path.GetFileName(transList.Member.Photo) : Path.GetFileName("gv_no_photo.jpg"));
 
                             #endregion Received
                         }
-                        if (category.Equals("DISPUTED"))
+                        else if (category.Equals("DISPUTED"))
                         {
                             #region Disputed
 
-                            var disputedTransaction = new TransactionDto();
-
-                            if (transactionListEntities.RaisedBy.Equals("Sender"))
+                            if (transList.RaisedBy.Equals("Sender"))
                             {
-                                transactionDateTime = transactionDateString.Split(' ');
-
-                                string timeZoneDateString = string.Empty;
-
-                                if (!string.IsNullOrEmpty(transactionListEntities.Member.TimeZoneKey))
-                                {
-                                    timeZoneDateString = mda.GMTTimeZoneConversion(transactionListEntities.TransactionDate.ToString(), transactionListEntities.Member.TimeZoneKey);
-
-                                    timeZoneDateString = Convert.ToDateTime(timeZoneDateString).ToString("MM/dd/yyyy hh:mm:ss tt");
-
-                                    transactionDateTime = timeZoneDateString.Split(' ');
-                                }
-
-                                disputedTransaction.FirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionListEntities.Member1.FirstName));
-                                disputedTransaction.LastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionListEntities.Member1.LastName));
-                                disputedTransaction.NoochId = transactionListEntities.Member1.Nooch_ID;
-                                disputedTransaction.TransactionId = transactionListEntities.TransactionId.ToString();
-                                disputedTransaction.Name = CommonHelper.GetDecryptedData(transactionListEntities.Member1.FirstName) + " " + CommonHelper.GetDecryptedData(transactionListEntities.Member1.LastName);
-                                disputedTransaction.TransactionDate = !string.IsNullOrEmpty(transactionListEntities.Member.TimeZoneKey) ? timeZoneDateString : transactionDateString;
-                                disputedTransaction.Date = transactionDateTime[0];
-                                disputedTransaction.Time = transactionDateTime[1] + " " + transactionDateTime[2];
-                                disputedTransaction.Amount = Math.Round(transactionListEntities.Amount, 2);
-                                disputedTransaction.DisputeStatus = !string.IsNullOrEmpty(transactionListEntities.DisputeStatus) ? CommonHelper.GetDecryptedData(transactionListEntities.DisputeStatus) : null;
-                                disputedTransaction.DisputeId = transactionListEntities.DisputeTrackingId;
-                                disputedTransaction.TransactionType = "Sent to";
+                                trans.FirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transList.Member1.FirstName));
+                                trans.LastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transList.Member1.LastName));
+                                trans.NoochId = transList.Member1.Nooch_ID;
+                                trans.Name = CommonHelper.GetDecryptedData(transList.Member1.FirstName) + " " + CommonHelper.GetDecryptedData(transList.Member1.LastName);
+                                trans.TransactionDate = !string.IsNullOrEmpty(transList.Member.TimeZoneKey) ? timeZoneDateString : transDateString;
+                                trans.TransactionType = "Sent to";
                                 // recipient photo - Sent to
-                                disputedTransaction.Photo = String.Concat(Utility.GetValueFromConfig("PhotoUrl"), transactionListEntities.Member1.Photo != null ? Path.GetFileName(transactionListEntities.Member1.Photo) : Path.GetFileName("gv_no_photo.jpg"));
-                                disputedTransaction.DisputeReportedDate = transactionListEntities.DisputeDate.HasValue ? disputeDateString : string.Empty;
-                                disputedTransaction.DisputeReviewDate = transactionListEntities.ReviewDate.HasValue ? disputeReviewDateString : string.Empty;
-                                disputedTransaction.DisputeResolvedDate = transactionListEntities.ResolvedDate.HasValue ? disputeResolvedDateString : string.Empty;
-
-                                if (transactionListEntities.GeoLocation != null)
-                                {
-                                    disputedTransaction.AddressLine1 = transactionListEntities.GeoLocation.AddressLine1 != null ? transactionListEntities.GeoLocation.AddressLine1 : string.Empty;
-                                    disputedTransaction.AddressLine2 = transactionListEntities.GeoLocation.AddressLine2 != null ? transactionListEntities.GeoLocation.AddressLine2 : string.Empty;
-                                    disputedTransaction.City = transactionListEntities.GeoLocation.City != null ? transactionListEntities.GeoLocation.City : string.Empty;
-                                    disputedTransaction.State = transactionListEntities.GeoLocation.State != null ? transactionListEntities.GeoLocation.State : string.Empty;
-                                    disputedTransaction.Country = transactionListEntities.GeoLocation.Country != null ? transactionListEntities.GeoLocation.Country : string.Empty;
-                                    disputedTransaction.ZipCode = transactionListEntities.GeoLocation.ZipCode != null ? transactionListEntities.GeoLocation.ZipCode : string.Empty;
-
-                                    disputedTransaction.Latitude = transactionListEntities.GeoLocation.Latitude != null ? (float)transactionListEntities.GeoLocation.Latitude : default(float);
-                                    disputedTransaction.Longitude = transactionListEntities.GeoLocation.Longitude != null ? (float)transactionListEntities.GeoLocation.Longitude : default(float);
-                                }
-
-                                if (transactionListEntities.GeoLocation != null)
-                                {
-                                    disputedTransaction.Location = transactionListEntities.GeoLocation.Latitude + ", " +
-                                        transactionListEntities.GeoLocation.Longitude;
-                                }
-                                else
-                                {
-                                    disputedTransaction.Location = "- Nil -";
-                                }
-
+                                trans.Photo = String.Concat(Utility.GetValueFromConfig("PhotoUrl"), transList.Member1.Photo != null ? Path.GetFileName(transList.Member1.Photo) : Path.GetFileName("gv_no_photo.jpg"));
                             }
 
-                            if (transactionListEntities.RaisedBy.Equals("Receiver"))
+                            if (transList.RaisedBy.Equals("Receiver"))
                             {
-                                transactionDateTime = transactionDateString.Split(' ');
-
-                                string timeZoneDateString = string.Empty;
-
-                                if (!string.IsNullOrEmpty(transactionListEntities.Member1.TimeZoneKey))
-                                {
-                                    timeZoneDateString = mda.GMTTimeZoneConversion(transactionListEntities.TransactionDate.ToString(), transactionListEntities.Member1.TimeZoneKey);
-
-                                    timeZoneDateString = Convert.ToDateTime(timeZoneDateString).ToString("MM/dd/yyyy hh:mm:ss tt");
-
-                                    transactionDateTime = timeZoneDateString.Split(' ');
-                                }
-
-                                disputedTransaction.NoochId = transactionListEntities.Member.Nooch_ID.ToString();
-                                disputedTransaction.TransactionId = transactionListEntities.TransactionId.ToString();
-                                disputedTransaction.Name = CommonHelper.GetDecryptedData(transactionListEntities.Member.FirstName) + " " + CommonHelper.GetDecryptedData(transactionListEntities.Member.LastName);
-                                disputedTransaction.TransactionDate = !string.IsNullOrEmpty(transactionListEntities.Member1.TimeZoneKey) ? timeZoneDateString : transactionDateString;
-                                disputedTransaction.Date = transactionDateTime[0];
-                                disputedTransaction.Time = transactionDateTime[1] + " " + transactionDateTime[2];
-                                disputedTransaction.Amount = Math.Round(transactionListEntities.Amount, 2);
-                                disputedTransaction.DisputeStatus = !string.IsNullOrEmpty(transactionListEntities.DisputeStatus) ? CommonHelper.GetDecryptedData(transactionListEntities.DisputeStatus) : null;
-                                disputedTransaction.DisputeId = transactionListEntities.DisputeTrackingId;
-                                disputedTransaction.TransactionType = "Received from";
+                                trans.NoochId = transList.Member.Nooch_ID.ToString();
+                                trans.Name = CommonHelper.GetDecryptedData(transList.Member.FirstName) + " " + CommonHelper.GetDecryptedData(transList.Member.LastName);
+                                trans.TransactionDate = !string.IsNullOrEmpty(transList.Member1.TimeZoneKey) ? timeZoneDateString : transDateString;
+                                trans.TransactionType = "Received from";
                                 // sender photo - Received from
-                                disputedTransaction.Photo = String.Concat(Utility.GetValueFromConfig("PhotoUrl"), transactionListEntities.Member.Photo != null ? Path.GetFileName(transactionListEntities.Member.Photo) : Path.GetFileName("gv_no_photo.jpg"));
-                                disputedTransaction.DisputeReportedDate = transactionListEntities.DisputeDate.HasValue ? disputeDateString : string.Empty;
-                                disputedTransaction.DisputeReviewDate = transactionListEntities.ReviewDate.HasValue ? disputeReviewDateString : string.Empty;
-                                disputedTransaction.DisputeResolvedDate = transactionListEntities.ResolvedDate.HasValue ? disputeResolvedDateString : string.Empty;
-
-                                if (transactionListEntities.GeoLocation != null)
-                                {
-                                    disputedTransaction.AddressLine1 = transactionListEntities.GeoLocation.AddressLine1 != null ? transactionListEntities.GeoLocation.AddressLine1 : string.Empty;
-                                    disputedTransaction.AddressLine2 = transactionListEntities.GeoLocation.AddressLine2 != null ? transactionListEntities.GeoLocation.AddressLine2 : string.Empty;
-                                    disputedTransaction.City = transactionListEntities.GeoLocation.City != null ? transactionListEntities.GeoLocation.City : string.Empty;
-                                    disputedTransaction.State = transactionListEntities.GeoLocation.State != null ? transactionListEntities.GeoLocation.State : string.Empty;
-                                    disputedTransaction.Country = transactionListEntities.GeoLocation.Country != null ? transactionListEntities.GeoLocation.Country : string.Empty;
-                                    disputedTransaction.ZipCode = transactionListEntities.GeoLocation.ZipCode != null ? transactionListEntities.GeoLocation.ZipCode : string.Empty;
-
-                                    disputedTransaction.Latitude = transactionListEntities.GeoLocation.Latitude != null ? (float)transactionListEntities.GeoLocation.Latitude : default(float);
-                                    disputedTransaction.Longitude = transactionListEntities.GeoLocation.Longitude != null ? (float)transactionListEntities.GeoLocation.Longitude : default(float);
-                                }
-
-                                if (transactionListEntities.GeoLocation != null)
-                                {
-                                    disputedTransaction.Location = transactionListEntities.GeoLocation.Latitude + ", " +
-                                        transactionListEntities.GeoLocation.Longitude;
-                                }
-                                else
-                                {
-                                    disputedTransaction.Location = "- Nil -";
-                                }
+                                trans.Photo = String.Concat(Utility.GetValueFromConfig("PhotoUrl"), transList.Member.Photo != null ? Path.GetFileName(transList.Member.Photo) : Path.GetFileName("gv_no_photo.jpg"));
                             }
-
-                            disputedTransaction.Picture = disputedTransaction.Picture;
-
-                            return disputedTransaction;
 
                             #endregion Disputed
                         }
 
                         #region Donation - UNUSED
                         /*
-                        if (transactionListEntities.RaisedBy.Equals("Donation"))
+                        else if (transactionListEntities.RaisedBy.Equals("Donation"))
                         {
                             var donationTransaction = new TransactionDto();
-
-                            transactionDateTime = transactionDateString.Split(' ');
-
-                            string timeZoneDateString = string.Empty;
 
                             if (!string.IsNullOrEmpty(transactionListEntities.Members1.TimeZoneKey))
                             {
                                 timeZoneDateString = memberDataAccess.GMTTimeZoneConversion(transactionListEntities.TransactionDate.ToString(), transactionListEntities.Members1.TimeZoneKey);
-
                                 timeZoneDateString = Convert.ToDateTime(timeZoneDateString).ToString("MM/dd/yyyy hh:mm:ss tt");
-
                                 transactionDateTime = timeZoneDateString.Split(' ');
                             }
 
@@ -2353,20 +2132,18 @@ namespace Nooch.API.Controllers
                             }
 
                             if (transactionListEntities.GeoLocations != null)
-                            {
                                 donationTransaction.Location = transactionListEntities.GeoLocations.Latitude + ", " +
                                     transactionListEntities.GeoLocations.Longitude;
-                            }
                             else
-                            {
                                 donationTransaction.Location = "- Nil -";
-                            }
 
                             donationTransaction.Picture = transactionListEntities.Picture;
 
                             return donationTransaction;
                         }*/
                         #endregion Donation - UNUSED
+
+                        return trans;
                     }
                 }
                 catch (Exception ex)
@@ -2376,9 +2153,7 @@ namespace Nooch.API.Controllers
                 return new TransactionDto();
             }
             else
-            {
                 throw new Exception("Invalid OAuth 2 Access");
-            }
         }
 
 
