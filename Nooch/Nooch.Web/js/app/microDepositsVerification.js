@@ -152,7 +152,7 @@ function SubmitInfo() {
 }
 
 
-function SubmitPay(transId,recipId) {
+function SubmitPay(transId, recipId) {
     //$.blockUI();
     console.log('SubmitPay fired' + recipId);
 
@@ -160,7 +160,7 @@ function SubmitPay(transId,recipId) {
 
     $.ajax({
         type: "GET",
-        url: "http://www.nooch.info/noochservice/api/NoochServices/GetTransactionDetailByIdAndMoveMoneyForNewUserDeposit?TransactionId=" + transId + "&MemberId=" + MemberId + "&TransactionType=RequestToNewUser&recipMemId=" + recipId,
+        url: "http://www.noochme.com/noochservice/api/NoochServices/GetTransactionDetailByIdAndMoveMoneyForNewUserDeposit?TransactionId=" + transId + "&MemberId=" + MemberId + "&TransactionType=RequestToNewUser&recipMemId=" + recipId,
         dataType: "json",
         cache: false,
         crossDomain: true,

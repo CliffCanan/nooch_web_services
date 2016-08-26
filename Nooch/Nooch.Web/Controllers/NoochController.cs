@@ -1505,8 +1505,7 @@ namespace Nooch.Web.Controllers
                 else
                     rpc.company = "nooch";
 
-                if (rpc.senderName1 == "Marvis Burns")
-                    rpc.senderName1 = "Rent Scene";
+                if (rpc.senderName1 == "Marvis Burns") rpc.senderName1 = "Rent Scene";
 
                 // Check If Still Pending
                 rpc.IsTransStillPending = transInfo.TransactionStatus == "Pending" ? true : false;
@@ -1587,7 +1586,6 @@ namespace Nooch.Web.Controllers
 
         public ActionResult createAccount(string TransId, string type, string memId, string by)
         {
-
             ResultcreateAccount rca = new ResultcreateAccount();
 
             try
