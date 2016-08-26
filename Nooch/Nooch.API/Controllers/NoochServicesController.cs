@@ -437,6 +437,7 @@ namespace Nooch.API.Controllers
                     var synBankDetails = CommonHelper.GetSynapseBankDetails(memberId);
 
                     res.memberId = memberObj.MemberId.ToString();
+                    res.DateCreated = memberObj.DateCreated.Value;
                     res.status = memberObj.Status;
                     res.email = CommonHelper.GetDecryptedData(memberObj.UserName);
                     res.firstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName));
