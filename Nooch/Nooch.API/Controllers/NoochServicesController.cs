@@ -729,8 +729,7 @@ namespace Nooch.API.Controllers
         [ActionName("SendTransactionReminderEmail")]
         public StringResult SendTransactionReminderEmail(string ReminderType, string TransactionId, string accessToken, string MemberId)
         {
-            //if (CommonHelper.IsValidRequest(accessToken, MemberId))
-            //{
+            //if (CommonHelper.IsValidRequest(accessToken, MemberId)) {
             try
             {
                 Logger.Info("Service Cntrlr - SendTransactionReminderEmail - MemberID: [" + MemberId + "], ReminderType: [" + ReminderType + "]");
@@ -744,10 +743,7 @@ namespace Nooch.API.Controllers
                 throw new Exception("Server Error.");
             }
             //}
-            //else
-            //{
-            //    throw new Exception("Invalid OAuth 2 Access");
-            //}
+            //else throw new Exception("Invalid OAuth 2 Access");
         }
 
 
@@ -1184,9 +1180,7 @@ namespace Nooch.API.Controllers
                 res.note = requestId;
 
                 if (tdaRes.Result.IndexOf("made successfully") > -1)
-                {
                     res.success = true;
-                }
             }
             catch (Exception ex)
             {
