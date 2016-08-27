@@ -5649,7 +5649,7 @@ namespace Nooch.DataAccess
 
         public string GetTokensAndTransferMoneyToNewUser(string TransactionId, string memberId, string TransactionType, string recipMemId)
         {
-            Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser Initiated - TransType: [" + TransactionType +
+            Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser Fired - TransType: [" + TransactionType +
                         "], TransID: [" + TransactionId + "], New User Member ID: [" + memberId +
                         "], Recip MemberID: [" + recipMemId + "]");
 

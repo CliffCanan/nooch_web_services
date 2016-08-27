@@ -1428,7 +1428,7 @@ namespace Nooch.Web.Controllers
                         rpc = GetTransDetailsForPayRequestComplete(transId, rpc);
 
                         if (rpc.IsTransStillPending)
-                            rpc = completeTrans(mem_id, transId, rpc);
+                            rpc = completeTrans(memberId, transId, rpc);
                         else
                             Logger.Error("PayRequestComplete Page -> Transaction No Longer Pending - TransID: [" + transId + "]");
                     }
@@ -2904,14 +2904,10 @@ namespace Nooch.Web.Controllers
                 if (!String.IsNullOrEmpty(user))
                 {
                     res.msg = user.ToLower();
-                    if (res.msg == "rentscene")
-                        memId = "852987e8-d5fe-47e7-a00b-58a80dd15b49";
-                    else if (res.msg == "habitat")
-                        memId = "45357cf0-e651-40e7-b825-e1ff48bf44d2";
-                    else if (res.msg == "appjaxx")
-                        memId = "8b4b4983-f022-4289-ba6e-48d5affb5484";
-                    else if (res.msg == "cliff")
-                        memId = "b3a6cf7b-561f-4105-99e4-406a215ccf60";
+                    if (res.msg == "rentscene") memId = "852987e8-d5fe-47e7-a00b-58a80dd15b49";
+                    else if (res.msg == "habitat") memId = "45357cf0-e651-40e7-b825-e1ff48bf44d2";
+                    else if (res.msg == "appjaxx") memId = "8b4b4983-f022-4289-ba6e-48d5affb5484";
+                    else if (res.msg == "cliff") memId = "b3a6cf7b-561f-4105-99e4-406a215ccf60";
                 }
 
                 res.memId = memId;
@@ -2937,7 +2933,7 @@ namespace Nooch.Web.Controllers
 
                             try
                             {
-                                if (trans.Memo.ToLower().IndexOf("test") == 0 && user != "habitat")
+                                if (trans.Memo.ToLower().IndexOf("test") == 0 || trans.RecipientId.ToString() == "b3a6cf7b-561f-4105-99e4-406a215ccf60")
                                 {
                                     // Exclude transactions where the Memo begins with "test" (except for Habitat)
                                 }
@@ -3137,7 +3133,6 @@ namespace Nooch.Web.Controllers
 
         [HttpPost]
         [ActionName("paymentReminder")]
-
         public ActionResult paymentReminder(ResultCancelRequest input)
         {
             Logger.Info("History Page -> paymentReminder Fired - TransID: [" + input.TransId +
@@ -3178,7 +3173,6 @@ namespace Nooch.Web.Controllers
                     string serviceMethod = "SendTransactionReminderEmail?ReminderType=" + reminderType + "&TransactionId=" + input.TransId + "&accessToken=" + MemDeatils.AccessToken + "&MemberId=" + input.memberId;
                     string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
 
-
                     Logger.Info("URL made for transaction reminder is " + String.Concat(serviceUrl, serviceMethod));
 
                     var serviceResult = ResponseConverter<StringResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
@@ -3200,9 +3194,7 @@ namespace Nooch.Web.Controllers
                     }
                 }
                 else
-                {
                     res.resultMsg = "Member not found";
-                }
             }
             catch (Exception ex)
             {
