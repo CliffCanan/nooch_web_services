@@ -889,9 +889,8 @@ namespace Nooch.DataAccess
                                     string msg = "Hey" + firstName + "! Just a reminder that " + senderFirstName + " " + senderLastName +
                                                  " sent you a Nooch request for $" + trans.Amount.ToString("n2") + ". Might want to pay up!";
 
-                                    Utility.SendNotificationMessage(msg, 1, null, trans.Member.DeviceToken,
-                                                                                  Utility.GetValueFromConfig("AppKey"),
-                                                                                  Utility.GetValueFromConfig("MasterSecret"));
+                                    Utility.SendNotificationMessage(msg,"Nooch" , trans.Member.DeviceToken,
+                                                                                  trans.Member.DeviceType);
 
                                     Logger.Info("TDA -> SendTransactionReminderEmail - (B/t 2 Existing Nooch Users) - Push notification sent successfully - [Username: " +
                                                 toAddress + "], [Device Token: " + trans.Member.DeviceToken + "]");
@@ -1178,9 +1177,10 @@ namespace Nooch.DataAccess
                         try
                         {
                             string mailBodyText = RejectorFirstName + " " + RejectorLastName + " just rejected your Nooch payment request for $" + wholeAmount + ".";
-                            Utility.SendNotificationMessage(mailBodyText, 1, null,
-                                transactionDetail.Member1.DeviceToken,
-                                Utility.GetValueFromConfig("AppKey"), Utility.GetValueFromConfig("MasterSecret"));
+                            
+
+                            Utility.SendNotificationMessage(mailBodyText, "Nooch", transactionDetail.Member1.DeviceToken,
+                                                                                   transactionDetail.Member1.DeviceType);
                         }
                         catch (Exception)
                         {
@@ -2016,9 +2016,13 @@ namespace Nooch.DataAccess
                                       + " " + CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member.LastName))
                                       + " just declined your Nooch payment request.";
 
-                                Utility.SendNotificationMessage(mailBodyText, 0, null,
-                                           noochMemberfornotification.DeviceToken,
-                                           Utility.GetValueFromConfig("AppKey"), Utility.GetValueFromConfig("MasterSecret"));
+                                
+
+
+                                Utility.SendNotificationMessage(mailBodyText, "Nooch", noochMemberfornotification.DeviceToken,
+                                                                                   noochMemberfornotification.DeviceType);
+
+
                                 Logger.Info("TDA -> Request Denied - Push notification sent to [" + noochMemberfornotification.UDID1 + "] sucessfully");
                             }
                             catch (Exception)
@@ -2505,9 +2509,8 @@ namespace Nooch.DataAccess
                                 {
                                     string mailBodyText = RejectorFullName + " just denied your payment request for $" + wholeAmount + ".";
 
-                                    Utility.SendNotificationMessage(mailBodyText, 0, null,
-                                                                    memberObj.DeviceToken,
-                                                                    Utility.GetValueFromConfig("AppKey"), Utility.GetValueFromConfig("MasterSecret"));
+                                    Utility.SendNotificationMessage(mailBodyText, "Nooch", memberObj.DeviceToken,
+                                                                                   memberObj.DeviceType);
 
                                     Logger.Info("TDA -> RejectMoneyCommon Request Denied - Push notification sent to [" +
                                                 memberObj.UDID1 + "] successfully");
@@ -2629,9 +2632,8 @@ namespace Nooch.DataAccess
                                 {
                                     string pushBodyText = TransRecipId + " just rejected your payment request for $" + wholeAmount + ".";
 
-                                    Utility.SendNotificationMessage(pushBodyText, 1, null,
-                                        noochMemberfornotification.DeviceToken,
-                                        Utility.GetValueFromConfig("AppKey"), Utility.GetValueFromConfig("MasterSecret"));
+                                    Utility.SendNotificationMessage(pushBodyText, "Nooch", noochMemberfornotification.DeviceToken,
+                                                                                  noochMemberfornotification.DeviceType);
 
                                     Logger.Info("TDA -> RejectMoneyCommon - Push notification sent to [" +
                                                            noochMemberfornotification.UDID1 + "] successfully.");
@@ -3453,6 +3455,7 @@ namespace Nooch.DataAccess
                                     {
                                         // for push notification
                                         string deviceId = friendDetails != null ? recipientOfRequest.DeviceToken : null;
+                                        string devicety = friendDetails != null ? recipientOfRequest.DeviceType : null;
                                         string mailBodyText = "Hi, " + RequesterFirstName + " " + RequesterLastName +
                                                               " requested $" + wholeAmount + " from you. Pay up now using Nooch.";
 
@@ -3460,10 +3463,10 @@ namespace Nooch.DataAccess
                                         {
                                             if (!String.IsNullOrEmpty(deviceId) && (friendDetails.TransferAttemptFailure ?? false))
                                             {
-                                                string response = Utility.SendNotificationMessage(mailBodyText,
-                                                        1, null, deviceId,
-                                                        Utility.GetValueFromConfig("AppKey"),
-                                                        Utility.GetValueFromConfig("MasterSecret"));
+                                                
+
+                                                Utility.SendNotificationMessage(mailBodyText, "Nooch", deviceId,
+                                                                                   devicety);
 
                                                 Logger.Info("Request Received Push notification sent to [" + deviceId + "] successfully.");
                                             }
@@ -3760,9 +3763,8 @@ namespace Nooch.DataAccess
 
                                         Logger.Info("TDA -> RequestMoney - CHECKPOINT #3C");
 
-                                        Utility.SendNotificationMessage(msg, 1, null, sender.DeviceToken,
-                                                                        Utility.GetValueFromConfig("AppKey"),
-                                                                        Utility.GetValueFromConfig("MasterSecret"));
+                                        Utility.SendNotificationMessage(msg, "Nooch", sender.DeviceToken,
+                                                                                   sender.DeviceType);
 
                                         Logger.Info("TDA -> SendTransactionReminderEmail - (B/t 2 Existing Nooch Users) - Push notification sent successfully - [Username: " +
                                                     CommonHelper.GetDecryptedData(transaction.Member.UserName) + "], [DeviceToken: " + sender.DeviceToken + "]");
@@ -4060,6 +4062,7 @@ namespace Nooch.DataAccess
                                     {
                                         // for push notification
                                         string deviceId = friendDetails != null ? recipientOfRequest.DeviceToken : null;
+                                        string deviceTy = friendDetails != null ? recipientOfRequest.DeviceType: null;
                                         string mailBodyText = "Hi, " + RequesterFirstName + " " + RequesterLastName +
                                                               " requested $" + wholeAmount + " from you. Pay up now using Nooch.";
 
@@ -4067,10 +4070,10 @@ namespace Nooch.DataAccess
                                         {
                                             if (!String.IsNullOrEmpty(deviceId) && (friendDetails.TransferAttemptFailure ?? false))
                                             {
-                                                string response = Utility.SendNotificationMessage(mailBodyText,
-                                                        1, null, deviceId,
-                                                        Utility.GetValueFromConfig("AppKey"),
-                                                        Utility.GetValueFromConfig("MasterSecret"));
+                                                
+                                                string response = Utility.SendNotificationMessage(mailBodyText, "Nooch", deviceId,
+                                                                                   deviceTy);
+
 
                                                 Logger.Info("Request Received Push notification sent to [" + deviceId + "] successfully.");
                                             }
@@ -4368,9 +4371,10 @@ namespace Nooch.DataAccess
 
                                         Logger.Info("TDA -> RequestMoney - CHECKPOINT #3C");
 
-                                        Utility.SendNotificationMessage(msg, 1, null, receiver.DeviceToken,
-                                                                        Utility.GetValueFromConfig("AppKey"),
-                                                                        Utility.GetValueFromConfig("MasterSecret"));
+                                        
+
+                                        Utility.SendNotificationMessage(msg, "Nooch", receiver.DeviceToken,
+                                                                                   receiver.DeviceType);
 
                                         Logger.Info("TDA -> SendTransactionReminderEmail - (B/t 2 Existing Nooch Users) - Push notification sent successfully - [Username: " +
                                                     CommonHelper.GetDecryptedData(transaction.Member.UserName) + "], [DeviceToken: " + receiver.DeviceToken + "]");
@@ -5891,9 +5895,10 @@ namespace Nooch.DataAccess
                                 {
                                     pushMsgTxt = pushMsgTxt + "!";
                                 }
-                                Utility.SendNotificationMessage(pushMsgTxt, 1, null, requester.DeviceToken,
-                                                                              Utility.GetValueFromConfig("AppKey"),
-                                                                              Utility.GetValueFromConfig("MasterSecret"));
+                                
+
+                                Utility.SendNotificationMessage(pushMsgTxt, "Nooch", requester.DeviceToken,
+                                                                                   requester.DeviceType);
 
                                 Logger.Info("TDA -> HandleRequestMoney - Request Paid Push notification sent to SENDER of request: [" +
                                                        requestMakerFirstName + " " + requestMakerLastName + "]");
@@ -6730,9 +6735,10 @@ namespace Nooch.DataAccess
                                                             " " + senderLastName + "! Spend it wisely :-)";
                                     try
                                     {
-                                        Utility.SendNotificationMessage(pushBodyText, 1, null, recipDeviceId,
-                                                                        Utility.GetValueFromConfig("AppKey"),
-                                                                        Utility.GetValueFromConfig("MasterSecret"));
+                                        
+
+                                        Utility.SendNotificationMessage(pushBodyText, "Nooch", recipDeviceId,
+                                                                                   recipientNoochDetails.DeviceType);
 
                                         Logger.Info("TDA -> TransferMoneyUsingSynapse -> SUCCESS - Push notification sent to " +
                                                     "Recipient [" + recipientFirstName + " " + recipientLastName + "] successfully.");
@@ -6855,6 +6861,7 @@ namespace Nooch.DataAccess
                                 if (senderNotificationSettings.TransferAttemptFailure == true)
                                 {
                                     string senderDeviceId = senderNotificationSettings != null ? senderNoochDetails.DeviceToken : null;
+                                    string senderDeviceTy = senderNotificationSettings != null ? senderNoochDetails.DeviceType: null;
 
                                     string mailBodyText = "Your attempt to send $" + transInput.Amount.ToString("n2") +
                                                           " to " + recipientFirstName + " " + recipientLastName + " failed ;-(  Contact Nooch support for more info.";
@@ -6863,9 +6870,9 @@ namespace Nooch.DataAccess
                                     {
                                         try
                                         {
-                                            Utility.SendNotificationMessage(mailBodyText, 0, null, senderDeviceId,
-                                                                                        Utility.GetValueFromConfig("AppKey"),
-                                                                                        Utility.GetValueFromConfig("MasterSecret"));
+                                            
+                                            Utility.SendNotificationMessage(mailBodyText, "Nooch", senderDeviceId,
+                                                                                   senderDeviceTy);
 
                                             Logger.Info("TDA -> TransferMoneyUsingSynapse FAILED - Push notif sent to Sender: [" +
                                                 senderFirstName + " " + senderLastName + "] successfully.");
@@ -7325,9 +7332,8 @@ namespace Nooch.DataAccess
                                     try
                                     {
 
-                                        Utility.SendNotificationMessage(pushBodyText, 0, null, senderDeviceId,
-                                            Utility.GetValueFromConfig("AppKey"),
-                                            Utility.GetValueFromConfig("MasterSecret"));
+                                        Utility.SendNotificationMessage(pushBodyText, "Nooch", senderDeviceId,
+                                                                                   sender.DeviceType);
 
                                         Logger.Info("TDA -> TransferMoneyToNonNoochUserUsingSynapse FAILED and Failure Push notif sent to [" +
                                             senderFirstName + " " + senderLastName + "] succesfully.");
@@ -7760,9 +7766,9 @@ namespace Nooch.DataAccess
                                         {
                                             if (!String.IsNullOrEmpty(deviceId) && (friendDetails.TransferAttemptFailure ?? false))
                                             {
-                                                Utility.SendNotificationMessage(smsText, 0, null, deviceId,
-                                                    Utility.GetValueFromConfig("AppKey"),
-                                                    Utility.GetValueFromConfig("MasterSecret"));
+                                                
+                                                Utility.SendNotificationMessage(smsText, "Nooch", deviceId,
+                                                                                   sender.DeviceType);
 
                                                 Logger.Info("TDA -> TransferMoneyToNonNoochUserThroughPhoneUsingsynapse FAILED - Push notification sent to [" + deviceId + "] successfully.");
                                             }
