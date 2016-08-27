@@ -165,10 +165,7 @@ namespace Nooch.Common
                 try
                 {
                     sourcePhone.Trim();
-                    if (sourcePhone.Length != 10)
-                    {
-                        return sourcePhone;
-                    }
+                    if (sourcePhone.Length != 10) return sourcePhone;
                     sourcePhone = "(" + sourcePhone;
                     sourcePhone = sourcePhone.Insert(4, ")");
                     sourcePhone = sourcePhone.Insert(5, " ");
@@ -197,20 +194,14 @@ namespace Nooch.Common
                 sourceNum = sourceNum.Replace("-", "");
                 sourceNum = sourceNum.Replace("+", "");
             }
-            else
-            {
-                Logger.Error("Common Helper -> RemovePhoneNumberFormatting Source String was NULL or EMPTY - [SourceData: " + sourceNum + "]");
-            }
+            else Logger.Error("Common Helper -> RemovePhoneNumberFormatting Source String was NULL or EMPTY - [SourceData: " + sourceNum + "]");
             return sourceNum;
         }
 
 
         public static string UppercaseFirst(string s)
         {
-            if (string.IsNullOrEmpty(s))
-            {
-                return string.Empty;
-            }
+            if (string.IsNullOrEmpty(s)) return string.Empty;
 
             return char.ToUpper(s[0]) + s.Substring(1);
         }
@@ -228,40 +219,8 @@ namespace Nooch.Common
                     //Get the member details
 
                     var noochMember = _dbContext.Members.FirstOrDefault(m => m.AccessToken == accessToken && m.IsDeleted == false && m.MemberId == memGuid);
-                    if (noochMember != null)
-                    {
-                        return true;
-                    }
-                    else
-                    {
-                        #region codeforemailandsms
-                        //Code to send sms and email when logged out
-                        /*
-                        MemberDataAccess mdA = new MemberDataAccess();
-                        Members member = mdA.GetMemberDetails(memberId);
-                        //This code was commented as it was sending email and sms twice to the user.
-                        StringResult PhoneNumber = GetPhoneNumberByMemberId(memberId);
-                        if (PhoneNumber.Result != "")
-                        {
-                            string msg = "Hi\n You are automatically logged out from your device because you signed in into another device.\n - Team Nooch";
-
-                            var fromAddress = Utility.GetValueFromConfig("adminMail");
-                            var toAddress = Common Helper.GetDecryptedData(member.UserName);
-                            try
-                            {
-                                // email notification
-                                UtilityDataAccess.SendEmail(null, MailPriority.High, fromAddress, toAddress, null, "Nooch automatic LogOut.", null, null, null, null, msg);
-                            }
-                            catch (Exception)
-                            {
-                                Logger.Info("InviteReminder - LogOut mail not sent to [" + toAddress + "]. Problem occured in sending mail.");
-                            }
-                            //sms notification
-                            StringResult smsResult = ApiSMS(PhoneNumber.Result, msg, accessToken, memberId);
-                        }*/
-                        #endregion
-                        return false;
-                    }
+                    if (noochMember != null) return true;
+                    else return false;
                 }
                 catch (Exception ex)
                 {
@@ -269,10 +228,7 @@ namespace Nooch.Common
                     return false;
                 }
             }
-            else
-            {
-                return false;
-            }
+            else return false;
         }
 
 
@@ -327,14 +283,9 @@ namespace Nooch.Common
             {
                 Guid memGuid = Utility.ConvertToGuid(MemberId);
 
-                var noochMember =
-                    _dbContext.Members.FirstOrDefault(
-                        m => m.MemberId == memGuid && m.IsDeleted == false);
+                var noochMember = _dbContext.Members.FirstOrDefault(m => m.MemberId == memGuid && m.IsDeleted == false);
 
-                if (noochMember != null)
-                {
-                    _dbContext.Entry(noochMember).Reload();
-                }
+                if (noochMember != null) _dbContext.Entry(noochMember).Reload();
 
                 return noochMember != null ? GetDecryptedData(noochMember.UserName) : null;
             }
@@ -351,13 +302,8 @@ namespace Nooch.Common
         {
             Guid memGuid = Utility.ConvertToGuid(MemberId);
 
-            var noochMember =
-                _dbContext.Members.FirstOrDefault(
-                    m => m.MemberId == memGuid && m.IsDeleted == false);
-            if (noochMember != null)
-            {
-                _dbContext.Entry(noochMember).Reload();
-            }
+            var noochMember = _dbContext.Members.FirstOrDefault(m => m.MemberId == memGuid && m.IsDeleted == false);
+            if (noochMember != null) _dbContext.Entry(noochMember).Reload();
 
             return noochMember != null ? noochMember.ContactNumber : null;
         }
@@ -365,14 +311,8 @@ namespace Nooch.Common
 
         public static string GetMemberIdByPhone(string memberPhone)
         {
-            var noochMember =
-                _dbContext.Members.FirstOrDefault(
-                    m => m.ContactNumber == memberPhone && m.IsDeleted == false);
-
-            if (noochMember != null)
-            {
-                _dbContext.Entry(noochMember).Reload();
-            }
+            var noochMember = _dbContext.Members.FirstOrDefault(m => m.ContactNumber == memberPhone && m.IsDeleted == false);
+            if (noochMember != null) _dbContext.Entry(noochMember).Reload();
 
             return noochMember != null ? noochMember.MemberId.ToString() : null;
         }
@@ -382,20 +322,13 @@ namespace Nooch.Common
         {
             Guid memGuid = Utility.ConvertToGuid(MemberId);
 
-            var noochMember =
-                _dbContext.Members.FirstOrDefault(
-                    m => m.MemberId == memGuid && m.IsDeleted == false);
+            var noochMember = _dbContext.Members.FirstOrDefault(m => m.MemberId == memGuid && m.IsDeleted == false);
 
             if (noochMember == null || noochMember.InviteCodeId == null) return "";
             Guid inviGuid = Utility.ConvertToGuid(noochMember.InviteCodeId.ToString());
 
-            var inviteCodeREsult =
-                _dbContext.InviteCodes.FirstOrDefault(
-                    m => m.InviteCodeId == inviGuid);
-            if (inviteCodeREsult != null)
-            {
-                _dbContext.Entry(inviteCodeREsult).Reload();
-            }
+            var inviteCodeREsult = _dbContext.InviteCodes.FirstOrDefault(m => m.InviteCodeId == inviGuid);
+            if (inviteCodeREsult != null) _dbContext.Entry(inviteCodeREsult).Reload();
             return inviteCodeREsult != null ? inviteCodeREsult.code : "";
         }
 
@@ -407,8 +340,7 @@ namespace Nooch.Common
                 var userNameLowerCase = GetEncryptedData(userName.ToLower());
                 userName = GetEncryptedData(userName);
 
-                var noochMember =
-                    _dbContext.Members.FirstOrDefault(
+                var noochMember = _dbContext.Members.FirstOrDefault(
                         m => m.UserNameLowerCase == userNameLowerCase && m.UserName == userName && m.IsDeleted == false);
 
                 if (noochMember != null)
@@ -447,13 +379,7 @@ namespace Nooch.Common
                         return noochMember.PinNumber; // Return ENCRYPTED Pin Number
                     }
                     else
-                    {
                         Logger.Error("Common Helper -> GetMemberPinByUserName FAILED - Couldn't find any Nooch user with the username of: [" + userName + "]");
-                    }
-                }
-                else
-                {
-                    Logger.Error("Common Helper -> GetMemberPinByUserName FAILED - Username was either NULL or too short, or missing '@'");
                 }
             }
             catch (Exception ex)
@@ -496,14 +422,10 @@ namespace Nooch.Common
 
                 string memId = string.Empty;
 
-                if (user.ToLower() == "rentscene")
-                    memId = "852987e8-d5fe-47e7-a00b-58a80dd15b49";
-                else if (user == "habitat")
-                    memId = "45357cf0-e651-40e7-b825-e1ff48bf44d2";
-                else if (user.ToLower() == "appjaxx")
-                    memId = "8b4b4983-f022-4289-ba6e-48d5affb5484";
-                else if (user == "cliff")
-                    memId = "b3a6cf7b-561f-4105-99e4-406a215ccf60";
+                if (user.ToLower() == "rentscene") memId = "852987e8-d5fe-47e7-a00b-58a80dd15b49";
+                else if (user == "habitat") memId = "45357cf0-e651-40e7-b825-e1ff48bf44d2";
+                else if (user.ToLower() == "appjaxx") memId = "8b4b4983-f022-4289-ba6e-48d5affb5484";
+                else if (user == "cliff") memId = "b3a6cf7b-561f-4105-99e4-406a215ccf60";
                 else
                 {
                     res.msg = "Invalid user";
@@ -521,10 +443,7 @@ namespace Nooch.Common
                         res.success = true;
                         res.msg = "PIN confirmed successfully";
                     }
-                    else
-                    {
-                        res.msg = "Incorrect PIN";
-                    }
+                    else res.msg = "Incorrect PIN";
                 }
                 else
                 {
@@ -546,22 +465,17 @@ namespace Nooch.Common
         {
             var id = Utility.ConvertToGuid(tokenId);
 
-            var noochMember =
-                _dbContext.AuthenticationTokens.FirstOrDefault(m => m.TokenId == id && m.IsActivated == true);
-            if (noochMember != null)
-            {
-                _dbContext.Entry(noochMember).Reload();
-            }
+            var noochMember = _dbContext.AuthenticationTokens.FirstOrDefault(m => m.TokenId == id &&
+                                                                                  m.IsActivated == true);
+            if (noochMember != null) _dbContext.Entry(noochMember).Reload();
             return noochMember != null;
         }
+
 
         public static bool IsNonNoochMemberActivated(string emailId)
         {
             var noochMember = _dbContext.Members.FirstOrDefault(m => m.UserName == emailId && m.IsDeleted == false);
-            if (noochMember != null)
-            {
-                _dbContext.Entry(noochMember).Reload();
-            }
+            if (noochMember != null) _dbContext.Entry(noochMember).Reload();
             return noochMember != null;
         }
 
@@ -573,12 +487,8 @@ namespace Nooch.Common
 
                 var userNameLowerCase = GetEncryptedData(userName.ToLower());
 
-                var noochMember =
-                    _dbContext.Members.FirstOrDefault(m => m.UserNameLowerCase == userNameLowerCase && m.IsDeleted == false);
-                if (noochMember != null)
-                {
-                    _dbContext.Entry(noochMember).Reload();
-                }
+                var noochMember = _dbContext.Members.FirstOrDefault(m => m.UserNameLowerCase == userNameLowerCase && m.IsDeleted == false);
+                if (noochMember != null) _dbContext.Entry(noochMember).Reload();
 
                 return noochMember != null ? "Username already exists for the primary email you entered. Please try with some other email." : "Not a nooch member.";
             }
@@ -605,8 +515,7 @@ namespace Nooch.Common
                                                    (m.TransactionType == "5dt4HUwCue532sNmw3LKDQ==" ||
                                                     m.TransactionType == "DrRr1tU1usk7nNibjtcZkA==" ||
                                                     m.TransactionType == "T3EMY1WWZ9IscHIj3dbcNw=="))
-                    .ToList()
-                    .Sum(t => t.Amount);
+                    .ToList().Sum(t => t.Amount);
 
             if (totalAmountSent > 10)
             {
@@ -650,6 +559,7 @@ namespace Nooch.Common
             return false;
         }
 
+
         public static Member GetMemberDetails(string memberId)
         {
             try
@@ -671,6 +581,7 @@ namespace Nooch.Common
 
             return null;
         }
+
 
         /// <summary>
         /// Looks up a member by an UNENCRYPTED email address. Will find any member based on Username OR SecondaryEmail fields.
@@ -787,8 +698,7 @@ namespace Nooch.Common
 
             var memberObj = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == id &&
                                                                                     m.IsDeleted == false);
-            if (memberObj != null)
-                _dbContext.Entry(memberObj).Reload();
+            if (memberObj != null) _dbContext.Entry(memberObj).Reload();
             else
                 Logger.Error("Common Helper -> GetSynapseCreateaUserDetails FAILED - No Synapse Create " +
                              "User Record found for MemberId: [" + memberId + "]");
@@ -798,22 +708,19 @@ namespace Nooch.Common
 
         public static MemberNotification GetMemberNotificationSettingsByUserName(string userName)
         {
-            Logger.Info("Common Helper -> GetMemberNotificationSettingsByUserName Initiated- UserName: [" + userName + "]");
+            Logger.Info("Common Helper -> GetMemberNotificationSettingsByUserName Fired - UserName: [" + userName + "]");
 
             userName = GetEncryptedData(userName);
 
             var memberNotifications = _dbContext.MemberNotifications.FirstOrDefault(m => m.Member.UserName == userName);
-            if (memberNotifications != null)
-            {
-                _dbContext.Entry(memberNotifications).Reload();
-            }
+            if (memberNotifications != null) _dbContext.Entry(memberNotifications).Reload();
 
             return memberNotifications;
         }
 
         public static string IncreaseInvalidLoginAttemptCount(string memGuid, int loginRetryCountInDb)
         {
-            Logger.Info("Common Helper -> IncreaseInvalidLoginAttemptCount Initiated (User's PW was incorrect during login attempt) - " +
+            Logger.Info("Common Helper -> IncreaseInvalidLoginAttemptCount Fired (User's PW was incorrect during login attempt) - " +
                         "This is invalid attempt #: [" + (loginRetryCountInDb + 1).ToString() + "], " +
                         "MemberId: [" + memGuid + "]");
 
@@ -860,10 +767,7 @@ namespace Nooch.Common
             try
             {
                 var noochMember = _dbContext.Members.FirstOrDefault(m => m.AccessToken == AccessToken && m.IsDeleted == false);
-                if (noochMember != null)
-                {
-                    _dbContext.Entry(noochMember).Reload();
-                }
+                if (noochMember != null) _dbContext.Entry(noochMember).Reload();
                 return noochMember != null;
             }
             catch (Exception ex)
@@ -876,10 +780,9 @@ namespace Nooch.Common
         public static bool IsListedInSDN(string lastName, Guid userId)
         {
             bool result = false;
-            Logger.Info("Common Helper -> IsListedInSDNList Initiated- userName: [" + lastName + "]");
+            Logger.Info("Common Helper -> IsListedInSDNList Fired - userName: [" + lastName + "]");
 
-            var noochMemberN =
-                _dbContext.Members.FirstOrDefault(
+            var noochMemberN = _dbContext.Members.FirstOrDefault(
                     m => m.IsDeleted == false && (m.IsSDNSafe == false || m.IsSDNSafe == null) && m.MemberId == userId);
 
             if (noochMemberN != null)
@@ -941,13 +844,8 @@ namespace Nooch.Common
                         Utility.GetValueFromConfig("SDNMailReciever"), null, "SDN Listed", null, null, null,
                         null, str.ToString());
 
-                    if (b)
-                    {
-                        Logger.Info("Common Helper -> SDN Screening Alert - SDN Screening Results email sent to SDN@nooch.com");
-                    }
-                    {
-                        Logger.Error("Common Helper -> SDN Screening Alert - SDN Screening Results email NOT sent to SDN@nooch.com.");
-                    }
+                    if (b) Logger.Info("Common Helper -> SDN Screening Alert - SDN Screening Results email sent to SDN@nooch.com");
+                    else Logger.Error("Common Helper -> SDN Screening Alert - SDN Screening Results email NOT sent to SDN@nooch.com.");
                 }
                 else
                 {
@@ -990,14 +888,8 @@ namespace Nooch.Common
 
                     if (memberEntity != null)
                     {
-                        if (memberEntity.PinNumber.Equals(pinNumber.Replace(" ", "+")))
-                        {
-                            return "Success";
-                        }
-                        else
-                        {
-                            return "Invalid Pin";
-                        }
+                        if (memberEntity.PinNumber.Equals(pinNumber.Replace(" ", "+"))) return "Success";
+                        else return "Invalid Pin";
                     }
                     return "Member not found.";
                 }
@@ -1040,8 +932,7 @@ namespace Nooch.Common
                     var disputeStatus = GetEncryptedData(Constants.DISPUTE_STATUS_REPORTED);
                     var disputeReviewStatus = GetEncryptedData(Constants.DISPUTE_STATUS_REVIEW);
 
-                    if (
-                        !memberEntity.Transactions.Any(transaction =>
+                    if (!memberEntity.Transactions.Any(transaction =>
                                 (transaction.DisputeStatus == disputeStatus ||
                                  transaction.DisputeStatus == disputeReviewStatus) &&
                                  memberEntity.MemberId == transaction.RaisedById))
@@ -1059,9 +950,7 @@ namespace Nooch.Common
 
                     // incorrect pinnumber after 24 hours
                     if (!memberEntity.PinNumber.Equals(pinNumber.Replace(" ", "+")))
-                    {
                         return IncreaseInvalidPinAttemptCount(memberEntity, pinRetryCountInDb);
-                    }
                 }
 
                 if (pinRetryCountInDb < 3 && memberEntity.PinNumber.Equals(pinNumber.Replace(" ", "+")))
@@ -1078,14 +967,12 @@ namespace Nooch.Common
                 //Username is there in db, whereas pin number entered by user is incorrect.
                 if (memberEntity.InvalidPinAttemptCount == null || memberEntity.InvalidPinAttemptCount == 0)
                 {
-                    //this is the first invalid try
+                    // This is the first invalid try
                     return IncreaseInvalidPinAttemptCount(memberEntity, pinRetryCountInDb);
                 }
 
                 if (pinRetryCountInDb == 3)
-                {
                     return "Your account has been suspended. Please contact admin or send a mail to support@nooch.com if you need to reset your PIN number immediately.";
-                }
                 if (pinRetryCountInDb == 2)
                 {
                     memberEntity.InvalidPinAttemptCount = pinRetryCountInDb + 1;
@@ -1204,11 +1091,7 @@ namespace Nooch.Common
                 Guid memId = Utility.ConvertToGuid(memberId);
 
                 var memberNotifications = _dbContext.MemberNotifications.FirstOrDefault(m => m.Member.MemberId == memId);
-
-                if (memberNotifications != null)
-                {
-                    _dbContext.Entry(memberNotifications).Reload();
-                }
+                if (memberNotifications != null) _dbContext.Entry(memberNotifications).Reload();
 
                 return memberNotifications;
             }
@@ -1238,10 +1121,7 @@ namespace Nooch.Common
                               .Select(s => s[random.Next(s.Length)])
                               .ToArray());
                 var transactionEntity = _dbContext.Transactions.FirstOrDefault(n => n.TransactionTrackingId == randomId);
-                if (transactionEntity == null)
-                {
-                    return randomId;
-                }
+                if (transactionEntity == null) return randomId;
 
                 j += i + 1;
             }
@@ -1339,11 +1219,7 @@ namespace Nooch.Common
             try
             {
                 var memberIP = _dbContext.MembersIPAddresses.OrderByDescending(m => m.ModifiedOn).FirstOrDefault(m => m.MemberId == MemberIdPassed);
-
-                if (memberIP != null)
-                {
-                    _dbContext.Entry(memberIP).Reload();
-                }
+                if (memberIP != null) _dbContext.Entry(memberIP).Reload();
 
                 lastIP = memberIP != null ? memberIP.Ip : "54.201.43.89";
             }

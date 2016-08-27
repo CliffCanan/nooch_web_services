@@ -564,16 +564,9 @@ namespace Nooch.DataAccess
                             transObj.IsPhoneInvitation == true &&
                             transObj.PhoneNumberInvited != null)
                         {
-                            string MessageToRecepient = senderFullName + " just cancelled a $" + s32[0].ToString() + "." + s32[1].ToString() +
-                                " payment to you on Nooch. Sorry about that!";
-
-                            // removing extra stuff from phone number
-                            nonNoochRecipient = nonNoochRecipient.Replace("(", "");
-                            nonNoochRecipient = nonNoochRecipient.Replace(")", "");
-                            nonNoochRecipient = nonNoochRecipient.Replace(" ", "");
-                            nonNoochRecipient = nonNoochRecipient.Replace("-", "");
-
-                            string s = Utility.SendSMS(nonNoochRecipient, MessageToRecepient);
+                            var smsTxt = senderFullName + " just cancelled a $" + s32[0] + "." + s32[1] +
+                                         " payment to you on Nooch. Sorry about that!";
+                            Utility.SendSMS(CommonHelper.RemovePhoneNumberFormatting(nonNoochRecipient), smsTxt);
                         }
                         else
                         {
@@ -611,16 +604,13 @@ namespace Nooch.DataAccess
                         return "Something went wrong while updating transaction, please retry.";
                     }
                 }
-                else
-                {
-                    // Transaction Not Found
+                else // Transaction Not Found
                     return "No Such Transaction Found.";
-                }
             }
             catch (Exception ex)
             {
                 Logger.Error("TDA -> CancelMoneyTransferToNonMemberForSender FAILED (Outer Exception) - TransID: [" + TransactionId + "]");
-                return "" + ex.Message;
+                return ex.Message;
             }
         }
 
@@ -697,7 +687,7 @@ namespace Nooch.DataAccess
                         #endregion Setup Common Variables
 
                         #region RequestMoneyReminderToNewUser
-                        
+
                         // Now check if this transaction was sent via Email or Phone Number (SMS)
                         if (trans.InvitationSentTo != null) // 'InvitationSentTo' field only used if it's an Email Transaction
                         {
@@ -829,7 +819,7 @@ namespace Nooch.DataAccess
                             requesterLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member1.LastName));
                             var rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"), "Nooch/RejectMoney?TransactionId=" + TransId + "&UserType=mx5bTcAYyiOf9I5Py9TiLw==&TransType=T3EMY1WWZ9IscHIj3dbcNw==");
                             string paylink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"), "Nooch/payRequest?TransactionId=" + TransId + "&UserType=mx5bTcAYyiOf9I5Py9TiLw=="); // Update to "Existing"
-                            
+
                             #region Reminder EMAIL
 
                             string toAddress = CommonHelper.GetDecryptedData(trans.Member.UserName);
@@ -909,7 +899,6 @@ namespace Nooch.DataAccess
 
                     #endregion Requests - Both Types
                 }
-
                 else if (ReminderType == "InvitationReminderToNewUser")
                 {
                     #region InvitationReminderToNewUser
@@ -1105,12 +1094,10 @@ namespace Nooch.DataAccess
             {
                 var transId = Utility.ConvertToGuid(TrannsactionId);
 
-                var transactionDetail = _dbContext.Transactions.FirstOrDefault(m => m.TransactionId == transId
-                                                                                    && m.TransactionStatus == "Pending" &&
-                                                                                    (m.TransactionType ==
-                                                                                     "DrRr1tU1usk7nNibjtcZkA==" ||
-                                                                                     m.TransactionType ==
-                                                                                     "T3EMY1WWZ9IscHIj3dbcNw=="));
+                var transactionDetail = _dbContext.Transactions.FirstOrDefault(m => m.TransactionId == transId &&
+                                                                                    m.TransactionStatus == "Pending" &&
+                                                                                   (m.TransactionType == "DrRr1tU1usk7nNibjtcZkA==" ||
+                                                                                    m.TransactionType == "T3EMY1WWZ9IscHIj3dbcNw=="));
 
                 if (transactionDetail != null)
                 {
@@ -1136,17 +1123,13 @@ namespace Nooch.DataAccess
                             string firstThreeChars = transactionDetail.Memo.Substring(0, 3).ToLower();
                             bool startWithFor = firstThreeChars.Equals("for");
 
-                            if (startWithFor)
-                                memo = transactionDetail.Memo.ToString();
-                            else
-                                memo = "For " + transactionDetail.Memo.ToString();
+                            if (startWithFor) memo = transactionDetail.Memo.ToString();
+                            else memo = "For " + transactionDetail.Memo.ToString();
                         }
-                        else
-                            memo = "For " + transactionDetail.Memo.ToString();
+                        else memo = "For " + transactionDetail.Memo.ToString();
                     }
 
                     #region Push Notification to Request Sender
-                    // sending push notification to money sender
 
                     var noochMemberfornotification = CommonHelper.GetMemberNotificationSettings(transactionDetail.Member1.MemberId.ToString());
 
@@ -1166,7 +1149,7 @@ namespace Nooch.DataAccess
                         }
                     }
 
-                    #endregion
+                    #endregion Push Notification to Request Sender
 
                     // Sending email to request sender about rejection
 
@@ -1230,8 +1213,7 @@ namespace Nooch.DataAccess
 
                     #endregion
                 }
-                else
-                    return "";
+                else return "";
             }
             catch (Exception ex)
             {
@@ -1254,8 +1236,7 @@ namespace Nooch.DataAccess
 
                 var transactionDetail = _dbContext.Transactions.Where(c => c.TransactionId == transGuid).FirstOrDefault();
 
-                if (transactionDetail != null)
-                    _dbContext.Entry(transactionDetail).Reload();
+                if (transactionDetail != null) _dbContext.Entry(transactionDetail).Reload();
 
                 return transactionDetail;
             }
@@ -1273,8 +1254,7 @@ namespace Nooch.DataAccess
             Logger.Info("TDA -> GetTransactionsList Initiated - MemberId: [" + memberId + "] - ListType: [" + listType +
                         "], SubListType: [" + SubListType + "]");
 
-            if (pageSize == null || pageSize < 100)
-                pageSize = 50;
+            if (pageSize == null || pageSize < 100) pageSize = 50;
 
             totalRecordsCount = 0;
             _dbContext = new NOOCHEntities();
@@ -1455,11 +1435,9 @@ namespace Nooch.DataAccess
                     _dbContext.Entry(disputedTransaction).Reload();
                     transaction = disputedTransaction.DisputeDate > receivedTransaction.TransactionDate ? disputedTransaction : receivedTransaction;
                 }
-                else
-                    transaction = receivedTransaction;
+                else transaction = receivedTransaction;
 
-                if (transaction != null)
-                    return transaction;
+                if (transaction != null) return transaction;
             }
 
             return new Transaction();
@@ -1475,8 +1453,7 @@ namespace Nooch.DataAccess
                 var id = Utility.ConvertToGuid(memberId);
 
                 var member = _dbContext.Members.Where(u => u.MemberId == id).FirstOrDefault();
-                if (member != null)
-                    _dbContext.Entry(member).Reload();
+                if (member != null) _dbContext.Entry(member).Reload();
 
                 string adminUserName = Utility.GetValueFromConfig("adminMail");
 
@@ -1961,7 +1938,7 @@ namespace Nooch.DataAccess
 
         public string CancelRejectTransaction(string transactionId, string userResponse)
         {
-            Logger.Info("TDA -> CancelRejectTransaction Initiated - [transactionId: " + transactionId + "], [userResponse: " + userResponse + "]");
+            Logger.Info("TDA -> CancelRejectTransaction Fired - TransID: [" + transactionId + "], UserResponse: [" + userResponse + "]");
 
             if (userResponse == "Rejected" || userResponse == "Cancelled")
             {
@@ -1980,26 +1957,24 @@ namespace Nooch.DataAccess
                     // 'Members1' IS THE REQUEST SENDER
                     if (userResponse == "Rejected")
                     {
-                        // sending push notification to request maker
+                        // Send push notification to request maker
                         Guid RequestSenderId = Utility.ConvertToGuid(transactionDetail.Member1.MemberId.ToString());
 
-                        var noochMemberfornotification = _dbContext.Members.Where(memberTemp =>
-                                memberTemp.MemberId.Equals(RequestSenderId) && memberTemp.IsDeleted == false && memberTemp.ContactNumber != null && memberTemp.IsVerifiedPhone == true).FirstOrDefault();
+                        var noochMemberfornotification = _dbContext.Members.Where(memberTemp => memberTemp.MemberId.Equals(RequestSenderId) &&
+                                                                                                memberTemp.isRentScene != true &&
+                                                                                                memberTemp.IsDeleted == false &&
+                                                                                                memberTemp.UDID1 != null).FirstOrDefault();
 
                         if (noochMemberfornotification != null)
                         {
                             try
                             {
-                                string mailBodyText = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member.FirstName))
-                                      + " " + CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member.LastName))
-                                      + " just declined your Nooch payment request.";
+                                var smsText = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member.FirstName)) +
+                                              " " + CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member.LastName)) +
+                                              " just declined your Nooch payment request.";
 
-
-
-
-                                Utility.SendNotificationMessage(mailBodyText, "Nooch", noochMemberfornotification.DeviceToken,
-                                                                                   noochMemberfornotification.DeviceType);
-
+                                Utility.SendNotificationMessage(smsText, "Nooch", noochMemberfornotification.DeviceToken,
+                                                                noochMemberfornotification.DeviceType);
 
                                 Logger.Info("TDA -> Request Denied - Push notification sent to [" + noochMemberfornotification.UDID1 + "] sucessfully");
                             }
@@ -2010,17 +1985,17 @@ namespace Nooch.DataAccess
                         }
 
                         // sending email TO USER THAT SENT THE REQUEST about rejection
-                        string reqSenderFirstName = "";
-                        string reqRejectorFullName = "";
-                        string reqRejectorFirstName = "";
+                        var reqSenderFirstName = "";
+                        var reqRejectorFullName = "";
+                        var reqRejectorFirstName = "";
 
                         reqSenderFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member1.FirstName));
                         reqRejectorFullName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member.FirstName)) + " " +
                                                CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member.LastName));
                         reqRejectorFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member.FirstName));
 
-                        string s2 = transactionDetail.Amount.ToString("n2");
-                        string[] s3 = s2.Split('.');
+                        string wholeAmount = transactionDetail.Amount.ToString("n2");
+                        string[] s3 = wholeAmount.Split('.');
 
                         string memo = "";
                         if (transactionDetail.Memo != null && transactionDetail.Memo != "")
@@ -2030,25 +2005,16 @@ namespace Nooch.DataAccess
                                 string firstThreeChars = transactionDetail.Memo.Substring(0, 3).ToLower();
                                 bool startWithFor = firstThreeChars.Equals("for");
 
-                                if (startWithFor)
-                                {
-                                    memo = transactionDetail.Memo.ToString();
-                                }
-                                else
-                                {
-                                    memo = "For " + transactionDetail.Memo.ToString();
-                                }
+                                if (startWithFor) memo = transactionDetail.Memo.ToString();
+                                else memo = "For " + transactionDetail.Memo.ToString();
                             }
-                            else
-                            {
-                                memo = "For " + transactionDetail.Memo.ToString();
-                            }
+                            else memo = "For " + transactionDetail.Memo.ToString();
                         }
 
                         var tokens = new Dictionary<string, string>
 										{
-											{Constants.PLACEHOLDER_FIRST_NAME,reqSenderFirstName},
-											{Constants.PLACEHOLDER_RECIPIENT_FULL_NAME,reqRejectorFullName},
+											{Constants.PLACEHOLDER_FIRST_NAME, reqSenderFirstName},
+											{Constants.PLACEHOLDER_RECIPIENT_FULL_NAME, reqRejectorFullName},
 											{Constants.PLACEHLODER_CENTS, s3[1].ToString()},
 											{Constants.PLACEHOLDER_TRANSFER_AMOUNT, s3[0].ToString()},
 											{Constants.PLACEHOLDER_RECIPIENT_FIRST_NAME,reqRejectorFirstName},
@@ -2060,12 +2026,9 @@ namespace Nooch.DataAccess
 
                         try
                         {
-                            Utility.SendEmail("requestDeniedToSender",
-                                fromAddress, toAddress, null,
-                                CommonHelper.UppercaseFirst(
-                                    CommonHelper.GetDecryptedData(transactionDetail.Member.FirstName)) + " " + CommonHelper.UppercaseFirst(
-                                    CommonHelper.GetDecryptedData(transactionDetail.Member.LastName)) + " denied your payment request", null,
-                                tokens, null, null, null);
+                            Utility.SendEmail("requestDeniedToSender", fromAddress, toAddress, null,
+                                              reqRejectorFullName + " denied your payment request", null,
+                                              tokens, null, null, null);
 
                             Logger.Info("TDA -> requestDeniedToSender - Email sent to [" + toAddress + "] successfully");
                         }
@@ -2084,8 +2047,8 @@ namespace Nooch.DataAccess
 
                         var tokens2 = new Dictionary<string, string>
 										{
-											{Constants.PLACEHOLDER_FIRST_NAME,reqRejectorFirstName},
-											{Constants.PLACEHOLDER_SENDER_FULL_NAME,reqSenderFullName},
+											{Constants.PLACEHOLDER_FIRST_NAME, reqRejectorFirstName},
+											{Constants.PLACEHOLDER_SENDER_FULL_NAME, reqSenderFullName},
 											{Constants.PLACEHLODER_CENTS, s3[1].ToString()},
 											{Constants.PLACEHOLDER_TRANSFER_AMOUNT, s3[0].ToString()},
 											{Constants.MEMO, memo}
@@ -2095,10 +2058,9 @@ namespace Nooch.DataAccess
 
                         try
                         {
-                            Utility.SendEmail("requestDeniedToRecipient",
-                                fromAddress, toAddress, null,
-                                "You rejected a Nooch request from " + reqSenderFullName, null,
-                                tokens2, null, null, null);
+                            Utility.SendEmail("requestDeniedToRecipient", fromAddress, toAddress, null,
+                                              "You rejected a Nooch request from " + reqSenderFullName, null,
+                                              tokens2, null, null, null);
 
                             Logger.Info("TDA -> requestDeniedToRecipient - Email sent to [" + toAddress + "] successfully");
                         }
@@ -2116,10 +2078,7 @@ namespace Nooch.DataAccess
                     return "";
                 }
             }
-            else
-            {
-                return "";
-            }
+            else return "";
         }
 
 
@@ -3178,7 +3137,9 @@ namespace Nooch.DataAccess
         /// <returns></returns>
         public string RequestMoney(RequestDto requestDto)
         {
-            Logger.Info("TDA -> RequestMoney Initiated - MemberId: [" + requestDto.MemberId + "], SenderID: [" + requestDto.SenderId + "]");
+            Logger.Info("TDA -> RequestMoney Fired - MemberID: [" + requestDto.MemberId +
+                        "], SenderID: [" + requestDto.SenderId +
+                        "], RecipientID: [" + requestDto.ReceiverId + "]");
 
             string requestId = string.Empty;
 
@@ -3526,10 +3487,10 @@ namespace Nooch.DataAccess
                         string RequestReceiverFirstName = CommonHelper.UppercaseFirst((CommonHelper.GetDecryptedData(sender.FirstName)).ToString());
                         string RequestReceiverLastName = CommonHelper.UppercaseFirst((CommonHelper.GetDecryptedData(sender.LastName)).ToString());
 
-                        string cancelLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"), "/Nooch/CancelMoneyRequest?TransactionId=" +
-                                                                                                        requestId + "&MemberId=" + requestDto.MemberId.ToString() +
-                                                                                                        "&userType=mx5bTcAYyiOf9I5Py9TiLw==");
-
+                        string cancelLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
+                                                          "/Nooch/CancelMoneyRequest?TransactionId=" + requestId +
+                                                          "&MemberId=" + requestDto.MemberId.ToString() +
+                                                          "&userType=mx5bTcAYyiOf9I5Py9TiLw==");
 
                         string wholeAmount = requestDto.Amount.ToString("n2");
                         string[] s32 = wholeAmount.Split('.');
@@ -3542,34 +3503,18 @@ namespace Nooch.DataAccess
                                 string firstThreeChars = transaction.Memo.Substring(0, 3).ToLower();
                                 bool startWithFor = firstThreeChars.Equals("for");
 
-                                if (startWithFor)
-                                {
-                                    memo = transaction.Memo.ToString();
-                                }
-                                else
-                                {
-                                    memo = "For " + transaction.Memo.ToString();
-                                }
+                                if (startWithFor) memo = transaction.Memo.ToString();
+                                else memo = "For " + transaction.Memo.ToString();
                             }
-                            else
-                            {
-                                memo = "For " + transaction.Memo.ToString();
-                            }
+                            else memo = "For " + transaction.Memo.ToString();
                         }
 
 
-                        string requesterPic = "https://www.noochme.com/EmailTemplates/img/userpic-default.png";
-                        if (!String.IsNullOrEmpty(requester.Photo) && requester.Photo.Length > 20)
-                        {
-                            requesterPic = requester.Photo.ToString();
-                        }
+                        string requesterPic = (!String.IsNullOrEmpty(requester.Photo) && requester.Photo.Length > 20)
+                            ? requester.Photo : "https://www.noochme.com/EmailTemplates/img/userpic-default.png";
 
-                        string senderPic = "https://www.noochme.com/EmailTemplates/img/userpic-default.png";
-                        if (!String.IsNullOrEmpty(sender.Photo) && sender.Photo.Length > 20)
-                        {
-                            senderPic = sender.Photo.ToString();
-                        }
-
+                        string senderPic = (!String.IsNullOrEmpty(sender.Photo) && sender.Photo.Length > 20)
+                            ? sender.Photo : "https://www.noochme.com/EmailTemplates/img/userpic-default.png";
 
                         bool isForRentScene = false;
 
@@ -3727,31 +3672,25 @@ namespace Nooch.DataAccess
 
                             Logger.Info("TDA -> RequestMoney - JUST GOT NOTIFICATION SETTINGS");
 
-                            if (notifSettings != null)
+                            if (notifSettings != null && notifSettings.TransferReceived != false)
                             {
-                                if (notifSettings.TransferReceived != false)
+                                try
                                 {
-                                    try
-                                    {
-                                        string deviceId = sender.DeviceToken;
-                                        //string emoji = "\U0001F601";
+                                    string deviceId = sender.DeviceToken;
+                                    //string emoji = "\U0001F601";
 
-                                        string msg = "Hi " + RequestReceiverFirstName + ", " + RequesterFirstName + " " + RequesterLastName +
-                                                     " just requested $" + wholeAmount + " from you. Open Nooch to pay up now (or reject this request)!";
+                                    string msg = "Hi " + RequestReceiverFirstName + ", " + RequesterFirstName + " " + RequesterLastName +
+                                                 " just requested $" + wholeAmount + " from you. Open Nooch to pay up now (or reject this request)!";
 
-                                        Logger.Info("TDA -> RequestMoney - CHECKPOINT #3C");
+                                    Utility.SendNotificationMessage(msg, "Nooch", sender.DeviceToken, sender.DeviceType);
 
-                                        Utility.SendNotificationMessage(msg, "Nooch", sender.DeviceToken,
-                                                                                   sender.DeviceType);
-
-                                        Logger.Info("TDA -> SendTransactionReminderEmail - (B/t 2 Existing Nooch Users) - Push notification sent successfully - [Username: " +
-                                                    CommonHelper.GetDecryptedData(transaction.Member.UserName) + "], [DeviceToken: " + sender.DeviceToken + "]");
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        Logger.Error("TDA -> RequestMoney - Request Received Push Notification NOT sent to [Username: " +
-                                                     CommonHelper.GetDecryptedData(transaction.Member.UserName) + "], [DeviceToken: " + sender.DeviceToken + "], [Exception: " + ex + "]");
-                                    }
+                                    Logger.Info("TDA -> RequestMoney - (B/t 2 Existing Nooch Users) - Push notification sent successfully - Username: [" +
+                                                CommonHelper.GetDecryptedData(transaction.Member.UserName) + "], DeviceToken: [" + sender.DeviceToken + "]");
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.Error("TDA -> RequestMoney - Request Received Push Notification NOT sent to Username: [" +
+                                                 CommonHelper.GetDecryptedData(transaction.Member.UserName) + "], DeviceToken: [" + sender.DeviceToken + "], Exception: [" + ex + "]");
                                 }
                             }
                         }
@@ -3762,10 +3701,7 @@ namespace Nooch.DataAccess
 
                         return "Request made successfully.";
                     }
-                    else
-                    {
-                        return "Request failed.";
-                    }
+                    else return "Request failed.";
                 }
             }
             catch (Exception ex)
@@ -3785,7 +3721,7 @@ namespace Nooch.DataAccess
         /// <returns></returns>
         public string TransferMoney(RequestDto requestDto)
         {
-            Logger.Info("TDA -> TransferMoney - [MemberId: " + requestDto.MemberId + "], [Receiver: " + requestDto.ReceiverId + "]");
+            Logger.Info("TDA -> TransferMoney Fired - MemberID: [" + requestDto.MemberId + "], ReceiverID: [" + requestDto.ReceiverId + "]");
 
             string requestId = string.Empty;
 
@@ -3795,30 +3731,22 @@ namespace Nooch.DataAccess
 
                 // Check uniqueness of requesting and sending user
                 if (requestDto.MemberId == requestDto.SenderId)
-                {
                     return "Not allowed to Transfer money to yourself.";
-                }
 
                 var requester = CommonHelper.GetMemberDetails(requestDto.MemberId);
 
                 var receiver = new Member();
                 if (requestDto.ReceiverId.IndexOf(',') == -1)
-                {
                     receiver = CommonHelper.GetMemberDetails(requestDto.ReceiverId);
-                }
 
                 // Check that both accounts exist
                 if (receiver == null || requester == null)
-                {
                     return "Either sending user or requesting user does not exist.";
-                }
                 // Validate PIN of requesting user
 
                 string validPinNumberResult = CommonHelper.ValidatePinNumber(requestDto.MemberId, requestDto.PinNumber);
                 if (validPinNumberResult != "Success")
-                {
                     return validPinNumberResult;
-                }
 
                 //decimal transactionFee = Utility.ConvertToDecimal(Utility.GetValueFromConfig("PayGoModeFee"));
                 decimal transactionAmount = Convert.ToDecimal(requestDto.Amount);
@@ -4128,13 +4056,15 @@ namespace Nooch.DataAccess
 
                         #region Setup Notification Variables
 
-                        string RequesterFirstName = CommonHelper.UppercaseFirst((CommonHelper.GetDecryptedData(requester.FirstName)).ToString());
-                        string RequesterLastName = CommonHelper.UppercaseFirst((CommonHelper.GetDecryptedData(requester.LastName)).ToString());
-                        string RequestReceiverFirstName = CommonHelper.UppercaseFirst((CommonHelper.GetDecryptedData(receiver.FirstName)).ToString());
-                        string RequestReceiverLastName = CommonHelper.UppercaseFirst((CommonHelper.GetDecryptedData(receiver.LastName)).ToString());
+                        string RequesterFirstName = CommonHelper.UppercaseFirst((CommonHelper.GetDecryptedData(requester.FirstName)));
+                        string RequesterLastName = CommonHelper.UppercaseFirst((CommonHelper.GetDecryptedData(requester.LastName)));
+                        string RequestReceiverFirstName = CommonHelper.UppercaseFirst((CommonHelper.GetDecryptedData(receiver.FirstName)));
+                        string RequestReceiverLastName = CommonHelper.UppercaseFirst((CommonHelper.GetDecryptedData(receiver.LastName)));
 
-                        string cancelLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"), "/Nooch/CancelMoneyRequest?TransactionId=" + requestId + "&MemberId=" + requestDto.MemberId.ToString() + "&userType=mx5bTcAYyiOf9I5Py9TiLw==");
-
+                        string cancelLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
+                                                          "/Nooch/CancelMoneyRequest?TransactionId=" + requestId +
+                                                          "&MemberId=" + requestDto.MemberId.ToString() +
+                                                          "&userType=mx5bTcAYyiOf9I5Py9TiLw==");
 
                         string wholeAmount = requestDto.Amount.ToString("n2");
                         string[] s32 = wholeAmount.Split('.');
@@ -4147,34 +4077,18 @@ namespace Nooch.DataAccess
                                 string firstThreeChars = transaction.Memo.Substring(0, 3).ToLower();
                                 bool startWithFor = firstThreeChars.Equals("for");
 
-                                if (startWithFor)
-                                {
-                                    memo = transaction.Memo.ToString();
-                                }
-                                else
-                                {
-                                    memo = "For " + transaction.Memo.ToString();
-                                }
+                                if (startWithFor) memo = transaction.Memo.ToString();
+                                else memo = "For " + transaction.Memo.ToString();
                             }
                             else
-                            {
                                 memo = "For " + transaction.Memo.ToString();
-                            }
                         }
 
+                        var requesterPic = (!String.IsNullOrEmpty(requester.Photo) && requester.Photo.Length > 20)
+                            ? requester.Photo : "https://www.noochme.com/EmailTemplates/img/userpic-default.png";
 
-                        string requesterPic = "https://www.noochme.com/EmailTemplates/img/userpic-default.png";
-                        if (!String.IsNullOrEmpty(requester.Photo) && requester.Photo.Length > 20)
-                        {
-                            requesterPic = requester.Photo.ToString();
-                        }
-
-                        string senderPic = "https://www.noochme.com/EmailTemplates/img/userpic-default.png";
-                        if (!String.IsNullOrEmpty(receiver.Photo) && receiver.Photo.Length > 20)
-                        {
-                            senderPic = receiver.Photo.ToString();
-                        }
-
+                        var senderPic = (!String.IsNullOrEmpty(receiver.Photo) && receiver.Photo.Length > 20)
+                            ? receiver.Photo : "https://www.noochme.com/EmailTemplates/img/userpic-default.png";
 
                         bool isForRentScene = false;
                         //var logoToDisplay = "noochlogo";
@@ -4333,35 +4247,25 @@ namespace Nooch.DataAccess
                         {
                             var notifSettings = CommonHelper.GetMemberNotificationSettings(receiver.MemberId.ToString());
 
-                            Logger.Info("TDA -> TransferMoney - JUST GOT NOTIFICATION SETTINGS");
-
-                            if (notifSettings != null)
+                            if (notifSettings != null && notifSettings.TransferReceived != false)
                             {
-                                if (notifSettings.TransferReceived != false)
+                                try
                                 {
-                                    try
-                                    {
-                                        string deviceId = receiver.DeviceToken;
-                                        //string emoji = "\U0001F601";
+                                    string deviceId = receiver.DeviceToken;
+                                    //string emoji = "\U0001F601";
 
-                                        string msg = "Hi " + RequestReceiverFirstName + ", " + RequesterFirstName + " " + RequesterLastName +
-                                                     " just requested $" + wholeAmount + " from you. Open Nooch to pay up now (or reject this request)!";
+                                    string msg = "Hi " + RequestReceiverFirstName + ", " + RequesterFirstName + " " + RequesterLastName +
+                                                 " just requested $" + wholeAmount + " from you. Open Nooch to pay up now (or reject this request)!";
 
-                                        Logger.Info("TDA -> RequestMoney - CHECKPOINT #3C");
+                                    Utility.SendNotificationMessage(msg, "Nooch", receiver.DeviceToken, receiver.DeviceType);
 
-
-
-                                        Utility.SendNotificationMessage(msg, "Nooch", receiver.DeviceToken,
-                                                                                   receiver.DeviceType);
-
-                                        Logger.Info("TDA -> SendTransactionReminderEmail - (B/t 2 Existing Nooch Users) - Push notification sent successfully - [Username: " +
-                                                    CommonHelper.GetDecryptedData(transaction.Member.UserName) + "], [DeviceToken: " + receiver.DeviceToken + "]");
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        Logger.Error("TDA -> RequestMoney - Request Received Push Notification NOT sent to [Username: " +
-                                                     CommonHelper.GetDecryptedData(transaction.Member.UserName) + "], [DeviceToken: " + receiver.DeviceToken + "], [Exception: " + ex + "]");
-                                    }
+                                    Logger.Info("TDA -> SendTransactionReminderEmail - (B/t 2 Existing Nooch Users) - Push notification sent successfully - Username: [" +
+                                                CommonHelper.GetDecryptedData(transaction.Member.UserName) + "], DeviceToken: [" + receiver.DeviceToken + "]");
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.Error("TDA -> RequestMoney - Request Received Push Notification NOT sent to Username: [" +
+                                                 CommonHelper.GetDecryptedData(transaction.Member.UserName) + "], DeviceToken: [" + receiver.DeviceToken + "], Exception: [" + ex + "]");
                                 }
                             }
                         }
@@ -4372,15 +4276,12 @@ namespace Nooch.DataAccess
 
                         return "Request made successfully.";
                     }
-                    else
-                    {
-                        return "Request failed.";
-                    }
+                    else return "Request failed.";
                 }
             }
             catch (Exception ex)
             {
-                Logger.Error("TDA -> RequestMoney FAILED - Outer Exception: [" + ex.Message + "]");
+                Logger.Error("TDA -> RequestMoney FAILED - Outer Exception: [" + ex + "]");
             }
 
             return "Request failed. Outer exception.";
@@ -4401,7 +4302,7 @@ namespace Nooch.DataAccess
 
             if (checkuser == null)
             {
-                Logger.Info("TDA -> RequestMoneyToNonNoochUserUsingSynapse Initiated - Requester MemberId: [" + requestDto.MemberId + "].");
+                Logger.Info("TDA -> RequestMoneyToNonNoochUserUsingSynapse Fired - Requester MemberID: [" + requestDto.MemberId + "].");
 
                 var requester = CommonHelper.GetMemberDetails(requestDto.MemberId);
 
@@ -4720,7 +4621,7 @@ namespace Nooch.DataAccess
         {
             try
             {
-                Logger.Info("TDA -> RequestMoneyToExistingButNonregisteredUser Initiated - Requestor MemberId: [" + requestDto.MemberId + "].");
+                Logger.Info("TDA -> RequestMoneyToExistingButNonregisteredUser Fired - Requester MemberID: [" + requestDto.MemberId + "].");
 
                 string requestId = string.Empty;
 
@@ -6025,10 +5926,7 @@ namespace Nooch.DataAccess
                                 newTrans.TransactionDate = DateTime.Now;
                                 newTrans.Memo = null;
 
-                                if (location != null)
-                                {
-                                    newTrans.GeoLocation = location;
-                                }
+                                if (location != null) newTrans.GeoLocation = location;
 
                                 // Legacy code to add a fee - just setting to 0
                                 newTrans.IsPrepaidTransaction = true;
@@ -6059,18 +5957,13 @@ namespace Nooch.DataAccess
                     return "Server failure - caught outer exception :-(";
                 }
             }
-            else
-            {
-                return "";
-            }
+            else return "";
         }
 
 
         private Transaction SetTransactionDetails(TransactionEntity transactionEntity, string transactionType, decimal? transactionFee)
         {
             string transactionTrackingId = CommonHelper.GetRandomTransactionTrackingId();
-
-            //var noochConnection = new NOOCHEntities();
 
             var entity = new Transaction
             {
@@ -6909,7 +6802,6 @@ namespace Nooch.DataAccess
         }
 
 
-
         /// <summary>
         /// To Transfer (SEND) money to NON-NOOCH USER using SYNAPSE - (VIA EMAIL ONLY... VIA PHONE HAS A DIFF METHOD)
         /// </summary>
@@ -7059,13 +6951,9 @@ namespace Nooch.DataAccess
                     {
                         // Update TotalNoochTransfersCount by +1
                         if (sender.TotalNoochTransfersCount == null)
-                        {
                             sender.TotalNoochTransfersCount = 0;
-                        }
                         else
-                        {
                             sender.TotalNoochTransfersCount = sender.TotalNoochTransfersCount + 1;
-                        }
                         // Update Sender in DB
                         sender.DateModified = DateTime.Now;
 
