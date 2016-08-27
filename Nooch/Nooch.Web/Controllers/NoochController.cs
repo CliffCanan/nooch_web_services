@@ -126,31 +126,23 @@ namespace Nooch.Web.Controllers
             string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
             string serviceMethod = "GetTransactionDetailById?TransactionId=" + TransactionId;
 
-            TransactionDto transaction = ResponseConverter<TransactionDto>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+            TransactionDto transInfo = ResponseConverter<TransactionDto>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
 
-            if (transaction != null)
+            if (transInfo != null)
             {
                 rcr.showPaymentInfo = true; // Show payment info (recipient name/pic, amount)
+                rcr.initStatus = transInfo.TransactionStatus.ToLower();
 
-                if (transaction.TransactionStatus == "Pending")
-                {
-                    //ResultCancelRequest cancelResult = CancelMoneyRequest(transaction.TransactionId, Request.QueryString["MemberId"], Request.QueryString["UserType"]);
-                    //rcr = cancelResult;
-                    // CLIFF (5/15/16): the transaction's status was actually just updated to 'Cancelled' in CancelMoneyRequest()
-                    // but this flag is just for telling the CancelMoney.js to display a SweetAlert if it is NOT initially 'Pending' on page load.
-                    rcr.initStatus = "pending";
-                }
-                else if (transaction.TransactionStatus == "Rejected")
+                if (transInfo.TransactionStatus == "Pending") { }
+                else if (transInfo.TransactionStatus == "Rejected")
                 {
                     Logger.Info("CancelRequest Page -> GetTransDetails - Payment already Rejected - TransID: [" + TransactionId + "]");
                     rcr.resultMsg = "Looks like this payment has already been rejected.";
-                    rcr.initStatus = "rejected";
                 }
-                else if (transaction.TransactionStatus == "Cancelled")
+                else if (transInfo.TransactionStatus == "Cancelled")
                 {
                     Logger.Info("CancelRequest Page -> GetTransDetails - Payment already Cancelled - TransID: [" + TransactionId + "]");
                     rcr.resultMsg = "This payment has already been cancelled.";
-                    rcr.initStatus = "cancelled";
                 }
             }
             else
@@ -161,32 +153,32 @@ namespace Nooch.Web.Controllers
 
             #region Set Name and Photo
 
-            if (transaction.IsPhoneInvitation && transaction.PhoneNumberInvited.Length > 0)
+            if (transInfo.IsPhoneInvitation && transInfo.PhoneNumberInvited.Length > 0)
             {
                 rcr.senderImage = "https://www.noochme.com/noochweb/Assets/Images/userpic-default.png";
-                rcr.nameLabel = transaction.PhoneNumberInvited;
+                rcr.nameLabel = transInfo.PhoneNumberInvited;
             }
-            else if (!String.IsNullOrEmpty(transaction.InvitationSentTo))
+            else if (!String.IsNullOrEmpty(transInfo.InvitationSentTo))
             {
                 rcr.senderImage = "https://www.noochme.com/noochweb/Assets/Images/userpic-default.png";
-                rcr.nameLabel = transaction.InvitationSentTo;
+                rcr.nameLabel = transInfo.InvitationSentTo;
             }
             else
             {
-                rcr.senderImage = !String.IsNullOrEmpty(transaction.SenderPhoto) ? transaction.SenderPhoto : "https://www.noochme.com/noochweb/Assets/Images/userpic-default.png";
-                rcr.nameLabel = transaction.Name;
+                rcr.senderImage = !String.IsNullOrEmpty(transInfo.SenderPhoto) ? transInfo.SenderPhoto : "https://www.noochme.com/noochweb/Assets/Images/userpic-default.png";
+                rcr.nameLabel = transInfo.Name;
             }
 
             #endregion Set Name and Photo
 
-            rcr.AmountLabel = transaction.Amount.ToString("n2");
+            rcr.AmountLabel = transInfo.Amount.ToString("n2");
 
             // Reject money page related stuff
-            if (!String.IsNullOrEmpty(transaction.TransactionType))
-                rcr.TransType = transaction.TransactionType;
+            if (!String.IsNullOrEmpty(transInfo.TransactionType))
+                rcr.TransType = transInfo.TransactionType;
 
-            if (!String.IsNullOrEmpty(transaction.TransactionId))
-                rcr.TransId = transaction.TransactionId;
+            if (!String.IsNullOrEmpty(transInfo.TransactionId))
+                rcr.TransId = transInfo.TransactionId;
 
             return rcr;
         }
@@ -199,21 +191,10 @@ namespace Nooch.Web.Controllers
 
             #region Inititial Data Checks
 
-            if (String.IsNullOrEmpty(TransactionId))
-            {
-                res.resultMsg = "Missing TransactionID";
-                return res;
-            }
-            if (String.IsNullOrEmpty(MemberId))
-            {
-                res.resultMsg = "Missing MemberId";
-                return res;
-            }
-            if (String.IsNullOrEmpty(userType))
-            {
-                res.resultMsg = "Missing userType";
-                return res;
-            }
+            if (String.IsNullOrEmpty(TransactionId)) res.resultMsg = "Missing TransactionID";
+            if (String.IsNullOrEmpty(MemberId)) res.resultMsg = "Missing MemberId";
+            if (String.IsNullOrEmpty(userType)) res.resultMsg = "Missing userType";
+            if (!String.IsNullOrEmpty(res.resultMsg)) return res;
 
             #endregion Inititial Data Checks
 
@@ -721,7 +702,6 @@ namespace Nooch.Web.Controllers
 
             ResultCompletePayment res = new ResultCompletePayment();
             res.showPaymentInfo = false;
-            res.PayorInitialInfo = false; // <div> containing the old form for entering name/email/phone...keeping just for reference
 
             try
             {
@@ -1157,11 +1137,10 @@ namespace Nooch.Web.Controllers
 
         public ActionResult PayRequest(string TransactionId, string UserType, string cip)
         {
+            Logger.Info("PayRequest Page -> Loaded - TransID: [" + TransactionId + "], CIP: [" + cip + "]");
+
             ResultCompletePayment res = new ResultCompletePayment();
             res.showPaymentInfo = false;
-            res.PayorInitialInfo = false; // <div> containing the old form for entering name/email/phone...keeping just for reference
-
-            Logger.Info("PayRequest Page -> Loaded - TransID: [" + TransactionId + "], CIP: [" + cip + "]");
 
             try
             {
@@ -1171,12 +1150,9 @@ namespace Nooch.Web.Controllers
 
                     if (!String.IsNullOrEmpty(UserType))
                     {
-                        string n = UserType;
-                        res.usrTyp = CommonHelper.GetDecryptedData(n);
-                        Logger.Info("PayRequest Page -> UserType is: [" + res.usrTyp + "]");
-
-                        if (res.usrTyp == "NonRegistered")
-                            res.nonRegUsrContainer = true;
+                        res.usrTyp = CommonHelper.GetDecryptedData(UserType);
+                        Logger.Info("PayRequest Page -> UserType: [" + res.usrTyp + "]");
+                        if (res.usrTyp == "NonRegistered") res.nonRegUsrContainer = true;
                     }
 
                     // CIP is new for Synapse V3 and tells the page what type of ID verification the new user will need.
@@ -2727,11 +2703,8 @@ namespace Nooch.Web.Controllers
             else
             {
                 // Something wrong with query string
-                //ScriptManager.RegisterStartupScript(this, GetType(), "showErrorModal", "showErrorModal('2');", true);
                 //payreqInfo.Visible = false;
-                //PayorInitialInfo.Visible = false;
                 payAnyone.payreqInfo = false;
-                payAnyone.PayorInitialInfo = false;
                 payAnyone.ErrorID = "2";
             }
 
@@ -3112,8 +3085,7 @@ namespace Nooch.Web.Controllers
         [ActionName("cancelPayment")]
         public ActionResult cancelPayment(ResultCancelRequest input)
         {
-            Logger.Info("History Page -> cancelPayment Fired - TransID: [" + input.TransId +
-                        "], UserType: [" + input.UserType + "]");
+            Logger.Info("History Page -> cancelPayment Fired - TransID: [" + input.TransId + "], UserType: [" + input.UserType + "]");
 
             ResultCancelRequest res = new ResultCancelRequest();
             res.success = false;
@@ -3173,7 +3145,7 @@ namespace Nooch.Web.Controllers
                     string serviceMethod = "SendTransactionReminderEmail?ReminderType=" + reminderType + "&TransactionId=" + input.TransId + "&accessToken=" + MemDeatils.AccessToken + "&MemberId=" + input.memberId;
                     string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
 
-                    Logger.Info("URL made for transaction reminder is " + String.Concat(serviceUrl, serviceMethod));
+                    Logger.Info("History Page -> Query to send to server: [" + String.Concat(serviceUrl, serviceMethod) + "]");
 
                     var serviceResult = ResponseConverter<StringResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
 
@@ -3181,7 +3153,7 @@ namespace Nooch.Web.Controllers
 
                     if (serviceResult.Result == "Reminder mail sent successfully." || serviceResult.Result == "Reminder sms sent successfully.")
                     {
-                        Logger.Info("History Page -> paymentReminder - Reminder sent Successfully - TransID: [" + input.TransId + "], MemberID: [" + input.memberId + "]");
+                        Logger.Info("History Page -> paymentReminder - Reminder sent Successfully - MemberID: [" + input.memberId + "], TransID: [" + input.TransId + "]");
 
                         res.showPaymentInfo = true;
                         res.success = true;
@@ -3193,8 +3165,7 @@ namespace Nooch.Web.Controllers
                         res.resultMsg = "Looks like this request is no longer pending. You may have cancelled it already or the recipient has already responded by accepting or rejecting.";
                     }
                 }
-                else
-                    res.resultMsg = "Member not found";
+                else res.resultMsg = "Member not found";
             }
             catch (Exception ex)
             {

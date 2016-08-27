@@ -9,7 +9,6 @@ namespace Nooch.Common.Entities
     public class ResultCompletePayment
     {
         public bool showPaymentInfo { get; set; }
-        public bool PayorInitialInfo { get; set; }
         public bool nonRegUsrContainer { get; set; }
         public string errorMsg { get; set; }
         public string company { get; set; }
