@@ -2437,13 +2437,14 @@ namespace Nooch.API.Controllers
                     res.isRs = memberObj.isRentScene ?? false;
 
                     var synapseBankDetails = CommonHelper.GetSynapseBankDetails(memberId);
-                    var mid = Utility.ConvertToGuid(memberId);
+                    var memGuid = Utility.ConvertToGuid(memberId);
 
                     // Added 8/22/16
                     #region Find Any Pending Requests
 
                     var pendingRequestTrans = _dbContext.Transactions.Where(t => t.TransactionStatus == "Pending" && //t.TransactionType == "T3EMY1WWZ9IscHIj3dbcNw==" || //t.SenderId == mid &&
-                                                                                (t.InvitationSentTo == memberObj.UserName ||
+                                                                                (t.SenderId == memGuid ||
+                                                                                 t.InvitationSentTo == memberObj.UserName ||
                                                                                  t.InvitationSentTo == memberObj.UserNameLowerCase ||
                                                                                  t.InvitationSentTo == memberObj.SecondaryEmail)).ToList();
                     res.PendingTransactionList = new List<PendingTransaction>();
@@ -2456,7 +2457,7 @@ namespace Nooch.API.Controllers
                             pt.TransactionId = transaction.TransactionId;
                             pt.userName = CommonHelper.GetDecryptedData(transaction.Member1.FirstName) + " " +
                                           CommonHelper.GetDecryptedData(transaction.Member1.LastName);
-                            pt.Amount = transaction.Amount;
+                            pt.amount = transaction.Amount.ToString("n2");
                             pt.RecipientId = transaction.RecipientId;
                             pt.SenderId = transaction.SenderId;
 
@@ -2470,8 +2471,7 @@ namespace Nooch.API.Controllers
                             res.PendingTransactionList.Add(pt);
                         }
 
-                        if (res.PendingTransactionList.Count > 0) res.hasPendingPymnt = true;
-                        else res.hasPendingPymnt = false;
+                        res.hasPendingPymnt = res.PendingTransactionList.Count > 0 ? true : false;
                     }
 
                     #endregion Find any pending request
@@ -5087,27 +5087,19 @@ namespace Nooch.API.Controllers
             return CommonHelper.GetEncryptedData(token);
         }
 
-        //[HttpGet]
-        //[ActionName("TestPush")]
-        //public void TestPush()
-        //{
-        //    Utility.SendNotificationMessage("alert text", "alert title", "e1451cfc18684704d03437a74a2a2725491a45364d2915a75c516bbf1c0cac31", "I");
-
-        //    Utility.SendNotificationMessage("alert text", "alert title", "APA91bHgOALjYqZ7DLV8jbu6qOdMF0G-v35La0IPuauD87poG9zOFZnXfTVuuj9vTrgrIXBFf3mEyV5Glnl85u-7wuzkJud_qF2uM2i4Rje01aUfoEUSG88fzaeydu6H1m8lAioFCjnA", "A");
-        //}
-
 
         // added deviceOS parameter to know which operating system user currently using, this will help to send appropriate push message to device
         [HttpGet]
         [ActionName("LoginRequest")]
         public StringResult LoginRequest(string userName, string pwd, Boolean rememberMeEnabled, decimal lat,
-                                         decimal lng, string udid, string devicetoken,string deviceOS)
+                                         decimal lng, string udid, string devicetoken, string deviceOS)
         {
             StringResult res = new StringResult();
 
             try
             {
-                Logger.Info("Service Cntlr -> LoginRequest - userName: [" + userName + "], UDID: [" + udid + "], DeviceToken: [" + devicetoken + "]");
+                Logger.Info("Service Cntlr -> LoginRequest - userName: [" + userName + "], UDID: [" + udid +
+                            "], DeviceOS: [" + deviceOS + "], DeviceToken: [" + devicetoken + "]");
 
                 var mda = new MembersDataAccess();
                 string cookie = mda.LoginRequest(userName, pwd, rememberMeEnabled, lat, lng, udid, devicetoken, deviceOS);

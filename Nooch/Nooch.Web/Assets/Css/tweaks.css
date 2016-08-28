@@ -1350,7 +1350,7 @@ div#pwFormShell #depositCreateAccount,
 	text-transform: uppercase;
 	font-size: 20px;
 }
-.resultDiv i {
+.resultDiv > i {
 	color: #555;
     font-size: 60px;
 }
@@ -1361,7 +1361,7 @@ div#pwFormShell #depositCreateAccount,
 }
 
 .resultDiv p {
-    font-size: 18px;
+    font-size: 17px;
 }
 
 @media only screen and (min-width: 500px) {

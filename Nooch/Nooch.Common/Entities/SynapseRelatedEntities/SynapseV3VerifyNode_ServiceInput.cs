@@ -32,7 +32,7 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
         public string bankId { get; set; }
         public string errorMsg { get; set; }
         public string NodeId1 { get; set; }
-        public List<PendingTransaction> PendingTransactionList{ get; set; }
+        public List<PendingTransaction> PendingTransactionList { get; set; }
     }
 
     public class PendingTransaction
@@ -40,11 +40,10 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
         public System.Guid TransactionId { get; set; }
         public System.Guid SenderId { get; set; }
         public Nullable<System.Guid> RecipientId { get; set; }
-        public string userName { get; set; }
-        public decimal Amount { get; set; }
         public Nullable<System.DateTime> TransactionDate { get; set; }
+        public string userName { get; set; }
+        public string amount { get; set; }
         public string TransactionType { get; set; }
         public string InvitationSentTo { get; set; }
-        
     }
 }

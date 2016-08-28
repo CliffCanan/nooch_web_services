@@ -19,12 +19,8 @@
 
     <style>
         .well {
-            background: rgb(252,252,252);
+            background: rgb(250,250,251);
             font-weight: bold;
-        }
-
-        #microVerForm {
-            font-size: 18px;
         }
 
         .input-group-addon, input.form-control {
@@ -55,6 +51,16 @@
             color: #888;
         }
 
+        .btnpayRequest {
+            padding: 4px 15px !important;
+            position: relative;
+            top: -2px;
+        }
+
+        #microVerPayRequestForm label {
+            font-size: 16px;
+        }
+
         .parsley-errors-list {
             width: 260px;
             margin: 0 auto;
@@ -65,7 +71,7 @@
         }
 
         #nameInNavContainer .bankName {
-            margin-top: 7px;
+            margin-top: 3px;
         }
     </style>
 </head>
@@ -89,13 +95,22 @@
                 }
                 <div id="nameInNavContainer" class="text-center" style="position:absolute; left:10%; width:80%; top: 8px;">
                     <label id="nameInNav" class="m-t-5 m-b-0 center-block f-600 h4">@MicroDeposit.userFirstName @MicroDeposit.userLastName</label>
-                    <h4 class="f-15 bankName">@MicroDeposit.bankName | @MicroDeposit.bankNickName</h4>
+                    @if (!String.IsNullOrEmpty(MicroDeposit.bankName))
+                    {
+                        <h4 class="f-14 bankName">
+                            <span>@MicroDeposit.bankName</span>
+                            @if (!String.IsNullOrEmpty(MicroDeposit.bankNickName))
+                            {
+                                <span>| @MicroDeposit.bankNickName}</span>
+                            }
+                        </h4>
+                    }
                 </div>
             </div>
         </div>
     </nav>
 
-    <div class="resultDiv col-sm-6 col-sm-offset-3 col-lg-4 col-lg-offset-4 hidden">
+    <div id="verifiedSuccess" class="resultDiv col-sm-6 col-sm-offset-3 col-lg-4 col-lg-offset-4 hidden">
         <i class="fa fa-check"></i>
         <h2>Thanks, You're All Set</h2>
         <p>Thanks for verifying your bank. &nbsp;We are committed to preventing ID fraud and making sure the platform safe for everyone.</p>
@@ -108,98 +123,114 @@
             <div id="idWizContainer" class="" style="width:96%; max-width:530px; margin: 25px auto;">
                 <div class="row animated bounceIn">
 
-                    <div>
+                    <div class="well text-center f-15">
+                        <span class="show f-19 m-b-5 text-primary">Hi @MicroDeposit.userFirstName,</span>Please enter the amounts of the two (2) deposits from <em>"Rent Scene"</em> on your bank statement:<br /><span style="font-weight:normal;">(both should be between $0.01 - $0.99)</span>
+                    </div>
 
-                        <div class="well text-center f-15">
-                            <span class="show f-19 m-b-5 text-primary">Hi @MicroDeposit.userFirstName,</span>Please enter the amounts of the two (2) deposits from <em>"Rent Scene"</em> on your bank statement:<br /><span style="font-weight:normal;">(both should be between $0.01 - $0.99)</span>
+                    <form id="microVerForm" class="form-horizontal f-18" role="form">
+
+                        <div class="form-group" id="micro1Grp">
+                            <div>
+                                <div class="input-group">
+                                    <span class="input-group-addon">$0.</span>
+                                    <div class="fg-line">
+                                        <input type="text" id="MicroDepositOne" class="form-control two-digits p-l-10" placeholder="00" maxlength="2" required data-parsley-trigger="keyup" data-parsley-minlength="2" data-parsley-minlength-message="Please enter a 2-digit number." data-parsley-validation-threshold="0" data-parsley-errors-container="#errorMsg1" />
+                                    </div>
+                                </div>
+                                <span class="glyphicon glyphicon-ok form-control-feedback hidden" aria-hidden="true"></span>
+                                <div id="errorMsg1"></div>
+                            </div>
                         </div>
 
-                        <form id="microVerForm" class="form-horizontal" role="form">
-
-                            <div class="form-group" id="micro1Grp">
-                                <div>
-                                    <div class="input-group">
-                                        <span class="input-group-addon">$0.</span>
-                                        <div class="fg-line">
-                                            <input type="text" id="MicroDepositOne" class="form-control two-digits p-l-10" placeholder="00" maxlength="2" required data-parsley-trigger="keyup" data-parsley-minlength="2" data-parsley-minlength-message="Please enter a 2-digit number." data-parsley-validation-threshold="0" data-parsley-errors-container="#errorMsg1" />
-                                        </div>
+                        <div class="form-group" id="micro2Grp">
+                            <div>
+                                <div class="input-group">
+                                    <span class="input-group-addon">$0.</span>
+                                    <div class="fg-line">
+                                        <input type="text" id="MicroDepositTwo" class="form-control two-digits" placeholder="00" maxlength="2" required data-parsley-trigger="keyup" data-parsley-minlength="2" maxlength="2" data-parsley-minlength-message="Please enter a 2-digit number." data-parsley-validation-threshold="0" data-parsley-errors-container="#errorMsg2" />
                                     </div>
-                                    <span class="glyphicon glyphicon-ok form-control-feedback hidden" aria-hidden="true"></span>
-                                    <div id="errorMsg1"></div>
                                 </div>
+                                <span class="glyphicon glyphicon-ok form-control-feedback hidden" aria-hidden="true"></span>
+                                <div id="errorMsg2"></div>
                             </div>
+                        </div>
 
-                            <div class="form-group" id="micro2Grp">
-                                <div>
-                                    <div class="input-group">
-                                        <span class="input-group-addon">$0.</span>
-                                        <div class="fg-line">
-                                            <input type="text" id="MicroDepositTwo" class="form-control two-digits" placeholder="00" maxlength="2" required data-parsley-trigger="keyup" data-parsley-minlength="2" maxlength="2" data-parsley-minlength-message="Please enter a 2-digit number." data-parsley-validation-threshold="0" data-parsley-errors-container="#errorMsg2" />
-                                        </div>
-                                    </div>
-                                    <span class="glyphicon glyphicon-ok form-control-feedback hidden" aria-hidden="true"></span>
-                                    <div id="errorMsg2"></div>
-                                </div>
+                        <div class="form-group m-t-30">
+                            <div class="col-sm-offset-2 col-sm-8">
+                                <button type="button" class="btn btn-primary btn-lg btn-block" id="Submit" onclick="SubmitInfo()">Submit</button>
                             </div>
+                        </div>
 
-                            <div class="form-group m-t-30">
-                                <div class="col-sm-offset-2 col-sm-8">
-                                    <button type="button" class="btn btn-primary btn-lg btn-block" id="Submit" onclick="SubmitInfo()">Submit</button>
-                                </div>
-                            </div>
+                    </form>
 
-                        </form>
-
-                    </div>
                 </div>
             </div>
         </div>
     }
-    else
+    else if (MicroDeposit.isAlreadyVerified && MicroDeposit.verifiedDate != null)
     {
-        if (MicroDeposit.PendingTransactionList != null)
-        {
-            <div class="row m-0">
-                <div id="idWizContainer" class="" style="width:96%; max-width:530px; margin: 25px auto;">
-                    <div class="row animated bounceIn">
-
-                        <div>
-
-                            <div class="well text-center f-15">
-                                <span class="show f-19 m-b-5 text-primary">Hi @MicroDeposit.userFirstName,</span>You have Pending Requests from
-                            </div>
-
-                            <form id="microVerPayRequestForm" class="form-horizontal" role="form">
-                                @foreach (var tran in MicroDeposit.PendingTransactionList)
-                                {
-                                    <div class="form-group" id="micro1Grp">
-                                        <div>
-                                            <div class="input-group">
-                                                <span class="input-group-addon">Amount: @tran.Amount</span>
-                                                <div class="fg-line">@tran.userName</div>
-                                                <div class="col-sm-offset-2 col-sm-8">
-                                                    <button type="button" class="btn btn-primary btnpayRequest @tran.TransactionId" onclick='SubmitPay("@tran.TransactionId","@tran.RecipientId")'>Pay</button>
-                                                </div>
-                                            </div>
-                                            <span class="glyphicon glyphicon-ok form-control-feedback hidden" aria-hidden="true"></span>
-                                            <div id="errorMsg1"></div>
-                                        </div>
-                                    </div>
-                                }
-                            </form>
-
-                        </div>
-                    </div>
-                </div>
-            </div>
-        }
-
         <div class="resultDiv col-sm-6 col-sm-offset-3 col-lg-4 col-lg-offset-4">
             <i class="fa fa-bank"></i>
             <h3>Account Already Verified</h3>
             <p>Looks like you're already good to go! &nbsp;This bank account was verified on <strong>@MicroDeposit.verifiedDate</strong>.</p>
             <p>You may use this bank account to send or receive funds.</p>
         </div>
+    }
+    else if (MicroDeposit.errorMsg == "Synapse bank details not found")
+    {
+        <div class="resultDiv col-sm-6 col-sm-offset-3 col-lg-4 col-lg-offset-4">
+            <i class="fa fa-bank"></i>
+            <h3>Bank Account Not Found</h3>
+            <p class="f-16">Oh No! &nbsp;Very sorry, but we couldn't find your bank account. &nbsp;Please contact our support team and we'll help get this issue resolved ASAP!</p>
+            @if (MicroDeposit.isRs)
+            {
+                <a class="btn btn-danger btn-sm m-t-10" href="mailto:payments@rentscene.com" target="_blank"><i class="fa fa-pencil-square-o m-r-5"></i> Contact Support</a>
+            }
+            else
+            {
+                <a class="btn btn-danger btn-sm m-t-10" href="mailto:support@nooch.com" target="_blank"><i class="fa fa-pencil-square-o m-r-5"></i> Contact Support</a>
+            }
+        </div>
+    }
+
+    @if (MicroDeposit.hasPendingPymnt && MicroDeposit.PendingTransactionList.Count > 0)
+    {
+        <input type="hidden" id="hasPending" value="true" />
+
+        <div id="pendingTrans" class="row m-0 hidden">
+            <div class="resultDiv" style="width:94%; max-width:500px; margin: 20px auto;">
+                <div class="row">
+
+                    <div class="well text-center f-15">
+                        You have <span class="text-primary">@MicroDeposit.PendingTransactionList.Count</span> Pending Requests:
+                    </div>
+
+                    <form id="microVerPayRequestForm" class="form-inline" role="form">
+                        @foreach (var tran in MicroDeposit.PendingTransactionList)
+                        {
+                            <div class="form-group" id="micro1Grp">
+                                <label class="m-r-5">Amount</label>
+                                <p class="form-control-static">$@tran.amount</p>
+
+                                <label class="m-l-10 m-r-5">From</label>
+                                <p class="form-control-static">@tran.userName</p>
+
+                                <button type="button" class="btn btn-success btnpayRequest m-l-10 @tran.TransactionId" onclick='SubmitPay("@tran.TransactionId","@tran.RecipientId")'>Pay Now</button>
+
+                                <span class="fa fa-check form-control-feedback hidden" aria-hidden="true"></span>
+
+                                <div id="errorMsg1"></div>
+                            </div>
+                        }
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <input type="hidden" id="hasPending" value="false" />
     }
 
     <div class="footer footer-landing" style="position:fixed; bottom:1%;">
@@ -218,7 +249,6 @@
                     <li><a href="https://www.nooch.com/safe" target="_blank">Security</a></li>
                     <li><a href="http://support.nooch.com/" target="_blank">Support Center</a></li>
                     <li><a href="https://www.nooch.com/tos" target="_blank">Legal Stuff</a></li>
-                    <li><a href="https://www.nooch.com/blog/" target="_blank">Blog</a></li>
                 }
             </ul>
         </div>
@@ -230,7 +260,8 @@
         <input type="hidden" id="NodeId1" value="@MicroDeposit.NodeId1" />
         <input type="hidden" id="errorMsg" value="@MicroDeposit.errorMsg" />
         <input type="hidden" id="success" value="@MicroDeposit.success.ToString().ToLower()" />
-        <input type="hidden" id="errorMsg" value="@MicroDeposit.verifiedDate" />
+        <input type="hidden" id="verifiedDate" value="@MicroDeposit.verifiedDate" />
+        <input type="hidden" id="isAlrdyVer" value="@MicroDeposit.isAlreadyVerified.ToString().ToLower()" />
     </form>
 
     <script src="//code.jquery.com/jquery-1.12.4.min.js"></script>

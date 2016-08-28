@@ -2,20 +2,6 @@
 var isLrgScrn = false;
 var COMPANY = "Nooch";
 
-$(function () {
-    $('.two-digits').keyup(function () {
-        if ($(this).val().indexOf('.') != -1)
-        {
-            if ($(this).val().split(".")[1].length > 2)
-            {
-                if (isNaN(parseFloat(this.value))) return;
-                this.value = parseFloat(this.value).toFixed(2);
-            }
-        }
-        return this; //for chaining
-    });
-});
-
 
 $(document).ready(function () {
     if ($(window).width() > 1000) isLrgScrn = true;
@@ -31,6 +17,12 @@ $(document).ready(function () {
     if ($('#success').val() == "true")
         $('#microVerForm').parsley();
 
+    if ($('#isAlrdyVer').val() == "true" && $('#hasPending').val() == "true")
+    {
+        // DISPLAY #pendingTrans IF USER HAS PENDING TRANSACTIONS
+        $('#pendingTrans').removeClass('hidden').addClass('animated bounceIn');
+    }
+
     $(".two-digits").keydown(function (e) {
         if ($.inArray(e.keyCode, [46, 8, 9, 27, 13, 110, 190]) !== -1 ||
             (e.keyCode == 65 && (e.ctrlKey === true || e.metaKey === true)) ||
@@ -41,7 +33,6 @@ $(document).ready(function () {
             e.preventDefault();
     });
 });
-
 
 
 function SubmitInfo() {
@@ -62,11 +53,11 @@ function SubmitInfo() {
         var BankName = $('#BankName').val();
 
         console.log("SAVE MEMBER INFO -> {IsRs: " + IsRs +
-                                         ", MemberId: " + MemberId +
-                                         ", MicroDepositOne: " + MicroDepositOne +
-                                         ", MicroDepositTwo: " + MicroDepositTwo +
-                                         ", BankName: " + BankName +
-                                         ", NodeId1 " + NodeId1 + "}");
+                                       ", MemberId: " + MemberId +
+                                       ", MicroDepositOne: " + MicroDepositOne +
+                                       ", MicroDepositTwo: " + MicroDepositTwo +
+                                       ", BankName: " + BankName +
+                                       ", NodeId1 " + NodeId1 + "}");
 
         $.ajax({
             type: "POST",
@@ -93,6 +84,7 @@ function SubmitInfo() {
                     console.log("Success!");
 
                     $('#idWizContainer').fadeOut(300);
+
                     setTimeout(function () {
                         $('.resultDiv').addClass('animated bounceIn').removeClass('hidden')
                     }, 350);
@@ -100,11 +92,15 @@ function SubmitInfo() {
                     // THEN DISPLAY SUCCESS ALERT...
                     swal({
                         title: "Submitted Successfully",
-                        text: "Thanks for submitting your information.",
+                        text: "Thanks for verifying your bank account.",
                         type: "success",
                         confirmButtonColor: "#3fabe1",
                         confirmButtonText: "Ok"
                     });
+
+                    // NOW DISPLAY #pendingTrans IF USER HAS PENDING TRANSACTIONS
+                    if ($('#hasPending').val() == "true")
+                        $('#pendingTrans').removeClass('hidden').addClass('animated bounceIn');
                 }
                 else if (result.errorMsg.indexOf("Incorrect microdeposit amounts") > -1)
                 {
@@ -196,6 +192,21 @@ function SubmitPay(transId, recipId) {
         }
     });
 }
+
+
+$(function () {
+    $('.two-digits').keyup(function () {
+        if ($(this).val().indexOf('.') != -1)
+        {
+            if ($(this).val().split(".")[1].length > 2)
+            {
+                if (isNaN(parseFloat(this.value))) return;
+                this.value = parseFloat(this.value).toFixed(2);
+            }
+        }
+        return this; //for chaining
+    });
+});
 
 
 $('body').on('focus', '.form-control', function () {

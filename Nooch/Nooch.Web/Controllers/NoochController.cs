@@ -1662,7 +1662,7 @@ namespace Nooch.Web.Controllers
                     rca.phone = member.ContactNumber;
                     rca.ssn = member.ssnLast4;
                     rca.fngprnt = member.fngrprnt;
-                    rca.rs = member.isRs ? "true" : "false";
+                    rca.rs = member.isRs ? "rentscene" : "";
 
                     if (member.companyName != null && member.companyName.Length > 3)
                     {
@@ -1673,12 +1673,6 @@ namespace Nooch.Web.Controllers
                     {
                         rca.nameInNav = rca.name;
                         rca.nameInNavContainer = true;
-
-                        if (rca.name == "Realty Mark llc")
-                        {
-                            rca.name = "";
-                            rca.nameInNav = "Realty Mark LLC";
-                        }
                     }
 
                     rca.errorId = "0";
@@ -3185,8 +3179,7 @@ namespace Nooch.Web.Controllers
         // NodeId is Id from SynapseBanksOfMembers table - non encrypted
         public ActionResult MicroDepositsVerification(string mid, string NodeId)
         {
-            Logger.Info("MicroDepositsVerification -> Page Load - MemberID: [" + mid +
-                        "], NodeID: [" + NodeId + "]");
+            Logger.Info("MicroDepositsVerification -> Page Load - MemberID: [" + mid + "], NodeID: [" + NodeId + "]");
 
             SynapseV3VerifyNodeWithMicroDeposits_ServiceInput pageData = new SynapseV3VerifyNodeWithMicroDeposits_ServiceInput();
             pageData.errorMsg = string.Empty;
@@ -3264,7 +3257,7 @@ namespace Nooch.Web.Controllers
 
             try
             {
-                Logger.Info("NoochController -> MFALoginWithRoutingAndAccountNumber Fired -> MemberID: [" + memberid + "], NodeID: [" + NodeId1 +
+                Logger.Info("MicroDepositsVerification Page -> MFALoginWithRoutingAndAccountNumber Fired -> MemberID: [" + memberid + "], NodeID: [" + NodeId1 +
                             "], Bank: [" + bank + "], Micro1: [" + MicroDepositOne + "], Micro2: [" + MicroDepositTwo + "]");
 
                 SynapseV3VerifyNodeWithMicroDeposits_ServiceInput inpu = new SynapseV3VerifyNodeWithMicroDeposits_ServiceInput();
