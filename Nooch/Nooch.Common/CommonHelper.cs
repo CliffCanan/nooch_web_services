@@ -2822,6 +2822,11 @@ namespace Nooch.Common
         }
 
 
+        /// <summary>
+        /// Gets a user's Synapse details AND refreshes the user's OAuth Key with Synapse.
+        /// </summary>
+        /// <param name="memberId"></param>
+        /// <returns></returns>
         public static SynapseDetailsClass GetSynapseBankAndUserDetailsforGivenMemberId(string memberId)
         {
             SynapseDetailsClass res = new SynapseDetailsClass();
@@ -2929,6 +2934,85 @@ namespace Nooch.Common
             catch (Exception ex)
             {
                 Logger.Error("Common Helper -> GetSynapseBankAndUserDetailsforGivenMemberId FAILED - MemberID: [" + memberId + "], Outer Exception: [" + ex + "]");
+            }
+
+            return res;
+        }
+
+
+        /// <summary>
+        /// Gets a user's bank details from Nooch's DB - does NOT refresh with Synapse.
+        /// </summary>
+        /// <param name="memId"></param>
+        /// <returns></returns>
+        public static BankDetailsForMobile GetSynapseBankDetailsForMobile(string memId)
+        {
+            BankDetailsForMobile res = new BankDetailsForMobile();
+            res.wereUserDetailsFound = false;
+            res.wereBankDetailsFound = false;
+
+            Logger.Info("Common Helper -> GetSynapseBankDetailsForMobile Fired - MemberID: [" + memId + "]");
+
+            try
+            {
+                Member memberObj = GetMemberDetails(memId);
+
+                // Check Synapse USER details from Nooch's DB
+                #region Get Users Synapse USER Details
+
+                var createSynUserObj = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == memberObj.MemberId &&
+                                                                                                   m.IsDeleted == false);
+
+                if (createSynUserObj != null && !String.IsNullOrEmpty(createSynUserObj.access_token))
+                {
+                    res.wereUserDetailsFound = true;
+
+                    res.userPermission = createSynUserObj.permission;
+                    res.physDocStatus = createSynUserObj.physical_doc;
+                    res.socDocStatus = createSynUserObj.social_doc;
+                    res.virtualDocStatus = createSynUserObj.virtual_doc;
+                    res.cip = createSynUserObj.cip_tag;
+                }
+                else
+                {
+                    Logger.Error("Common Helper -> GetSynapseBankDetailsForMobile FAILED - Unable to find Synapse " +
+                                 "USER Details - MemberID: [" + memId + "] - CONTINUING ON TO CHECK FOR SYNAPSE BANK...");
+                }
+
+                #endregion Get Users Synapse USER Details
+
+
+                #region Get Users Synapse Bank Details
+
+                var defaultBank = _dbContext.SynapseBanksOfMembers.FirstOrDefault(m => m.MemberId == memberObj.MemberId &&
+                                                                                       m.IsDefault == true);
+
+                if (defaultBank != null && !String.IsNullOrEmpty(defaultBank.oid))
+                {
+                    // Found a Synapse bank account for this user
+                    res.wereBankDetailsFound = true;
+                    res.bankAllowed = defaultBank.allowed;
+                    res.bankAddedDate = defaultBank.AddedOn != null ? Convert.ToDateTime(defaultBank.AddedOn).ToString("MMM d, yyyy") : defaultBank.bankAdddate;
+                    res.bankName = CommonHelper.GetDecryptedData(defaultBank.bank_name);
+                    res.bankNickname = !String.IsNullOrEmpty(defaultBank.nickname) ? CommonHelper.GetDecryptedData(defaultBank.nickname) : "";
+                    res.bankStatus = defaultBank.Status; // "Verfified" or "Not Verified"
+                    res.bankVerifiedDate = defaultBank.Status == "Verified" && defaultBank.VerifiedOn != null
+                        ? Convert.ToDateTime(defaultBank.VerifiedOn).ToString("MMM d, yyyy") : "";
+
+                    res.errorMsg = "OK";
+                }
+                else
+                {
+                    Logger.Error("Common Helper -> GetSynapseBankDetailsForMobile FAILED - Unable to find Synapse " +
+                                 "BANK Details - MemberID: [" + memId + "]");
+                    res.errorMsg = "No bank found for this user.";
+                }
+
+                #endregion Get The User's Synapse Bank Details
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Common Helper -> GetSynapseBankDetailsForMobile FAILED - MemberID: [" + memId + "], Outer Exception: [" + ex + "]");
             }
 
             return res;
@@ -4438,9 +4522,10 @@ namespace Nooch.Common
             try
             {
                 StringBuilder completeEmailTxt = new StringBuilder();
-                string s = "<html><body><h2>Error Occurred</h2><p>The following error just occurred (at [" + DateTime.Now.ToString("MMMM dd, yyyy MM/dd/yy H:mm:ss") +
-                            "]:<br/><br>" + bodyTxt +
-                           "<br/><br/><small>This email was generated automatically in [Common Helper -> notifyCliffAboutError]</small></body></html>";
+                string s = "<html><body><h2>Error Occurred</h2><p>The following error just occurred at <strong>[" +
+                            DateTime.Now.ToString("MMMM dd, yyyy H:mm") + "]</strong>:<br/><br>" + bodyTxt +
+                           "<br/><br/><small style=\"color:#888;margin-top:10px;\">This email was generated automatically in " +
+                           "[Common Helper -> notifyCliffAboutError]</small></body></html>";
 
                 completeEmailTxt.Append(s);
 

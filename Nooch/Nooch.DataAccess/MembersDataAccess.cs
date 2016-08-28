@@ -4646,15 +4646,15 @@ namespace Nooch.DataAccess
             else
             {
                 // Now get the Member's Nooch account details
-                Guid id = Utility.ConvertToGuid(MemberId);
+                Guid memGuid = Utility.ConvertToGuid(MemberId);
 
-                var noochMember = CommonHelper.GetMemberDetails(id.ToString());
+                var noochMember = CommonHelper.GetMemberDetails(memGuid.ToString());
 
                 if (noochMember != null)
                 {
                     // Checking member auth token in DB stored after synapse create user service call
 
-                    var noochMemberResultFromSynapseAuth = CommonHelper.GetSynapseCreateaUserDetails(id.ToString());
+                    var noochMemberResultFromSynapseAuth = CommonHelper.GetSynapseCreateaUserDetails(memGuid.ToString());
                     if (noochMemberResultFromSynapseAuth == null)
                     {
                         Logger.Info("MDA - SynapseV3MFABankVerify -> could not locate Synapse Auth Token for MemberID: [" + MemberId + "]");
@@ -4739,7 +4739,7 @@ namespace Nooch.DataAccess
 
                                     // Preparing to save results in SynapseBankLoginResults DB table
                                     SynapseBankLoginResult sbr = new SynapseBankLoginResult();
-                                    sbr.MemberId = id;
+                                    sbr.MemberId = memGuid;
                                     sbr.IsSuccess = true;
                                     sbr.dateCreated = DateTime.Now;
                                     sbr.IsDeleted = false;
@@ -4814,31 +4814,35 @@ namespace Nooch.DataAccess
                                                             "], OID: [" + v._id.oid + "]");
                                                 nodeCount += 1;
 
-                                                SynapseBanksOfMember sbm = new SynapseBanksOfMember();
+                                                SynapseBanksOfMember bnkAccnt = new SynapseBanksOfMember();
 
-                                                Guid memId = Utility.ConvertToGuid(MemberId);
-                                                sbm.MemberId = memId;
-                                                sbm.AddedOn = DateTime.Now;
-                                                sbm.bankAdddate = DateTime.Now.ToShortDateString();
-                                                sbm.IsDefault = false;
-                                                sbm.mfa_verifed = true;
-                                                sbm.IsAddedUsingRoutingNumber = false;
-                                                sbm.account_number_string = !String.IsNullOrEmpty(v.info.account_num) ? CommonHelper.GetEncryptedData(v.info.account_num) : null;
-                                                sbm.routing_number_string = !String.IsNullOrEmpty(v.info.routing_num) ? CommonHelper.GetEncryptedData(v.info.routing_num) : null;
-                                                sbm.bank_name = !String.IsNullOrEmpty(v.info.bank_name) ? CommonHelper.GetEncryptedData(v.info.bank_name) : null;
-                                                sbm.oid = CommonHelper.GetEncryptedData(v._id.oid.ToString());
-                                                sbm.name_on_account = !String.IsNullOrEmpty(v.info.name_on_account) ? CommonHelper.GetEncryptedData(v.info.name_on_account) : null;
-                                                sbm.nickname = !String.IsNullOrEmpty(v.info.nickname) ? CommonHelper.GetEncryptedData(v.info.nickname) : null;
-                                                sbm.allowed = v.allowed;
-                                                sbm.balance = v.info.balance.amount;
-                                                sbm.is_active = v.is_active;
-                                                sbm.type_bank = v.info.type;
-                                                sbm.type_synapse = v.type;
-                                                sbm.supp_id = v.extra.supp_id;
+                                                bnkAccnt.MemberId = Utility.ConvertToGuid(MemberId);
+                                                bnkAccnt.AddedOn = DateTime.Now;
+                                                bnkAccnt.bankAdddate = DateTime.Now.ToShortDateString();
+                                                bnkAccnt.IsDefault = false;
 
-                                                _dbContext.SynapseBanksOfMembers.Add(sbm);
+                                                // Holdovers from V2
+                                                bnkAccnt.account_number_string = !String.IsNullOrEmpty(v.info.account_num) ? CommonHelper.GetEncryptedData(v.info.account_num) : null;
+                                                bnkAccnt.routing_number_string = !String.IsNullOrEmpty(v.info.routing_num) ? CommonHelper.GetEncryptedData(v.info.routing_num) : null;
+                                                bnkAccnt.bank_name = !String.IsNullOrEmpty(v.info.bank_name) ? CommonHelper.GetEncryptedData(v.info.bank_name) : null;
+                                                bnkAccnt.name_on_account = !String.IsNullOrEmpty(v.info.name_on_account) ? CommonHelper.GetEncryptedData(v.info.name_on_account) : null;
+                                                bnkAccnt.nickname = !String.IsNullOrEmpty(v.info.nickname) ? CommonHelper.GetEncryptedData(v.info.nickname) : null;
+                                                bnkAccnt.is_active = v.is_active;
+                                                bnkAccnt.mfa_verifed = true;
+                                                bnkAccnt.Status = "Verified"; // Consider verified immediately since this is after successfully answering MFA
+
+                                                // New in V3
+                                                bnkAccnt.oid = CommonHelper.GetEncryptedData(v._id.oid.ToString());
+                                                bnkAccnt.allowed = !String.IsNullOrEmpty(v.allowed) ? v.allowed : "UNKNOWN";
+                                                bnkAccnt.@class = !String.IsNullOrEmpty(v.info._class) ? v.info._class : "UNKNOWN";
+                                                bnkAccnt.supp_id = v.extra.supp_id;
+                                                bnkAccnt.type_bank = !String.IsNullOrEmpty(v.info.type) ? v.info.type : "UNKNOWN";
+                                                bnkAccnt.type_synapse = "ACH-US";
+                                                bnkAccnt.IsAddedUsingRoutingNumber = false;
+
+                                                _dbContext.SynapseBanksOfMembers.Add(bnkAccnt);
                                                 _dbContext.SaveChanges();
-                                                _dbContext.Entry(sbm).Reload();
+                                                _dbContext.Entry(bnkAccnt).Reload();
                                             }
                                             catch (Exception ex)
                                             {

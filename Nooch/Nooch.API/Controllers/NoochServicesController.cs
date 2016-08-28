@@ -1357,15 +1357,6 @@ namespace Nooch.API.Controllers
 
                     var myDetails = CommonHelper.GetMemberDetails(memberId);
 
-                    // Check address, city, cell phone to check whether the profile is a valid profile or not
-                    bool isvalidprofile = !string.IsNullOrEmpty(myDetails.Address) &&
-                                          !string.IsNullOrEmpty(myDetails.City) &&
-                                          !string.IsNullOrEmpty(myDetails.Zipcode) &&
-                                          !string.IsNullOrEmpty(myDetails.ContactNumber) &&
-                                          !string.IsNullOrEmpty(myDetails.SSN) &&
-                                          myDetails.IsVerifiedPhone == true &&
-                                          myDetails.DateOfBirth != null;
-
                     var settings = new MySettingsInput
                     {
                         UserName = !String.IsNullOrEmpty(myDetails.UserName) ? CommonHelper.GetDecryptedData(myDetails.UserName) : "",
@@ -1373,6 +1364,8 @@ namespace Nooch.API.Controllers
                         LastName = !String.IsNullOrEmpty(myDetails.LastName) ? CommonHelper.GetDecryptedData(myDetails.LastName) : "",
                         DateOfBirth = myDetails.DateOfBirth != null ? Convert.ToDateTime(myDetails.DateOfBirth).ToString("MM/dd/yyyy") : "",
 
+                        IsVerifiedPhone = myDetails.IsVerifiedPhone ?? false,
+                        IsSsnAdded = !String.IsNullOrEmpty(myDetails.SSN) && CommonHelper.GetDecryptedData(myDetails.SSN).Length > 8,
                         //Password = myDetails.Password,
                         ContactNumber = !String.IsNullOrEmpty(myDetails.ContactNumber) ? CommonHelper.FormatPhoneNumber(myDetails.ContactNumber) : myDetails.ContactNumber,
                         SecondaryMail = !String.IsNullOrEmpty(myDetails.SecondaryEmail) ? CommonHelper.GetDecryptedData(myDetails.SecondaryEmail) : "",
@@ -1385,8 +1378,6 @@ namespace Nooch.API.Controllers
                         State = !String.IsNullOrEmpty(myDetails.State) ? CommonHelper.GetDecryptedData(myDetails.State) : "",
                         Zipcode = !String.IsNullOrEmpty(myDetails.Zipcode) ? CommonHelper.GetDecryptedData(myDetails.Zipcode) : "",
                         Country = !String.IsNullOrEmpty(myDetails.Country) ? CommonHelper.GetDecryptedData(myDetails.Country) : "",
-                        IsVerifiedPhone = myDetails.IsVerifiedPhone ?? false,
-                        IsValidProfile = isvalidprofile,
 
                         Photo = (myDetails.Photo == null) ? Utility.GetValueFromConfig("PhotoUrl") : myDetails.Photo, //CLIFF: this is already being sent in the GetMemberDetails service
                         //FacebookAcctLogin = myDetails.FacebookAccountLogin, //CLIFF: this is already being sent in the GetMemberDetails service
@@ -3864,27 +3855,29 @@ namespace Nooch.API.Controllers
 
                                     SynapseBanksOfMember bnkAccnt = new SynapseBanksOfMember();
 
+                                    bnkAccnt.MemberId = Utility.ConvertToGuid(MemberId);
                                     bnkAccnt.AddedOn = DateTime.Now;
                                     bnkAccnt.IsDefault = false;
-                                    bnkAccnt.MemberId = Utility.ConvertToGuid(MemberId);
 
                                     // Holdovers from V2
                                     bnkAccnt.account_number_string = !String.IsNullOrEmpty(bank.info.account_num) ? CommonHelper.GetEncryptedData(bank.info.account_num) : null;
+                                    bnkAccnt.routing_number_string = !String.IsNullOrEmpty(bank.info.routing_num) ? CommonHelper.GetEncryptedData(bank.info.routing_num) : null;
                                     bnkAccnt.bank_name = !String.IsNullOrEmpty(bank.info.bank_name) ? CommonHelper.GetEncryptedData(bank.info.bank_name) : null;
                                     bnkAccnt.name_on_account = !String.IsNullOrEmpty(bank.info.name_on_account) ? CommonHelper.GetEncryptedData(bank.info.name_on_account) : null;
                                     bnkAccnt.nickname = !String.IsNullOrEmpty(bank.info.nickname) ? CommonHelper.GetEncryptedData(bank.info.nickname) : null;
-                                    bnkAccnt.routing_number_string = !String.IsNullOrEmpty(bank.info.routing_num) ? CommonHelper.GetEncryptedData(bank.info.routing_num) : null;
                                     bnkAccnt.is_active = bank.is_active;
-                                    bnkAccnt.Status = "Not Verified";
                                     bnkAccnt.mfa_verifed = false;
+                                    bnkAccnt.Status = "Not Verified";
 
                                     // New in V3
                                     bnkAccnt.oid = !String.IsNullOrEmpty(bank._id.oid) ? CommonHelper.GetEncryptedData(bank._id.oid) : null;
                                     bnkAccnt.allowed = !String.IsNullOrEmpty(bank.allowed) ? bank.allowed : "UNKNOWN";
                                     bnkAccnt.@class = !String.IsNullOrEmpty(bank.info._class) ? bank.info._class : "UNKNOWN";
-                                    bnkAccnt.supp_id = !String.IsNullOrEmpty(bank.extra.supp_id) ? bank.extra.supp_id : null;
+                                    bnkAccnt.supp_id = bank.extra.supp_id;
                                     bnkAccnt.type_bank = !String.IsNullOrEmpty(bank.info.type) ? bank.info.type : "UNKNOWN";
                                     bnkAccnt.type_synapse = "ACH-US";
+
+                                    bnkAccnt.IsAddedUsingRoutingNumber = false;
 
                                     _dbContext.SynapseBanksOfMembers.Add(bnkAccnt);
                                     int addBankToDB = _dbContext.SaveChanges();
@@ -3896,12 +3889,6 @@ namespace Nooch.API.Controllers
                                         Logger.Info("Service Cntrlr -> SynapseV3AddNodeBankLogin - SUCCESSFULLY Added Bank to DB - Bank OID: [" + bank._id.oid +
                                                     "], MemberID: [" + MemberId + "]");
                                         numOfBanksSavedSuccessfully += 1;
-
-                                        // CC (8/17/16): I DON'T THINK WE NEED TO CREATE A NEW SUBSCRIPTION FOR EVERY BANK.
-                                        //               I THINK WE JUST CREATE THE SUBSCRIPTION *ONCE* (...EVER) AND THAT APPLIES TO
-                                        //               *ALL* USERS/BANKS/TRANSACTIONS CREATED USING OUR CLIENT ID/SECRET
-                                        // subscribe this node on synapse
-                                        //setSubcriptionToNode(res.bankOid.ToString(), MemberId);
                                     }
                                     else
                                         Logger.Error("Service Cntrlr -> SynapseV3AddNodeBankLogin - Failed to save new BANK in SynapseBanksOfMembers Table in DB - MemberID: [" + MemberId + "]");
@@ -4058,16 +4045,11 @@ namespace Nooch.API.Controllers
                     // Most likely the user submitted an incorrect answer, so they can try again...
                     // (Don't need to pass back the Bank ID or question since the HTML page still has it.)
                     // Also possible: another MFA Question from Synapse just like the Bank Login service (/node/add)
-                    if (mdaResult.SynapseNodesList != null &&
-                        mdaResult.SynapseNodesList.nodes.Length > 0)
-                    {
+                    if (mdaResult.SynapseNodesList != null && mdaResult.SynapseNodesList.nodes.Length > 0)
                         res.bankOid = mdaResult.SynapseNodesList.nodes[0]._id.oid;
-                    }
 
                     if (!String.IsNullOrEmpty(mdaResult.mfaMessage))
-                    {
                         res.mfaQuestion = mdaResult.mfaMessage;
-                    }
                 }
 
                 #endregion MFA Required
@@ -4134,22 +4116,45 @@ namespace Nooch.API.Controllers
 
             try
             {
-                Logger.Info("Service Cntrlr - GetSynapseBankAndUserDetails Initiated - MemberId: [" + memberid + "]");
-
+                Logger.Info("Service Cntrlr - GetSynapseBankAndUserDetails Fired - MemberID: [" + memberid + "]");
                 res = CommonHelper.GetSynapseBankAndUserDetailsforGivenMemberId(memberid);
-                //Logger.Info("Service Controller - GetSynapseBankAndUserDetails Checkpoint #1!");
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Cntrlr - GetSynapseBankAndUserDetails FAILED - MemberId: [" + memberid +
+                Logger.Error("Service Cntrlr - GetSynapseBankAndUserDetails FAILED - MemberID: [" + memberid +
                              "], Exception: [" + ex + "]");
             }
 
-            Logger.Info("Service Cntrlr - GetSynapseBankAndUserDetails FINISHED, ABOUT TO RETURN - MemberId: [" + memberid +
-                        "], res.wereUserDetailsFound: [" + res.wereUserDetailsFound +
-                        "], res.wereBankDetailsFound: [" + res.wereBankDetailsFound + "]");
+            Logger.Info("Service Cntrlr - GetSynapseBankAndUserDetails - RETURNING - MemberID: [" + memberid +
+                        "], User Details Found: [" + res.wereUserDetailsFound +
+                        "], Bank Details Found: [" + res.wereBankDetailsFound + "]");
             //"], UserDetails.access_token: [" + res.UserDetails.access_token +
             //"], BankDetails.bankid: [" + res.BankDetails.bankid + "]");
+
+            return res;
+        }
+
+
+        [HttpGet]
+        [ActionName("GetUsersBankInfoForMobile")]
+        public BankDetailsForMobile GetUsersBankInfoForMobile(string memberid)
+        {
+            BankDetailsForMobile res = new BankDetailsForMobile();
+
+            try
+            {
+                Logger.Info("Service Cntrlr - GetUsersBankInfoForMobile Fired - MemberID: [" + memberid + "]");
+                res = CommonHelper.GetSynapseBankDetailsForMobile(memberid);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Cntrlr - GetUsersBankInfoForMobile FAILED - MemberID: [" + memberid +
+                             "], Exception: [" + ex + "]");
+            }
+
+            Logger.Info("Service Cntrlr - GetUsersBankInfoForMobile - RETURNING - MemberID: [" + memberid +
+                        "], User Details Found: [" + res.wereUserDetailsFound +
+                        "], Bank Details Found: [" + res.wereBankDetailsFound + "]");
 
             return res;
         }
