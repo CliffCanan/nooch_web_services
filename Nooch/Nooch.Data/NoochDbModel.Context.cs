@@ -44,7 +44,6 @@ namespace Nooch.Data
         public virtual DbSet<AuthenticationToken> AuthenticationTokens { get; set; }
         public virtual DbSet<InviteCode> InviteCodes { get; set; }
         public virtual DbSet<SynapseBankLoginResult> SynapseBankLoginResults { get; set; }
-        public virtual DbSet<SynapseBanksOfMember> SynapseBanksOfMembers { get; set; }
         public virtual DbSet<SynapseCreateUserResult> SynapseCreateUserResults { get; set; }
         public virtual DbSet<SynapseIdVerificationQuestion> SynapseIdVerificationQuestions { get; set; }
         public virtual DbSet<SynapseSupportedBank> SynapseSupportedBanks { get; set; }
@@ -55,6 +54,7 @@ namespace Nooch.Data
         public virtual DbSet<SynapseAddTransactionResult> SynapseAddTransactionResults { get; set; }
         public virtual DbSet<Transaction> Transactions { get; set; }
         public virtual DbSet<TransactionsStatusAtSynapse> TransactionsStatusAtSynapses { get; set; }
+        public virtual DbSet<SynapseBanksOfMember> SynapseBanksOfMembers { get; set; }
     
         public virtual ObjectResult<GetMostFrequentFriends_Result> GetMostFrequentFriends(string memberId)
         {
