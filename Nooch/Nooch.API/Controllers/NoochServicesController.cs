@@ -3373,21 +3373,24 @@ namespace Nooch.API.Controllers
                                     res.errorMsg = "Failed to save entry in BankLoginResults table: [" + ex.Message + "]";
                                 }
 
-                                Logger.Info("Service Controller -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber SUCCESS - Added record to SynapseBanksOfMembers Table - [UserName: " + CommonHelper.GetDecryptedData(noochMember.UserName) + "]");
+                                Logger.Info("Service Controller -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber SUCCESS - Added record to SynapseBanksOfMembers Table - UserName: [" + CommonHelper.GetDecryptedData(noochMember.UserName) + "]");
 
+                                res.Is_success = true;
 
-                                #region Send Initial Micro-Deposit Email
+                                if (noochMember.cipTag != "vendor")
+                                {
+                                    #region Send Initial Micro-Deposit Email
 
-                                _dbContext.Entry(sbom).Reload();
+                                    _dbContext.Entry(sbom).Reload();
 
-                                string firstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(noochMember.FirstName));
-                                string accountNum = "**** - " + account_num.Substring(account_num.Length - 4);
-                                string verifyLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
-                                                    "Nooch/MicroDepositsVerification?mid=" + MemberId);
+                                    var firstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(noochMember.FirstName));
+                                    var accountNum = "**** - " + account_num.Substring(account_num.Length - 4);
+                                    var verifyLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
+                                                        "Nooch/MicroDepositsVerification?mid=" + MemberId);
 
-                                var templateToUse = noochMember.isRentScene == true ? "MicroDepositNotification_RentScene" : "MicroDepositNotification";
+                                    var templateToUse = noochMember.isRentScene == true ? "MicroDepositNotification_RentScene" : "MicroDepositNotification";
 
-                                var tokens = new Dictionary<string, string>
+                                    var tokens = new Dictionary<string, string>
 	                                        {
                                                 {Constants.PLACEHOLDER_FIRST_NAME, firstName},
                                                 {"$BankName$", bankNickName},
@@ -3398,62 +3401,54 @@ namespace Nooch.API.Controllers
 	                                            {"$PayLink$", verifyLink}
 	                                        };
 
-                                string fromAddress = Utility.GetValueFromConfig("transfersMail");
-                                var toAddress = CommonHelper.GetDecryptedData(noochMember.UserName);
+                                    var fromAddress = Utility.GetValueFromConfig("transfersMail");
+                                    var toAddress = CommonHelper.GetDecryptedData(noochMember.UserName);
 
-                                try
-                                {
-                                    Utility.SendEmail(templateToUse, fromAddress, toAddress, null,
-                                                      "Bank Account Verification - Important Info",
-                                                      null, tokens, null, "bankAddedManually@nooch.com", null);
-
-                                    Logger.Info("Service Cntrlr -> SynapseV3 AddNodeWithAccountNumberAndRoutingNumber - [" + templateToUse + "] - Email sent to [" +
-                                                 toAddress + "] successfully");
-                                }
-                                catch (Exception ex)
-                                {
-                                    Logger.Error("Service Cntrlr -> SynapseV3 AddNodeWithAccountNumberAndRoutingNumber - EMAIL FAILED: " +
-                                                 "[" + templateToUse + "] Email NOT sent to [" + toAddress + "], Exception: [" + ex + "]");
-                                }
-
-                                #endregion Send Initial Micro-Deposit Email
-
-                                #region Scheduling Micro-Deposit Reminder Email
-
-                                try
-                                {
-                                    // Determine when to send the reminder email
-                                    TimeSpan delayToUse = TimeSpan.FromDays(2);
-                                    DateTime currentDateTime = DateTime.Now;
-                                    if ((int)currentDateTime.DayOfWeek == 5)
+                                    try
                                     {
-                                        delayToUse = TimeSpan.FromDays(5);
+                                        Utility.SendEmail(templateToUse, fromAddress, toAddress, null,
+                                                          "Bank Account Verification - Important Info",
+                                                          null, tokens, null, "bankAddedManually@nooch.com", null);
+
+                                        Logger.Info("Service Cntrlr -> SynapseV3 AddNodeWithAccountNumberAndRoutingNumber - [" + templateToUse + "] - Email sent to [" +
+                                                     toAddress + "] successfully");
                                     }
-                                    else if ((int)currentDateTime.DayOfWeek == 6)
+                                    catch (Exception ex)
                                     {
-                                        delayToUse = TimeSpan.FromDays(4);
-                                    }
-                                    else if ((int)currentDateTime.DayOfWeek == 6)
-                                    {
-                                        delayToUse = TimeSpan.FromDays(4);
+                                        Logger.Error("Service Cntrlr -> SynapseV3 AddNodeWithAccountNumberAndRoutingNumber - EMAIL FAILED: " +
+                                                     "[" + templateToUse + "] Email NOT sent to [" + toAddress + "], Exception: [" + ex + "]");
                                     }
 
-                                    var x = BackgroundJob.Schedule(() => CommonHelper.SendMincroDepositsVerificationReminderEmail(sbom.MemberId.ToString(), sbom.oid, Convert.ToBoolean(noochMember.isRentScene)), delayToUse);
-                                    if (x != null)
+                                    #endregion Send Initial Micro-Deposit Email
+
+                                    #region Scheduling Micro-Deposit Reminder Email
+
+                                    try
                                     {
-                                        Logger.Info("Service Cntrlr -> SynapseV3 AddNodeWithAccountNumberAndRoutingNumber - Scheduled Micro Deposit Reminder email in Background - [" +
-                                                    "] DelayToUser: [" + delayToUse.ToString() + "]");
+                                        // Determine when to send the reminder email
+                                        TimeSpan delayToUse = TimeSpan.FromDays(2);
+                                        DateTime currentDateTime = DateTime.Now;
+
+                                        if ((int)currentDateTime.DayOfWeek == 5)
+                                            delayToUse = TimeSpan.FromDays(5);
+                                        else if ((int)currentDateTime.DayOfWeek == 6)
+                                            delayToUse = TimeSpan.FromDays(4);
+                                        else if ((int)currentDateTime.DayOfWeek == 6)
+                                            delayToUse = TimeSpan.FromDays(4);
+
+                                        var x = BackgroundJob.Schedule(() => CommonHelper.SendMincroDepositsVerificationReminderEmail(sbom.MemberId.ToString(), sbom.oid, Convert.ToBoolean(noochMember.isRentScene)), delayToUse);
+                                        if (x != null)
+                                            Logger.Info("Service Cntrlr -> SynapseV3 AddNodeWithAccountNumberAndRoutingNumber - Scheduled Micro Deposit Reminder email in Background - [" +
+                                                        "] DelayToUser: [" + delayToUse.ToString() + " Days]");
                                     }
-                                }
-                                catch (Exception ex)
-                                {
-                                    Logger.Error("Service Controller -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber ERROR - Failed to schedule Micro-Deposit Reminder Email - " +
-                                                 "MemberID: [" + MemberId + " ], Exception: [" + ex + "]");
-                                }
+                                    catch (Exception ex)
+                                    {
+                                        Logger.Error("Service Controller -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber ERROR - Failed to schedule Micro-Deposit Reminder Email - " +
+                                                     "MemberID: [" + MemberId + " ], Exception: [" + ex + "]");
+                                    }
 
-                                #endregion Scheduling Micro-Deposit Reminder Email
-
-                                res.Is_success = true;
+                                    #endregion Scheduling Micro-Deposit Reminder Email
+                                }
                             }
                         }
                         catch (Exception ex)
