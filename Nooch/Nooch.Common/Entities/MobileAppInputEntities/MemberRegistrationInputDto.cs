@@ -26,4 +26,13 @@ namespace Nooch.Common.Entities.MobileAppInputEntities
         public string sendEmail { get; set; }
         public string type { get; set; }
     }
+
+    public class checkEmailForMobileApp
+    {
+        public bool matchFound { get; set; }
+        public bool rememberMe { get; set; }
+        public string firstName { get; set; }
+        public string lastName { get; set; }
+        public string email { get; set; }
+    }
 }

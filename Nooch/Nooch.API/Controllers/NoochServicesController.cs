@@ -251,20 +251,29 @@ namespace Nooch.API.Controllers
 
 
         [HttpGet]
-        [ActionName("GetMemberNameByUserName")]
-        public StringResult GetMemberNameByUserName(string userName)
+        [ActionName("CheckIfEmailIsRegistered")]
+        public checkEmailForMobileApp CheckIfEmailIsRegistered(string email)
         {
-            StringResult res = new StringResult();
+            checkEmailForMobileApp res = new checkEmailForMobileApp();
+            res.matchFound = false;
 
             try
             {
-                res.Result = CommonHelper.GetMemberNameByUserName(userName);
+                var memberObj = CommonHelper.GetMemberDetailsByUserName(email);
+
+                if (memberObj != null)
+                {
+                    res.matchFound = true;
+                    res.firstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName));
+                    //res.lastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(test.LastName));
+                    res.email = email;
+                    res.rememberMe = memberObj.RememberMeEnabled ?? true;
+                }
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Cntlr -> GetMemberUsernameByMemberId FAILED - [GetMemberNameByUserName : " + userName +
+                Logger.Error("Service Cntlr -> CheckIfEmailIsRegistered FAILED - userName: [" + email +
                              "], Exception: [" + ex + "]");
-                res.Result = ex.Message;
             }
 
             return res;
