@@ -1282,8 +1282,8 @@ namespace Nooch.DataAccess
 
                         LocationSearch obj = mapper.Map<LocationSearch>(loc);
 
-                        obj.FirstName = CommonHelper.GetDecryptedData(loc.FirstName);
-                        obj.LastName = CommonHelper.GetDecryptedData(loc.LastName);
+                        obj.FirstName = CommonHelper.UppercaseFirst(loc.FirstName);
+                        obj.LastName = CommonHelper.UppercaseFirst(loc.LastName);
                         decimal miles = obj.Miles;
                         obj.Miles = decimal.Parse(miles > 0 ? miles.ToString("###.##") : "000.00");
                         obj.Photo = loc.Photo;

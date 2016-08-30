@@ -17,7 +17,7 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
         public string UserDetailsErrMessage { get; set; }
         public string AccountDetailsErrMessage { get; set; }
     }
-
+     
     public class BankDetailsForMobile
     {
         public bool wereBankDetailsFound { get; set; }
