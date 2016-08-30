@@ -278,6 +278,9 @@ namespace Nooch.Common
                     case "payments@rentscene.com":
                         mailMessage.From = new MailAddress(fromAddress, "Rent Scene Payments");
                         break;
+                    case "payments@tryhabitat.com":
+                        mailMessage.From = new MailAddress(fromAddress, "Habitat Payments");
+                        break;
                     default:
                         mailMessage.From = new MailAddress(fromAddress, "Nooch Admin");
                         break;
@@ -290,10 +293,7 @@ namespace Nooch.Common
 
                 mailMessage.To.Add(toAddress);
 
-                if (!String.IsNullOrEmpty(bccMailId))
-                {
-                    mailMessage.Bcc.Add(bccMailId);
-                }
+                if (!String.IsNullOrEmpty(bccMailId)) mailMessage.Bcc.Add(bccMailId);
 
                 SmtpClient smtpClient = new SmtpClient();
 
