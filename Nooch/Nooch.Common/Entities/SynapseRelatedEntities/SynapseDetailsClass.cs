@@ -30,6 +30,7 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
         public string bankAllowed { get; set; }
         public string bankAddedDate { get; set; }
         public string bankVerifiedDate { get; set; }
+        public string bankLogoUrl { get; set; }
 
         public string userPermission { get; set; }
         public string physDocStatus { get; set; }

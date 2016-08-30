@@ -5528,84 +5528,8 @@ namespace Nooch.DataAccess
                         var BankName = CommonHelper.GetDecryptedData(memberBank.bank_name);
                         var bankNickName = CommonHelper.GetDecryptedData(memberBank.nickname);
 
-                        #region Set Bank Logo URL Variable
-
-                        string appPath = Utility.GetValueFromConfig("ApplicationURL");
-                        var bankLogoUrl = "";
-
-                        switch (BankName)
-                        {
-                            case "Ally":
-                                {
-                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/ally.png");
-                                }
-                                break;
-                            case "Bank of America":
-                                {
-                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/bankofamerica.png");
-                                }
-                                break;
-                            case "Wells Fargo":
-                                {
-                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/WellsFargo.png");
-                                }
-                                break;
-                            case "Chase":
-                                {
-                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/chase.png");
-                                }
-                                break;
-                            case "Citibank":
-                                {
-                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/citibank.png");
-                                }
-                                break;
-                            case "TD Bank":
-                                {
-                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/td.png");
-                                }
-                                break;
-                            case "Capital One 360":
-                                {
-                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/capone360.png");
-                                }
-                                break;
-                            case "US Bank":
-                                {
-                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/usbank.png");
-                                }
-                                break;
-                            case "PNC":
-                                {
-                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/pnc.png");
-                                }
-                                break;
-                            case "SunTrust":
-                                {
-                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/suntrust.png");
-                                }
-                                break;
-                            case "USAA":
-                                {
-                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/usaa.png");
-                                }
-                                break;
-
-                            case "First Tennessee":
-                                {
-                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/firsttennessee.png");
-                                }
-                                break;
-                            default:
-                                {
-                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/no.png");
-                                }
-                                break;
-                        }
-
-                        #endregion Set Bank Logo URL Variable
-
-                        Logger.Info("MDA -> VerifySynapseAccount --> Checkpoint 8818 - BankLogoUrl: [" + bankLogoUrl + "]");
+                        // Set Bank Logo URL Variable
+                        var bankLogoUrl = CommonHelper.getLogoForBank(BankName);
 
                         var noochMember = _dbContext.Members.Where(memberTemp => memberTemp.MemberId == memberId &&
                                                       memberTemp.IsDeleted == false).FirstOrDefault();
@@ -5631,8 +5555,8 @@ namespace Nooch.DataAccess
                                             };
 
                             Utility.SendEmail("bankVerified", fromAddress, toAddress, null,
-                                "Your bank account has been verified on Nooch",
-                                null, tokens, null, null, null);
+                                              "Your bank account has been verified on Nooch",
+                                              null, tokens, null, null, null);
 
                             Logger.Info("MDA -> VerifySynapseAccount --> Bank VERIFIED Email sent to: [" + toAddress + "]");
                         }

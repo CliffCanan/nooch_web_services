@@ -4147,7 +4147,7 @@ namespace Nooch.API.Controllers
 
             try
             {
-                Logger.Info("Service Cntrlr - GetUsersBankInfoForMobile Fired - MemberID: [" + memberid + "]");
+                //Logger.Info("Service Cntrlr - GetUsersBankInfoForMobile Fired - MemberID: [" + memberid + "]");
                 res = CommonHelper.GetSynapseBankDetailsForMobile(memberid);
             }
             catch (Exception ex)
@@ -4755,75 +4755,7 @@ namespace Nooch.API.Controllers
 
                         o.BankName = CommonHelper.GetDecryptedData(accountCollection.bank_name);
                         o.BankNickName = CommonHelper.GetDecryptedData(accountCollection.nickname);
-                        switch (o.BankName)
-                        {
-                            case "Ally":
-                                {
-                                    o.BankImageURL = String.Concat(appPath, "Assets/Images/bankPictures/ally.png");
-                                }
-                                break;
-                            case "Bank of America":
-                                {
-                                    o.BankImageURL = String.Concat(appPath, "Assets/Images/bankPictures/bankofamerica.png");
-                                }
-                                break;
-                            case "Wells Fargo":
-                                {
-                                    o.BankImageURL = String.Concat(appPath, "Assets/Images/bankPictures/WellsFargo.png");
-                                }
-                                break;
-                            case "Chase":
-                                {
-                                    o.BankImageURL = String.Concat(appPath, "Assets/Images/bankPictures/chase.png");
-                                }
-                                break;
-                            case "Citibank":
-                                {
-                                    o.BankImageURL = String.Concat(appPath, "Assets/Images/bankPictures/citibank.png");
-                                }
-                                break;
-                            case "TD Bank":
-                                {
-                                    o.BankImageURL = String.Concat(appPath, "Assets/Images/bankPictures/td.png");
-                                }
-                                break;
-                            case "Capital One 360":
-                                {
-                                    o.BankImageURL = String.Concat(appPath, "Assets/Images/bankPictures/capone360.png");
-                                }
-                                break;
-                            case "US Bank":
-                                {
-                                    o.BankImageURL = String.Concat(appPath, "Assets/Images/bankPictures/usbank.png");
-                                }
-                                break;
-                            case "PNC":
-                                {
-                                    o.BankImageURL = String.Concat(appPath, "Assets/Images/bankPictures/pnc.png");
-                                }
-                                break;
-                            case "SunTrust":
-                                {
-                                    o.BankImageURL = String.Concat(appPath, "Assets/Images/bankPictures/suntrust.png");
-                                }
-                                break;
-                            case "USAA":
-                                {
-                                    o.BankImageURL = String.Concat(appPath, "Assets/Images/bankPictures/usaa.png");
-                                }
-                                break;
-
-                            case "First Tennessee":
-                                {
-                                    o.BankImageURL = String.Concat(appPath, "Assets/Images/bankPictures/firsttennessee.png");
-                                }
-                                break;
-                            default:
-                                {
-                                    o.BankImageURL = String.Concat(appPath, "Assets/Images/bankPictures/no.png");
-                                }
-                                break;
-                        }
+                        o.BankImageURL = CommonHelper.getLogoForBank(o.BankName);
                         o.AccountName = CommonHelper.GetDecryptedData(accountCollection.account_number_string);
                         o.AccountStatus = accountCollection.Status;
                         o.MemberId = memberId;

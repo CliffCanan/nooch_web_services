@@ -2998,6 +2998,7 @@ namespace Nooch.Common
                     res.bankStatus = defaultBank.Status; // "Verfified" or "Not Verified"
                     res.bankVerifiedDate = defaultBank.Status == "Verified" && defaultBank.VerifiedOn != null
                         ? Convert.ToDateTime(defaultBank.VerifiedOn).ToString("MMM d, yyyy") : "";
+                    res.bankLogoUrl = getLogoForBank(res.bankName);
 
                     res.errorMsg = "OK";
                 }
@@ -3736,83 +3737,8 @@ namespace Nooch.Common
                         #endregion Check, Parse, & Compare Name from Bank Account
 
 
-                        #region Set Bank Logo URL Variable for Either Email Template
-
-                        string appPath = Utility.GetValueFromConfig("ApplicationURL");
-                        var bankLogoUrl = "";
-
-                        switch (BankName)
-                        {
-                            case "Ally":
-                                {
-                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/ally.png");
-                                }
-                                break;
-                            case "Bank of America":
-                                {
-                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/bankofamerica.png");
-                                }
-                                break;
-                            case "Wells Fargo":
-                                {
-                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/WellsFargo.png");
-                                }
-                                break;
-                            case "Chase":
-                                {
-                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/chase.png");
-                                }
-                                break;
-                            case "Citibank":
-                                {
-                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/citibank.png");
-                                }
-                                break;
-                            case "TD Bank":
-                                {
-                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/td.png");
-                                }
-                                break;
-                            case "Capital One 360":
-                                {
-                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/capone360.png");
-                                }
-                                break;
-                            case "US Bank":
-                                {
-                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/usbank.png");
-                                }
-                                break;
-                            case "PNC":
-                                {
-                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/pnc.png");
-                                }
-                                break;
-                            case "SunTrust":
-                                {
-                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/suntrust.png");
-                                }
-                                break;
-                            case "USAA":
-                                {
-                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/usaa.png");
-                                }
-                                break;
-
-                            case "First Tennessee":
-                                {
-                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/firsttennessee.png");
-                                }
-                                break;
-                            default:
-                                {
-                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/no.png");
-                                }
-                                break;
-                        }
-
-                        #endregion Set Bank Logo URL Variable for Either Email Template
-
+                        // Set Bank Logo URL Variable for Either Email Template
+                        var bankLogoUrl = getLogoForBank(BankName);
 
                         #region Scenarios for Immediately VERIFYING this bank account
 
@@ -4517,6 +4443,85 @@ namespace Nooch.Common
         }
 
 
+
+        public static string getLogoForBank(string bankName)
+        {
+            string appPath = Utility.GetValueFromConfig("ApplicationURL");
+            var bankLogoUrl = "";
+
+            switch (bankName)
+            {
+                case "Ally":
+                    {
+                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/ally.png");
+                    }
+                    break;
+                case "Bank of America":
+                    {
+                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/bankofamerica.png");
+                    }
+                    break;
+                case "Wells Fargo":
+                    {
+                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/WellsFargo.png");
+                    }
+                    break;
+                case "Chase":
+                    {
+                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/chase.png");
+                    }
+                    break;
+                case "Citibank":
+                    {
+                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/citibank.png");
+                    }
+                    break;
+                case "TD Bank":
+                    {
+                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/td.png");
+                    }
+                    break;
+                case "Capital One 360":
+                    {
+                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/capone360.png");
+                    }
+                    break;
+                case "US Bank":
+                    {
+                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/usbank.png");
+                    }
+                    break;
+                case "PNC":
+                    {
+                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/pnc.png");
+                    }
+                    break;
+                case "SunTrust":
+                    {
+                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/suntrust.png");
+                    }
+                    break;
+                case "USAA":
+                    {
+                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/usaa.png");
+                    }
+                    break;
+                case "First Tennessee":
+                    {
+                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/firsttennessee.png");
+                    }
+                    break;
+                default:
+                    {
+                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/no.png");
+                    }
+                    break;
+            }
+
+            return bankLogoUrl;
+        }
+
+
         public static string notifyCliffAboutError(string bodyTxt)
         {
             try
@@ -4641,10 +4646,8 @@ namespace Nooch.Common
                                          where statusObj.Nooch_Transaction_Id == transId
                                          select statusObj).OrderByDescending(n => n.Id).FirstOrDefault();
 
-                    if (lastStatusObj != null)
-                        return lastStatusObj.status_note;
-                    else
-                        return "No status note";
+                    if (lastStatusObj != null) return lastStatusObj.status_note;
+                    else return "No status note";
                 }
             }
             catch (Exception ex)
