@@ -36,6 +36,7 @@ namespace Nooch.Common.Entities.MobileAppInputEntities
     {
         public bool ShowInSearch { get; set; }
         public bool? IsVerifiedPhone { get; set; }
+        public bool? IsVerifiedEmail { get; set; }
         //public bool IsValidProfile { get; set; }
         //public bool IsBankVerified { get; set; }
         public bool UseFacebookPicture { get; set; }

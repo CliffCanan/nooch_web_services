@@ -517,6 +517,39 @@ namespace Nooch.API.Controllers
         }
 
 
+
+        [HttpGet]
+        [ActionName("DeleteAttachedBankNode")]
+        public string DeleteAttachedBankNode(string memberid, string bankOid) {
+             
+                try
+                {
+                    Logger.Error("Service Cntlr -> DeleteAttachedBankNode for - MemberID: [" + memberid + "]");
+                    Guid MemId = Utility.ConvertToGuid(memberid);
+                    string DecryptedBankOid = CommonHelper.GetEncryptedData(bankOid);
+                    var synBankDetails = _dbContext.SynapseBanksOfMembers.Where(b => b.MemberId == MemId && b.oid == DecryptedBankOid).FirstOrDefault();
+                    if (synBankDetails != null)
+                    {
+                        synBankDetails.is_active = false;
+                        synBankDetails.IsDefault = false;
+                        _dbContext.SaveChanges();
+                        return "Deleted";
+                    }
+                    else
+                    {
+                        return "Bank not found";
+                    }
+
+                
+                }
+                catch (Exception ex) {
+                    Logger.Error("Service Cntlr -> DeleteAttachedBankNode FAILED - MemberID: [" + memberid + "], Exception: [" + ex.InnerException + "]");
+                    throw new Exception("Server Error");
+                }
+             
+            
+        }
+
         [HttpGet]
         [ActionName("GetMemberStats")]
         public StringResult GetMemberStats(string MemberId, string accesstoken, string query)
@@ -1365,7 +1398,10 @@ namespace Nooch.API.Controllers
                     // Logger.LogDebugMessage("Service Cntlr -> GetMyDetails Initiated - MemberID: [" + memberId + "]");
 
                     var myDetails = CommonHelper.GetMemberDetails(memberId);
-
+                    Guid MemId = Utility.ConvertToGuid(memberId);
+                    var authToken =
+                     _dbContext.AuthenticationTokens.FirstOrDefault(
+                          m => m.MemberId == MemId && m.IsActivated == false);
                     var settings = new MySettingsInput
                     {
                         UserName = !String.IsNullOrEmpty(myDetails.UserName) ? CommonHelper.GetDecryptedData(myDetails.UserName) : "",
@@ -1374,6 +1410,7 @@ namespace Nooch.API.Controllers
                         DateOfBirth = myDetails.DateOfBirth != null ? Convert.ToDateTime(myDetails.DateOfBirth).ToString("MM/dd/yyyy") : "",
 
                         IsVerifiedPhone = myDetails.IsVerifiedPhone ?? false,
+                        IsVerifiedEmail = authToken==null?false:true,
                         IsSsnAdded = !String.IsNullOrEmpty(myDetails.SSN) && CommonHelper.GetDecryptedData(myDetails.SSN).Length > 8,
                         //Password = myDetails.Password,
                         ContactNumber = !String.IsNullOrEmpty(myDetails.ContactNumber) ? CommonHelper.FormatPhoneNumber(myDetails.ContactNumber) : myDetails.ContactNumber,
@@ -5073,7 +5110,7 @@ namespace Nooch.API.Controllers
                 else
                     res.Result = cookie;
             }
-            catch (Exception ex)
+           catch (Exception ex)
             {
                 Logger.Error("Service Cntlr -> LoginRequest FAILED - userName: [" + userName + "], Exception: [" + ex + "]");
                 res.Result = ex.Message;
@@ -5702,6 +5739,8 @@ namespace Nooch.API.Controllers
 
             return res;
         }
+
+
 
         #endregion UNUSED METHODS
     }
