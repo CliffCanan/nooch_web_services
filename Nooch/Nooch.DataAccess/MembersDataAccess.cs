@@ -1135,7 +1135,7 @@ namespace Nooch.DataAccess
                             memberEntity.LastLocationLat = lat;
                             memberEntity.LastLocationLng = lng;
                             memberEntity.IsOnline = true;
-                            
+
 
                             var currentTimeMinus24Hours = DateTime.Now.AddHours(-24);
                             int loginRetryCountInDb = memberEntity.InvalidLoginAttemptCount.Equals(null)
@@ -3540,7 +3540,9 @@ namespace Nooch.DataAccess
 
                     try
                     {
-                        string lastNameUnEncr = CommonHelper.GetDecryptedData(LastName);
+                        var lastNameUnEncr = CommonHelper.GetDecryptedData(LastName);
+                        var ssnTxt = !String.IsNullOrEmpty(ssn) && ssn.Length > 5 ? "XXX - XX - " + ssn.Substring(ssn.Length - 4) : "<em>Not Submitted</em>";
+                        var imgIncludedTxt = isIdImageAdded == "1" ? "TRUE" : "FALSE";
 
                         StringBuilder st = new StringBuilder("<p><strong>This user's Nooch Account information is:</strong></p>" +
                                               "<table border='1' cellpadding='5' style='border-collapse:collapse;'>" +
@@ -3550,8 +3552,8 @@ namespace Nooch.DataAccess
                                               "<tr><td><strong>Email Address:</strong></td><td>" + userEmail + "</td></tr>" +
                                               "<tr><td><strong>Phone #:</strong></td><td>" + CommonHelper.FormatPhoneNumber(userPhone) + "</td></tr>" +
                                               "<tr><td><strong>Address:</strong></td><td>" + address + ", " + cityFromGoogle + ", " + stateAbbrev + ", " + zip + "</td></tr>" +
-                                              "<tr><td><strong>SSN:</strong></td><td>" + ssn + "</td></tr>" +
-                                              "<tr><td><strong>isIdImageAdded:</strong></td><td>" + isIdImageAdded +
+                                              "<tr><td><strong>SSN:</strong></td><td>" + ssnTxt + "</td></tr>" +
+                                              "<tr><td><strong>isIdImageAdded:</strong></td><td>" + imgIncludedTxt +
                                               "<tr><td><strong>Invited By:</strong></td><td>" + inviteCodeMemberName +
                                               "</td></tr></table><br/><br/>- Nooch Bot</body></html>");
 
@@ -6403,7 +6405,7 @@ namespace Nooch.DataAccess
                         ValidationRemainder = validationRemainder,
                         ProductUpdates = productUpdates,
                         NewAndUpdate = newAndUpdate,
-                        TransferReceived=mobTransferReceived,
+                        TransferReceived = mobTransferReceived,
                         DateCreated = DateTime.Now
                     };
                     i++;
