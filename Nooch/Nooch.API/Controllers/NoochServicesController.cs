@@ -520,14 +520,14 @@ namespace Nooch.API.Controllers
 
         [HttpGet]
         [ActionName("DeleteAttachedBankNode")]
-        public string DeleteAttachedBankNode(string memberid, string bankOid) {
+        public string DeleteAttachedBankNode(string memberid) {
              
                 try
                 {
                     Logger.Error("Service Cntlr -> DeleteAttachedBankNode for - MemberID: [" + memberid + "]");
                     Guid MemId = Utility.ConvertToGuid(memberid);
-                    string DecryptedBankOid = CommonHelper.GetEncryptedData(bankOid);
-                    var synBankDetails = _dbContext.SynapseBanksOfMembers.Where(b => b.MemberId == MemId && b.oid == DecryptedBankOid).FirstOrDefault();
+     
+                    var synBankDetails = _dbContext.SynapseBanksOfMembers.Where(b => b.MemberId == MemId && b.IsDefault == true).FirstOrDefault();
                     if (synBankDetails != null)
                     {
                         synBankDetails.is_active = false;
