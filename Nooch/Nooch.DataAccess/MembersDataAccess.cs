@@ -6602,11 +6602,11 @@ namespace Nooch.DataAccess
             // Check to make sure Username is not already taken
             if (CommonHelper.GetMemberNameByUserName(UserName) == null)
             {
-                Logger.Info("MDA -> Member Registration Initiated - [Name: " + FirstName + " " + LastName + "],  [Email: " + UserName + "]");
+                Logger.Info("MDA -> Member Registration Fired - Name: [" + FirstName + " " + LastName + "], Email: [" + UserName + "]");
 
-                string userNameLowerCase = UserName.Trim().ToLower();
+                var userNameLowerCase = UserName.Trim().ToLower();
 
-                string noochRandomId = GetRandomNoochId();
+                var noochRandomId = GetRandomNoochId();
 
                 if (!String.IsNullOrEmpty(noochRandomId))
                 {
@@ -6645,9 +6645,36 @@ namespace Nooch.DataAccess
                     #endregion Check Invitation/Referral Code
 
 
+                    #region Parse Name
+
+                    // CC (8/30/16): The new Ionic app is sending the entire Name in the 'FirstName' param.
+                    //               Better to parse it here than on the mobile device.
+                    if (!String.IsNullOrEmpty(FirstName) && String.IsNullOrEmpty(LastName))
+                    {
+                        string[] namearray = FirstName.Split(' ');
+                        FirstName = namearray[0];
+
+                        // Example Name Formats: Most Common: 1.) Charles Smith
+                        //                       Possible Variations: 2.) Charles   3.) Charles H. Smith
+                        //                       4.) CJ Smith   5.) C.J. Smith   6.)  Charles Andrew Thomas Smith
+
+                        if (namearray.Length > 1)
+                        {
+                            if (namearray.Length == 2) // For regular First & Last name: Charles Smith
+                                LastName = namearray[1];
+                            else if (namearray.Length == 3) // For 3 names, could be a middle name or middle initial: Charles H. Smith or Charles Andrew Smith
+                                LastName = namearray[2];
+                            else // For more than 3 names (some people have 2 or more middle names)
+                                LastName = namearray[namearray.Length - 1];
+                        }
+                    }
+
+                    #endregion Parse Name
+
+
                     #region Create New Member Record In DB
 
-                    string emailEncrypted = CommonHelper.GetEncryptedData(UserName);
+                    var emailEncrypted = CommonHelper.GetEncryptedData(UserName);
 
                     var member = new Member
                     {
@@ -6676,10 +6703,9 @@ namespace Nooch.DataAccess
                         UDID1 = UUID,
                         IsVerifiedWithSynapse = false,
                     };
+
                     if (inviteCodeObj != null)
-                    {
                         member.InviteCodeIdUsed = inviteCodeObj.InviteCodeId;
-                    }
 
                     if (Picture != null)
                     {
@@ -6693,9 +6719,7 @@ namespace Nooch.DataAccess
                         member.Photo = Utility.GetValueFromConfig("PhotoUrl") + member.MemberId + ".png";
                     }
                     else
-                    {
                         member.Photo = Utility.GetValueFromConfig("PhotoUrl") + "gv_no_photo.png";
-                    }
 
                     // Save member details to table
                     int result = 0;

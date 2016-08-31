@@ -4938,11 +4938,11 @@ namespace Nooch.API.Controllers
             try
             {
                 Logger.Info("Service Cntlr -> MemberRegistrationGET Fired - NEW USER'S INFO: Name: [" + name +
-                                       "], Email: [" + email + "],  Type: [" + type +
-                                       "], Phone: [" + phone + "], Address: [" + address +
-                                       "], ZIP: [" + zip + "], DOB: [" + dob +
-                                       "], SSN: [" + ssn + "], IP: [" + ip +
-                                       "], Fngrprnt: [" + fngprnt + "], PW: [" + pw + "], ");
+                            "], Email: [" + email + "],  Type: [" + type +
+                            "], Phone: [" + phone + "], Address: [" + address +
+                            "], ZIP: [" + zip + "], DOB: [" + dob +
+                            "], SSN: [" + ssn + "], IP: [" + ip +
+                            "], Fngrprnt: [" + fngprnt + "], PW: [" + pw + "], ");
 
                 #region Parse Name
 
