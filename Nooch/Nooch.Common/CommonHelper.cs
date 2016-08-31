@@ -216,15 +216,12 @@ namespace Nooch.Common
 
                 try
                 {
-                    //Get the member details
-
                     var noochMember = _dbContext.Members.FirstOrDefault(m => m.AccessToken == accessToken && m.IsDeleted == false && m.MemberId == memGuid);
-                    if (noochMember != null) return true;
-                    else return false;
+                    return noochMember != null ? true : false;
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Common Helper -> IsValidRequest FAILED - [Exception: " + ex + "]");
+                    Logger.Error("Common Helper -> IsValidRequest FAILED - MemberID: [" + memberId + "], Exception: [" + ex.Message + "]");
                     return false;
                 }
             }
