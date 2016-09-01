@@ -1401,7 +1401,7 @@ namespace Nooch.API.Controllers
                     Guid MemId = Utility.ConvertToGuid(memberId);
                     var authToken =
                      _dbContext.AuthenticationTokens.FirstOrDefault(
-                          m => m.MemberId == MemId && m.IsActivated == false);
+                          m => m.MemberId == MemId && m.IsActivated == true);
                     var settings = new MySettingsInput
                     {
                         UserName = !String.IsNullOrEmpty(myDetails.UserName) ? CommonHelper.GetDecryptedData(myDetails.UserName) : "",
@@ -3102,6 +3102,14 @@ namespace Nooch.API.Controllers
                 // Make URL from byte array b/c submitDocumentToSynapseV3 expects url of image.
                 string ImageUrlMade = "";
                 string filename = "";
+
+                //convert base64 string into byte array(sent from mobile app)
+                if (DocumentDetails.Photo != null)
+                {
+                    DocumentDetails.Picture = System.Convert.FromBase64String(DocumentDetails.Photo);
+
+                }
+
                 if (DocumentDetails.Picture != null)
                 {
                     // Make  image from bytes
