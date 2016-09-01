@@ -6798,8 +6798,8 @@ namespace Nooch.DataAccess
         /// <param name="trnsactionId"></param>
         public string TransferMoneyToNonNoochUserUsingSynapse(string inviteType, string receiverEmailId, TransactionEntity transactionEntity, string cip = "renter")
         {
-            Logger.Info("TDA -> TransferMoneyToNonNoochUserUsingSynapse Initiated - " +
-                        "MemberId: [" + transactionEntity.MemberId + "], " +
+            Logger.Info("TDA -> TransferMoneyToNonNoochUserUsingSynapse Fired - " +
+                        "MemberID: [" + transactionEntity.MemberId + "], " +
                         "Recipient: [" + receiverEmailId + "], " +
                         "Amount: [" + transactionEntity.Amount + "], CIP: [" + cip + "]");
 
@@ -7250,8 +7250,8 @@ namespace Nooch.DataAccess
         /// <param name="trnsactionId"></param>
         public string TransferMoneyToNonNoochUserThroughPhoneUsingsynapse(string inviteType, string receiverPhoneNumber, TransactionEntity transactionEntity)
         {
-            Logger.Info("TDA -> TransferMoneyToNonNoochUserThroughPhoneUsingsynapse Initiated - [MemberID:" + transactionEntity.MemberId + "], [inviteType: " +
-                                    inviteType + "], [receiverPhoneNumber: " + receiverPhoneNumber + "]");
+            Logger.Info("TDA -> TransferMoneyToNonNoochUserThroughPhoneUsingsynapse Initiated - MemberID: [" + transactionEntity.MemberId + "], InviteType: [" +
+                        inviteType + "], receiverPhoneNumber: [" + receiverPhoneNumber + "]");
 
             string trnsactionId = string.Empty;
 

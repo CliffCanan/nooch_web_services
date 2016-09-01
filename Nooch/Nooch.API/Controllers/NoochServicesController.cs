@@ -517,6 +517,39 @@ namespace Nooch.API.Controllers
         }
 
 
+
+        [HttpGet]
+        [ActionName("DeleteAttachedBankNode")]
+        public string DeleteAttachedBankNode(string memberid) {
+             
+                try
+                {
+                    Logger.Error("Service Cntlr -> DeleteAttachedBankNode for - MemberID: [" + memberid + "]");
+                    Guid MemId = Utility.ConvertToGuid(memberid);
+     
+                    var synBankDetails = _dbContext.SynapseBanksOfMembers.Where(b => b.MemberId == MemId && b.IsDefault == true).FirstOrDefault();
+                    if (synBankDetails != null)
+                    {
+                        synBankDetails.is_active = false;
+                        synBankDetails.IsDefault = false;
+                        _dbContext.SaveChanges();
+                        return "Deleted";
+                    }
+                    else
+                    {
+                        return "Bank not found";
+                    }
+
+                
+                }
+                catch (Exception ex) {
+                    Logger.Error("Service Cntlr -> DeleteAttachedBankNode FAILED - MemberID: [" + memberid + "], Exception: [" + ex.InnerException + "]");
+                    throw new Exception("Server Error");
+                }
+             
+            
+        }
+
         [HttpGet]
         [ActionName("GetMemberStats")]
         public StringResult GetMemberStats(string MemberId, string accesstoken, string query)
@@ -1365,7 +1398,10 @@ namespace Nooch.API.Controllers
                     // Logger.LogDebugMessage("Service Cntlr -> GetMyDetails Initiated - MemberID: [" + memberId + "]");
 
                     var myDetails = CommonHelper.GetMemberDetails(memberId);
-
+                    Guid MemId = Utility.ConvertToGuid(memberId);
+                    var authToken =
+                     _dbContext.AuthenticationTokens.FirstOrDefault(
+                          m => m.MemberId == MemId && m.IsActivated == false);
                     var settings = new MySettingsInput
                     {
                         UserName = !String.IsNullOrEmpty(myDetails.UserName) ? CommonHelper.GetDecryptedData(myDetails.UserName) : "",
@@ -1374,6 +1410,7 @@ namespace Nooch.API.Controllers
                         DateOfBirth = myDetails.DateOfBirth != null ? Convert.ToDateTime(myDetails.DateOfBirth).ToString("MM/dd/yyyy") : "",
 
                         IsVerifiedPhone = myDetails.IsVerifiedPhone ?? false,
+                        IsVerifiedEmail = authToken==null?false:true,
                         IsSsnAdded = !String.IsNullOrEmpty(myDetails.SSN) && CommonHelper.GetDecryptedData(myDetails.SSN).Length > 8,
                         //Password = myDetails.Password,
                         ContactNumber = !String.IsNullOrEmpty(myDetails.ContactNumber) ? CommonHelper.FormatPhoneNumber(myDetails.ContactNumber) : myDetails.ContactNumber,
@@ -4147,7 +4184,7 @@ namespace Nooch.API.Controllers
 
             try
             {
-                Logger.Info("Service Cntrlr - GetUsersBankInfoForMobile Fired - MemberID: [" + memberid + "]");
+                //Logger.Info("Service Cntrlr - GetUsersBankInfoForMobile Fired - MemberID: [" + memberid + "]");
                 res = CommonHelper.GetSynapseBankDetailsForMobile(memberid);
             }
             catch (Exception ex)
@@ -4755,75 +4792,7 @@ namespace Nooch.API.Controllers
 
                         o.BankName = CommonHelper.GetDecryptedData(accountCollection.bank_name);
                         o.BankNickName = CommonHelper.GetDecryptedData(accountCollection.nickname);
-                        switch (o.BankName)
-                        {
-                            case "Ally":
-                                {
-                                    o.BankImageURL = String.Concat(appPath, "Assets/Images/bankPictures/ally.png");
-                                }
-                                break;
-                            case "Bank of America":
-                                {
-                                    o.BankImageURL = String.Concat(appPath, "Assets/Images/bankPictures/bankofamerica.png");
-                                }
-                                break;
-                            case "Wells Fargo":
-                                {
-                                    o.BankImageURL = String.Concat(appPath, "Assets/Images/bankPictures/WellsFargo.png");
-                                }
-                                break;
-                            case "Chase":
-                                {
-                                    o.BankImageURL = String.Concat(appPath, "Assets/Images/bankPictures/chase.png");
-                                }
-                                break;
-                            case "Citibank":
-                                {
-                                    o.BankImageURL = String.Concat(appPath, "Assets/Images/bankPictures/citibank.png");
-                                }
-                                break;
-                            case "TD Bank":
-                                {
-                                    o.BankImageURL = String.Concat(appPath, "Assets/Images/bankPictures/td.png");
-                                }
-                                break;
-                            case "Capital One 360":
-                                {
-                                    o.BankImageURL = String.Concat(appPath, "Assets/Images/bankPictures/capone360.png");
-                                }
-                                break;
-                            case "US Bank":
-                                {
-                                    o.BankImageURL = String.Concat(appPath, "Assets/Images/bankPictures/usbank.png");
-                                }
-                                break;
-                            case "PNC":
-                                {
-                                    o.BankImageURL = String.Concat(appPath, "Assets/Images/bankPictures/pnc.png");
-                                }
-                                break;
-                            case "SunTrust":
-                                {
-                                    o.BankImageURL = String.Concat(appPath, "Assets/Images/bankPictures/suntrust.png");
-                                }
-                                break;
-                            case "USAA":
-                                {
-                                    o.BankImageURL = String.Concat(appPath, "Assets/Images/bankPictures/usaa.png");
-                                }
-                                break;
-
-                            case "First Tennessee":
-                                {
-                                    o.BankImageURL = String.Concat(appPath, "Assets/Images/bankPictures/firsttennessee.png");
-                                }
-                                break;
-                            default:
-                                {
-                                    o.BankImageURL = String.Concat(appPath, "Assets/Images/bankPictures/no.png");
-                                }
-                                break;
-                        }
+                        o.BankImageURL = CommonHelper.getLogoForBank(o.BankName);
                         o.AccountName = CommonHelper.GetDecryptedData(accountCollection.account_number_string);
                         o.AccountStatus = accountCollection.Status;
                         o.MemberId = memberId;
@@ -5006,11 +4975,11 @@ namespace Nooch.API.Controllers
             try
             {
                 Logger.Info("Service Cntlr -> MemberRegistrationGET Fired - NEW USER'S INFO: Name: [" + name +
-                                       "], Email: [" + email + "],  Type: [" + type +
-                                       "], Phone: [" + phone + "], Address: [" + address +
-                                       "], ZIP: [" + zip + "], DOB: [" + dob +
-                                       "], SSN: [" + ssn + "], IP: [" + ip +
-                                       "], Fngrprnt: [" + fngprnt + "], PW: [" + pw + "], ");
+                            "], Email: [" + email + "],  Type: [" + type +
+                            "], Phone: [" + phone + "], Address: [" + address +
+                            "], ZIP: [" + zip + "], DOB: [" + dob +
+                            "], SSN: [" + ssn + "], IP: [" + ip +
+                            "], Fngrprnt: [" + fngprnt + "], PW: [" + pw + "], ");
 
                 #region Parse Name
 
@@ -5141,7 +5110,7 @@ namespace Nooch.API.Controllers
                 else
                     res.Result = cookie;
             }
-            catch (Exception ex)
+           catch (Exception ex)
             {
                 Logger.Error("Service Cntlr -> LoginRequest FAILED - userName: [" + userName + "], Exception: [" + ex + "]");
                 res.Result = ex.Message;
@@ -5770,6 +5739,8 @@ namespace Nooch.API.Controllers
 
             return res;
         }
+
+
 
         #endregion UNUSED METHODS
     }

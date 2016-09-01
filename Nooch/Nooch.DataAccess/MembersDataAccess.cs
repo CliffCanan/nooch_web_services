@@ -1135,7 +1135,7 @@ namespace Nooch.DataAccess
                             memberEntity.LastLocationLat = lat;
                             memberEntity.LastLocationLng = lng;
                             memberEntity.IsOnline = true;
-                            
+
 
                             var currentTimeMinus24Hours = DateTime.Now.AddHours(-24);
                             int loginRetryCountInDb = memberEntity.InvalidLoginAttemptCount.Equals(null)
@@ -3540,7 +3540,9 @@ namespace Nooch.DataAccess
 
                     try
                     {
-                        string lastNameUnEncr = CommonHelper.GetDecryptedData(LastName);
+                        var lastNameUnEncr = CommonHelper.GetDecryptedData(LastName);
+                        var ssnTxt = !String.IsNullOrEmpty(ssn) && ssn.Length > 5 ? "XXX - XX - " + ssn.Substring(ssn.Length - 4) : "<em>Not Submitted</em>";
+                        var imgIncludedTxt = isIdImageAdded == "1" ? "TRUE" : "FALSE";
 
                         StringBuilder st = new StringBuilder("<p><strong>This user's Nooch Account information is:</strong></p>" +
                                               "<table border='1' cellpadding='5' style='border-collapse:collapse;'>" +
@@ -3550,8 +3552,8 @@ namespace Nooch.DataAccess
                                               "<tr><td><strong>Email Address:</strong></td><td>" + userEmail + "</td></tr>" +
                                               "<tr><td><strong>Phone #:</strong></td><td>" + CommonHelper.FormatPhoneNumber(userPhone) + "</td></tr>" +
                                               "<tr><td><strong>Address:</strong></td><td>" + address + ", " + cityFromGoogle + ", " + stateAbbrev + ", " + zip + "</td></tr>" +
-                                              "<tr><td><strong>SSN:</strong></td><td>" + ssn + "</td></tr>" +
-                                              "<tr><td><strong>isIdImageAdded:</strong></td><td>" + isIdImageAdded +
+                                              "<tr><td><strong>SSN:</strong></td><td>" + ssnTxt + "</td></tr>" +
+                                              "<tr><td><strong>isIdImageAdded:</strong></td><td>" + imgIncludedTxt +
                                               "<tr><td><strong>Invited By:</strong></td><td>" + inviteCodeMemberName +
                                               "</td></tr></table><br/><br/>- Nooch Bot</body></html>");
 
@@ -5528,84 +5530,8 @@ namespace Nooch.DataAccess
                         var BankName = CommonHelper.GetDecryptedData(memberBank.bank_name);
                         var bankNickName = CommonHelper.GetDecryptedData(memberBank.nickname);
 
-                        #region Set Bank Logo URL Variable
-
-                        string appPath = Utility.GetValueFromConfig("ApplicationURL");
-                        var bankLogoUrl = "";
-
-                        switch (BankName)
-                        {
-                            case "Ally":
-                                {
-                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/ally.png");
-                                }
-                                break;
-                            case "Bank of America":
-                                {
-                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/bankofamerica.png");
-                                }
-                                break;
-                            case "Wells Fargo":
-                                {
-                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/WellsFargo.png");
-                                }
-                                break;
-                            case "Chase":
-                                {
-                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/chase.png");
-                                }
-                                break;
-                            case "Citibank":
-                                {
-                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/citibank.png");
-                                }
-                                break;
-                            case "TD Bank":
-                                {
-                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/td.png");
-                                }
-                                break;
-                            case "Capital One 360":
-                                {
-                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/capone360.png");
-                                }
-                                break;
-                            case "US Bank":
-                                {
-                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/usbank.png");
-                                }
-                                break;
-                            case "PNC":
-                                {
-                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/pnc.png");
-                                }
-                                break;
-                            case "SunTrust":
-                                {
-                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/suntrust.png");
-                                }
-                                break;
-                            case "USAA":
-                                {
-                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/usaa.png");
-                                }
-                                break;
-
-                            case "First Tennessee":
-                                {
-                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/firsttennessee.png");
-                                }
-                                break;
-                            default:
-                                {
-                                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/no.png");
-                                }
-                                break;
-                        }
-
-                        #endregion Set Bank Logo URL Variable
-
-                        Logger.Info("MDA -> VerifySynapseAccount --> Checkpoint 8818 - BankLogoUrl: [" + bankLogoUrl + "]");
+                        // Set Bank Logo URL Variable
+                        var bankLogoUrl = CommonHelper.getLogoForBank(BankName);
 
                         var noochMember = _dbContext.Members.Where(memberTemp => memberTemp.MemberId == memberId &&
                                                       memberTemp.IsDeleted == false).FirstOrDefault();
@@ -5631,8 +5557,8 @@ namespace Nooch.DataAccess
                                             };
 
                             Utility.SendEmail("bankVerified", fromAddress, toAddress, null,
-                                "Your bank account has been verified on Nooch",
-                                null, tokens, null, null, null);
+                                              "Your bank account has been verified on Nooch",
+                                              null, tokens, null, null, null);
 
                             Logger.Info("MDA -> VerifySynapseAccount --> Bank VERIFIED Email sent to: [" + toAddress + "]");
                         }
@@ -6479,7 +6405,7 @@ namespace Nooch.DataAccess
                         ValidationRemainder = validationRemainder,
                         ProductUpdates = productUpdates,
                         NewAndUpdate = newAndUpdate,
-                        TransferReceived=mobTransferReceived,
+                        TransferReceived = mobTransferReceived,
                         DateCreated = DateTime.Now
                     };
                     i++;
@@ -6676,11 +6602,11 @@ namespace Nooch.DataAccess
             // Check to make sure Username is not already taken
             if (CommonHelper.GetMemberNameByUserName(UserName) == null)
             {
-                Logger.Info("MDA -> Member Registration Initiated - [Name: " + FirstName + " " + LastName + "],  [Email: " + UserName + "]");
+                Logger.Info("MDA -> Member Registration Fired - Name: [" + FirstName + " " + LastName + "], Email: [" + UserName + "]");
 
-                string userNameLowerCase = UserName.Trim().ToLower();
+                var userNameLowerCase = UserName.Trim().ToLower();
 
-                string noochRandomId = GetRandomNoochId();
+                var noochRandomId = GetRandomNoochId();
 
                 if (!String.IsNullOrEmpty(noochRandomId))
                 {
@@ -6719,9 +6645,36 @@ namespace Nooch.DataAccess
                     #endregion Check Invitation/Referral Code
 
 
+                    #region Parse Name
+
+                    // CC (8/30/16): The new Ionic app is sending the entire Name in the 'FirstName' param.
+                    //               Better to parse it here than on the mobile device.
+                    if (!String.IsNullOrEmpty(FirstName) && String.IsNullOrEmpty(LastName))
+                    {
+                        string[] namearray = FirstName.Split(' ');
+                        FirstName = namearray[0];
+
+                        // Example Name Formats: Most Common: 1.) Charles Smith
+                        //                       Possible Variations: 2.) Charles   3.) Charles H. Smith
+                        //                       4.) CJ Smith   5.) C.J. Smith   6.)  Charles Andrew Thomas Smith
+
+                        if (namearray.Length > 1)
+                        {
+                            if (namearray.Length == 2) // For regular First & Last name: Charles Smith
+                                LastName = namearray[1];
+                            else if (namearray.Length == 3) // For 3 names, could be a middle name or middle initial: Charles H. Smith or Charles Andrew Smith
+                                LastName = namearray[2];
+                            else // For more than 3 names (some people have 2 or more middle names)
+                                LastName = namearray[namearray.Length - 1];
+                        }
+                    }
+
+                    #endregion Parse Name
+
+
                     #region Create New Member Record In DB
 
-                    string emailEncrypted = CommonHelper.GetEncryptedData(UserName);
+                    var emailEncrypted = CommonHelper.GetEncryptedData(UserName);
 
                     var member = new Member
                     {
@@ -6750,10 +6703,9 @@ namespace Nooch.DataAccess
                         UDID1 = UUID,
                         IsVerifiedWithSynapse = false,
                     };
+
                     if (inviteCodeObj != null)
-                    {
                         member.InviteCodeIdUsed = inviteCodeObj.InviteCodeId;
-                    }
 
                     if (Picture != null)
                     {
@@ -6767,9 +6719,7 @@ namespace Nooch.DataAccess
                         member.Photo = Utility.GetValueFromConfig("PhotoUrl") + member.MemberId + ".png";
                     }
                     else
-                    {
                         member.Photo = Utility.GetValueFromConfig("PhotoUrl") + "gv_no_photo.png";
-                    }
 
                     // Save member details to table
                     int result = 0;
