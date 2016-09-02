@@ -3018,11 +3018,11 @@ namespace Nooch.DataAccess
                         http.ContentType = "application/json";
                         http.Method = "POST";
 
-                        Logger.Info("TDA -> AddTransSynapseV3Reusable - Payload to send to /v3/trans/add API: From Bank ID: [" + transParamsForSynapse.trans.from.id +
-                                    "], To Bank ID: [" + transParamsForSynapse.trans.to.id + "], Amount: [" + transParamsForSynapse.trans.amount +
-                                    "], Note: [" + transParamsForSynapse.trans.extra.note + "]");
+                        var parsedContent = JsonConvert.SerializeObject(transParamsForSynapse);
 
-                        string parsedContent = JsonConvert.SerializeObject(transParamsForSynapse);
+                        Logger.Info("TDA -> AddTransSynapseV3Reusable - Payload to send to /v3/trans/add API: [" + transParamsForSynapse + "]");//From Bank ID: [" + transParamsForSynapse.trans.from.id +
+                        //"], To Bank ID: [" + transParamsForSynapse.trans.to.id + "], Amount: [" + transParamsForSynapse.trans.amount +
+                        //"], Note: [" + transParamsForSynapse.trans.extra.note + "]");
 
                         ASCIIEncoding encoding = new ASCIIEncoding();
                         Byte[] bytes = encoding.GetBytes(parsedContent);
@@ -3081,7 +3081,7 @@ namespace Nooch.DataAccess
                         var resp = new StreamReader(ex.Response.GetResponseStream()).ReadToEnd();
                         JObject jsonFromSynapse = JObject.Parse(resp);
 
-                        var error = "TDA -> AddTransSynapseV3Reusable FAILED - [Exception: " + jsonFromSynapse.ToString() + "]";
+                        var error = "TDA -> AddTransSynapseV3Reusable FAILED - Exception: [" + jsonFromSynapse.ToString() + "]";
                         Logger.Error(error);
                         CommonHelper.notifyCliffAboutError(error);
 
@@ -3100,7 +3100,7 @@ namespace Nooch.DataAccess
                 }
                 catch (Exception ex)
                 {
-                    var error = "TDA -> AddTransSynapseV3Reusable FAILED - Inner Exception (3247): [Exception: " + ex + "]";
+                    var error = "TDA -> AddTransSynapseV3Reusable FAILED - Inner Exception (3103): [Exception: " + ex + "]";
                     Logger.Error(error);
                     CommonHelper.notifyCliffAboutError(error);
                     res.ErrorMessage = "Server Error - TDA Inner Exception";
@@ -6688,7 +6688,8 @@ namespace Nooch.DataAccess
                         Logger.Error("TDA -> TransferMoneyUsingSynapse - THERE WAS A FAILURE - Sending Failure Notifications to both Users - " +
                                      "shouldSendFailureNotifications = [" + shouldSendFailureNotifications + "]");
 
-                        if (isAutoPay == false)
+                        // CC (8/31/16): Commenting out failure notifications
+                        /*if (isAutoPay == false)
                         {
                             #region Notify Sender about failure
 
@@ -6747,12 +6748,11 @@ namespace Nooch.DataAccess
 
                                     try
                                     {
-                                        Utility.SendEmail("transferFailure",
-                                            fromAddress, toAddress, null, "Nooch transfer failure :-(", null,
-                                            tokens, null, null, null);
+                                        Utility.SendEmail("transferFailure", fromAddress, toAddress, null,
+                                                          "Nooch transfer failure :-(", null, tokens, null, null, null);
 
                                         Logger.Info("TDA -> TransferMoneyUsingSynapse FAILED - Email sent to Sender: [" +
-                                            toAddress + "] successfully.");
+                                                    toAddress + "] successfully.");
                                     }
                                     catch (Exception ex)
                                     {
@@ -6765,7 +6765,7 @@ namespace Nooch.DataAccess
                             }
 
                             #endregion Notify Sender about failure
-                        }
+                        }*/
 
                         if (shouldSendFailureNotifications == 1) return "There was a problem updating Nooch DB tables.";
                         else if (shouldSendFailureNotifications == 2) return "There was a problem with Synapse.";

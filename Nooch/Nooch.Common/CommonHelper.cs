@@ -476,11 +476,12 @@ namespace Nooch.Common
             return noochMember != null;
         }
 
+
         public static string IsDuplicateMember(string userName)
         {
             try
             {
-                Logger.Info("Common Helper -> IsDuplicateMember Initiated - [UserName to check: " + userName + "]");
+                Logger.Info("Common Helper -> IsDuplicateMember Initiated - UserName to check: [" + userName + "]");
 
                 var userNameLowerCase = GetEncryptedData(userName.ToLower());
 
@@ -664,21 +665,22 @@ namespace Nooch.Common
         {
             Logger.Info("Common Helper -> GetSynapseBankDetails Fired - MemberId: [" + memberId + "]");
 
-            var id = Utility.ConvertToGuid(memberId);
-
-            var bankDetailsFromDB = _dbContext.SynapseBanksOfMembers.FirstOrDefault(m => m.MemberId == id &&
-                                                                                         m.IsDefault == true);
-            if (bankDetailsFromDB != null)
+            try
             {
-                _dbContext.Entry(bankDetailsFromDB).Reload();
+                var Guid = Utility.ConvertToGuid(memberId);
+
+                var bankDetailsFromDB = _dbContext.SynapseBanksOfMembers.FirstOrDefault(m => m.MemberId == Guid &&
+                                                                                             m.IsDefault == true);
+                if (bankDetailsFromDB != null) _dbContext.Entry(bankDetailsFromDB).Reload();
+                return bankDetailsFromDB;
             }
-            else
+            catch (Exception ex)
             {
-                Logger.Error("Common Helper -> GetSynapseBankDetails FAILED - No Synapse Bank " +
-                             "User Record found for MemberId: [" + memberId + "]");
+                Logger.Error("Common Helper -> GetSynapseBankDetails FAILED - " +
+                             "MemberId: [" + memberId + "], Exception: [" + ex + "]");
             }
 
-            return bankDetailsFromDB;
+            return null;
         }
 
 
@@ -690,17 +692,22 @@ namespace Nooch.Common
         public static SynapseCreateUserResult GetSynapseCreateaUserDetails(string memberId)
         {
             //Logger.Info("Common Helper -> GetSynapseCreateaUserDetails Fired - MemberId: [" + memberId + "]");
+            try
+            {
+                var Guid = Utility.ConvertToGuid(memberId);
 
-            var id = Utility.ConvertToGuid(memberId);
+                var synUserDetails = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == Guid &&
+                                                                                        m.IsDeleted == false);
+                if (synUserDetails != null) _dbContext.Entry(synUserDetails).Reload();
+                return synUserDetails;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Common Helper -> GetSynapseCreateaUserDetails FAILED - " +
+                             "MemberId: [" + memberId + "], Exeption: [" + ex + "]");
+            }
 
-            var memberObj = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == id &&
-                                                                                    m.IsDeleted == false);
-            if (memberObj != null) _dbContext.Entry(memberObj).Reload();
-            else
-                Logger.Error("Common Helper -> GetSynapseCreateaUserDetails FAILED - No Synapse Create " +
-                             "User Record found for MemberId: [" + memberId + "]");
-
-            return memberObj;
+            return null;
         }
 
         public static MemberNotification GetMemberNotificationSettingsByUserName(string userName)

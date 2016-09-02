@@ -2800,49 +2800,52 @@ namespace Nooch.Web.Controllers
         /// When the /Activation page first loads (page is for verifying an email address).
         /// </summary>
         /// <returns></returns>
-        public ActionResult Activation()
+        public ActionResult Activation(string tokenId, string type)
         {
-            Logger.Info("Email Activation Page -> Loaded");
+            Logger.Info("Email Activation Page -> Loaded - TokenID: [" + tokenId + "]");
 
             ResultActivation resultActivation = new ResultActivation();
             resultActivation.success = false;
-
-            string strUserAgent = Request.UserAgent.ToLower();
-
-            if (strUserAgent != null &&
-                (Request.Browser.IsMobileDevice ||
-                 strUserAgent.Contains("iphone") ||
-                 strUserAgent.Contains("mobile") ||
-                 strUserAgent.Contains("iOS")))
+            try
             {
-                resultActivation.openAppText = true;
+                var strUserAgent = Request.UserAgent.ToLower();
+
+                if (strUserAgent != null &&
+                    (Request.Browser.IsMobileDevice ||
+                     strUserAgent.Contains("iphone") ||
+                     strUserAgent.Contains("mobile") ||
+                     strUserAgent.Contains("iOS")))
+                {
+                    resultActivation.openAppText = true;
+                }
+
+                if (!String.IsNullOrEmpty(type))
+                {
+                    type = type.Trim();
+                    if (type == "ll")// For Landlords
+                        resultActivation.toLandlordApp = true;
+                }
+
+                var serviceUrl = Utility.GetValueFromConfig("ServiceUrl") + "IsMemberActivated?tokenID=" + tokenId.Trim();
+
+                var result = ResponseConverter<BoolResult>.ConvertToCustomEntity(serviceUrl);
+
+                if (!result.Result)
+                {
+                    serviceUrl = Utility.GetValueFromConfig("ServiceUrl") + "MemberActivation?tokenId=" + tokenId.Trim();
+                    ResponseConverter<BoolResult>.ConvertToCustomEntity(serviceUrl);
+
+                    resultActivation.success = true;
+                    resultActivation.error = false;
+                }
+                else
+                    resultActivation.error = true;
             }
-
-            string tokenId = Request.QueryString["tokenId"].Trim();
-            string type = null;
-
-            if (Request.QueryString.AllKeys.Any(k => k == "type"))
+            catch (Exception ex)
             {
-                type = Request.QueryString["type"].Trim();
-
-                if (type == "ll")// For Landlords
-                    resultActivation.toLandlordApp = true;
-            }
-
-            string serviceUrl = Utility.GetValueFromConfig("ServiceUrl") + "IsMemberActivated?tokenID=" + tokenId.Trim();
-
-            var result = ResponseConverter<BoolResult>.ConvertToCustomEntity(serviceUrl);
-
-            if (!result.Result)
-            {
-                serviceUrl = Utility.GetValueFromConfig("ServiceUrl") + "MemberActivation?tokenId=" + tokenId.Trim();
-                ResponseConverter<BoolResult>.ConvertToCustomEntity(serviceUrl);
-
-                resultActivation.success = true;
-                resultActivation.error = false;
-            }
-            else
+                Logger.Error("Email Activation Page -> FAILED - Exception: [" + ex + "]");
                 resultActivation.error = true;
+            }
 
             ViewData["OnLoaddata"] = resultActivation;
 

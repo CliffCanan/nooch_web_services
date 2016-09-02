@@ -520,34 +520,36 @@ namespace Nooch.API.Controllers
 
         [HttpGet]
         [ActionName("DeleteAttachedBankNode")]
-        public string DeleteAttachedBankNode(string memberid) {
-             
-                try
-                {
-                    Logger.Error("Service Cntlr -> DeleteAttachedBankNode for - MemberID: [" + memberid + "]");
-                    Guid MemId = Utility.ConvertToGuid(memberid);
-     
-                    var synBankDetails = _dbContext.SynapseBanksOfMembers.Where(b => b.MemberId == MemId && b.IsDefault == true).FirstOrDefault();
-                    if (synBankDetails != null)
-                    {
-                        synBankDetails.is_active = false;
-                        synBankDetails.IsDefault = false;
-                        _dbContext.SaveChanges();
-                        return "Deleted";
-                    }
-                    else
-                    {
-                        return "Bank not found";
-                    }
+        public string DeleteAttachedBankNode(string memberid)
+        {
 
-                
+            try
+            {
+                Logger.Error("Service Cntlr -> DeleteAttachedBankNode for - MemberID: [" + memberid + "]");
+                Guid MemId = Utility.ConvertToGuid(memberid);
+
+                var synBankDetails = _dbContext.SynapseBanksOfMembers.Where(b => b.MemberId == MemId && b.IsDefault == true).FirstOrDefault();
+                if (synBankDetails != null)
+                {
+                    synBankDetails.is_active = false;
+                    synBankDetails.IsDefault = false;
+                    _dbContext.SaveChanges();
+                    return "Deleted";
                 }
-                catch (Exception ex) {
-                    Logger.Error("Service Cntlr -> DeleteAttachedBankNode FAILED - MemberID: [" + memberid + "], Exception: [" + ex.InnerException + "]");
-                    throw new Exception("Server Error");
+                else
+                {
+                    return "Bank not found";
                 }
-             
-            
+
+
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Cntlr -> DeleteAttachedBankNode FAILED - MemberID: [" + memberid + "], Exception: [" + ex.InnerException + "]");
+                throw new Exception("Server Error");
+            }
+
+
         }
 
         [HttpGet]
@@ -1408,9 +1410,8 @@ namespace Nooch.API.Controllers
                         FirstName = !String.IsNullOrEmpty(myDetails.FirstName) ? CommonHelper.GetDecryptedData(myDetails.FirstName) : "",
                         LastName = !String.IsNullOrEmpty(myDetails.LastName) ? CommonHelper.GetDecryptedData(myDetails.LastName) : "",
                         DateOfBirth = myDetails.DateOfBirth != null ? Convert.ToDateTime(myDetails.DateOfBirth).ToString("MM/dd/yyyy") : "",
-
                         IsVerifiedPhone = myDetails.IsVerifiedPhone ?? false,
-                        IsVerifiedEmail = authToken==null?false:true,
+                        IsVerifiedEmail = authToken == null || myDetails.Status == "Active" || myDetails.Status == "Active" ? false : true,
                         IsSsnAdded = !String.IsNullOrEmpty(myDetails.SSN) && CommonHelper.GetDecryptedData(myDetails.SSN).Length > 8,
                         //Password = myDetails.Password,
                         ContactNumber = !String.IsNullOrEmpty(myDetails.ContactNumber) ? CommonHelper.FormatPhoneNumber(myDetails.ContactNumber) : myDetails.ContactNumber,
@@ -1473,6 +1474,12 @@ namespace Nooch.API.Controllers
         }
 
 
+        /// <summary>
+        /// CC (9/1/16): NO REASON THIS SHOULD BE SEPARATE FROM THE REGULAR METHOD FOR SAVING A USER'S PROFILE.
+        ///              LET'S DELETE THIS METHOD ENTIRELY ONCE UPDATED AND TESTED SUCCESSFULLY.
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
         [HttpPost]
         [ActionName("SaveDOBForMember")]
         public StringResult SaveDOBForMember(SaveMemberDOB_Input input)
@@ -1481,8 +1488,6 @@ namespace Nooch.API.Controllers
             {
                 try
                 {
-                    Logger.Info("Service Cntlr - SaveDOBForMember - MemberID: [" + input.memberId + "]");
-
                     MembersDataAccess mda = new MembersDataAccess();
                     return new StringResult()
                     {
@@ -1519,7 +1524,6 @@ namespace Nooch.API.Controllers
                 {
                     Logger.Info("Service Cntlr -> MySettings Fired - MemberID: [" + mySettings.MemberId + "]");
 
-                    var mda = new MembersDataAccess();
                     string fileContent = null;
                     int contentLength = 0;
                     string fileExtension = null;
@@ -1527,19 +1531,20 @@ namespace Nooch.API.Controllers
                     if (!String.IsNullOrEmpty(mySettings.Photo))
                         mySettings.Picture = System.Convert.FromBase64String(mySettings.Photo);
 
+                    var mda = new MembersDataAccess();
                     return new StringResult
                     {
                         Result = mda.MySettings(mySettings.MemberId, mySettings.FirstName.ToLower(), mySettings.LastName.ToLower(),
                             mySettings.Password, mySettings.SecondaryMail, mySettings.RecoveryMail, mySettings.FacebookAcctLogin,
                             fileContent, contentLength, fileExtension, mySettings.ContactNumber,
                             mySettings.Address, mySettings.City, mySettings.State, mySettings.Zipcode, mySettings.Country,
-                            mySettings.Picture, mySettings.ShowInSearch, mySettings.Address2)
+                            mySettings.Picture, mySettings.ShowInSearch, mySettings.Address2, mySettings.DateOfBirth)
                     };
                 }
                 catch (Exception ex)
                 {
                     Logger.Error("Service Cntlr -> MySettings FAILED - MemberID: [" + mySettings.MemberId + "], Exception: [" + ex + "]");
-                    return new StringResult();
+                    return new StringResult { Result = ex.Message };
                 }
             }
             else throw new Exception("Invalid OAuth 2 Access");
@@ -4431,8 +4436,9 @@ namespace Nooch.API.Controllers
 
             StringResult res = new StringResult();
 
-            if (transInput.isRentScene == true |
+            if (transInput.isRentScene == true ||
                 transInput.isRentAutoPayment == true ||
+                transInput.doNotSendEmails == false || // Proxy to tell if it's an admin sending a test transaction (only time doNotSendEmails would be 'false')
                 CommonHelper.IsValidRequest(accessToken, transInput.MemberId))
             {
                 string trnsactionId = string.Empty;
@@ -4942,7 +4948,7 @@ namespace Nooch.API.Controllers
 
             try
             {
-                Logger.Info("Service Cntlr -> MemberRegistration Initiated - NEW USER'S INFO: Name: [" + MemberDetails.UserName +
+                Logger.Info("Service Cntlr -> MemberRegistration Fired - NEW USER'S INFO: Name: [" + MemberDetails.UserName +
                             "], Email: [" + MemberDetails.UserName + "], Type: [" + MemberDetails.type +
                             "], Invite Code: [" + MemberDetails.inviteCode + "], SendEmail: [" + MemberDetails.sendEmail + "]");
 
@@ -4951,13 +4957,13 @@ namespace Nooch.API.Controllers
 
                 var mda = new MembersDataAccess();
 
-                string type = String.IsNullOrEmpty(MemberDetails.type) ? "Personal" : MemberDetails.type;
+                var type = String.IsNullOrEmpty(MemberDetails.type) ? "Personal" : MemberDetails.type;
 
                 res.Result = mda.MemberRegistration(MemberDetails.Picture, MemberDetails.UserName, MemberDetails.FirstName.ToLower(),
-                                               MemberDetails.LastName.ToLower(), MemberDetails.PinNumber, MemberDetails.Password,
-                                               MemberDetails.SecondaryMail, MemberDetails.RecoveryMail, MemberDetails.UdId,
-                                               MemberDetails.friendRequestId, MemberDetails.invitedFriendFacebookId,
-                                               MemberDetails.facebookAccountLogin, MemberDetails.inviteCode, MemberDetails.sendEmail, type, null, null, null, null, null);
+                                                    MemberDetails.LastName.ToLower(), MemberDetails.PinNumber, MemberDetails.Password,
+                                                    MemberDetails.SecondaryMail, MemberDetails.RecoveryMail, MemberDetails.UdId,
+                                                    MemberDetails.friendRequestId, MemberDetails.invitedFriendFacebookId,
+                                                    MemberDetails.facebookAccountLogin, MemberDetails.inviteCode, MemberDetails.sendEmail, type, null, null, null, null, null);
             }
             catch (Exception ex)
             {
@@ -5118,7 +5124,7 @@ namespace Nooch.API.Controllers
                 else
                     res.Result = cookie;
             }
-           catch (Exception ex)
+            catch (Exception ex)
             {
                 Logger.Error("Service Cntlr -> LoginRequest FAILED - userName: [" + userName + "], Exception: [" + ex + "]");
                 res.Result = ex.Message;

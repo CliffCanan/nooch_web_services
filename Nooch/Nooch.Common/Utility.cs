@@ -269,6 +269,9 @@ namespace Nooch.Common
                     case "hello@nooch.com":
                         mailMessage.From = new MailAddress(fromAddress, "Team Nooch");
                         break;
+                    case "welcome@nooch.com":
+                        mailMessage.From = new MailAddress(fromAddress, "Team Nooch");
+                        break;
                     case "landlords@rentscene.com":
                         mailMessage.From = new MailAddress(fromAddress, "Rent Scene");
                         break;
