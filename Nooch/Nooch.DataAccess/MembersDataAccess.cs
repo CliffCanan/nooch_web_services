@@ -642,7 +642,7 @@ namespace Nooch.DataAccess
 
         public List<Member> getInvitedMemberList(string memberId)
         {
-            Logger.Info("MDA -> getInvitedMemberList Fired - MemberId: [" + memberId + "]");
+            Logger.Info("MDA -> getInvitedMemberList Fired - MemberID: [" + memberId + "]");
 
             var id = Utility.ConvertToGuid(memberId);
             //Get the member details
@@ -653,9 +653,8 @@ namespace Nooch.DataAccess
                 _dbContext.Entry(noochMember).Reload();
                 Guid n = Utility.ConvertToGuid(noochMember.InviteCodeId.ToString());
 
-                var allnoochMember =
-                    _dbContext.Members.Where(m => m.InviteCodeId == noochMember.InviteCodeId).ToList();
-                return allnoochMember;
+                var referredUsers = _dbContext.Members.Where(m => m.InviteCodeId == noochMember.InviteCodeId).ToList();
+                return referredUsers;
             }
             else return null;
         }

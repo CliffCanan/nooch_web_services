@@ -624,12 +624,51 @@ namespace Nooch.API.Controllers
             {
                 var mda = new MembersDataAccess();
                 List<Member> members = mda.getInvitedMemberList(memberId);
-                return (from fMember in members let config = new MapperConfiguration(cfg => { cfg.CreateMap<Member, MemberForInvitedMembersList>().BeforeMap((src, dest) => src.FirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(src.FirstName))).BeforeMap((src, dest) => src.LastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(src.LastName))).BeforeMap((src, dest) => src.UserName = CommonHelper.GetDecryptedData(src.UserName)); }) let mapper = config.CreateMapper() select mapper.Map<Member, MemberForInvitedMembersList>(fMember)).ToList();
+
+                List<MemberForInvitedMembersList> invitedUsersList = new List<MemberForInvitedMembersList>();
+
+                if (members != null && members.Count > 0)
+                {
+                    foreach (var user in members)
+                    {
+                        if (user.MemberId.ToString() != memberId)
+                        {
+                            MemberForInvitedMembersList m = new MemberForInvitedMembersList
+                            {
+                                FirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(user.FirstName)),
+                                LastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(user.LastName)),
+                                UserName = CommonHelper.GetDecryptedData(user.UserName),
+                                MemberId = user.MemberId.ToString(),
+                                //NoochId = user.Nooch_ID, // Not needed by the mobile app
+                                DateCreated = user.DateCreated,
+                                Status = user.Status,
+                                Photo = user.Photo,
+                            };
+
+                            invitedUsersList.Add(m);
+                        }
+                    }
+                }
+
+                return invitedUsersList;
+
+                // CC (9/2/16): Commenting out this way of doing it which was including the user who made the request in the list to send back to the app.
+                //return (from fMember in members
+                //        let config = new MapperConfiguration(cfg =>
+                //            {
+                //                cfg.CreateMap<Member, MemberForInvitedMembersList>()
+                //                    .BeforeMap((src, dest) =>
+                //                        src.FirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(src.FirstName)))
+                //                    .BeforeMap((src, dest) =>
+                //                        src.LastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(src.LastName)))
+                //                    .BeforeMap((src, dest) =>
+                //                        src.UserName = CommonHelper.GetDecryptedData(src.UserName));
+                //            })
+                //        let mapper = config.CreateMapper()
+                //        select mapper.Map<Member, MemberForInvitedMembersList>(fMember)).ToList();
             }
             else
-            {
                 throw new Exception("Invalid OAuth 2 Access");
-            }
         }
 
 
