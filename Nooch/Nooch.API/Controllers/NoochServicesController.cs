@@ -2886,6 +2886,13 @@ namespace Nooch.API.Controllers
         }
 
 
+        /// <summary>
+        /// For Updating a user's Privacy/Security settings for the mobile app (Required
+        /// Immediately, Show In Search, Allow Sharing settings).
+        /// </summary>
+        /// <param name="privacySettings"></param>
+        /// <param name="accessToken"></param>
+        /// <returns></returns>
         [HttpPost]
         [ActionName("MemberPrivacySettings")]
         public StringResult MemberPrivacySettings(PrivacySettings privacySettings, string accessToken)
@@ -2897,8 +2904,8 @@ namespace Nooch.API.Controllers
                 try
                 {
                     Logger.Info("Service Cntlr -> MemberPrivacySettings Fired - MemberID: [" + privacySettings.MemberId + "]");
-                    var mda = new MembersDataAccess();
 
+                    var mda = new MembersDataAccess();
                     res.Result = mda.MemberPrivacySettings(privacySettings.MemberId,
                                  (bool)privacySettings.ShowInSearch,
                                  (bool)privacySettings.AllowSharing,
@@ -2933,17 +2940,15 @@ namespace Nooch.API.Controllers
 
                     if (memberPrivacySettings != null)
                     {
-                        var r = _dbContext.MemberPrivacySettings.FirstOrDefault(m => m.MemberId == memberPrivacySettings.MemberId);
-                        privacySettings.MemberId = r.Member.MemberId.ToString();
-                        privacySettings.ShowInSearch = r.ShowInSearch ?? false;
-                        privacySettings.AllowSharing = r.AllowSharing ?? false;
-                        privacySettings.RequireImmediately = r.RequireImmediately ?? false;
+                        privacySettings.MemberId = memberPrivacySettings.Member.MemberId.ToString();
+                        privacySettings.ShowInSearch = memberPrivacySettings.ShowInSearch ?? false;
+                        privacySettings.AllowSharing = memberPrivacySettings.AllowSharing ?? false;
+                        privacySettings.RequireImmediately = memberPrivacySettings.RequireImmediately ?? false;
                     }
-
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Cntlr -> GetMemberPrivacySettings FAILED - MemberId: [" + memberId + "], Exception: [" + ex + "]");
+                    Logger.Error("Service Cntlr -> GetMemberPrivacySettings FAILED - MemberID: [" + memberId + "], Exception: [" + ex + "]");
                 }
 
                 return privacySettings;

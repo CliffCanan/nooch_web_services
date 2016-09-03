@@ -369,16 +369,22 @@ namespace Nooch.DataAccess
         /// <returns></returns>
         public MemberPrivacySetting GetMemberPrivacySettings(string memberId)
         {
-            Logger.Info("MDA - GetMemberPrivacySettings - memberId: [" + memberId + "]");
-
-            using (var noochConnection = new NOOCHEntities())
+            try
             {
-                var id = Utility.ConvertToGuid(memberId);
+                using (var noochConnection = new NOOCHEntities())
+                {
+                    var id = Utility.ConvertToGuid(memberId);
 
-                var memberPrivacySettings = noochConnection.MemberPrivacySettings.FirstOrDefault(m => m.MemberId == id);
+                    var memberPrivacySettings = noochConnection.MemberPrivacySettings.FirstOrDefault(m => m.MemberId == id);
 
-                return memberPrivacySettings;
+                    return memberPrivacySettings;
+                }
             }
+            catch (Exception ex)
+            {
+                Logger.Error("MDA - GetMemberPrivacySettings FAILED - MemberID: [" + memberId + "], Exception: " + ex + "]");
+            }
+            return null;
         }
 
 
@@ -6516,57 +6522,79 @@ namespace Nooch.DataAccess
         /// <param name="requireImmediately"></param>
         public string MemberPrivacySettings(string memberId, bool showInSearch, bool allowSharing, bool requireImmediately)
         {
-            Logger.Info("MDA -> MemberPrivacySettings - [MemberId: " + memberId + "]");
+            Logger.Info("MDA -> MemberPrivacySettings - MemberId: [" + memberId + "], Req Imm: [" + requireImmediately +
+                        "], ShowInSearch: [" + showInSearch + "], Allow Sharing: [" + allowSharing + "]");
 
-            using (var noochConnection = new NOOCHEntities())
+            var saveToDB = 0;
+            var id = Utility.ConvertToGuid(memberId);
+
+            var memberPrivacySettings = _dbContext.MemberPrivacySettings.FirstOrDefault(m => m.MemberId == id);
+
+            if (memberPrivacySettings != null)
             {
-                var id = Utility.ConvertToGuid(memberId);
+                memberPrivacySettings.ShowInSearch = showInSearch;
+                memberPrivacySettings.AllowSharing = allowSharing;
+                memberPrivacySettings.RequireImmediately = requireImmediately;
 
-                var memberPrivacySettings = noochConnection.MemberPrivacySettings.FirstOrDefault(m => m.MemberId == id);
+                if (memberPrivacySettings.DateCreated == null)
+                    memberPrivacySettings.DateCreated = DateTime.Now;
 
-                if (memberPrivacySettings != null)
+                memberPrivacySettings.DateModified = DateTime.Now;
+
+                saveToDB = _dbContext.SaveChanges();
+
+                #region Update Members Table
+
+                try
                 {
-                    memberPrivacySettings.ShowInSearch = showInSearch;
-                    memberPrivacySettings.AllowSharing = allowSharing;
-                    memberPrivacySettings.RequireImmediately = requireImmediately;
+                    Member memberObj = _dbContext.Members.FirstOrDefault(m => m.MemberId == id);
 
-                    if (memberPrivacySettings.DateCreated == null)
+                    if (memberObj != null)
                     {
-                        memberPrivacySettings.DateCreated = DateTime.Now;
-                    }
-                    else
-                    {
-                        memberPrivacySettings.DateModified = DateTime.Now;
+                        memberObj.ShowInSearch = showInSearch;
+                        memberObj.IsRequiredImmediatley = requireImmediately;
+                        memberObj.DateModified = DateTime.Now;
+
+                        saveToDB = _dbContext.SaveChanges();
+                        _dbContext.Entry(memberObj).Reload();
                     }
                 }
+                catch (Exception ex)
+                {
+                    Logger.Error("MDA -> MemberPrivacySettings FAILED - MemberID: [" + memberId + "], Exception: [" + ex + "]");
+                }
 
-                int value = noochConnection.SaveChanges();
-                return value > 0 ? "Flag is updated successfully." : "Failure";
+                #endregion Update Members Table
             }
+            else
+                Logger.Error("MDA -> MemberPrivacySettings FAILED - MemberPrivacySettings Record Not Found - MemberID: [" + memberId + "]");
+
+            return saveToDB > 0 ? "Flag is updated successfully." : "Failure";
         }
 
 
         public string SetShowInSearch(string memberId, bool showInSearch)
         {
-            Logger.Info("MDA -> SetShowInSearch - memberId: [" + memberId + "]");
+            Logger.Info("MDA -> SetShowInSearch - MemberId: [" + memberId + "]");
 
             var id = Utility.ConvertToGuid(memberId);
 
-            // code to update setting in members table 
+            #region Update Members Table
 
-            var memberSettings = _dbContext.Members.FirstOrDefault(m => m.MemberId == id);
+            var memberObj = _dbContext.Members.FirstOrDefault(m => m.MemberId == id);
 
-            if (memberSettings != null)
+            if (memberObj != null)
             {
-                // member found
-                memberSettings.ShowInSearch = showInSearch;
+                memberObj.ShowInSearch = showInSearch;
                 _dbContext.SaveChanges();
-                _dbContext.Entry(memberSettings).Reload();
+                _dbContext.Entry(memberObj).Reload();
             }
             else
-            {
                 return "Failure";
-            }
+
+            #endregion Update Members Table
+
+            #region Update MemberPrivacySettings Table
 
             var memberPrivacySettings = _dbContext.MemberPrivacySettings.FirstOrDefault(m => m.MemberId == id);
 
@@ -6583,12 +6611,13 @@ namespace Nooch.DataAccess
                 int r = _dbContext.SaveChanges();
                 if (r > 0)
                 {
-                    _dbContext.Entry(memberSettings).Reload();
+                    _dbContext.Entry(memberObj).Reload();
                     return "ShowInSearch flag is added successfully.";
                 }
 
                 return "Failure";
             }
+
             memberPrivacySettings.ShowInSearch = showInSearch;
             memberPrivacySettings.DateModified = DateTime.Now;
 
@@ -6600,9 +6629,9 @@ namespace Nooch.DataAccess
                 return "ShowInSearch flag is updated successfully.";
             }
             else
-            {
                 return "Failure";
-            }
+
+            #endregion Update MemberPrivacySettings Table
         }
 
 
