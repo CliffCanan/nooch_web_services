@@ -653,7 +653,7 @@ namespace Nooch.DataAccess
                 _dbContext.Entry(noochMember).Reload();
                 Guid n = Utility.ConvertToGuid(noochMember.InviteCodeId.ToString());
 
-                var referredUsers = _dbContext.Members.Where(m => m.InviteCodeId == noochMember.InviteCodeId).ToList();
+                var referredUsers = _dbContext.Members.Where(m => m.InviteCodeIdUsed == noochMember.InviteCodeId).ToList();
                 return referredUsers;
             }
             else return null;
