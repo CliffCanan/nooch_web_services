@@ -458,14 +458,28 @@ namespace Nooch.Common
         }
 
 
+        /// <summary>
+        /// For the 'Activation' landing page used to verify a new user's
+        /// email address and activate the user's OAuth Token.
+        /// </summary>
+        /// <param name="tokenId"></param>
+        /// <returns></returns>
         public static bool IsMemberActivated(string tokenId)
         {
-            var id = Utility.ConvertToGuid(tokenId);
+            try
+            {
+                var id = Utility.ConvertToGuid(tokenId);
 
-            var noochMember = _dbContext.AuthenticationTokens.FirstOrDefault(m => m.TokenId == id &&
-                                                                                  m.IsActivated == true);
-            if (noochMember != null) _dbContext.Entry(noochMember).Reload();
-            return noochMember != null;
+                var noochMember = _dbContext.AuthenticationTokens.FirstOrDefault(m => m.TokenId == id &&
+                                                                                      m.IsActivated == true);
+                if (noochMember != null) return true;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("CommonHelper -> IsMemberActivated FAILED - TokenID: [" + tokenId + "], Exception: [" + ex + "]");
+            }
+
+            return false;
         }
 
 

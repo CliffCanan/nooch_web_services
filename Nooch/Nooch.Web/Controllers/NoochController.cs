@@ -2805,49 +2805,54 @@ namespace Nooch.Web.Controllers
             Logger.Info("Email Activation Page -> Loaded - TokenID: [" + tokenId + "]");
 
             ResultActivation resultActivation = new ResultActivation();
+            resultActivation.error = false;
             resultActivation.success = false;
-            try
+            resultActivation.openAppText = false;
+            resultActivation.toLandlordApp = false;
+
+            if (!String.IsNullOrEmpty(tokenId))
             {
-                var strUserAgent = Request.UserAgent.ToLower();
-
-                if (strUserAgent != null &&
-                    (Request.Browser.IsMobileDevice ||
-                     strUserAgent.Contains("iphone") ||
-                     strUserAgent.Contains("mobile") ||
-                     strUserAgent.Contains("iOS")))
+                try
                 {
-                    resultActivation.openAppText = true;
-                }
+                    var strUserAgent = Request.UserAgent.ToLower();
 
-                if (!String.IsNullOrEmpty(type))
-                {
-                    type = type.Trim();
-                    if (type == "ll")// For Landlords
+                    if (strUserAgent != null &&
+                        (Request.Browser.IsMobileDevice || strUserAgent.Contains("iphone") ||
+                         strUserAgent.Contains("mobile") || strUserAgent.Contains("iOS")))
+                    {
+                        resultActivation.openAppText = true;
+                    }
+
+                    if (!String.IsNullOrEmpty(type) && type == "ll")
                         resultActivation.toLandlordApp = true;
+
+                    // First check if the user's Access Token is ALREADY activated
+                    var isAlrdyActive = CommonHelper.IsMemberActivated(tokenId);
+
+                    if (isAlrdyActive == false)
+                    {
+                        // Now activate this user's Access Token
+                        var serviceUrl = Utility.GetValueFromConfig("ServiceUrl") + "MemberActivation?tokenId=" + tokenId.Trim();
+                        ResponseConverter<BoolResult>.ConvertToCustomEntity(serviceUrl);
+
+                        resultActivation.success = true;
+                    }
+                    else
+                    {
+                        Logger.Info("Email Activation Page -> Member Already Active");
+                        resultActivation.error = true;
+                    }
                 }
-
-                var serviceUrl = Utility.GetValueFromConfig("ServiceUrl") + "IsMemberActivated?tokenID=" + tokenId.Trim();
-
-                var result = ResponseConverter<BoolResult>.ConvertToCustomEntity(serviceUrl);
-
-                if (!result.Result)
+                catch (Exception ex)
                 {
-                    serviceUrl = Utility.GetValueFromConfig("ServiceUrl") + "MemberActivation?tokenId=" + tokenId.Trim();
-                    ResponseConverter<BoolResult>.ConvertToCustomEntity(serviceUrl);
-
-                    resultActivation.success = true;
-                    resultActivation.error = false;
-                }
-                else
+                    Logger.Error("Email Activation Page -> FAILED - Exception: [" + ex + "]");
                     resultActivation.error = true;
+                }
             }
-            catch (Exception ex)
-            {
-                Logger.Error("Email Activation Page -> FAILED - Exception: [" + ex + "]");
+            else
                 resultActivation.error = true;
-            }
 
-            ViewData["OnLoaddata"] = resultActivation;
+            ViewData["OnLoadData"] = resultActivation;
 
             return View();
         }
