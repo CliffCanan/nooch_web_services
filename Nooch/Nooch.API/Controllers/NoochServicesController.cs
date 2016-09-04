@@ -4909,7 +4909,6 @@ namespace Nooch.API.Controllers
                 catch (Exception ex)
                 {
                     Logger.Error("Service Cntlr - ValidatePinNumber FAILED MemberID: [" + memberId + "], Exception: [" + ex + "]");
-
                 }
 
                 return new StringResult();
@@ -5496,10 +5495,10 @@ namespace Nooch.API.Controllers
                         foreach (var trans in recentTrans)
                         {
                             string photo = trans.Member1.Photo != null
-                                           ? string.Concat(Utility.GetValueFromConfig("PhotoUrl"), "/", trans.Member1.Photo.Substring(trans.Member1.Photo.IndexOf("Photos") + 14))
+                                           ? string.Concat(Utility.GetValueFromConfig("PhotoUrl"), trans.Member1.Photo.Substring(trans.Member1.Photo.IndexOf("Photos") + 14))
                                            : "https://www.noochme.com/noochweb/Assets/Images/userpic-default.png";
                             string photoRec = trans.Member.Photo != null
-                                              ? string.Concat(Utility.GetValueFromConfig("PhotoUrl"), "/", trans.Member.Photo.Substring(trans.Member.Photo.IndexOf("Photos") + 14))
+                                              ? string.Concat(Utility.GetValueFromConfig("PhotoUrl"), trans.Member.Photo.Substring(trans.Member.Photo.IndexOf("Photos") + 14))
                                               : "https://www.noochme.com/noochweb/Assets/Images/userpic-default.png";
 
                             if (trans.Member.MemberId.ToString().Equals(memberId.ToLower())) // Sent Collection
