@@ -449,12 +449,15 @@ namespace Nooch.API.Controllers
                     res.DateCreated = memberObj.DateCreated.Value;
                     res.status = memberObj.Status;
                     res.email = CommonHelper.GetDecryptedData(memberObj.UserName);
+                    res.contactNumber = String.IsNullOrEmpty(memberObj.ContactNumber) && memberObj.ContactNumber.Length > 2
+                                        ? CommonHelper.FormatPhoneNumber(memberObj.ContactNumber) : "";
                     res.firstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName));
                     res.lastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.LastName));
                     res.userPicture = memberObj.Photo ?? Path.GetFileName("gv_no_photo.jpg");
                     res.pin = memberObj.PinNumber;
+                    res.rememberMe = memberObj.RememberMeEnabled ?? false;
 
-                    res.hasSynapseUserAccount = (synUserDetails != null && synUserDetails.access_token != null);
+                    res.hasSynapseUserAccount = synUserDetails != null && synUserDetails.access_token != null;
                     res.hasSynapseBank = synBankDetails != null;
                     res.isBankVerified = synBankDetails != null && synBankDetails.Status == "Verified";
                     res.bankStatus = synBankDetails != null ? synBankDetails.Status : "Not Attached";
@@ -1440,9 +1443,9 @@ namespace Nooch.API.Controllers
 
                     var myDetails = CommonHelper.GetMemberDetails(memberId);
                     Guid MemId = Utility.ConvertToGuid(memberId);
-                    var authToken =
-                     _dbContext.AuthenticationTokens.FirstOrDefault(
-                          m => m.MemberId == MemId && m.IsActivated == true);
+                    var authToken = _dbContext.AuthenticationTokens.FirstOrDefault(m => m.MemberId == MemId &&
+                                                                                        m.IsActivated == true);
+
                     var settings = new MySettingsInput
                     {
                         UserName = !String.IsNullOrEmpty(myDetails.UserName) ? CommonHelper.GetDecryptedData(myDetails.UserName) : "",
@@ -1450,9 +1453,9 @@ namespace Nooch.API.Controllers
                         LastName = !String.IsNullOrEmpty(myDetails.LastName) ? CommonHelper.GetDecryptedData(myDetails.LastName) : "",
                         DateOfBirth = myDetails.DateOfBirth != null ? Convert.ToDateTime(myDetails.DateOfBirth).ToString("MM/dd/yyyy") : "",
                         IsVerifiedPhone = myDetails.IsVerifiedPhone ?? false,
-                        IsVerifiedEmail = authToken == null || myDetails.Status == "Active" || myDetails.Status == "Active" ? false : true,
+                        IsVerifiedEmail = authToken != null || myDetails.Status == "Active" || myDetails.Status == "NonRegistered" ? true : false,
                         IsSsnAdded = !String.IsNullOrEmpty(myDetails.SSN) && CommonHelper.GetDecryptedData(myDetails.SSN).Length > 8,
-                        //Password = myDetails.Password,
+
                         ContactNumber = !String.IsNullOrEmpty(myDetails.ContactNumber) ? CommonHelper.FormatPhoneNumber(myDetails.ContactNumber) : myDetails.ContactNumber,
                         SecondaryMail = !String.IsNullOrEmpty(myDetails.SecondaryEmail) ? CommonHelper.GetDecryptedData(myDetails.SecondaryEmail) : "",
                         RecoveryMail = !String.IsNullOrEmpty(myDetails.RecoveryEmail) ? CommonHelper.GetDecryptedData(myDetails.RecoveryEmail) : "",
@@ -1465,9 +1468,8 @@ namespace Nooch.API.Controllers
                         Zipcode = !String.IsNullOrEmpty(myDetails.Zipcode) ? CommonHelper.GetDecryptedData(myDetails.Zipcode) : "",
                         Country = !String.IsNullOrEmpty(myDetails.Country) ? CommonHelper.GetDecryptedData(myDetails.Country) : "",
 
-                        Photo = (myDetails.Photo == null) ? Utility.GetValueFromConfig("PhotoUrl") : myDetails.Photo, //CLIFF: this is already being sent in the GetMemberDetails service
-                        //FacebookAcctLogin = myDetails.FacebookAccountLogin, //CLIFF: this is already being sent in the GetMemberDetails service
-                        //IsBankVerified = bankVerified
+                        Photo = (myDetails.Photo == null) ? Utility.GetValueFromConfig("PhotoUrl") + "gv_no_photo.png" : myDetails.Photo,
+                        //FacebookAcctLogin = myDetails.FacebookAccountLogin, // CC: this is already being sent in the GetMemberDetails service
                     };
 
                     return settings;
@@ -1488,11 +1490,12 @@ namespace Nooch.API.Controllers
         [ActionName("SaveMemberSSN")]
         public StringResult SaveMemberSSN(SaveMemberSSN_Input input)
         {
+            Logger.Info("Service Cntlr - SaveMemberSSN Fired - MemberID: [" + input.memberId + "]");
+
             if (CommonHelper.IsValidRequest(input.accessToken, input.memberId))
             {
                 try
                 {
-                    Logger.Info("Service Cntlr - SaveMemberSSN - MemberID: [" + input.memberId + "]");
                     MembersDataAccess mda = new MembersDataAccess();
                     return new StringResult()
                     {
@@ -1507,7 +1510,7 @@ namespace Nooch.API.Controllers
             }
             else
             {
-                Logger.Error("Service Cntlr - Operation FAILED: SaveMemberSSN - MemberID: [" + input.memberId + "]. INVALID OAUTH 2 ACCESS.");
+                Logger.Error("Service Cntlr -> SaveMemberSSN FAILED - MemberID: [" + input.memberId + "]. INVALID OAUTH 2 ACCESS.");
                 throw new Exception("Invalid OAuth 2 Access");
             }
         }
@@ -2886,6 +2889,13 @@ namespace Nooch.API.Controllers
         }
 
 
+        /// <summary>
+        /// For Updating a user's Privacy/Security settings for the mobile app (Required
+        /// Immediately, Show In Search, Allow Sharing settings).
+        /// </summary>
+        /// <param name="privacySettings"></param>
+        /// <param name="accessToken"></param>
+        /// <returns></returns>
         [HttpPost]
         [ActionName("MemberPrivacySettings")]
         public StringResult MemberPrivacySettings(PrivacySettings privacySettings, string accessToken)
@@ -2897,8 +2907,8 @@ namespace Nooch.API.Controllers
                 try
                 {
                     Logger.Info("Service Cntlr -> MemberPrivacySettings Fired - MemberID: [" + privacySettings.MemberId + "]");
-                    var mda = new MembersDataAccess();
 
+                    var mda = new MembersDataAccess();
                     res.Result = mda.MemberPrivacySettings(privacySettings.MemberId,
                                  (bool)privacySettings.ShowInSearch,
                                  (bool)privacySettings.AllowSharing,
@@ -2933,17 +2943,15 @@ namespace Nooch.API.Controllers
 
                     if (memberPrivacySettings != null)
                     {
-                        var r = _dbContext.MemberPrivacySettings.FirstOrDefault(m => m.MemberId == memberPrivacySettings.MemberId);
-                        privacySettings.MemberId = r.Member.MemberId.ToString();
-                        privacySettings.ShowInSearch = r.ShowInSearch ?? false;
-                        privacySettings.AllowSharing = r.AllowSharing ?? false;
-                        privacySettings.RequireImmediately = r.RequireImmediately ?? false;
+                        privacySettings.MemberId = memberPrivacySettings.Member.MemberId.ToString();
+                        privacySettings.ShowInSearch = memberPrivacySettings.ShowInSearch ?? false;
+                        privacySettings.AllowSharing = memberPrivacySettings.AllowSharing ?? false;
+                        privacySettings.RequireImmediately = memberPrivacySettings.RequireImmediately ?? false;
                     }
-
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Cntlr -> GetMemberPrivacySettings FAILED - MemberId: [" + memberId + "], Exception: [" + ex + "]");
+                    Logger.Error("Service Cntlr -> GetMemberPrivacySettings FAILED - MemberID: [" + memberId + "], Exception: [" + ex + "]");
                 }
 
                 return privacySettings;
@@ -4904,7 +4912,6 @@ namespace Nooch.API.Controllers
                 catch (Exception ex)
                 {
                     Logger.Error("Service Cntlr - ValidatePinNumber FAILED MemberID: [" + memberId + "], Exception: [" + ex + "]");
-
                 }
 
                 return new StringResult();
@@ -5408,7 +5415,7 @@ namespace Nooch.API.Controllers
 
             try
             {
-                Logger.Info("Service Cntlr -> ResendVerificationSMS - UserName: [" + UserName + "]");
+                Logger.Info("Service Cntlr -> ResendVerificationSMS Fired - UserName: [" + UserName + "]");
 
                 var mda = new MembersDataAccess();
                 res.Result = mda.ResendVerificationSMS(UserName);
@@ -5491,10 +5498,10 @@ namespace Nooch.API.Controllers
                         foreach (var trans in recentTrans)
                         {
                             string photo = trans.Member1.Photo != null
-                                           ? string.Concat(Utility.GetValueFromConfig("PhotoUrl"), "/", trans.Member1.Photo.Substring(trans.Member1.Photo.IndexOf("Photos") + 14))
+                                           ? string.Concat(Utility.GetValueFromConfig("PhotoUrl"), trans.Member1.Photo.Substring(trans.Member1.Photo.IndexOf("Photos") + 14))
                                            : "https://www.noochme.com/noochweb/Assets/Images/userpic-default.png";
                             string photoRec = trans.Member.Photo != null
-                                              ? string.Concat(Utility.GetValueFromConfig("PhotoUrl"), "/", trans.Member.Photo.Substring(trans.Member.Photo.IndexOf("Photos") + 14))
+                                              ? string.Concat(Utility.GetValueFromConfig("PhotoUrl"), trans.Member.Photo.Substring(trans.Member.Photo.IndexOf("Photos") + 14))
                                               : "https://www.noochme.com/noochweb/Assets/Images/userpic-default.png";
 
                             if (trans.Member.MemberId.ToString().Equals(memberId.ToLower())) // Sent Collection

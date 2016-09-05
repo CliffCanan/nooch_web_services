@@ -150,8 +150,8 @@ namespace Nooch.Common
                 throw new FormatException(exception.Message + "Unable to format string :" + value);
             }
             return result;
-
         }
+
 
         public static Guid ConvertToGuid(string value)
         {
@@ -165,7 +165,7 @@ namespace Nooch.Common
             }
             catch (Exception ex)
             {
-                Logger.Error("Utility - ConvertToGuid FAILED - [Exception: " + ex + "]");
+                Logger.Error("Utility - ConvertToGuid FAILED - Exception: [" + ex + "]");
                 throw;
             }
             return id;
@@ -181,6 +181,7 @@ namespace Nooch.Common
             return selectedValues;
         }
 
+
         public static void LogInnerException(Exception ex)
         {
             Exception innerException = ex.InnerException;
@@ -190,13 +191,13 @@ namespace Nooch.Common
                 LogInnerException(innerException);
             }
         }
+
+
         public static string UploadPhoto(string folderPath, string fileName, string fileExtension, string fileContent, int contentLength)
         {
             //Used to create folder if its not exists
             if (!Directory.Exists(folderPath))
-            {
                 Directory.CreateDirectory(folderPath);
-            }
 
             var fileStream = new FileStream(Path.Combine(folderPath, fileName + fileExtension), FileMode.Create);
             var byteContent = System.Convert.FromBase64String(fileContent);

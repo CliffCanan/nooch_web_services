@@ -81,66 +81,63 @@ namespace Nooch.DataAccess
 
 
         /// <summary>
-        /// To change member's password
+        /// To change a user's password.
         /// </summary>
         /// <param name="memberId"></param>
         /// <param name="newPassword"></param>
+        /// <param name="newUser"></param>
+        /// <returns>Bool for success/failure</returns>
         public bool ResetPassword(string memberId, string newPassword, string newUser)
         {
             Logger.Info("MDA -> ResetPassword Fired - MemberID: [" + memberId + "]");
 
             try
             {
-                using (var noochConnection = new NOOCHEntities())
+                var id = Utility.ConvertToGuid(memberId);
+
+                var memberObj = _dbContext.Members.FirstOrDefault(m => m.MemberId == id &&
+                                                                         m.IsDeleted == false);
+
+                if (memberObj != null)
                 {
-                    var id = Utility.ConvertToGuid(memberId);
+                    bool shouldReset = false;
 
-                    var noochMember = noochConnection.Members.FirstOrDefault(m => m.MemberId == id &&
-                                                                                  m.IsDeleted == false);
-
-                    if (noochMember != null)
+                    if (String.IsNullOrEmpty(newUser))
                     {
-                        bool shouldReset = false;
+                        // checking password reset request time
+                        var resetRequestTime = _dbContext.PasswordResetRequests.OrderByDescending(m => m.Id).Take(1)
+                                                                                    .FirstOrDefault(m => m.MemberId == id);
 
-                        if (String.IsNullOrEmpty(newUser))
+                        if (resetRequestTime == null) return false;
+
+                        DateTime req = resetRequestTime.RequestedOn == null
+                                       ? DateTime.Now
+                                       : Convert.ToDateTime(resetRequestTime.RequestedOn);
+
+                        if (DateTime.Now < req.AddHours(3)) shouldReset = true;
+                    }
+                    else if (newUser.ToLower().Trim() == "true")
+                        shouldReset = true;
+
+                    if (shouldReset)
+                    {
+                        // Now update the user's password
+                        memberObj.Password = newPassword.Replace(" ", "+");
+                        memberObj.DateModified = DateTime.Now;
+
+                        var emailAddress = CommonHelper.GetDecryptedData(memberObj.UserName);
+
+                        if (_dbContext.SaveChanges() > 0)
                         {
-                            // checking password reset request time
-                            var resetRequestTime = noochConnection.PasswordResetRequests.OrderByDescending(m => m.Id).Take(1)
-                                                                                        .FirstOrDefault(m => m.MemberId == id);
-
-                            if (resetRequestTime == null) return false;
-
-                            DateTime req = Convert.ToDateTime(resetRequestTime.RequestedOn == null
-                                                              ? DateTime.Now
-                                                              : resetRequestTime.RequestedOn);
-
-                            if (DateTime.Now < req.AddHours(3)) shouldReset = true;
-                        }
-                        else if (newUser.ToLower().Trim() == "true")
-                            shouldReset = true;
-
-                        if (shouldReset)
-                        {
-                            // Now update the user's password
-                            noochMember.Password = newPassword.Replace(" ", "+");
-                            noochMember.DateModified = DateTime.Now;
-
-                            var emailAddress = CommonHelper.GetDecryptedData(noochMember.UserName);
-
                             // Cliff (1/21/16): Only send the confirmation email if it's truly a Reset... as opposed to a new user setting their PW
                             // from one of the browser pages, which also uses this service to set the pw after linking a bank.
                             if (!String.IsNullOrEmpty(newUser) && newUser.ToLower().Trim() != "true")
-                                SendPasswordUpdatedMail(noochMember, emailAddress);
+                                SendPasswordUpdatedMail(memberObj, emailAddress);
 
-                            if (noochConnection.SaveChanges() > 0)
-                            {
-                                Logger.Info("MDA -> ResetPassword - PW Reset Successfully for: Username: [" + emailAddress +
-                                            "], MemberID: [" + memberId + "]");
-                                return true;
-                            }
+                            Logger.Info("MDA -> ResetPassword - PW Reset Successfully for Username: [" + emailAddress +
+                                        "], MemberID: [" + memberId + "]");
+                            return true;
                         }
-                        else
-                            return false;
                     }
                 }
             }
@@ -151,6 +148,7 @@ namespace Nooch.DataAccess
 
             return false;
         }
+
 
         private static bool SendPasswordUpdatedMail(Member member, string primaryMail)
         {
@@ -164,83 +162,83 @@ namespace Nooch.DataAccess
             };
 
             return Utility.SendEmail("passwordChanged", fromAddress, primaryMail, null,
-                "Your Nooch password was changed"
-                , null, tokens, null, null, null);
+                                     "Your Nooch password was changed", null, tokens, null, null, null);
         }
 
+
+        /// <summary>
+        /// For resending a verification SMS message to the user to verify their phone number.
+        /// </summary>
+        /// <param name="Username"></param>
+        /// <returns></returns>
         public string ResendVerificationSMS(string Username)
         {
             //1. Check if user exists
             //2. Check if phone is already verified
 
-            string s = CommonHelper.IsDuplicateMember(Username);
-            if (s != "Not a nooch member.")
+            Member memberObj = CommonHelper.GetMemberDetailsByUserName(Username);
+
+            if (memberObj != null)
             {
-                // member exists, now check if Phone is already verified
+                // Member found, now check if Phone exists and is already verified
+                if (memberObj.Status == "Suspended" || memberObj.Status == "Temporarily_Blocked")
+                    return "Suspended";
 
-                // checking if phone is already activated
-                // getting MemberId
-                Username = CommonHelper.GetEncryptedData(Username);
-                using (var noochConnection = new NOOCHEntities())
+                if (!String.IsNullOrEmpty(memberObj.ContactNumber))
                 {
-
-                    var memberEntity = noochConnection.Members.FirstOrDefault(m => m.UserName == Username);
-
-                    if (memberEntity != null)
+                    if (memberObj.ContactNumber.Length > 9)
                     {
-                        if (memberEntity.Status == "Temporarily_Blocked") return "Temporarily_Blocked";
-                        else if (memberEntity.Status == "Suspended") return "Suspended";
-
-                        else// if (memberEntity.Status == "Active" || memberEntity.Status == "Registered")
+                        if (memberObj.IsVerifiedPhone == true)
                         {
-                            string fname = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberEntity.FirstName));
-                            string MessageBody = "Hi " + fname + ", This is Nooch - just need to verify this is your phone number. Please reply 'Go' to confirm your phone number.";
-
-                            if (memberEntity.ContactNumber != null &&
-                                (memberEntity.IsVerifiedPhone == false || memberEntity.IsVerifiedPhone == null))
-                            {
-                                string result = Utility.SendSMS(memberEntity.ContactNumber, MessageBody);
-                                return "Success";
-                            }
-                            else if (memberEntity.ContactNumber != null && (memberEntity.IsVerifiedPhone == true))
-                                return "Already Verified.";
-                            else
-                                return "Failure";
+                            return memberObj.PhoneVerifiedOn != null
+                                   ? "Looks like your phone number was already verified on " + Convert.ToDateTime(memberObj.PhoneVerifiedOn).ToString("MM/dd/yyyy")
+                                   : "Looks like your phone number was already verified.";
+                        }
+                        else
+                        {
+                            var fname = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName));
+                            var MessageBody = "Hi " + fname + ", This is Nooch - just making sure this is your phone number. Please reply 'Go' to verify your phone number.";
+                            var result = Utility.SendSMS(memberObj.ContactNumber, MessageBody);
+                            return "Success";
                         }
                     }
-                    else
-                        return "Not a Nooch member.";
+                    else return "Invalid phone number";
                 }
+                else return "No phone number found";
             }
-            else // Member doesn't exists
-                return "Not a Nooch member.";
+            else return "Not a Nooch member.";
         }
 
+
+        /// <summary>
+        /// For resending the email verification email to an existing user.
+        /// </summary>
+        /// <param name="Username"></param>
+        /// <returns></returns>
         public string ResendVerificationLink(string Username)
         {
             //1. Check if user exists or not
             //2. Check if already verified or not
             try
             {
-                string s = CommonHelper.IsDuplicateMember(Username);
-                if (s != "Not a nooch member.")
+                // Get MemberId from Username
+                var MemberId = CommonHelper.GetMemberIdByUserName(Username);
+
+                if (!String.IsNullOrEmpty(MemberId))
                 {
-                    // Get MemberId from Username
-                    var MemberId = CommonHelper.GetMemberIdByUserName(Username);
+                    var userNameLowerCase = CommonHelper.GetEncryptedData(Username.ToLower());
 
-                    if (!String.IsNullOrEmpty(MemberId))
+                    using (var noochConnection = new NOOCHEntities())
                     {
-                        var userNameLowerCase = CommonHelper.GetEncryptedData(Username.ToLower());
+                        // Member exists, now check if user's account is already activated or not
+                        Guid MemId = Utility.ConvertToGuid(MemberId);
 
-                        using (var noochConnection = new NOOCHEntities())
+                        var authToken = noochConnection.AuthenticationTokens.FirstOrDefault(
+                                        m => m.MemberId == MemId && m.IsActivated == false);
+
+                        if (authToken != null)
                         {
-                            // Member exists, now check if user's account is already activated or not
-                            Guid MemId = Utility.ConvertToGuid(MemberId);
-
-                            var authToken = noochConnection.AuthenticationTokens.FirstOrDefault(
-                                            m => m.MemberId == MemId && m.IsActivated == false);
-
-                            if (authToken != null)
+                            try
                             {
                                 // send registration email to member with autogenerated token 
                                 var fromAddress = Utility.GetValueFromConfig("welcomeMail");
@@ -255,29 +253,24 @@ namespace Nooch.DataAccess
                                         {Constants.PLACEHOLDER_LAST_NAME, ""},
                                         {Constants.PLACEHOLDER_OTHER_LINK, link}
                                     };
-                                try
-                                {
-                                    Utility.SendEmail(Constants.TEMPLATE_REGISTRATION,
-                                        fromAddress, Username, null,
-                                        "Confirm Nooch Registration", link,
-                                        tokens, null, null, null);
-                                    return "Success";
-                                }
-                                catch (Exception)
-                                {
-                                    Logger.Error("MDA -> ResendVerificationLink FAILED - Member activation " +
-                                                 "email not sent to [" + Username + "]");
-                                    return "Failure";
-                                }
+
+                                Utility.SendEmail(Constants.TEMPLATE_REGISTRATION, fromAddress, Username, null,
+                                    "Confirm Nooch Registration", link,
+                                    tokens, null, null, null);
+                                return "Success";
                             }
-                            else // Already activated
-                                return "Already Activated.";
+                            catch (Exception)
+                            {
+                                Logger.Error("MDA -> ResendVerificationLink FAILED - Member Activation " +
+                                             "email not sent to [" + Username + "]");
+                                return "Failure";
+                            }
                         }
+                        else
+                            return "Already Activated.";
                     }
-                    else // Member doesn't exist
-                        return "Not a nooch member.";
                 }
-                else // Member doesn't exist
+                else
                     return "Not a nooch member.";
             }
             catch (Exception ex)
@@ -369,16 +362,22 @@ namespace Nooch.DataAccess
         /// <returns></returns>
         public MemberPrivacySetting GetMemberPrivacySettings(string memberId)
         {
-            Logger.Info("MDA - GetMemberPrivacySettings - memberId: [" + memberId + "]");
-
-            using (var noochConnection = new NOOCHEntities())
+            try
             {
-                var id = Utility.ConvertToGuid(memberId);
+                using (var noochConnection = new NOOCHEntities())
+                {
+                    var id = Utility.ConvertToGuid(memberId);
 
-                var memberPrivacySettings = noochConnection.MemberPrivacySettings.FirstOrDefault(m => m.MemberId == id);
+                    var memberPrivacySettings = noochConnection.MemberPrivacySettings.FirstOrDefault(m => m.MemberId == id);
 
-                return memberPrivacySettings;
+                    return memberPrivacySettings;
+                }
             }
+            catch (Exception ex)
+            {
+                Logger.Error("MDA - GetMemberPrivacySettings FAILED - MemberID: [" + memberId + "], Exception: " + ex + "]");
+            }
+            return null;
         }
 
 
@@ -5412,17 +5411,18 @@ namespace Nooch.DataAccess
         {
             try
             {
-                if (String.IsNullOrEmpty(ssn) || ssn.Length != 4)
+                if (String.IsNullOrEmpty(ssn) || ssn.Length != 9)
                     return "Invalid SSN passed.";
 
-                var noochMember = CommonHelper.GetMemberDetails(MemberId);
+                var guid = new Guid(MemberId);
+                var memberObj = _dbContext.Members.FirstOrDefault(m => m.MemberId == guid && m.IsDeleted != true);
 
-                if (noochMember != null)
+                if (memberObj != null)
                 {
-                    noochMember.SSN = CommonHelper.GetEncryptedData(ssn);
-                    noochMember.DateModified = DateTime.Now;
-                    var dbContext = CommonHelper.GetDbContextFromEntity(noochMember);
-                    var res = dbContext.SaveChanges();
+                    memberObj.SSN = CommonHelper.GetEncryptedData(ssn);
+                    memberObj.DateModified = DateTime.Now;
+
+                    _dbContext.SaveChanges();
 
                     return "SSN saved successfully.";
                 }
@@ -5824,9 +5824,9 @@ namespace Nooch.DataAccess
                                         #region Setup Email Placeholders
 
                                         Transaction.TransactionDate = DateTime.Now;
-                                        string fromAddress = Utility.GetValueFromConfig("transfersMail");
+                                        var fromAddress = Utility.GetValueFromConfig("transfersMail");
 
-                                        string newUserPhone = "";
+                                        var newUserPhone = "";
 
                                         if (Transaction.IsPhoneInvitation != null &&
                                             Transaction.IsPhoneInvitation == true &&
@@ -5843,11 +5843,11 @@ namespace Nooch.DataAccess
                                             moneyRecipientLastName = "";
                                         }
 
-                                        string newUserNameForEmail = "";
+                                        var newUserNameForEmail = "";
 
-                                        string recipientPic = (!String.IsNullOrEmpty(recipient.Photo) && recipient.Photo.Length > 20)
-                                                                ? recipient.Photo.ToString()
-                                                                : "https://www.noochme.com/noochweb/Assets/Images/userpic-default.png";
+                                        var recipientPic = (!String.IsNullOrEmpty(recipient.Photo) && recipient.Photo.Length > 20)
+                                                           ? recipient.Photo.ToString()
+                                                           : "https://www.noochme.com/noochweb/Assets/Images/userpic-default.png";
 
 
                                         if (!String.IsNullOrEmpty(moneyRecipientFirstName))
@@ -5862,26 +5862,23 @@ namespace Nooch.DataAccess
                                         else if (newUserPhone.Length > 2)
                                             newUserNameForEmail = newUserPhone;
 
-                                        string wholeAmount = Transaction.Amount.ToString("n2");
+                                        var wholeAmount = Transaction.Amount.ToString("n2");
                                         string[] s3 = wholeAmount.Split('.');
 
-                                        string transDate = Convert.ToDateTime(Transaction.TransactionDate).ToString("MMMM dd, yyyy");
+                                        var transDate = Convert.ToDateTime(Transaction.TransactionDate).ToString("MMMM dd, yyyy");
 
-                                        string memo = "";
+                                        var memo = "";
                                         if (!String.IsNullOrEmpty(Transaction.Memo))
                                         {
                                             if (Transaction.Memo.Length > 3)
                                             {
-                                                string firstThreeChars = Transaction.Memo.Substring(0, 3).ToLower();
+                                                var firstThreeChars = Transaction.Memo.Substring(0, 3).ToLower();
                                                 bool startsWithFor = firstThreeChars.Equals("for");
 
-                                                if (startsWithFor)
-                                                    memo = Transaction.Memo.ToString();
-                                                else
-                                                    memo = "For: " + Transaction.Memo.ToString();
+                                                if (startsWithFor) memo = Transaction.Memo.ToString();
+                                                else memo = "For: " + Transaction.Memo.ToString();
                                             }
-                                            else
-                                                memo = "For: " + Transaction.Memo.ToString();
+                                            else memo = "For: " + Transaction.Memo.ToString();
                                         }
 
                                         #endregion Setup Email Placeholders
@@ -6186,64 +6183,64 @@ namespace Nooch.DataAccess
             Logger.Info("MDA -> MySettings (Updating User's Profile) - Name: [" + firstName + " " + lastName +
                         "], MemberID: [" + memberId + "]");
 
-            string folderPath = Utility.GetValueFromConfig("PhotoPath");
-            string fileName = memberId;
-            var id = Utility.ConvertToGuid(memberId);
+            var folderPath = Utility.GetValueFromConfig("PhotoPath");
+            var fileName = memberId;
+            var guid = Utility.ConvertToGuid(memberId);
 
-            var member = CommonHelper.GetMemberDetails(memberId);
+            var memberObj = _dbContext.Members.FirstOrDefault(m => m.MemberId == guid && m.IsDeleted != true);
 
-            if (member != null)
+            if (memberObj != null)
             {
                 try
                 {
-                    #region Encrypt & Save All Data
+                    #region Encrypt All String Data
 
-                    member.FirstName = CommonHelper.GetEncryptedData(firstName.Split(' ')[0]);
+                    memberObj.FirstName = CommonHelper.GetEncryptedData(firstName.Split(' ')[0]);
 
                     if (firstName.IndexOf(' ') > 0)
-                        member.LastName = CommonHelper.GetEncryptedData(firstName.Split(' ')[1]);
+                        memberObj.LastName = CommonHelper.GetEncryptedData(firstName.Split(' ')[1]);
 
-                    if (member.Password != null && member.Password == "")
-                        member.Password = CommonHelper.GetEncryptedData(CommonHelper.GetDecryptedData(password).Replace(" ", "+"));
+                    if (memberObj.Password != null && memberObj.Password == "")
+                        memberObj.Password = CommonHelper.GetEncryptedData(CommonHelper.GetDecryptedData(password).Replace(" ", "+"));
 
                     if (!String.IsNullOrEmpty(secondaryMail))
-                        member.SecondaryEmail = CommonHelper.GetEncryptedData(secondaryMail);
+                        memberObj.SecondaryEmail = CommonHelper.GetEncryptedData(secondaryMail);
 
                     if (!String.IsNullOrEmpty(recoveryMail))
-                        member.RecoveryEmail = CommonHelper.GetEncryptedData(recoveryMail);
+                        memberObj.RecoveryEmail = CommonHelper.GetEncryptedData(recoveryMail);
 
                     if (contentLength > 0)
-                        member.Photo = Utility.UploadPhoto(folderPath, fileName, fileExtension, fileContent, contentLength);
+                        memberObj.Photo = Utility.UploadPhoto(folderPath, fileName, fileExtension, fileContent, contentLength);
 
                     if (!String.IsNullOrEmpty(facebookAcctLogin))
-                        member.FacebookAccountLogin = facebookAcctLogin;
+                        memberObj.FacebookAccountLogin = facebookAcctLogin;
 
                     if (!String.IsNullOrEmpty(address))
-                        member.Address = CommonHelper.GetEncryptedData(address);
+                        memberObj.Address = CommonHelper.GetEncryptedData(address);
 
                     if (!String.IsNullOrEmpty(address2))
-                        member.Address2 = CommonHelper.GetEncryptedData(address2);
+                        memberObj.Address2 = CommonHelper.GetEncryptedData(address2);
 
                     if (!String.IsNullOrEmpty(city))
-                        member.City = CommonHelper.GetEncryptedData(city);
+                        memberObj.City = CommonHelper.GetEncryptedData(city);
 
                     if (!String.IsNullOrEmpty(state))
-                        member.State = CommonHelper.GetEncryptedData(state);
+                        memberObj.State = CommonHelper.GetEncryptedData(state);
 
                     if (!String.IsNullOrEmpty(country))
-                        member.Country = country;
+                        memberObj.Country = country;
 
                     if (!String.IsNullOrEmpty(zipCode))
                     {
-                        member.Zipcode = CommonHelper.GetEncryptedData(zipCode);
+                        memberObj.Zipcode = CommonHelper.GetEncryptedData(zipCode);
 
                         // Get state from ZIP via Google Maps API
                         var stateResult = CommonHelper.GetCityAndStateFromZip(zipCode.Trim());
                         var stateAbbrev = stateResult != null && stateResult.stateAbbrev != null ? stateResult.stateAbbrev : "";
                         var cityFromGoogle = stateResult != null && !String.IsNullOrEmpty(stateResult.city) ? stateResult.city : "";
 
-                        if (!String.IsNullOrEmpty(stateAbbrev)) member.State = CommonHelper.GetEncryptedData(stateAbbrev);
-                        if (!String.IsNullOrEmpty(stateAbbrev)) member.City = CommonHelper.GetEncryptedData(cityFromGoogle);
+                        if (!String.IsNullOrEmpty(stateAbbrev)) memberObj.State = CommonHelper.GetEncryptedData(stateAbbrev);
+                        if (!String.IsNullOrEmpty(stateAbbrev)) memberObj.City = CommonHelper.GetEncryptedData(cityFromGoogle);
                     }
 
                     DateTime dob2;
@@ -6251,68 +6248,71 @@ namespace Nooch.DataAccess
                     if (!DateTime.TryParse(dob, out dob2))
                         Logger.Error("MDA -> MySettings - Invalid DOB Passed - MemberID: [" + memberId + "], DOB: [" + dob + "]");
                     else
-                        member.DateOfBirth = dob2;
+                        memberObj.DateOfBirth = dob2;
 
-                    #endregion Encrypt & Save All Data
+                    #endregion Encrypt All String Data
 
-                    member.ShowInSearch = showinSearch;
-
-                    if (!String.IsNullOrEmpty(contactNumber) &&
-                        (String.IsNullOrEmpty(member.ContactNumber) ||
-                        CommonHelper.RemovePhoneNumberFormatting(member.ContactNumber) != CommonHelper.RemovePhoneNumberFormatting(contactNumber)))
-                    {
-                        if (!IsPhoneNumberAlreadyRegistered(contactNumber))
-                        {
-                            member.ContactNumber = contactNumber;
-                            member.IsVerifiedPhone = false;
-
-                            #region SendingSMSVerificaion
-
-                            try
-                            {
-                                string fname = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(member.FirstName));
-                                string MessageBody = "Hi " + fname + ", This is Nooch - just need to verify this is your phone number. Please reply 'Go' to confirm your phone number.";
-
-                                string SMSresult = Utility.SendSMS(contactNumber, MessageBody);
-
-                                Logger.Info("MySettings --> SMS Verification sent to [" + contactNumber + "] successfully.");
-                            }
-                            catch (Exception)
-                            {
-                                Logger.Error("MySettings --> SMS Verification NOT sent to [" +
-                                    contactNumber + "]. Problem occurred in sending SMS.");
-                            }
-
-                            #endregion
-                        }
-                        else
-                            return "Phone Number already registered with Nooch";
-                    }
+                    memberObj.ShowInSearch = showinSearch;
 
                     if (Picture != null)
                     {
                         // make  image from bytes
                         string filename = HttpContext.Current.Server.MapPath("~/UploadedPhotos") + "/Photos/" +
-                                          member.MemberId.ToString() + ".png";
+                                          memberObj.MemberId.ToString() + ".png";
 
                         using (FileStream fs = new FileStream(filename, FileMode.Create, FileAccess.ReadWrite))
                         {
                             fs.Write(Picture, 0, (int)Picture.Length);
                         }
 
-                        member.Photo = Utility.GetValueFromConfig("PhotoUrl") + member.MemberId + ".png";
+                        memberObj.Photo = Utility.GetValueFromConfig("PhotoUrl") + memberObj.MemberId + ".png";
                     }
                     else
                     {
                         // check if image is already there
-                        if (member.Photo == null)
-                            member.Photo = Utility.GetValueFromConfig("PhotoUrl") + "gv_no_photo.png";
+                        if (memberObj.Photo == null)
+                            memberObj.Photo = Utility.GetValueFromConfig("PhotoUrl") + "gv_no_photo.png";
                     }
 
-                    member.DateModified = DateTime.Now;
-                    DbContext dbc = CommonHelper.GetDbContextFromEntity(member);
+                    memberObj.DateModified = DateTime.Now;
+                    int value = _dbContext.SaveChanges();
+                    _dbContext.Entry(memberObj).Reload();
 
-                    int value = dbc.SaveChanges();
+                    // Finally, check and save the Phone Number
+                    if (!String.IsNullOrEmpty(contactNumber) &&
+                        (String.IsNullOrEmpty(memberObj.ContactNumber) ||
+                        CommonHelper.RemovePhoneNumberFormatting(memberObj.ContactNumber) != CommonHelper.RemovePhoneNumberFormatting(contactNumber)))
+                    {
+                        if (!IsPhoneNumberAlreadyRegistered(contactNumber))
+                        {
+                            memberObj.ContactNumber = contactNumber;
+                            memberObj.IsVerifiedPhone = false;
+
+                            value = _dbContext.SaveChanges();
+                            _dbContext.Entry(memberObj).Reload();
+
+                            #region Sending SMS Verificaion
+
+                            try
+                            {
+                                var fname = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName));
+                                var MessageBody = "Hi " + fname + ", Nooch here - just making sure this is your number. Please reply 'Go' to verify your phone number.";
+
+                                var SMSresult = Utility.SendSMS(contactNumber, MessageBody);
+
+                                Logger.Info("MDA -> MySettings - SMS Verification sent to [" + contactNumber + "] successfully.");
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.Error("MDA -> MySettings - SMS Verification NOT sent to [" +
+                                             contactNumber + "], Exception: [" + ex + "]");
+                            }
+
+                            #endregion Sending SMS Verificaion
+                        }
+                        else
+                            return "Phone Number already registered with Nooch";
+                    }
 
                     return value > 0 ? "Your details have been updated successfully." : "Failure";
                 }
@@ -6337,7 +6337,7 @@ namespace Nooch.DataAccess
             var memOldPin = oldPin.Replace(" ", "+");
             var noochMember = _dbContext.Members.FirstOrDefault(m => m.MemberId == id && m.PinNumber == memOldPin);
             if (noochMember == null) return "Incorrect pin. Please check your current pin.";
-            // update nooch member pin number
+            // Update user's PIN number
             noochMember.PinNumber = newPin.Replace(" ", "+");
             noochMember.DateModified = DateTime.Now;
             int r = _dbContext.SaveChanges();
@@ -6350,7 +6350,6 @@ namespace Nooch.DataAccess
             else
             {
                 return "Incorrect pin. Please check your current pin.";
-
             }
         }
 
@@ -6516,57 +6515,79 @@ namespace Nooch.DataAccess
         /// <param name="requireImmediately"></param>
         public string MemberPrivacySettings(string memberId, bool showInSearch, bool allowSharing, bool requireImmediately)
         {
-            Logger.Info("MDA -> MemberPrivacySettings - [MemberId: " + memberId + "]");
+            Logger.Info("MDA -> MemberPrivacySettings - MemberId: [" + memberId + "], Req Imm: [" + requireImmediately +
+                        "], ShowInSearch: [" + showInSearch + "], Allow Sharing: [" + allowSharing + "]");
 
-            using (var noochConnection = new NOOCHEntities())
+            var saveToDB = 0;
+            var id = Utility.ConvertToGuid(memberId);
+
+            var memberPrivacySettings = _dbContext.MemberPrivacySettings.FirstOrDefault(m => m.MemberId == id);
+
+            if (memberPrivacySettings != null)
             {
-                var id = Utility.ConvertToGuid(memberId);
+                memberPrivacySettings.ShowInSearch = showInSearch;
+                memberPrivacySettings.AllowSharing = allowSharing;
+                memberPrivacySettings.RequireImmediately = requireImmediately;
 
-                var memberPrivacySettings = noochConnection.MemberPrivacySettings.FirstOrDefault(m => m.MemberId == id);
+                if (memberPrivacySettings.DateCreated == null)
+                    memberPrivacySettings.DateCreated = DateTime.Now;
 
-                if (memberPrivacySettings != null)
+                memberPrivacySettings.DateModified = DateTime.Now;
+
+                saveToDB = _dbContext.SaveChanges();
+
+                #region Update Members Table
+
+                try
                 {
-                    memberPrivacySettings.ShowInSearch = showInSearch;
-                    memberPrivacySettings.AllowSharing = allowSharing;
-                    memberPrivacySettings.RequireImmediately = requireImmediately;
+                    Member memberObj = _dbContext.Members.FirstOrDefault(m => m.MemberId == id);
 
-                    if (memberPrivacySettings.DateCreated == null)
+                    if (memberObj != null)
                     {
-                        memberPrivacySettings.DateCreated = DateTime.Now;
-                    }
-                    else
-                    {
-                        memberPrivacySettings.DateModified = DateTime.Now;
+                        memberObj.ShowInSearch = showInSearch;
+                        memberObj.IsRequiredImmediatley = requireImmediately;
+                        memberObj.DateModified = DateTime.Now;
+
+                        saveToDB = _dbContext.SaveChanges();
+                        _dbContext.Entry(memberObj).Reload();
                     }
                 }
+                catch (Exception ex)
+                {
+                    Logger.Error("MDA -> MemberPrivacySettings FAILED - MemberID: [" + memberId + "], Exception: [" + ex + "]");
+                }
 
-                int value = noochConnection.SaveChanges();
-                return value > 0 ? "Flag is updated successfully." : "Failure";
+                #endregion Update Members Table
             }
+            else
+                Logger.Error("MDA -> MemberPrivacySettings FAILED - MemberPrivacySettings Record Not Found - MemberID: [" + memberId + "]");
+
+            return saveToDB > 0 ? "Flag is updated successfully." : "Failure";
         }
 
 
         public string SetShowInSearch(string memberId, bool showInSearch)
         {
-            Logger.Info("MDA -> SetShowInSearch - memberId: [" + memberId + "]");
+            Logger.Info("MDA -> SetShowInSearch - MemberId: [" + memberId + "]");
 
             var id = Utility.ConvertToGuid(memberId);
 
-            // code to update setting in members table 
+            #region Update Members Table
 
-            var memberSettings = _dbContext.Members.FirstOrDefault(m => m.MemberId == id);
+            var memberObj = _dbContext.Members.FirstOrDefault(m => m.MemberId == id);
 
-            if (memberSettings != null)
+            if (memberObj != null)
             {
-                // member found
-                memberSettings.ShowInSearch = showInSearch;
+                memberObj.ShowInSearch = showInSearch;
                 _dbContext.SaveChanges();
-                _dbContext.Entry(memberSettings).Reload();
+                _dbContext.Entry(memberObj).Reload();
             }
             else
-            {
                 return "Failure";
-            }
+
+            #endregion Update Members Table
+
+            #region Update MemberPrivacySettings Table
 
             var memberPrivacySettings = _dbContext.MemberPrivacySettings.FirstOrDefault(m => m.MemberId == id);
 
@@ -6583,12 +6604,13 @@ namespace Nooch.DataAccess
                 int r = _dbContext.SaveChanges();
                 if (r > 0)
                 {
-                    _dbContext.Entry(memberSettings).Reload();
+                    _dbContext.Entry(memberObj).Reload();
                     return "ShowInSearch flag is added successfully.";
                 }
 
                 return "Failure";
             }
+
             memberPrivacySettings.ShowInSearch = showInSearch;
             memberPrivacySettings.DateModified = DateTime.Now;
 
@@ -6600,9 +6622,9 @@ namespace Nooch.DataAccess
                 return "ShowInSearch flag is updated successfully.";
             }
             else
-            {
                 return "Failure";
-            }
+
+            #endregion Update MemberPrivacySettings Table
         }
 
 
