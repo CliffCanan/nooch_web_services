@@ -4468,77 +4468,48 @@ namespace Nooch.Common
 
         public static string getLogoForBank(string bankName)
         {
-            string appPath = Utility.GetValueFromConfig("ApplicationURL");
+            var appPath = Utility.GetValueFromConfig("ApplicationURL");
             var bankLogoUrl = "";
 
-            switch (bankName)
+            if (!String.IsNullOrEmpty(bankName))
             {
-                case "Ally":
-                    {
-                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/ally.png");
-                    }
-                    break;
-                case "Bank of America":
-                    {
-                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/bankofamerica.png");
-                    }
-                    break;
-                case "Wells Fargo":
-                    {
-                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/WellsFargo.png");
-                    }
-                    break;
-                case "Chase":
-                    {
-                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/chase.png");
-                    }
-                    break;
-                case "Citibank":
-                    {
-                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/citibank.png");
-                    }
-                    break;
-                case "TD Bank":
-                    {
-                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/td.png");
-                    }
-                    break;
-                case "Capital One 360":
-                    {
-                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/capone360.png");
-                    }
-                    break;
-                case "US Bank":
-                    {
-                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/usbank.png");
-                    }
-                    break;
-                case "PNC":
-                    {
-                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/pnc.png");
-                    }
-                    break;
-                case "SunTrust":
-                    {
-                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/suntrust.png");
-                    }
-                    break;
-                case "USAA":
-                    {
-                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/usaa.png");
-                    }
-                    break;
-                case "First Tennessee":
-                    {
-                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/firsttennessee.png");
-                    }
-                    break;
-                default:
-                    {
-                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/no.png");
-                    }
-                    break;
+                bankName = bankName.ToLower();
+
+                if (bankName.IndexOf("bank of america") > -1 || bankName.IndexOf("boa") > -1)
+                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/bankofamerica.png");
+                else if (bankName.IndexOf("wells") > -1)
+                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/WellsFargo.png");
+                else if (bankName.IndexOf("pnc") > -1)
+                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/pnc.png");
+                else if (bankName.IndexOf("chase") > -1)
+                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/chase.png");
+                else if (bankName.IndexOf("citi") > -1)
+                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/citibank.png");
+                else if (bankName.IndexOf("td") > -1)
+                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/td.png");
+                else if (bankName.IndexOf("360") > -1)
+                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/capone360.png");
+                else if (bankName.IndexOf("us bank") > -1)
+                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/usbank.png");
+                else if (bankName.IndexOf("sun") > -1)
+                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/suntrust.png");
+                else if (bankName.IndexOf("usaa") > -1)
+                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/usaa.png");
+                else if (bankName.IndexOf("tennessee") > -1)
+                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/firsttennessee.png");
+                else if (bankName.IndexOf("ally") > -1)
+                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/ally.png");
+                else if (bankName.IndexOf("schwab") > -1)
+                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/schwab.png");
+                else if (bankName.IndexOf("regions") > -1)
+                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/regions.png");
+                else if (bankName.IndexOf("bb") > -1)
+                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/bbandt.png");
+                else // Default bank image
+                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/no.png");
             }
+            else // Default bank image
+                bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/no.png");
 
             return bankLogoUrl;
         }
