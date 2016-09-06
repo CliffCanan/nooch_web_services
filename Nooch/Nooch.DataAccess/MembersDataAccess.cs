@@ -364,14 +364,11 @@ namespace Nooch.DataAccess
         {
             try
             {
-                using (var noochConnection = new NOOCHEntities())
-                {
-                    var id = Utility.ConvertToGuid(memberId);
+                var id = Utility.ConvertToGuid(memberId);
 
-                    var memberPrivacySettings = noochConnection.MemberPrivacySettings.FirstOrDefault(m => m.MemberId == id);
+                var privacySettings = _dbContext.MemberPrivacySettings.FirstOrDefault(m => m.MemberId == id);
 
-                    return memberPrivacySettings;
-                }
+                return privacySettings;
             }
             catch (Exception ex)
             {
@@ -6849,11 +6846,6 @@ namespace Nooch.DataAccess
 
                         var memberPrivacySettings = new MemberPrivacySetting
                         {
-                            //MembersReference =
-                            //{
-                            //    EntityKey = new System.Data.EntityKey(noochConnection.DefaultContainerName +
-                            //                                          ".Members", "MemberId", member.MemberId)
-                            //},
                             MemberId = member.MemberId,
                             AllowSharing = true,
                             ShowInSearch = true,
