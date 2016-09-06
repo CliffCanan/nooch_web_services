@@ -232,6 +232,11 @@ namespace Nooch.API.Controllers
         }
 
 
+        /// <summary>
+        /// CC (9/6/16): NOT CURRENTLY USED ANYWHERE.
+        /// </summary>
+        /// <param name="phoneEmailListDto"></param>
+        /// <returns></returns>
         [HttpPost]
         [ActionName("GetMemberIds")]
         public PhoneEmailListDto GetMemberIds(PhoneEmailListDto phoneEmailListDto)
@@ -436,8 +441,6 @@ namespace Nooch.API.Controllers
             {
                 try
                 {
-                    var res = new userDetailsForMobileApp();
-
                     // Get Member's Details
                     var memberObj = CommonHelper.GetMemberDetails(memberId);
 
@@ -445,34 +448,38 @@ namespace Nooch.API.Controllers
                     var synUserDetails = CommonHelper.GetSynapseCreateaUserDetails(memberId);
                     var synBankDetails = CommonHelper.GetSynapseBankDetails(memberId);
 
-                    res.memberId = memberObj.MemberId.ToString();
-                    res.DateCreated = memberObj.DateCreated.Value;
-                    res.status = memberObj.Status;
-                    res.email = CommonHelper.GetDecryptedData(memberObj.UserName);
-                    res.contactNumber = String.IsNullOrEmpty(memberObj.ContactNumber) && memberObj.ContactNumber.Length > 2
-                                        ? CommonHelper.FormatPhoneNumber(memberObj.ContactNumber) : "";
-                    res.firstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName));
-                    res.lastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.LastName));
-                    res.userPicture = memberObj.Photo ?? Path.GetFileName("gv_no_photo.jpg");
-                    res.pin = memberObj.PinNumber;
-                    res.rememberMe = memberObj.RememberMeEnabled ?? false;
+                    var res = new userDetailsForMobileApp
+                    {
+                        memberId = memberObj.MemberId.ToString(),
+                        DateCreated = memberObj.DateCreated.Value,
+                        status = memberObj.Status,
+                        email = CommonHelper.GetDecryptedData(memberObj.UserName),
+                        contactNumber = String.IsNullOrEmpty(memberObj.ContactNumber) && memberObj.ContactNumber.Length > 2
+                                            ? CommonHelper.FormatPhoneNumber(memberObj.ContactNumber) : "",
+                        firstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName)),
+                        lastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.LastName)),
+                        userPicture = memberObj.Photo ?? Path.GetFileName("gv_no_photo.jpg"),
+                        pin = memberObj.PinNumber,
+                        rememberMe = memberObj.RememberMeEnabled ?? false,
 
-                    res.hasSynapseUserAccount = synUserDetails != null && synUserDetails.access_token != null;
-                    res.hasSynapseBank = synBankDetails != null;
-                    res.isBankVerified = synBankDetails != null && synBankDetails.Status == "Verified";
-                    res.bankStatus = synBankDetails != null ? synBankDetails.Status : "Not Attached";
-                    res.synUserPermission = synUserDetails != null ? synUserDetails.permission : "";
-                    res.synBankAllowed = synBankDetails != null ? synBankDetails.allowed : "";
+                        fbUserId = memberObj.FacebookUserId != "not connected" ? memberObj.FacebookUserId : null,
 
-                    res.isProfileComplete = !string.IsNullOrEmpty(memberObj.Address) &&
-                                            !string.IsNullOrEmpty(memberObj.City) &&
-                                            !string.IsNullOrEmpty(memberObj.Zipcode) &&
-                                            !string.IsNullOrEmpty(memberObj.ContactNumber) &&
-                                            !string.IsNullOrEmpty(memberObj.SSN) &&
-                                            memberObj.DateOfBirth != null;
-                    res.isRequiredImmediately = memberObj.IsRequiredImmediatley ?? false;
-                    res.isVerifiedPhone = memberObj.IsVerifiedPhone == true ? true : false;
+                        hasSynapseUserAccount = synUserDetails != null && synUserDetails.access_token != null,
+                        hasSynapseBank = synBankDetails != null,
+                        isBankVerified = synBankDetails != null && synBankDetails.Status == "Verified",
+                        bankStatus = synBankDetails != null ? synBankDetails.Status : "Not Attached",
+                        synUserPermission = synUserDetails != null ? synUserDetails.permission : "",
+                        synBankAllowed = synBankDetails != null ? synBankDetails.allowed : "",
 
+                        isProfileComplete = !string.IsNullOrEmpty(memberObj.Address) &&
+                                                !string.IsNullOrEmpty(memberObj.City) &&
+                                                !string.IsNullOrEmpty(memberObj.Zipcode) &&
+                                                !string.IsNullOrEmpty(memberObj.ContactNumber) &&
+                                                !string.IsNullOrEmpty(memberObj.SSN) &&
+                                                memberObj.DateOfBirth != null,
+                        isRequiredImmediately = memberObj.IsRequiredImmediatley ?? false,
+                        isVerifiedPhone = memberObj.IsVerifiedPhone == true ? true : false,
+                    };
                     return res;
                 }
                 catch (Exception ex)
@@ -2361,8 +2368,8 @@ namespace Nooch.API.Controllers
                     IsSSNAdded = memberEntity.SSN != null,
                     ssnLast4 = !String.IsNullOrEmpty(memberEntity.SSN) ? CommonHelper.GetDecryptedData(memberEntity.SSN) : "",
                     PhotoUrl = memberEntity.Photo ?? Path.GetFileName("gv_no_photo.jpg"),
-                    FacebookAccountLogin = memberEntity.FacebookAccountLogin != null ?
-                                           CommonHelper.GetDecryptedData(memberEntity.FacebookAccountLogin) :
+                    FacebookAccountLogin = memberEntity.FacebookUserId != "not connected" ?
+                                           memberEntity.FacebookUserId :
                                            "",
                     IsSynapseBankAdded = synapseBank != null,
                     SynapseBankStatus = accountstatus,
@@ -4881,17 +4888,16 @@ namespace Nooch.API.Controllers
 
         [HttpGet]
         [ActionName("SaveMembersFBId")]
-        public StringResult SaveMembersFBId(string MemberId, string MemberfaceBookId, string IsConnect)
+        public StringResult SaveMembersFBId(string memberId, string fbid, bool IsConnect)
         {
             try
             {
                 //Logger.LogDebugMessage("Service Cntlr -> SaveMembersFBId - MemberID: [" + MemberId + "]");
-
-                return new StringResult { Result = CommonHelper.SaveMemberFBId(MemberId, MemberfaceBookId, IsConnect) };
+                return new StringResult { Result = CommonHelper.SaveMemberFBId(memberId, fbid, IsConnect) };
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Cntlr -> SaveMembersFBId Error - MemberID: [" + MemberId + "], Exception: [" + ex + "]");
+                Logger.Error("Service Cntlr -> SaveMembersFBId Error - MemberID: [" + memberId + "], Exception: [" + ex + "]");
                 return new StringResult { Result = ex.Message };
             }
         }

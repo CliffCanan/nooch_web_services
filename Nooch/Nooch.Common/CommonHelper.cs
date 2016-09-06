@@ -4153,34 +4153,42 @@ namespace Nooch.Common
         }
 
 
-        public static string SaveMemberFBId(string MemberId, string fbid, string IsConnect)
+        public static string SaveMemberFBId(string MemberId, string fbid, bool isConnect)
         {
-            Logger.Info("Common Helper -> SaveMembersFBId Fired - MemberID: [" + MemberId + "], FBID: [" + fbid + "]");
+            Logger.Info("Common Helper -> SaveMemberFBId Fired - MemberID: [" + MemberId + "], FBID: [" + fbid + "]");
+
+            if (String.IsNullOrEmpty(MemberId))
+                return "Missing MemberID";
+            if (String.IsNullOrEmpty(fbid) || fbid.Length < 2)
+                return "Missing FB ID";
 
             try
             {
+                var guid = new Guid(MemberId);
                 fbid = GetEncryptedData(fbid.ToLower());
 
-                var noochMember = GetMemberDetails(MemberId);
+                var memberObj = _dbContext.Members.FirstOrDefault(m => m.MemberId == guid);
 
-                if (noochMember != null)
+                if (memberObj != null)
                 {
-                    if (IsConnect == "YES") noochMember.FacebookAccountLogin = fbid.Replace(" ", "+");
-                    else noochMember.FacebookAccountLogin = null;
+                    if (isConnect)
+                        memberObj.FacebookUserId = fbid.Replace(" ", "+");
+                    else
+                        memberObj.FacebookUserId = null;
 
-                    noochMember.DateModified = DateTime.Now;
+                    memberObj.DateModified = DateTime.Now;
+                    int i = _dbContext.SaveChanges();
 
-                    DbContext dbc = GetDbContextFromEntity(noochMember);
-                    //_dbContext.Entry(dbc).Reload();
-                    int i = dbc.SaveChanges();
                     return i > 0 ? "Success" : "Failure";
                 }
                 else
-                    return "Failure";
+                    return "Member not found";
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return "Failure";
+                Logger.Error("CommonHelper -> SaveMemberFBId FAILED - MemberID: [" + MemberId + "], FBID: [" + fbid +
+                             "], IsConnect: [" + isConnect + "], Exception: [" + ex + "]");
+                return ex.Message;
             }
         }
 

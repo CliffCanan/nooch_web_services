@@ -26,6 +26,7 @@ namespace Nooch.Common.Entities.MobileAppInputEntities
         public string lastName { get; set; }
         public string userPicture { get; set; }
         public string pin { get; set; }
+        public string fbUserId { get; set; }
 
         public string bankStatus { get; set; }
         public string synUserPermission { get; set; }
