@@ -977,8 +977,6 @@ namespace Nooch.DataAccess
             {
                 _dbContext.Entry(memberEntity).Reload();
 
-                var memberNotifications = CommonHelper.GetMemberNotificationSettingsByUserName(userEmail);
-
                 switch (memberEntity.Status)
                 {
                     case "Temporarily_Blocked":
@@ -1000,12 +998,12 @@ namespace Nooch.DataAccess
                             // Check if user already logged in or not.  If yes, then send Auto Logout email
                             if (!String.IsNullOrEmpty(memberEntity.AccessToken) &&
                                 !String.IsNullOrEmpty(memberEntity.UDID1) &&
+                                !String.IsNullOrEmpty(udid) &&
                                 memberEntity.IsOnline == true &&
                                 memberEntity.UDID1.ToLower() != udid.ToLower())
                             {
                                 Logger.Info("MDA -> LoginRequest - Sending Automatic Logout Notification - UserName: [" + userEmail +
-                                            "], UDID: [" + udid +
-                                            "], AccessToken: [" + memberEntity.AccessToken + "]");
+                                            "], UDID: [" + udid + "], AccessToken: [" + memberEntity.AccessToken + "]");
 
                                 var fromAddress = Utility.GetValueFromConfig("adminMail");
                                 var toAddress = userEmail;
@@ -1020,24 +1018,6 @@ namespace Nooch.DataAccess
                                                       "Nooch Automatic Logout", null, null, null, null, msg);
 
                                     Logger.Info("MDA -> LoginRequest - Automatic Log Out Email sent to [" + toAddress + "] successfully.");
-
-                                    // Checking if phone exists and isVerified before sending SMS to user
-                                    /*if (memberEntity.ContactNumber != null && memberEntity.IsVerifiedPhone == true)
-                                    {
-                                        try
-                                        {
-                                            //msg = "Hi, You were automatically logged out from your Nooch account b/c you signed in from another device. " +
-                                            // "If this is a mistake, contact support@nooch.com immediately. - Nooch";
-                                            //string result = UtilityDataAccess.SendSMS(memberEntity.ContactNumber, msg, memberEntity.AccessToken, memberEntity.MemberId.ToString());
-
-                                            //Logger.Info("MDA -> LoginRequest - Automatic Log Out SMS sent to [" + memberEntity.ContactNumber + "] successfully. [SendSMS Result: " + result + "]");
-                                        }
-                                        catch (Exception ex)
-                                        {
-                                            Logger.Error("MDA -> LoginRequest - Automatic Log Out SMS NOT sent to [" + memberEntity.ContactNumber + "], " +
-                                                                   "Exception: [" + ex.Message + "]");
-                                        }
-                                    }*/
                                 }
                                 catch (Exception ex)
                                 {
@@ -1053,6 +1033,7 @@ namespace Nooch.DataAccess
 
                             if (!String.IsNullOrEmpty(devicetoken))
                                 memberEntity.DeviceToken = devicetoken;
+
                             if (!String.IsNullOrEmpty(deviceOS))
                                 memberEntity.DeviceType = deviceOS;
 
