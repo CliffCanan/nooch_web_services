@@ -454,7 +454,7 @@ namespace Nooch.API.Controllers
                         DateCreated = memberObj.DateCreated.Value,
                         status = memberObj.Status,
                         email = CommonHelper.GetDecryptedData(memberObj.UserName),
-                        contactNumber = String.IsNullOrEmpty(memberObj.ContactNumber) && memberObj.ContactNumber.Length > 2
+                        contactNumber = !String.IsNullOrEmpty(memberObj.ContactNumber) && memberObj.ContactNumber.Length > 2
                                             ? CommonHelper.FormatPhoneNumber(memberObj.ContactNumber) : "",
                         firstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName)),
                         lastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.LastName)),
