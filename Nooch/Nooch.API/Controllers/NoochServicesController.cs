@@ -232,6 +232,11 @@ namespace Nooch.API.Controllers
         }
 
 
+        /// <summary>
+        /// CC (9/6/16): NOT CURRENTLY USED ANYWHERE.
+        /// </summary>
+        /// <param name="phoneEmailListDto"></param>
+        /// <returns></returns>
         [HttpPost]
         [ActionName("GetMemberIds")]
         public PhoneEmailListDto GetMemberIds(PhoneEmailListDto phoneEmailListDto)
@@ -436,8 +441,6 @@ namespace Nooch.API.Controllers
             {
                 try
                 {
-                    var res = new userDetailsForMobileApp();
-
                     // Get Member's Details
                     var memberObj = CommonHelper.GetMemberDetails(memberId);
 
@@ -445,31 +448,38 @@ namespace Nooch.API.Controllers
                     var synUserDetails = CommonHelper.GetSynapseCreateaUserDetails(memberId);
                     var synBankDetails = CommonHelper.GetSynapseBankDetails(memberId);
 
-                    res.memberId = memberObj.MemberId.ToString();
-                    res.DateCreated = memberObj.DateCreated.Value;
-                    res.status = memberObj.Status;
-                    res.email = CommonHelper.GetDecryptedData(memberObj.UserName);
-                    res.firstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName));
-                    res.lastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.LastName));
-                    res.userPicture = memberObj.Photo ?? Path.GetFileName("gv_no_photo.jpg");
-                    res.pin = memberObj.PinNumber;
+                    var res = new userDetailsForMobileApp
+                    {
+                        memberId = memberObj.MemberId.ToString(),
+                        DateCreated = memberObj.DateCreated.Value,
+                        status = memberObj.Status,
+                        email = CommonHelper.GetDecryptedData(memberObj.UserName),
+                        contactNumber = !String.IsNullOrEmpty(memberObj.ContactNumber) && memberObj.ContactNumber.Length > 2
+                                            ? CommonHelper.FormatPhoneNumber(memberObj.ContactNumber) : "",
+                        firstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName)),
+                        lastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.LastName)),
+                        userPicture = memberObj.Photo ?? Path.GetFileName("gv_no_photo.jpg"),
+                        pin = memberObj.PinNumber,
+                        rememberMe = memberObj.RememberMeEnabled ?? false,
 
-                    res.hasSynapseUserAccount = (synUserDetails != null && synUserDetails.access_token != null);
-                    res.hasSynapseBank = synBankDetails != null;
-                    res.isBankVerified = synBankDetails != null && synBankDetails.Status == "Verified";
-                    res.bankStatus = synBankDetails != null ? synBankDetails.Status : "Not Attached";
-                    res.synUserPermission = synUserDetails != null ? synUserDetails.permission : "";
-                    res.synBankAllowed = synBankDetails != null ? synBankDetails.allowed : "";
+                        fbUserId = memberObj.FacebookUserId != "not connected" ? memberObj.FacebookUserId : null,
 
-                    res.isProfileComplete = !string.IsNullOrEmpty(memberObj.Address) &&
-                                            !string.IsNullOrEmpty(memberObj.City) &&
-                                            !string.IsNullOrEmpty(memberObj.Zipcode) &&
-                                            !string.IsNullOrEmpty(memberObj.ContactNumber) &&
-                                            !string.IsNullOrEmpty(memberObj.SSN) &&
-                                            memberObj.DateOfBirth != null;
-                    res.isRequiredImmediately = memberObj.IsRequiredImmediatley ?? false;
-                    res.isVerifiedPhone = memberObj.IsVerifiedPhone == true ? true : false;
+                        hasSynapseUserAccount = synUserDetails != null && synUserDetails.access_token != null,
+                        hasSynapseBank = synBankDetails != null,
+                        isBankVerified = synBankDetails != null && synBankDetails.Status == "Verified",
+                        bankStatus = synBankDetails != null ? synBankDetails.Status : "Not Attached",
+                        synUserPermission = synUserDetails != null ? synUserDetails.permission : "",
+                        synBankAllowed = synBankDetails != null ? synBankDetails.allowed : "",
 
+                        isProfileComplete = !string.IsNullOrEmpty(memberObj.Address) &&
+                                                !string.IsNullOrEmpty(memberObj.City) &&
+                                                !string.IsNullOrEmpty(memberObj.Zipcode) &&
+                                                !string.IsNullOrEmpty(memberObj.ContactNumber) &&
+                                                !string.IsNullOrEmpty(memberObj.SSN) &&
+                                                memberObj.DateOfBirth != null,
+                        isRequiredImmediately = memberObj.IsRequiredImmediatley ?? false,
+                        isVerifiedPhone = memberObj.IsVerifiedPhone == true ? true : false,
+                    };
                     return res;
                 }
                 catch (Exception ex)
@@ -520,34 +530,36 @@ namespace Nooch.API.Controllers
 
         [HttpGet]
         [ActionName("DeleteAttachedBankNode")]
-        public string DeleteAttachedBankNode(string memberid) {
-             
-                try
-                {
-                    Logger.Error("Service Cntlr -> DeleteAttachedBankNode for - MemberID: [" + memberid + "]");
-                    Guid MemId = Utility.ConvertToGuid(memberid);
-     
-                    var synBankDetails = _dbContext.SynapseBanksOfMembers.Where(b => b.MemberId == MemId && b.IsDefault == true).FirstOrDefault();
-                    if (synBankDetails != null)
-                    {
-                        synBankDetails.is_active = false;
-                        synBankDetails.IsDefault = false;
-                        _dbContext.SaveChanges();
-                        return "Deleted";
-                    }
-                    else
-                    {
-                        return "Bank not found";
-                    }
+        public string DeleteAttachedBankNode(string memberid)
+        {
 
-                
+            try
+            {
+                Logger.Error("Service Cntlr -> DeleteAttachedBankNode for - MemberID: [" + memberid + "]");
+                Guid MemId = Utility.ConvertToGuid(memberid);
+
+                var synBankDetails = _dbContext.SynapseBanksOfMembers.Where(b => b.MemberId == MemId && b.IsDefault == true).FirstOrDefault();
+                if (synBankDetails != null)
+                {
+                    synBankDetails.is_active = false;
+                    synBankDetails.IsDefault = false;
+                    _dbContext.SaveChanges();
+                    return "Deleted";
                 }
-                catch (Exception ex) {
-                    Logger.Error("Service Cntlr -> DeleteAttachedBankNode FAILED - MemberID: [" + memberid + "], Exception: [" + ex.InnerException + "]");
-                    throw new Exception("Server Error");
+                else
+                {
+                    return "Bank not found";
                 }
-             
-            
+
+
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Cntlr -> DeleteAttachedBankNode FAILED - MemberID: [" + memberid + "], Exception: [" + ex.InnerException + "]");
+                throw new Exception("Server Error");
+            }
+
+
         }
 
         [HttpGet]
@@ -622,12 +634,51 @@ namespace Nooch.API.Controllers
             {
                 var mda = new MembersDataAccess();
                 List<Member> members = mda.getInvitedMemberList(memberId);
-                return (from fMember in members let config = new MapperConfiguration(cfg => { cfg.CreateMap<Member, MemberForInvitedMembersList>().BeforeMap((src, dest) => src.FirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(src.FirstName))).BeforeMap((src, dest) => src.LastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(src.LastName))).BeforeMap((src, dest) => src.UserName = CommonHelper.GetDecryptedData(src.UserName)); }) let mapper = config.CreateMapper() select mapper.Map<Member, MemberForInvitedMembersList>(fMember)).ToList();
+
+                List<MemberForInvitedMembersList> invitedUsersList = new List<MemberForInvitedMembersList>();
+
+                if (members != null && members.Count > 0)
+                {
+                    foreach (var user in members)
+                    {
+                        if (user.MemberId.ToString() != memberId)
+                        {
+                            MemberForInvitedMembersList m = new MemberForInvitedMembersList
+                            {
+                                FirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(user.FirstName)),
+                                LastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(user.LastName)),
+                                UserName = CommonHelper.GetDecryptedData(user.UserName),
+                                MemberId = user.MemberId.ToString(),
+                                //NoochId = user.Nooch_ID, // Not needed by the mobile app
+                                DateCreated = user.DateCreated,
+                                Status = user.Status,
+                                Photo = user.Photo,
+                            };
+
+                            invitedUsersList.Add(m);
+                        }
+                    }
+                }
+
+                return invitedUsersList;
+
+                // CC (9/2/16): Commenting out this way of doing it which was including the user who made the request in the list to send back to the app.
+                //return (from fMember in members
+                //        let config = new MapperConfiguration(cfg =>
+                //            {
+                //                cfg.CreateMap<Member, MemberForInvitedMembersList>()
+                //                    .BeforeMap((src, dest) =>
+                //                        src.FirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(src.FirstName)))
+                //                    .BeforeMap((src, dest) =>
+                //                        src.LastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(src.LastName)))
+                //                    .BeforeMap((src, dest) =>
+                //                        src.UserName = CommonHelper.GetDecryptedData(src.UserName));
+                //            })
+                //        let mapper = config.CreateMapper()
+                //        select mapper.Map<Member, MemberForInvitedMembersList>(fMember)).ToList();
             }
             else
-            {
                 throw new Exception("Invalid OAuth 2 Access");
-            }
         }
 
 
@@ -1402,20 +1453,19 @@ namespace Nooch.API.Controllers
 
                     var myDetails = CommonHelper.GetMemberDetails(memberId);
                     Guid MemId = Utility.ConvertToGuid(memberId);
-                    var authToken =
-                     _dbContext.AuthenticationTokens.FirstOrDefault(
-                          m => m.MemberId == MemId && m.IsActivated == true);
+                    var authToken = _dbContext.AuthenticationTokens.FirstOrDefault(m => m.MemberId == MemId &&
+                                                                                        m.IsActivated == true);
+
                     var settings = new MySettingsInput
                     {
                         UserName = !String.IsNullOrEmpty(myDetails.UserName) ? CommonHelper.GetDecryptedData(myDetails.UserName) : "",
                         FirstName = !String.IsNullOrEmpty(myDetails.FirstName) ? CommonHelper.GetDecryptedData(myDetails.FirstName) : "",
                         LastName = !String.IsNullOrEmpty(myDetails.LastName) ? CommonHelper.GetDecryptedData(myDetails.LastName) : "",
                         DateOfBirth = myDetails.DateOfBirth != null ? Convert.ToDateTime(myDetails.DateOfBirth).ToString("MM/dd/yyyy") : "",
-
                         IsVerifiedPhone = myDetails.IsVerifiedPhone ?? false,
-                        IsVerifiedEmail = authToken==null?false:true,
+                        IsVerifiedEmail = authToken != null || myDetails.Status == "Active" || myDetails.Status == "NonRegistered" ? true : false,
                         IsSsnAdded = !String.IsNullOrEmpty(myDetails.SSN) && CommonHelper.GetDecryptedData(myDetails.SSN).Length > 8,
-                        //Password = myDetails.Password,
+
                         ContactNumber = !String.IsNullOrEmpty(myDetails.ContactNumber) ? CommonHelper.FormatPhoneNumber(myDetails.ContactNumber) : myDetails.ContactNumber,
                         SecondaryMail = !String.IsNullOrEmpty(myDetails.SecondaryEmail) ? CommonHelper.GetDecryptedData(myDetails.SecondaryEmail) : "",
                         RecoveryMail = !String.IsNullOrEmpty(myDetails.RecoveryEmail) ? CommonHelper.GetDecryptedData(myDetails.RecoveryEmail) : "",
@@ -1428,9 +1478,8 @@ namespace Nooch.API.Controllers
                         Zipcode = !String.IsNullOrEmpty(myDetails.Zipcode) ? CommonHelper.GetDecryptedData(myDetails.Zipcode) : "",
                         Country = !String.IsNullOrEmpty(myDetails.Country) ? CommonHelper.GetDecryptedData(myDetails.Country) : "",
 
-                        Photo = (myDetails.Photo == null) ? Utility.GetValueFromConfig("PhotoUrl") : myDetails.Photo, //CLIFF: this is already being sent in the GetMemberDetails service
-                        //FacebookAcctLogin = myDetails.FacebookAccountLogin, //CLIFF: this is already being sent in the GetMemberDetails service
-                        //IsBankVerified = bankVerified
+                        Photo = (myDetails.Photo == null) ? Utility.GetValueFromConfig("PhotoUrl") + "gv_no_photo.png" : myDetails.Photo,
+                        //FacebookAcctLogin = myDetails.FacebookAccountLogin, // CC: this is already being sent in the GetMemberDetails service
                     };
 
                     return settings;
@@ -1451,11 +1500,12 @@ namespace Nooch.API.Controllers
         [ActionName("SaveMemberSSN")]
         public StringResult SaveMemberSSN(SaveMemberSSN_Input input)
         {
+            Logger.Info("Service Cntlr - SaveMemberSSN Fired - MemberID: [" + input.memberId + "]");
+
             if (CommonHelper.IsValidRequest(input.accessToken, input.memberId))
             {
                 try
                 {
-                    Logger.Info("Service Cntlr - SaveMemberSSN - MemberID: [" + input.memberId + "]");
                     MembersDataAccess mda = new MembersDataAccess();
                     return new StringResult()
                     {
@@ -1470,12 +1520,18 @@ namespace Nooch.API.Controllers
             }
             else
             {
-                Logger.Error("Service Cntlr - Operation FAILED: SaveMemberSSN - MemberID: [" + input.memberId + "]. INVALID OAUTH 2 ACCESS.");
+                Logger.Error("Service Cntlr -> SaveMemberSSN FAILED - MemberID: [" + input.memberId + "]. INVALID OAUTH 2 ACCESS.");
                 throw new Exception("Invalid OAuth 2 Access");
             }
         }
 
 
+        /// <summary>
+        /// CC (9/1/16): NO REASON THIS SHOULD BE SEPARATE FROM THE REGULAR METHOD FOR SAVING A USER'S PROFILE.
+        ///              LET'S DELETE THIS METHOD ENTIRELY ONCE UPDATED AND TESTED SUCCESSFULLY.
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
         [HttpPost]
         [ActionName("SaveDOBForMember")]
         public StringResult SaveDOBForMember(SaveMemberDOB_Input input)
@@ -1484,8 +1540,6 @@ namespace Nooch.API.Controllers
             {
                 try
                 {
-                    Logger.Info("Service Cntlr - SaveDOBForMember - MemberID: [" + input.memberId + "]");
-
                     MembersDataAccess mda = new MembersDataAccess();
                     return new StringResult()
                     {
@@ -1522,7 +1576,6 @@ namespace Nooch.API.Controllers
                 {
                     Logger.Info("Service Cntlr -> MySettings Fired - MemberID: [" + mySettings.MemberId + "]");
 
-                    var mda = new MembersDataAccess();
                     string fileContent = null;
                     int contentLength = 0;
                     string fileExtension = null;
@@ -1530,19 +1583,20 @@ namespace Nooch.API.Controllers
                     if (!String.IsNullOrEmpty(mySettings.Photo))
                         mySettings.Picture = System.Convert.FromBase64String(mySettings.Photo);
 
+                    var mda = new MembersDataAccess();
                     return new StringResult
                     {
                         Result = mda.MySettings(mySettings.MemberId, mySettings.FirstName.ToLower(), mySettings.LastName.ToLower(),
                             mySettings.Password, mySettings.SecondaryMail, mySettings.RecoveryMail, mySettings.FacebookAcctLogin,
                             fileContent, contentLength, fileExtension, mySettings.ContactNumber,
                             mySettings.Address, mySettings.City, mySettings.State, mySettings.Zipcode, mySettings.Country,
-                            mySettings.Picture, mySettings.ShowInSearch, mySettings.Address2)
+                            mySettings.Picture, mySettings.ShowInSearch, mySettings.Address2, mySettings.DateOfBirth)
                     };
                 }
                 catch (Exception ex)
                 {
                     Logger.Error("Service Cntlr -> MySettings FAILED - MemberID: [" + mySettings.MemberId + "], Exception: [" + ex + "]");
-                    return new StringResult();
+                    return new StringResult { Result = ex.Message };
                 }
             }
             else throw new Exception("Invalid OAuth 2 Access");
@@ -2317,8 +2371,8 @@ namespace Nooch.API.Controllers
                     IsSSNAdded = memberEntity.SSN != null,
                     ssnLast4 = !String.IsNullOrEmpty(memberEntity.SSN) ? CommonHelper.GetDecryptedData(memberEntity.SSN) : "",
                     PhotoUrl = memberEntity.Photo ?? Path.GetFileName("gv_no_photo.jpg"),
-                    FacebookAccountLogin = memberEntity.FacebookAccountLogin != null ?
-                                           CommonHelper.GetDecryptedData(memberEntity.FacebookAccountLogin) :
+                    FacebookAccountLogin = memberEntity.FacebookUserId != "not connected" ?
+                                           memberEntity.FacebookUserId :
                                            "",
                     IsSynapseBankAdded = synapseBank != null,
                     SynapseBankStatus = accountstatus,
@@ -2845,6 +2899,13 @@ namespace Nooch.API.Controllers
         }
 
 
+        /// <summary>
+        /// For Updating a user's Privacy/Security settings for the mobile app (Required
+        /// Immediately, Show In Search, Allow Sharing settings).
+        /// </summary>
+        /// <param name="privacySettings"></param>
+        /// <param name="accessToken"></param>
+        /// <returns></returns>
         [HttpPost]
         [ActionName("MemberPrivacySettings")]
         public StringResult MemberPrivacySettings(PrivacySettings privacySettings, string accessToken)
@@ -2856,8 +2917,8 @@ namespace Nooch.API.Controllers
                 try
                 {
                     Logger.Info("Service Cntlr -> MemberPrivacySettings Fired - MemberID: [" + privacySettings.MemberId + "]");
-                    var mda = new MembersDataAccess();
 
+                    var mda = new MembersDataAccess();
                     res.Result = mda.MemberPrivacySettings(privacySettings.MemberId,
                                  (bool)privacySettings.ShowInSearch,
                                  (bool)privacySettings.AllowSharing,
@@ -2892,17 +2953,15 @@ namespace Nooch.API.Controllers
 
                     if (memberPrivacySettings != null)
                     {
-                        var r = _dbContext.MemberPrivacySettings.FirstOrDefault(m => m.MemberId == memberPrivacySettings.MemberId);
-                        privacySettings.MemberId = r.Member.MemberId.ToString();
-                        privacySettings.ShowInSearch = r.ShowInSearch ?? false;
-                        privacySettings.AllowSharing = r.AllowSharing ?? false;
-                        privacySettings.RequireImmediately = r.RequireImmediately ?? false;
+                        privacySettings.MemberId = memberPrivacySettings.Member.MemberId.ToString();
+                        privacySettings.ShowInSearch = memberPrivacySettings.ShowInSearch ?? false;
+                        privacySettings.AllowSharing = memberPrivacySettings.AllowSharing ?? false;
+                        privacySettings.RequireImmediately = memberPrivacySettings.RequireImmediately ?? false;
                     }
-
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Cntlr -> GetMemberPrivacySettings FAILED - MemberId: [" + memberId + "], Exception: [" + ex + "]");
+                    Logger.Error("Service Cntlr -> GetMemberPrivacySettings FAILED - MemberID: [" + memberId + "], Exception: [" + ex + "]");
                 }
 
                 return privacySettings;
@@ -4434,8 +4493,9 @@ namespace Nooch.API.Controllers
 
             StringResult res = new StringResult();
 
-            if (transInput.isRentScene == true |
+            if (transInput.isRentScene == true ||
                 transInput.isRentAutoPayment == true ||
+                transInput.doNotSendEmails == false || // Proxy to tell if it's an admin sending a test transaction (only time doNotSendEmails would be 'false')
                 CommonHelper.IsValidRequest(accessToken, transInput.MemberId))
             {
                 string trnsactionId = string.Empty;
@@ -4831,17 +4891,16 @@ namespace Nooch.API.Controllers
 
         [HttpGet]
         [ActionName("SaveMembersFBId")]
-        public StringResult SaveMembersFBId(string MemberId, string MemberfaceBookId, string IsConnect)
+        public StringResult SaveMembersFBId(string memberId, string fbid, bool IsConnect)
         {
             try
             {
                 //Logger.LogDebugMessage("Service Cntlr -> SaveMembersFBId - MemberID: [" + MemberId + "]");
-
-                return new StringResult { Result = CommonHelper.SaveMemberFBId(MemberId, MemberfaceBookId, IsConnect) };
+                return new StringResult { Result = CommonHelper.SaveMemberFBId(memberId, fbid, IsConnect) };
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Cntlr -> SaveMembersFBId Error - MemberID: [" + MemberId + "], Exception: [" + ex + "]");
+                Logger.Error("Service Cntlr -> SaveMembersFBId Error - MemberID: [" + memberId + "], Exception: [" + ex + "]");
                 return new StringResult { Result = ex.Message };
             }
         }
@@ -4862,7 +4921,6 @@ namespace Nooch.API.Controllers
                 catch (Exception ex)
                 {
                     Logger.Error("Service Cntlr - ValidatePinNumber FAILED MemberID: [" + memberId + "], Exception: [" + ex + "]");
-
                 }
 
                 return new StringResult();
@@ -4945,7 +5003,7 @@ namespace Nooch.API.Controllers
 
             try
             {
-                Logger.Info("Service Cntlr -> MemberRegistration Initiated - NEW USER'S INFO: Name: [" + MemberDetails.UserName +
+                Logger.Info("Service Cntlr -> MemberRegistration Fired - NEW USER'S INFO: Name: [" + MemberDetails.UserName +
                             "], Email: [" + MemberDetails.UserName + "], Type: [" + MemberDetails.type +
                             "], Invite Code: [" + MemberDetails.inviteCode + "], SendEmail: [" + MemberDetails.sendEmail + "]");
 
@@ -4954,13 +5012,13 @@ namespace Nooch.API.Controllers
 
                 var mda = new MembersDataAccess();
 
-                string type = String.IsNullOrEmpty(MemberDetails.type) ? "Personal" : MemberDetails.type;
+                var type = String.IsNullOrEmpty(MemberDetails.type) ? "Personal" : MemberDetails.type;
 
                 res.Result = mda.MemberRegistration(MemberDetails.Picture, MemberDetails.UserName, MemberDetails.FirstName.ToLower(),
-                                               MemberDetails.LastName.ToLower(), MemberDetails.PinNumber, MemberDetails.Password,
-                                               MemberDetails.SecondaryMail, MemberDetails.RecoveryMail, MemberDetails.UdId,
-                                               MemberDetails.friendRequestId, MemberDetails.invitedFriendFacebookId,
-                                               MemberDetails.facebookAccountLogin, MemberDetails.inviteCode, MemberDetails.sendEmail, type, null, null, null, null, null);
+                                                    MemberDetails.LastName.ToLower(), MemberDetails.PinNumber, MemberDetails.Password,
+                                                    MemberDetails.SecondaryMail, MemberDetails.RecoveryMail, MemberDetails.UdId,
+                                                    MemberDetails.friendRequestId, MemberDetails.invitedFriendFacebookId,
+                                                    MemberDetails.facebookAccountLogin, MemberDetails.inviteCode, MemberDetails.sendEmail, type, null, null, null, null, null);
             }
             catch (Exception ex)
             {
@@ -5121,7 +5179,7 @@ namespace Nooch.API.Controllers
                 else
                     res.Result = cookie;
             }
-           catch (Exception ex)
+            catch (Exception ex)
             {
                 Logger.Error("Service Cntlr -> LoginRequest FAILED - userName: [" + userName + "], Exception: [" + ex + "]");
                 res.Result = ex.Message;
@@ -5366,7 +5424,7 @@ namespace Nooch.API.Controllers
 
             try
             {
-                Logger.Info("Service Cntlr -> ResendVerificationSMS - UserName: [" + UserName + "]");
+                Logger.Info("Service Cntlr -> ResendVerificationSMS Fired - UserName: [" + UserName + "]");
 
                 var mda = new MembersDataAccess();
                 res.Result = mda.ResendVerificationSMS(UserName);
@@ -5449,10 +5507,10 @@ namespace Nooch.API.Controllers
                         foreach (var trans in recentTrans)
                         {
                             string photo = trans.Member1.Photo != null
-                                           ? string.Concat(Utility.GetValueFromConfig("PhotoUrl"), "/", trans.Member1.Photo.Substring(trans.Member1.Photo.IndexOf("Photos") + 14))
+                                           ? string.Concat(Utility.GetValueFromConfig("PhotoUrl"), trans.Member1.Photo.Substring(trans.Member1.Photo.IndexOf("Photos") + 14))
                                            : "https://www.noochme.com/noochweb/Assets/Images/userpic-default.png";
                             string photoRec = trans.Member.Photo != null
-                                              ? string.Concat(Utility.GetValueFromConfig("PhotoUrl"), "/", trans.Member.Photo.Substring(trans.Member.Photo.IndexOf("Photos") + 14))
+                                              ? string.Concat(Utility.GetValueFromConfig("PhotoUrl"), trans.Member.Photo.Substring(trans.Member.Photo.IndexOf("Photos") + 14))
                                               : "https://www.noochme.com/noochweb/Assets/Images/userpic-default.png";
 
                             if (trans.Member.MemberId.ToString().Equals(memberId.ToLower())) // Sent Collection

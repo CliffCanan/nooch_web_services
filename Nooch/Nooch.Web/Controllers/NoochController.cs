@@ -2801,51 +2801,59 @@ namespace Nooch.Web.Controllers
         /// When the /Activation page first loads (page is for verifying an email address).
         /// </summary>
         /// <returns></returns>
-        public ActionResult Activation()
+        public ActionResult Activation(string tokenId, string type)
         {
-            Logger.Info("Email Activation Page -> Loaded");
+            Logger.Info("Email Activation Page -> Loaded - TokenID: [" + tokenId + "]");
 
             ResultActivation resultActivation = new ResultActivation();
+            resultActivation.error = false;
             resultActivation.success = false;
+            resultActivation.openAppText = false;
+            resultActivation.toLandlordApp = false;
 
-            string strUserAgent = Request.UserAgent.ToLower();
-
-            if (strUserAgent != null &&
-                (Request.Browser.IsMobileDevice ||
-                 strUserAgent.Contains("iphone") ||
-                 strUserAgent.Contains("mobile") ||
-                 strUserAgent.Contains("iOS")))
+            if (!String.IsNullOrEmpty(tokenId))
             {
-                resultActivation.openAppText = true;
-            }
+                try
+                {
+                    var strUserAgent = Request.UserAgent.ToLower();
 
-            string tokenId = Request.QueryString["tokenId"].Trim();
-            string type = null;
+                    if (strUserAgent != null &&
+                        (Request.Browser.IsMobileDevice || strUserAgent.Contains("iphone") ||
+                         strUserAgent.Contains("mobile") || strUserAgent.Contains("iOS")))
+                    {
+                        resultActivation.openAppText = true;
+                    }
 
-            if (Request.QueryString.AllKeys.Any(k => k == "type"))
-            {
-                type = Request.QueryString["type"].Trim();
+                    if (!String.IsNullOrEmpty(type) && type == "ll")
+                        resultActivation.toLandlordApp = true;
 
-                if (type == "ll")// For Landlords
-                    resultActivation.toLandlordApp = true;
-            }
+                    // First check if the user's Access Token is ALREADY activated
+                    var isAlrdyActive = CommonHelper.IsMemberActivated(tokenId);
 
-            string serviceUrl = Utility.GetValueFromConfig("ServiceUrl") + "IsMemberActivated?tokenID=" + tokenId.Trim();
+                    if (isAlrdyActive == false)
+                    {
+                        // Now activate this user's Access Token
+                        var serviceUrl = Utility.GetValueFromConfig("ServiceUrl") + "MemberActivation?tokenId=" + tokenId.Trim();
+                        ResponseConverter<BoolResult>.ConvertToCustomEntity(serviceUrl);
 
-            var result = ResponseConverter<BoolResult>.ConvertToCustomEntity(serviceUrl);
-
-            if (!result.Result)
-            {
-                serviceUrl = Utility.GetValueFromConfig("ServiceUrl") + "MemberActivation?tokenId=" + tokenId.Trim();
-                ResponseConverter<BoolResult>.ConvertToCustomEntity(serviceUrl);
-
-                resultActivation.success = true;
-                resultActivation.error = false;
+                        resultActivation.success = true;
+                    }
+                    else
+                    {
+                        Logger.Info("Email Activation Page -> Member Already Active");
+                        resultActivation.error = true;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Email Activation Page -> FAILED - Exception: [" + ex + "]");
+                    resultActivation.error = true;
+                }
             }
             else
                 resultActivation.error = true;
 
-            ViewData["OnLoaddata"] = resultActivation;
+            ViewData["OnLoadData"] = resultActivation;
 
             return View();
         }

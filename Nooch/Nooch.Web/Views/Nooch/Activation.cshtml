@@ -1,97 +1,95 @@
 ﻿@using Nooch.Common.Entities;
 @{
     Layout = null;
-    ResultActivation resultActivation = (ResultActivation)ViewData["OnLoaddata"];
+    ResultActivation pData = (ResultActivation)ViewData["OnLoadData"];
 }
 
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
-<head runat="server">
-    <title>Member Activation</title>
+<head>
+    <title>Nooch | Email Verification</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.6.0/css/font-awesome.min.css" />
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.6.0/css/font-awesome.min.css" />
     <link rel="stylesheet" href="@Url.Content("~/Assets/Css/animate.css")" />
-    <link rel="stylesheet" href="../Assets/Css/tweaks.css" />
+    <link rel="stylesheet" href="@Url.Content("~/Assets/Css/tweaks.css")" />
 
-    <link rel="icon" href="../Assets/favicon.ico" />
+    <link rel="icon" href="@Url.Content("~/Assets/favicon.ico")" />
     <meta name="apple-itunes-app" content="app-id=917955306" />
 </head>
 
 <body style="background-color: rgba(230, 231, 232, 0.8);" id="body-depositNew">
 
     <nav class="navbar navbar-default navbar-fixed-top" role="navigation" id="msb">
-        <div style="background: none;">
-            <a class="landingHeaderLogo center-block" href="https://www.nooch.com">
-                <img src="../assets/Images/nooch-logo2.svg" class="center-block" alt="Nooch">
-            </a>
+        <div class="clearfix">
+            <div class="m-l-15">
+                <a class="landingHeaderLogo center-block" href="https://www.nooch.com/">
+                    <img src="../Assets/Images/nooch-logo2.svg" class="center-block" alt="Nooch Logo" />
+                </a>
+            </div>
         </div>
     </nav>
 
-    <form id="form1">
-        <div>
-            <input type="hidden" id="" value="" />
+    <div id="iconCircleFA" class="floating light-green-text">
+        <span class="fa-stack fa-lg">
+            <i class="fa fa-circle fa-stack-1x"></i>
+            <i class="fa fa-exclamation-circle fa-stack-1x fa-inverse"></i>
+        </span>
+    </div>
 
-            <div id="r">
-                <div id="iconCircleFA" class="floating light-green-text">
-                    <span class="fa-stack fa-lg">
-                        <i class="fa fa-circle fa-stack-1x"></i>
-                        <i class="fa fa-exclamation-circle fa-stack-1x fa-inverse"></i>
-                    </span>
-                </div>
-            </div>
-            @if (resultActivation.success == true)
-            {
-                <div id="success" class="text-center" visible="false">
-                    <div class="emailConfHeader">
-                        <div style="font-size: 110%">Success!</div>
-                        <div id="fromText">Your email address has been confirmed.</div>
-                    </div>
-                </div>
-            }
-            @if (resultActivation.error == true)
-            {
-                <div id="error">
-                    <div class="emailConfHeader">
-                        <div id="Div3">Looks like your email address has already been confirmed.</div>
-                    </div>
-                </div>
-            }
-            @if (resultActivation.toLandlordApp == true)
-            {
-                <div id="toLandlordApp" class="row m-t-15">
-                    <div class="col-xs-8 col-xs-offset-2 col-sm-4 col-sm-offset-4 col-md-2 col-md-offset-5">
-                        <a class="btn btn-lg btn-default p-10 center-block btn-shadow" onclick="toLandlordLogin()">Sign In<i class="fa fa-sign-in m-l-15"></i></a>
-                    </div>
-                </div>
-            }
-            @if (resultActivation.openAppText == true)
-            {
-                <div id="openAppText">
-                    <a href="nooch://" class="btn btn-lg btn-default center-block">Return to the Nooch App</a>
-                </div>
-            }
-            <div class="footer col-xs-12 col-sm-12">
-                <div>
-                    <ul class="list-inline">
-                        <li><a href="https://www.nooch.com/overview">About</a></li>
-                        <li><a href="https://www.nooch.com/safe">Security</a></li>
-                        <li><a href="http://support.nooch.com/">Support Center</a></li>
-                        <li><a href="https://www.nooch.com/privacy">Privacy Policy</a></li>
-                        <li><a href="https://www.nooch.com/blog/">Blog</a></li>
-                    </ul>
-                </div>
+    @if (pData.success == true)
+    {
+        <div id="success" class="text-center" visible="false">
+            <div class="emailConfHeader">
+                <div style="font-size: 110%">Success!</div>
+                <div id="fromText">Your email address has been confirmed.</div>
             </div>
         </div>
-    </form>
+    }
 
-    <!-- jQuery -->
-    <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
-    <script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+    @if (pData.error == true)
+    {
+        <div id="error">
+            <div class="emailConfHeader">
+                <div>Looks like your email address has already been confirmed.</div>
+            </div>
+        </div>
+    }
 
-    <!-- Bootstrap Plugins -->
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    @if (pData.toLandlordApp == true)
+    {
+        <div id="toLandlordApp" class="row m-t-15">
+            <div class="col-xs-8 col-xs-offset-2 col-sm-4 col-sm-offset-4 col-md-2 col-md-offset-5">
+                <a class="btn btn-lg btn-default p-10 center-block btn-shadow" onclick="toLandlordLogin()">Sign In<i class="fa fa-sign-in m-l-15"></i></a>
+            </div>
+        </div>
+    }
+    @if (pData.openAppText == true)
+    {
+        <div id="openAppText">
+            <a href="nooch://" class="btn btn-lg btn-default center-block">Return to the Nooch App</a>
+        </div>
+    }
+
+    <div class="footer footer-landing" style="position:fixed; bottom:1%;">
+        <div>
+            <ul class="list-inline">
+                <li><a href="https://www.nooch.com/overview">About</a></li>
+                <li><a href="https://www.nooch.com/safe">Security</a></li>
+                <li><a href="https://www.nooch.com/privacy">Privacy Policy</a></li>
+                <li><a href="https://www.nooch.com/blog/">Blog</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <input type="hidden" id="error" value="@pData.error.ToString()" />
+    <input type="hidden" id="success" value="@pData.success.ToString()" />
+
+
+    <script src="@Url.Content("//code.jquery.com/jquery-1.12.4.min.js")"></script>
+    <script src="@Url.Content("//code.jquery.com/ui/1.11.4/jquery-ui.min.js")"></script>
+    <script src="@Url.Content("https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js")"></script>
 
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -101,18 +99,16 @@
         <![endif]-->
 
     <script type="text/javascript">
-        function getParameterByName(name)
-        {
+        function getParameterByName(name) {
             name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
             var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
                 results = regex.exec(location.search);
             return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
         }
 
-        var llemail = getParameterByName('llem') ? "?from=activation&em=" + getParameterByName('llem') : "";
+        function toLandlordLogin() {
+            var llemail = getParameterByName('llem') ? "?from=activation&em=" + getParameterByName('llem') : "";
 
-        function toLandlordLogin()
-        {
             var url = encodeURI("http://www.noochme.com/landlords2/login.html" + llemail);
             window.location = url;
         }

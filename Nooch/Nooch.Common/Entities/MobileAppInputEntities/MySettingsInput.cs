@@ -11,19 +11,22 @@ namespace Nooch.Common.Entities.MobileAppInputEntities
         public bool hasSynapseUserAccount { get; set; }
         public bool hasSynapseBank { get; set; }
         public bool isBankVerified { get; set; }
-        public bool isRequiredImmediately { get; set; }
         public bool isProfileComplete { get; set; }
         public bool isVerifiedPhone { get; set; }
+        public bool isRequiredImmediately { get; set; }
+        public bool rememberMe { get; set; }
 
         public byte[] Picture { get; set; }
 
         public string memberId { get; set; }
         public string status { get; set; }
         public string email { get; set; }
+        public string contactNumber { get; set; }
         public string firstName { get; set; }
         public string lastName { get; set; }
         public string userPicture { get; set; }
         public string pin { get; set; }
+        public string fbUserId { get; set; }
 
         public string bankStatus { get; set; }
         public string synUserPermission { get; set; }

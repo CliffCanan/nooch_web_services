@@ -216,12 +216,12 @@ namespace Nooch.Common
 
                 try
                 {
-                    var noochMember = _dbContext.Members.FirstOrDefault(m => m.AccessToken == accessToken && m.IsDeleted == false && m.MemberId == memGuid);
+                    var noochMember = _dbContext.Members.FirstOrDefault(m => m.AccessToken == accessToken && m.MemberId == memGuid && m.IsDeleted == false);
                     return noochMember != null ? true : false;
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Common Helper -> IsValidRequest FAILED - MemberID: [" + memberId + "], Exception: [" + ex.Message + "]");
+                    Logger.Error("Common Helper -> IsValidRequest FAILED - MemberID: [" + memberId + "], Exception: [" + ex + "]");
                     return false;
                 }
             }
@@ -458,14 +458,28 @@ namespace Nooch.Common
         }
 
 
+        /// <summary>
+        /// For the 'Activation' landing page used to verify a new user's
+        /// email address and activate the user's OAuth Token.
+        /// </summary>
+        /// <param name="tokenId"></param>
+        /// <returns></returns>
         public static bool IsMemberActivated(string tokenId)
         {
-            var id = Utility.ConvertToGuid(tokenId);
+            try
+            {
+                var id = Utility.ConvertToGuid(tokenId);
 
-            var noochMember = _dbContext.AuthenticationTokens.FirstOrDefault(m => m.TokenId == id &&
-                                                                                  m.IsActivated == true);
-            if (noochMember != null) _dbContext.Entry(noochMember).Reload();
-            return noochMember != null;
+                var noochMember = _dbContext.AuthenticationTokens.FirstOrDefault(m => m.TokenId == id &&
+                                                                                      m.IsActivated == true);
+                if (noochMember != null) return true;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("CommonHelper -> IsMemberActivated FAILED - TokenID: [" + tokenId + "], Exception: [" + ex + "]");
+            }
+
+            return false;
         }
 
 
@@ -476,11 +490,12 @@ namespace Nooch.Common
             return noochMember != null;
         }
 
+
         public static string IsDuplicateMember(string userName)
         {
             try
             {
-                Logger.Info("Common Helper -> IsDuplicateMember Initiated - [UserName to check: " + userName + "]");
+                Logger.Info("Common Helper -> IsDuplicateMember Initiated - UserName to check: [" + userName + "]");
 
                 var userNameLowerCase = GetEncryptedData(userName.ToLower());
 
@@ -664,21 +679,22 @@ namespace Nooch.Common
         {
             Logger.Info("Common Helper -> GetSynapseBankDetails Fired - MemberId: [" + memberId + "]");
 
-            var id = Utility.ConvertToGuid(memberId);
-
-            var bankDetailsFromDB = _dbContext.SynapseBanksOfMembers.FirstOrDefault(m => m.MemberId == id &&
-                                                                                         m.IsDefault == true);
-            if (bankDetailsFromDB != null)
+            try
             {
-                _dbContext.Entry(bankDetailsFromDB).Reload();
+                var Guid = Utility.ConvertToGuid(memberId);
+
+                var bankDetailsFromDB = _dbContext.SynapseBanksOfMembers.FirstOrDefault(m => m.MemberId == Guid &&
+                                                                                             m.IsDefault == true);
+                if (bankDetailsFromDB != null) _dbContext.Entry(bankDetailsFromDB).Reload();
+                return bankDetailsFromDB;
             }
-            else
+            catch (Exception ex)
             {
-                Logger.Error("Common Helper -> GetSynapseBankDetails FAILED - No Synapse Bank " +
-                             "User Record found for MemberId: [" + memberId + "]");
+                Logger.Error("Common Helper -> GetSynapseBankDetails FAILED - " +
+                             "MemberId: [" + memberId + "], Exception: [" + ex + "]");
             }
 
-            return bankDetailsFromDB;
+            return null;
         }
 
 
@@ -690,17 +706,22 @@ namespace Nooch.Common
         public static SynapseCreateUserResult GetSynapseCreateaUserDetails(string memberId)
         {
             //Logger.Info("Common Helper -> GetSynapseCreateaUserDetails Fired - MemberId: [" + memberId + "]");
+            try
+            {
+                var Guid = Utility.ConvertToGuid(memberId);
 
-            var id = Utility.ConvertToGuid(memberId);
+                var synUserDetails = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == Guid &&
+                                                                                        m.IsDeleted == false);
+                if (synUserDetails != null) _dbContext.Entry(synUserDetails).Reload();
+                return synUserDetails;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Common Helper -> GetSynapseCreateaUserDetails FAILED - " +
+                             "MemberId: [" + memberId + "], Exeption: [" + ex + "]");
+            }
 
-            var memberObj = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == id &&
-                                                                                    m.IsDeleted == false);
-            if (memberObj != null) _dbContext.Entry(memberObj).Reload();
-            else
-                Logger.Error("Common Helper -> GetSynapseCreateaUserDetails FAILED - No Synapse Create " +
-                             "User Record found for MemberId: [" + memberId + "]");
-
-            return memberObj;
+            return null;
         }
 
         public static MemberNotification GetMemberNotificationSettingsByUserName(string userName)
@@ -867,7 +888,7 @@ namespace Nooch.Common
             mem.InvalidPinAttemptTime = DateTime.Now;
             _dbContext.SaveChanges();
             _dbContext.Entry(mem).Reload();
-            return memberEntity.InvalidPinAttemptCount == 1
+            return memberEntity.InvalidPinAttemptCount < 3
                 ? "PIN number you have entered is incorrect."
                 : "PIN number you entered again is incorrect. Your account will be suspended for 24 hours if you enter wrong PIN number again.";
         }
@@ -899,116 +920,120 @@ namespace Nooch.Common
         }
 
 
+        /// <summary>
+        /// For Checking a user's PIN.
+        /// </summary>
+        /// <param name="memberId"></param>
+        /// <param name="pinNumber">Must be ENCRYPTED already.</param>
+        /// <returns></returns>
         public static string ValidatePinNumber(string memberId, string pinNumber)
         {
             var id = Utility.ConvertToGuid(memberId);
 
-            var memberEntity = _dbContext.Members.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
-            // _dbContext.Entry(memberEntity).Reload();
+            var memberObj = _dbContext.Members.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
 
-            if (memberEntity != null)
+            if (memberObj != null)
             {
-                int pinRetryCountInDb = 0;
-                pinRetryCountInDb = memberEntity.InvalidPinAttemptCount.Equals(null)
-                    ? 0
-                    : memberEntity.InvalidPinAttemptCount.Value;
+                int pinRetryCountInDb = memberObj.InvalidPinAttemptCount.Equals(null) ? 0 : memberObj.InvalidPinAttemptCount.Value;
                 var currentTimeMinus24Hours = DateTime.Now.AddHours(-24);
 
-                //Check(InvalidPinAttemptTime) > CurrentTime - 24 hrs                  
+                // Check(InvalidPinAttemptTime) > CurrentTime - 24 hrs
                 bool isInvalidPinAttempTimeOver =
-                    (new InvalidAttemptDurationSpecification().IsSatisfiedBy(memberEntity.InvalidPinAttemptTime,
-                        currentTimeMinus24Hours));
+                    (new InvalidAttemptDurationSpecification().IsSatisfiedBy(memberObj.InvalidPinAttemptTime, currentTimeMinus24Hours));
 
                 if (isInvalidPinAttempTimeOver)
                 {
-                    //Reset attempt count
-                    memberEntity.InvalidPinAttemptCount = null;
-                    memberEntity.InvalidPinAttemptTime = null;
-                    //if member has no dispute raised or under review, he can be made active, else he should remain suspended so that he cant do fund transfer or withdraw amount...
+                    // Reset attempt count
+                    memberObj.InvalidPinAttemptCount = null;
+                    memberObj.InvalidPinAttemptTime = null;
+
+                    // If the user has no current transaction disputes (raised or under review), he can be made active, else he should remain suspended to prevent any further transactions.
 
                     var disputeStatus = GetEncryptedData(Constants.DISPUTE_STATUS_REPORTED);
                     var disputeReviewStatus = GetEncryptedData(Constants.DISPUTE_STATUS_REVIEW);
 
-                    if (!memberEntity.Transactions.Any(transaction =>
+                    if (!memberObj.Transactions.Any(transaction =>
                                 (transaction.DisputeStatus == disputeStatus ||
                                  transaction.DisputeStatus == disputeReviewStatus) &&
-                                 memberEntity.MemberId == transaction.RaisedById))
+                                 memberObj.MemberId == transaction.RaisedById))
                     {
-                        memberEntity.Status = Constants.STATUS_ACTIVE;
+                        memberObj.Status = Constants.STATUS_ACTIVE;
                     }
 
-                    memberEntity.DateModified = DateTime.Now;
+                    memberObj.DateModified = DateTime.Now;
                     _dbContext.SaveChanges();
-                    _dbContext.Entry(memberEntity).Reload();
+                    _dbContext.Entry(memberObj).Reload();
 
-                    pinRetryCountInDb = memberEntity.InvalidPinAttemptCount.Equals(null)
+                    pinRetryCountInDb = memberObj.InvalidPinAttemptCount.Equals(null)
                                         ? 0
-                                        : memberEntity.InvalidPinAttemptCount.Value;
+                                        : memberObj.InvalidPinAttemptCount.Value;
 
-                    // incorrect pinnumber after 24 hours
-                    if (!memberEntity.PinNumber.Equals(pinNumber.Replace(" ", "+")))
-                        return IncreaseInvalidPinAttemptCount(memberEntity, pinRetryCountInDb);
+                    // Incorrect pinnumber after 24 hours
+                    if (!memberObj.PinNumber.Equals(pinNumber.Replace(" ", "+")))
+                        return IncreaseInvalidPinAttemptCount(memberObj, pinRetryCountInDb);
                 }
 
-                if (pinRetryCountInDb < 3 && memberEntity.PinNumber.Equals(pinNumber.Replace(" ", "+")))
+                if (pinRetryCountInDb < 4 && memberObj.PinNumber.Equals(pinNumber.Replace(" ", "+")))
                 {
-                    //Reset attempt count                       
-                    memberEntity.InvalidPinAttemptCount = 0;
-                    memberEntity.InvalidPinAttemptTime = null;
+                    // Reset attempt count
+                    memberObj.InvalidPinAttemptCount = 0;
+                    memberObj.InvalidPinAttemptTime = null;
+                    memberObj.DateModified = DateTime.Now;
 
                     _dbContext.SaveChanges();
-                    _dbContext.Entry(memberEntity).Reload();
+                    _dbContext.Entry(memberObj).Reload();
                     return "Success"; // active nooch member  
                 }
 
-                //Username is there in db, whereas pin number entered by user is incorrect.
-                if (memberEntity.InvalidPinAttemptCount == null || memberEntity.InvalidPinAttemptCount == 0)
+                // PIN entered by user is incorrect
+                if (memberObj.InvalidPinAttemptCount == null || memberObj.InvalidPinAttemptCount < 2)
                 {
                     // This is the first invalid try
-                    return IncreaseInvalidPinAttemptCount(memberEntity, pinRetryCountInDb);
+                    return IncreaseInvalidPinAttemptCount(memberObj, pinRetryCountInDb);
                 }
 
+                if (pinRetryCountInDb == 4)
+                    return "Your account has been suspended.";
                 if (pinRetryCountInDb == 3)
-                    return "Your account has been suspended. Please contact admin or send a mail to support@nooch.com if you need to reset your PIN number immediately.";
-                if (pinRetryCountInDb == 2)
                 {
-                    memberEntity.InvalidPinAttemptCount = pinRetryCountInDb + 1;
-                    memberEntity.InvalidPinAttemptTime = DateTime.Now;
-                    memberEntity.Status = Constants.STATUS_SUSPENDED;
+                    memberObj.InvalidPinAttemptCount = pinRetryCountInDb + 1;
+                    memberObj.InvalidPinAttemptTime = DateTime.Now;
+                    memberObj.Status = Constants.STATUS_SUSPENDED;
                     _dbContext.SaveChanges();
-                    _dbContext.Entry(memberEntity).Reload();
+                    _dbContext.Entry(memberObj).Reload();
 
-                    #region SendingEmailToUser
+                    #region Send Suspended User Email
 
                     var tokens = new Dictionary<string, string>
                         {
                             {
-                                Constants.PLACEHOLDER_FIRST_NAME, UppercaseFirst(GetDecryptedData(memberEntity.FirstName))
+                                Constants.PLACEHOLDER_FIRST_NAME, UppercaseFirst(GetDecryptedData(memberObj.FirstName))
                             }
                         };
 
                     try
                     {
                         var fromAddress = Utility.GetValueFromConfig("adminMail");
-                        string emailAddress = GetDecryptedData(memberEntity.UserName);
-                        Logger.Info("Validate PIN Number --> Attempt to send mail for Suspend Member[ memberId:" + memberEntity.MemberId + "].");
-                        Utility.SendEmail("userSuspended", fromAddress, emailAddress,
+                        var toAddress = GetDecryptedData(memberObj.UserName);
+
+                        Logger.Info("CommonHelper -> ValidatePinNumber - Sending Suspended User email notification to: [" + toAddress + "]");
+
+                        Utility.SendEmail("userSuspended", fromAddress, toAddress,
                             null, "Your Nooch account has been suspended", null, tokens, null, null, null);
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
-                        Logger.Error("Validate PIN Number --> Suspend Member status email not send to [" +
-                                               memberEntity.MemberId +
-                                               "]. Problem occurred in sending Suspend Member status mail. ");
+                        Logger.Error("CommonHelper -> ValidatePinNumber - Suspended Status email NOT send to [" + memberObj.MemberId +
+                                     "], Exception: [" + ex + "]");
                     }
 
-                    #endregion
+                    #endregion Send Suspended User Email
 
-                    return "Your account has been suspended for 24 hours from now. Please contact admin or send a mail to support@nooch.com if you need to reset your PIN number immediately.";
-                    // this is 3rd try
+                    // This was the 3rd try
+                    return "Your account has been suspended for 24 hours from now.";
                 }
-                return IncreaseInvalidPinAttemptCount(memberEntity, pinRetryCountInDb);
-                // this is second try.
+
+                return IncreaseInvalidPinAttemptCount(memberObj, pinRetryCountInDb);// This was the 2nd try
             }
 
             return "Member not found.";
@@ -4128,34 +4153,42 @@ namespace Nooch.Common
         }
 
 
-        public static string SaveMemberFBId(string MemberId, string fbid, string IsConnect)
+        public static string SaveMemberFBId(string MemberId, string fbid, bool isConnect)
         {
-            Logger.Info("Common Helper -> SaveMembersFBId Fired - MemberID: [" + MemberId + "], FBID: [" + fbid + "]");
+            Logger.Info("Common Helper -> SaveMemberFBId Fired - MemberID: [" + MemberId + "], FBID: [" + fbid + "]");
+
+            if (String.IsNullOrEmpty(MemberId))
+                return "Missing MemberID";
+            if (String.IsNullOrEmpty(fbid) || fbid.Length < 2)
+                return "Missing FB ID";
 
             try
             {
+                var guid = new Guid(MemberId);
                 fbid = GetEncryptedData(fbid.ToLower());
 
-                var noochMember = GetMemberDetails(MemberId);
+                var memberObj = _dbContext.Members.FirstOrDefault(m => m.MemberId == guid);
 
-                if (noochMember != null)
+                if (memberObj != null)
                 {
-                    if (IsConnect == "YES") noochMember.FacebookAccountLogin = fbid.Replace(" ", "+");
-                    else noochMember.FacebookAccountLogin = null;
+                    if (isConnect)
+                        memberObj.FacebookUserId = fbid.Replace(" ", "+");
+                    else
+                        memberObj.FacebookUserId = null;
 
-                    noochMember.DateModified = DateTime.Now;
+                    memberObj.DateModified = DateTime.Now;
+                    int i = _dbContext.SaveChanges();
 
-                    DbContext dbc = GetDbContextFromEntity(noochMember);
-                    //_dbContext.Entry(dbc).Reload();
-                    int i = dbc.SaveChanges();
                     return i > 0 ? "Success" : "Failure";
                 }
                 else
-                    return "Failure";
+                    return "Member not found";
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return "Failure";
+                Logger.Error("CommonHelper -> SaveMemberFBId FAILED - MemberID: [" + MemberId + "], FBID: [" + fbid +
+                             "], IsConnect: [" + isConnect + "], Exception: [" + ex + "]");
+                return ex.Message;
             }
         }
 
@@ -4443,77 +4476,48 @@ namespace Nooch.Common
 
         public static string getLogoForBank(string bankName)
         {
-            string appPath = Utility.GetValueFromConfig("ApplicationURL");
+            var appPath = Utility.GetValueFromConfig("ApplicationURL");
             var bankLogoUrl = "";
 
-            switch (bankName)
+            if (!String.IsNullOrEmpty(bankName))
             {
-                case "Ally":
-                    {
-                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/ally.png");
-                    }
-                    break;
-                case "Bank of America":
-                    {
-                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/bankofamerica.png");
-                    }
-                    break;
-                case "Wells Fargo":
-                    {
-                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/WellsFargo.png");
-                    }
-                    break;
-                case "Chase":
-                    {
-                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/chase.png");
-                    }
-                    break;
-                case "Citibank":
-                    {
-                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/citibank.png");
-                    }
-                    break;
-                case "TD Bank":
-                    {
-                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/td.png");
-                    }
-                    break;
-                case "Capital One 360":
-                    {
-                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/capone360.png");
-                    }
-                    break;
-                case "US Bank":
-                    {
-                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/usbank.png");
-                    }
-                    break;
-                case "PNC":
-                    {
-                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/pnc.png");
-                    }
-                    break;
-                case "SunTrust":
-                    {
-                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/suntrust.png");
-                    }
-                    break;
-                case "USAA":
-                    {
-                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/usaa.png");
-                    }
-                    break;
-                case "First Tennessee":
-                    {
-                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/firsttennessee.png");
-                    }
-                    break;
-                default:
-                    {
-                        bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/no.png");
-                    }
-                    break;
+                bankName = bankName.ToLower();
+
+                if (bankName.IndexOf("bank of america") > -1 || bankName.IndexOf("boa") > -1)
+                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/bankofamerica.png");
+                else if (bankName.IndexOf("wells") > -1)
+                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/WellsFargo.png");
+                else if (bankName.IndexOf("pnc") > -1)
+                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/pnc.png");
+                else if (bankName.IndexOf("chase") > -1)
+                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/chase.png");
+                else if (bankName.IndexOf("citi") > -1)
+                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/citibank.png");
+                else if (bankName.IndexOf("td") > -1)
+                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/td.png");
+                else if (bankName.IndexOf("360") > -1)
+                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/capone360.png");
+                else if (bankName.IndexOf("us bank") > -1)
+                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/usbank.png");
+                else if (bankName.IndexOf("sun") > -1)
+                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/suntrust.png");
+                else if (bankName.IndexOf("usaa") > -1)
+                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/usaa.png");
+                else if (bankName.IndexOf("tennessee") > -1)
+                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/firsttennessee.png");
+                else if (bankName.IndexOf("ally") > -1)
+                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/ally.png");
+                else if (bankName.IndexOf("schwab") > -1)
+                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/schwab.png");
+                else if (bankName.IndexOf("regions") > -1)
+                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/regions.png");
+                else if (bankName.IndexOf("bb") > -1)
+                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/bbandt.png");
+                else // Default bank image
+                    bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/no.png");
             }
+            else // Default bank image
+                bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/no.png");
 
             return bankLogoUrl;
         }
