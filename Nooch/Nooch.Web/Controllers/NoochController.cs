@@ -183,7 +183,8 @@ namespace Nooch.Web.Controllers
             return rcr;
         }
 
-
+        [HttpGet]
+        [ActionName("CancelMoneyRequest")]
         public ResultCancelRequest CancelMoneyRequest(string TransactionId, string MemberId, string userType)
         {
             ResultCancelRequest res = new ResultCancelRequest();
@@ -206,7 +207,7 @@ namespace Nooch.Web.Controllers
             if (userType == "mx5bTcAYyiOf9I5Py9TiLw==")
             {
                 // Service to cancel a REQUEST to an EXISTING Nooch user
-                serviceMethod = "CancelMoneyRequestForExistingNoochUser?TransactionId=" + TransactionId + "&MemberId=" + MemberId;
+                serviceMethod = "/CancelMoneyRequestForExistingNoochUser?TransactionId=" + TransactionId + "&MemberId=" + MemberId;
             }
             else if (userType == "U6De3haw2r4mSgweNpdgXQ==")
             {

@@ -3313,7 +3313,9 @@ namespace Nooch.DataAccess
                             if (!alreadySentEmailToSender)
                             {
                                 // This cancel link will currently only cancel the individual request to the 1st recipient (NEED NEW WAY TO CANCEL ALL REQUESTS FOR A GROUP REQUEST)
-                                string cancelLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"), "/Nooch/CancelMoneyRequest?TransactionId=" + requestId + "&MemberId=" + requestDto.MemberId.ToString() + "&userType=mx5bTcAYyiOf9I5Py9TiLw==");
+                             //   string cancelLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"), "/Nooch/CancelMoneyRequest?TransactionId=" + requestId + "&MemberId=" + requestDto.MemberId.ToString() + "&userType=mx5bTcAYyiOf9I5Py9TiLw==");
+                                string cancelLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"), "/Nooch/CancelRequest?TransactionId=" + requestId + "&MemberId=" + requestDto.MemberId.ToString() + "&userType=mx5bTcAYyiOf9I5Py9TiLw==");
+                            
                                 var tokens = new Dictionary<string, string>
 								{
 									{Constants.PLACEHOLDER_FIRST_NAME, RequesterFirstName},
@@ -3476,10 +3478,14 @@ namespace Nooch.DataAccess
                         string RequestReceiverFirstName = CommonHelper.UppercaseFirst((CommonHelper.GetDecryptedData(sender.FirstName)).ToString());
                         string RequestReceiverLastName = CommonHelper.UppercaseFirst((CommonHelper.GetDecryptedData(sender.LastName)).ToString());
 
+                        //string cancelLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
+                        //                                  "/Nooch/CancelMoneyRequest?TransactionId=" + requestId +
+                        //                                  "&MemberId=" + requestDto.MemberId.ToString() +
+                        //                                  "&userType=mx5bTcAYyiOf9I5Py9TiLw==");
                         string cancelLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
-                                                          "/Nooch/CancelMoneyRequest?TransactionId=" + requestId +
-                                                          "&MemberId=" + requestDto.MemberId.ToString() +
-                                                          "&userType=mx5bTcAYyiOf9I5Py9TiLw==");
+                                                         "/Nooch/CancelRequest?TransactionId=" + requestId +
+                                                         "&MemberId=" + requestDto.MemberId.ToString() +
+                                                         "&userType=mx5bTcAYyiOf9I5Py9TiLw==");
 
                         string wholeAmount = requestDto.Amount.ToString("n2");
                         string[] s32 = wholeAmount.Split('.');
@@ -3887,7 +3893,9 @@ namespace Nooch.DataAccess
                             if (!alreadySentEmailToReceiver)
                             {
                                 // This cancel link will currently only cancel the individual request to the 1st recipient (NEED NEW WAY TO CANCEL ALL REQUESTS FOR A GROUP REQUEST)
-                                string cancelLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"), "/Nooch/CancelMoneyRequest?TransactionId=" + requestId + "&MemberId=" + requestDto.MemberId.ToString() + "&userType=mx5bTcAYyiOf9I5Py9TiLw==");
+                               // string cancelLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"), "/Nooch/CancelMoneyRequest?TransactionId=" + requestId + "&MemberId=" + requestDto.MemberId.ToString() + "&userType=mx5bTcAYyiOf9I5Py9TiLw==");
+                                string cancelLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"), "/Nooch/CancelRequest?TransactionId=" + requestId + "&MemberId=" + requestDto.MemberId.ToString() + "&userType=mx5bTcAYyiOf9I5Py9TiLw==");
+                            
                                 var tokens = new Dictionary<string, string>
                                 {
                                     {Constants.PLACEHOLDER_FIRST_NAME, RequesterFirstName},
@@ -4050,10 +4058,15 @@ namespace Nooch.DataAccess
                         string RequestReceiverFirstName = CommonHelper.UppercaseFirst((CommonHelper.GetDecryptedData(receiver.FirstName)));
                         string RequestReceiverLastName = CommonHelper.UppercaseFirst((CommonHelper.GetDecryptedData(receiver.LastName)));
 
+                        //string cancelLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
+                        //                                  "/Nooch/CancelMoneyRequest?TransactionId=" + requestId +
+                        //                                  "&MemberId=" + requestDto.MemberId.ToString() +
+                        //                                  "&userType=mx5bTcAYyiOf9I5Py9TiLw==");
+
                         string cancelLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
-                                                          "/Nooch/CancelMoneyRequest?TransactionId=" + requestId +
-                                                          "&MemberId=" + requestDto.MemberId.ToString() +
-                                                          "&userType=mx5bTcAYyiOf9I5Py9TiLw==");
+                                  "/Nooch/CancelRequest?TransactionId=" + requestId +
+                                  "&MemberId=" + requestDto.MemberId.ToString() +
+                                  "&userType=mx5bTcAYyiOf9I5Py9TiLw==");
 
                         string wholeAmount = requestDto.Amount.ToString("n2");
                         string[] s32 = wholeAmount.Split('.');
