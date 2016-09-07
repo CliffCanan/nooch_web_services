@@ -1341,8 +1341,9 @@ namespace Nooch.API.Controllers
         {
             TransactionsDataAccess tda = new TransactionsDataAccess();
             string s = tda.CancelMoneyRequestForExistingNoochUser(TransactionId, MemberId);
-            return new StringResult {
-             Result = tda.CancelMoneyRequestForExistingNoochUser(TransactionId, MemberId) 
+            return new StringResult
+            {
+                Result = tda.CancelMoneyRequestForExistingNoochUser(TransactionId, MemberId)
             };
         }
 
