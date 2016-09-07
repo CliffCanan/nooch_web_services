@@ -320,18 +320,17 @@ namespace Nooch.DataAccess
                         _dbContext.Entry(res).Reload();
                         string memo = "";
                         if (!string.IsNullOrEmpty(res.Memo))
-                        {
                             memo = "For " + res.Memo.ToString();
-                        }
+
                         // updated, now send email to user who made the request
                         var tokens = new Dictionary<string, string>
-												 {
-													 {Constants.PLACEHOLDER_FIRST_NAME, CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(res.Member1.FirstName))},
-													 {Constants.PLACEHOLDER_Recepient_Email, CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(res.Member.FirstName)) + " " + CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(res.Member.LastName))},
-													 {Constants.PLACEHOLDER_TRANSFER_AMOUNT, res.Amount.ToString("n2")},
-													 {Constants.PLACEHOLDER_DATE, Convert.ToDateTime(res.TransactionDate).ToString("MMM dd yyyy")},
-													 {Constants.MEMO, memo}
-												 };
+                            {
+							    {Constants.PLACEHOLDER_FIRST_NAME, CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(res.Member1.FirstName))},
+							    {Constants.PLACEHOLDER_Recepient_Email, CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(res.Member.FirstName)) + " " + CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(res.Member.LastName))},
+							    {Constants.PLACEHOLDER_TRANSFER_AMOUNT, res.Amount.ToString("n2")},
+							    {Constants.PLACEHOLDER_DATE, Convert.ToDateTime(res.TransactionDate).ToString("MMM d, yyyy")},
+							    {Constants.MEMO, memo}
+							};
 
                         // for TransferReceived email notification       
                         string adminUserName = Utility.GetValueFromConfig("transfersMail");
@@ -339,8 +338,7 @@ namespace Nooch.DataAccess
                         var toAddress = CommonHelper.GetDecryptedData(res.Member1.UserName.ToString());
                         try
                         {
-                            // email notification
-                            Utility.SendEmail("requestCancelledToSender", fromAddress, toAddress, null, "Nooch payment request to " + CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(res.Member.FirstName)) + " cancelled", null, tokens, null, null, null);
+                            Utility.SendEmail("requestCancelledToSender", fromAddress, toAddress, null, "Nooch payment request to " + toAddress + " cancelled", null, tokens, null, null, null);
                             Logger.Info("CancelMoneyRequestForExistingNoochUser --> requestCancelledToSender email sent to Sender: [" + toAddress + "] successfully.");
                         }
                         catch (Exception)
@@ -349,42 +347,36 @@ namespace Nooch.DataAccess
                         }
 
                         var tokens2 = new Dictionary<string, string>
-												 {
-													 {Constants.PLACEHOLDER_FIRST_NAME, CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(res.Member.FirstName))},
-													 {Constants.PLACEHOLDER_LAST_NAME, CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(res.Member1.FirstName))+" "+CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(res.Member1.LastName))},
-													 {Constants.PLACEHOLDER_TRANSFER_AMOUNT, res.Amount.ToString("n2")},
-													 {Constants.MEMO, memo}
-												 };
+                            {
+							    {Constants.PLACEHOLDER_FIRST_NAME, CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(res.Member.FirstName))},
+							    {Constants.PLACEHOLDER_LAST_NAME, CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(res.Member1.FirstName)) + " " + CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(res.Member1.LastName))},
+							    {Constants.PLACEHOLDER_TRANSFER_AMOUNT, res.Amount.ToString("n2")},
+							    {Constants.MEMO, memo}
+							};
 
                         var toAddress2 = CommonHelper.GetDecryptedData(res.Member.UserName);
                         try
                         {
                             Utility.SendEmail("requestCancelledToRecipient", fromAddress, toAddress2, null, "Nooch payment request cancelled", null, tokens2, null, null, null);
-                            Logger.Info("CancelMoneyRequestForExistingNoochUser --> requestCancelledToRecipient email sent to [" + toAddress2 + "] successfully.");
+                            Logger.Info("TDA -> CancelMoneyRequestForExistingNoochUser - requestCancelledToRecipient email sent to [" + toAddress2 + "] successfully.");
                         }
-                        catch (Exception)
+                        catch (Exception ex)
                         {
-                            Logger.Error("CancelMoneyRequestForExistingNoochUser --> requestCancelledToRecipient email NOT sent to [" + toAddress2 + "]. Problem occurred in sending mail.");
+                            Logger.Error("TDA -> CancelMoneyRequestForExistingNoochUser - requestCancelledToRecipient email NOT sent to [" + toAddress2 + "], Exception: [" + ex + "]");
                         }
 
                         return "Transaction Cancelled Successfully.";
                     }
                     else
-                    {
-                        // not updated returning error
                         return "Something went wrong while updating transaction, please retry.";
-                    }
                 }
                 else
-                {
                     return "No Such Transaction Found.";
-                }
             }
             catch (Exception ex)
             {
                 return "" + ex.ToString();
             }
-
         }
 
 
@@ -3281,39 +3273,24 @@ namespace Nooch.DataAccess
                                     string firstThreeChars = transaction.Memo.Substring(0, 3).ToLower();
                                     bool startWithFor = firstThreeChars.Equals("for");
 
-                                    if (startWithFor)
-                                    {
-                                        memo = transaction.Memo.ToString();
-                                    }
-                                    else
-                                    {
-                                        memo = "For " + transaction.Memo.ToString();
-                                    }
+                                    if (startWithFor) memo = transaction.Memo.ToString();
+                                    else memo = "For " + transaction.Memo.ToString();
                                 }
-                                else
-                                {
-                                    memo = "For " + transaction.Memo.ToString();
-                                }
+                                else memo = "For " + transaction.Memo.ToString();
                             }
                             string sendersPic;
                             if (!string.IsNullOrEmpty(requester.Photo))
                             {
                                 string lastFourOfRecipientsPic = requester.Photo.Substring(requester.Photo.Length - 15);
-                                if (lastFourOfRecipientsPic != "gv_no_photo.png")
-                                {
-                                    sendersPic = "";
-                                }
-                                else
-                                {
-                                    sendersPic = requester.Photo.ToString();
-                                }
+                                sendersPic = lastFourOfRecipientsPic != "gv_no_photo.png" ? "" : requester.Photo.ToString();
                             }
 
                             // Send 1 TOTAL email to Sender for this Request (i.e. If there are 5 recipients, don't need to send a separate email for each)
                             if (!alreadySentEmailToSender)
                             {
                                 // This cancel link will currently only cancel the individual request to the 1st recipient (NEED NEW WAY TO CANCEL ALL REQUESTS FOR A GROUP REQUEST)
-                                string cancelLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"), "/Nooch/CancelMoneyRequest?TransactionId=" + requestId + "&MemberId=" + requestDto.MemberId.ToString() + "&userType=mx5bTcAYyiOf9I5Py9TiLw==");
+                                string cancelLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"), "/Nooch/CancelRequest?TransactionId=" + requestId + "&MemberId=" + requestDto.MemberId.ToString() + "&userType=mx5bTcAYyiOf9I5Py9TiLw==");
+
                                 var tokens = new Dictionary<string, string>
 								{
 									{Constants.PLACEHOLDER_FIRST_NAME, RequesterFirstName},
@@ -3332,11 +3309,11 @@ namespace Nooch.DataAccess
                                         "Your Nooch requests to " + senders.Length + " people is pending", null,
                                         tokens, null, null, null);
 
-                                    Logger.Info("requestSent --> Multiple Recipients --> email sent to [" + toAddress + "] successfully.");
+                                    Logger.Info("TDA -> RequestMoney - Multiple Recipients - requestSent email sent to [" + toAddress + "] successfully.");
                                 }
-                                catch (Exception)
+                                catch (Exception ex)
                                 {
-                                    Logger.Error("requestSent --> Multiple Recipients --> email NOT sent to [" + toAddress + "]. Problem occurred in sending mail.");
+                                    Logger.Error("TDA -> RequestMoney - Multiple Recipients - requestSent email NOT sent to [" + toAddress + "], Exception: [" + ex + "]");
                                 }
 
                                 // So we don't send another email to the Sender in the next loop through...
@@ -3364,11 +3341,13 @@ namespace Nooch.DataAccess
                                      RequesterFirstName + " " + RequesterLastName + " requested " + "$" + wholeAmount + " with Nooch",
                                      null, tokensRequestMultipleRecipients, null, null, null);
 
-                                Logger.Info("requestReceivedToExistingUser --> Multiple Recipients --> email sent to [" + CommonHelper.GetDecryptedData(requester.UserName) + "] successfully.");
+                                Logger.Info("TDA -> RequestMoney requestReceivedToExistingUser - Multiple Recipients - [" + emailTemplateToRecipient +
+                                            "] email sent to [" + toAddress2 + "] successfully.");
                             }
-                            catch (Exception)
+                            catch (Exception ex)
                             {
-                                Logger.Error("requestReceivedToExistingUser --> Multiple Recipients --> email NOT sent to [" + CommonHelper.GetDecryptedData(requester.UserName) + "]. Problem occurred in sending mail.");
+                                Logger.Error("TDA -> RequestMoney requestReceivedToExistingUser - Multiple Recipients - [" + emailTemplateToRecipient +
+                                             "] email NOT sent to [" + toAddress2 + "], Exception: [" + ex + "]");
                             }
 
 
@@ -3381,7 +3360,6 @@ namespace Nooch.DataAccess
                                     if ((friendDetails.TransferSent == null)
                                         ? false : friendDetails.TransferSent.Value)
                                     {
-                                        // for push notification
                                         string deviceId = friendDetails != null ? recipientOfRequest.DeviceToken : null;
                                         string devicety = friendDetails != null ? recipientOfRequest.DeviceType : null;
                                         string mailBodyText = "Hi, " + RequesterFirstName + " " + RequesterLastName +
@@ -3391,27 +3369,23 @@ namespace Nooch.DataAccess
                                         {
                                             if (!String.IsNullOrEmpty(deviceId) && (friendDetails.TransferAttemptFailure ?? false))
                                             {
+                                                Utility.SendNotificationMessage(mailBodyText, "Nooch", deviceId, devicety);
 
-
-                                                Utility.SendNotificationMessage(mailBodyText, "Nooch", deviceId,
-                                                                                   devicety);
-
-                                                Logger.Info("Request Received Push notification sent to [" + deviceId + "] successfully.");
+                                                Logger.Info("TDA -> RequestMoney - Request Received Push notification sent to [" + RequesterFirstName + " " + RequesterLastName + "] successfully.");
                                             }
                                         }
-                                        catch (Exception)
+                                        catch (Exception ex)
                                         {
-                                            Logger.Error("Request Received Push Notification NOT sent to [" + deviceId + "]. Problem occurred in sending notification. ");
+                                            Logger.Error("Request Received Push Notification NOT sent to [" + deviceId + "], Exception: [" + ex + "]");
                                         }
                                     }
                                 }
                             }
+
                             #endregion
                         }
                         else
-                        {
                             return "Request failed.";
-                        }
                     }
 
                     return "Request made successfully.";
@@ -3476,10 +3450,14 @@ namespace Nooch.DataAccess
                         string RequestReceiverFirstName = CommonHelper.UppercaseFirst((CommonHelper.GetDecryptedData(sender.FirstName)).ToString());
                         string RequestReceiverLastName = CommonHelper.UppercaseFirst((CommonHelper.GetDecryptedData(sender.LastName)).ToString());
 
+                        //string cancelLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
+                        //                                  "/Nooch/CancelMoneyRequest?TransactionId=" + requestId +
+                        //                                  "&MemberId=" + requestDto.MemberId.ToString() +
+                        //                                  "&userType=mx5bTcAYyiOf9I5Py9TiLw==");
                         string cancelLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
-                                                          "/Nooch/CancelMoneyRequest?TransactionId=" + requestId +
-                                                          "&MemberId=" + requestDto.MemberId.ToString() +
-                                                          "&userType=mx5bTcAYyiOf9I5Py9TiLw==");
+                                                         "/Nooch/CancelRequest?TransactionId=" + requestId +
+                                                         "&MemberId=" + requestDto.MemberId.ToString() +
+                                                         "&userType=mx5bTcAYyiOf9I5Py9TiLw==");
 
                         string wholeAmount = requestDto.Amount.ToString("n2");
                         string[] s32 = wholeAmount.Split('.');
@@ -3887,7 +3865,8 @@ namespace Nooch.DataAccess
                             if (!alreadySentEmailToReceiver)
                             {
                                 // This cancel link will currently only cancel the individual request to the 1st recipient (NEED NEW WAY TO CANCEL ALL REQUESTS FOR A GROUP REQUEST)
-                                string cancelLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"), "/Nooch/CancelMoneyRequest?TransactionId=" + requestId + "&MemberId=" + requestDto.MemberId.ToString() + "&userType=mx5bTcAYyiOf9I5Py9TiLw==");
+                                string cancelLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"), "/Nooch/CancelRequest?TransactionId=" + requestId + "&MemberId=" + requestDto.MemberId.ToString() + "&userType=mx5bTcAYyiOf9I5Py9TiLw==");
+
                                 var tokens = new Dictionary<string, string>
                                 {
                                     {Constants.PLACEHOLDER_FIRST_NAME, RequesterFirstName},
@@ -4050,10 +4029,15 @@ namespace Nooch.DataAccess
                         string RequestReceiverFirstName = CommonHelper.UppercaseFirst((CommonHelper.GetDecryptedData(receiver.FirstName)));
                         string RequestReceiverLastName = CommonHelper.UppercaseFirst((CommonHelper.GetDecryptedData(receiver.LastName)));
 
+                        //string cancelLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
+                        //                                  "/Nooch/CancelMoneyRequest?TransactionId=" + requestId +
+                        //                                  "&MemberId=" + requestDto.MemberId.ToString() +
+                        //                                  "&userType=mx5bTcAYyiOf9I5Py9TiLw==");
+
                         string cancelLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
-                                                          "/Nooch/CancelMoneyRequest?TransactionId=" + requestId +
-                                                          "&MemberId=" + requestDto.MemberId.ToString() +
-                                                          "&userType=mx5bTcAYyiOf9I5Py9TiLw==");
+                                  "/Nooch/CancelRequest?TransactionId=" + requestId +
+                                  "&MemberId=" + requestDto.MemberId.ToString() +
+                                  "&userType=mx5bTcAYyiOf9I5Py9TiLw==");
 
                         string wholeAmount = requestDto.Amount.ToString("n2");
                         string[] s32 = wholeAmount.Split('.');

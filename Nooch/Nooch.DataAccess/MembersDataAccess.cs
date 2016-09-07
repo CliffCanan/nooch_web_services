@@ -574,6 +574,11 @@ namespace Nooch.DataAccess
         }
 
 
+        /// <summary>
+        /// CC (9/6/16): NOT CURRENTLY USED ANYWHERE.
+        /// </summary>
+        /// <param name="phoneEmailListDto"></param>
+        /// <returns></returns>
         public PhoneEmailListDto GetMemberIds(PhoneEmailListDto phoneEmailListDto)
         {
             Logger.Info("MDA -> GetMemberIds Fired - phoneEmailList: [" + phoneEmailListDto.phoneEmailList + "]");
@@ -593,7 +598,8 @@ namespace Nooch.DataAccess
                     // Then check for an EMAIL match
                     var tempEmailEnc = CommonHelper.GetEncryptedData(phoneEmailObj.emailAddy.ToLower());
 
-                    noochMember = _dbContext.Members.FirstOrDefault(m => m.UserName == tempEmailEnc || m.FacebookAccountLogin == tempEmailEnc && m.IsDeleted == false);
+                    noochMember = _dbContext.Members.FirstOrDefault(m => (m.UserName == tempEmailEnc || m.UserNameLowerCase == tempEmailEnc) &&
+                                                                          m.IsDeleted == false);
 
                     if (noochMember != null)
                     {
@@ -687,6 +693,7 @@ namespace Nooch.DataAccess
 
         /// <summary>
         /// For logging in a user using their linked Facebook account.
+        /// CC (9/6/16): NOT SURE THIS IS USED ANYMORE - IONIC APP USES LoginWithFacebookGeneric().
         /// </summary>
         /// <param name="userEmail"></param>
         /// <param name="FBId"></param>
@@ -697,337 +704,259 @@ namespace Nooch.DataAccess
         /// <param name="devicetoken"></param>
         public string LoginwithFB(string userEmail, string FBId, Boolean rememberMeEnabled, decimal lat, decimal lng, string udid, string devicetoken)
         {
-            Logger.Info("MDA -> LoginwithFB Initiated - [UserEmail: " + userEmail + "],  [FBId: " + FBId + "]");
+            Logger.Info("MDA -> LoginwithFB fIRED - UserEmail: [" + userEmail + "], FBId: [" + FBId + "]");
 
             FBId = CommonHelper.GetEncryptedData(FBId.ToLower());
 
-            using (var noochConnection = new NOOCHEntities())
+            var memberEntity = _dbContext.Members.FirstOrDefault(
+                    m => m.FacebookAccountLogin.Equals(FBId) && m.IsDeleted == false);
+
+            if (memberEntity == null)
             {
-                var memberEntity =
-                    noochConnection.Members.FirstOrDefault(
-                        m => m.FacebookAccountLogin.Equals(FBId) && m.IsDeleted == false);
+                Logger.Info("MDA -> LoginwithFB - No User Found for this FB ID - [UserEmail: " + userEmail + "],  [FBId: " + FBId + "]");
 
-                if (memberEntity == null)
+                return "FBID or EmailId not registered with Nooch";
+            }
+            else
+            {
+                var email = CommonHelper.GetDecryptedData(memberEntity.UserName);
+
+                // generating and sending access token
+
+                if (memberEntity.Status == "Temporarily_Blocked")
+                    return "Temporarily_Blocked";
+                else if (memberEntity.Status == "Suspended")
+                    return "Suspended";
+                else if (memberEntity.Status == "Active" || memberEntity.Status == "Registered")
                 {
-                    Logger.Info("MDA -> LoginwithFB - No User Found for this FB ID - [UserEmail: " + userEmail + "],  [FBId: " + FBId + "]");
+                    #region
 
-                    return "FBID or EmailId not registered with Nooch";
-                }
-                else
-                {
-                    var emailFromServerForGivenFbId = CommonHelper.GetDecryptedData(memberEntity.UserName);
+                    #region Check If User Is Already Logged In
 
-                    // generating and sending access token
-                    //var memberNotifications = GetMemberNotificationSettingsByUserName(emailFromServerForGivenFbId);
-
-                    if (memberEntity.Status == "Temporarily_Blocked")
-                        return "Temporarily_Blocked";
-                    else if (memberEntity.Status == "Suspended")
-                        return "Suspended";
-                    else if (memberEntity.Status == "Active" || memberEntity.Status == "Registered")
+                    // Check if user already logged in or not.  If yes, then send Auto Logout email
+                    if (!String.IsNullOrEmpty(memberEntity.AccessToken) &&
+                        memberEntity.IsOnline == true &&
+                        memberEntity.UDID1 != udid &&
+                        !String.IsNullOrEmpty(memberEntity.UDID1))
                     {
-                        #region
+                        var fromAddress = Utility.GetValueFromConfig("adminMail");
+                        var toAddress = email;
+                        var userFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberEntity.FirstName));
 
-                        #region Check If User Is Already Logged In
+                        var msg = "Hi " + userFirstName + ",<br/><br/>You have been automatically logged out from your Nooch account because you signed in from a new device.\n" +
+                                  "If you did not do this or you feel your account may be compromised, please contact support@nooch.com immediately.<br/><br/>- Team Nooch";
 
-                        // Check if user already logged in or not.  If yes, then send Auto Logout email
-                        if (!String.IsNullOrEmpty(memberEntity.AccessToken) &&
-                            memberEntity.IsOnline == true &&
-                            memberEntity.UDID1 != udid &&
-                            !String.IsNullOrEmpty(memberEntity.UDID1))
+                        try
                         {
-                            var fromAddress = Utility.GetValueFromConfig("adminMail");
-                            var toAddress = emailFromServerForGivenFbId;
-                            var userFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberEntity.FirstName));
+                            Utility.SendEmail("", fromAddress, toAddress, null,
+                                              "Nooch Automatic Logout", null, null, null, null, msg);
 
-                            string msg = "Hi,\n  You have been automatically logged out from your Nooch account because you signed in from another device.\n" +
-                                         "If this is a mistake and you feel your account may be compromised, please contact support@nooch.com immediately  - Team Nooch";
-
-                            try
-                            {
-                                Utility.SendEmail("", fromAddress, toAddress, null,
-                                    "Nooch Automatic Logout", null, null, null, null, msg);
-
-                                Logger.Info("MDA -> LoginwithFB - Automatic Log Out Email sent to [" + toAddress + "] successfully.");
-
-                                // Checking if phone exists and isVerified before sending SMS to user
-                                if (memberEntity.ContactNumber != null && memberEntity.IsVerifiedPhone == true)
-                                {
-                                    var GetPhoneNumberByMemberId_wFormatting = CommonHelper.FormatPhoneNumber(memberEntity.ContactNumber);
-
-                                    try
-                                    {
-                                        //var GetPhoneNumberByMemberId = CommonHelper.RemovePhoneNumberFormatting(memberEntity.ContactNumber);
-
-                                        //string result = UtilityDataAccess.SendSMS(GetPhoneNumberByMemberId, msg, memberEntity.AccessToken, memberEntity.MemberId.ToString());
-
-                                        //Logger.LogDebugMessage("MDA -> LoginwithFB - Automatic Log Out SMS sent to [" + GetPhoneNumberByMemberId_wFormatting + "] successfully.");
-                                    }
-                                    catch (Exception)
-                                    {
-                                        Logger.Error("MDA -> LoginwithFB - Automatic Log Out SMS NOT sent to [" + GetPhoneNumberByMemberId_wFormatting + "]. Problem occured in sending SMS.");
-                                    }
-                                }
-                            }
-                            catch (Exception)
-                            {
-                                Logger.Error("MDA -> LoginwithFB - Automatic Log Out email NOT sent to [" + toAddress + "]. Problem occured in sending email.");
-                            }
+                            Logger.Info("MDA -> LoginwithFB - Automatic Log Out Email sent to [" + toAddress + "] successfully.");
                         }
-
-                        #endregion Check If User Is Already Logged In
-
-                        //Update UDID of device from which the user has logged in.
-                        if (!String.IsNullOrEmpty(udid))
+                        catch (Exception)
                         {
-                            memberEntity.UDID1 = udid;
+                            Logger.Error("MDA -> LoginwithFB - Automatic Log Out email NOT sent to [" + toAddress + "]. Problem occured in sending email.");
                         }
-                        if (!String.IsNullOrEmpty(devicetoken))
-                        {
-                            memberEntity.DeviceToken = devicetoken;
-                        }
-
-                        memberEntity.LastLocationLat = lat;
-                        memberEntity.LastLocationLng = lng;
-                        memberEntity.IsOnline = true;
-
-                        // Reset attempt count
-                        memberEntity.InvalidLoginTime = null;
-                        memberEntity.InvalidLoginAttemptCount = null;
-
-                        // resetting invalid login attempt count to 0
-                        memberEntity.InvalidPinAttemptCount = null;
-                        memberEntity.InvalidPinAttemptTime = null;
-                        noochConnection.SaveChanges();
-
-
-                        return "Success";
-
-                        #endregion
                     }
-                    else return "Invalid user id or password.";
+
+                    #endregion Check If User Is Already Logged In
+
+                    // Update UDID of device from which the user has logged in.
+                    if (!String.IsNullOrEmpty(udid))
+                        memberEntity.UDID1 = udid;
+                    if (!String.IsNullOrEmpty(devicetoken))
+                        memberEntity.DeviceToken = devicetoken;
+
+                    memberEntity.LastLocationLat = lat;
+                    memberEntity.LastLocationLng = lng;
+                    memberEntity.IsOnline = true;
+
+                    // Reset attempt count
+                    memberEntity.InvalidLoginTime = null;
+                    memberEntity.InvalidLoginAttemptCount = null;
+
+                    // resetting invalid login attempt count to 0
+                    memberEntity.InvalidPinAttemptCount = null;
+                    memberEntity.InvalidPinAttemptTime = null;
+
+                    _dbContext.SaveChanges();
+
+                    return "Success";
+
+                    #endregion
                 }
+                else return "Invalid user id or password.";
             }
         }
 
 
         public string LoginwithFBGeneric(string userEmail, string FBId, Boolean rememberMeEnabled, decimal lat, decimal lng, string udid, string devicetoken)
         {
-            Logger.Info("MDA -> LoginwithFBGeneric Initiated - [UserEmail: " + userEmail + "],  [FBId: " + FBId + "]");
+            Logger.Info("MDA -> LoginwithFBGeneric Fired - UserEmail: [" + userEmail + "], FBId: [" + FBId + "]");
 
-            FBId = CommonHelper.GetEncryptedData(FBId.ToLower());
+            var emailEncr = CommonHelper.GetEncryptedData(userEmail.ToLower());
 
-            using (var noochConnection = new NOOCHEntities())
+            var memberEntity = _dbContext.Members.FirstOrDefault(m => (m.UserName == emailEncr ||
+                                                                       m.UserNameLowerCase == emailEncr ||
+                                                                       m.FacebookUserId == FBId) && m.IsDeleted == false);
+
+            if (memberEntity == null)
             {
-                var memberEntity = noochConnection.Members.FirstOrDefault(
-                        m => m.FacebookAccountLogin.Equals(FBId) && m.IsDeleted == false);
+                //Logger.Info("MDA -> LoginwithFB - No User Found for this FB ID - [UserEmail: " + userEmail + "],  [FBId: " + FBId + "]");
+                //return "FBID or EmailId not registered with Nooch";
 
-                if (memberEntity == null)
+                var noochRandomId = GetRandomNoochId();
+
+                var member = new Member()
+                  {
+                      Nooch_ID = noochRandomId,
+                      MemberId = Guid.NewGuid(),
+                      FirstName = CommonHelper.GetEncryptedData(" "), // CC (9/6/16): This can't be blank... need to send name from the app
+                      LastName = CommonHelper.GetEncryptedData(" "),
+                      UserName = CommonHelper.GetEncryptedData(userEmail),
+                      UserNameLowerCase = CommonHelper.GetEncryptedData(userEmail),
+                      SecondaryEmail = userEmail,
+                      RecoveryEmail = CommonHelper.GetEncryptedData(userEmail),
+                      ContactNumber = null,
+                      Address = CommonHelper.GetEncryptedData(" "),
+                      City = CommonHelper.GetEncryptedData(" "),
+                      State = CommonHelper.GetEncryptedData(" "),
+                      Zipcode = CommonHelper.GetEncryptedData(" "),
+                      SSN = CommonHelper.GetEncryptedData(" "),
+                      DateOfBirth = null,
+                      Password = CommonHelper.GetEncryptedData("jibb3r;jawn"), // Malkit 19 Aug 2016 -- Not sure if we need to set some password for users signingup wih FB
+                      PinNumber = CommonHelper.GetEncryptedData(Utility.GetRandomPinNumber()),
+                      Status = Constants.STATUS_ACTIVE,
+                      IsDeleted = false,
+                      DateCreated = DateTime.Now,
+                      Type = "Personal - Browser",
+                      Photo = Utility.GetValueFromConfig("PhotoUrl") + "gv_no_photo.png",
+                      UDID1 = !String.IsNullOrEmpty(udid) ? udid : null,
+                      DeviceToken = !String.IsNullOrEmpty(devicetoken) ? devicetoken : null,
+                      LastLocationLat = lat,
+                      LastLocationLng = lng,
+                      IsVerifiedWithSynapse = false,
+                      IsOnline = true,
+                      cipTag = "renter",
+                      FacebookUserId = FBId,
+                      FacebookAccountLogin = FBId,
+                      isRentScene = false,
+                  };
+
+                int i = 0;
+                try
                 {
-                    //Logger.Info("MDA -> LoginwithFB - No User Found for this FB ID - [UserEmail: " + userEmail + "],  [FBId: " + FBId + "]");
-                    //return "FBID or EmailId not registered with Nooch";
+                    _dbContext.Members.Add(member);
+                    i = _dbContext.SaveChanges();
+                }
+                catch (Exception ex)
+                {
+                    var error = "MDA -> LoginwithFBGeneric - FAILED to save new member in DB - Email: [" + userEmail +
+                                 "], MemberID: [" + member.MemberId + "], Exception: [" + ex + "]";
+                    Logger.Error(error);
+                    throw ex;
+                }
 
-                    var noochRandomId = GetRandomNoochId();
+                #region
 
-                    var member = new Member()
-                      {
-                          Nooch_ID = noochRandomId,
-                          MemberId = Guid.NewGuid(),
-                          FirstName = CommonHelper.GetEncryptedData(" "),
-                          LastName = CommonHelper.GetEncryptedData(" "),
-                          UserName = CommonHelper.GetEncryptedData(userEmail),
-                          UserNameLowerCase = CommonHelper.GetEncryptedData(userEmail),
-                          SecondaryEmail = userEmail,
-                          RecoveryEmail = CommonHelper.GetEncryptedData(userEmail),
-                          ContactNumber = null,
-                          Address = CommonHelper.GetEncryptedData(" "),
-                          City = CommonHelper.GetEncryptedData(" "),
-                          State = CommonHelper.GetEncryptedData(" "),
-                          Zipcode = CommonHelper.GetEncryptedData(" "),
-                          SSN = CommonHelper.GetEncryptedData(" "),
-                          DateOfBirth = null,
-                          Password = CommonHelper.GetEncryptedData("jibb3r;jawn"), // Malkit 19 Aug 2016 -- Not sure if we need to set some password for users signingup wih FB
-                          PinNumber = CommonHelper.GetEncryptedData(Utility.GetRandomPinNumber()),
-                          Status = Constants.STATUS_ACTIVE,
-                          IsDeleted = false,
-                          DateCreated = DateTime.Now,
-                          Type = "Personal - Browser",
-                          Photo = Utility.GetValueFromConfig("PhotoUrl") + "gv_no_photo.png",
-                          UDID1 = !String.IsNullOrEmpty(udid) ? udid : null,
-                          IsVerifiedWithSynapse = false,
-                          cipTag = CommonHelper.GetEncryptedData(" "),
-                          FacebookUserId = userEmail,
-                          FacebookAccountLogin = FBId,
-                          isRentScene = false,
-                      };
+                _dbContext.SaveChanges();
 
-                    int i = 0;
-                    try
-                    {
-                        _dbContext.Members.Add(member);
-                        i = _dbContext.SaveChanges();
+                // email newly generated pin number
+                #region Send Temp PIN Email
 
-                    }
-                    catch (Exception ex)
-                    {
-                        var error = "MDA -> LoginwithFBGeneric - FAILED to save new member in DB - Email: [" + userEmail +
-                                     "], MemberID: [" + member.MemberId + "], Exception: [" + ex + "]";
-                        Logger.Error(error);
-                        throw ex;
-                    }
+                try
+                {
+                    var fName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(member.FirstName));
+                    var pin = CommonHelper.GetDecryptedData(member.PinNumber);
+                    var email = CommonHelper.GetDecryptedData(member.UserName);
 
-                    var NewMemberEntity = noochConnection.Members.FirstOrDefault(m => m.FacebookAccountLogin.Equals(FBId) && m.IsDeleted == false);
+                    var tokens2 = new Dictionary<string, string>
+                        {
+                            {Constants.PLACEHOLDER_FIRST_NAME, fName},
+                            {Constants.PLACEHOLDER_PINNUMBER, pin}
+                        };
 
+                    Utility.SendEmail("pinSetForNewUser", "support@nooch.com", email, null,
+                        "Your temporary Nooch PIN", null, tokens2, null, null, null);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("MDA -> CreateNonNoochUserPasswordForPhoneInvitations EXCEPTION - Member Temp PIN email NOT sent to [" +
+                                 CommonHelper.GetDecryptedData(member.UserName) + "], Exception: [" + ex + "]");
+                }
 
-                    var emailFromServerForGivenFbId = CommonHelper.GetDecryptedData(NewMemberEntity.UserName);
+                #endregion Send Temp PIN Email
 
-                    // generating and sending access token
-                    //var memberNotifications = GetMemberNotificationSettingsByUserName(emailFromServerForGivenFbId);                
+                return "Success";
 
+                #endregion
+            }
+            else
+            {
+                var email = CommonHelper.GetDecryptedData(memberEntity.UserName);
+
+                if (memberEntity.Status == "Temporarily_Blocked")
+                    return "Temporarily_Blocked";
+                else if (memberEntity.Status == "Suspended")
+                    return "Suspended";
+                else if (memberEntity.Status == "Active" || memberEntity.Status == "Registered")
+                {
                     #region
-                    //Update UDID of device from which the user has logged in.
-                    //if (!String.IsNullOrEmpty(udid))
-                    //{
-                    //    memberEntity.UDID1 = udid;
-                    //}
-                    if (!String.IsNullOrEmpty(devicetoken))
+
+                    #region Check If User Is Already Logged In
+
+                    // Check if user already logged in or not. If yes, then send Auto Logout email
+                    if (!String.IsNullOrEmpty(memberEntity.AccessToken) &&
+                        memberEntity.IsOnline == true &&
+                        !String.IsNullOrEmpty(memberEntity.UDID1) &&
+                        memberEntity.UDID1 != udid)
                     {
-                        NewMemberEntity.DeviceToken = devicetoken;
+                        var fromAddress = Utility.GetValueFromConfig("adminMail");
+                        var userFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberEntity.FirstName));
+
+                        var msg = "Hi " + userFirstName + ",<br/><br/>You have been automatically logged out from your Nooch account because you signed in from a new device.\n" +
+                                  "If you did not do this or you feel your account may be compromised, please contact support@nooch.com immediately.<br/><br/>- Team Nooch";
+
+                        try
+                        {
+                            Utility.SendEmail("", fromAddress, email, null,
+                                              "Nooch Automatic Logout", null, null, null, null, msg);
+
+                            Logger.Info("MDA -> LoginwithFB - Automatic Log Out Email sent to [" + email + "] successfully.");
+                        }
+                        catch (Exception)
+                        {
+                            Logger.Error("MDA -> LoginwithFB - Automatic Log Out email NOT sent to [" + email + "]. Problem occured in sending email.");
+                        }
                     }
 
-                    NewMemberEntity.LastLocationLat = lat;
-                    NewMemberEntity.LastLocationLng = lng;
-                    NewMemberEntity.IsOnline = true;
+                    #endregion Check If User Is Already Logged In
+
+                    //Update UDID of device from which the user has logged in.
+                    if (!String.IsNullOrEmpty(udid))
+                        memberEntity.UDID1 = udid;
+                    if (!String.IsNullOrEmpty(devicetoken))
+                        memberEntity.DeviceToken = devicetoken;
+
+                    memberEntity.LastLocationLat = lat;
+                    memberEntity.LastLocationLng = lng;
+                    memberEntity.IsOnline = true;
 
                     // Reset attempt count
-                    NewMemberEntity.InvalidLoginTime = null;
-                    NewMemberEntity.InvalidLoginAttemptCount = null;
+                    memberEntity.InvalidLoginTime = null;
+                    memberEntity.InvalidLoginAttemptCount = null;
 
                     // resetting invalid login attempt count to 0
-                    NewMemberEntity.InvalidPinAttemptCount = null;
-                    NewMemberEntity.InvalidPinAttemptTime = null;
-                    noochConnection.SaveChanges();
+                    memberEntity.InvalidPinAttemptCount = null;
+                    memberEntity.InvalidPinAttemptTime = null;
 
-
-                    // email newly generated pin number
-                    #region Send Temp PIN Email
-                    try
-                    {
-                        var tokens2 = new Dictionary<string, string>
-                                        {
-                                            {Constants.PLACEHOLDER_FIRST_NAME,CommonHelper.GetDecryptedData( NewMemberEntity.FirstName)},
-                                            {Constants.PLACEHOLDER_PINNUMBER, CommonHelper.GetDecryptedData(NewMemberEntity.PinNumber)}
-                                        };
-
-                        Utility.SendEmail("pinSetForNewUser",
-                            "support@nooch.com", CommonHelper.GetDecryptedData(NewMemberEntity.UserName), null, "Your temporary Nooch PIN",
-                            null, tokens2, null, null, null);
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.Error("MDA -> CreateNonNoochUserPasswordForPhoneInvitations EXCEPTION - Member Temp PIN email NOT sent to [" +
-                                              CommonHelper.GetDecryptedData(NewMemberEntity.UserName) + "], Exception: [" + ex + "]");
-                    }
-                    #endregion Send Temp PIN Email
+                    _dbContext.SaveChanges();
 
                     return "Success";
+
                     #endregion
                 }
-                else
-                {
-                    var emailFromServerForGivenFbId = CommonHelper.GetDecryptedData(memberEntity.UserName);
-
-                    // generating and sending access token
-                    //var memberNotifications = GetMemberNotificationSettingsByUserName(emailFromServerForGivenFbId);
-
-                    if (memberEntity.Status == "Temporarily_Blocked")
-                        return "Temporarily_Blocked";
-                    else if (memberEntity.Status == "Suspended")
-                        return "Suspended";
-                    else if (memberEntity.Status == "Active" || memberEntity.Status == "Registered")
-                    {
-                        #region
-
-                        #region Check If User Is Already Logged In
-
-                        // Check if user already logged in or not.  If yes, then send Auto Logout email
-                        if (!String.IsNullOrEmpty(memberEntity.AccessToken) &&
-                            memberEntity.IsOnline == true &&
-                            memberEntity.UDID1 != udid &&
-                            !String.IsNullOrEmpty(memberEntity.UDID1))
-                        {
-                            var fromAddress = Utility.GetValueFromConfig("adminMail");
-                            var toAddress = emailFromServerForGivenFbId;
-                            var userFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberEntity.FirstName));
-
-                            string msg = "Hi,\n  You have been automatically logged out from your Nooch account because you signed in from another device.\n" +
-                                         "If this is a mistake and you feel your account may be compromised, please contact support@nooch.com immediately  - Team Nooch";
-
-                            try
-                            {
-                                Utility.SendEmail("", fromAddress, toAddress, null,
-                                    "Nooch Automatic Logout", null, null, null, null, msg);
-
-                                Logger.Info("MDA -> LoginwithFB - Automatic Log Out Email sent to [" + toAddress + "] successfully.");
-
-                                // Checking if phone exists and isVerified before sending SMS to user
-                                if (memberEntity.ContactNumber != null && memberEntity.IsVerifiedPhone == true)
-                                {
-                                    var GetPhoneNumberByMemberId_wFormatting = CommonHelper.FormatPhoneNumber(memberEntity.ContactNumber);
-
-                                    try
-                                    {
-                                        //var GetPhoneNumberByMemberId = CommonHelper.RemovePhoneNumberFormatting(memberEntity.ContactNumber);
-
-                                        //string result = UtilityDataAccess.SendSMS(GetPhoneNumberByMemberId, msg, memberEntity.AccessToken, memberEntity.MemberId.ToString());
-
-                                        //Logger.LogDebugMessage("MDA -> LoginwithFB - Automatic Log Out SMS sent to [" + GetPhoneNumberByMemberId_wFormatting + "] successfully.");
-                                    }
-                                    catch (Exception)
-                                    {
-                                        Logger.Error("MDA -> LoginwithFB - Automatic Log Out SMS NOT sent to [" + GetPhoneNumberByMemberId_wFormatting + "]. Problem occured in sending SMS.");
-                                    }
-                                }
-                            }
-                            catch (Exception)
-                            {
-                                Logger.Error("MDA -> LoginwithFB - Automatic Log Out email NOT sent to [" + toAddress + "]. Problem occured in sending email.");
-                            }
-                        }
-
-                        #endregion Check If User Is Already Logged In
-
-                        //Update UDID of device from which the user has logged in.
-                        if (!String.IsNullOrEmpty(udid))
-                        {
-                            memberEntity.UDID1 = udid;
-                        }
-                        if (!String.IsNullOrEmpty(devicetoken))
-                        {
-                            memberEntity.DeviceToken = devicetoken;
-                        }
-
-                        memberEntity.LastLocationLat = lat;
-                        memberEntity.LastLocationLng = lng;
-                        memberEntity.IsOnline = true;
-
-                        // Reset attempt count
-                        memberEntity.InvalidLoginTime = null;
-                        memberEntity.InvalidLoginAttemptCount = null;
-
-                        // resetting invalid login attempt count to 0
-                        memberEntity.InvalidPinAttemptCount = null;
-                        memberEntity.InvalidPinAttemptTime = null;
-                        noochConnection.SaveChanges();
-
-
-
-                        return "Success";
-
-                        #endregion
-                    }
-                    else return "Invalid user id or password.";
-                }
+                else return "Invalid user id or password.";
             }
         }
 
@@ -1047,8 +976,6 @@ namespace Nooch.DataAccess
             if (memberEntity != null)
             {
                 _dbContext.Entry(memberEntity).Reload();
-
-                var memberNotifications = CommonHelper.GetMemberNotificationSettingsByUserName(userEmail);
 
                 switch (memberEntity.Status)
                 {
@@ -1071,19 +998,19 @@ namespace Nooch.DataAccess
                             // Check if user already logged in or not.  If yes, then send Auto Logout email
                             if (!String.IsNullOrEmpty(memberEntity.AccessToken) &&
                                 !String.IsNullOrEmpty(memberEntity.UDID1) &&
+                                !String.IsNullOrEmpty(udid) &&
                                 memberEntity.IsOnline == true &&
                                 memberEntity.UDID1.ToLower() != udid.ToLower())
                             {
                                 Logger.Info("MDA -> LoginRequest - Sending Automatic Logout Notification - UserName: [" + userEmail +
-                                            "], UDID: [" + udid +
-                                            "], AccessToken: [" + memberEntity.AccessToken + "]");
+                                            "], UDID: [" + udid + "], AccessToken: [" + memberEntity.AccessToken + "]");
 
                                 var fromAddress = Utility.GetValueFromConfig("adminMail");
                                 var toAddress = userEmail;
                                 var userFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberEntity.FirstName));
 
-                                string msg = "Hi,\n\nYou have been automatically logged out from your Nooch account because you signed in from a new device.\n" +
-                                             "If this is a mistake and you feel your account may be compromised, please contact support@nooch.com immediately.  - Team Nooch";
+                                var msg = "Hi " + userFirstName + ",<br/><br/>You have been automatically logged out from your Nooch account because you signed in from a new device.\n" +
+                                          "If you did not do this or you feel your account may be compromised, please contact support@nooch.com immediately.<br/><br/>- Team Nooch";
 
                                 try
                                 {
@@ -1091,24 +1018,6 @@ namespace Nooch.DataAccess
                                                       "Nooch Automatic Logout", null, null, null, null, msg);
 
                                     Logger.Info("MDA -> LoginRequest - Automatic Log Out Email sent to [" + toAddress + "] successfully.");
-
-                                    // Checking if phone exists and isVerified before sending SMS to user
-                                    /*if (memberEntity.ContactNumber != null && memberEntity.IsVerifiedPhone == true)
-                                    {
-                                        try
-                                        {
-                                            //msg = "Hi, You were automatically logged out from your Nooch account b/c you signed in from another device. " +
-                                            // "If this is a mistake, contact support@nooch.com immediately. - Nooch";
-                                            //string result = UtilityDataAccess.SendSMS(memberEntity.ContactNumber, msg, memberEntity.AccessToken, memberEntity.MemberId.ToString());
-
-                                            //Logger.Info("MDA -> LoginRequest - Automatic Log Out SMS sent to [" + memberEntity.ContactNumber + "] successfully. [SendSMS Result: " + result + "]");
-                                        }
-                                        catch (Exception ex)
-                                        {
-                                            Logger.Error("MDA -> LoginRequest - Automatic Log Out SMS NOT sent to [" + memberEntity.ContactNumber + "], " +
-                                                                   "Exception: [" + ex.Message + "]");
-                                        }
-                                    }*/
                                 }
                                 catch (Exception ex)
                                 {
@@ -1124,6 +1033,7 @@ namespace Nooch.DataAccess
 
                             if (!String.IsNullOrEmpty(devicetoken))
                                 memberEntity.DeviceToken = devicetoken;
+
                             if (!String.IsNullOrEmpty(deviceOS))
                                 memberEntity.DeviceType = deviceOS;
 
@@ -1518,13 +1428,12 @@ namespace Nooch.DataAccess
                             ContactNumber = newUserPhoneNumber,
                             IsVerifiedPhone = true,
                             IsVerifiedWithSynapse = false,
-                            AdminNotes = "Created via Phone Invitation Landing page"
+                            AdminNotes = "Created via Phone Invitation Landing page",
+                            Photo = Utility.GetValueFromConfig("PhotoUrl") + "gv_no_photo.png"
                         };
-                        member.Photo = Utility.GetValueFromConfig("PhotoUrl") + "gv_no_photo.png";
-                        if (!String.IsNullOrEmpty(inviteCode) && inviteCode.Length > 1)
-                        {
+
+                        if (!String.IsNullOrEmpty(inviteCode))
                             member.InviteCodeIdUsed = Utility.ConvertToGuid(inviteCode);
-                        }
 
                         int result = 0;
 
@@ -1605,17 +1514,17 @@ namespace Nooch.DataAccess
 
                             var memberPrivacySettings = new MemberPrivacySetting
                             {
-
                                 MemberId = member.MemberId,
-
                                 AllowSharing = true,
                                 ShowInSearch = true,
-                                DateCreated = DateTime.Now
+                                RequireImmediately = true,
+                                DateCreated = DateTime.Now,
+                                DateModified = DateTime.Now,
                             };
+
                             _dbContext.MemberPrivacySettings.Add(memberPrivacySettings);
 
                             _dbContext.SaveChanges();
-
 
                             #endregion Set Privacy Settings
 
@@ -6210,7 +6119,7 @@ namespace Nooch.DataAccess
                         memberObj.Photo = Utility.UploadPhoto(folderPath, fileName, fileExtension, fileContent, contentLength);
 
                     if (!String.IsNullOrEmpty(facebookAcctLogin))
-                        memberObj.FacebookAccountLogin = facebookAcctLogin;
+                        memberObj.FacebookUserId = facebookAcctLogin;
 
                     if (!String.IsNullOrEmpty(address))
                         memberObj.Address = CommonHelper.GetEncryptedData(address);
@@ -6724,7 +6633,8 @@ namespace Nooch.DataAccess
                         DateCreated = DateTime.Now,
                         DateModified = DateTime.Now,
                         UserNameLowerCase = CommonHelper.GetEncryptedData(userNameLowerCase),
-                        FacebookAccountLogin = CommonHelper.GetEncryptedData(facebookAccountLogin.ToLower()),
+                        FacebookUserId = facebookAccountLogin,
+                        FacebookAccountLogin = facebookAccountLogin,
                         cipTag = "renter",
                         ShowInSearch = true,
                         Country = "USA",
@@ -6962,24 +6872,13 @@ namespace Nooch.DataAccess
                                             {
                                                 if (!String.IsNullOrEmpty(FbUser.id))
                                                 {
-                                                    // 1. Using the FB ID, lookup the user's UserName (email address)
+                                                    // 1. Lookup the user using the FB ID, 
 
-                                                    //   var memberSpec = new Specification<Members>();
                                                     var memberSpec = new Member();
-                                                    var encryptedFBId = CommonHelper.GetEncryptedData(FbUser.id);
 
-                                                    //memberSpec.Predicate =
-                                                    //        memberTemp => !String.IsNullOrEmpty(memberTemp.FacebookAccountLogin) &&
-                                                    //                       memberTemp.FacebookAccountLogin.Equals(encryptedFBId) &&
-                                                    //                       memberTemp.IsDeleted == false;
-
-                                                    //  membersRepository = new Repository<Members, NoochDataEntities>(noochConnection);
-                                                    //  var noochMember = membersRepository.SelectAll(memberSpec).FirstOrDefault();
-
-
-                                                    var noochMember = _dbContext.Members.FirstOrDefault(memberTemp => !String.IsNullOrEmpty(memberTemp.FacebookAccountLogin) &&
-                                                                           memberTemp.FacebookAccountLogin.Equals(encryptedFBId) &&
-                                                                           memberTemp.IsDeleted == false);
+                                                    var noochMember = _dbContext.Members.FirstOrDefault(m => !String.IsNullOrEmpty(m.FacebookUserId) &&
+                                                                                                             m.FacebookUserId.Equals(FbUser.id) &&
+                                                                                                             m.IsDeleted == false);
 
                                                     if (noochMember != null)
                                                     {
