@@ -37,7 +37,7 @@
         <input type="hidden" id="type" value="@rca.type" />
         <input type="hidden" id="dob" value="@rca.dob" />
         <input type="hidden" id="phone" value="@rca.phone" />
-        <input type="hidden" id="rs" value="@rca.rs" />
+        <input type="hidden" id="company" value="@rca.company" />
         <input type="hidden" id="addBank_Url" value="@Url.Action("AddBank","Nooch")" />
     </form>
 
@@ -45,13 +45,13 @@
         <div class="clearfix">
             <div class="m-l-15">
 
-                @if (rca.rs == "rentscene")
+                @if (rca.company == "rentscene")
                 {
                     <a class="landingHeaderLogo m-t-15 m-b-15" href="https://www.rentscene.com/" style="float:left;">
                         <img src="../Assets/Images/rentscene.png" class="center-block" alt="Rent Scene Logo" />
                     </a>
                 }
-                else if (rca.rs == "habitat")
+                else if (rca.company == "habitat")
                 {
                     <a class="landingHeaderLogo m-t-15 m-b-15" href="https://tryhabitat.com/" style="float:left;">
                         <img src="../Assets/Images/habitat-logo.png" class="center-block" alt="Habitat Logo" />
@@ -281,7 +281,7 @@
     <div class="footer footer-login p-5">
         <div>
             <ul class="list-inline">
-                @if (rca.rs != "habitat" && rca.rs != "rentscene")
+                @if (rca.company != "habitat" && rca.company != "rentscene")
                 {
                     <li><a href="https://www.nooch.com/overview">About</a></li>
                     <li><a href="https://www.nooch.com/blog/">Blog</a></li>

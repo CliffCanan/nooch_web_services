@@ -1674,10 +1674,11 @@ namespace Nooch.DataAccess
                 if (memberObj != null)
                 {
                     _dbContext.Entry(memberObj).Reload();
-                    var fromAddress = Utility.GetValueFromConfig("welcomeMail");
                     var toAddress = CommonHelper.GetDecryptedData(memberObj.UserName);
 
-                    var tokens = new Dictionary<string, string>
+                    try
+                    {
+                        var tokens = new Dictionary<string, string>
                         {
                             {
                                 Constants.PLACEHOLDER_FIRST_NAME,
@@ -1692,8 +1693,7 @@ namespace Nooch.DataAccess
                                 CommonHelper.UppercaseFirst(userJoinedName)
                             }
                         };
-                    try
-                    {
+
                         Utility.SendEmail("EmailToInvitorAfterSignup", "hello@nooch.com", toAddress, null,
                             userJoinedName + " joined Nooch with your invite code", null, tokens, null, null, null);
 
@@ -1706,12 +1706,13 @@ namespace Nooch.DataAccess
                                      InviteCodeIdUsed + "], New User's Name: [" + userJoinedName + "], Exception: [" + ex + "]");
                     }
                 }
-
             }
             catch (Exception ex)
             {
-                Logger.Error("MDA -> SendEmailToInvitor FAILED (Outer) - Email NOT sent to Referrer - [New User's Email: " + userJoinedEmail +
-                             "], [InviteCode:" + InviteCodeIdUsed + "], Exception: [" + ex + "]");
+                var error = "MDA -> SendEmailToInvitor FAILED (Outer) - Email NOT sent to Referrer - New User's Email: [" + userJoinedEmail +
+                             "], InviteCode: [" + InviteCodeIdUsed + "], Exception: [" + ex + "]";
+                Logger.Error(error);
+                CommonHelper.notifyCliffAboutError(error);
             }
         }
 
@@ -2933,17 +2934,17 @@ namespace Nooch.DataAccess
 
         public synapseCreateUserV3Result_int RegisterNonNoochUserWithSynapseV3(string transId, string userEmail, string userPhone, string userName, string pw,
                                                                                string ssn, string dob, string address, string zip, string fngprnt, string ip,
-                                                                               string cip, string fbid, bool isRentScene, string isIdImageAdded = "0", string idImageData = "")
+                                                                               string cip, string fbid, bool isRentScene, string company, string isIdImageAdded = "0", string idImageData = "")
         {
             // What's the plan? -- Store new Nooch member, then create Synpase user, then check if user supplied a (is password.Length > 0)
             // then store data in new added field in SynapseCreateUserResults table for later use
 
-            Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 Initiated - Name: [" + userName +
+            Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 Fired - Name: [" + userName +
                         "], Email: [" + userEmail + "], Phone: [" + userPhone +
                         "], DOB: [" + dob + "], SSN: [" + ssn +
                         "], Address: [" + address + "], ZIP: [" + zip +
                         "], IP: [" + ip + "], Fngprnt: [" + fngprnt +
-                        "], TransId: [" + transId + "], CIP: [" + cip +
+                        "], TransID: [" + transId + "], CIP: [" + cip +
                         "], FBID: [" + fbid + "], isRentScene: [" + isRentScene +
                         "], isIdImageAdded: [" + isIdImageAdded + "]");
 
@@ -2951,7 +2952,7 @@ namespace Nooch.DataAccess
             res.success = false;
             res.reason = "Initial";
 
-            string NewUsersNoochMemId = "";
+            var NewUsersNoochMemId = "";
 
 
             #region Check To Make Sure All Data Was Passed
@@ -2960,7 +2961,7 @@ namespace Nooch.DataAccess
             if (String.IsNullOrEmpty(userName) || String.IsNullOrEmpty(userEmail) ||
                 String.IsNullOrEmpty(userPhone) || String.IsNullOrEmpty(zip) || String.IsNullOrEmpty(fngprnt))
             {
-                string missingData = "";
+                var missingData = "";
 
                 if (String.IsNullOrEmpty(userName))
                     missingData = missingData + "Users' Name";
@@ -3003,20 +3004,19 @@ namespace Nooch.DataAccess
 
             #region Check if given Email and Phone already exist
 
-            string memberIdFromEmail = CommonHelper.GetMemberIdByUserName(userEmail);
+            var memberIdFromEmail = CommonHelper.GetMemberIdByUserName(userEmail);
             if (!String.IsNullOrEmpty(memberIdFromEmail))
             {
                 // Check if the user was created w/in the last 60 minutes... then we can assume it's the same person
                 Member memberObj = CommonHelper.GetMemberDetails(memberIdFromEmail);
 
-                //if (memberObj.DateCreated > )
                 DateTime todaysDateTime = DateTime.Now;
                 TimeSpan span = todaysDateTime.Subtract(Convert.ToDateTime(memberObj.DateCreated));
                 double totalMins = span.TotalMinutes;
 
                 if (totalMins < 60)
                 {
-                    Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - Email already registered, but user created < 60 mins ago [" +
+                    Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - EMAIL already registered, but user created < 60 mins ago [" +
                                 totalMins + "], so sending to RegisterExistingUserWithSynapseV3()");
 
                     // Consider the user valid, send to RegisterExistingUserWithSynapseV3()
@@ -3038,55 +3038,91 @@ namespace Nooch.DataAccess
                 }
             }
 
-            string memberIdFromPhone = CommonHelper.GetMemberIdByContactNumber(userPhone);
+            var memberIdFromPhone = CommonHelper.GetMemberIdByContactNumber(userPhone);
             if (!String.IsNullOrEmpty(memberIdFromPhone))
             {
-                // CC (8/4/16): We really shouldn't abort in this case. Instead, we should verify that the user actually is the owner
-                //              of the Phone # by sending  a 5-digit numeric code to the Phone # and prompting the user to input it
-                //              on the page (which could be CreateAccount, PayRequest or DepositMoney)
-                var error = "MDA -> RegisterNonNoochUserWithSynapseV3 FAILED - PHONE Already Registered: [" + userEmail + "] - ABORTING";
-                CommonHelper.notifyCliffAboutError(error);
-                Logger.Error(error);
+                // Check if the user was created w/in the last 60 minutes... then we can assume it's the same person
+                Member memberObj = CommonHelper.GetMemberDetails(memberIdFromPhone);
 
-                res.reason = "Given phone number already registered.";
-                return res;
+                DateTime todaysDateTime = DateTime.Now;
+                TimeSpan span = todaysDateTime.Subtract(Convert.ToDateTime(memberObj.DateCreated));
+                double totalMins = span.TotalMinutes;
+
+                if (totalMins < 60)
+                {
+                    Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - PHONE already registered, but user created < 60 mins ago [" +
+                                totalMins + "], so sending to RegisterExistingUserWithSynapseV3()");
+
+                    // Consider the user valid, send to RegisterExistingUserWithSynapseV3()
+                    return RegisterExistingUserWithSynapseV3(transId, memberObj.MemberId.ToString(), userEmail,
+                                                             userPhone, userName, pw, ssn, dob, address, zip, fngprnt,
+                                                             ip, cip, fbid, isRentScene, isIdImageAdded, idImageData);
+                }
+                else
+                {
+                    // CC (8/4/16): We really shouldn't abort in this case. Instead, we should verify that the user actually is the owner
+                    //              of the Phone # by sending  a 5-digit numeric code to the Phone # and prompting the user to input it
+                    //              on the page (which could be CreateAccount, PayRequest or DepositMoney)
+                    var error = "MDA -> RegisterNonNoochUserWithSynapseV3 FAILED - PHONE Already Registered: [" + userEmail + "] - ABORTING";
+                    CommonHelper.notifyCliffAboutError(error);
+                    Logger.Error(error);
+
+                    res.reason = "Given phone number already registered.";
+                    return res;
+                }
             }
 
             #endregion Check if given email or phone already exists
 
 
             // Set up member details based on given name, email, phone, & other parameters
-            string noochRandomId = GetRandomNoochId();
+            var noochRandomId = GetRandomNoochId();
 
             if (!String.IsNullOrEmpty(noochRandomId))
             {
                 #region Get Invite Code ID from transaction
 
-                string inviteCode = "";
-                string inviteCodeMemberName = "";
+                var inviteCodeId = "";
+                var inviteCodeMemberName = "";
 
                 Transaction trans = new Transaction();
 
-                try
+                if (!String.IsNullOrEmpty(transId))
                 {
-                    Guid tid = Utility.ConvertToGuid(transId);
-
-                    trans = _dbContext.Transactions.FirstOrDefault(transIdTemp => transIdTemp.TransactionId == tid);
-
-                    if (trans != null)
+                    try
                     {
-                        _dbContext.Entry(trans).Reload();
-                        inviteCode = trans.Member.InviteCodeId.ToString();
+                        Guid tid = Utility.ConvertToGuid(transId);
 
-                        // Now get the Member's Name associated with the Invite Code from Members Table
-                        inviteCodeMemberName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member.FirstName)) + " " +
-                                               CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member.LastName));
+                        trans = _dbContext.Transactions.FirstOrDefault(transIdTemp => transIdTemp.TransactionId == tid);
+
+                        if (trans != null)
+                        {
+                            _dbContext.Entry(trans).Reload();
+                            inviteCodeId = trans.Member.InviteCodeId.ToString();
+
+                            // Now get the Member's Name associated with the Invite Code from Members Table
+                            inviteCodeMemberName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member.FirstName)) + " " +
+                                                   CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member.LastName));
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 -> FAILED to lookup Invite Code from Transaction - " +
+                                     "TransID: [" + transId + "], Exception: [" + ex + "]");
                     }
                 }
-                catch (Exception ex)
+                else if (!String.IsNullOrEmpty(company))
                 {
-                    Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 -> FAILED to lookup Invite Code from Transaction - " +
-                                 "TransID: [" + transId + "], Exception: [" + ex + "]");
+                    if (company == "rentscene")
+                    {
+                        inviteCodeMemberName = "Rent Scene";
+                        inviteCodeId = CommonHelper.GetMemberReferralCodeByMemberId("852987e8-d5fe-47e7-a00b-58a80dd15b49");
+                    }
+                    else if (company == "habitat")
+                    {
+                        inviteCodeMemberName = "Habitat LLC";
+                        inviteCodeId = CommonHelper.GetMemberReferralCodeByMemberId("45357cf0-e651-40e7-b825-e1ff48bf44d2");
+                    }
                 }
 
                 #endregion Get Invite Code ID from transaction
@@ -3101,13 +3137,11 @@ namespace Nooch.DataAccess
                 var stateAbbrev = googleMapsResult != null && googleMapsResult.stateAbbrev != null ? googleMapsResult.stateAbbrev : "";
                 var cityFromGoogle = googleMapsResult != null && !String.IsNullOrEmpty(googleMapsResult.city) ? googleMapsResult.city : "";
 
-                if (userName.IndexOf('+') > -1)
-                {
-                    userName.Replace("+", " ");
-                }
+                if (userName.IndexOf('+') > -1) userName.Replace("+", " ");
+
                 string[] namearray = userName.Split(' ');
-                string FirstName = CommonHelper.GetEncryptedData(namearray[0]);
-                string LastName = " ";
+                var FirstName = CommonHelper.GetEncryptedData(namearray[0]);
+                var LastName = " ";
 
                 // Example Name Formats: Most Common: 1.) Charles Smith
                 //                       Possible Variations: 2.) Charles   3.) Charles H. Smith
@@ -3115,21 +3149,12 @@ namespace Nooch.DataAccess
 
                 if (namearray.Length > 1)
                 {
-                    if (namearray.Length == 2)
-                    {
-                        // For regular First & Last name: Charles Smith
+                    if (namearray.Length == 2) // For regular First & Last name: Charles Smith
                         LastName = CommonHelper.GetEncryptedData(namearray[1]);
-                    }
-                    else if (namearray.Length == 3)
-                    {
-                        // For 3 names, could be a middle name or middle initial: Charles H. Smith or Charles Andrew Smith
+                    else if (namearray.Length == 3) // For 3 names, could be a middle name or middle initial: Charles H. Smith or Charles Andrew Smith
                         LastName = CommonHelper.GetEncryptedData(namearray[2]);
-                    }
-                    else
-                    {
-                        // For more than 3 names (some people have 2 or more middle names)
+                    else // For more than 3 names (some people have 2 or more middle names)
                         LastName = CommonHelper.GetEncryptedData(namearray[namearray.Length - 1]);
-                    }
                 }
 
                 // Convert string Date of Birth to DateTime
@@ -3140,13 +3165,11 @@ namespace Nooch.DataAccess
                 }
                 DateTime dateofbirth;
                 if (!DateTime.TryParse(dob, out dateofbirth))
-                {
                     Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - DOB was NULL - Name: [" + userName + "], TransId: [" + transId + "]");
-                }
 
-                string userNameLowerCase = userEmail.Trim().ToLower();
-                string userNameLowerCaseEncr = CommonHelper.GetEncryptedData(userNameLowerCase);
-                string secondaryEmail;
+                var userNameLowerCase = userEmail.Trim().ToLower();
+                var userNameLowerCaseEncr = CommonHelper.GetEncryptedData(userNameLowerCase);
+                var secondaryEmail = "";
 
                 // CLIFF (5/21/16): If this new user was invited via Email, then set the SecondaryEmail as the InvitationSentTo value.
                 //                  This helps if the user enters a different email during ID Verification form.
@@ -3154,7 +3177,7 @@ namespace Nooch.DataAccess
                                  ? trans.InvitationSentTo
                                  : userNameLowerCaseEncr;
 
-                string pinNumber = Utility.GetRandomPinNumber();
+                var pinNumber = Utility.GetRandomPinNumber();
                 pinNumber = CommonHelper.GetEncryptedData(pinNumber);
 
                 if (!String.IsNullOrEmpty(cip))
@@ -3198,8 +3221,8 @@ namespace Nooch.DataAccess
                     isRentScene = isRentScene == true ? true : false,
                 };
 
-                if (inviteCode.Length > 0)
-                    member.InviteCodeIdUsed = Utility.ConvertToGuid(inviteCode);
+                if (!String.IsNullOrEmpty(inviteCodeId) && inviteCodeId.Length > 0)
+                    member.InviteCodeIdUsed = Utility.ConvertToGuid(inviteCodeId);
 
                 NewUsersNoochMemId = member.MemberId.ToString();
 
@@ -3451,14 +3474,17 @@ namespace Nooch.DataAccess
 
                         // Notify Nooch Admin
                         StringBuilder completeEmailTxt = new StringBuilder();
-                        string s = "<html><body><h2>New Nooch User Created</h2><p>The following person just created a Nooch account:</p>" +
-                                   st.ToString() +
-                                   "<br/><br/><small><strong>This email was generated automatically in: [MDA -> RegisterNonNoochUserWithSynapse]</strong></small></body></html>";
+                        var s = "<html><body><h2>New Nooch User Created</h2><p>The following person just created a Nooch account:</p>" + st.ToString() +
+                                "<br/><br/><small><strong>This email was generated automatically in: [MDA -> RegisterNonNoochUserWithSynapse]</strong></small></body></html>";
 
                         completeEmailTxt.Append(s);
 
+                        var companyTxt = "";
+                        if (company == "rentscene") companyTxt = " [RENT SCENE]";
+                        else if (company == "habitat") companyTxt = " [HABITAT]";
+
                         Utility.SendEmail(null, "admin-autonotify@nooch.com", "newUser@nooch.com", null,
-                                          "Nooch Alert - NEW USER: " + namearray[0] + " " + lastNameUnEncr,
+                                          "Nooch Alert - NEW" + companyTxt + " USER: " + namearray[0] + " " + lastNameUnEncr,
                                           null, null, null, null, completeEmailTxt.ToString());
                     }
                     catch (Exception ex)
@@ -3467,6 +3493,7 @@ namespace Nooch.DataAccess
                     }
 
                     #endregion Notify Cliff About New User
+
 
                     #region Create User with Synapse
 
@@ -3531,7 +3558,7 @@ namespace Nooch.DataAccess
                                 // Case when synapse returned email already registered... chances are we have user id in SynapseCreateUserResults table
                                 // Checking Nooch DB
 
-                                string MemberIdFromtransId = GetNonNoochUserTempRegisterIdFromTransId(transId);
+                                var MemberIdFromtransId = GetNonNoochUserTempRegisterIdFromTransId(transId);
 
                                 if (MemberIdFromtransId.Length > 0)
                                 {
@@ -3577,7 +3604,7 @@ namespace Nooch.DataAccess
                     else
                     {
                         Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 - createSynapseUser FAILED & Returned NULL");
-                        res.reason = !String.IsNullOrEmpty(createSynapseUserResult.reason) ? createSynapseUserResult.reason : "Reg NonNooch User w/ Syn: Error 5927.";
+                        res.reason = !String.IsNullOrEmpty(createSynapseUserResult.reason) ? createSynapseUserResult.reason : "Reg NonNooch User w/ Syn: Error 3602.";
                     }
 
                     #endregion Create User with Synapse
@@ -3585,37 +3612,26 @@ namespace Nooch.DataAccess
 
                     #region Send Email To Referrer (If Applicable)
 
-                    if (!String.IsNullOrEmpty(inviteCode) && inviteCode.ToLower() != "b43a36a6-1da5-47ce-a56c-6210f9ddbd22")
+                    if (!String.IsNullOrEmpty(inviteCodeId) &&
+                        inviteCodeId.ToLower() != "b43a36a6-1da5-47ce-a56c-6210f9ddbd22" && // CC (9/7/16): Rent Scene didn't want these emails
+                        inviteCodeId.ToLower() != "nocode")
                     {
                         try
                         {
-                            Guid invideCodeGuid = Utility.ConvertToGuid(inviteCode);
+                            Guid invideCodeGuid = Utility.ConvertToGuid(inviteCodeId);
 
-                            var inviteCodeObj = _dbContext.InviteCodes.Where(inviteTemp => inviteTemp.InviteCodeId == invideCodeGuid).FirstOrDefault();
+                            var inviteCodeObj = _dbContext.InviteCodes.Where(i => i.InviteCodeId == invideCodeGuid).FirstOrDefault();
 
                             if (inviteCodeObj == null)
-                            {
-                                Logger.Info("MDA - RegisterNonNoochUserWithSynapseV3 - Could not find Invite Code - [Invite Code ID: " + inviteCode + "]");
-                            }
+                                Logger.Info("MDA - RegisterNonNoochUserWithSynapseV3 - Could not find Invite Code - Invite Code ID: [" + inviteCodeId +
+                                            "], InviteCodeMemberName: [" + inviteCodeMemberName + "]");
                             else if (inviteCodeObj.count >= inviteCodeObj.totalAllowed)
-                            {
                                 Logger.Info("MDA - RegisterNonNoochUserWithSynapseV3 - Invite Code limit of [" + inviteCodeObj.totalAllowed +
                                             "] exceeded for Code: [" + inviteCodeObj.code + "]");
-                            }
                             else
                             {
-                                if (inviteCode.ToLower() != "nocode")
-                                {
-                                    try
-                                    {
-                                        // Sending email to user who invited this user (Based on the invite code provided during registration)
-                                        SendEmailToInvitor(inviteCodeObj.InviteCodeId, userNameLowerCase, userName);
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 - EXCEPTION (Inner) trying to send Email To Referrer - [Exception: " + ex + "]");
-                                    }
-                                }
+                                // Send email to user who invited this user (Based on the invite code)
+                                SendEmailToInvitor(inviteCodeObj.InviteCodeId, userNameLowerCase, userName);
 
                                 // Now update invite code count
                                 inviteCodeObj.count++;
@@ -3625,7 +3641,8 @@ namespace Nooch.DataAccess
                         }
                         catch (Exception ex)
                         {
-                            Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 - EXCEPTION (Outer) trying to send Email To Referrer - [Exception: " + ex + "]");
+                            Logger.Error("MDA -> RegisterNonNoochUserWithSynapseV3 - EXCEPTION (Outer) Trying to send Email To Referrer - InviteCodeID: [" + inviteCodeId +
+                                         "], Exception: [" + ex + "]");
                         }
                     }
 

@@ -317,16 +317,24 @@ namespace Nooch.Common
 
         public static string GetMemberReferralCodeByMemberId(string MemberId)
         {
-            Guid memGuid = Utility.ConvertToGuid(MemberId);
+            try
+            {
+                Guid memGuid = Utility.ConvertToGuid(MemberId);
 
-            var noochMember = _dbContext.Members.FirstOrDefault(m => m.MemberId == memGuid && m.IsDeleted == false);
+                var noochMember = _dbContext.Members.FirstOrDefault(m => m.MemberId == memGuid && m.IsDeleted == false);
 
-            if (noochMember == null || noochMember.InviteCodeId == null) return "";
-            Guid inviGuid = Utility.ConvertToGuid(noochMember.InviteCodeId.ToString());
+                if (noochMember == null || noochMember.InviteCodeId == null) return "";
+                Guid inviGuid = Utility.ConvertToGuid(noochMember.InviteCodeId.ToString());
 
-            var inviteCodeREsult = _dbContext.InviteCodes.FirstOrDefault(m => m.InviteCodeId == inviGuid);
-            if (inviteCodeREsult != null) _dbContext.Entry(inviteCodeREsult).Reload();
-            return inviteCodeREsult != null ? inviteCodeREsult.code : "";
+                var inviteCodeResult = _dbContext.InviteCodes.FirstOrDefault(m => m.InviteCodeId == inviGuid);
+                if (inviteCodeResult != null) _dbContext.Entry(inviteCodeResult).Reload();
+                return inviteCodeResult != null ? inviteCodeResult.code : "";
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Common Helper -> GetMemberReferralCodeByMemberId FAILED - MemberID: [" + MemberId + "], Exception: [" + ex + "]");
+                return "";
+            }
         }
 
 
@@ -2983,7 +2991,7 @@ namespace Nooch.Common
                 #region Get Users Synapse USER Details
 
                 var createSynUserObj = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == memberObj.MemberId &&
-                                                                                                   m.IsDeleted == false);
+                                                                                               m.IsDeleted != true);
 
                 if (createSynUserObj != null && !String.IsNullOrEmpty(createSynUserObj.access_token))
                 {
@@ -3018,10 +3026,10 @@ namespace Nooch.Common
                     res.bankName = CommonHelper.GetDecryptedData(defaultBank.bank_name);
                     res.bankNickname = !String.IsNullOrEmpty(defaultBank.nickname) ? CommonHelper.GetDecryptedData(defaultBank.nickname) : "";
                     res.bankStatus = defaultBank.Status; // "Verfified" or "Not Verified"
-                    res.bankVerifiedDate = defaultBank.Status == "Verified" && defaultBank.VerifiedOn != null
-                        ? Convert.ToDateTime(defaultBank.VerifiedOn).ToString("MMM d, yyyy") : "";
+                    res.bankVerifiedDate = (defaultBank.Status == "Verified" && defaultBank.VerifiedOn != null)
+                                           ? Convert.ToDateTime(defaultBank.VerifiedOn).ToString("MMM d, yyyy") : "";
                     res.bankLogoUrl = getLogoForBank(res.bankName);
-
+                    res.isBankAddedManually = defaultBank.IsAddedUsingRoutingNumber ?? false;
                     res.errorMsg = "OK";
                 }
                 else

@@ -3111,17 +3111,25 @@ namespace Nooch.API.Controllers
 
             try
             {
+                if (String.IsNullOrEmpty(input.company))
+                {
+                    if (input.isRentScene)
+                        input.company = "rentscene";
+                    else
+                        input.company = "nooch";
+                }
+
                 Logger.Info("Service Cntrlr -> RegisterNonNoochUserWithSynapse Fired - MemberID: [" + input.memberId +
                             "], Name: [" + input.fullname + "], Email: [" + input.email +
                             "], Is ID Img Sent: [" + input.isIdImageAdded + "], CIP: [" + input.cip +
-                            "], FBID: [" + input.fbid + "], isRentScene: [" + input.isRentScene + "]");
+                            "], FBID: [" + input.fbid + "], Company: [" + input.company + "], isRentScene: [" + input.isRentScene + "]");
 
                 MembersDataAccess mda = new MembersDataAccess();
 
                 synapseCreateUserV3Result_int mdaRes = mda.RegisterNonNoochUserWithSynapseV3(input.transId, input.email, input.phone, input.fullname,
                                                                                              input.pw, input.ssn, input.dob, input.address,
                                                                                              input.zip, input.fngprnt, input.ip, input.cip, input.fbid,
-                                                                                             input.isRentScene, input.isIdImageAdded, input.idImageData);
+                                                                                             input.isRentScene, input.company, input.isIdImageAdded, input.idImageData);
 
                 res.success = mdaRes.success.ToString().ToLower();
                 res.reason = mdaRes.reason;
@@ -3231,7 +3239,7 @@ namespace Nooch.API.Controllers
         [ActionName("SynapseV3AddNodeWithAccountNumberAndRoutingNumber")]
         public SynapseBankLoginV3_Response_Int SynapseV3AddNodeWithAccountNumberAndRoutingNumber(string MemberId, string bankNickName, string account_num, string routing_num, string accounttype, string accountclass)
         {
-            Logger.Info("Service Cntrlr -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber Initiated - MemberID: [" + MemberId +
+            Logger.Info("Service Cntrlr -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber Fired - MemberID: [" + MemberId +
                         "], Bank Nick Name: [" + bankNickName + "], Routing #: [" + routing_num +
                         "], Account #: [" + account_num + "], Type: [" + accounttype + "], Class: [" + accountclass + "]");
 
@@ -3246,35 +3254,21 @@ namespace Nooch.API.Controllers
                 String.IsNullOrEmpty(accounttype) || String.IsNullOrEmpty(accountclass))
             {
                 if (String.IsNullOrEmpty(MemberId))
-                {
                     res.errorMsg = "Invalid data - need MemberID.";
-                }
                 else if (String.IsNullOrEmpty(bankNickName))
-                {
                     res.errorMsg = "Invalid data - need bank account nick name.";
-                }
                 else if (String.IsNullOrEmpty(account_num))
-                {
                     res.errorMsg = "Invalid data - need bank account number.";
-                }
                 else if (String.IsNullOrEmpty(routing_num))
-                {
                     res.errorMsg = "Invalid data - need bank routing number.";
-                }
                 else if (String.IsNullOrEmpty(accounttype))
-                {
                     res.errorMsg = "Invalid data - need bank account type.";
-                }
                 else if (String.IsNullOrEmpty(accountclass))
-                {
                     res.errorMsg = "Invalid data - need bank account class.";
-                }
                 else
-                {
                     res.errorMsg = "Invalid data - please try again.";
-                }
 
-                Logger.Error("Service Controller -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber ABORTING: Invalid data sent for: [" + MemberId + "].");
+                Logger.Error("Service Cntrlr -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber ABORTING: Invalid data sent for: [" + MemberId + "].");
 
                 return res;
             }
