@@ -3028,6 +3028,7 @@ namespace Nooch.Common
                     res.bankStatus = defaultBank.Status; // "Verfified" or "Not Verified"
                     res.bankVerifiedDate = (defaultBank.Status == "Verified" && defaultBank.VerifiedOn != null)
                                            ? Convert.ToDateTime(defaultBank.VerifiedOn).ToString("MMM d, yyyy") : "";
+                    res.bank_node_id = GetDecryptedData(defaultBank.oid);
                     res.bankLogoUrl = getLogoForBank(res.bankName);
                     res.isBankAddedManually = defaultBank.IsAddedUsingRoutingNumber ?? false;
                     res.errorMsg = "OK";
