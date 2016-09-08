@@ -24,6 +24,7 @@ namespace Nooch.Common.Entities.MobileAppInputEntities
         public string fullname { get; set; }
         public string cip { get; set; }
         public string fbid { get; set; }
+        public string company { get; set; }
         public bool isRentScene { get; set; }
     }
 }

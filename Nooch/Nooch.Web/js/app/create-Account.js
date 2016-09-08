@@ -4,8 +4,8 @@ var resultReason = "";
 var fingprint = "";
 var errorId = $('#errorId').val();
 var TYPE = $('#type').val();
-var RENTSCENE = $('#rs').val();
-var COMPANY = "Nooch";
+var COMPANY = $('#company').val();
+var COMPANY_DISPLAY_TXT = "Nooch";
 var memIdGen = "";
 var memid = $('#memId').val();
 var ISNEW = $('#isNew').val();
@@ -24,9 +24,9 @@ document.head || (document.head = document.getElementsByTagName('head')[0]);
 $(document).ready(function () {
     if ($(window).width() < 768) isSmScrn = true;
 
-    if (RENTSCENE == "rentscene")
+    if (COMPANY == "rentscene")
     {
-        COMPANY = "Rent Scene";
+        COMPANY_DISPLAY_TXT = "Rent Scene";
 
         var w = isSmScrn ? '90px' : '140px'
         $('.landingHeaderLogo img').css('width', w);
@@ -34,9 +34,9 @@ $(document).ready(function () {
         document.title = (ISNEW == "true") ? "Create Account | Rent Scene Payments" : "Update Account | Rent Scene Payments"
         changeFavicon('../Assets/favicon2.ico');
     }
-    else if (RENTSCENE == "habitat")
+    else if (COMPANY == "habitat")
     {
-        COMPANY = "Habitat";
+        COMPANY_DISPLAY_TXT = "Habitat";
 
         var w = isSmScrn ? '90px' : '150px'
         $('.landingHeaderLogo img').css('width', w);
@@ -576,7 +576,7 @@ function createRecord() {
                                    ", fngprnt: " + fngprntVal +
 								   ", isIdImage: " + isFileAdded +
                                    ", IP: " + ipVal +
-                                   ", isRS: " + RENTSCENE +
+                                   ", company: " + COMPANY +
                                    ", Type: " + cip +
 								   ", FBID: " + FBID + "}");
 
@@ -596,7 +596,7 @@ function createRecord() {
              "', 'ip':'" + ipVal +
              "', 'pw':'" + '' +
              "', 'fbid':'" + FBID +
-             "', 'rs':'" + RENTSCENE +
+             "', 'company':'" + COMPANY +
              "', 'cip':'" + cip +
              "', 'isIdImage':'" + isFileAdded +
              "', 'idImagedata':'" + FileData + "'}",
@@ -739,7 +739,7 @@ function idVerifiedSuccess() {
         // THEN DISPLAY SUCCESS ALERT...
         swal({
             title: "Submitted Successfully",
-            text: "Thanks for submitting your ID information. That helps us keep " + COMPANY + " safe for everyone. &nbsp;We only use this information to prevent ID fraud and never share it without your permission." +
+            text: "Thanks for submitting your ID information. That helps us keep " + COMPANY_DISPLAY_TXT + " safe for everyone. &nbsp;We only use this information to prevent ID fraud and never share it without your permission." +
             "<span class='show m-t-10'>To finish, link any checking account:</span>" +
             "<span class=\"spanlist\"><span>1. &nbsp;Select your bank</span><span>2. &nbsp;Login with your regular online banking credentials</span><span>3. &nbsp;Choose which account to use</span></span>",
             type: "success",
@@ -1096,7 +1096,7 @@ function showErrorAlert(errorNum) {
     var shouldShowErrorDiv = true;
 
     var supportEmail = "support@nooch.com";
-    if (COMPANY == "Rent Scene") supportEmail = "payments@rentscene.com"
+    if (COMPANY == "rentscene") supportEmail = "payments@rentscene.com"
 
     console.log("ShowError -> errorNum is: [" + errorNum + "], resultReason is: [" + resultReason + "]");
 
@@ -1104,31 +1104,31 @@ function showErrorAlert(errorNum) {
     {
         alertTitle = "Errors Are The Worst!";
         alertBodyText = "We had trouble finding that transaction.  Please try again and if you continue to see this message, contact <span style='font-weight:600;'>" +
-						COMPANY + " Support</span>:<br/><a href='mailto:" + supportEmail + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + supportEmail + "</a>";
+						COMPANY_DISPLAY_TXT + " Support</span>:<br/><a href='mailto:" + supportEmail + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + supportEmail + "</a>";
     }
     else if (errorNum == '2') // Errors after submitting ID verification AJAX
     {
         alertTitle = "Errors Are The Worst!";
         alertBodyText = "Terrible sorry, but it looks like we had trouble processing your info.  Please refresh this page to try again and if you continue to see this message, contact <span style='font-weight:600;'>" +
-                        COMPANY + " Support</span>:<br/><a href='mailto:" + supportEmail + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + supportEmail + "</a>";
+                        COMPANY_DISPLAY_TXT + " Support</span>:<br/><a href='mailto:" + supportEmail + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + supportEmail + "</a>";
     }
     else if (errorNum == '25') // Errors from the iFrame with the multiple choice verification questions
     {
         alertTitle = "Errors Are The Worst!";
         alertBodyText = "Terrible sorry, but it looks like we had trouble processing your info.  Please refresh this page to try again and if you continue to see this message, contact <span style='font-weight:600;'>" +
-                        COMPANY + " Support</span>:<br/><a href='mailto:" + supportEmail + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + supportEmail + "</a>";
+                        COMPANY_DISPLAY_TXT + " Support</span>:<br/><a href='mailto:" + supportEmail + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + supportEmail + "</a>";
     }
     else if (errorNum == '20') // Submitted ID Verification info, but EMAIL came back as already registered with Nooch.
     {
         alertTitle = "Email Already Registered";
-        alertBodyText = "Looks like <strong>" + $('#idVer-email').val() + "</strong> is already registered to a " + COMPANY + " account.  Please try a different email address.";
+        alertBodyText = "Looks like <strong>" + $('#idVer-email').val() + "</strong> is already registered to a " + COMPANY_DISPLAY_TXT + " account.  Please try a different email address.";
         shouldFocusOnEmail = true;
         shouldShowErrorDiv = false;
     }
     else if (errorNum == '30') // Submitted ID Verification info, but PHONE came back as already registered with Nooch.
     {
         alertTitle = "Phone Number Already Registered";
-        alertBodyText = "Looks like <strong>" + $('#idVer-phone').val() + "</strong> is already registered to a " + COMPANY + " account.  Please try a different number.";
+        alertBodyText = "Looks like <strong>" + $('#idVer-phone').val() + "</strong> is already registered to a " + COMPANY_DISPLAY_TXT + " account.  Please try a different number.";
         shouldFocusOnPhone = true;
         shouldShowErrorDiv = false;
     }
@@ -1136,7 +1136,7 @@ function showErrorAlert(errorNum) {
     {
         alertTitle = "Errors Are The Worst!";
         alertBodyText = "Terrible sorry, but it looks like we had trouble processing your request.  Please refresh this page to try again and if you continue to see this message, contact <span style='font-weight:600;'>" +
-                        COMPANY + " Support</span>:<br/><a href='mailto:" + supportEmail + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + supportEmail + "</a>";
+                        COMPANY_DISPLAY_TXT + " Support</span>:<br/><a href='mailto:" + supportEmail + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + supportEmail + "</a>";
     }
 
     if (shouldShowErrorDiv == true)
@@ -1196,7 +1196,7 @@ function ssnWhy() {
     swal({
         title: "Why Do We Collect SSN?",
         text: "We hate identify fraud.  With a passion.<span class='show m-t-15'>" +
-              "In order to keep " + COMPANY + " safe for all users, and to comply with federal and state measures against identity theft, we use your SSN for one purpose only: verifying your ID. &nbsp;Your SSN is never displayed anywhere and is only transmitted with bank-grade encryption.</span>" +
+              "In order to keep " + COMPANY_DISPLAY_TXT + " safe for all users, and to comply with federal and state measures against identity theft, we use your SSN for one purpose only: verifying your ID. &nbsp;Your SSN is never displayed anywhere and is only transmitted with bank-grade encryption.</span>" +
               "<span class='show'><a href='https://en.wikipedia.org/wiki/Know_your_customer' class='btn btn-link p-5 f-16' target='_blank'>Learn More<i class='fa fa-external-link m-l-10 f-15'></i></a></span>",
         type: "info",
         showCancelButton: false,

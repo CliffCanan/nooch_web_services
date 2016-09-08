@@ -8,7 +8,9 @@ namespace Nooch.Common.Entities
 {
     public class ResultcreateAccount
     {
-        public string rs { get; set; }
+        public bool isNewUser { get; set; }
+        public bool nameInNavContainer { get; set; }
+        public string company { get; set; }
         public string type { get; set; }
         public string errorId { get; set; }
         public string transId { get; set; }
@@ -23,7 +25,6 @@ namespace Nooch.Common.Entities
         public string email { get; set; }
         public string phone { get; set; }
         public string nameInNav { get; set; }
-        public bool nameInNavContainer { get; set; }
         public string ssn { get; set; }
         public string ip { get; set; }
         public string fngprnt { get; set; }
@@ -32,7 +33,6 @@ namespace Nooch.Common.Entities
         public string idImagedata { get; set; }
         public string fbid { get; set; }
         public string cip { get; set; }
-        public bool isNewUser { get; set; }
     }
 
     public class CreateAccountInDB

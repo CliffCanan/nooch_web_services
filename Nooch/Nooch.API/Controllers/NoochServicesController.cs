@@ -3111,17 +3111,25 @@ namespace Nooch.API.Controllers
 
             try
             {
+                if (String.IsNullOrEmpty(input.company))
+                {
+                    if (input.isRentScene)
+                        input.company = "rentscene";
+                    else
+                        input.company = "nooch";
+                }
+
                 Logger.Info("Service Cntrlr -> RegisterNonNoochUserWithSynapse Fired - MemberID: [" + input.memberId +
                             "], Name: [" + input.fullname + "], Email: [" + input.email +
                             "], Is ID Img Sent: [" + input.isIdImageAdded + "], CIP: [" + input.cip +
-                            "], FBID: [" + input.fbid + "], isRentScene: [" + input.isRentScene + "]");
+                            "], FBID: [" + input.fbid + "], Company: [" + input.company + "], isRentScene: [" + input.isRentScene + "]");
 
                 MembersDataAccess mda = new MembersDataAccess();
 
                 synapseCreateUserV3Result_int mdaRes = mda.RegisterNonNoochUserWithSynapseV3(input.transId, input.email, input.phone, input.fullname,
                                                                                              input.pw, input.ssn, input.dob, input.address,
                                                                                              input.zip, input.fngprnt, input.ip, input.cip, input.fbid,
-                                                                                             input.isRentScene, input.isIdImageAdded, input.idImageData);
+                                                                                             input.isRentScene, input.company, input.isIdImageAdded, input.idImageData);
 
                 res.success = mdaRes.success.ToString().ToLower();
                 res.reason = mdaRes.reason;

@@ -1337,7 +1337,7 @@ namespace Nooch.Web.Controllers
                 else // Member DOES NOT already exist, so use RegisterNONNOOCHUserWithSynapse()
                     serviceMethod = "RegisterNonNoochUserWithSynapse";
 
-                string json = scriptSerializer.Serialize(inputClass);
+                var json = scriptSerializer.Serialize(inputClass);
 
                 Logger.Info("PayRequest Page -> RegisterUserWithSynpForPayRequest - URL To Query: [ " + String.Concat(serviceUrl, serviceMethod) + " ]");
 
@@ -1565,7 +1565,7 @@ namespace Nooch.Web.Controllers
                     // No MemberID in URL, so must be creating a brand NEW user
                     rca.errorId = "0";
                     rca.isNewUser = true;
-                    rca.rs = by;
+                    rca.company = by;
 
                     if (by == "habitat")
                         rca.type = "vendor";
@@ -1663,7 +1663,7 @@ namespace Nooch.Web.Controllers
                     rca.phone = member.ContactNumber;
                     rca.ssn = member.ssnLast4;
                     rca.fngprnt = member.fngrprnt;
-                    rca.rs = member.isRs ? "rentscene" : "";
+                    rca.company = member.isRs ? "rentscene" : "nooch";
 
                     if (member.companyName != null && member.companyName.Length > 3)
                     {
@@ -1698,7 +1698,7 @@ namespace Nooch.Web.Controllers
                         "], Phone: [" + userData.phone + "], DOB: [" + userData.dob +
                         "], SSN: [" + userData.ssn + "], Address: [" + userData.address +
                         "], IP: [" + userData.ip + "], Is Image Sent: [" + userData.isIdImage +
-                        "], FBID: [" + userData.fbid + "], isRentScene: [" + userData.rs +
+                        "], FBID: [" + userData.fbid + "], company: [" + userData.company +
                         "], CIP: [" + userData.cip + "]");
 
             RegisterUserSynapseResultClassExt res = new RegisterUserSynapseResultClassExt();
@@ -1711,29 +1711,31 @@ namespace Nooch.Web.Controllers
                 // Determine if this is for a new or existing user
                 bool newUser = String.IsNullOrEmpty(userData.memId);
 
-                string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+                var serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+                var serviceMethod = newUser ? "RegisterNonNoochUserWithSynapse" : "RegisterExistingUserWithSynapseV3";
+                var urlToUse = String.Concat(serviceUrl, serviceMethod);
 
-                string serviceMethod = newUser ? "RegisterNonNoochUserWithSynapse" : "RegisterExistingUserWithSynapseV3";
-                string urlToUse = String.Concat(serviceUrl, serviceMethod);
-
-                RegisterUserWithSynapseV3_Input inputClass = new RegisterUserWithSynapseV3_Input();
-                inputClass.fullname = userData.name;
-                inputClass.email = userData.email;
-                inputClass.phone = userData.phone;
-                inputClass.address = userData.address;
-                inputClass.zip = userData.zip;
-                inputClass.dob = userData.dob;
-                inputClass.ssn = userData.ssn;
-                inputClass.fngprnt = userData.fngprnt;
-                inputClass.ip = userData.ip;
-                inputClass.fbid = userData.fbid;
-                inputClass.idImageData = userData.idImagedata;
-                inputClass.isIdImageAdded = userData.isIdImage;
-                inputClass.pw = userData.pw;
-                inputClass.memberId = userData.memId;
-                inputClass.transId = userData.transId;
-                inputClass.isRentScene = userData.rs == "true" ? true : false;
-                inputClass.cip = !String.IsNullOrEmpty(userData.cip) ? userData.cip : "renter";
+                RegisterUserWithSynapseV3_Input inputClass = new RegisterUserWithSynapseV3_Input
+                {
+                    fullname = userData.name,
+                    email = userData.email,
+                    phone = userData.phone,
+                    address = userData.address,
+                    zip = userData.zip,
+                    dob = userData.dob,
+                    ssn = userData.ssn,
+                    fngprnt = userData.fngprnt,
+                    ip = userData.ip,
+                    fbid = userData.fbid,
+                    idImageData = userData.idImagedata,
+                    isIdImageAdded = userData.isIdImage,
+                    pw = userData.pw,
+                    memberId = userData.memId,
+                    transId = userData.transId,
+                    isRentScene = userData.company == "true" ? true : false,
+                    company = userData.company,
+                    cip = !String.IsNullOrEmpty(userData.cip) ? userData.cip : "renter"
+                };
 
                 var scriptSerializer = new JavaScriptSerializer();
                 string json = scriptSerializer.Serialize(inputClass);

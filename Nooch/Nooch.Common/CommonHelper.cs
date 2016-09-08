@@ -317,16 +317,24 @@ namespace Nooch.Common
 
         public static string GetMemberReferralCodeByMemberId(string MemberId)
         {
-            Guid memGuid = Utility.ConvertToGuid(MemberId);
+            try
+            {
+                Guid memGuid = Utility.ConvertToGuid(MemberId);
 
-            var noochMember = _dbContext.Members.FirstOrDefault(m => m.MemberId == memGuid && m.IsDeleted == false);
+                var noochMember = _dbContext.Members.FirstOrDefault(m => m.MemberId == memGuid && m.IsDeleted == false);
 
-            if (noochMember == null || noochMember.InviteCodeId == null) return "";
-            Guid inviGuid = Utility.ConvertToGuid(noochMember.InviteCodeId.ToString());
+                if (noochMember == null || noochMember.InviteCodeId == null) return "";
+                Guid inviGuid = Utility.ConvertToGuid(noochMember.InviteCodeId.ToString());
 
-            var inviteCodeREsult = _dbContext.InviteCodes.FirstOrDefault(m => m.InviteCodeId == inviGuid);
-            if (inviteCodeREsult != null) _dbContext.Entry(inviteCodeREsult).Reload();
-            return inviteCodeREsult != null ? inviteCodeREsult.code : "";
+                var inviteCodeResult = _dbContext.InviteCodes.FirstOrDefault(m => m.InviteCodeId == inviGuid);
+                if (inviteCodeResult != null) _dbContext.Entry(inviteCodeResult).Reload();
+                return inviteCodeResult != null ? inviteCodeResult.code : "";
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Common Helper -> GetMemberReferralCodeByMemberId FAILED - MemberID: [" + MemberId + "], Exception: [" + ex + "]");
+                return "";
+            }
         }
 
 
