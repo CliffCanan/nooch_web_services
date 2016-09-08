@@ -2945,7 +2945,7 @@ namespace Nooch.DataAccess
                         "], Address: [" + address + "], ZIP: [" + zip +
                         "], IP: [" + ip + "], Fngprnt: [" + fngprnt +
                         "], TransID: [" + transId + "], CIP: [" + cip +
-                        "], FBID: [" + fbid + "], isRentScene: [" + isRentScene +
+                        "], FBID: [" + fbid + "], company: [" + company + "], isRentScene: [" + isRentScene +
                         "], isIdImageAdded: [" + isIdImageAdded + "]");
 
             synapseCreateUserV3Result_int res = new synapseCreateUserV3Result_int();
@@ -3777,7 +3777,7 @@ namespace Nooch.DataAccess
         /// <returns></returns>
         public GenericInternalResponseForSynapseMethods submitDocumentToSynapseV3(string MemberId, string ImageUrl)
         {
-            Logger.Info("MDA -> submitDocumentToSynapseV3 Initialized - [MemberId: " + MemberId +
+            Logger.Info("MDA -> submitDocumentToSynapseV3 Fired - MemberID: [" + MemberId +
                         "], ImageURL: [" + ImageUrl + "]");
 
             GenericInternalResponseForSynapseMethods res = new GenericInternalResponseForSynapseMethods();

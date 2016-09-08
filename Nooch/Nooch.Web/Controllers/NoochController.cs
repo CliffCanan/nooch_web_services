@@ -1692,13 +1692,12 @@ namespace Nooch.Web.Controllers
         [ActionName("saveMemberInfo")]
         public ActionResult saveMemberInfo(ResultcreateAccount userData)
         {
-
             Logger.Info("Create Account Page -> saveMemberInfo Fired - MemberID: [" + userData.memId +
                         "], Name: [" + userData.name + "], Email: [" + userData.email +
                         "], Phone: [" + userData.phone + "], DOB: [" + userData.dob +
                         "], SSN: [" + userData.ssn + "], Address: [" + userData.address +
                         "], IP: [" + userData.ip + "], Is Image Sent: [" + userData.isIdImage +
-                        "], FBID: [" + userData.fbid + "], company: [" + userData.company +
+                        "], FBID: [" + userData.fbid + "], Company: [" + userData.company +
                         "], CIP: [" + userData.cip + "]");
 
             RegisterUserSynapseResultClassExt res = new RegisterUserSynapseResultClassExt();
@@ -2469,7 +2468,7 @@ namespace Nooch.Web.Controllers
 
             #region Lookup PIN
 
-            string json = "";
+            var json = "";
             requestFromRentScene response = new requestFromRentScene();
             var scriptSerializer = new JavaScriptSerializer();
 
@@ -2494,9 +2493,9 @@ namespace Nooch.Web.Controllers
 
             try
             {
-                string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-                string serviceMethod;
-                string textLoggerHelper = "";
+                var serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+                var serviceMethod = "";
+                var textLoggerHelper = "";
 
                 if (isRequest)
                 {
@@ -2511,8 +2510,8 @@ namespace Nooch.Web.Controllers
                 }
                 else
                 {
-                    string memIdToUse = "";
-                    string accessToken = "";
+                    var memIdToUse = "";
+                    var accessToken = "";
 
                     if (from.ToLower() == "rentscene")
                     {
@@ -2546,7 +2545,7 @@ namespace Nooch.Web.Controllers
                         return Json(res);
                     }
 
-                    string RecepientId = CommonHelper.GetMemberIdByUserName(email.ToString());
+                    var RecepientId = CommonHelper.GetMemberIdByUserName(email.ToString());
 
                     TransactionDto transactionDto = new TransactionDto();
                     transactionDto.MemberId = memIdToUse;
@@ -2566,9 +2565,10 @@ namespace Nooch.Web.Controllers
                         response.msg = sr.Result;
                     }
                 }
-                string urlToUse = String.Concat(serviceUrl, serviceMethod);
 
-                Logger.Info("Make Payment Page -> submitRequestToExistingUser - URL To Query: [" + urlToUse + "], IsRequest: [" + isRequest + "]");
+                var urlToUse = String.Concat(serviceUrl, serviceMethod);
+
+                Logger.Info("Make Payment Page -> submitRequestToExistingUser - URL To Query was: [" + urlToUse + "], IsRequest: [" + isRequest + "]");
 
                 Logger.Info("Make Payment Page -> submitRequestToExistingUser - Server Response: Success: [" + response.success + "], Msg: [" + response.msg + "]");
 

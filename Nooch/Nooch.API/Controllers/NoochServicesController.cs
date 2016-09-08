@@ -3171,14 +3171,13 @@ namespace Nooch.API.Controllers
                 var mda = new MembersDataAccess();
 
                 // Make URL from byte array b/c submitDocumentToSynapseV3 expects url of image.
-                string ImageUrlMade = "";
-                string filename = "";
+                var ImageUrlMade = "";
+                var filename = "";
 
                 //convert base64 string into byte array(sent from mobile app)
                 if (DocumentDetails.Photo != null)
                 {
                     DocumentDetails.Picture = System.Convert.FromBase64String(DocumentDetails.Photo);
-
                 }
 
                 if (DocumentDetails.Picture != null)
@@ -4493,7 +4492,7 @@ namespace Nooch.API.Controllers
                 transInput.doNotSendEmails == false || // Proxy to tell if it's an admin sending a test transaction (only time doNotSendEmails would be 'false')
                 CommonHelper.IsValidRequest(accessToken, transInput.MemberId))
             {
-                string trnsactionId = string.Empty;
+                var trnsactionId = string.Empty;
 
                 try
                 {

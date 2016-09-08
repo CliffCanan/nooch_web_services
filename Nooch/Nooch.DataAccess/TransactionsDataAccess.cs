@@ -5963,7 +5963,7 @@ namespace Nooch.DataAccess
         /// <param name="trnsactionId"></param>
         public string TransferMoneyUsingSynapse(TransactionEntity transInput)
         {
-            Logger.Info("TDA -> TransferMoneyUsingSynapse Initiated - " +
+            Logger.Info("TDA -> TransferMoneyUsingSynapse Fired - " +
                         "SenderID: [" + transInput.MemberId + "], " +
                         "Amount: [" + transInput.Amount + "], " +
                         "RecipientID: [" + transInput.RecipientId + "], " +
@@ -5973,36 +5973,36 @@ namespace Nooch.DataAccess
 
             DateTime TransDateTime = DateTime.Now;
 
-            string trnsactionId = string.Empty;
+            var trnsactionId = string.Empty;
 
             #region Initial checks
 
             if (transInput.MemberId == null)
             {
-                Logger.Error("TDA -> TransferMoneyUsingSynapse - ABORTING - Missing MemberID- [MemberId: " + transInput.MemberId + "]");
+                Logger.Error("TDA -> TransferMoneyUsingSynapse - ABORTING - Missing MemberID- MemberID: [" + transInput.MemberId + "]");
                 return "Missing MemberID (Sender)";
             }
             if (transInput.RecipientId == null)
             {
-                Logger.Error("TDA -> TransferMoneyUsingSynapse - ABORTING - Missing RecipientID - [MemberId: " + transInput.MemberId + "]");
+                Logger.Error("TDA -> TransferMoneyUsingSynapse - ABORTING - Missing RecipientID - MemberID: [" + transInput.MemberId + "]");
                 return "Missing MemberID (Recipient)";
             }
             if (transInput.Amount == null)
             {
-                Logger.Error("TDA -> TransferMoneyUsingSynapse - ABORTING - Missing Amount - [MemberId: " + transInput.MemberId + "]");
+                Logger.Error("TDA -> TransferMoneyUsingSynapse - ABORTING - Missing Amount - MemberID: [" + transInput.MemberId + "]");
                 return "Missing Amount";
             }
 
             // Check to make sure sender and recipient are not the same user
             if (transInput.MemberId == transInput.RecipientId)
             {
-                Logger.Error("TDA -> TransferMoneyUsingSynapse - ABORTING - Sender and recipient MemberIDs were the same - MemberId: [" +
+                Logger.Error("TDA -> TransferMoneyUsingSynapse - ABORTING - Sender and recipient MemberIDs were the same - MemberID: [" +
                              transInput.MemberId + "]");
                 return "Not allowed for send money to the same user.";
             }
 
             // Check PIN
-            string validPinNumberResult = CommonHelper.ValidatePinNumber(transInput.MemberId, transInput.PinNumber);
+            var validPinNumberResult = CommonHelper.ValidatePinNumber(transInput.MemberId, transInput.PinNumber);
 
             if (validPinNumberResult != "Success")
             {
@@ -6016,7 +6016,7 @@ namespace Nooch.DataAccess
 
             // Individual user transfer limit check
             decimal thisUserTransLimit = 0;
-            string indiTransLimit = CommonHelper.GetGivenMemberTransferLimit(transInput.MemberId);
+            var indiTransLimit = CommonHelper.GetGivenMemberTransferLimit(transInput.MemberId);
 
             if (!String.IsNullOrEmpty(indiTransLimit))
             {
@@ -6054,11 +6054,12 @@ namespace Nooch.DataAccess
 
             #region Get Sender Synapse Details
 
-            string senderBankOid = "";
-            string sender_oauth = "";
+            var senderBankOid = "";
+            var sender_oauth = "";
 
+            Guid senderGuid = new Guid(transInput.MemberId);
+            var senderNoochDetails = _dbContext.Members.FirstOrDefault(m => m.MemberId == senderGuid && m.IsDeleted != true);
             var senderSynDetails = CommonHelper.GetSynapseBankAndUserDetailsforGivenMemberId(transInput.MemberId);
-            var senderNoochDetails = CommonHelper.GetMemberDetails(transInput.MemberId);
 
             if (senderSynDetails.wereUserDetailsFound == false || senderSynDetails.UserDetails == null)
             {
@@ -6096,9 +6097,10 @@ namespace Nooch.DataAccess
 
             #region Get Recipient Synapse Details
 
-            string recipBankOid = ""; // This is not actually needed for the transaction to happen, we can remove this check later
+            var recipBankOid = ""; // This is not actually needed for the transaction to happen, we can remove this check later
 
-            var recipientNoochDetails = CommonHelper.GetMemberDetails(transInput.RecipientId);
+            Guid recipGuid = new Guid(transInput.RecipientId);
+            var recipientNoochDetails = _dbContext.Members.FirstOrDefault(m => m.MemberId == recipGuid && m.IsDeleted != true);
             var recipientSynapseDetails = CommonHelper.GetSynapseBankAndUserDetailsforGivenMemberId(transInput.RecipientId);
 
             if (recipientSynapseDetails.wereUserDetailsFound == false || recipientSynapseDetails.UserDetails == null)
@@ -6177,421 +6179,396 @@ namespace Nooch.DataAccess
 
             //Logger.Info("TDA -> TransferMoneyUsingSynapse CHECKPOINT #1 - ALL INITIAL INPUT CHECKS PASSED");
 
-            using (var noochConnection = new NOOCHEntities())
+            try
             {
-                try
+                //Logger.Info("TDA -> TransferMoneyUsingSynapse CHECKPOINT #2 - BOTH USERS' SYNAPSE INFO RETRIEVED SUCCESSFULLY");
+
+                // Prepare variables for Email/SMS notifications (This block is this early because these vars will be used for both success & failure scenarios below)
+                #region Define Variables From Transaction for Notifications
+
+                var senderUserName = CommonHelper.GetDecryptedData(senderNoochDetails.UserName);
+                var senderFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(senderNoochDetails.FirstName));
+                var senderLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(senderNoochDetails.LastName));
+
+                var receiverUserName = CommonHelper.GetDecryptedData(recipientNoochDetails.UserName);
+                var recipientFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(recipientNoochDetails.FirstName));
+                var recipientLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(recipientNoochDetails.LastName));
+
+                var wholeAmount = transInput.Amount.ToString("n2");
+                string[] s3 = wholeAmount.Split('.');
+                var cents = "";
+                var dollars = "";
+                if (s3.Length <= 1)
                 {
-                    //Logger.Info("TDA -> TransferMoneyUsingSynapse CHECKPOINT #2 - BOTH USERS' SYNAPSE INFO RETRIEVED SUCCESSFULLY");
+                    dollars = s3[0].ToString();
+                    cents = "00";
+                }
+                else
+                {
+                    cents = s3[1].ToString();
+                    dollars = s3[0].ToString();
+                }
 
-                    // Prepare variables for Email/SMS notifications (This block is this early because these vars will be used for both success & failure scenarios below)
-                    #region Define Variables From Transaction for Notifications
-
-                    string senderUserName = CommonHelper.GetDecryptedData(senderNoochDetails.UserName);
-                    string senderFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(senderNoochDetails.FirstName));
-                    string senderLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(senderNoochDetails.LastName));
-
-                    string receiverUserName = CommonHelper.GetDecryptedData(recipientNoochDetails.UserName);
-                    string recipientFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(recipientNoochDetails.FirstName));
-                    string recipientLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(recipientNoochDetails.LastName));
-
-                    string wholeAmount = transInput.Amount.ToString("n2");
-                    string[] s3 = wholeAmount.Split('.');
-                    string ce = "";
-                    string dl = "";
-                    if (s3.Length <= 1)
+                var memo = "";
+                if (!String.IsNullOrEmpty(transInput.Memo))
+                {
+                    if (transInput.Memo.Length > 3)
                     {
-                        dl = s3[0].ToString();
-                        ce = "00";
+                        var firstThreeChars = transInput.Memo.Substring(0, 3).ToLower();
+                        bool startsWithFor = firstThreeChars.Equals("for");
+
+                        if (startsWithFor) memo = transInput.Memo.ToString();
+                        else memo = "For: " + transInput.Memo.ToString();
+                    }
+                    else memo = "For: " + transInput.Memo.ToString();
+                }
+
+                var senderPic = "https://www.noochme.com/noochweb/Assets/Images/userpic-default.png";
+                var recipientPic = "";
+
+                bool isForRentScene = false;
+                bool isRentScenePayrollPayment = false;
+                bool isAutoPay = false;
+
+                if (senderNoochDetails.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49") // Rent Scene's account
+                {
+                    isForRentScene = true;
+                    senderFirstName = "Rent Scene";
+                    senderLastName = "";
+
+                    // Now check if the recipient is one of Rent Scene's employees
+                    if (recipientNoochDetails.Nooch_ID.ToString() == "q40l9MnO") // Tori Moore
+                    {
+                        Logger.Info("TDA -> TransferMoneyUsingSynapse - RENT SCENE PAYROLL PAYMENT DETECTED - continuing on, but won't send email to Sender (Rent Scene)");
+                        isRentScenePayrollPayment = true;
+                    }
+                }
+                else if (recipientNoochDetails.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49") // Rent Scene's account
+                {
+                    isForRentScene = true;
+                    recipientFirstName = "Rent Scene";
+                    recipientLastName = "";
+                }
+
+                if (transInput.isRentAutoPayment)
+                {
+                    Logger.Info("TDA -> TransferMoneyUsingSynapse - RENT AUTO-PAYMENT DETECTED - continuing on!");
+                    isAutoPay = true;
+                }
+
+                var fromAddress = Utility.GetValueFromConfig("transfersMail");
+                if (isForRentScene) fromAddress = "payments@rentscene.com";
+
+                #endregion Define Variables From Transaction for Notifications
+
+
+                // Make call to SYNAPSE Order API service
+
+                #region Synapse V3 Add Trans
+
+                // CC (6/20/16): Must get the TransactionID from 'SetTransactionDetails' here so we send the right webhook to Synapse.
+                Transaction transactionDetail = new Transaction();
+                transactionDetail = SetTransactionDetails(transInput, Constants.TRANSACTION_TYPE_TRANSFER, 0);
+
+                var senderFingerprint = senderNoochDetails.UDID1;
+                var amount = transInput.Amount.ToString();
+                var iPForTransaction = CommonHelper.GetRecentOrDefaultIPOfMember(SenderGuid);
+                var memoForSyn = !string.IsNullOrEmpty(transInput.Memo) ? transInput.Memo : "";
+                var suppID_or_transID = transactionDetail.TransactionId.ToString();
+
+                SynapseV3AddTrans_ReusableClass transactionResultFromSynapseAPI = new SynapseV3AddTrans_ReusableClass();
+
+                #region Habitat Custom Checks
+
+                bool isHabitat = false;
+
+                if (transInput.MemberId.ToString().ToLower() == "45357cf0-e651-40e7-b825-e1ff48bf44d2" &&
+                    recipientNoochDetails.cipTag == "vendor")
+                {
+                    isHabitat = true;
+                    fromAddress = "payments@tryhabitat.com";
+
+                    Logger.Info("MDA -> TransferMoneyUsingSynapse - HABITAT Payment!!");
+
+                    // Need to create 2 transactions with Synapse: 1 from Habitat to Rent Scene, & 1 from Rent Scene to the Vendor
+
+                    senderFirstName = "Habitat LLC";
+                    senderLastName = "";
+
+                    // Insert RENT SCENE values
+                    var recipBankOid2 = "574f45d79506295ff7a81db8";
+                    var recipEmail2 = "payments@rentscene.com";
+                    var moneyRecipientLastName2 = "Rent Scene";
+
+                    var log = "TDA -> TransferMoneyUsingSynapse - About to call AddTransSynapseV3Reusable() in TDA - " +
+                                "TransID: [" + suppID_or_transID + "], Amount: [" + amount + "], Sender Name: [Habitat" +
+                                "], Sender BankOID: [" + senderBankOid + "], Recip Name: [" + recipientFirstName + " " + recipientLastName +
+                                "], Recip BankOID: [" + recipBankOid2 + "]";
+                    Logger.Info(log);
+
+                    // 1st payment - from Habitat -> Rent Scene
+                    transactionResultFromSynapseAPI = AddTransSynapseV3Reusable(sender_oauth, senderFingerprint,
+                        senderBankOid, amount, recipBankOid2, suppID_or_transID, senderUserName, recipEmail2,
+                        CommonHelper.GetRecentOrDefaultIPOfMember(senderNoochDetails.MemberId),
+                        "Habitat", moneyRecipientLastName2, memoForSyn);
+
+
+                    if (transactionResultFromSynapseAPI.success)
+                    {
+                        #region 2nd Synapse Payment (RS to Vendor)
+
+                        // 1st Payment was successful, now do the 2nd one (from RS -> original recipient)
+                        Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser - 1st HABITAT Payment Successful (to RS) - Response From SYNAPSE's /order/add API - " +
+                                    "OrderID: [" + transactionResultFromSynapseAPI.responseFromSynapse.trans._id.oid + "]");
+
+                        var rentSceneMemGuid = new Guid("852987e8-d5fe-47e7-a00b-58a80dd15b49"); // Rent Scene's MemberID
+
+                        sender_oauth = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == rentSceneMemGuid &&
+                                                                                               m.IsDeleted == false).access_token;
+
+                        senderBankOid = "574f45d79506295ff7a81db8";
+                        senderFingerprint = "6d441f70cc6891e7831432baac2e50d7";
+                        var senderIP = CommonHelper.GetRecentOrDefaultIPOfMember(rentSceneMemGuid);
+                        var senderEmail2 = "payments@rentscene.com";
+
+                        log = "TDA -> GetTokensAndTransferMoneyToNewUser - About to call 2nd HABITAT Payment (to the Vendor) - " +
+                              "TransID: [" + suppID_or_transID + "], Amount: [" + amount + "], Sender Name: [Rent Scene" +
+                              "], Sender BankOID: [" + senderBankOid + "], Recip Name: [" + recipientFirstName + " " + recipientLastName +
+                              "], Recip BankOID: [" + recipBankOid + "]";
+                        Logger.Info(log);
+
+                        transactionResultFromSynapseAPI = AddTransSynapseV3Reusable(sender_oauth, senderFingerprint,
+                            senderBankOid, amount, recipBankOid, suppID_or_transID, senderEmail2, receiverUserName,
+                            senderIP, "Habitat", recipientLastName, memoForSyn);
+
+                        #endregion 2nd Synapse Payment (RS to Vendor)
                     }
                     else
                     {
-                        ce = s3[1].ToString();
-                        dl = s3[0].ToString();
+                        var error = "MDA -> GetTokensAndTransferMoneyToNewUser - 1st HABITAT Payment (to RS) FAILED - Response From SYNAPSE's /order/add API - " +
+                                    "ErrorMessage: [" + transactionResultFromSynapseAPI.ErrorMessage + "], Synapse Error: [" + transactionResultFromSynapseAPI.responseFromSynapse.error.en + "]";
+                        Logger.Error(error);
+                        CommonHelper.notifyCliffAboutError(error);
                     }
+                }
 
-                    string memo = "";
-                    if (!String.IsNullOrEmpty(transInput.Memo))
+                #endregion Habitat Custom Checks
+
+                else
+                {
+                    // Expected path for all Payments except for Habitat
+                    transactionResultFromSynapseAPI = AddTransSynapseV3Reusable(sender_oauth, senderFingerprint, senderBankOid, amount,
+                                                                                recipBankOid, suppID_or_transID, senderUserName, receiverUserName,
+                                                                                iPForTransaction, senderLastName, recipientLastName, memoForSyn);
+                }
+
+
+                short shouldSendFailureNotifications = 0;
+
+                int saveToTransTable = 0;
+
+                if (transactionResultFromSynapseAPI.success == true)
+                {
+                    Logger.Info("TDA -> TransferMoneyUsingSynapse - SUCCESS Response From SYNAPSE's /order/add API - " +
+                                "Synapse OrderID: [" + transactionResultFromSynapseAPI.responseFromSynapse.trans._id.oid + "]");
+
+                    #region Save Info in Transaction Details Table
+
+                    transactionDetail.TransactionStatus = "Success";
+                    transactionDetail.Memo = transInput.Memo;
+                    transactionDetail.Picture = transInput.Picture;
+                    transactionDetail.Amount = transInput.Amount;
+                    transactionDetail.AdminNotes = isAutoPay
+                                                   ? "RENT AUTO PAYMENT"
+                                                   : null;
+
+                    transactionDetail.GeoLocation = new GeoLocation
                     {
-                        if (transInput.Memo.Length > 3)
+                        LocationId = Guid.NewGuid(),
+                        Latitude = transInput.Location.Latitude,
+                        Longitude = transInput.Location.Longitude,
+                        Altitude = transInput.Location.Altitude,
+                        AddressLine1 = transInput.Location.AddressLine1,
+                        AddressLine2 = transInput.Location.AddressLine2,
+                        City = transInput.Location.City,
+                        State = transInput.Location.State,
+                        Country = transInput.Location.Country,
+                        ZipCode = transInput.Location.ZipCode,
+                        DateCreated = TransDateTime,
+                    };
+
+                    _dbContext.Transactions.Add(transactionDetail);
+                    saveToTransTable = _dbContext.SaveChanges();
+
+                    // Set output to be the just-created TransactionID
+                    // Cliff (5/17/16): Not sure this is needed anymore with the new architecture...
+                    trnsactionId = transactionDetail.TransactionId.ToString();
+
+                    #endregion Save Info in Transaction Details Table
+
+
+                    #region Update TotalNoochTransfersCount
+
+                    try
+                    {
+                        if (senderNoochDetails.TotalNoochTransfersCount != null)
                         {
-                            string firstThreeChars = transInput.Memo.Substring(0, 3).ToLower();
-                            bool startsWithFor = firstThreeChars.Equals("for");
-
-                            if (startsWithFor) memo = transInput.Memo.ToString();
-                            else memo = "For: " + transInput.Memo.ToString();
-                        }
-                        else memo = "For: " + transInput.Memo.ToString();
-                    }
-
-                    string senderPic = "https://www.noochme.com/noochweb/Assets/Images/userpic-default.png";
-                    string recipientPic;
-
-                    bool isForRentScene = false;
-                    bool isRentScenePayrollPayment = false;
-                    bool isAutoPay = false;
-
-                    if (senderNoochDetails.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49") // Rent Scene's account
-                    {
-                        isForRentScene = true;
-                        senderFirstName = "Rent Scene";
-                        senderLastName = "";
-
-                        // Now check if the recipient is one of Rent Scene's employees
-                        if (recipientNoochDetails.Nooch_ID.ToString() == "q40l9MnO") // Tori Moore
-                        {
-                            Logger.Info("TDA -> TransferMoneyUsingSynapse - RENT SCENE PAYROLL PAYMENT DETECTED - continuing on, but won't send email to Sender (Rent Scene)");
-                            isRentScenePayrollPayment = true;
-                        }
-                    }
-                    else if (recipientNoochDetails.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49") // Rent Scene's account
-                    {
-                        isForRentScene = true;
-                        recipientFirstName = "Rent Scene";
-                        recipientLastName = "";
-                    }
-
-                    if (transInput.isRentAutoPayment)
-                    {
-                        Logger.Info("TDA -> TransferMoneyUsingSynapse - RENT AUTO-PAYMENT DETECTED - continuing on!");
-                        isAutoPay = true;
-                    }
-
-                    var fromAddress = isForRentScene ? "payments@rentscene.com"
-                                                     : Utility.GetValueFromConfig("transfersMail");
-
-                    #endregion Define Variables From Transaction for Notifications
-
-
-                    // Make call to SYNAPSE Order API service
-
-                    #region Synapse V3 Add Trans
-
-                    // CC (6/20/16): Must get the TransactionID from 'SetTransactionDetails' here so we send the right webhook to Synapse.
-                    Transaction transactionDetail = new Transaction();
-                    transactionDetail = SetTransactionDetails(transInput, Constants.TRANSACTION_TYPE_TRANSFER, 0);
-
-                    string senderFingerprint = senderNoochDetails.UDID1;
-                    string amount = transInput.Amount.ToString();
-                    string iPForTransaction = CommonHelper.GetRecentOrDefaultIPOfMember(SenderGuid);
-                    string memoForSyn = !string.IsNullOrEmpty(transInput.Memo) ? transInput.Memo : "";
-                    string suppID_or_transID = transactionDetail.TransactionId.ToString();
-
-                    SynapseV3AddTrans_ReusableClass transactionResultFromSynapseAPI = new SynapseV3AddTrans_ReusableClass();
-
-                    #region Habitat Custom Checks
-
-                    if (transInput.MemberId.ToString().ToLower() == "45357cf0-e651-40e7-b825-e1ff48bf44d2" &&
-                        recipientNoochDetails.cipTag == "vendor")
-                    {
-                        Logger.Info("MDA -> TransferMoneyUsingSynapse - HABITAT Payment!!");
-
-                        // Need to create 2 transactions with Synapse: 1 from Habitat to Rent Scene, & 1 from Rent Scene to the Vendor
-
-                        senderFirstName = "Habitat";
-                        senderLastName = "";
-
-                        // Insert RENT SCENE values
-                        var recipBankOid2 = "574f45d79506295ff7a81db8";
-                        var recipEmail2 = "payments@rentscene.com";
-                        var moneyRecipientLastName2 = "Rent Scene";
-
-                        var log = "TDA -> TransferMoneyUsingSynapse - About to call AddTransSynapseV3Reusable() in TDA - " +
-                                    "TransID: [" + suppID_or_transID + "], Amount: [" + amount + "], Sender Name: [" + senderFirstName + " " + senderLastName +
-                                    "], Sender BankOID: [" + senderBankOid + "], Recip Name: [" + recipientFirstName + " " + recipientLastName +
-                                    "], Recip BankOID: [" + recipBankOid2 + "]";
-                        Logger.Info(log);
-
-                        // 1st payment - from Habitat -> Rent Scene
-                        transactionResultFromSynapseAPI = AddTransSynapseV3Reusable(sender_oauth, senderFingerprint,
-                            senderBankOid, amount, recipBankOid2, suppID_or_transID, senderUserName, recipEmail2,
-                            CommonHelper.GetRecentOrDefaultIPOfMember(senderNoochDetails.MemberId),
-                            senderLastName, moneyRecipientLastName2, memoForSyn);
-
-
-                        if (transactionResultFromSynapseAPI.success)
-                        {
-                            #region 2nd Synapse Payment (RS to Vendor)
-
-                            // 1st Payment was successful, now do the 2nd one (from RS -> original recipient)
-                            Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser - 1st HABITAT Payment Successful (to RS) - Response From SYNAPSE's /order/add API - " +
-                                        "OrderID: [" + transactionResultFromSynapseAPI.responseFromSynapse.trans._id.oid + "]");
-
-                            senderFirstName = "Rent Scene";
-                            senderLastName = "";
-
-                            var rentSceneMemId = "852987e8-d5fe-47e7-a00b-58a80dd15b49"; // Rent Scene's MemberID
-                            var rentSceneMemGuid = Utility.ConvertToGuid(rentSceneMemId);
-
-                            var createSynapseUserObj = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == rentSceneMemGuid &&
-                                                                                                               m.IsDeleted == false);
-                            sender_oauth = createSynapseUserObj.access_token;
-
-                            senderBankOid = "574f45d79506295ff7a81db8";
-                            senderFingerprint = "6d441f70cc6891e7831432baac2e50d7";
-                            var senderIP = CommonHelper.GetRecentOrDefaultIPOfMember(new Guid(rentSceneMemId));
-                            var senderEmail2 = "payments@rentscene.com";
-
-
-                            log = "TDA -> GetTokensAndTransferMoneyToNewUser - About to call 2nd HABITAT Payment (to the Vendor) - " +
-                                        "TransID: [" + suppID_or_transID + "], Amount: [" + amount + "], Sender Name: [" + senderFirstName + " " + senderLastName +
-                                        "], Sender BankOID: [" + senderBankOid + "], Recip Name: [" + recipientFirstName + " " + recipientLastName +
-                                        "], Recip BankOID: [" + recipBankOid + "]";
-
-                            Logger.Info(log);
-
-                            transactionResultFromSynapseAPI = AddTransSynapseV3Reusable(sender_oauth, senderFingerprint,
-                                senderBankOid, amount, recipBankOid, suppID_or_transID, senderEmail2, receiverUserName,
-                                senderIP, senderLastName, recipientLastName, memoForSyn);
-
-                            #endregion 2nd Synapse Payment (RS to Vendor)
+                            senderNoochDetails.TotalNoochTransfersCount = senderNoochDetails.TotalNoochTransfersCount + 1;
+                            senderNoochDetails.DateModified = DateTime.Now;
                         }
                         else
                         {
-                            var error = "MDA -> GetTokensAndTransferMoneyToNewUser - 1st HABITAT Payment (to RS) FAILED - Response From SYNAPSE's /order/add API - " +
-                                        "ErrorMessage: [" + transactionResultFromSynapseAPI.ErrorMessage + "], Synapse Error: [" + transactionResultFromSynapseAPI.responseFromSynapse.error.en + "]";
-                            Logger.Error(error);
-                            CommonHelper.notifyCliffAboutError(error);
+                            senderNoochDetails.TotalNoochTransfersCount = 1;
+                            senderNoochDetails.DateModified = DateTime.Now;
                         }
+
+                        if (recipientNoochDetails.TotalNoochTransfersCount != null)
+                        {
+                            recipientNoochDetails.TotalNoochTransfersCount = recipientNoochDetails.TotalNoochTransfersCount + 1;
+                            recipientNoochDetails.DateModified = DateTime.Now;
+                        }
+                        else
+                        {
+                            recipientNoochDetails.TotalNoochTransfersCount = 1;
+                            recipientNoochDetails.DateModified = DateTime.Now;
+                        }
+
+                        // Update Users in Members Table
+                        _dbContext.SaveChanges();
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error("TDA -> TransferMoneyUsingSynapse - Attempted to update Sender / Recipient Member Records Failed - " +
+                                     "Exception: [" + ex + "]");
                     }
 
-                    #endregion Habitat Custom Checks
+                    #endregion Update TotalNoochTransfersCount
 
-                    else
+
+                    #region Transaction Updated in DB
+
+                    if (saveToTransTable > 0)
                     {
-                        // Expected path for all Payments except for Habitat
-                        transactionResultFromSynapseAPI = AddTransSynapseV3Reusable(sender_oauth, senderFingerprint, senderBankOid, amount,
-                                                                                    recipBankOid, suppID_or_transID, senderUserName, receiverUserName,
-                                                                                    iPForTransaction, senderLastName, recipientLastName, memoForSyn);
-                    }
+                        Logger.Info("TDA -> TransferMoneyUsingSynapse CHECKPOINT - TRANSACTION ADDED TO DB SUCCESSFULLY");
 
-
-                    short shouldSendFailureNotifications = 0;
-
-                    int saveToTransTable = 0;
-
-                    if (transactionResultFromSynapseAPI.success == true)
-                    {
-                        Logger.Info("TDA -> TransferMoneyUsingSynapse - SUCCESS Response From SYNAPSE's /order/add API - " +
-                                    "Synapse OrderID: [" + transactionResultFromSynapseAPI.responseFromSynapse.trans._id.oid + "]");
-
-                        #region Save Info in Transaction Details Table
-
-                        transactionDetail.TransactionStatus = "Success";
-                        transactionDetail.Memo = transInput.Memo;
-                        transactionDetail.Picture = transInput.Picture;
-                        transactionDetail.Amount = transInput.Amount;
-                        transactionDetail.AdminNotes = isAutoPay
-                                                       ? "RENT AUTO PAYMENT"
-                                                       : null;
-
-                        transactionDetail.GeoLocation = new GeoLocation
+                        if (transInput.doNotSendEmails != true)
                         {
-                            LocationId = Guid.NewGuid(),
-                            Latitude = transInput.Location.Latitude,
-                            Longitude = transInput.Location.Longitude,
-                            Altitude = transInput.Location.Altitude,
-                            AddressLine1 = transInput.Location.AddressLine1,
-                            AddressLine2 = transInput.Location.AddressLine2,
-                            City = transInput.Location.City,
-                            State = transInput.Location.State,
-                            Country = transInput.Location.Country,
-                            ZipCode = transInput.Location.ZipCode,
-                            DateCreated = TransDateTime,
-                        };
+                            #region Send Email to Sender on transfer success
 
-                        noochConnection.Transactions.Add(transactionDetail);
-                        //noochConnection.SaveChanges();
+                            // CC (6/18/16): Bypassing the Notifcation Settings Check since no users currently can edit those,
+                            //               so it should always return true... so just skip it until we do something with the Notification Settings again.
+                            //var sendersNotificationSets = CommonHelper.GetMemberNotificationSettings(senderNoochDetails.MemberId.ToString());
 
-                        // Set output to be the just-created TransactionID
-                        // Cliff (5/17/16): Not sure this is needed anymore with the new architecture...
-                        trnsactionId = transactionDetail.TransactionId.ToString();
-
-                        #endregion Save Info in Transaction Details Table
-
-
-                        #region Update TotalNoochTransfersCount
-
-                        try
-                        {
-                            if (senderNoochDetails.TotalNoochTransfersCount != null)
+                            if (//((sendersNotificationSets != null && sendersNotificationSets.EmailTransferSent != false) ||
+                                //isForRentScene) &&
+                                !isRentScenePayrollPayment) // don't send email to sender if sender is Rent Scene and it's a payment to a RS employee
                             {
-                                senderNoochDetails.TotalNoochTransfersCount = senderNoochDetails.TotalNoochTransfersCount + 1;
-                                senderNoochDetails.DateModified = DateTime.Now;
-                            }
-                            else
-                            {
-                                senderNoochDetails.TotalNoochTransfersCount = 1;
-                                senderNoochDetails.DateModified = DateTime.Now;
-                            }
+                                if (!String.IsNullOrEmpty(recipientNoochDetails.Photo) && recipientNoochDetails.Photo.Length > 20)
+                                    recipientPic = recipientNoochDetails.Photo.ToString();
 
-                            if (recipientNoochDetails.TotalNoochTransfersCount != null)
-                            {
-                                recipientNoochDetails.TotalNoochTransfersCount = recipientNoochDetails.TotalNoochTransfersCount + 1;
-                                recipientNoochDetails.DateModified = DateTime.Now;
-                            }
-                            else
-                            {
-                                recipientNoochDetails.TotalNoochTransfersCount = 1;
-                                recipientNoochDetails.DateModified = DateTime.Now;
-                            }
-
-                            // Update Users in Members Table
-                            try
-                            {
-                                saveToTransTable = noochConnection.SaveChanges();
-                            }
-                            catch
-                            {
-                                saveToTransTable = 0;
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Error("TDA -> TransferMoneyUsingSynapse - Attempted to update Sender / Recipient Member Records Failed - " +
-                                         "[Exception: " + ex + "]");
-                        }
-
-                        #endregion Update TotalNoochTransfersCount
-
-
-                        #region Transaction Updated in DB
-
-                        if (saveToTransTable > 0)
-                        {
-                            //Logger.Info("TDA -> TransferMoneyUsingSynapse CHECKPOINT #6 - ALL DB OPERATIONS SAVED SUCCESSFULLY");
-
-                            if (transInput.doNotSendEmails != true)
-                            {
-                                #region Send Email to Sender on transfer success
-
-                                // CC (6/18/16): Bypassing the Notifcation Settings Check since no users currently can edit those,
-                                //               so it should always return true... so just skip it until we do something with the Notification Settings again.
-                                //var sendersNotificationSets = CommonHelper.GetMemberNotificationSettings(senderNoochDetails.MemberId.ToString());
-
-                                if (//((sendersNotificationSets != null && sendersNotificationSets.EmailTransferSent != false) ||
-                                    //isForRentScene) &&
-                                    !isRentScenePayrollPayment) // don't send email to sender if sender is Rent Scene and it's a payment to a RS employee
-                                {
-                                    if (!String.IsNullOrEmpty(recipientNoochDetails.Photo) && recipientNoochDetails.Photo.Length > 20)
-                                    {
-                                        recipientPic = recipientNoochDetails.Photo.ToString();
-                                    }
-
-                                    var tokens = new Dictionary<string, string>
+                                var tokens = new Dictionary<string, string>
 	                                        {
 	                                            {Constants.PLACEHOLDER_FIRST_NAME, senderFirstName},
 	                                            {Constants.PLACEHOLDER_FRIEND_FIRST_NAME, recipientFirstName + " " + recipientLastName},
-	                                            {Constants.PLACEHOLDER_TRANSFER_AMOUNT, dl},
-	                                            {Constants.PLACEHLODER_CENTS, ce},
+	                                            {Constants.PLACEHOLDER_TRANSFER_AMOUNT, dollars},
+	                                            {Constants.PLACEHLODER_CENTS, cents},
 	                                            {Constants.MEMO, memo}
 	                                        };
 
-                                    var toAddress = senderUserName;
+                                var toAddress = senderUserName;
 
-                                    try
+                                try
+                                {
+                                    var subject = "";
+                                    var template = "";
+                                    // var month = 
+
+                                    if (isAutoPay)
                                     {
-                                        string subject;
-                                        string template;
-                                        // string month = 
+                                        subject = "Your Rent Payment To " + recipientFirstName + " " + recipientLastName;
 
-                                        if (isAutoPay)
-                                        {
-                                            subject = "Your Rent Payment To " + recipientFirstName + " " + recipientLastName;
-
-                                            if (isForRentScene)
-                                            {
-                                                template = "TransferSent_RentSceneAutoPay";
-                                            }
-                                            else
-                                            {
-                                                template = "TransferSent";
-                                            }
-                                        }
+                                        if (isForRentScene)
+                                            template = "TransferSent_RentSceneAutoPay";
                                         else
-                                        {
-                                            subject = "Your $" + wholeAmount + " payment to " + recipientFirstName;
-
-                                            if (isForRentScene)
-                                            {
-                                                template = "TransferSent_RentScene";
-                                            }
-                                            else
-                                            {
-                                                template = "TransferSent";
-                                            }
-                                        }
-
-                                        Utility.SendEmail(template, fromAddress, toAddress, null,
-                                                                    subject, null, tokens, null, null, null);
-
-                                        Logger.Info("TDA -> TransferMoneyUsingSynapse - [" + template + "] email sent to [" +
-                                                    toAddress + "] successfully. Subject: [" + subject + "]");
+                                            template = "TransferSent";
                                     }
-                                    catch (Exception ex)
+                                    else
                                     {
-                                        Logger.Error("TDA -> TransferMoneyUsingSynapse -> EMAIL TO RECIPIENT FAILED: TransferReceived Email NOT sent to [" +
-                                                     toAddress + "], [Exception: " + ex + "]");
+                                        subject = "Your $" + wholeAmount + " payment to " + recipientFirstName;
+
+                                        if (isForRentScene)
+                                            template = "TransferSent_RentScene";
+                                        else if (isHabitat)
+                                            template = "TransferSent_Habitat";
+                                        else
+                                            template = "TransferSent";
                                     }
+
+                                    Utility.SendEmail(template, fromAddress, toAddress, null,
+                                                      subject, null, tokens, null, null, null);
+
+                                    Logger.Info("TDA -> TransferMoneyUsingSynapse - [" + template + "] email sent to [" +
+                                                toAddress + "] from [" + fromAddress + "] successfully. Subject: [" + subject + "]");
                                 }
-
-                                #endregion Send Email to Sender on transfer success
-
-                                // Now notify the recipient...
-
-                                #region Send Notifications to Recipient on transfer success
-
-                                // CC (6/18/16): Bypassing the Notifcation Settings Check since no users currently can edit those,
-                                //               so it should always return true... so just skip it until we do something with the Notification Settings again.
-                                //var recipNotificationSets = CommonHelper.GetMemberNotificationSettings(recipientNoochDetails.MemberId.ToString());
-
-                                //if (recipNotificationSets != null)
-                                //{
-                                // First, send push notification
-                                #region Push notification to Recipient
-
-                                if (//recipNotificationSets.TransferReceived == true &&
-                                    !String.IsNullOrEmpty(recipientNoochDetails.DeviceToken) &&
-                                    recipientNoochDetails.DeviceToken.Length > 6)
+                                catch (Exception ex)
                                 {
-                                    string recipDeviceId = recipientNoochDetails.DeviceToken;
-
-                                    string pushBodyText = isAutoPay
-                                                          ? "Rent Auto Payment for $" + wholeAmount + " received from " +
-                                                            senderFirstName + " " + senderLastName + "."
-                                                          : "You received $" + wholeAmount + " from " + senderFirstName +
-                                                            " " + senderLastName + "! Spend it wisely :-)";
-                                    try
-                                    {
-
-
-                                        Utility.SendNotificationMessage(pushBodyText, "Nooch", recipDeviceId,
-                                                                                   recipientNoochDetails.DeviceType);
-
-                                        Logger.Info("TDA -> TransferMoneyUsingSynapse -> SUCCESS - Push notification sent to " +
-                                                    "Recipient [" + recipientFirstName + " " + recipientLastName + "] successfully.");
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        Logger.Error("TDA -> TransferMoneyUsingSynapse -> Success - BUT Push notification FAILURE - Push to Recipient NOT sent [" +
-                                                     recipientFirstName + " " + recipientLastName + "], Exception: [" + ex + "]");
-                                    }
+                                    Logger.Error("TDA -> TransferMoneyUsingSynapse -> EMAIL TO RECIPIENT FAILED: TransferReceived Email NOT sent to [" +
+                                                 toAddress + "], Exception: [" + ex + "]");
                                 }
+                            }
 
-                                #endregion Push notification to Recipient
+                            #endregion Send Email to Sender on transfer success
 
-                                // Now send email notification
-                                #region Email notification to Recipient
+                            // Now notify the recipient...
 
-                                if (true)//recipNotificationSets.EmailTransferReceived ?? false || isForRentScene)
+                            #region Send Notifications to Recipient on transfer success
+
+                            // CC (6/18/16): Bypassing the Notifcation Settings Check since no users currently can edit those,
+                            //               so it should always return true... so just skip it until we do something with the Notification Settings again.
+                            //var recipNotificationSets = CommonHelper.GetMemberNotificationSettings(recipientNoochDetails.MemberId.ToString());
+
+                            //if (recipNotificationSets != null) {
+                            // First, send push notification
+                            #region Push notification to Recipient
+
+                            if (//recipNotificationSets.TransferReceived == true &&
+                                !isForRentScene && !isHabitat &&
+                                !String.IsNullOrEmpty(recipientNoochDetails.DeviceToken) &&
+                                recipientNoochDetails.DeviceToken.Length > 6)
+                            {
+                                var recipDeviceId = recipientNoochDetails.DeviceToken;
+
+                                var pushBodyText = isAutoPay
+                                                      ? "Rent Auto Payment for $" + wholeAmount + " received from " +
+                                                        senderFirstName + " " + senderLastName + "."
+                                                      : "You received $" + wholeAmount + " from " + senderFirstName +
+                                                        " " + senderLastName + "! Spend it wisely :-)";
+                                try
                                 {
-                                    if (!String.IsNullOrEmpty(senderNoochDetails.Photo) && senderNoochDetails.Photo.Length > 20)
-                                    {
-                                        senderPic = senderNoochDetails.Photo.ToString();
-                                    }
+                                    Utility.SendNotificationMessage(pushBodyText, "Nooch", recipDeviceId,
+                                                                    recipientNoochDetails.DeviceType);
 
-                                    var templateToUse = (isAutoPay || isForRentScene) ? "TransferReceived_RentScene" : "TransferReceived";
+                                    Logger.Info("TDA -> TransferMoneyUsingSynapse -> SUCCESS - Push notification sent to " +
+                                                "Recipient [" + recipientFirstName + " " + recipientLastName + "] successfully.");
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.Error("TDA -> TransferMoneyUsingSynapse -> Success - BUT Push notification FAILURE - Push to Recipient NOT sent [" +
+                                                 recipientFirstName + " " + recipientLastName + "], Exception: [" + ex + "]");
+                                }
+                            }
 
-                                    var tokensR = new Dictionary<string, string>
+                            #endregion Push notification to Recipient
+
+                            // Now send email notification
+                            #region Email notification to Recipient
+
+                            if (true)//recipNotificationSets.EmailTransferReceived ?? false || isForRentScene)
+                            {
+                                if (!String.IsNullOrEmpty(senderNoochDetails.Photo) && senderNoochDetails.Photo.Length > 20)
+                                    senderPic = senderNoochDetails.Photo.ToString();
+
+                                var tokensR = new Dictionary<string, string>
 	                                        {
                                                 {Constants.PLACEHOLDER_FIRST_NAME, recipientFirstName},
 	                                            {Constants.PLACEHOLDER_FRIEND_FIRST_NAME, senderFirstName + " " + senderLastName},
@@ -6601,174 +6578,170 @@ namespace Nooch.DataAccess
 	                                            {Constants.MEMO, memo}
 	                                        };
 
-                                    var toAddress = receiverUserName;
+                                var toAddress = receiverUserName;
 
-                                    try
-                                    {
-                                        string subject = "";
-                                        if (isAutoPay)
-                                        {
-                                            subject = "Rent AutoPayment from " + senderFirstName + " " + senderLastName + " - $" + wholeAmount;
-                                        }
-                                        else if (senderFirstName == "Rent Scene")
-                                        {
-                                            subject = "Payment Received From Rent Scene for $" + wholeAmount;
-                                        }
-                                        else
-                                        {
-                                            subject = senderFirstName + " " + senderLastName + " sent you $" + wholeAmount;
-                                        }
+                                var templateToUse = "TransferReceived";
+                                if (isAutoPay || isForRentScene) templateToUse = "TransferReceived_RentScene";
+                                else if (isHabitat) templateToUse = "TransferReceived_Habitat";
 
-                                        Utility.SendEmail(templateToUse, fromAddress, toAddress, null,
-                                                          subject, null, tokensR, null, null, null);
+                                try
+                                {
+                                    var subject = "";
+                                    if (isAutoPay)
+                                        subject = "Rent AutoPayment from " + senderFirstName + " " + senderLastName + " - $" + wholeAmount;
+                                    else if (isForRentScene)
+                                        subject = "Payment Received From Rent Scene for $" + wholeAmount;
+                                    else if (isHabitat)
+                                        subject = "Payment Received From Habitat LLC for $" + wholeAmount;
+                                    else
+                                        subject = senderFirstName + " " + senderLastName + " sent you $" + wholeAmount;
 
-                                        Logger.Info("TDA -> TransferMoneyUsingSynapse - [" + templateToUse + "] Email sent to [" +
-                                                    toAddress + "] successfully");
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        Logger.Error("TDA -> TransferMoneyUsingSynapse -> EMAIL TO RECIPIENT FAILED: " +
-                                                     "[" + templateToUse + "] Email NOT sent to [" + toAddress + "], [Exception: " + ex + "]");
-                                    }
+                                    Utility.SendEmail(templateToUse, fromAddress, toAddress, null,
+                                                      subject, null, tokensR, null, null, null);
+
+                                    Logger.Info("TDA -> TransferMoneyUsingSynapse - [" + templateToUse + "] Email sent to [" +
+                                                toAddress + "] from [" + fromAddress + "] successfully");
                                 }
-
-                                #endregion Email notification to Recipient
-
-                                #endregion Send Notifications to Recipient on transfer success
+                                catch (Exception ex)
+                                {
+                                    Logger.Error("TDA -> TransferMoneyUsingSynapse -> EMAIL TO RECIPIENT FAILED: " +
+                                                 "[" + templateToUse + "] Email NOT sent to [" + toAddress + "], [Exception: " + ex + "]");
+                                }
                             }
-                            else
-                                Logger.Info("TDA -> TransferMoneyUsigSynapse - shouldSendEmail flag is [" + transInput.doNotSendEmails +
-                                            "] - SO NOT SENDING TRANSFER SENT EMAIL TO SENDER: [" + senderUserName + "] OR RECIPIENT: [" + receiverUserName + "]");
 
-                            return "Your cash was sent successfully";
+                            #endregion Email notification to Recipient
+
+                            #endregion Send Notifications to Recipient on transfer success
                         }
                         else
-                        {
-                            // Transaction NOT updated in DB
-                            var error = "TDA -> TransferMoneyUsingSynapse - Synapse returned successfully, BUT FAILED to update Nooch DB with transaction info - " +
-                                        "MemberID : [" + transInput.MemberId + "], Amount: [$" + transInput.Amount + "]";
-                            Logger.Error(error);
-                            CommonHelper.notifyCliffAboutError(error);
-                            shouldSendFailureNotifications = 1;
-                        }
+                            Logger.Info("TDA -> TransferMoneyUsigSynapse - shouldSendEmail flag is [" + transInput.doNotSendEmails +
+                                        "] - SO NOT SENDING TRANSFER SENT EMAIL TO SENDER: [" + senderUserName + "] OR RECIPIENT: [" + receiverUserName + "]");
 
-                        #endregion Transaction Updated in DB
+                        return "Your cash was sent successfully";
                     }
-
-                    #region Failure Sections
-
-                    else // Synapse Order API returned failure in response
+                    else
                     {
-                        var error = "TDA - TransferMoneyUsingSynapse FAILED - Got Synapse response, but not successful - ErrorMsg: [" + transactionResultFromSynapseAPI.ErrorMessage +
-                                    "], Response From Synapse: [" + transactionResultFromSynapseAPI.responseFromSynapse + "]";
+                        // Transaction NOT updated in DB
+                        var error = "TDA -> TransferMoneyUsingSynapse - Synapse returned successfully, BUT FAILED to update Nooch DB with transaction info - " +
+                                    "MemberID : [" + transInput.MemberId + "], Amount: [$" + transInput.Amount + "]";
                         Logger.Error(error);
                         CommonHelper.notifyCliffAboutError(error);
-                        shouldSendFailureNotifications = 2;
+                        shouldSendFailureNotifications = 1;
                     }
 
-                    // Check if there was a failure above and we need to send the failure Email/SMS notifications to the sender.
-                    if (shouldSendFailureNotifications > 0)
+                    #endregion Transaction Updated in DB
+                }
+
+                #region Failure Sections
+
+                else // Synapse Order API returned failure in response
+                {
+                    var error = "TDA - TransferMoneyUsingSynapse FAILED - Got Synapse response, but not successful - ErrorMsg: [" + transactionResultFromSynapseAPI.ErrorMessage +
+                                "], Response From Synapse: [" + transactionResultFromSynapseAPI.responseFromSynapse + "]";
+                    Logger.Error(error);
+                    CommonHelper.notifyCliffAboutError(error);
+                    shouldSendFailureNotifications = 2;
+                }
+
+                // Check if there was a failure above and we need to send the failure Email/SMS notifications to the sender.
+                if (shouldSendFailureNotifications > 0)
+                {
+                    Logger.Error("TDA -> TransferMoneyUsingSynapse - THERE WAS A FAILURE - Sending Failure Notifications to both Users - " +
+                                 "shouldSendFailureNotifications = [" + shouldSendFailureNotifications + "]");
+
+                    // CC (8/31/16): Commenting out failure notifications
+                    /*if (isAutoPay == false)
                     {
-                        Logger.Error("TDA -> TransferMoneyUsingSynapse - THERE WAS A FAILURE - Sending Failure Notifications to both Users - " +
-                                     "shouldSendFailureNotifications = [" + shouldSendFailureNotifications + "]");
+                        #region Notify Sender about failure
 
-                        // CC (8/31/16): Commenting out failure notifications
-                        /*if (isAutoPay == false)
+                        var senderNotificationSettings = CommonHelper.GetMemberNotificationSettings(senderNoochDetails.MemberId.ToString());
+
+                        if (senderNotificationSettings != null)
                         {
-                            #region Notify Sender about failure
+                            #region Push Notification to Sender about failure
 
-                            var senderNotificationSettings = CommonHelper.GetMemberNotificationSettings(senderNoochDetails.MemberId.ToString());
+                            // COMMETNED BY CLIFF 11.24.14  (Don't think a push notification is necessary for a transfer failure... email is enough)
+                            // UN-COMMENTED BY CLIFF (7/10/15): After more thought, we might as well notify via push as well.
 
-                            if (senderNotificationSettings != null)
+                            if (senderNotificationSettings.TransferAttemptFailure == true)
                             {
-                                #region Push Notification to Sender about failure
+                                var senderDeviceId = senderNotificationSettings != null ? senderNoochDetails.DeviceToken : null;
+                                var senderDeviceTy = senderNotificationSettings != null ? senderNoochDetails.DeviceType : null;
 
-                                // COMMETNED BY CLIFF 11.24.14  (Don't think a push notification is necessary for a transfer failure... email is enough)
-                                // UN-COMMENTED BY CLIFF (7/10/15): After more thought, we might as well notify via push as well.
+                                var mailBodyText = "Your attempt to send $" + transInput.Amount.ToString("n2") +
+                                                      " to " + recipientFirstName + " " + recipientLastName + " failed ;-(  Contact Nooch support for more info.";
 
-                                if (senderNotificationSettings.TransferAttemptFailure == true)
+                                if (!String.IsNullOrEmpty(senderDeviceId))
                                 {
-                                    string senderDeviceId = senderNotificationSettings != null ? senderNoochDetails.DeviceToken : null;
-                                    string senderDeviceTy = senderNotificationSettings != null ? senderNoochDetails.DeviceType : null;
-
-                                    string mailBodyText = "Your attempt to send $" + transInput.Amount.ToString("n2") +
-                                                          " to " + recipientFirstName + " " + recipientLastName + " failed ;-(  Contact Nooch support for more info.";
-
-                                    if (!String.IsNullOrEmpty(senderDeviceId))
-                                    {
-                                        try
-                                        {
-
-                                            Utility.SendNotificationMessage(mailBodyText, "Nooch", senderDeviceId,
-                                                                                   senderDeviceTy);
-
-                                            Logger.Info("TDA -> TransferMoneyUsingSynapse FAILED - Push notif sent to Sender: [" +
-                                                senderFirstName + " " + senderLastName + "] successfully.");
-                                        }
-                                        catch (Exception ex)
-                                        {
-                                            Logger.Error(
-                                                "TDA -> TransferMoneyUsingSynapse FAILED - Push notif FAILED also, SMS NOT sent to [" +
-                                                senderFirstName + " " + senderLastName + "],  [Exception: " + ex + "]");
-                                        }
-                                    }
-                                }
-
-                                #endregion Push Notification to Sender about failure
-
-                                #region Email notification to Sender about failure
-
-                                if (senderNotificationSettings.EmailTransferAttemptFailure ?? false)
-                                {
-                                    var tokens = new Dictionary<string, string>
-	                                {
-	                                    {Constants.PLACEHOLDER_FIRST_NAME, senderFirstName + " " + senderLastName},
-	                                    {Constants.PLACEHOLDER_FRIEND_FIRST_NAME, recipientFirstName + " " + recipientLastName},
-	                                    {Constants.PLACEHOLDER_TRANSFER_AMOUNT, dl},
-	                                    {Constants.PLACEHLODER_CENTS, ce},
-	                                };
-
-                                    var toAddress = CommonHelper.GetDecryptedData(senderNoochDetails.UserName);
-
                                     try
                                     {
-                                        Utility.SendEmail("transferFailure", fromAddress, toAddress, null,
-                                                          "Nooch transfer failure :-(", null, tokens, null, null, null);
+                                        Utility.SendNotificationMessage(mailBodyText, "Nooch", senderDeviceId, senderDeviceTy);
 
-                                        Logger.Info("TDA -> TransferMoneyUsingSynapse FAILED - Email sent to Sender: [" +
-                                                    toAddress + "] successfully.");
+                                        Logger.Info("TDA -> TransferMoneyUsingSynapse FAILED - Push notif sent to Sender: [" +
+                                            senderFirstName + " " + senderLastName + "] successfully.");
                                     }
                                     catch (Exception ex)
                                     {
-                                        Logger.Error("TDA -> TransferMoneyUsingSynapse --> Error: TransferAttemptFailure mail " +
-                                                               "NOT sent to [" + toAddress + "],  [Exception: " + ex + "]");
+                                        Logger.Error("TDA -> TransferMoneyUsingSynapse FAILED - Push notif FAILED also, SMS NOT sent to [" +
+                                            senderFirstName + " " + senderLastName + "],  [Exception: " + ex + "]");
                                     }
                                 }
-
-                                #endregion Email notification to Sender about failure
                             }
 
-                            #endregion Notify Sender about failure
-                        }*/
+                            #endregion Push Notification to Sender about failure
 
-                        if (shouldSendFailureNotifications == 1) return "There was a problem updating Nooch DB tables.";
-                        else if (shouldSendFailureNotifications == 2) return "There was a problem with Synapse.";
-                        else return "Unknown Failure";
-                    }
+                            #region Email notification to Sender about failure
 
-                    #endregion Failure Sections
+                            if (senderNotificationSettings.EmailTransferAttemptFailure ?? false)
+                            {
+                                var tokens = new Dictionary<string, string>
+                                {
+                                    {Constants.PLACEHOLDER_FIRST_NAME, senderFirstName + " " + senderLastName},
+                                    {Constants.PLACEHOLDER_FRIEND_FIRST_NAME, recipientFirstName + " " + recipientLastName},
+                                    {Constants.PLACEHOLDER_TRANSFER_AMOUNT, dl},
+                                    {Constants.PLACEHLODER_CENTS, ce},
+                                };
 
-                    #endregion Synapse V3 Add Trans
+                                var toAddress = CommonHelper.GetDecryptedData(senderNoochDetails.UserName);
 
-                    return "Uh oh - Unknown Failure"; // This should never be reached b/c code should hit the failure section
+                                try
+                                {
+                                    Utility.SendEmail("transferFailure", fromAddress, toAddress, null,
+                                                      "Nooch transfer failure :-(", null, tokens, null, null, null);
+
+                                    Logger.Info("TDA -> TransferMoneyUsingSynapse FAILED - Email sent to Sender: [" +
+                                                toAddress + "] successfully.");
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.Error("TDA -> TransferMoneyUsingSynapse --> Error: TransferAttemptFailure mail " +
+                                                           "NOT sent to [" + toAddress + "],  [Exception: " + ex + "]");
+                                }
+                            }
+
+                            #endregion Email notification to Sender about failure
+                        }
+
+                        #endregion Notify Sender about failure
+                    }*/
+
+                    if (shouldSendFailureNotifications == 1) return "There was a problem updating Nooch DB tables.";
+                    else if (shouldSendFailureNotifications == 2) return "There was a problem with Synapse.";
+                    else return "Unknown Failure";
                 }
-                catch (Exception ex)
-                {
-                    var error = "TDA -> TransferMoneyUsingSynapse FAILED (#6943) - Exception: [" + ex.ToString() + "]";
-                    Logger.Error(error);
-                    CommonHelper.notifyCliffAboutError(error);
-                    return "Sorry there was a problem (#6946): [" + ex.Message + "]";
-                }
+
+                #endregion Failure Sections
+
+                #endregion Synapse V3 Add Trans
+
+                return "Uh oh - Unknown Failure"; // This should never be reached b/c code should hit the failure section
+            }
+            catch (Exception ex)
+            {
+                var error = "TDA -> TransferMoneyUsingSynapse FAILED (#6943) - Exception: [" + ex.ToString() + "]";
+                Logger.Error(error);
+                CommonHelper.notifyCliffAboutError(error);
+                return "Sorry there was a problem (#6946): [" + ex.Message + "]";
             }
         }
 
