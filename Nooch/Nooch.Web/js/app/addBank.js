@@ -1095,6 +1095,12 @@ function sendToRedUrl() {
             var idVerURL = $("#idVer_Url").val();
             window.top.location.href = idVerURL + "?memid=" + MEMBER_ID + "&from=addbnk&redUrl=" + RED_URL;
         }
+        else if (RED_URL == "createaccnt") // For users coming from the CreateAccount.aspx page
+        {
+            // Send msg back to parent window to display Success message for adding a bank
+            console.log("AddBank -> TRIGGERING COMPLETE IN PARENT - Success!");
+            window.parent.$('body').trigger('addBankComplete');
+        }
         else if (RED_URL.indexOf("rentscene") > -1) // For RentScene
         {
             if (isManual == true)
@@ -1122,15 +1128,27 @@ function sendToRedUrl() {
                 }, function (isConfirm) {
                     setTimeout(function () {
                         window.top.location.href = "https://www.nooch.com/rentscene";
-                    }, 300);
+                    }, 400);
                 });
             }
         }
-        else if (RED_URL == "createaccnt")// For users coming from the CreateAccount.aspx page
+        else if (RED_URL.indexOf("habitat") > -1) // For Habitat
         {
-            // Send msg back to parent window to display Success message for adding a bank
-            console.log("AddBank -> TRIGGERING COMPLETE IN PARENT - Success!");
-            window.parent.$('body').trigger('addBankComplete');
+            swal({
+                title: "Bank Linked Successfully",
+                text: "<p>Thanks for completing this <strong>one-time</strong> process. &nbsp;Now you can get paid securely and never share your bank details again!</p>",
+                type: "success",
+                confirmButtonColor: "#3fabe1",
+                confirmButtonText: "Done",
+                customClass: "largeText",
+                html: true
+            }, function (isConfirm) {
+                showLoadingHUD("Finishing");
+
+                setTimeout(function () {
+                    window.top.location.href = "https://tryhabitat.com/";
+                }, 400);
+            });
         }
         else if (RED_URL.indexOf('DepositMoneyComplete') > 1 ||
                  RED_URL.indexOf('PayRequestComplete') > 1)
@@ -1145,8 +1163,7 @@ function sendToRedUrl() {
                 confirmButtonText: "Done",
                 customClass: "largeText",
                 html: true
-            }, function (isConfirm)
-            {*/
+            }, function (isConfirm) {*/
 
             // If user adds a bank with routing/account # and it's a request (meaning the user is trying to send $)
             // then they must wait for the microdeposits to verify ownership of the account.  If just DEPOSITING $,
@@ -1429,43 +1446,43 @@ function onLookupSuccess(data)
 	{
 		var name = data["name"].toLowerCase();
 
-		if (name.indexOf("bank of america") >= 0) {
+		if (name.indexOf("bank of america") > -1) {
 			$(".selectedBank-logo img").attr('src', '../Assets/Images/bankPictures/bankofamerica.png');
 		}
-		else if (name.indexOf("wells fargo") >= 0) {
+		else if (name.indexOf("wells") > -1) {
 			$(".selectedBank-logo img").attr('src', '../Assets/Images/bankPictures/WellsFargo.png');
 		}
-		else if (name.indexOf("chase") >= 0) {
+		else if (name.indexOf("chase") > -1) {
 			$(".selectedBank-logo img").attr('src', '../Assets/Images/bankPictures/chase.png');
 		}
-		else if (name.indexOf("citibank") >= 0) {
+		else if (name.indexOf("citibank") > -1) {
 			$(".selectedBank-logo img").attr('src', '../Assets/Images/bankPictures/citibank.png');
 		}
-		else if (name.indexOf("td bank") >= 0) {
+		else if (name.indexOf("td bank") > -1) {
 			$(".selectedBank-logo img").attr('src', '../Assets/Images/bankPictures/td.png');
 		}
-		else if (name.indexOf("capital one 360") >= 0) {
+		else if (name.indexOf("360") > -1) {
 			$(".selectedBank-logo img").attr('src', '../Assets/Images/bankPictures/capone360.png');
 		}
-		else if (name.indexOf("us bank") >= 0) {
+		else if (name.indexOf("us bank") > -1) {
 			$(".selectedBank-logo img").attr('src', '../Assets/Images/bankPictures/usbank.png');
 		}
-		else if (name.indexOf("pnc") >= 0) {
+		else if (name.indexOf("pnc") > -1) {
 			$(".selectedBank-logo img").attr('src', '../Assets/Images/bankPictures/pnc.png');
 		}
-		else if (name.indexOf("suntrust") >= 0) {
+		else if (name.indexOf("suntrust") > -1) {
 			$(".selectedBank-logo img").attr('src', '../Assets/Images/bankPictures/suntrust.png');
 		}
-		else if (name.indexOf("usaa") >= 0) {
+		else if (name.indexOf("usaa") > -1) {
 			$(".selectedBank-logo img").attr('src', '../Assets/Images/bankPictures/usaa.png');
 		}
-		else if (name.indexOf("ally") >= 0) {
+		else if (name.indexOf("ally") > -1) {
 			$(".selectedBank-logo img").attr('src', '../Assets/Images/bankPictures/ally.png');
 		}
-		else if (name.indexOf("first tennessee") >= 0) {
+		else if (name.indexOf("first tennessee") > -1) {
 			$(".selectedBank-logo img").attr('src', '../Assets/Images/bankPictures/firsttennessee.png');
 		}
-		else if (name.indexOf("regions") >= 0) {
+		else if (name.indexOf("regions") > -1) {
 			$(".selectedBank-logo img").attr('src', '../Assets/Images/bankPictures/regions.png');
 		}
 		else {
