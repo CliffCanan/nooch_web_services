@@ -3652,12 +3652,12 @@ namespace Nooch.DataAccess
                                     Utility.SendNotificationMessage(msg, "Nooch", sender.DeviceToken, sender.DeviceType);
 
                                     Logger.Info("TDA -> RequestMoney - (B/t 2 Existing Nooch Users) - Push notification sent successfully - Username: [" +
-                                                CommonHelper.GetDecryptedData(transaction.Member.UserName) + "], DeviceToken: [" + sender.DeviceToken + "]");
+                                                CommonHelper.GetDecryptedData(sender.UserName) + "], DeviceToken: [" + sender.DeviceToken + "]");
                                 }
                                 catch (Exception ex)
                                 {
                                     Logger.Error("TDA -> RequestMoney - Request Received Push Notification NOT sent to Username: [" +
-                                                 CommonHelper.GetDecryptedData(transaction.Member.UserName) + "], DeviceToken: [" + sender.DeviceToken + "], Exception: [" + ex + "]");
+                                                 CommonHelper.GetDecryptedData(sender.UserName) + "], DeviceToken: [" + sender.DeviceToken + "], Exception: [" + ex + "]");
                                 }
                             }
                         }
