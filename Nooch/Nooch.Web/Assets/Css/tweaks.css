@@ -1412,27 +1412,24 @@ div#pwFormShell #depositCreateAccount,
 #idVerWiz input#idVer-name { text-transform: capitalize; }
 #idVerWiz input#idVer-ssn {
     font-weight: bold;
-    font-size: 16.5px;
-    letter-spacing: 1.5px;
+    font-size: 14.5px;
 	text-align: center;
 }
 #idVerWiz-p-2 label,
 #idVerWiz-p-2 dt { font-size: 16px; }
 #idVerWiz .orDiv {
-    background-color: rgba(188,190,192,.1);
-    border-bottom: 1px solid #ccc;
-    border-top: 1px solid #ccc;
-    padding: 17px 0px;
-    font-weight: 700;
-    font-size: 20px;
-    margin: 0 15px;
+    padding: 15px 0px;
+    font-weight: 400;
+    font-size: 16px;
+    margin: 0 5px;
 }
 .btn.btn-fb {
   background-color: #39579B;
-  border-radius: 5px;
+  border-radius: 6px;
   color: #fff;
-  height: 45px;
-  padding: 0 12px !important;
+  height: 42px;
+  font-size: 13px;
+  padding: 0 6px !important;
 }
 .btn.btn-fb > i { margin: 0 8px 0 0;}
 
@@ -1539,7 +1536,7 @@ div#pwFormShell #depositCreateAccount,
   border-radius: 20px;
 }
 
-#idVerWiz .well-sm { margin-bottom; 5px;}
+#idVerWiz .well-sm { margin-bottom: 15px;}
 
 #idVerWiz dl {font-size: 15px;}
 #idVerWiz input {font-size: 15px;}
@@ -2537,6 +2534,27 @@ form .table-header {
   letter-spacing: .5px;
 }
 
+#idVerWiz .orDiv {
+    background-color: rgba(188,190,192,.1);
+    border-bottom: 1px solid #ccc;
+    border-top: 1px solid #ccc;
+    padding: 17px 0px;
+    font-weight: 700;
+    font-size: 20px;
+    margin: 0 15px;
+}
+#idVerWiz input#idVer-ssn {
+    font-weight: bold;
+    font-size: 16px;
+    letter-spacing: 1.5px;
+	text-align: center;
+}
+.btn.btn-fb {
+    height: 45px;
+	font-size: 14px;
+    padding: 0 12px !important;
+}
+
 .bootstrap-datetimepicker-widget table td span { font-weight: 600; }
 .bootstrap-datetimepicker-widget { top: -15px !important; }
 
@@ -2681,6 +2699,7 @@ form .table-header {
 	#idVerWiz #idVerWiz-p-2 .well-sm {font-size: 13px;}
 }
 @media only screen and (min-width: 768px) {
+  .hide-md { display: none !important; }
   .sweet-alert {
     padding-top: 45px;
     padding-bottom: 14px;
@@ -2703,6 +2722,7 @@ form .table-header {
   }
 
   #idVer .modal-dialog { width: 640px; }
+
 }
 
 @media only screen and (min-width: 1000px) {

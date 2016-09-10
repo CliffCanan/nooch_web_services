@@ -3702,7 +3702,7 @@ namespace Nooch.API.Controllers
                     return res;
                 }
 
-                if (noochMember.IsVerifiedPhone != true &&
+                /*if (noochMember.IsVerifiedPhone != true &&
                     noochMember.Status != "NonRegistered" &&
                     noochMember.isRentScene != true &&
                     noochMember.Type != "Personal - Browser")
@@ -3711,7 +3711,7 @@ namespace Nooch.API.Controllers
 
                     res.errorMsg = "User phone is not verified";
                     return res;
-                }
+                }*/
 
                 #endregion Check Member's Status And Phone
 
