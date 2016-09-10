@@ -1109,45 +1109,46 @@ function showErrorAlert(errorNum) {
 
     var supportEmail = "support@nooch.com";
     if (COMPANY == "rentscene") supportEmail = "payments@rentscene.com"
+    if (COMPANY == "habitat") supportEmail = "payments@tryhabitat.com"
 
     console.log("ShowError -> errorNum is: [" + errorNum + "], resultReason is: [" + resultReason + "]");
 
     if (errorNum == '1') // Codebehind errors
     {
         alertTitle = "Errors Are The Worst!";
-        alertBodyText = "We had trouble finding that transaction.  Please try again and if you continue to see this message, contact <span style='font-weight:600;'>" +
+        alertBodyText = "We had trouble finding that transaction. &nbsp;Please try again and if you continue to see this message, contact <span style='font-weight:600;'>" +
 						COMPANY_DISPLAY_TXT + " Support</span>:<br/><a href='mailto:" + supportEmail + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + supportEmail + "</a>";
     }
     else if (errorNum == '2') // Errors after submitting ID verification AJAX
     {
         alertTitle = "Errors Are The Worst!";
-        alertBodyText = "Terrible sorry, but it looks like we had trouble processing your info.  Please refresh this page to try again and if you continue to see this message, contact <span style='font-weight:600;'>" +
+        alertBodyText = "Terrible sorry, but it looks like we had trouble processing your info. &nbsp;Please refresh this page to try again and if you continue to see this message, contact <span style='font-weight:600;'>" +
                         COMPANY_DISPLAY_TXT + " Support</span>:<br/><a href='mailto:" + supportEmail + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + supportEmail + "</a>";
     }
     else if (errorNum == '25') // Errors from the iFrame with the multiple choice verification questions
     {
         alertTitle = "Errors Are The Worst!";
-        alertBodyText = "Terrible sorry, but it looks like we had trouble processing your info.  Please refresh this page to try again and if you continue to see this message, contact <span style='font-weight:600;'>" +
+        alertBodyText = "Terrible sorry, but it looks like we had trouble processing your info. &nbsp;Please refresh this page to try again and if you continue to see this message, contact <span style='font-weight:600;'>" +
                         COMPANY_DISPLAY_TXT + " Support</span>:<br/><a href='mailto:" + supportEmail + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + supportEmail + "</a>";
     }
     else if (errorNum == '20') // Submitted ID Verification info, but EMAIL came back as already registered with Nooch.
     {
         alertTitle = "Email Already Registered";
-        alertBodyText = "Looks like <strong>" + $('#idVer-email').val() + "</strong> is already registered to a " + COMPANY_DISPLAY_TXT + " account.  Please try a different email address.";
+        alertBodyText = "Looks like <strong>" + $('#idVer-email').val() + "</strong> is already registered to a " + COMPANY_DISPLAY_TXT + " account. &nbsp;Please try a different email address.";
         shouldFocusOnEmail = true;
         shouldShowErrorDiv = false;
     }
     else if (errorNum == '30') // Submitted ID Verification info, but PHONE came back as already registered with Nooch.
     {
         alertTitle = "Phone Number Already Registered";
-        alertBodyText = "Looks like <strong>" + $('#idVer-phone').val() + "</strong> is already registered to a " + COMPANY_DISPLAY_TXT + " account.  Please try a different number.";
+        alertBodyText = "Looks like <strong>" + $('#idVer-phone').val() + "</strong> is already registered to a " + COMPANY_DISPLAY_TXT + " account. &nbsp;Please try a different number.";
         shouldFocusOnPhone = true;
         shouldShowErrorDiv = false;
     }
     else // Generic Error
     {
         alertTitle = "Errors Are The Worst!";
-        alertBodyText = "Terrible sorry, but it looks like we had trouble processing your request.  Please refresh this page to try again and if you continue to see this message, contact <span style='font-weight:600;'>" +
+        alertBodyText = "Terrible sorry, but it looks like we had trouble processing your request. &nbsp;Please refresh this page to try again and if you continue to see this message, contact <span style='font-weight:600;'>" +
                         COMPANY_DISPLAY_TXT + " Support</span>:<br/><a href='mailto:" + supportEmail + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>" + supportEmail + "</a>";
     }
 

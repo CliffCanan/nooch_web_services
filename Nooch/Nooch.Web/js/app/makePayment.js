@@ -855,16 +855,12 @@ function submitPin(pin) {
 
                 // THEN DISPLAY SUCCESS ALERT...
                 swal({
-                    title: "Great Success",
-                    text: "Your PIN has been confirmed.",
+                    title: "Access Granted",
+                    text: "PIN successfully verified.",
                     type: "success",
-                    showCancelButton: false,
-                    confirmButtonColor: "#3fabe1",
-                    confirmButtonText: "Ok",
-                    closeOnConfirm: true,
                     customClass: "largeText",
                     showConfirmButton: false,
-                    timer: 1800
+                    timer: 1600
                 }, function () {
                     swal.close();
 

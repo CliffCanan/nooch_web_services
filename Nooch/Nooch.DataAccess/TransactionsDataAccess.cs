@@ -2739,8 +2739,8 @@ namespace Nooch.DataAccess
 
                     foreach (synapseSearchUserResponse_User senderUser in senderPermissions.users)
                     {
-                        Logger.Info("TDA -> AddTransSynapseV3Reusable - Got User array for SENDER from Synapse - Name: [" + senderUser.legal_names[0] +
-                                    "], User OID: [" + senderUser._id.oid + "] - About to check bank permissions...");
+                        //Logger.Info("TDA -> AddTransSynapseV3Reusable - Got User array for SENDER from Synapse - Name: [" + senderUser.legal_names[0] +
+                        //            "] - About to check bank permissions...");
 
                         iterator++;
 
@@ -2923,7 +2923,7 @@ namespace Nooch.DataAccess
                     if (senderMemberDetails.isRentScene == true) companyName = "RENT SCENE";
                     else if (senderUserName == "andrew@tryhabitat.com") companyName = "HABITAT";
 
-                    if (receiverUserName == "payments@rentscene.com") recipientLastName = ""; // Blank for the Bank memo since the company will already be in it.
+                    if (receiverUserName == "payments@rentscene.com") recipientLastName = ""; // For Habitat: Blank for the ACH memo since the company will already be in it.
 
                     SynapseV3AddTransInput transParamsForSynapse = new SynapseV3AddTransInput();
 
@@ -3019,9 +3019,7 @@ namespace Nooch.DataAccess
 
                         var parsedContent = JsonConvert.SerializeObject(transParamsForSynapse);
 
-                        //Logger.Info("TDA -> AddTransSynapseV3Reusable - Payload to send to /v3/trans/add API: [" + JsonArrayAttribute. transParamsForSynapse + "]");//From Bank ID: [" + transParamsForSynapse.trans.from.id +
-                        //"], To Bank ID: [" + transParamsForSynapse.trans.to.id + "], Amount: [" + transParamsForSynapse.trans.amount +
-                        //"], Note: [" + transParamsForSynapse.trans.extra.note + "]");
+                        Logger.Info("TDA -> AddTransSynapseV3Reusable - Payload to send to URL: [" + UrlToHitV3 + "] ...Params: [" + parsedContent + "]");
 
                         ASCIIEncoding encoding = new ASCIIEncoding();
                         Byte[] bytes = encoding.GetBytes(parsedContent);
@@ -3037,7 +3035,7 @@ namespace Nooch.DataAccess
 
                         var synapseResponse = JsonConvert.DeserializeObject<SynapseV3AddTrans_Resp>(content);
 
-                        Logger.Info("TDA -> AddTransSynapseV3Reusable - RESPONSE FROM Synapse V3 /trans/add API: " + JObject.Parse(content));
+                        Logger.Info("TDA -> AddTransSynapseV3Reusable - RESPONSE FROM Synapse V3 /trans/add API: " + JObject.Parse(content).ToString());
 
                         if (synapseResponse.success == true ||
                             synapseResponse.success.ToString().ToLower() == "true")
@@ -3045,7 +3043,7 @@ namespace Nooch.DataAccess
                             res.success = true;
                             res.ErrorMessage = "OK";
 
-                            // save changes into synapseTransactionResult table in db
+                            // Save changes in synapseTransactionResult table in DB
                             SynapseAddTransactionResult satr = new SynapseAddTransactionResult();
                             satr.TransactionId = Utility.ConvertToGuid(suppID_or_transID);
                             satr.OidFromSynapse = synapseResponse.trans._id.oid.ToString();
@@ -3056,12 +3054,6 @@ namespace Nooch.DataAccess
 
                             _dbContext.SynapseAddTransactionResults.Add(satr);
                             _dbContext.SaveChanges();
-
-                            // CC (8/17/16): I DON'T THINK WE NEED TO CREATE A NEW SUBSCRIPTION FOR EVERY BANK.
-                            //               I THINK WE JUST CREATE THE SUBSCRIPTION *ONCE* (...EVER) AND THAT APPLIES TO
-                            //               *ALL* USERS/BANKS/TRANSACTIONS CREATED USING OUR CLIENT ID/SECRET
-                            //subscribe this Transaction on synapse
-                            //setSubcriptionToTrans(satr.OidFromSynapse.ToString(), senderUserName);
                         }
                         else
                         {
@@ -6295,7 +6287,7 @@ namespace Nooch.DataAccess
                     isHabitat = true;
                     fromAddress = "payments@tryhabitat.com";
 
-                    Logger.Info("MDA -> TransferMoneyUsingSynapse - HABITAT Payment!!");
+                    Logger.Info("TDA -> TransferMoneyUsingSynapse - HABITAT Payment!");
 
                     // Need to create 2 transactions with Synapse: 1 from Habitat to Rent Scene, & 1 from Rent Scene to the Vendor
 
@@ -6325,13 +6317,13 @@ namespace Nooch.DataAccess
                         #region 2nd Synapse Payment (RS to Vendor)
 
                         // 1st Payment was successful, now do the 2nd one (from RS -> original recipient)
-                        Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser - 1st HABITAT Payment Successful (to RS) - Response From SYNAPSE's /order/add API - " +
-                                    "OrderID: [" + transactionResultFromSynapseAPI.responseFromSynapse.trans._id.oid + "]");
+                        Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser - 1st HABITAT Payment Successful (to RS)");
 
                         var rentSceneMemGuid = new Guid("852987e8-d5fe-47e7-a00b-58a80dd15b49"); // Rent Scene's MemberID
 
                         sender_oauth = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == rentSceneMemGuid &&
                                                                                                m.IsDeleted == false).access_token;
+                        sender_oauth = CommonHelper.GetDecryptedData(sender_oauth);
 
                         senderBankOid = "574f45d79506295ff7a81db8";
                         senderFingerprint = "6d441f70cc6891e7831432baac2e50d7";
@@ -6379,6 +6371,7 @@ namespace Nooch.DataAccess
                     Logger.Info("TDA -> TransferMoneyUsingSynapse - SUCCESS Response From SYNAPSE's /order/add API - " +
                                 "Synapse OrderID: [" + transactionResultFromSynapseAPI.responseFromSynapse.trans._id.oid + "]");
 
+
                     #region Save Info in Transaction Details Table
 
                     transactionDetail.TransactionStatus = "Success";
@@ -6419,28 +6412,18 @@ namespace Nooch.DataAccess
                     try
                     {
                         if (senderNoochDetails.TotalNoochTransfersCount != null)
-                        {
                             senderNoochDetails.TotalNoochTransfersCount = senderNoochDetails.TotalNoochTransfersCount + 1;
-                            senderNoochDetails.DateModified = DateTime.Now;
-                        }
                         else
-                        {
                             senderNoochDetails.TotalNoochTransfersCount = 1;
-                            senderNoochDetails.DateModified = DateTime.Now;
-                        }
 
                         if (recipientNoochDetails.TotalNoochTransfersCount != null)
-                        {
                             recipientNoochDetails.TotalNoochTransfersCount = recipientNoochDetails.TotalNoochTransfersCount + 1;
-                            recipientNoochDetails.DateModified = DateTime.Now;
-                        }
                         else
-                        {
                             recipientNoochDetails.TotalNoochTransfersCount = 1;
-                            recipientNoochDetails.DateModified = DateTime.Now;
-                        }
 
-                        // Update Users in Members Table
+                        senderNoochDetails.DateModified = DateTime.Now;
+                        recipientNoochDetails.DateModified = DateTime.Now;
+
                         _dbContext.SaveChanges();
                     }
                     catch (Exception ex)
@@ -6456,7 +6439,7 @@ namespace Nooch.DataAccess
 
                     if (saveToTransTable > 0)
                     {
-                        Logger.Info("TDA -> TransferMoneyUsingSynapse CHECKPOINT - TRANSACTION ADDED TO DB SUCCESSFULLY");
+                        Logger.Info("TDA -> TransferMoneyUsingSynapse CHECKPOINT - TRANS ADDED TO DB SUCCESSFULLY");
 
                         if (transInput.doNotSendEmails != true)
                         {
@@ -6510,9 +6493,6 @@ namespace Nooch.DataAccess
                                         else
                                             template = "TransferSent";
                                     }
-
-                                    // CC (9/9/16): TESTING CODE - REMOVE WHEN DONE!! 
-                                    if (isHabitat) toAddress = "isHabitat-SENDER@nooch.com";
 
                                     Utility.SendEmail(template, fromAddress, toAddress, null,
                                                       subject, null, tokens, null, null, null);
@@ -6604,10 +6584,6 @@ namespace Nooch.DataAccess
                                 else
                                     subject = senderFirstName + " " + senderLastName + " sent you $" + wholeAmount;
 
-
-                                // CC (9/9/16): TESTING CODE - REMOVE WHEN DONE!! 
-                                if (isHabitat) toAddress2 = "isHabitat-RECIP@nooch.com";
-
                                 Utility.SendEmail(templateToUse, fromAddress, toAddress2, null,
                                                   subject, null, tokensR, null, null, null);
 
@@ -6617,7 +6593,7 @@ namespace Nooch.DataAccess
                             catch (Exception ex)
                             {
                                 Logger.Error("TDA -> TransferMoneyUsingSynapse -> EMAIL TO RECIPIENT FAILED: " +
-                                             "[" + templateToUse + "] Email NOT sent to [" + toAddress2 + "], [Exception: " + ex + "]");
+                                             "[" + templateToUse + "] Email NOT sent to [" + toAddress2 + "], Exception: [" + ex + "]");
                             }
 
                             #endregion Email notification to Recipient

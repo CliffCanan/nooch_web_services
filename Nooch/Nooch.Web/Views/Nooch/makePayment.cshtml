@@ -215,9 +215,18 @@
                 *@<div class="form-group" id="UserTypeGrp">
                     <label for="amount" class="col-sm-3 control-label p-t-10">
                         User Type
-                        <span data-toggle="popover" title="User Types" data-content='<span class="show m-t-10"><span class="text-success">CLIENT</span>: &nbsp;Users may send or receive funds; Photo ID required.</span><span class="show m-t-10"><span class="text-primary">Landlord</span>: &nbsp;May be a person or business. Photo ID + EIN letter (bus.) requried.</span><span class="show m-t-10"><span class="text-danger">VENDOR</span>: &nbsp;Users who will ONLY be receiving $ from Rent Scene).</span>' data-trigger="hover" data-placement="top" data-html="true">
-                            <i class="fa fa-question-circle-o m-l-5"></i>
-                        </span>
+                        @if (onLoad.from == "habitat")
+                        {
+                            <span data-toggle="popover" title="User Types" data-content='<span class="show m-t-10"><span class="text-success">Vendor</span>: &nbsp;Users may only receive funds; EIN may be required for businesses.</span><span class="show m-t-10"><span class="show m-t-10"><span class="text-danger">RUNNER</span>: &nbsp;Users may only receive $ from Habitat.</span>' data-trigger="hover" data-placement="top" data-html="true">
+                                <i class="fa fa-question-circle-o m-l-5"></i>
+                            </span>
+                        }
+                        else
+                        {
+                            <span data-toggle="popover" title="User Types" data-content='<span class="show m-t-10"><span class="text-success">CLIENT</span>: &nbsp;Users may send or receive funds; Photo ID required.</span><span class="show m-t-10"><span class="text-primary">Landlord</span>: &nbsp;May be a person or business. Photo ID + EIN letter (bus.) requried.</span><span class="show m-t-10"><span class="text-danger">VENDOR</span>: &nbsp;Users who will ONLY be receiving $ from Rent Scene).</span>' data-trigger="hover" data-placement="top" data-html="true">
+                                <i class="fa fa-question-circle-o m-l-5"></i>
+                            </span>
+                        }
                     </label>
 
                     <div class="col-sm-9 inputContainer" style="margin-top: 3px">

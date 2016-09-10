@@ -2884,8 +2884,8 @@ namespace Nooch.Common
                 {
                     res.wereUserDetailsFound = true;
 
-                    Logger.Info("Common Helper -> GetSynapseBankAndUserDetailsforGivenMemberId - Checkpoint #1 - " +
-                                "SynapseCreateUserResults Record Found - MemberID: [" + memberId + "], Access_Token: [" + createSynapseUserObj.access_token + "] - Now about to check if Synapse OAuth Key is still valid.");
+                    //Logger.Info("Common Helper -> GetSynapseBankAndUserDetailsforGivenMemberId - Checkpoint #1 - " +
+                    //            "SynapseCreateUserResults Record Found - MemberID: [" + memberId + "], Access_Token: [" + createSynapseUserObj.access_token + "] - Now about to check if Synapse OAuth Key is still valid.");
 
                     // CLIFF (10/3/15): ADDING CALL TO NEW METHOD TO CHECK USER'S STATUS WITH SYNAPSE, AND REFRESHING OAUTH KEY IF NECESSARY
                     synapseV3checkUsersOauthKey checkTokenResult = refreshSynapseV3OautKey(createSynapseUserObj.access_token);
