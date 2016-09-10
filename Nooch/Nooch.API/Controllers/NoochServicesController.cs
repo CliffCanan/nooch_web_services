@@ -2338,7 +2338,7 @@ namespace Nooch.API.Controllers
                 // Get Synapse Bank Account Info
                 var synapseBank = CommonHelper.GetSynapseBankDetails(memberId);
 
-                string accountstatus = "";
+                var accountstatus = "";
 
                 // Now check this bank's status.
                 // CC (10/7/15): If the user's ID is verified (after sending SSN info to Synapse), then consider the bank Verified as well
@@ -2381,7 +2381,8 @@ namespace Nooch.API.Controllers
                     DateCreatedString = memberEntity.DateCreated == null ? "" : Convert.ToDateTime(memberEntity.DateCreated).ToString("MM/dd/yyyy"),
                     DeviceToken = memberEntity.DeviceToken,
                     fngrprnt = !String.IsNullOrEmpty(memberEntity.UDID1) ? memberEntity.UDID1 : null,
-                    isRs = memberEntity.isRentScene ?? false
+                    isRs = memberEntity.isRentScene ?? false,
+                    cip_type = memberEntity.cipTag
                 };
 
                 if (memberEntity.Type == "Landlord")

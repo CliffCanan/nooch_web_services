@@ -81,9 +81,10 @@ $(document).ready(function () {
         });
         //console.log(ipusr);
 
+        var actionTxt = TYPE == "vendor" ? "Get paid" : "Send money";
         swal({
             title: "Secure, Private, & Direct Payments",
-            text: "<p>Send money without having to leave your seat! &nbsp;Secure, direct, and traceable payments when you want them. &nbsp;Please verify your identity as an authorized user of your company's account.</p>" +
+            text: "<p>" + actionTxt + " without having to leave your seat! &nbsp;Secure, direct, and traceable payments when you want them. &nbsp;Please verify your identity and link a funding source to get started.</p>" +
                   "<ul class='fa-ul'>" +
                   "<li><i class='fa-li fa fa-check'></i>We don't see or store your bank credentials</li>" +
                   "<li><i class='fa-li fa fa-check'></i>We use <strong>bank-grade encryption</strong> to secure all data</li>" +
@@ -153,33 +154,36 @@ function runIdWizard() {
 
             $('#idVerWiz > .content').animate({ height: "27em" }, 300)
 
-            var DOB = $('#dob').val() ? $('#dob').val() : "1980 01 01";
+            if (!isSmScrn)
+            {
+                var DOB = $('#dob').val() ? $('#dob').val() : "1980-01-01";
 
-            $('#idVer-dob').datetimepicker({
-                format: 'MM/DD/YYYY',
-                useCurrent: false,
-                defaultDate: DOB,
-                icons: {
-                    previous: 'fa fa-fw fa-chevron-circle-left',
-                    next: 'fa fa-fw fa-chevron-circle-right',
-                    clear: 'fa fa-fw fa-trash-o'
-                },
-                maxDate: "1998-06-01",
-                viewMode: 'years',
-                //debug: true
-            });
+                $('#idVer-dob').datetimepicker({
+                    format: 'MM/DD/YYYY',
+                    useCurrent: false,
+                    defaultDate: DOB,
+                    icons: {
+                        previous: 'fa fa-fw fa-chevron-circle-left',
+                        next: 'fa fa-fw fa-chevron-circle-right',
+                        clear: 'fa fa-fw fa-trash-o'
+                    },
+                    maxDate: "1998-06-01",
+                    viewMode: 'years',
+                    //debug: true
+                });
 
-            var calendarIcon = $('.datePickerGrp i');
+                var calendarIcon = $('.datePickerGrp i');
 
-            calendarIcon.click(function () {
-                setTimeout(function () {
-                    $('#dobGrp .dtp-container.dropdown').addClass('fg-toggled open');
-                    $('#idVer-dob').data("DateTimePicker").show();
-                }, 150);
-            });
+                calendarIcon.click(function () {
+                    setTimeout(function () {
+                        $('#dobGrp .dtp-container.dropdown').addClass('fg-toggled open');
+                        $('#idVer-dob').data("DateTimePicker").show();
+                    }, 150);
+                });
+            }
 
             $('#idVer-ssn').mask("000 - 00 - 0000");
-            //$('#idVer-zip').mask("00000");
+            $('#idVer-zip').mask("00000");
             $('#idVer-phone').mask('(000) 000-0000');
 
             $('[data-toggle="popover"]').popover();
@@ -212,7 +216,7 @@ function runIdWizard() {
                             updateValidationUi("email", true);
 
                             // Finally, check the phone number's length
-                            if ($('#idVer-phone').cleanVal().length == 10)
+                            if ($('#idVer-phone').val().trim().replace(/[^0-9]/g, '').length == 10)
                             {
                                 updateValidationUi("phone", true);
 
@@ -244,10 +248,10 @@ function runIdWizard() {
                     updateValidationUi("address", true);
 
                     // Check ZIP code field
-                    var trimmedZip = $('#idVer-zip').val().trim();
+                    var trimmedZip = $('#idVer-zip').val().trim().replace(/[^0-9]/g, '');
                     $('#idVer-zip').val(trimmedZip);
 
-                    if ($('#idVer-zip').val().length > 4)
+                    if ($('#idVer-zip').val().length == 5)
                     {
                         updateValidationUi("zip", true);
 
@@ -300,11 +304,11 @@ function runIdWizard() {
 function checkStepThree() {
     console.log("CheckStepThree Fired\n");
 
-    // Check DOB field
-    if ($('#idVer-dob').val().length == 10)
+    // Check DOB field (Mobile screens get a different input w/ type='tel' so that a numpad is displayed)
+    if ((!isSmScrn && $('#idVer-dob').val().length == 10) || (isSmScrn && $('#idVer-dob-mobile').val().length > 9))
     {
         // Double check that DOB is not still "01/01/1980", which is the default and probably not the user's B-Day...
-        if ($('#idVer-dob').val() != "01/01/1980")
+        if (isSmScrn || $('#idVer-dob').val() != "01/01/1980")
         {
             updateValidationUi("dob", true);
 
@@ -424,6 +428,8 @@ function resizeInCanvas(img) {
 
 function updateValidationUi(field, success) {
     //console.log("Field: " + field + "; success: " + success);
+
+    if (isSmScrn && field == "dob") field = "dob-mobile";
 
     if (field == "dob-default")
     {
@@ -558,12 +564,18 @@ function createRecord() {
     var userPhVal = $('#idVer-phone').cleanVal();
     var userPwVal = "";  // Still need to add the option for users to create a PW (not sure where in the flow to do it)
     var ssnVal = $('#idVer-ssn').val().trim();
-    var dobVal = $('#idVer-dob').val().trim();
+    var dobVal = isSmScrn ? $('#idVer-dob-mobile').val().trim() : $('#idVer-dob').val().trim();
     var addressVal = $('#idVer-address').val().trim();
     var zipVal = $('#idVer-zip').val().trim();
     var fngprntVal = fingprint;
     var ipVal = ipusr;
     var cip = TYPE.length > 0 ? TYPE : "renter";
+
+    if (isSmScrn)
+    {
+        dobVal = moment(dobVal).format('MM/DD/YYYY');
+        console.log("After applying Moment --> DOB Value is: [" + dobVal + "]");
+    }
 
     console.log("SAVE MEMBER INFO -> {memId: " + memId +
                                    ", Name: " + userNameVal +
@@ -579,6 +591,7 @@ function createRecord() {
                                    ", company: " + COMPANY +
                                    ", Type: " + cip +
 								   ", FBID: " + FBID + "}");
+
 
     $.ajax({
         type: "POST",
@@ -823,11 +836,10 @@ function submitPin(pin) {
                     html: true,
                     customClass: "idVerSuccessAlert",
                 }, function (isConfirm)
-                {*/
+                {});*/
                 // SUBMIT ID WIZARD DATA TO SERVER AGAIN...
                 console.log("Calling createRecord() again...")
                 createRecord();
-                //});
             }
             else
             {
@@ -1195,9 +1207,10 @@ $('body').on('blur', '.form-control', function () {
 function ssnWhy() {
     swal({
         title: "Why Do We Collect SSN?",
-        text: "We hate identify fraud.  With a passion.<span class='show m-t-15'>" +
-              "In order to keep " + COMPANY_DISPLAY_TXT + " safe for all users, and to comply with federal and state measures against identity theft, we use your SSN for one purpose only: verifying your ID. &nbsp;Your SSN is never displayed anywhere and is only transmitted with bank-grade encryption.</span>" +
-              "<span class='show'><a href='https://en.wikipedia.org/wiki/Know_your_customer' class='btn btn-link p-5 f-16' target='_blank'>Learn More<i class='fa fa-external-link m-l-10 f-15'></i></a></span>",
+        text: "<strong>We hate identify fraud.  With a passion.</strong><span class='show m-t-10'>" +
+              "In order to keep " + COMPANY_DISPLAY_TXT + " safe for all users (and to comply with federal and state measures against identity theft), we use your SSN for one purpose only: <strong>verifying your ID</strong>.</span>" +
+			  "<span class='show m-t-10'>Your SSN is never displayed anywhere and is only transmitted with bank-grade encryption.</span>" +
+              "<span class='show m-t-10'><a href='https://en.wikipedia.org/wiki/Know_your_customer' class='btn btn-link p-5 f-16' target='_blank'>Learn More<i class='fa fa-external-link m-l-10 f-15'></i></a></span>",
         type: "info",
         showCancelButton: false,
         confirmButtonColor: "#3fabe1",

@@ -35,6 +35,7 @@ namespace Nooch.Common.Entities.MobileAppOutputEnities
         public string DeviceToken { get; set; }
         public string companyName { get; set; }
         public string fngrprnt { get; set; }
+        public string cip_type { get; set; }
     }
 
     public class genericResponse

@@ -2702,7 +2702,10 @@ namespace Nooch.DataAccess
         {
             Logger.Info("TDA -> AddTransSynapseV3Reusable Fired - Sender Last Name: [" + senderLastName +
                         "], Sender Username: " + senderUserName + "], Recip Last Name: [" + recipientLastName +
-                        "], Recipient Username: [" + receiverUserName + "], Amount: [" + amount + "]");
+                        "], Recipient Username: [" + receiverUserName + "], Amount: [" + amount +
+                        "], Sender OAUTH: [" + sender_oauth + "], Sender FNGPRNT: [" + sender_fingerPrint +
+                        "], Sender Bank Node ID: [" + sender_bank_node_id + "], Recip Bank Node ID: [" + receiver_bank_node_id +
+                        "], IP: [" + iPForTransaction + "], Memo: [" + memo + "]");
 
             SynapseV3AddTrans_ReusableClass res = new SynapseV3AddTrans_ReusableClass();
             res.success = false;
@@ -2831,8 +2834,8 @@ namespace Nooch.DataAccess
                     // Should usually only be 1 'user' result, contained in an array from Synapse
                     foreach (synapseSearchUserResponse_User recUser in recipPermissions.users)
                     {
-                        Logger.Info("TDA -> AddTransSynapseV3Reusable - User array for RECIPIENT from Synapse [Name: " + recUser.legal_names[0] +
-                                    "], [User OID:" + recUser._id.oid + "] - About to check bank permissions...");
+                        Logger.Info("TDA -> AddTransSynapseV3Reusable - User array for RECIPIENT from Synapse Name: [" + recUser.legal_names[0] +
+                                    "], User OID: [" + recUser._id.oid + "] - About to check bank permissions...");
 
                         iterator++;
 
@@ -2854,7 +2857,7 @@ namespace Nooch.DataAccess
                                 else
                                 {
                                     var error = "TDA -> AddTransSynapseV3Reusable - Recipient's Synapse Permission returned by Synapse was: [" +
-                                                 nodePermCheckRes.PermissionType + "] for [Receiver_bank_node_id: " + receiver_bank_node_id + "]";
+                                                 nodePermCheckRes.PermissionType + "] for Receiver_bank_node_id:[ " + receiver_bank_node_id + "]";
                                     Logger.Error(error);
                                     CommonHelper.notifyCliffAboutError(error);
                                     res.ErrorMessage = "Recipient has insufficient permissions to complete this payment (TDA - 3019)";
@@ -2878,7 +2881,7 @@ namespace Nooch.DataAccess
                             if (iterator == recipPermissionUsersCount) // Last one on the list, so abort and return with error
                             {
                                 var error = "TDA -> AddTransSynapseV3Reusable FAILED - No Bank Found for Recipient in Users List returned by Synapse - Username: [" + receiverUserName +
-                                             "], [RecipUser OID: " + recUser._id.oid + "] - Last iteration, so aborting and returning with error.";
+                                             "], RecipUser OID: [" + recUser._id.oid + "] - Last iteration, so aborting and returning with error.";
                                 Logger.Error(error);
                                 CommonHelper.notifyCliffAboutError(error);
                                 res.ErrorMessage = "No banks found for Recipient (TDA - 3276)";
@@ -2897,7 +2900,10 @@ namespace Nooch.DataAccess
 
                 if (!RecipientSynapsePermissionOK)
                 {
-                    res.ErrorMessage = "Recipient bank permission problem (TDA - 3063)";
+                    var error = "Recipient bank permission problem (TDA - 2903)";
+                    Logger.Error(error + " - ABORTING");
+                    CommonHelper.notifyCliffAboutError(error + " - ABORTING");
+                    res.ErrorMessage = error;
                     return res;
                 }
 
@@ -2913,6 +2919,7 @@ namespace Nooch.DataAccess
 
                     var senderMemberDetails = CommonHelper.GetMemberDetailsByUserName(senderUserName);
                     var companyName = "NOOCH";
+
                     if (senderMemberDetails.isRentScene == true) companyName = "RENT SCENE";
                     else if (senderUserName == "andrew@tryhabitat.com") companyName = "HABITAT";
 
@@ -2994,7 +3001,7 @@ namespace Nooch.DataAccess
 
                     transParamsForSynapse.trans = transMain;
 
-                    string UrlToHitV3 = isTesting ? "https://sandbox.synapsepay.com/api/v3/trans/add" : "https://synapsepay.com/api/v3/trans/add";
+                    var UrlToHitV3 = isTesting ? "https://sandbox.synapsepay.com/api/v3/trans/add" : "https://synapsepay.com/api/v3/trans/add";
 
                     #endregion Setup Synapse V3 Order Details
 
@@ -3012,7 +3019,7 @@ namespace Nooch.DataAccess
 
                         var parsedContent = JsonConvert.SerializeObject(transParamsForSynapse);
 
-                        Logger.Info("TDA -> AddTransSynapseV3Reusable - Payload to send to /v3/trans/add API: [" + transParamsForSynapse + "]");//From Bank ID: [" + transParamsForSynapse.trans.from.id +
+                        //Logger.Info("TDA -> AddTransSynapseV3Reusable - Payload to send to /v3/trans/add API: [" + JsonArrayAttribute. transParamsForSynapse + "]");//From Bank ID: [" + transParamsForSynapse.trans.from.id +
                         //"], To Bank ID: [" + transParamsForSynapse.trans.to.id + "], Amount: [" + transParamsForSynapse.trans.amount +
                         //"], Note: [" + transParamsForSynapse.trans.extra.note + "]");
 
@@ -6504,6 +6511,9 @@ namespace Nooch.DataAccess
                                             template = "TransferSent";
                                     }
 
+                                    // CC (9/9/16): TESTING CODE - REMOVE WHEN DONE!! 
+                                    if (isHabitat) toAddress = "isHabitat-SENDER@nooch.com";
+
                                     Utility.SendEmail(template, fromAddress, toAddress, null,
                                                       subject, null, tokens, null, null, null);
 
@@ -6563,12 +6573,10 @@ namespace Nooch.DataAccess
                             // Now send email notification
                             #region Email notification to Recipient
 
-                            if (true)//recipNotificationSets.EmailTransferReceived ?? false || isForRentScene)
-                            {
-                                if (!String.IsNullOrEmpty(senderNoochDetails.Photo) && senderNoochDetails.Photo.Length > 20)
-                                    senderPic = senderNoochDetails.Photo.ToString();
+                            if (!String.IsNullOrEmpty(senderNoochDetails.Photo) && senderNoochDetails.Photo.Length > 20)
+                                senderPic = senderNoochDetails.Photo.ToString();
 
-                                var tokensR = new Dictionary<string, string>
+                            var tokensR = new Dictionary<string, string>
 	                                        {
                                                 {Constants.PLACEHOLDER_FIRST_NAME, recipientFirstName},
 	                                            {Constants.PLACEHOLDER_FRIEND_FIRST_NAME, senderFirstName + " " + senderLastName},
@@ -6578,35 +6586,38 @@ namespace Nooch.DataAccess
 	                                            {Constants.MEMO, memo}
 	                                        };
 
-                                var toAddress = receiverUserName;
+                            var toAddress2 = receiverUserName;
 
-                                var templateToUse = "TransferReceived";
-                                if (isAutoPay || isForRentScene) templateToUse = "TransferReceived_RentScene";
-                                else if (isHabitat) templateToUse = "TransferReceived_Habitat";
+                            var templateToUse = "TransferReceived";
+                            if (isAutoPay || isForRentScene) templateToUse = "TransferReceived_RentScene";
+                            else if (isHabitat) templateToUse = "TransferReceived_Habitat";
 
-                                try
-                                {
-                                    var subject = "";
-                                    if (isAutoPay)
-                                        subject = "Rent AutoPayment from " + senderFirstName + " " + senderLastName + " - $" + wholeAmount;
-                                    else if (isForRentScene)
-                                        subject = "Payment Received From Rent Scene for $" + wholeAmount;
-                                    else if (isHabitat)
-                                        subject = "Payment Received From Habitat LLC for $" + wholeAmount;
-                                    else
-                                        subject = senderFirstName + " " + senderLastName + " sent you $" + wholeAmount;
+                            try
+                            {
+                                var subject = "";
+                                if (isAutoPay)
+                                    subject = "Rent AutoPayment from " + senderFirstName + " " + senderLastName + " - $" + wholeAmount;
+                                else if (isForRentScene)
+                                    subject = "Payment Received From Rent Scene for $" + wholeAmount;
+                                else if (isHabitat)
+                                    subject = "Payment Received From Habitat LLC for $" + wholeAmount;
+                                else
+                                    subject = senderFirstName + " " + senderLastName + " sent you $" + wholeAmount;
 
-                                    Utility.SendEmail(templateToUse, fromAddress, toAddress, null,
-                                                      subject, null, tokensR, null, null, null);
 
-                                    Logger.Info("TDA -> TransferMoneyUsingSynapse - [" + templateToUse + "] Email sent to [" +
-                                                toAddress + "] from [" + fromAddress + "] successfully");
-                                }
-                                catch (Exception ex)
-                                {
-                                    Logger.Error("TDA -> TransferMoneyUsingSynapse -> EMAIL TO RECIPIENT FAILED: " +
-                                                 "[" + templateToUse + "] Email NOT sent to [" + toAddress + "], [Exception: " + ex + "]");
-                                }
+                                // CC (9/9/16): TESTING CODE - REMOVE WHEN DONE!! 
+                                if (isHabitat) toAddress2 = "isHabitat-RECIP@nooch.com";
+
+                                Utility.SendEmail(templateToUse, fromAddress, toAddress2, null,
+                                                  subject, null, tokensR, null, null, null);
+
+                                Logger.Info("TDA -> TransferMoneyUsingSynapse - [" + templateToUse + "] Email sent to [" +
+                                            toAddress2 + "] from [" + fromAddress + "] successfully");
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.Error("TDA -> TransferMoneyUsingSynapse -> EMAIL TO RECIPIENT FAILED: " +
+                                             "[" + templateToUse + "] Email NOT sent to [" + toAddress2 + "], [Exception: " + ex + "]");
                             }
 
                             #endregion Email notification to Recipient
