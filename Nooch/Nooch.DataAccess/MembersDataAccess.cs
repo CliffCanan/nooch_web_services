@@ -3116,12 +3116,12 @@ namespace Nooch.DataAccess
                     if (company == "rentscene")
                     {
                         inviteCodeMemberName = "Rent Scene";
-                        inviteCodeId = CommonHelper.GetMemberReferralCodeByMemberId("852987e8-d5fe-47e7-a00b-58a80dd15b49");
+                        inviteCodeId = "B43A36A6-1DA5-47CE-A56C-6210F9DDBD22"; // Rent Scene Account's InviteCodeId
                     }
                     else if (company == "habitat")
                     {
                         inviteCodeMemberName = "Habitat LLC";
-                        inviteCodeId = CommonHelper.GetMemberReferralCodeByMemberId("45357cf0-e651-40e7-b825-e1ff48bf44d2");
+                        inviteCodeId = "3B749443-ACE2-4F31-BBA5-B3343D2D50C5"; // Habitat Account's InviteCodeId
                     }
                 }
 
@@ -3221,7 +3221,7 @@ namespace Nooch.DataAccess
                     isRentScene = isRentScene == true ? true : false,
                 };
 
-                if (!String.IsNullOrEmpty(inviteCodeId) && inviteCodeId.Length > 0)
+                if (!String.IsNullOrEmpty(inviteCodeId) && inviteCodeId.Length > 30)
                     member.InviteCodeIdUsed = Utility.ConvertToGuid(inviteCodeId);
 
                 NewUsersNoochMemId = member.MemberId.ToString();
@@ -7033,13 +7033,9 @@ namespace Nooch.DataAccess
         public string LogOut(string memberId)
         {
             if (LogoutRequest(memberId) == "Success")
-            {
                 return "Success";
-            }
             else
-            {
                 return string.Empty;
-            }
         }
 
 
@@ -7305,9 +7301,6 @@ namespace Nooch.DataAccess
                 return "Server error.";
             }
         }
-
-
-
 
     }
 

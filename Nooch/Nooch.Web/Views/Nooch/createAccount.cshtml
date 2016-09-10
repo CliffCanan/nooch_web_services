@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.6.0/css/font-awesome.min.css" />
 
-    <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,400italic,500,500italic,700,900" rel="stylesheet" type="text/css" />
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,400italic,500,500italic,700" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.4/themes/cupertino/jquery-ui.css" />
     <link rel="stylesheet" href="@Url.Content("~/Assets/Css/sweetalert-override.min.css")" />
     <link rel="stylesheet" href="@Url.Content("~/Assets/Css/bootstrap-select.min.css")" />
@@ -144,7 +144,7 @@
                                 <dd>
                                     <div class="form-group">
                                         <div class="dtp-container dropdown fg-line">
-                                            <input id="idVer-email" type='text' class="form-control" value="@rca.email" placeholder="email@domain.com" />
+                                            <input id="idVer-email" type='email' class="form-control" value="@rca.email" placeholder="email@domain.com" />
                                         </div>
                                     </div>
                                 </dd>
@@ -190,7 +190,7 @@
                             <dd>
                                 <div class="form-group">
                                     <div class="dtp-container dropdown fg-line">
-                                        <input id="idVer-zip" type='text' class="form-control" value="@rca.zip" placeholder="eg. 90210" />
+                                        <input id="idVer-zip" type='tel' class="form-control" value="@rca.zip" placeholder="eg. 90210" />
                                     </div>
                                 </div>
                             </dd>
@@ -223,7 +223,8 @@
                                 <div class="form-group withIcon datePickerGrp">
                                     <i class="fa fa-fw fa-calendar-plus-o"></i>
                                     <div class="dtp-container dropdown fg-line">
-                                        <input id="idVer-dob" type='text' class="form-control date-picker" data-toggle="dropdown" placeholder="eg. 08/05/1978" />
+                                        <input id="idVer-dob" type='text' class="form-control date-picker hide-sm" data-toggle="dropdown" placeholder="eg. 08/05/1978" />
+                                        <input id="idVer-dob-mobile" type='date' class="form-control hide-md" placeholder="eg. 08/05/1978" />
                                     </div>
                                     <i class="fa fa-fw fa-question-circle-o help-icon m-l-5" data-trigger="hover" data-toggle="popover" data-placement="auto" data-content="A date of birth is needed to verify a user's identity. Don't worry - nobody sees this!"></i>
                                 </div>
@@ -234,7 +235,7 @@
                             <div class="col-xs-5 p-r-5" id="ssnGrp">
                                 <div class="form-group m-b-5">
                                     <label for="idVer-ssn">SSN</label>
-                                    <input id="idVer-ssn" type="text" class="form-control" value="@rca.ssn" placeholder="XXX - XX - XXXX" />
+                                    <input id="idVer-ssn" type="tel" class="form-control" value="@rca.ssn" placeholder="XXX - XX - XXXX" />
                                 </div>
                                 <span><button class="btn btn-link btn-sm p-0" onclick="ssnWhy()">Why?</button></span>
                             </div>

@@ -324,10 +324,13 @@ namespace Nooch.Common
                 var noochMember = _dbContext.Members.FirstOrDefault(m => m.MemberId == memGuid && m.IsDeleted == false);
 
                 if (noochMember == null || noochMember.InviteCodeId == null) return "";
+
                 Guid inviGuid = Utility.ConvertToGuid(noochMember.InviteCodeId.ToString());
 
                 var inviteCodeResult = _dbContext.InviteCodes.FirstOrDefault(m => m.InviteCodeId == inviGuid);
+
                 if (inviteCodeResult != null) _dbContext.Entry(inviteCodeResult).Reload();
+
                 return inviteCodeResult != null ? inviteCodeResult.code : "";
             }
             catch (Exception ex)

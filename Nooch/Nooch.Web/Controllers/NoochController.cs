@@ -1664,6 +1664,7 @@ namespace Nooch.Web.Controllers
                     rca.ssn = member.ssnLast4;
                     rca.fngprnt = member.fngrprnt;
                     rca.company = member.isRs ? "rentscene" : "nooch";
+                    rca.type = member.cip_type;
 
                     if (member.companyName != null && member.companyName.Length > 3)
                     {
