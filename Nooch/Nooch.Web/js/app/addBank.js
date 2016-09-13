@@ -21,9 +21,7 @@ var wasEnterPressed = false;
 $('#bankSearch').on('keypress', function (e) {
     // This function prevents the form from submitting... otherwise the browser was always selecting Bank of America no matter what was in the text field, not sure why
     if (e.which === 13)
-    {
         wasEnterPressed = true;
-    }
 });
 
 /**** (Step 1) USER SELECTS A BANK  ****/
@@ -125,9 +123,11 @@ $(".manualLogin").click(function () {
 $("#bckbtn").click(function () {
     goBackReset();
 });
+
 $("#backbtn2").click(function () {
     goBackReset();
 });
+
 $("#backbtn_onManual").click(function () {
     $('.addBank-steps #step2').velocity({
         'border-top-right-radius': '0px',
@@ -137,6 +137,7 @@ $("#backbtn_onManual").click(function () {
     });
     goBackReset();
 });
+
 function goBackReset() {
     $('#bckbtn').addClass("hide");
     $('.manualLogin').css("opacity", "1");
@@ -156,9 +157,8 @@ function goBackReset() {
         delay: 200,
         complete: function (e) {
             if (!$('#bnkPinGrp').hasClass("hide"))
-            {
                 $('#bnkPinGrp').addClass("hide");
-            }
+
             $('#addBank2').addClass("hide");
             $('#addBank_mfa_code').addClass("hide");
             $('#addBank_mfa_question').addClass("hide");
@@ -166,19 +166,14 @@ function goBackReset() {
             $('#addBankManual').addClass("hide");
 
             if ($('.manualLogin').hasClass("hide"))
-            {
                 $('.manualLogin').removeClass("hide");
-            }
 
             // Reset Login Error Message div if an error message is displayed
             if ($('#bankLogin_errorMsg p').length)
-            {
                 $('#bankLogin_errorMsg').html('');
-            }
+
             if ($('#mfa_question_errorMsg p').length)
-            {
                 $('#mfa_question_errorMsg').html('');
-            }
         }
     });
 
@@ -291,61 +286,34 @@ function CheckBankDetails(bankName) {
             $('.addBank-steps #step2').removeAttr("data-target");
 
             if (bankName == "Bank of America")
-            {
                 $(".selectedBank-logo img").attr('src', '../Assets/Images/bankPictures/bankofamerica.png');
-            }
             else if (bankName == "Wells Fargo")
-            {
                 $(".selectedBank-logo img").attr('src', '../Assets/Images/bankPictures/WellsFargo.png');
-            }
             else if (bankName == "Chase")
-            {
                 $(".selectedBank-logo img").attr('src', '../Assets/Images/bankPictures/chase.png');
-            }
             else if (bankName == "Citibank")
-            {
                 $(".selectedBank-logo img").attr('src', '../Assets/Images/bankPictures/citibank.png');
-            }
             else if (bankName == "TD Bank")
-            {
                 $(".selectedBank-logo img").attr('src', '../Assets/Images/bankPictures/td.png');
-            }
             else if (bankName == "Capital One 360")
-            {
                 $(".selectedBank-logo img").attr('src', '../Assets/Images/bankPictures/capone360.png');
-            }
             else if (bankName == "US Bank")
-            {
                 $(".selectedBank-logo img").attr('src', '../Assets/Images/bankPictures/usbank.png');
-            }
             else if (bankName == "PNC")
-            {
                 $(".selectedBank-logo img").attr('src', '../Assets/Images/bankPictures/pnc.png');
-            }
             else if (bankName == "SunTrust")
-            {
                 $(".selectedBank-logo img").attr('src', '../Assets/Images/bankPictures/suntrust.png');
-            }
             else if (bankName == "USAA")
-            {
                 $(".selectedBank-logo img").attr('src', '../Assets/Images/bankPictures/usaa.png');
-            }
             else if (bankName == "Ally")
-            {
                 $(".selectedBank-logo img").attr('src', '../Assets/Images/bankPictures/ally.png');
-            }
             else if (bankName == "First Tennessee")
-            {
                 $(".selectedBank-logo img").attr('src', '../Assets/Images/bankPictures/firsttennessee.png');
-            }
             else if (bankName.indexOf("Regions") >= 0)
-            {
                 $(".selectedBank-logo img").attr('src', '../Assets/Images/bankPictures/regions.png');
-            }
             else
-            {
                 $(".selectedBank-logo img").attr('src', '../Assets/Images/bankPictures/bank.png');
-            }
+
 
             //Reset bank username/password fields (if person started to enter, then goes back to select a different bank)
             //$('#bankUsername').val('');
@@ -517,9 +485,7 @@ function submitBnkLgn() {
                         html: true
                     }, function (isConfirm) {
                         if (!isConfirm)
-                        {
                             window.open("mailto:" + SUPPORTLINK);
-                        }
                     });
                 }
                 else if (bnkLoginResult.ERROR_MSG.indexOf('error occured at server') > -1)
@@ -641,6 +607,7 @@ function submitBnkLgn() {
     });
 }
 
+
 function bankLoginErrorAlert() {
     swal({
         title: "Oh No!",
@@ -658,17 +625,15 @@ function bankLoginErrorAlert() {
         if (isConfirm)
         {
             if (!$('#addBank2').hasClass("hide"))
-            {
                 $('#addBank2').addClass("hide");
-            }
+
             $(".manualLogin").trigger("click");
         }
         else
-        {
             $('#bankUsername').focus();
-        }
     });
 }
+
 
 // Submit Manual Bank Info (Routing/Account Nos.)
 $('#bankLoginManual').submit(function (e) {
@@ -734,22 +699,14 @@ function submitManualBank() {
     var typeString, classString;
 
     if ($('#togPersonal').is(':checked') && !$('#togBusiness').is(':checked'))
-    {
         typeString = "PERSONAL"
-    }
     else
-    {
         typeString = "BUSINESS"
-    }
 
     if ($('#togChecking').is(':checked') && !$('#togSavings').is(':checked'))
-    {
         classString = "CHECKING"
-    }
     else
-    {
         classString = "SAVINGS"
-    }
 
     $.ajax({
         type: "POST",
@@ -768,33 +725,37 @@ function submitManualBank() {
 
             // Reset Login Error Message div IF an error message is displayed
             if ($('#bankManual_errorMsg > p').length)
-            {
                 $('#bankManual_errorMsg').html('');
-            }
 
 
-            if (bnkManualResult.Is_success == true || MEMBER_ID == "adcaecb2-7829-4923-8ba4-09ef8079a2b3")
+            if (bnkManualResult.Is_success == true)
             {
                 isManual = true;
 
-                // Check if Additional ID Verification Questions Are Needed
-                swal({
-                    title: "Bank Submitted Successfully<br/><span style='color:#1f8ec6;font-size:20px;text-transform:uppercase;'>Verify Your Account</span>",
-                    text: "<span class='show' style='margin-top:-10px;'>Before this account can be used to send money, federal law requires us to verify you are the account owner.</span>" +
-                          "<span class='show' style='margin-top:12px;'><strong>We will make 2 \"microdeposits\" ($0.00 - $0.99) to your account</strong>. &nbsp;Just check your bank statement, then report the amounts using the link we just emailed you.</span>" +
-                          "<span class='show' style='margin-top:13px;'>You will get an email reminder with more info - please allow 1-2 business days for the microdeposits to arrive!</p>",
-                    type: "success",
-                    confirmButtonColor: "#3fabe1",
-                    confirmButtonText: "Ok",
-                    html: true
-                }, function (isConfirm) {
-                    showLoadingHUD("Finishing");
+                if (COMPANY == "Habitat" || RED_URL.indexOf("habitat") > -1)
+                {
+                    // Habitat user's will only receive $, so they don't need to worry about the Micro-Deposits
+                    sendToRedUrl();
+                }
+                else
+                {
+                    swal({
+                        title: "Bank Submitted Successfully<br/><span style='color:#1f8ec6;font-size:20px;text-transform:uppercase;'>Verify Your Account</span>",
+                        text: "<span class='show' style='margin-top:-10px;'>Before this account can be used to send money, federal law requires us to verify you are the account owner.</span>" +
+                              "<span class='show' style='margin-top:12px;'><strong>We will make 2 \"microdeposits\" ($0.00 - $0.99) to your account</strong>. &nbsp;Just check your bank statement, then report the amounts using the link we just emailed you.</span>" +
+                              "<span class='show' style='margin-top:13px;'>You will get an email reminder with more info - please allow 1-2 business days for the microdeposits to arrive!</p>",
+                        type: "success",
+                        confirmButtonColor: "#3fabe1",
+                        confirmButtonText: "Ok",
+                        html: true
+                    }, function (isConfirm) {
+                        showLoadingHUD("Finishing");
 
-                    setTimeout(function () {
-                        sendToRedUrl();
-                    }, 200);
-                });
-
+                        setTimeout(function () {
+                            sendToRedUrl();
+                        }, 200);
+                    });
+                }
             }
             else // ERROR CAME BACK FROM SERVER LOGIN ATTEMPT
             {
@@ -1006,7 +967,7 @@ function MFALogin() {
 function mfaErrorAlert() {
     swal({
         title: "Oh No!",
-        text: "We're having trouble verifying your answer - very sorry about this. Contact <a href='mailto:" + SUPPORTLINK + "' target='_blank'>" + SUPPORTLINK + "</a> if the problem persists, or you can skip this step by entering your bank's routing/account # instead." +
+        text: "We're having trouble verifying your answer - very sorry about this. Please contact <a href='mailto:" + SUPPORTLINK + "' target='_blank'>" + SUPPORTLINK + "</a> if the problem persists, or you can skip this step by entering your bank's routing/account # instead." +
               "<small class='show' style='margin-top:12px'>Error Reference: <strong>#MFA-1</strong></small>",
         type: "error",
         showCancelButton: true,
@@ -1019,17 +980,11 @@ function mfaErrorAlert() {
         if (isConfirm)
         {
             if (!$('#addBank_mfa_question').hasClass("hide"))
-            {
                 $('#addBank2').addClass("hide");
-            }
-            if (!$('#addBank_mfa_code').hasClass("hide"))
-            {
-                $('#addBank_mfa_code').addClass("hide");
-            }
+
             if (!$('#addBank2').hasClass("hide"))
-            {
                 $('#addBank2').addClass("hide");
-            }
+
             $(".manualLogin").trigger("click");
         }
     });
@@ -1084,10 +1039,7 @@ function SetDefaultAct() {
         });
     }
     else
-    {
-        console.log("PARSLEY RETURNED false FOR SELECT ACCOUNT");
         return;
-    }
 }
 
 
@@ -1317,11 +1269,12 @@ $(document).ready(function () {
             html: true
         })
     }
-    else if (COMPANY == "Rent Scene" && SCREENWIDTH > 1200 && // Only should show when the user came straight to this page, i.e. NOT via iFrame from another page.
+    else if (COMPANY == "Rent Scene" && SCREENWIDTH > 1100 && // Only should show when the user came straight to this page, i.e. NOT via iFrame from another page.
              RED_URL != "createaccnt")
     {
         changeFavicon('../Assets/favicon2.ico')
         $('#headerAlt').removeClass('hidden');
+        $('body').css('overflow-y', 'scroll');
 
         swal({
             title: "Secure, Private Payments",
@@ -1340,10 +1293,34 @@ $(document).ready(function () {
             html: true
         }, function (isConfirm) {
             if (!isConfirm)
-            {
                 window.top.location.href = "https://www.nooch.com/safe";
-            }
         });
+    }
+    else if (RED_URL.indexOf("habitat") > -1)
+    {
+        COMPANY = "Habitat";
+        SUPPORTLINK = "payments@tryhabitat.com";
+
+        if (SCREENWIDTH > 1100 && RED_URL != "createaccnt")
+        {
+            changeFavicon('../Assets/favicon-habitat.png');
+            $('#headerAlt').removeClass('hidden');
+            $('body').css('overflow-y', 'scroll');
+
+            swal({
+                title: "Secure, Private Payments",
+                text: "<p>Habitat offers a quick, secure way to get paid without sharing your bank account info. &nbsp;Just select your bank and login to your online banking<span class='desk-only'> as you normally do</span>.</p>" +
+                      "<ul class='fa-ul'><li><i class='fa-li fa fa-check'></i><strong>Habitat never sees or stores</strong> your bank credentials (except your name)</li>" +
+                      "<li><i class='fa-li fa fa-check'></i>All data is secured with <strong>bank-grade encryption</strong></li></ul>",
+                imageUrl: "../Assets/Images/secure.svg",
+                imageSize: "194x80",
+                confirmButtonColor: "#3fabe1",
+                confirmButtonText: "Great, Let's Go!",
+                customClass: "securityAlert",
+                allowEscapeKey: false,
+                html: true
+            });
+        }
     }
     /* else if (isUpgradeToV3 == 'true')
 	{
