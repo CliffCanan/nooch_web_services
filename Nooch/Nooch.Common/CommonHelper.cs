@@ -314,6 +314,13 @@ namespace Nooch.Common
             return noochMember != null ? noochMember.MemberId.ToString() : null;
         }
 
+        public static Member GetMemberByPhone(string memberPhone)
+        {
+            var noochMember = _dbContext.Members.FirstOrDefault(m => m.ContactNumber == memberPhone && m.IsDeleted == false);
+            
+            return noochMember;
+        }
+
 
         public static string GetMemberReferralCodeByMemberId(string MemberId)
         {
@@ -4122,6 +4129,59 @@ namespace Nooch.Common
                 return "Only DeviceID saved successfully, not IP Address.";
 
             return "Neither IP address nor DeviceID were saved.";
+        }
+
+        public static string UdateMemberNotificationTokenAndDeviceInfo(string MemberId, string NotifToken, string DeviceId, string DeviceOS)
+        {
+            
+
+            if (String.IsNullOrEmpty(MemberId)) return "MemberId not supplied.";
+            if (String.IsNullOrEmpty(NotifToken)) return "NotifToken not supplied.";
+            if (String.IsNullOrEmpty(DeviceId)) return "DeviceId not supplied.";
+            if (String.IsNullOrEmpty(DeviceOS)) return "DeviceOS not supplied.";
+
+            Guid memId = Utility.ConvertToGuid(MemberId);
+
+     
+
+            #region Save Device ID
+
+                try
+                {
+                    // CLIFF (8/12/15): This "Device ID" will be stored in Nooch's DB as "UDID1" and is specifically for Synapse's "Fingerprint" requirement...
+                    //                  NOT for push notifications, which should use the "DeviceToken" in Nooch's DB.  (Confusing, but they are different values)
+
+                    var member = _dbContext.Members.FirstOrDefault(memberTemp => memberTemp.MemberId == memId);
+                    if (member != null)
+                    {
+                        member.UDID1 = DeviceId;
+                        member.DeviceToken= NotifToken;
+                        member.DeviceType = DeviceOS;           /// I for iOS and A for Android
+                        member.DateModified = DateTime.Now;
+                    }
+
+                    int c = _dbContext.SaveChanges();
+                    if (c > 0)
+                    {
+                        _dbContext.Entry(member).Reload();
+                        Logger.Info("Common Helper -> UdateMemberNotificationTokenAndDeviceInfo SUCCESS - Device ID Saved - MemberID: [" + MemberId + "]");
+                        
+                    }
+                    else
+                        Logger.Error("Common Helper -> UdateMemberNotificationTokenAndDeviceInfo FAILED Trying To Saving Device ID in DB - MemberID: [" + MemberId + "]");
+                    return "All info saved.";
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Common Helper -> UdateMemberNotificationTokenAndDeviceInfo FAILED For Saving Device ID - Exception: [" + ex + "]");
+                }
+            
+
+            #endregion Save Device ID
+
+            
+
+            return "No info saved.";
         }
 
 

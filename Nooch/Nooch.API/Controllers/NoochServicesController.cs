@@ -79,12 +79,38 @@ namespace Nooch.API.Controllers
                 try
                 {
                     MembersDataAccess mda = new MembersDataAccess();
-                    string res = CommonHelper.UpdateMemberIPAddressAndDeviceId(member.MemberId, member.IpAddress, member.DeviceId);
+                   // string res = CommonHelper.UpdateMemberIPAddressAndDeviceId(member.MemberId, member.IpAddress, member.DeviceId);  -- was doing same thing twice  - 
                     return new StringResult() { Result = CommonHelper.UpdateMemberIPAddressAndDeviceId(member.MemberId, member.IpAddress, member.DeviceId) };
                 }
                 catch (Exception ex)
                 {
                     Logger.Error("Service Controller -> UpdateMemberIPAddressAndDeviceId FAILED - MemberID: [" + member.MemberId +
+                                           "], Exception: [" + ex + "]");
+                }
+                return new StringResult();
+            }
+            else
+            {
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
+
+
+        [HttpPost]
+        [ActionName("UdateMemberNotificationTokenAndDeviceInfo")]
+        public StringResult UdateMemberNotificationTokenAndDeviceInfo(UdateMemberNotificationTokenAndDeviceInfoInput member)
+        {
+            if (CommonHelper.IsValidRequest(member.AccessToken, member.MemberId))
+            {
+                try
+                {
+                    MembersDataAccess mda = new MembersDataAccess();
+                    
+                    return new StringResult() { Result = CommonHelper.UdateMemberNotificationTokenAndDeviceInfo(member.MemberId, member.NotificationToken, member.DeviceId, member.DeviceOS) };
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Controller -> UdateMemberNotificationTokenAndDeviceInfo FAILED - MemberID: [" + member.MemberId +
                                            "], Exception: [" + ex + "]");
                 }
                 return new StringResult();
@@ -5776,6 +5802,86 @@ namespace Nooch.API.Controllers
         }
 
 
+
+        // Method to test if given email or phone number is already registered
+
+        [HttpPost]
+        [ActionName("CheckMemberExistenceUsingEmailOrPhone")]
+        public CheckMemberExistenceUsingEmailOrPhoneResultClass CheckMemberExistenceUsingEmailOrPhone(CheckMemberExistenceUsingEmailOrPhoneInputClass input)
+        {
+            if (CommonHelper.IsValidRequest(input.AccessToken, input.MemberId))
+            {
+                CheckMemberExistenceUsingEmailOrPhoneResultClass res = new CheckMemberExistenceUsingEmailOrPhoneResultClass();
+                try
+                {
+
+                    if (!String.IsNullOrEmpty(input.StringToCheck) && !String.IsNullOrEmpty(input.CheckType))
+                    {
+
+
+                        if(input.CheckType=="E")
+                        {
+                            var memberObj = CommonHelper.GetMemberDetailsByUserName(input.StringToCheck);
+
+                            if (memberObj != null)
+                            {
+
+                                res.Name = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName) + " " + CommonHelper.GetDecryptedData(memberObj.LastName));
+                                res.MemberId = memberObj.MemberId.ToString();
+                                
+                                res.IsMemberFound = true;
+                                res.IsSuccess = true;
+                                res.ErrorMessage = "OK.";
+                            }
+                        }
+                        else if (input.CheckType == "P")
+                        {
+                            var memberObj = CommonHelper.GetMemberByPhone(input.StringToCheck);
+
+                            if (memberObj != null)
+                            {
+
+                                res.Name = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName) + " " + CommonHelper.GetDecryptedData(memberObj.LastName));
+                                res.MemberId = memberObj.MemberId.ToString();
+
+                                res.IsMemberFound = true;
+                                res.IsSuccess = true;
+                                res.ErrorMessage = "OK.";
+                            }
+                        }
+                        else
+                        {
+                            res.IsSuccess = false;
+                            res.ErrorMessage = "Invalid data.";
+                        }
+
+                        res.IsMemberFound = false;
+                        
+                        res.IsSuccess = true;
+                        res.ErrorMessage = "OK.";
+                    }
+                    else
+                    {
+                        res.IsSuccess = false;
+                        res.ErrorMessage = "Invalid data.";
+                    }
+
+
+
+                }
+                catch (Exception ex)
+                {
+                    res.IsSuccess = false;
+                    res.ErrorMessage = "Server Error.";
+
+                }
+                return res;
+            }
+            else
+            {
+                throw new Exception("Invalid OAuth 2 Access");
+            }
+        }
 
         #region UNUSED METHODS
 

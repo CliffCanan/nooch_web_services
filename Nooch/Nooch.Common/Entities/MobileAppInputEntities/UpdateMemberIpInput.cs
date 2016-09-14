@@ -21,4 +21,23 @@ namespace Nooch.Common.Entities.MobileAppInputEntities
        
         public string DeviceId { get; set; }
     }
+
+
+
+    public class UdateMemberNotificationTokenAndDeviceInfoInput
+    {
+
+
+        public string MemberId { get; set; }
+
+
+        public string AccessToken { get; set; }
+
+
+        public string NotificationToken { get; set; }
+
+        public string DeviceId { get; set; }
+
+        public string DeviceOS { get; set; }
+    }
 }
