@@ -79,13 +79,13 @@ namespace Nooch.API.Controllers
                 try
                 {
                     MembersDataAccess mda = new MembersDataAccess();
-                   // string res = CommonHelper.UpdateMemberIPAddressAndDeviceId(member.MemberId, member.IpAddress, member.DeviceId);  -- was doing same thing twice  - 
-                    return new StringResult() { Result = CommonHelper.UpdateMemberIPAddressAndDeviceId(member.MemberId, member.IpAddress, member.DeviceId) };
+                    var res = CommonHelper.UpdateMemberIPAddressAndDeviceId(member.MemberId, member.IpAddress, member.DeviceId);
+                    return new StringResult() { Result = res };
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Controller -> UpdateMemberIPAddressAndDeviceId FAILED - MemberID: [" + member.MemberId +
-                                           "], Exception: [" + ex + "]");
+                    Logger.Error("Service Cntlr -> UpdateMemberIPAddressAndDeviceId FAILED - MemberID: [" + member.MemberId +
+                                 "], Exception: [" + ex + "]");
                 }
                 return new StringResult();
             }
@@ -105,13 +105,12 @@ namespace Nooch.API.Controllers
                 try
                 {
                     MembersDataAccess mda = new MembersDataAccess();
-                    
                     return new StringResult() { Result = CommonHelper.UdateMemberNotificationTokenAndDeviceInfo(member.MemberId, member.NotificationToken, member.DeviceId, member.DeviceOS) };
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Controller -> UdateMemberNotificationTokenAndDeviceInfo FAILED - MemberID: [" + member.MemberId +
-                                           "], Exception: [" + ex + "]");
+                    Logger.Error("Service Cntlr -> UdateMemberNotificationTokenAndDeviceInfo FAILED - MemberID: [" + member.MemberId +
+                                 "], Exception: [" + ex + "]");
                 }
                 return new StringResult();
             }
@@ -130,7 +129,7 @@ namespace Nooch.API.Controllers
             {
                 try
                 {
-                    Logger.Info("Service Controller - GetPrimaryEmail [udId: " + udId + "]");
+                    Logger.Info("Service Cntlr - GetPrimaryEmail [udId: " + udId + "]");
 
                     var memberEntity = CommonHelper.GetMemberByUdId(udId);
                     var member = new MemberDto { UserName = memberEntity.UserName, Status = memberEntity.Status };
@@ -138,7 +137,7 @@ namespace Nooch.API.Controllers
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Cntrlr -> GetMemberByUdId FAILED - Exception: [" + ex.Message + "]");
+                    Logger.Error("Service Cntlr -> GetMemberByUdId FAILED - Exception: [" + ex.Message + "]");
                     throw new Exception("Server Error");
                 }
             }
@@ -157,28 +156,30 @@ namespace Nooch.API.Controllers
         /// <returns>PendingTransCoutResult [sic] object with values for 4 types of pending transactions: requests sent/received, invites, disputes unresolved.</returns>
         [HttpGet]
         [ActionName("GetMemberPendingTransctionsCount")]
-        public PendingTransCoutResult GetMemberPendingTransctionsCount(string MemberId, string AccessToken)
+        public PendingTransCountResult GetMemberPendingTransctionsCount(string MemberId, string AccessToken)
         {
+            var res = new PendingTransCountResult();
+
             if (CommonHelper.IsValidRequest(AccessToken, MemberId))
             {
                 try
                 {
                     //Logger.LogDebugMessage("Service Cntlr -> GetMemberPendingTransctionsCount - MemberId: [" + MemberId + "]");
-                    var transactionDataAccess = new TransactionsDataAccess();
-
-                    PendingTransCoutResult trans = transactionDataAccess.GetMemberPendingTransCount(MemberId);
-                    return trans;
+                    var tda = new TransactionsDataAccess();
+                    res = tda.GetMemberPendingTransCount(MemberId);
                 }
                 catch (Exception)
                 {
                     //throw new Exception("Server Error");
-                    return new PendingTransCoutResult { pendingRequestsSent = "0", pendingRequestsReceived = "0", pendingInvitationsSent = "0", pendingDisputesNotSolved = "0" };
+                    return new PendingTransCountResult { pendingRequestsSent = "0", pendingRequestsReceived = "0", pendingInvitationsSent = "0", pendingDisputesNotSolved = "0" };
                 }
             }
             else
             {
-                throw new Exception("Invalid OAuth 2 Access");
+                //throw new Exception("Invalid OAuth 2 Access");
             }
+
+            return res;
         }
 
 
@@ -192,8 +193,8 @@ namespace Nooch.API.Controllers
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Controller - GetMemberByUserName FAILED - [userName: " + userName +
-                                       "], Exception: [" + ex + "]");
+                Logger.Error("Service Cntlr - GetMemberByUserName FAILED - [userName: " + userName +
+                             "], Exception: [" + ex + "]");
             }
             return new StringResult();
         }
@@ -5170,35 +5171,35 @@ namespace Nooch.API.Controllers
                             "], DeviceOS: [" + deviceOS + "], DeviceToken: [" + devicetoken + "]");
 
                 var mda = new MembersDataAccess();
-                string cookie = mda.LoginRequest(userName, pwd, rememberMeEnabled, lat, lng, udid, devicetoken, deviceOS);
+                var loginAttemptRes = mda.LoginRequest(userName, pwd, rememberMeEnabled, lat, lng, udid, devicetoken, deviceOS);
 
-                if (cookie == "Success")
+                if (loginAttemptRes == "Success")
                 {
                     string state = GenerateAccessToken();
                     CommonHelper.UpdateAccessToken(userName, state);
                     res.Result = state;
                 }
-                else if (string.IsNullOrEmpty(cookie))
+                else if (string.IsNullOrEmpty(loginAttemptRes))
                 {
-                    cookie = "Authentication failed.";
+                    loginAttemptRes = "Authentication failed.";
                     res.Result = "Invalid Login or Password";
                 }
-                else if (cookie == "Registered")
+                else if (loginAttemptRes == "Registered")
                 {
                     string state = GenerateAccessToken();
                     CommonHelper.UpdateAccessToken(userName, state);
                     res.Result = state;
                 }
-                else if (cookie == "Temporarily_Blocked")
+                else if (loginAttemptRes == "Temporarily_Blocked")
                     res.Result = "Temporarily_Blocked";
-                else if (cookie == "Suspended")
+                else if (loginAttemptRes == "Suspended")
                     res.Result = "Suspended";
-                else if (cookie == "Invalid user id or password.")
+                else if (loginAttemptRes == "Invalid user id or password.")
                     res.Result = "Invalid user id or password.";
-                else if (cookie == "The password you have entered is incorrect.")
+                else if (loginAttemptRes == "The password you have entered is incorrect.")
                     res.Result = "The password you have entered is incorrect.";
                 else
-                    res.Result = cookie;
+                    res.Result = loginAttemptRes;
             }
             catch (Exception ex)
             {
@@ -5812,79 +5813,55 @@ namespace Nooch.API.Controllers
             if (CommonHelper.IsValidRequest(input.AccessToken, input.MemberId))
             {
                 CheckMemberExistenceUsingEmailOrPhoneResultClass res = new CheckMemberExistenceUsingEmailOrPhoneResultClass();
+                res.IsSuccess = false;
+                res.IsMemberFound = false;
+
                 try
                 {
-
                     if (!String.IsNullOrEmpty(input.StringToCheck) && !String.IsNullOrEmpty(input.CheckType))
                     {
-
-
-                        if(input.CheckType=="E")
+                        if (input.CheckType == "email")
                         {
                             var memberObj = CommonHelper.GetMemberDetailsByUserName(input.StringToCheck);
 
                             if (memberObj != null)
                             {
-
-                                res.Name = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName) + " " + CommonHelper.GetDecryptedData(memberObj.LastName));
+                                res.Name = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName)) + " " +
+                                           CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.LastName));
                                 res.MemberId = memberObj.MemberId.ToString();
                                 res.UserImage = memberObj.Photo ?? Path.GetFileName("gv_no_photo.jpg");
-                                
                                 res.IsMemberFound = true;
                                 res.IsSuccess = true;
-                                res.ErrorMessage = "OK.";
-                            }
-                            else
-                            {
-                                res.IsMemberFound = false;
+                                res.ErrorMessage = "OK";
                             }
                         }
-                        else if (input.CheckType == "P")
+                        else if (input.CheckType == "phone")
                         {
                             var memberObj = CommonHelper.GetMemberByPhone(input.StringToCheck);
 
                             if (memberObj != null)
                             {
-
-                                res.Name = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName) + " " + CommonHelper.GetDecryptedData(memberObj.LastName));
+                                res.Name = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName)) + " " +
+                                           CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.LastName));
                                 res.MemberId = memberObj.MemberId.ToString();
                                 res.UserImage = memberObj.Photo ?? Path.GetFileName("gv_no_photo.jpg");
                                 res.IsMemberFound = true;
                                 res.IsSuccess = true;
-                                res.ErrorMessage = "OK.";
-                            }
-                            else
-                            {
-                                res.IsMemberFound = false;
+                                res.ErrorMessage = "OK";
                             }
                         }
                         else
-                        {
-                            res.IsSuccess = false;
-                            res.ErrorMessage = "Invalid data.";
-                            res.IsMemberFound = false;
-                        }
-
-                        
-                        
-                        res.IsSuccess = true;
-                        res.ErrorMessage = "OK.";
+                            res.ErrorMessage = "Invalid data sent!";
                     }
                     else
-                    {
-                        res.IsSuccess = false;
-                        res.ErrorMessage = "Invalid data.";
-                    }
-
-
-
+                        res.ErrorMessage = "Invalid data sent";
                 }
                 catch (Exception ex)
                 {
-                    res.IsSuccess = false;
-                    res.ErrorMessage = "Server Error.";
-
+                    Logger.Error("Service Cntlr -> CheckMemberExistenceUsingEmailOrPhone FAILED - StringToCheck: [" + input.StringToCheck + "], Exception: [" + ex + "]");
+                    res.ErrorMessage = ex.Message;
                 }
+
                 return res;
             }
             else
@@ -5892,6 +5869,7 @@ namespace Nooch.API.Controllers
                 throw new Exception("Invalid OAuth 2 Access");
             }
         }
+
 
         #region UNUSED METHODS
 
@@ -5919,8 +5897,6 @@ namespace Nooch.API.Controllers
 
             return res;
         }
-
-
 
         #endregion UNUSED METHODS
     }

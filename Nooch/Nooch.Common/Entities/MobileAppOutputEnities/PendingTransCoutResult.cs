@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Nooch.Common.Entities.MobileAppOutputEnities
 {
-    public class PendingTransCoutResult
+    public class PendingTransCountResult
     {
         public string pendingRequestsSent { get; set; }
         public string pendingRequestsReceived { get; set; }

@@ -46,13 +46,13 @@ namespace Nooch.DataAccess
         }
 
 
-        public PendingTransCoutResult GetMemberPendingTransCount(string MemberId)
+        public PendingTransCountResult GetMemberPendingTransCount(string MemberId)
         {
             Logger.Info("TDA -> GetMemberPendingTransCount - MemberID: [" + MemberId + "]");
 
             try
             {
-                PendingTransCoutResult r = new PendingTransCoutResult();
+                PendingTransCountResult r = new PendingTransCountResult();
 
                 var memberId = Utility.ConvertToGuid(MemberId);
 
