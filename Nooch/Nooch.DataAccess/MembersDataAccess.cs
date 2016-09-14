@@ -1675,6 +1675,7 @@ namespace Nooch.DataAccess
                 {
                     _dbContext.Entry(memberObj).Reload();
                     var toAddress = CommonHelper.GetDecryptedData(memberObj.UserName);
+                    var subject = userJoinedName + " joined Nooch with your invite code";
 
                     try
                     {
@@ -1694,8 +1695,18 @@ namespace Nooch.DataAccess
                             }
                         };
 
+                        #region Custom Habitat Checks
+
+                        if (toAddress == "andrew@tryhabitat.com")
+                        {
+                            toAddress = "payments@tryhabitat.com";
+                            subject = userJoinedName + " just created a Habitat Payments account";
+                        }
+
+                        #endregion Custom Habitat Checks
+
                         Utility.SendEmail("EmailToInvitorAfterSignup", "hello@nooch.com", toAddress, null,
-                            userJoinedName + " joined Nooch with your invite code", null, tokens, null, null, null);
+                                          subject, null, tokens, null, null, null);
 
                         Logger.Info("MDA -> SendEmailToInvitor - Email sent to Referrer [" + toAddress + "], InviteCode: [" +
                                     InviteCodeIdUsed + "]");

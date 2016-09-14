@@ -6487,9 +6487,14 @@ namespace Nooch.DataAccess
                                         subject = "Your $" + wholeAmount + " payment to " + recipientFirstName;
 
                                         if (isForRentScene)
+                                        {
                                             template = "TransferSent_RentScene";
+                                        }
                                         else if (isHabitat)
+                                        {
                                             template = "TransferSent_Habitat";
+                                            toAddress = "payments@tryhabitat.com";
+                                        }
                                         else
                                             template = "TransferSent";
                                     }
