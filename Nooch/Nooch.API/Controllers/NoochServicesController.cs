@@ -5828,10 +5828,15 @@ namespace Nooch.API.Controllers
 
                                 res.Name = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName) + " " + CommonHelper.GetDecryptedData(memberObj.LastName));
                                 res.MemberId = memberObj.MemberId.ToString();
+                                res.UserImage = memberObj.Photo ?? Path.GetFileName("gv_no_photo.jpg");
                                 
                                 res.IsMemberFound = true;
                                 res.IsSuccess = true;
                                 res.ErrorMessage = "OK.";
+                            }
+                            else
+                            {
+                                res.IsMemberFound = false;
                             }
                         }
                         else if (input.CheckType == "P")
@@ -5843,19 +5848,24 @@ namespace Nooch.API.Controllers
 
                                 res.Name = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName) + " " + CommonHelper.GetDecryptedData(memberObj.LastName));
                                 res.MemberId = memberObj.MemberId.ToString();
-
+                                res.UserImage = memberObj.Photo ?? Path.GetFileName("gv_no_photo.jpg");
                                 res.IsMemberFound = true;
                                 res.IsSuccess = true;
                                 res.ErrorMessage = "OK.";
+                            }
+                            else
+                            {
+                                res.IsMemberFound = false;
                             }
                         }
                         else
                         {
                             res.IsSuccess = false;
                             res.ErrorMessage = "Invalid data.";
+                            res.IsMemberFound = false;
                         }
 
-                        res.IsMemberFound = false;
+                        
                         
                         res.IsSuccess = true;
                         res.ErrorMessage = "OK.";
