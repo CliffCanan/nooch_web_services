@@ -305,7 +305,7 @@ namespace Nooch.DataAccess
                 Guid memGuid = Utility.ConvertToGuid(MemberId);
                 Guid transid = Utility.ConvertToGuid(TransactionId);
 
-                Logger.Info("TDA -> CancelMoneyRequestForExistingNoochUser Initiated for: [" + MemberId + "]");
+                Logger.Info("TDA -> CancelMoneyRequestForExistingNoochUser Fired - MemberID: [" + MemberId + "]");
 
                 var res = _dbContext.Transactions.FirstOrDefault(m => m.Member1.MemberId == memGuid && m.TransactionId == transid
                     && m.TransactionStatus == "Pending" && (m.TransactionType == "T3EMY1WWZ9IscHIj3dbcNw==" || m.TransactionType == "DrRr1tU1usk7nNibjtcZkA=="));
@@ -333,17 +333,17 @@ namespace Nooch.DataAccess
 							};
 
                         // for TransferReceived email notification       
-                        string adminUserName = Utility.GetValueFromConfig("transfersMail");
+                        var adminUserName = Utility.GetValueFromConfig("transfersMail");
                         var fromAddress = adminUserName;
                         var toAddress = CommonHelper.GetDecryptedData(res.Member1.UserName.ToString());
                         try
                         {
                             Utility.SendEmail("requestCancelledToSender", fromAddress, toAddress, null, "Nooch payment request to " + toAddress + " cancelled", null, tokens, null, null, null);
-                            Logger.Info("CancelMoneyRequestForExistingNoochUser --> requestCancelledToSender email sent to Sender: [" + toAddress + "] successfully.");
+                            Logger.Info("TDA -> CancelMoneyRequestForExistingNoochUser - requestCancelledToSender email sent to Sender: [" + toAddress + "] successfully.");
                         }
                         catch (Exception)
                         {
-                            Logger.Error("CancelMoneyRequestForExistingNoochUser --> requestCancelledToSender email NOT sent to [" + toAddress + "]. Problem occurred in sending mail.");
+                            Logger.Error("TDA -> CancelMoneyRequestForExistingNoochUser - requestCancelledToSender email NOT sent to [" + toAddress + "]. Problem occurred in sending mail.");
                         }
 
                         var tokens2 = new Dictionary<string, string>
@@ -375,7 +375,8 @@ namespace Nooch.DataAccess
             }
             catch (Exception ex)
             {
-                return "" + ex.ToString();
+                Logger.Error("TDA -> CancelMoneyRequestForExistingNoochUser FAILED - Outer Exception: [" + ex + "]");
+                return ex.ToString();
             }
         }
 
