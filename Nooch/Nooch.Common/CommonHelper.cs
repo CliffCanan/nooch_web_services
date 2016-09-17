@@ -606,7 +606,7 @@ namespace Nooch.Common
             }
             catch (Exception ex)
             {
-                Logger.Error("Common Helper -> GetMemberDetails FAILED - Member ID: [" + memberId + "], [Exception: " + ex + "]");
+                Logger.Error("Common Helper -> GetMemberDetails FAILED - Member ID: [" + memberId + "], Exception: [" + ex + "]");
             }
 
             return null;
@@ -695,7 +695,7 @@ namespace Nooch.Common
         /// <returns></returns>
         public static SynapseBanksOfMember GetSynapseBankDetails(string memberId)
         {
-            Logger.Info("Common Helper -> GetSynapseBankDetails Fired - MemberId: [" + memberId + "]");
+            //Logger.Info("Common Helper -> GetSynapseBankDetails Fired - MemberId: [" + memberId + "]");
 
             try
             {
@@ -709,7 +709,7 @@ namespace Nooch.Common
             catch (Exception ex)
             {
                 Logger.Error("Common Helper -> GetSynapseBankDetails FAILED - " +
-                             "MemberId: [" + memberId + "], Exception: [" + ex + "]");
+                             "MemberID: [" + memberId + "], Exception: [" + ex + "]");
             }
 
             return null;
@@ -736,7 +736,7 @@ namespace Nooch.Common
             catch (Exception ex)
             {
                 Logger.Error("Common Helper -> GetSynapseCreateaUserDetails FAILED - " +
-                             "MemberId: [" + memberId + "], Exeption: [" + ex + "]");
+                             "MemberID: [" + memberId + "], Exeption: [" + ex + "]");
             }
 
             return null;
@@ -2991,7 +2991,7 @@ namespace Nooch.Common
             res.wereUserDetailsFound = false;
             res.wereBankDetailsFound = false;
 
-            Logger.Info("Common Helper -> GetSynapseBankDetailsForMobile Fired - MemberID: [" + memId + "]");
+            //Logger.Info("Common Helper -> GetSynapseBankDetailsForMobile Fired - MemberID: [" + memId + "]");
 
             try
             {
@@ -3054,7 +3054,9 @@ namespace Nooch.Common
             }
             catch (Exception ex)
             {
-                Logger.Error("Common Helper -> GetSynapseBankDetailsForMobile FAILED - MemberID: [" + memId + "], Outer Exception: [" + ex + "]");
+                var error = "Common Helper -> GetSynapseBankDetailsForMobile FAILED - MemberID: [" + memId + "], Outer Exception: [" + ex + "]";
+                Logger.Error(error);
+                notifyCliffAboutError(error);
             }
 
             return res;
@@ -3863,7 +3865,7 @@ namespace Nooch.Common
                             if (MemberInfoInNoochDb.IsVerifiedWithSynapse == true)
                             {
                                 Logger.Info("Common Helper -> SetSynapseDefaultBank -> Bank was not verified, but user's SSN verification was successful, so " +
-                                            "NOT sending the Verification Email - [MemberID: " + MemberId + "], [Username: " + noochEmailAddress + "]");
+                                            "NOT sending the Verification Email - MemberID: [" + MemberId + "], Username: [" + noochEmailAddress + "]");
 
                                 StringBuilder st = new StringBuilder("<br/><p><strong>This user's Nooch Account information is:</strong></p>" +
                                           "<table border='1' cellpadding='3' style='border-collapse:collapse;'>" +

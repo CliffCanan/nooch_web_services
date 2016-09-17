@@ -1247,7 +1247,7 @@ namespace Nooch.DataAccess
             Logger.Info("TDA -> GetTransactionsList Initiated - MemberId: [" + memberId + "] - ListType: [" + listType +
                         "], SubListType: [" + SubListType + "]");
 
-            if (pageSize == null || pageSize < 100) pageSize = 50;
+            if (pageSize == null) pageSize = 50;
 
             totalRecordsCount = 0;
             _dbContext = new NOOCHEntities();
@@ -1314,7 +1314,6 @@ namespace Nooch.DataAccess
                                         (entity.Member1.MemberId == id || entity.Member.MemberId == id || entity.InvitationSentTo == member.UserName) &&
                                          entity.TransactionType == transactionTypeDonation &&
                                          entity.TransactionStatus == SubListType).ToList();
-
                         }
                         else if (listType.ToUpper().Equals("REQUEST"))
                         {
@@ -2772,8 +2771,8 @@ namespace Nooch.DataAccess
                             }
                             else if (iterator == senderPermissionUsersCount) // No nodes found for this 'user', iterate to next one unless this is the last
                             {
-                                Logger.Error("TDA -> AddTransSynapseV3Reusable FAEILD - Unable to find Sender's Synapse Bank permission - [Username: " +
-                                             senderUserName + "], for [Sender_bank_node_id: " + sender_bank_node_id + "]");
+                                Logger.Error("TDA -> AddTransSynapseV3Reusable FAEILD - Unable to find Sender's Synapse Bank permission - Username: [" +
+                                             senderUserName + "], for Sender_bank_node_id: [" + sender_bank_node_id + "]");
                                 res.ErrorMessage = "Unable to find Sender's bank permissions (TDA - 3179)";
                                 return res;
                             }
@@ -2785,7 +2784,7 @@ namespace Nooch.DataAccess
                             if (iterator == senderPermissionUsersCount) // Last one on the list, so abort and return with error
                             {
                                 var error = "TDA -> AddTransSynapseV3Reusable FAILED - No Bank Found for Sender in Users List returned by Synapse - Username: [" + senderUserName +
-                                             "] [SenderUser OID: " + senderUser._id.oid + "] - Last iteration, so aborting and returning with error.";
+                                             "], SenderUser OID: [" + senderUser._id.oid + "] - Last iteration, so aborting and returning with error.";
                                 Logger.Error(error);
                                 CommonHelper.notifyCliffAboutError(error);
                                 res.ErrorMessage = "No banks found for Sender (TDA - 2948)";
@@ -2858,7 +2857,7 @@ namespace Nooch.DataAccess
                                 else
                                 {
                                     var error = "TDA -> AddTransSynapseV3Reusable - Recipient's Synapse Permission returned by Synapse was: [" +
-                                                 nodePermCheckRes.PermissionType + "] for Receiver_bank_node_id:[ " + receiver_bank_node_id + "]";
+                                                 nodePermCheckRes.PermissionType + "] for Receiver_bank_node_id: [" + receiver_bank_node_id + "]";
                                     Logger.Error(error);
                                     CommonHelper.notifyCliffAboutError(error);
                                     res.ErrorMessage = "Recipient has insufficient permissions to complete this payment (TDA - 3019)";
@@ -3055,6 +3054,40 @@ namespace Nooch.DataAccess
 
                             _dbContext.SynapseAddTransactionResults.Add(satr);
                             _dbContext.SaveChanges();
+
+                            #region Notify Cliff
+
+                            try
+                            {
+                                StringBuilder st = new StringBuilder("<table border='1' cellpadding='5' style='border-collapse:collapse;'>" +
+                                                  "<tr><td><strong>Sender:</strong></td><td><strong>" + senderLastName + "</strong> (" + senderUserName + ")</td></tr>" +
+                                                  "<tr><td><strong>Recipient:</strong></td><td><strong>" + recipientLastName + "</strong> (" + receiverUserName + ")</td></tr>" +
+                                                  "<tr><td><strong>Amount:</strong></td><td>$" + amount + "</td></tr>" +
+                                                  "<tr><td><strong>Memo:</strong></td><td>" + memo + "</td></tr>" +
+                                                  "<tr><td><strong>Date:</strong></td><td>" + DateTime.Now.ToShortDateString() + "</td></tr>" +
+                                                  "</td></tr></table><br/><br/>- Nooch Bot</body></html>");
+
+                                // Notify Nooch Admin
+                                StringBuilder completeEmailTxt = new StringBuilder();
+                                var s = "<html><body><h2>Transaction Submitted Successfully</h2><p>The following transaction was just submitted:</p>" + st.ToString() +
+                                        "<br/><br/><small><strong>This email was generated automatically in: [TDA -> AddTransSynapseV3Reusable]</strong></small></body></html>";
+
+                                completeEmailTxt.Append(s);
+
+                                var companyTxt = "";
+                                if (companyName == "rentscene") companyTxt = " [RENT SCENE]";
+                                else if (companyName == "habitat") companyTxt = " [HABITAT]";
+
+                                Utility.SendEmail(null, "admin-autonotify@nooch.com", "newpayment@nooch.com", null,
+                                                  "Nooch Alert - NEW" + companyTxt + " Transaction: $" + amount,
+                                                  null, null, null, null, completeEmailTxt.ToString());
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.Error("TDA -> AddTransSynapseV3Reusable - Failed to notify Cliff about transaction - Exception: [" + ex + "]");
+                            }
+
+                            #endregion Notify Cliff
                         }
                         else
                         {

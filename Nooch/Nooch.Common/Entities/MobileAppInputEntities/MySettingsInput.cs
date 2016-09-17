@@ -14,6 +14,7 @@ namespace Nooch.Common.Entities.MobileAppInputEntities
         public bool isProfileComplete { get; set; }
         public bool isVerifiedPhone { get; set; }
         public bool isRequiredImmediately { get; set; }
+        public bool showInSearch { get; set; }
         public bool rememberMe { get; set; }
 
         public byte[] Picture { get; set; }

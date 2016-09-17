@@ -462,12 +462,12 @@ namespace Nooch.API.Controllers
         [ActionName("GetUserDetailsForApp")]
         public userDetailsForMobileApp GetUserDetailsForApp(string memberId, string accessToken)
         {
-            Logger.Info("Service Cntlr -> GetUserDetailsForApp - MemberID: [" + memberId + "]");
-
             if (CommonHelper.IsValidRequest(accessToken, memberId))
             {
                 try
                 {
+                    Logger.Info("Service Cntlr -> GetUserDetailsForApp - MemberID: [" + memberId + "]");
+
                     // Get Member's Details
                     var memberObj = CommonHelper.GetMemberDetails(memberId);
 
@@ -490,7 +490,7 @@ namespace Nooch.API.Controllers
                         rememberMe = memberObj.RememberMeEnabled ?? false,
 
                         fbUserId = memberObj.FacebookUserId != "not connected" ? memberObj.FacebookUserId : null,
-
+                        
                         hasSynapseUserAccount = synUserDetails != null && synUserDetails.access_token != null,
                         hasSynapseBank = synBankDetails != null,
                         isBankVerified = synBankDetails != null && synBankDetails.Status == "Verified",
@@ -505,13 +505,14 @@ namespace Nooch.API.Controllers
                                                 !string.IsNullOrEmpty(memberObj.SSN) &&
                                                 memberObj.DateOfBirth != null,
                         isRequiredImmediately = memberObj.IsRequiredImmediatley ?? false,
+                        showInSearch = memberObj.ShowInSearch ?? false,
                         isVerifiedPhone = memberObj.IsVerifiedPhone == true ? true : false,
                     };
                     return res;
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Cntlr -> GetUserDetailsForApp FAILED - MemberID: [" + memberId + "], Exception: [" + ex.InnerException + "]");
+                    Logger.Error("Service Cntlr -> GetUserDetailsForApp FAILED - MemberID: [" + memberId + "], Exception: [" + ex + "]");
                     throw new Exception("Server Error");
                 }
             }
@@ -2944,7 +2945,7 @@ namespace Nooch.API.Controllers
             {
                 try
                 {
-                    Logger.Info("Service Cntlr -> MemberPrivacySettings Fired - MemberID: [" + privacySettings.MemberId + "]");
+                    //Logger.Info("Service Cntlr -> MemberPrivacySettings Fired - MemberID: [" + privacySettings.MemberId + "]");
 
                     var mda = new MembersDataAccess();
                     res.Result = mda.MemberPrivacySettings(privacySettings.MemberId,
@@ -4284,9 +4285,9 @@ namespace Nooch.API.Controllers
                              "], Exception: [" + ex + "]");
             }
 
-            Logger.Info("Service Cntrlr - GetUsersBankInfoForMobile - RETURNING - MemberID: [" + memberid +
-                        "], User Details Found: [" + res.wereUserDetailsFound +
-                        "], Bank Details Found: [" + res.wereBankDetailsFound + "]");
+            //Logger.Info("Service Cntrlr - GetUsersBankInfoForMobile - RETURNING - MemberID: [" + memberid +
+            //            "], User Details Found: [" + res.wereUserDetailsFound +
+            //            "], Bank Details Found: [" + res.wereBankDetailsFound + "]");
 
             return res;
         }

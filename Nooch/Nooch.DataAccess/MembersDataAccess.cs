@@ -3468,17 +3468,19 @@ namespace Nooch.DataAccess
                     {
                         var lastNameUnEncr = CommonHelper.GetDecryptedData(LastName);
                         var ssnTxt = !String.IsNullOrEmpty(ssn) && ssn.Length > 5 ? "XXX - XX - " + ssn.Substring(ssn.Length - 4) : "<em>Not Submitted</em>";
+                        var fbTxt = !String.IsNullOrEmpty(fbid) && fbid.Length > 5 ? "<a href='https://facebook.com/" + fbid + " target='_blank'>" + fbid + "</a>" : "<em>Not Submitted</em>";
                         var imgIncludedTxt = isIdImageAdded == "1" ? "TRUE" : "FALSE";
 
                         StringBuilder st = new StringBuilder("<p><strong>This user's Nooch Account information is:</strong></p>" +
                                               "<table border='1' cellpadding='5' style='border-collapse:collapse;'>" +
                                               "<tr><td><strong>Name:</strong></td><td><strong>" + namearray[0] + " " + lastNameUnEncr + "</strong></td></tr>" +
                                               "<tr><td><strong>MemberID:</strong></td><td>" + member.MemberId + "</td></tr>" +
-                                              "<tr><td><strong>Nooch_ID:</strong></td><td>" + member.Nooch_ID + "</td></tr>" +
+                                              "<tr><td><strong>Nooch_ID:</strong></td><td><a href='https://noochme.com/noochnewadmin/Member/Detail?NoochId=" + member.Nooch_ID + "' target='_blank'>" + member.Nooch_ID + "</a></td></tr>" +
                                               "<tr><td><strong>Email Address:</strong></td><td>" + userEmail + "</td></tr>" +
                                               "<tr><td><strong>Phone #:</strong></td><td>" + CommonHelper.FormatPhoneNumber(userPhone) + "</td></tr>" +
                                               "<tr><td><strong>Address:</strong></td><td>" + address + ", " + cityFromGoogle + ", " + stateAbbrev + ", " + zip + "</td></tr>" +
                                               "<tr><td><strong>SSN:</strong></td><td>" + ssnTxt + "</td></tr>" +
+                                              "<tr><td><strong>Facebook:</strong></td><td>" + fbTxt + "</td></tr>" +
                                               "<tr><td><strong>isIdImageAdded:</strong></td><td>" + imgIncludedTxt +
                                               "<tr><td><strong>Invited By:</strong></td><td>" + inviteCodeMemberName +
                                               "</td></tr></table><br/><br/>- Nooch Bot</body></html>");
