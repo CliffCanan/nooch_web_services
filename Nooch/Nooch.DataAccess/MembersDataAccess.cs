@@ -3802,13 +3802,42 @@ namespace Nooch.DataAccess
 
                 #region Get User's Synapse OAuth Consumer Key
 
-                string usersSynapseOauthKey = "";
+                var usersSynapseOauthKey = "";
                 var usersSynapseDetails = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
 
                 if (usersSynapseDetails == null)
                 {
-                    Logger.Error("MDA -> submitDocumentToSynapseV3 ABORTED: Member's Synapse User Details not found. [MemberId: " + MemberId + "]");
-                    res.message = "Could not find this member's account info";
+                    // CC (9/18/16): User's from the iOS app may not have a Synapse account yet when they upload an ID image,
+                    // so we should still store the image URL in the Members Table for the user in 
+
+                    if (!String.IsNullOrEmpty(ImageUrl))
+                    {
+                        Logger.Error("MDA -> submitDocumentToSynapseV3 - User's Synapse User Details Not Found - Attempting to save VerificationDocumentPath as: [" + ImageUrl + "]");
+
+                        var memberObj = _dbContext.Members.FirstOrDefault(m => m.MemberId == id && m.IsDeleted == false);
+
+                        if (memberObj != null)
+                        {
+                            _dbContext.Entry(memberObj).Reload();
+                            memberObj.VerificationDocumentPath = ImageUrl;
+                            memberObj.DateModified = DateTime.Now;
+
+                            _dbContext.SaveChanges();
+
+                            res.success = true;
+                            res.message = "Document saved but no Synapse user details found.";
+                        }
+                        else
+                        {
+                            Logger.Info("MDA -> submitDocumentToSynapseV3 ABORTED: Member not found - MemberID: [" + MemberId + "]");
+                            res.message = "Member not found";
+                        }
+                    }
+                    else
+                    {
+                        Logger.Error("MDA -> submitDocumentToSynapseV3 - User's Synapse User Details Not Found & no ImageURL passed - ABORTING - [" + ImageUrl + "]");
+                        res.message = "Missing Image URL to save";
+                    }
                     return res;
                 }
                 else
@@ -3821,13 +3850,13 @@ namespace Nooch.DataAccess
 
                 #region Get User's Fingerprint
 
-                string usersFingerprint = "";
+                var usersFingerprint = "";
 
                 var member = CommonHelper.GetMemberDetails(id.ToString()); ;
 
                 if (member == null)
                 {
-                    Logger.Info("MDA -> submitDocumentToSynapseV3 ABORTED: Member not found. [MemberId: " + MemberId + "]");
+                    Logger.Info("MDA -> submitDocumentToSynapseV3 ABORTED: Member not found - MemberID: [" + MemberId + "]");
                     res.message = "Member not found";
                     return res;
                 }
@@ -3840,9 +3869,7 @@ namespace Nooch.DataAccess
                         return res;
                     }
                     else
-                    {
                         usersFingerprint = member.UDID1;
-                    }
                 }
 
                 #endregion Get User's Fingerprint
@@ -3918,14 +3945,11 @@ namespace Nooch.DataAccess
                             catch (Exception ex)
                             {
                                 Logger.Error("MDA -> submitDocumentToSynapseV3 - FAILED to save new Permission and ImageURL in SynapseCreateUserResult Table" +
-                                               "New Permission: [" + permission + "], ID Doc URL: [" + ImageUrl + "], Exception: [" + ex + "]");
+                                             "New Permission: [" + permission + "], ID Doc URL: [" + ImageUrl + "], Exception: [" + ex + "]");
                                 res.message = "Error saving ID doc";
                                 save = 0;
                             }
 
-                            // Cliff (5/31/16): THIS IS FAILING TO SAVE FOR SOME REASON ACCORDING TO THE LOGS... CAN'T FIGURE OUT WHY :-(
-                            // Malkit (10 June 2016) : This should work now.
-                            //     ----^---- GHOST OF FUTURE MALKIT!!  ;-)
                             if (save > 0)
                             {
                                 Logger.Info("MDA -> submitDocumentToSynapseV3 - SUCCESSFULLY updated user's Synapse Permission in SynapseCreateUserResult Table" +

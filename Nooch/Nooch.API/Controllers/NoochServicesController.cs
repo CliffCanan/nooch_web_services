@@ -488,11 +488,15 @@ namespace Nooch.API.Controllers
                         userPicture = memberObj.Photo ?? Path.GetFileName("gv_no_photo.jpg"),
                         pin = memberObj.PinNumber,
                         rememberMe = memberObj.RememberMeEnabled ?? false,
+                        cip_tag = memberObj.cipTag,
 
                         fbUserId = memberObj.FacebookUserId != "not connected" ? memberObj.FacebookUserId : null,
                         
                         hasSynapseUserAccount = synUserDetails != null && synUserDetails.access_token != null,
                         hasSynapseBank = synBankDetails != null,
+                        hasSubmittedId = !String.IsNullOrEmpty(memberObj.VerificationDocumentPath) ||
+                                         (synUserDetails != null && !String.IsNullOrEmpty(synUserDetails.photos))
+                                         ? true : false, 
                         isBankVerified = synBankDetails != null && synBankDetails.Status == "Verified",
                         bankStatus = synBankDetails != null ? synBankDetails.Status : "Not Attached",
                         synUserPermission = synUserDetails != null ? synUserDetails.permission : "",
@@ -3210,7 +3214,7 @@ namespace Nooch.API.Controllers
 
                 if (DocumentDetails.Picture != null)
                 {
-                    // Make  image from bytes
+                    // Make image from bytes
                     filename = HttpContext.Current.Server.MapPath("../../UploadedPhotos") + "/Photos/" +
                                                                   DocumentDetails.MemberId + ".png";
                     using (MemoryStream inStream = new MemoryStream(DocumentDetails.Picture))

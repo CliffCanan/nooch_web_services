@@ -10,6 +10,7 @@ namespace Nooch.Common.Entities.MobileAppInputEntities
     {
         public bool hasSynapseUserAccount { get; set; }
         public bool hasSynapseBank { get; set; }
+        public bool hasSubmittedId { get; set; }
         public bool isBankVerified { get; set; }
         public bool isProfileComplete { get; set; }
         public bool isVerifiedPhone { get; set; }
@@ -28,6 +29,7 @@ namespace Nooch.Common.Entities.MobileAppInputEntities
         public string userPicture { get; set; }
         public string pin { get; set; }
         public string fbUserId { get; set; }
+        public string cip_tag { get; set; }
 
         public string bankStatus { get; set; }
         public string synUserPermission { get; set; }
