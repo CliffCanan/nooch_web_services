@@ -5829,7 +5829,7 @@ namespace Nooch.API.Controllers
                                 res.Name = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName)) + " " +
                                            CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.LastName));
                                 res.MemberId = memberObj.MemberId.ToString();
-                                res.UserImage = memberObj.Photo ?? Path.GetFileName("gv_no_photo.jpg");
+                                res.UserImage = memberObj.Photo ?? "././img/profile_picture.png";
                                 res.IsMemberFound = true;
                                 res.IsSuccess = true;
                                 res.ErrorMessage = "OK";

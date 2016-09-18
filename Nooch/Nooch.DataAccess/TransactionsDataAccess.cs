@@ -1235,7 +1235,7 @@ namespace Nooch.DataAccess
             }
             catch (Exception ex)
             {
-                Logger.Error("TDA -> GetTransactionById EXCEPTION - TransactionID: [" + transId + "], Exception: [" + ex + "]");
+                Logger.Error("TDA -> GetTransactionById EXCEPTION - TransID: [" + transId + "], Exception: [" + ex + "]");
             }
 
             return null;
@@ -1244,10 +1244,10 @@ namespace Nooch.DataAccess
 
         public List<Transaction> GetTransactionsList(string memberId, string listType, int pageSize, int pageIndex, string SubListType, out int totalRecordsCount)
         {
-            Logger.Info("TDA -> GetTransactionsList Initiated - MemberId: [" + memberId + "] - ListType: [" + listType +
-                        "], SubListType: [" + SubListType + "]");
+            Logger.Info("TDA -> GetTransactionsList Fired - MemberID: [" + memberId + "] - ListType: [" + listType +
+                        "], SubListType: [" + SubListType + "], pageSize: [" + pageSize + "]");
 
-            if (pageSize == null) pageSize = 50;
+            if (pageSize == 0) pageSize = 50;
 
             totalRecordsCount = 0;
             _dbContext = new NOOCHEntities();
@@ -1393,8 +1393,10 @@ namespace Nooch.DataAccess
             }
             catch (Exception ex)
             {
-                Logger.Error("TDA -> GetTransactionsList EXCEPTION - [MemberId: " + memberId + "], [Exception: " + ex.Message + "]");
+                Logger.Error("TDA -> GetTransactionsList EXCEPTION - MemberID: [" + memberId + "], Exception: [" + ex + "]");
             }
+
+            Logger.Error("TDA -> GetTransactionsList FAILED - SHOULDN'T BE HERE!");
 
             return new List<Transaction>();
         }
