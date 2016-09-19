@@ -485,7 +485,7 @@ namespace Nooch.API.Controllers
                                             ? CommonHelper.FormatPhoneNumber(memberObj.ContactNumber) : "",
                         firstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName)),
                         lastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.LastName)),
-                        userPicture = memberObj.Photo ?? Path.GetFileName("gv_no_photo.jpg"),
+                        userPicture = memberObj.Photo ?? Path.GetFileName("././img/profile_picture.png"),
                         pin = memberObj.PinNumber,
                         rememberMe = memberObj.RememberMeEnabled ?? false,
                         cip_tag = memberObj.cipTag,

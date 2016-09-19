@@ -1293,19 +1293,19 @@ namespace Nooch.DataAccess
 
         public bool IsPhoneNumberAlreadyRegistered(string PhoneNumberToSearch)
         {
-            string NumAltOne = "+" + PhoneNumberToSearch;
-            string NumAltTwo = "+1" + PhoneNumberToSearch;
-            string BlankNumCase = CommonHelper.GetEncryptedData(" ");
-
             if (!String.IsNullOrEmpty(PhoneNumberToSearch))
             {
+                string NumAltOne = "+" + PhoneNumberToSearch;
+                string NumAltTwo = "+1" + PhoneNumberToSearch;
+                string formattedVersion = CommonHelper.FormatPhoneNumber(PhoneNumberToSearch);
+                string BlankNumCase = CommonHelper.GetEncryptedData(" ");
 
-                var MemberSerachedWithPhone = _dbContext.Members.Where(
-                        inviteTemp =>
-                            (inviteTemp.ContactNumber == PhoneNumberToSearch ||
-                             inviteTemp.ContactNumber == NumAltOne || inviteTemp.ContactNumber == NumAltTwo) &&
-                             inviteTemp.IsDeleted == false &&
-                             inviteTemp.ContactNumber != BlankNumCase).FirstOrDefault();
+                var MemberSerachedWithPhone = _dbContext.Members.Where(m => (m.ContactNumber == PhoneNumberToSearch ||
+                                                                              m.ContactNumber == NumAltOne ||
+                                                                              m.ContactNumber == NumAltTwo ||
+                                                                              m.ContactNumber == formattedVersion) &&
+                                                                              m.IsDeleted == false &&
+                                                                              m.ContactNumber != BlankNumCase).FirstOrDefault();
                 if (MemberSerachedWithPhone == null) return false;
                 else return true;
             }
@@ -6243,6 +6243,8 @@ namespace Nooch.DataAccess
                         (String.IsNullOrEmpty(memberObj.ContactNumber) ||
                         CommonHelper.RemovePhoneNumberFormatting(memberObj.ContactNumber) != CommonHelper.RemovePhoneNumberFormatting(contactNumber)))
                     {
+                        contactNumber = CommonHelper.RemovePhoneNumberFormatting(contactNumber);
+
                         if (!IsPhoneNumberAlreadyRegistered(contactNumber))
                         {
                             memberObj.ContactNumber = contactNumber;
@@ -6253,19 +6255,21 @@ namespace Nooch.DataAccess
 
                             #region Sending SMS Verificaion
 
-                            try
+                            if (contactNumber.IndexOf("555") != 0)
                             {
-                                var fname = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName));
-                                var MessageBody = "Hi " + fname + ", Nooch here - just making sure this is your number. Please reply 'Go' to verify your phone number.";
+                                try
+                                {
+                                    var fname = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName));
+                                    var MessageBody = "Hi " + fname + ", Nooch here - just making sure this is your number. Please reply 'Go' to verify your phone number.";
 
-                                var SMSresult = Utility.SendSMS(contactNumber, MessageBody);
+                                    var SMSresult = Utility.SendSMS(contactNumber, MessageBody);
 
-                                Logger.Info("MDA -> MySettings - SMS Verification sent to [" + contactNumber + "] successfully.");
-                            }
-                            catch (Exception ex)
-                            {
-                                Logger.Error("MDA -> MySettings - SMS Verification NOT sent to [" +
-                                             contactNumber + "], Exception: [" + ex + "]");
+                                    Logger.Info("MDA -> MySettings - SMS Verification sent to [" + contactNumber + "] successfully.");
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logger.Error("MDA -> MySettings - SMS Verification NOT sent to [" + contactNumber + "], Exception: [" + ex + "]");
+                                }
                             }
 
                             #endregion Sending SMS Verificaion

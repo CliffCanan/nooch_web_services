@@ -323,20 +323,26 @@ namespace Nooch.Common
         {
             try
             {
-                string AccountSid = GetValueFromConfig("AccountSid");
-                string AuthToken = GetValueFromConfig("AuthToken");
-                string from = GetValueFromConfig("AccountPhone");
-                string to = "";
+                phoneto = CommonHelper.RemovePhoneNumberFormatting(phoneto);
 
-                if (!phoneto.Trim().Contains('+'))
-                    to = GetValueFromConfig("SMSInternationalCode") + phoneto.Trim();
+                if (!String.IsNullOrEmpty(phoneto) && phoneto.IndexOf("555") != 0)
+                {
+                    string AccountSid = GetValueFromConfig("AccountSid");
+                    string AuthToken = GetValueFromConfig("AuthToken");
+                    string from = GetValueFromConfig("AccountPhone");
+                    string to = "";
+
+                    if (!phoneto.Trim().Contains('+'))
+                        to = GetValueFromConfig("SMSInternationalCode") + phoneto.Trim();
+                    else
+                        to = phoneto.Trim();
+
+                    var client = new Twilio.TwilioRestClient(AccountSid, AuthToken);
+                    var sms = client.SendMessage(from, to, msg);
+                    return sms.Status;
+                }
                 else
-                    to = phoneto.Trim();
-
-                var client = new Twilio.TwilioRestClient(AccountSid, AuthToken);
-                //var sms = client.SendSmsMessage(from, to, msg);
-                var sms = client.SendMessage(from, to, msg);
-                return sms.Status;
+                    return "test user - SMS not sent";
             }
             catch (Exception ex)
             {
