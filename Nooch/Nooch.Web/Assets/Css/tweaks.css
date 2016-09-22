@@ -243,7 +243,8 @@ h1 a:hover {text-decoration:none;}
 	background:      -o-linear-gradient(top, #7fd034,#6ab029);
 	background: 	   -webkit-gradient(linear, 50% 0%, 50% 100%, color-stop(0%, #7fd034), color-stop(100%, #6ab029));
 	background: 		linear-gradient(top, #7fd034,#6ab029);
-	text-shadow: 0px 1px rgba(26, 38, 19, 0.3);
+	border-color: #6ab029;
+    text-shadow: 0px 1px rgba(26, 38, 19, 0.3);
 }
 .btn-success:disabled { 
 	border-radius: 3px;	
@@ -252,6 +253,7 @@ h1 a:hover {text-decoration:none;}
 	background: -moz-linear-gradient(top, #c0c2c4,#b1b3b6);
 	background: -o-linear-gradient(top, #c0c2c4,#b1b3b6);
 	background: linear-gradient(top, #c0c2c4,#b1b3b6);
+    text-shadow: 0px 1px 1px rgba(20, 20, 20, 0.45);
 }
 .btn-gray, .btn-gray:active {
     background: -webkit-gradient(linear, 50% 0%, 50% 100%, color-stop(0%, #c0c2c4), color-stop(100%, #b1b3b6));

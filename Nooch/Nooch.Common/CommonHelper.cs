@@ -655,13 +655,14 @@ namespace Nooch.Common
 
         public static bool RemoveSynapseBankLoginResults(string memberId)
         {
-            Logger.Info("Common Helper -> RemoveSynapseBankLoginResultsForGivenMemberId Initiated - MemberId: [" + memberId + "]");
+            Logger.Info("Common Helper -> RemoveSynapseBankLoginResultsForGivenMemberId Fired - MemberID: [" + memberId + "]");
 
             try
             {
                 var id = Utility.ConvertToGuid(memberId);
 
-                var oldBankLoginRecords = _dbContext.SynapseBankLoginResults.Where(m => m.MemberId == id && m.IsDeleted == false).ToList();
+                var oldBankLoginRecords = _dbContext.SynapseBankLoginResults.Where(m => m.MemberId == id &&
+                                                                                        m.IsDeleted == false).ToList();
 
                 if (oldBankLoginRecords != null && oldBankLoginRecords.Count > 0)
                 {
@@ -2895,7 +2896,7 @@ namespace Nooch.Common
                     //            "SynapseCreateUserResults Record Found - MemberID: [" + memberId + "], Access_Token: [" + createSynapseUserObj.access_token + "] - Now about to check if Synapse OAuth Key is still valid.");
 
                     // CLIFF (10/3/15): ADDING CALL TO NEW METHOD TO CHECK USER'S STATUS WITH SYNAPSE, AND REFRESHING OAUTH KEY IF NECESSARY
-                    synapseV3checkUsersOauthKey checkTokenResult = refreshSynapseV3OautKey(createSynapseUserObj.access_token);
+                    synapseV3checkUsersOauthKey checkTokenResult = refreshSynapseV3OauthKey(createSynapseUserObj.access_token);
 
                     if (checkTokenResult != null)
                     {
@@ -2973,7 +2974,9 @@ namespace Nooch.Common
             }
             catch (Exception ex)
             {
-                Logger.Error("Common Helper -> GetSynapseBankAndUserDetailsforGivenMemberId FAILED - MemberID: [" + memberId + "], Outer Exception: [" + ex + "]");
+                var error = "Common Helper -> GetSynapseBankAndUserDetailsforGivenMemberId FAILED - MemberID: [" + memberId + "], Outer Exception: [" + ex + "]";
+                Logger.Error(error);
+                notifyCliffAboutError(error);
             }
 
             return res;
@@ -3063,10 +3066,14 @@ namespace Nooch.Common
         }
 
 
-        // oAuth token needs to be in encrypted format
-        public static synapseV3checkUsersOauthKey refreshSynapseV3OautKey(string oauthKey)
+        /// <summary>
+        /// For refreshing a user's Synapse OAuth Access Token.
+        /// </summary>
+        /// <param name="oauthKey">oAuth token needs to be encrypted.</param>
+        /// <returns></returns>
+        public static synapseV3checkUsersOauthKey refreshSynapseV3OauthKey(string oauthKey)
         {
-            Logger.Info("Common Helper -> refreshSynapseV3OautKey Fired - User's Original OAuth Key (Encr): [" + oauthKey + "]");
+            Logger.Info("Common Helper -> refreshSynapseV3OautKey Fired - Orig. OAuth Key (encr): [" + oauthKey + "]");
 
             synapseV3checkUsersOauthKey res = new synapseV3checkUsersOauthKey();
             res.success = false;
@@ -3083,8 +3090,6 @@ namespace Nooch.Common
                     var noochMemberObject = GetMemberDetails(synCreateUserObject.MemberId.ToString());
 
                     #region Found Refresh Token
-
-                    //Logger.Info("Common Helper -> refreshSynapseV3OautKey - Found Member By Original OAuth Key");
 
                     SynapseV3RefreshOauthKeyAndSign_Input input = new SynapseV3RefreshOauthKeyAndSign_Input();
 
@@ -3146,8 +3151,6 @@ namespace Nooch.Common
 
                         JObject refreshResponse = JObject.Parse(content);
 
-                        //Logger.Info("Common Helper -> synapseV3checkUsersOauthKey - Just Parsed Synapse Response: [" + refreshResponse + "]");
-
                         #region Signed Into Synapse Successfully
 
                         if ((refreshResponse["success"] != null && Convert.ToBoolean(refreshResponse["success"])) ||
@@ -3156,15 +3159,14 @@ namespace Nooch.Common
                             //Logger.Info("Common Helper -> synapseV3checkUsersOauthKey - Signed User In With Synapse Successfully!");
 
                             // Check if Token from Synapse /user/signin is same as the one we already have saved in DB for this suer
+                            var resultType = "";
                             if (synCreateUserObject.access_token == GetEncryptedData(refreshResultFromSyn.oauth.oauth_key))
                             {
                                 res.success = true;
-                                Logger.Info("Common Helper -> refreshSynapseV3OautKey - Access_Token from Synapse MATCHES whats in DB");
+                                resultType = "[Existing Token Confirmed]";
                             }
                             else // New Access Token...
-                            {
-                                Logger.Info("Common Helper -> refreshSynapseV3OautKey - Access_Token from Synapse is NEW");
-                            }
+                                resultType = "[Received NEW Token]";
 
                             // Update all values no matter what, even if access_token hasn't changed - possible one of the other values did
                             synCreateUserObject.access_token = GetEncryptedData(refreshResultFromSyn.oauth.oauth_key);
@@ -3176,16 +3178,14 @@ namespace Nooch.Common
                             synCreateUserObject.extra_security = refreshResultFromSyn.user.extra != null ? refreshResultFromSyn.user.extra.extra_security.ToString() : null;
 
                             if (!String.IsNullOrEmpty(refreshResultFromSyn.user.permission))
-                            {
                                 synCreateUserObject.permission = refreshResultFromSyn.user.permission;
-                            }
 
                             int save = _dbContext.SaveChanges();
                             _dbContext.Entry(synCreateUserObject).Reload();
 
                             if (save > 0)
                             {
-                                Logger.Info("Common Helper -> refreshSynapseV3OautKey - SUCCESS From Synapse & saved updates to DB.");
+                                Logger.Info("Common Helper -> refreshSynapseV3OautKey - SUCCESS - Result: " + resultType);
 
                                 res.success = true;
                                 res.oauth_consumer_key = synCreateUserObject.access_token;
@@ -3236,15 +3236,17 @@ namespace Nooch.Common
                                             // Bad - Synapse has a different phone # than we do for this user,
                                             // which means it probably changed since we created the user with Synapse...
                                             res.msg = "Phone number from Synapse doesn't match Nooch phone number";
-                                            Logger.Error("Common Helper -> refreshSynapseV3OautKey FAILED - Phone # Array returned from Synapse - " +
-                                                         "But didn't match user's ContactNumber in DB - Can't attempt 2FA flow - ABORTING");
+                                            var error = "Common Helper -> refreshSynapseV3OautKey FAILED - Phone # Array returned from Synapse - " +
+                                                         "But didn't match user's ContactNumber in DB - Can't attempt 2FA flow - ABORTING";
+                                            Logger.Error(error);
+                                            CommonHelper.notifyCliffAboutError(error);
                                         }
                                     }
                                     else
                                     {
                                         res.msg = "Phone number not found from synapse";
                                         var error = "Common Helper -> refreshSynapseV3OautKey FAILED - No Phone # Array returned from Synapse - " +
-                                                     "Can't attempt 2FA flow - ABORTING";
+                                                    "Can't attempt 2FA flow - ABORTING";
                                         Logger.Error(error);
                                         notifyCliffAboutError(error);
                                     }
@@ -3307,7 +3309,7 @@ namespace Nooch.Common
                              "], Exception: [" + ex + "]";
                 Logger.Error(error);
                 notifyCliffAboutError(error);
-                res.msg = "Nooch Server Error: Outer Exception #3319";
+                res.msg = "Nooch Server Error: Outer Exception #3313";
             }
 
             return res;
@@ -4015,7 +4017,7 @@ namespace Nooch.Common
 
         public static string UpdateMemberIPAddressAndDeviceId(string MemberId, string IP, string DeviceId)
         {
-            //Logger.Info("Common Helper -> UpdateMemberIPAddressAndDeviceId Initiated - MemberID: [" + MemberId + "], IP: [" + IP + "], DeviceID: [" + DeviceId + "]");
+            //Logger.Info("Common Helper -> UpdateMemberIPAddressAndDeviceId Fired - MemberID: [" + MemberId + "], IP: [" + IP + "], DeviceID: [" + DeviceId + "]");
 
             if (String.IsNullOrEmpty(MemberId)) return "MemberId not supplied.";
 
@@ -4133,7 +4135,7 @@ namespace Nooch.Common
             return "Neither IP address nor DeviceID were saved.";
         }
 
-        
+
         public static string UdateMemberNotificationTokenAndDeviceInfo(string MemberId, string NotifToken, string DeviceId, string DeviceOS)
         {
             if (String.IsNullOrEmpty(MemberId)) return "MemberId not supplied.";
@@ -4550,7 +4552,7 @@ namespace Nooch.Common
             {
                 bankName = bankName.ToLower();
 
-                if (bankName.IndexOf("bank of america") > -1 || bankName.IndexOf("boa") > -1)
+                if (bankName.IndexOf("bank of america") > -1 || bankName.IndexOf("boa") > -1 || bankName.IndexOf("bofa") > -1)
                     bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/bankofamerica.png");
                 else if (bankName.IndexOf("wells") > -1)
                     bankLogoUrl = String.Concat(appPath, "Assets/Images/bankPictures/WellsFargo.png");

@@ -51,14 +51,18 @@
             color: #888;
         }
 
-        .btnpayRequest {
+        .btnPayRequest {
             padding: 4px 15px !important;
             position: relative;
             top: -2px;
         }
 
         #microVerPayRequestForm label {
-            font-size: 16px;
+            font-size: 15px;
+        }
+
+        #microVerPayRequestForm p {
+            font-size: 15px;
         }
 
         .parsley-errors-list {
@@ -97,11 +101,11 @@
                     <label id="nameInNav" class="m-t-5 m-b-0 center-block f-600 h4">@MicroDeposit.userFirstName @MicroDeposit.userLastName</label>
                     @if (!String.IsNullOrEmpty(MicroDeposit.bankName))
                     {
-                        <h4 class="f-14 bankName">
+                        <h4 class="f-13 bankName">
                             <span>@MicroDeposit.bankName</span>
                             @if (!String.IsNullOrEmpty(MicroDeposit.bankNickName))
                             {
-                                <span>| @MicroDeposit.bankNickName}</span>
+                                <span>| @MicroDeposit.bankNickName</span>
                             }
                         </h4>
                     }
@@ -169,11 +173,11 @@
     }
     else if (MicroDeposit.isAlreadyVerified && MicroDeposit.verifiedDate != null)
     {
-        <div class="resultDiv col-sm-6 col-sm-offset-3 col-lg-4 col-lg-offset-4">
+        <div class="resultDiv col-sm-6 col-sm-offset-3 col-lg-4 col-lg-offset-4 p-l-15 p-r-15">
             <i class="fa fa-bank"></i>
             <h3>Account Already Verified</h3>
-            <p>Looks like you're already good to go! &nbsp;This bank account was verified on <strong>@MicroDeposit.verifiedDate</strong>.</p>
-            <p>You may use this bank account to send or receive funds.</p>
+            <p class="f-16">Looks like you're already good to go! &nbsp;This bank account was verified on <strong>@MicroDeposit.verifiedDate</strong>.</p>
+            <p class="f-16">You may use this bank account to send or receive funds.</p>
         </div>
     }
     else if (MicroDeposit.errorMsg == "Synapse bank details not found")
@@ -198,28 +202,35 @@
         <input type="hidden" id="hasPending" value="true" />
 
         <div id="pendingTrans" class="row m-0 hidden">
-            <div class="resultDiv" style="width:94%; max-width:500px; margin: 20px auto;">
+            <div class="resultDiv" style="width:94%; max-width:560px; margin: 10px auto 20px;">
                 <div class="row">
 
-                    <div class="well text-center f-15">
+                    <div class="well well-sm text-center f-16">
                         You have <span class="text-primary">@MicroDeposit.PendingTransactionList.Count</span> Pending Requests:
                     </div>
 
                     <form id="microVerPayRequestForm" class="form-inline" role="form">
                         @foreach (var tran in MicroDeposit.PendingTransactionList)
                         {
-                            <div class="form-group" id="micro1Grp">
-                                <label class="m-r-5">Amount</label>
-                                <p class="form-control-static">$@tran.amount</p>
+                            
+                            <div class="row">
+                                <div class="col-xs-4 p-r-0">
+                                    <label class="m-r-5">Amount:</label>
+                                    <p class="form-control-static">$@tran.amount</p>
+                                </div>
 
-                                <label class="m-l-10 m-r-5">From</label>
-                                <p class="form-control-static">@tran.userName</p>
+                                <div class="col-xs-5 p-l-0 p-r-0">
+                                    <label class="m-r-5">From:</label>
+                                    <p class="form-control-static capitalize">@tran.userName</p>
+                                </div>
 
-                                <button type="button" class="btn btn-success btnpayRequest m-l-10 @tran.TransactionId" onclick='SubmitPay("@tran.TransactionId","@tran.RecipientId")'>Pay Now</button>
-
-                                <span class="fa fa-check form-control-feedback hidden" aria-hidden="true"></span>
+                                <div class="col-xs-3 p-l-5 p-r-10 text-center">
+                                    <button type="button" class="btn btn-sm btn-success btnPayRequest m-t-5 @tran.TransactionId" onclick='SubmitPay("@tran.TransactionId","@tran.RecipientId")'>Pay Now</button>
+                                    <span class="fa fa-check form-control-feedback hidden" aria-hidden="true"></span>
+                                </div>
 
                                 <div id="errorMsg1"></div>
+
                             </div>
                         }
                     </form>

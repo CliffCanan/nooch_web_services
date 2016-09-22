@@ -491,12 +491,12 @@ namespace Nooch.API.Controllers
                         cip_tag = memberObj.cipTag,
 
                         fbUserId = memberObj.FacebookUserId != "not connected" ? memberObj.FacebookUserId : null,
-                        
+
                         hasSynapseUserAccount = synUserDetails != null && synUserDetails.access_token != null,
                         hasSynapseBank = synBankDetails != null,
                         hasSubmittedId = !String.IsNullOrEmpty(memberObj.VerificationDocumentPath) ||
                                          (synUserDetails != null && !String.IsNullOrEmpty(synUserDetails.photos))
-                                         ? true : false, 
+                                         ? true : false,
                         isBankVerified = synBankDetails != null && synBankDetails.Status == "Verified",
                         bankStatus = synBankDetails != null ? synBankDetails.Status : "Not Attached",
                         synUserPermission = synUserDetails != null ? synUserDetails.permission : "",
@@ -755,7 +755,7 @@ namespace Nooch.API.Controllers
 
         [HttpGet]
         [ActionName("GetLocationSearch")]
-        public List<LocationSearch> GetLocationSearch(string MemberId, int Radius, string accessToken)
+        public List<LocationSearch> GetLocationSearch(string accessToken, string MemberId, int Radius)
         {
             try
             {
@@ -4209,10 +4209,10 @@ namespace Nooch.API.Controllers
 
             try
             {
-                Logger.Info("Service Cntrlr - SynapseV3MFABankVerifyWithMicroDeposits Initiated - MemberId: [" + input.MemberId + "]");
+                Logger.Info("Service Cntrlr - SynapseV3MFABankVerifyWithMicroDeposits Fired - MemberID: [" + input.MemberId + "]");
 
                 var OauthObj = CommonHelper.GetSynapseCreateaUserDetails(input.MemberId);
-                synapseV3checkUsersOauthKey checkTokenResult = CommonHelper.refreshSynapseV3OautKey(OauthObj.access_token);
+                synapseV3checkUsersOauthKey checkTokenResult = CommonHelper.refreshSynapseV3OauthKey(OauthObj.access_token);
 
                 if (checkTokenResult.success == true)
                 {
@@ -4228,15 +4228,15 @@ namespace Nooch.API.Controllers
                 }
                 else
                 {
-                    Logger.Error("Service Cntrlr - SynapseV3MFABankVerifyWithMicroDeposits failed on checking user's synapse oauth token - " +
-                                 "checktokenresult.msg: [" + checkTokenResult.msg + "], memberid: [" + input.MemberId + "]");
+                    Logger.Error("Service Cntrlr - SynapseV3MFABankVerifyWithMicroDeposits FAIELD on checking user's Synapse oauth token - " +
+                                 "checktokenresult.msg: [" + checkTokenResult.msg + "], MemberID: [" + input.MemberId + "]");
                     res.errorMsg = checkTokenResult.msg;
                     return res;
                 }
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Cntrlr - SynapseV3MFABankVerifyWithMicroDeposits FAILED - MemberId: [" + input.MemberId +
+                Logger.Error("Service Cntrlr - SynapseV3MFABankVerifyWithMicroDeposits FAILED - MemberID: [" + input.MemberId +
                              "], Exception: [" + ex + "]");
                 res.errorMsg = ex.Message;
             }
@@ -5394,12 +5394,14 @@ namespace Nooch.API.Controllers
 
             StringResult res = new StringResult();
 
-            if (CommonHelper.IsValidRequest(accesstoken, memberId))
+            //if (CommonHelper.IsValidRequest(accesstoken, memberId))
+            //{
+            if (!String.IsNullOrEmpty(memberId) && !String.IsNullOrEmpty(Lat) && !String.IsNullOrEmpty(Long))
             {
                 try
                 {
                     var mda = new MembersDataAccess();
-                    string s = mda.UpdateUserLocation(memberId, Lat, Long);
+                    var s = mda.UpdateUserLocation(memberId, Lat, Long);
 
                     if (s == "success")
                         res.Result = "success";
@@ -5413,7 +5415,10 @@ namespace Nooch.API.Controllers
                 }
             }
             else
-                res.Result = "Invalid OAuth 2 Access";
+                res.Result = "Missing input data";
+            //}
+            //else
+            //    res.Result = "Invalid OAuth 2 Access";
 
             return res;
         }

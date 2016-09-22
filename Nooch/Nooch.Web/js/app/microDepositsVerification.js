@@ -72,7 +72,7 @@ function SubmitInfo() {
             async: "true",
             cache: "false",
             success: function (result) {
-                console.log("SUCCESS -> MFALoginWithRoutingAndAccountNumber result is... [next line]");
+                //console.log("SUCCESS -> MFALoginWithRoutingAndAccountNumber result is... [next line]");
                 console.log(result);
                 resultReason = result.msg;
 
@@ -150,19 +150,25 @@ function SubmitInfo() {
 
 function SubmitPay(transId, recipId) {
     //$.blockUI();
-    console.log('SubmitPay fired' + recipId);
+    console.log('SubmitPay fired: ' + recipId);
+
+    $('.btnPayRequest').attr('disabled', 'disabled');
+
+    showLoadingHUD('Submitting Payment...');
 
     var MemberId = $('#MemberId').val().trim();
 
     $.ajax({
         type: "GET",
-        url: "http://www.noochme.com/noochservice/api/NoochServices/GetTransactionDetailByIdAndMoveMoneyForNewUserDeposit?TransactionId=" + transId + "&MemberId=" + MemberId + "&TransactionType=RequestToNewUser&recipMemId=" + recipId,
+        url: "https://www.noochme.com/noochservice/api/NoochServices/GetTransactionDetailByIdAndMoveMoneyForNewUserDeposit?TransactionId=" + transId + "&MemberId=" + MemberId + "&TransactionType=RequestToNewUser&recipMemId=" + recipId,
         dataType: "json",
         cache: false,
         crossDomain: true,
         success: function (data) {
             console.log(data);
-            //$.unblockUI();
+
+            $('#pendingTrans .resultDiv').unblock();
+            $('.btnPayRequest').removeAttr("disabled");
 
             if (data.synapseTransResult == 'Success')
             {
@@ -182,13 +188,40 @@ function SubmitPay(transId, recipId) {
                     text: "User not found!",
                     type: "error",
                     showCancelButton: false,
-                    confirmButtonColor: "#3fabe1",
-                    confirmButtonText: "Ok",
+                    confirmButtonColor: "#3fabe1"
                 });
             }
         },
         Error: function (data) {
             //$.UnblockUI();
+            $('.btnPayRequest').removeAttr("disabled");
+            swal({
+                title: "Error",
+                text: "User not found!",
+                type: "error",
+                showCancelButton: false,
+                confirmButtonColor: "#3fabe1"
+            });
+        }
+    });
+}
+
+
+function showLoadingHUD(msg) {
+    $('#pendingTrans .resultDiv').block({
+        message: '<span><i class="fa fa-refresh fa-spin fa-loading"></i></span><br/><span class="loadingMsg">' + msg + '...</span>',
+        css: {
+            border: 'none',
+            padding: '26px 8px 20px',
+            backgroundColor: '#000',
+            '-webkit-border-radius': '15px',
+            '-moz-border-radius': '15px',
+            'border-radius': '15px',
+            opacity: '.75',
+            width: '70%',
+            left: '15%',
+            top: '25px',
+            color: '#fff'
         }
     });
 }
