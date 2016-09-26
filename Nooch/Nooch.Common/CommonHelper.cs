@@ -94,7 +94,7 @@ namespace Nooch.Common
 
         public static AppLogin ForgotPassword(string userName)
         {
-            Logger.Info("Common Helper -> ForgotPassword - UserName: [" + userName + "]");
+            Logger.Info("Common Helper -> ForgotPassword Fired - UserName: [" + userName + "]");
 
             AppLogin res = new AppLogin();
             res.success = false;
@@ -139,14 +139,10 @@ namespace Nooch.Common
                         res.msg = "Your reset password link has been sent to your mail successfully.";
                     }
                     else
-                    {
                         res.msg = "Problem occured while sending email.";
-                    }
                 }
                 else
-                {
                     res.msg = "Email address not found.";
-                }
             }
             catch (Exception ex)
             {
@@ -231,16 +227,19 @@ namespace Nooch.Common
 
         public static MemberBusinessDto GetMemberByUdId(string udId)
         {
-            Logger.Info("Common Helper -> GetMemberByUdId[ udId:" + udId + "].");
+            Logger.Info("Common Helper -> GetMemberByUdId Fired - UDID: [" + udId + "]");
 
             var member = _dbContext.Members.FirstOrDefault(m => m.UDID1 == udId && m.IsDeleted == false);
+
             if (member != null)
             {
                 _dbContext.Entry(member).Reload();
+
                 if (member.Status == Constants.STATUS_REGISTERED)
                 {
                     return new MemberBusinessDto { Status = "Your nooch account is inactive." };
                 }
+
                 return new MemberBusinessDto { UserName = GetDecryptedData(member.UserName) };
             }
 
@@ -773,7 +772,7 @@ namespace Nooch.Common
 
         public static bool UpdateAccessToken(string userName, string AccessToken)
         {
-            Logger.Info("Common Helper -> UpdateAccessToken Initiated- userName: [" + userName + "]");
+            Logger.Info("Common Helper -> UpdateAccessToken Fired - Username: [" + userName + "]");
 
             try
             {

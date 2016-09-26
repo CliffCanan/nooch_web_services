@@ -11,23 +11,25 @@ namespace Nooch.Web.Controllers
 {
     public class OpenController : Controller
     {
-       
+
         public ActionResult VerifyPhoneNumber()
         {
 
-            string FromNumber = Request.QueryString["From"];
-            string MessageBody = Request.QueryString["Body"];
-            
-            if (!String.IsNullOrEmpty( FromNumber)&& !String.IsNullOrEmpty( MessageBody ))
+            var FromNumber = Request.QueryString["From"];
+            var MessageBody = Request.QueryString["Body"];
+
+            if (!String.IsNullOrEmpty(FromNumber) && !String.IsNullOrEmpty(MessageBody))
             {
-                string From = FromNumber;
-                string Body = MessageBody;
+                Logger.Info("OpenController -> VerifyPhoneNumber - Got a message: [" + MessageBody + "]");
+
+                var From = FromNumber;
+                var Body = MessageBody;
 
                 bool isOk = false;
 
-                string memberId = "Not Set";
-                string firstName = "";
-                string lastName = "";
+                var memberId = "Not Set";
+                var firstName = "";
+                var lastName = "";
                 var memberPhone = "Not Set";
 
                 if (Body.Trim().ToLower() == "go" && !String.IsNullOrEmpty(From))
@@ -36,12 +38,12 @@ namespace Nooch.Web.Controllers
                     {
                         using (var noochConnection = new NOOCHEntities())
                         {
-                            string toMatch = From.Trim().Substring(2, From.Length - 2);
-                            string toMatch2 = From.Trim();
+                            var toMatch = From.Trim().Substring(2, From.Length - 2);
+                            var toMatch2 = From.Trim();
 
                             var noochMember = noochConnection.Members.FirstOrDefault(m => m.IsDeleted == false &&
                                                                                     (m.ContactNumber == toMatch2 ||
-                                                                                    m.ContactNumber == toMatch));
+                                                                                     m.ContactNumber == toMatch));
 
                             if (noochMember != null)
                             {

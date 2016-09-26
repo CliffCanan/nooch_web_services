@@ -57,12 +57,12 @@ namespace Nooch.API.Controllers
 
             try
             {
-                Logger.Info("Service Cntrlr -> ForgotPassword - UserName: [" + userName + "]");
+                //Logger.Info("Service Cntrlr -> ForgotPassword - UserName: [" + userName.Input + "]");
                 res = CommonHelper.ForgotPassword(userName.Input);
             }
             catch (Exception ex)
             {
-                Logger.Info("Service Cntrlr -> ForgotPassword FAILED - UserName: [" + userName + "], Exception: [" + ex + "]");
+                Logger.Info("Service Cntrlr -> ForgotPassword FAILED - UserName: [" + userName.Input + "], Exception: [" + ex + "]");
                 res.msg = "Server Exception: [" + ex.Message + "]";
             }
 
@@ -5042,9 +5042,9 @@ namespace Nooch.API.Controllers
 
                 res.Result = mda.MemberRegistration(MemberDetails.Picture, MemberDetails.UserName, MemberDetails.FirstName.ToLower(),
                                                     MemberDetails.LastName.ToLower(), MemberDetails.PinNumber, MemberDetails.Password,
-                                                    MemberDetails.SecondaryMail, MemberDetails.RecoveryMail, MemberDetails.UdId,
-                                                    MemberDetails.friendRequestId, MemberDetails.invitedFriendFacebookId,
-                                                    MemberDetails.facebookAccountLogin, MemberDetails.inviteCode, MemberDetails.sendEmail, type, null, null, null, null, null);
+                                                    MemberDetails.SecondaryMail, MemberDetails.UdId, MemberDetails.friendRequestId,
+                                                    MemberDetails.invitedFriendFacebookId, MemberDetails.facebookAccountLogin,
+                                                    MemberDetails.inviteCode, MemberDetails.sendEmail, type, null);
             }
             catch (Exception ex)
             {
@@ -5111,9 +5111,8 @@ namespace Nooch.API.Controllers
 
                 var mda = new MembersDataAccess();
 
-                var mdaRes = mda.MemberRegistration(null, email, FirstName, LastName, "", password, email, email,
-                                                    fngprnt, "", "", "", "BROWSER", "true", type,
-                                                    phone, address, zip, ssn, dob);
+                var mdaRes = mda.MemberRegistration(null, email, FirstName, LastName, "", password, email,
+                                                    fngprnt, "", "", "", "BROWSER", "true", type, phone);
 
                 res.msg = mdaRes;
 

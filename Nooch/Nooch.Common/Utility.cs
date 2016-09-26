@@ -327,10 +327,10 @@ namespace Nooch.Common
 
                 if (!String.IsNullOrEmpty(phoneto) && phoneto.IndexOf("555") != 0)
                 {
-                    string AccountSid = GetValueFromConfig("AccountSid");
-                    string AuthToken = GetValueFromConfig("AuthToken");
-                    string from = GetValueFromConfig("AccountPhone");
-                    string to = "";
+                    var AccountSid = GetValueFromConfig("AccountSid");
+                    var AuthToken = GetValueFromConfig("AuthToken");
+                    var from = GetValueFromConfig("AccountPhone");
+                    var to = "";
 
                     if (!phoneto.Trim().Contains('+'))
                         to = GetValueFromConfig("SMSInternationalCode") + phoneto.Trim();
@@ -362,15 +362,16 @@ namespace Nooch.Common
                 request.KeepAlive = true;
                 request.Method = "POST";
                 request.ContentType = "application/json";
-                string post_auth = "Basic " + Utility.GetValueFromConfig("OneSignalRestKey");
+
+                var post_auth = "Basic " + Utility.GetValueFromConfig("OneSignalRestKey");
                 request.Headers.Add("authorization", post_auth);
 
                 var serializer = new JavaScriptSerializer();
 
                 byte[] byteArray = new byte[0];
+
                 if (deviceType == "I")
                 {
-
                     var obj = new
                     {
                         app_id = Utility.GetValueFromConfig("OneSignalAppId"),
@@ -378,13 +379,12 @@ namespace Nooch.Common
                         contents = new { en = alertText },
                         headings = new { en = alertHeading }
                     };
+
                     var param = serializer.Serialize(obj);
                     byteArray = Encoding.UTF8.GetBytes(param);
-
                 }
                 else
                 {
-
                     var obj = new
                     {
                         app_id = Utility.GetValueFromConfig("OneSignalAppId"),
@@ -392,11 +392,13 @@ namespace Nooch.Common
                         contents = new { en = alertText },
                         headings = new { en = alertHeading }
                     };
+
                     var param = serializer.Serialize(obj);
                     byteArray = Encoding.UTF8.GetBytes(param);
-
                 }
+
                 string responseContent = null;
+
                 try
                 {
                     using (var writer = request.GetRequestStream())
@@ -414,14 +416,10 @@ namespace Nooch.Common
                 }
                 catch (WebException ex)
                 {
-                    //System.Diagnostics.Debug.WriteLine(ex.Message);
-                    //System.Diagnostics.Debug.WriteLine(new StreamReader(ex.Response.GetResponseStream()).ReadToEnd());
                     Logger.Info("Utility -> SendNotificationMessage (For SMS) FAILED - Exception: [" + ex.Message + "]");
                 }
 
                 return "1";
-
-
             }
             catch (Exception ex)
             {
