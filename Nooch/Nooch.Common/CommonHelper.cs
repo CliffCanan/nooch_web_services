@@ -65,7 +65,7 @@ namespace Nooch.Common
 
         public static string GetDecryptedData(string sourceData)
         {
-            if (!String.IsNullOrEmpty(sourceData))
+            if (!String.IsNullOrEmpty(sourceData) && sourceData.Length > 7)
             {
                 try
                 {
@@ -868,7 +868,7 @@ namespace Nooch.Common
                         "<table border='1'><tr><td>Email Address: </td><td>" + senderemail + "</td></tr>" +
                         "<tr><td>Name: </td><td>" + sendername + "</td></tr>" +
                         "<tr><td>MemberID: </td><td>" + noochMemberN.MemberId + "</td></tr>" +
-                        "<tr><td>Country: </td><td>" + GetDecryptedData(noochMemberN.Country) + "</td></tr>" +
+                        "<tr><td>Country: </td><td>" + noochMemberN.Country + "</td></tr>" +
                         "<tr><td>Address: </td><td>" + GetDecryptedData(noochMemberN.Address) + "</td></tr>" +
                         "<tr><td>Phone Number: </td><td>" + noochMemberN.ContactNumber + "</td></tr></table><br/>- Nooch SDN Check</body></html>";
 
@@ -4100,7 +4100,10 @@ namespace Nooch.Common
                     var member = _dbContext.Members.FirstOrDefault(memberTemp => memberTemp.MemberId == memId);
                     if (member != null)
                     {
-                        member.UDID1 = DeviceId;
+                        if (MemberId != "852987e8-d5fe-47e7-a00b-58a80dd15b49") // For RS's account, don't ever update the Fingerprint (DeviceID). Otherwise it will screw up Synapse services.
+                            member.UDID1 = DeviceId;
+                        else
+                            Logger.Info("Common Helper -> UpdateMemberIPAddressAndDeviceId - Rent Scene Account Detected - Not Saving DeviceID (UDID1)");
                         member.DateModified = DateTime.Now;
                     }
 
@@ -4154,7 +4157,10 @@ namespace Nooch.Common
                 var member = _dbContext.Members.FirstOrDefault(memberTemp => memberTemp.MemberId == memId);
                 if (member != null)
                 {
-                    member.UDID1 = DeviceId;
+                    if (MemberId != "852987e8-d5fe-47e7-a00b-58a80dd15b49") // For RS's account, don't ever update the Fingerprint (DeviceID). Otherwise it will screw up Synapse services.
+                        member.UDID1 = DeviceId;
+                    else
+                        Logger.Info("Common Helper -> UdateMemberNotificationTokenAndDeviceInfo - Rent Scene Account Detected - Not Updating DeviceID (UDID1)");
                     member.DeviceToken = NotifToken;
                     member.DeviceType = DeviceOS; // I for iOS and A for Android
                     member.DateModified = DateTime.Now;

@@ -746,8 +746,7 @@ namespace Nooch.DataAccess
 
                         try
                         {
-                            Utility.SendEmail("", fromAddress, toAddress, null,
-                                              "Nooch Automatic Logout", null, null, null, null, msg);
+                            Utility.SendEmail("", fromAddress, toAddress, null, "Nooch Automatic Logout", null, null, null, null, msg);
 
                             Logger.Info("MDA -> LoginwithFB - Automatic Log Out Email sent to [" + toAddress + "] successfully.");
                         }
@@ -761,7 +760,8 @@ namespace Nooch.DataAccess
 
                     // Update UDID of device from which the user has logged in.
                     if (!String.IsNullOrEmpty(udid))
-                        memberEntity.UDID1 = udid;
+                        if (memberEntity.MemberId.ToString() != "852987e8-d5fe-47e7-a00b-58a80dd15b49") // For RS's account, don't ever update the Fingerprint (DeviceID). Otherwise it will screw up Synapse services.
+                            memberEntity.UDID1 = udid;
                     if (!String.IsNullOrEmpty(devicetoken))
                         memberEntity.DeviceToken = devicetoken;
 
@@ -930,9 +930,10 @@ namespace Nooch.DataAccess
 
                     #endregion Check If User Is Already Logged In
 
-                    //Update UDID of device from which the user has logged in.
+                    // Update UDID of device from which the user has logged in.
                     if (!String.IsNullOrEmpty(udid))
-                        memberEntity.UDID1 = udid;
+                        if (memberEntity.MemberId.ToString() != "852987e8-d5fe-47e7-a00b-58a80dd15b49") // For RS's account, don't ever update the Fingerprint (DeviceID). Otherwise it will screw up Synapse services.
+                            memberEntity.UDID1 = udid;
                     if (!String.IsNullOrEmpty(devicetoken))
                         memberEntity.DeviceToken = devicetoken;
 
@@ -1026,7 +1027,8 @@ namespace Nooch.DataAccess
 
                             // Update UDID of device from which the user has logged in.
                             if (!String.IsNullOrEmpty(udid))
-                                memberEntity.UDID1 = udid;
+                                if (memberEntity.MemberId.ToString() != "852987e8-d5fe-47e7-a00b-58a80dd15b49") // For RS's account, don't ever update the Fingerprint (DeviceID). Otherwise it will screw up Synapse services.
+                                    memberEntity.UDID1 = udid;
 
                             if (!String.IsNullOrEmpty(devicetoken))
                                 memberEntity.DeviceToken = devicetoken;
@@ -2601,7 +2603,7 @@ namespace Nooch.DataAccess
 
                 #endregion
 
-                string pinNumber = Utility.GetRandomPinNumber();
+                var pinNumber = Utility.GetRandomPinNumber();
                 pinNumber = CommonHelper.GetEncryptedData(pinNumber);
                 memberObj.SecondaryEmail = memberObj.UserName; // In case the supplied email is different than what the Landlord used to invite, saving the original email here as secondary, and updating UserName in next line
                 memberObj.UserName = CommonHelper.GetEncryptedData(userEmail.Trim()); // Username might be different if user changes the email on the payRequest page
@@ -5562,24 +5564,24 @@ namespace Nooch.DataAccess
                                 #region Call Synapse Order API
 
                                 var sender = GetMemberDetails(SenderId.ToString());
-                                string senderEmail = CommonHelper.GetDecryptedData(sender.UserName);
-                                string moneySenderFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(sender.FirstName));
-                                string moneySenderLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(sender.LastName));
+                                var senderEmail = CommonHelper.GetDecryptedData(sender.UserName);
+                                var moneySenderFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(sender.FirstName));
+                                var moneySenderLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(sender.LastName));
 
                                 var access_token = SenderUserAndBankDetails.UserDetails.access_token;
                                 var senderFingerprint = SenderUserAndBankDetails.UserDetails.user_fingerprints;
                                 var senderBankOid = SenderUserAndBankDetails.BankDetails.bank_oid;
 
                                 var recipient = GetMemberDetails(RecipientId.ToString());
-                                string recipEmail = CommonHelper.GetDecryptedData(recipient.UserName);
-                                string moneyRecipientFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(recipient.FirstName));
-                                string moneyRecipientLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(recipient.LastName));
+                                var recipEmail = CommonHelper.GetDecryptedData(recipient.UserName);
+                                var moneyRecipientFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(recipient.FirstName));
+                                var moneyRecipientLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(recipient.LastName));
 
                                 var recipBankOid = RecipientUserAndBankDetails.BankDetails.bank_oid;
 
                                 var transId = Transaction.TransactionId.ToString();
                                 var amount = Transaction.Amount.ToString();
-                                string memoForSyn = !String.IsNullOrEmpty(Transaction.Memo) ? Transaction.Memo : "";
+                                var memoForSyn = !String.IsNullOrEmpty(Transaction.Memo) ? Transaction.Memo : "";
                                 var log = "";
 
                                 #region Rent Scene Custom Checks
@@ -6667,7 +6669,8 @@ namespace Nooch.DataAccess
                         UserNameLowerCase = CommonHelper.GetEncryptedData(userNameLowerCase),
                         FacebookUserId = facebookAccountLogin,
                         FacebookAccountLogin = facebookAccountLogin,
-                        cipTag = "renter",
+                        cipTag = "renter", // CC (9/27/16): This service is only called by the Mobile App, so the user's probably are not actually renters, but for now we need to use this for Synapse.
+                        isRentScene = false,
                         ShowInSearch = true,
                         Country = "USA",
                         IsVerifiedPhone = false,

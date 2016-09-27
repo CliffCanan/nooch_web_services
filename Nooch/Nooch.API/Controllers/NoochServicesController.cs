@@ -512,6 +512,7 @@ namespace Nooch.API.Controllers
                         showInSearch = memberObj.ShowInSearch ?? false,
                         isVerifiedPhone = memberObj.IsVerifiedPhone == true ? true : false,
                     };
+
                     return res;
                 }
                 catch (Exception ex)
@@ -559,7 +560,6 @@ namespace Nooch.API.Controllers
         }
 
 
-
         [HttpGet]
         [ActionName("DeleteAttachedBankNode")]
         public string DeleteAttachedBankNode(string memberid)
@@ -593,6 +593,7 @@ namespace Nooch.API.Controllers
 
 
         }
+
 
         [HttpGet]
         [ActionName("GetMemberStats")]
@@ -1508,9 +1509,9 @@ namespace Nooch.API.Controllers
                         City = !String.IsNullOrEmpty(myDetails.City) ? CommonHelper.GetDecryptedData(myDetails.City) : "",
                         State = !String.IsNullOrEmpty(myDetails.State) ? CommonHelper.GetDecryptedData(myDetails.State) : "",
                         Zipcode = !String.IsNullOrEmpty(myDetails.Zipcode) ? CommonHelper.GetDecryptedData(myDetails.Zipcode) : "",
-                        Country = !String.IsNullOrEmpty(myDetails.Country) ? CommonHelper.GetDecryptedData(myDetails.Country) : "",
+                        //Country = !String.IsNullOrEmpty(myDetails.Country) ? myDetails.Country : "",
 
-                        Photo = (myDetails.Photo == null) ? Utility.GetValueFromConfig("PhotoUrl") + "gv_no_photo.png" : myDetails.Photo,
+                        Photo = myDetails.Photo == null ? Utility.GetValueFromConfig("PhotoUrl") + "gv_no_photo.png" : myDetails.Photo,
                         //FacebookAcctLogin = myDetails.FacebookAccountLogin, // CC: this is already being sent in the GetMemberDetails service
                     };
 
@@ -1847,18 +1848,19 @@ namespace Nooch.API.Controllers
                             }
                             catch (Exception ex)
                             {
-                                Logger.Error("Service Controller - GetTransactionsList ERROR - Inner Exception during loop through all transactions - " +
-                                                       "MemberID: [" + memberId + "], TransID: [" + trans.TransactionId +
-                                                       "], Amount: [" + trans.Amount.ToString("n2") + "], Exception: [" + ex + "]");
+                                Logger.Error("Service Cntlr - GetTransactionsList ERROR - Inner Exception during loop through all transactions - " +
+                                             "MemberID: [" + memberId + "], TransID: [" + trans.TransactionId +
+                                             "], Amount: [" + trans.Amount.ToString("n2") + "], Exception: [" + ex + "]");
                                 continue;
                             }
                         }
+
                         return Transactions;
                     }
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error("Service Controller - GetTransactionsList FAILED - MemberID: [" + memberId + "], Exception: [" + ex + "]");
+                    Logger.Error("Service Cntlr - GetTransactionsList FAILED - MemberID: [" + memberId + "], Exception: [" + ex + "]");
                     throw ex;
                 }
                 return new Collection<TransactionDto>();
@@ -3799,7 +3801,7 @@ namespace Nooch.API.Controllers
                 {
                     try
                     {
-                        string newFingerprint = Guid.NewGuid().ToString("n").Substring(0, 24).ToLower();
+                        var newFingerprint = Guid.NewGuid().ToString("n").Substring(0, 24).ToLower();
                         user.fingerprint = newFingerprint;
 
                         noochMember.UDID1 = newFingerprint;

@@ -1100,20 +1100,20 @@ namespace Nooch.DataAccess
                     _dbContext.SaveChanges();
                     _dbContext.Entry(transactionDetail).Reload();
 
-                    string SenderFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member1.FirstName));
-                    string SenderLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member1.LastName));
-                    string RejectorFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member.FirstName));
-                    string RejectorLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member.LastName));
+                    var SenderFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member1.FirstName));
+                    var SenderLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member1.LastName));
+                    var RejectorFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member.FirstName));
+                    var RejectorLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member.LastName));
 
-                    string wholeAmount = transactionDetail.Amount.ToString("n2");
+                    var wholeAmount = transactionDetail.Amount.ToString("n2");
                     string[] s3 = wholeAmount.Split('.');
 
-                    string memo = "";
+                    var memo = "";
                     if (!string.IsNullOrEmpty(transactionDetail.Memo))
                     {
                         if (transactionDetail.Memo.Length > 3)
                         {
-                            string firstThreeChars = transactionDetail.Memo.Substring(0, 3).ToLower();
+                            var firstThreeChars = transactionDetail.Memo.Substring(0, 3).ToLower();
                             bool startWithFor = firstThreeChars.Equals("for");
 
                             if (startWithFor) memo = transactionDetail.Memo.ToString();
@@ -1124,21 +1124,23 @@ namespace Nooch.DataAccess
 
                     #region Push Notification to Request Sender
 
-                    var noochMemberfornotification = CommonHelper.GetMemberNotificationSettings(transactionDetail.Member1.MemberId.ToString());
-
-                    if (noochMemberfornotification != null)
+                    if (!String.IsNullOrEmpty(transactionDetail.Member1.DeviceToken))
                     {
-                        try
-                        {
-                            string mailBodyText = RejectorFirstName + " " + RejectorLastName + " just rejected your Nooch payment request for $" + wholeAmount + ".";
+                        var noochMemberfornotification = CommonHelper.GetMemberNotificationSettings(transactionDetail.Member1.MemberId.ToString());
 
-
-                            Utility.SendNotificationMessage(mailBodyText, "Nooch", transactionDetail.Member1.DeviceToken,
-                                                                                   transactionDetail.Member1.DeviceType);
-                        }
-                        catch (Exception)
+                        if (noochMemberfornotification != null)
                         {
-                            Logger.Error("RejectMoneyRequestForExistingNoochUser - Push notification not sent to [" + transactionDetail.Member1.UDID1 + "].");
+                            try
+                            {
+                                var smsText = RejectorFirstName + " " + RejectorLastName + " just rejected your Nooch payment request for $" + wholeAmount + ".";
+
+                                Utility.SendNotificationMessage(smsText, "Nooch", transactionDetail.Member1.DeviceToken,
+                                                                                  transactionDetail.Member1.DeviceType);
+                            }
+                            catch (Exception)
+                            {
+                                Logger.Error("TDA -> RejectMoneyRequestForExistingNoochUser - Push notification not sent to [" + transactionDetail.Member1.DeviceToken + "].");
+                            }
                         }
                     }
 
@@ -1166,12 +1168,12 @@ namespace Nooch.DataAccess
                             RejectorFirstName + " " + RejectorLastName + " denied your payment request for $" + wholeAmount, null,
                             tokens, null, null, null);
 
-                        Logger.Info("TDA -> rejectMoneyRequestForExistingNoochUser -> requestDeniedToSender email sent to [" + toAddress + "] successfully.");
+                        Logger.Info("TDA -> RejectMoneyRequestForExistingNoochUser -> requestDeniedToSender email sent to [" + toAddress + "] successfully.");
                     }
                     catch (Exception ex)
                     {
-                        Logger.Error("TDA -> rejectMoneyRequestForExistingNoochUser -> requestDeniedToSender email NOT sent to [" + toAddress +
-                                               "], Exception: [" + ex.Message + "]");
+                        Logger.Error("TDA -> RejectMoneyRequestForExistingNoochUser -> requestDeniedToSender email NOT sent to [" + toAddress +
+                                     "], Exception: [" + ex.Message + "]");
                     }
 
                     // sending email to user who rejected this request
@@ -1189,17 +1191,16 @@ namespace Nooch.DataAccess
 
                     try
                     {
-                        Utility.SendEmail("requestDeniedToRecipient",
-                                fromAddress, toAddress, null,
+                        Utility.SendEmail("requestDeniedToRecipient", fromAddress, toAddress, null,
                                 "You rejected a Nooch request from " + SenderFirstName + " " + SenderLastName, null,
                                 tokens2, null, null, null);
 
-                        Logger.Info("rejectMoneyRequestForExistingNoochUser -> requestDeniedToRecipient email sent to [" + toAddress + "] successfully.");
+                        Logger.Info("TDA -> RejectMoneyRequestForExistingNoochUser -> requestDeniedToRecipient email sent to [" + toAddress + "] successfully.");
                     }
                     catch (Exception ex)
                     {
-                        Logger.Error("rejectMoneyRequestForExistingNoochUser -> requestDeniedToRecipient email NOT sent to [" +
-                                               toAddress + "], Exception: [" + ex.Message + "]");
+                        Logger.Error("TDA -> RejectMoneyRequestForExistingNoochUser -> requestDeniedToRecipient email NOT sent to [" +
+                                      toAddress + "], Exception: [" + ex.Message + "]");
                     }
 
                     return "Request Rejected Successfully.";
@@ -1210,7 +1211,7 @@ namespace Nooch.DataAccess
             }
             catch (Exception ex)
             {
-                Logger.Error("TDA -> RejectMoneyRequestForExistingNoochUser FAILED. [Exception: " + ex + "]");
+                Logger.Error("TDA -> RejectMoneyRequestForExistingNoochUser FAILED - Exception: [" + ex + "]");
                 return "";
             }
         }
@@ -1395,8 +1396,6 @@ namespace Nooch.DataAccess
             {
                 Logger.Error("TDA -> GetTransactionsList EXCEPTION - MemberID: [" + memberId + "], Exception: [" + ex + "]");
             }
-
-            Logger.Error("TDA -> GetTransactionsList FAILED - SHOULDN'T BE HERE!");
 
             return new List<Transaction>();
         }
@@ -1718,7 +1717,7 @@ namespace Nooch.DataAccess
         /// <param name="bodyText"></param>
         public DisputeResultEntity RaiseDispute(string memberId, string recipientId, string transactionId, string listType, string ccCollection, string bccCollection, string subject, string bodyText)
         {
-            Logger.Info("TDA - RaiseDispute Initiated - [MemberId: " + memberId + "], [TransactionId: " + transactionId + "]");
+            Logger.Info("TDA - RaiseDispute Fired - MemberID: [" + memberId + "], TransID: [" + transactionId + "]");
 
             string DisputeTId = "";
             string DisputeTransId = "";
@@ -2925,8 +2924,6 @@ namespace Nooch.DataAccess
                     if (senderMemberDetails.isRentScene == true) companyName = "RENT SCENE";
                     else if (senderUserName == "andrew@tryhabitat.com") companyName = "HABITAT";
 
-                    if (receiverUserName == "payments@rentscene.com") recipientLastName = ""; // For Habitat: Blank for the ACH memo since the company will already be in it.
-
                     SynapseV3AddTransInput transParamsForSynapse = new SynapseV3AddTransInput();
 
                     SynapseV3Input_login login = new SynapseV3Input_login() { oauth_key = sender_oauth };
@@ -2970,7 +2967,9 @@ namespace Nooch.DataAccess
 
                     var webhooklink = Utility.GetValueFromConfig("NoochWebHookURL") + suppID_or_transID;
 
-                    var noteTxt = companyName + " / " + senderLastName + " / " + recipientLastName;
+                    var noteTxt = companyName == "HABITAT"
+                                  ? senderLastName + " / " + recipientLastName // CC (9/27/16): Last name is alrdy "Habitat", so don't need to duplicate it w/ CompanyName too.
+                                  : companyName + " / " + senderLastName + " / " + recipientLastName;
                     //if (!String.IsNullOrEmpty(memo) && memo.Length > 1)
                     //    noteTxt += memo.Substring(0, 9);
 
@@ -2988,7 +2987,7 @@ namespace Nooch.DataAccess
                     transMain.extra = extraMain;
 
                     SynapseV3AddTransInput_trans_fees feeMain = new SynapseV3AddTransInput_trans_fees();
-                    feeMain.note = companyName == "RENT SCENE" ? "Negative Rent Scene Fee" : "Negative Nooch Fee";
+                    feeMain.note = "Negative Fee Offset";
                     feeMain.fee = "-0.10"; // to offset the Synapse fee so the user doesn't pay it
 
                     SynapseV3AddTransInput_trans_fees_to tomain = new SynapseV3AddTransInput_trans_fees_to()
@@ -6010,7 +6009,7 @@ namespace Nooch.DataAccess
 
             var trnsactionId = string.Empty;
 
-            #region Initial checks
+            #region Initial Checks
 
             if (transInput.MemberId == null)
             {
@@ -6209,7 +6208,7 @@ namespace Nooch.DataAccess
 
             #endregion Rent Scene Custom Checks
 
-            #endregion Initial checks
+            #endregion Initial Checks
 
 
             //Logger.Info("TDA -> TransferMoneyUsingSynapse CHECKPOINT #1 - ALL INITIAL INPUT CHECKS PASSED");
@@ -6333,7 +6332,6 @@ namespace Nooch.DataAccess
                     // Insert RENT SCENE values
                     var recipBankOid2 = "574f45d79506295ff7a81db8";
                     var recipEmail2 = "payments@rentscene.com";
-                    var moneyRecipientLastName2 = "Rent Scene";
 
                     var log = "TDA -> TransferMoneyUsingSynapse - About to call AddTransSynapseV3Reusable() in TDA - " +
                                 "TransID: [" + suppID_or_transID + "], Amount: [" + amount + "], Sender Name: [Habitat" +
@@ -6345,7 +6343,7 @@ namespace Nooch.DataAccess
                     transactionResultFromSynapseAPI = AddTransSynapseV3Reusable(sender_oauth, senderFingerprint,
                         senderBankOid, amount, recipBankOid2, suppID_or_transID, senderUserName, recipEmail2,
                         CommonHelper.GetRecentOrDefaultIPOfMember(senderNoochDetails.MemberId),
-                        "Habitat", moneyRecipientLastName2, memoForSyn);
+                        "Habitat", recipientLastName, memoForSyn);
 
 
                     if (transactionResultFromSynapseAPI.success)
@@ -6353,7 +6351,7 @@ namespace Nooch.DataAccess
                         #region 2nd Synapse Payment (RS to Vendor)
 
                         // 1st Payment was successful, now do the 2nd one (from RS -> original recipient)
-                        Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser - 1st HABITAT Payment Successful (to RS)");
+                        Logger.Info("TDA -> TransferMoneyUsingSynapse - 1st HABITAT Payment Successful (to RS)");
 
                         var rentSceneMemGuid = new Guid("852987e8-d5fe-47e7-a00b-58a80dd15b49"); // Rent Scene's MemberID
 
@@ -6366,7 +6364,7 @@ namespace Nooch.DataAccess
                         var senderIP = CommonHelper.GetRecentOrDefaultIPOfMember(rentSceneMemGuid);
                         var senderEmail2 = "payments@rentscene.com";
 
-                        log = "TDA -> GetTokensAndTransferMoneyToNewUser - About to call 2nd HABITAT Payment (to the Vendor) - " +
+                        log = "TDA -> TransferMoneyUsingSynapse - About to call 2nd HABITAT Payment (to the Vendor) - " +
                               "TransID: [" + suppID_or_transID + "], Amount: [" + amount + "], Sender Name: [Rent Scene" +
                               "], Sender BankOID: [" + senderBankOid + "], Recip Name: [" + recipientFirstName + " " + recipientLastName +
                               "], Recip BankOID: [" + recipBankOid + "]";
@@ -6380,7 +6378,7 @@ namespace Nooch.DataAccess
                     }
                     else
                     {
-                        var error = "MDA -> GetTokensAndTransferMoneyToNewUser - 1st HABITAT Payment (to RS) FAILED - Response From SYNAPSE's /order/add API - " +
+                        var error = "TDA -> TransferMoneyUsingSynapse - 1st HABITAT Payment (to RS) FAILED - Response From SYNAPSE's /order/add API - " +
                                     "ErrorMessage: [" + transactionResultFromSynapseAPI.ErrorMessage + "], Synapse Error: [" + transactionResultFromSynapseAPI.responseFromSynapse.error.en + "]";
                         Logger.Error(error);
                         CommonHelper.notifyCliffAboutError(error);
