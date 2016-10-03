@@ -3461,14 +3461,14 @@ namespace Nooch.DataAccess
 
                     try
                     {
-                        var lastNameUnEncr = CommonHelper.GetDecryptedData(LastName);
+                        var name = CommonHelper.UppercaseFirst(namearray[0]) + " " + CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(LastName));
                         var ssnTxt = !String.IsNullOrEmpty(ssn) && ssn.Length > 5 ? "XXX - XX - " + ssn.Substring(ssn.Length - 4) : "<em>Not Submitted</em>";
                         var fbTxt = !String.IsNullOrEmpty(fbid) && fbid.Length > 5 ? "<a href='https://facebook.com/" + fbid + " target='_blank'>" + fbid + "</a>" : "<em>Not Submitted</em>";
                         var imgIncludedTxt = isIdImageAdded == "1" ? "TRUE" : "FALSE";
 
                         StringBuilder st = new StringBuilder("<p><strong>This user's Nooch Account information is:</strong></p>" +
                                               "<table border='1' cellpadding='5' style='border-collapse:collapse;'>" +
-                                              "<tr><td><strong>Name:</strong></td><td><strong>" + namearray[0] + " " + lastNameUnEncr + "</strong></td></tr>" +
+                                              "<tr><td><strong>Name:</strong></td><td><strong>" + namearray[0] + " " + name + "</strong></td></tr>" +
                                               "<tr><td><strong>MemberID:</strong></td><td>" + member.MemberId + "</td></tr>" +
                                               "<tr><td><strong>Nooch_ID:</strong></td><td><a href='https://noochme.com/noochnewadmin/Member/Detail?NoochId=" + member.Nooch_ID + "' target='_blank'>" + member.Nooch_ID + "</a></td></tr>" +
                                               "<tr><td><strong>Email Address:</strong></td><td>" + userEmail + "</td></tr>" +
@@ -3492,7 +3492,7 @@ namespace Nooch.DataAccess
                         else if (company == "habitat") companyTxt = " [HABITAT]";
 
                         Utility.SendEmail(null, "admin-autonotify@nooch.com", "newUser@nooch.com", null,
-                                          "Nooch Alert - NEW" + companyTxt + " USER: " + namearray[0] + " " + lastNameUnEncr,
+                                          "Nooch Alert - NEW" + companyTxt + " USER: " + namearray[0] + " " + name,
                                           null, null, null, null, completeEmailTxt.ToString());
                     }
                     catch (Exception ex)
@@ -6873,9 +6873,11 @@ namespace Nooch.DataAccess
                                             ? "<a href='https://facebook.com/" + facebookAccountLogin + " target='_blank'>" + facebookAccountLogin + "</a>"
                                             : "<em>Not Submitted</em>";
 
+                                if (String.IsNullOrEmpty(inviteCode)) inviteCode = "<em>No Invite Code</em>";
+
                                 StringBuilder st = new StringBuilder("<p><strong>This user's Nooch Account information is:</strong></p>" +
                                                       "<table border='1' cellpadding='5' style='border-collapse:collapse;'>" +
-                                                      "<tr><td><strong>Name:</strong></td><td><strong>" + FirstName + " " + LastName + "</strong></td></tr>" +
+                                                      "<tr><td><strong>Name:</strong></td><td><strong>" + CommonHelper.UppercaseFirst(FirstName) + " " + CommonHelper.UppercaseFirst(LastName) + "</strong></td></tr>" +
                                                       "<tr><td><strong>MemberID:</strong></td><td>" + member.MemberId + "</td></tr>" +
                                                       "<tr><td><strong>Nooch_ID:</strong></td><td><a href='https://noochme.com/noochnewadmin/Member/Detail?NoochId=" + member.Nooch_ID + "' target='_blank'>" + member.Nooch_ID + "</a></td></tr>" +
                                                       "<tr><td><strong>Email Address:</strong></td><td>" + UserName + "</td></tr>" +

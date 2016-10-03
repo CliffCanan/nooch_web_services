@@ -2897,12 +2897,12 @@ namespace Nooch.Web.Controllers
 
                 try
                 {
-                    string listType = "ALL";
+                    var listType = "ALL";
 
                     int totalRecordsCount = 0;
 
                     TransactionsDataAccess tda = new TransactionsDataAccess();
-                    var transactionList = tda.GetTransactionsList(memId, listType, 100, 1, "", out totalRecordsCount);
+                    var transactionList = tda.GetTransactionsList(memId, listType, 150, 1, "", out totalRecordsCount);
 
                     if (transactionList != null && transactionList.Count > 0)
                     {
