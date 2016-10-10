@@ -78,7 +78,6 @@ namespace Nooch.API.Controllers
             {
                 try
                 {
-                    MembersDataAccess mda = new MembersDataAccess();
                     var res = CommonHelper.UpdateMemberIPAddressAndDeviceId(member.MemberId, member.IpAddress, member.DeviceId);
                     return new StringResult() { Result = res };
                 }
@@ -719,7 +718,7 @@ namespace Nooch.API.Controllers
         [ActionName("SaveMemberDeviceToken")]
         public StringResult SaveMemberDeviceToken(string memberId, string accessToken, string deviceToken)
         {
-            Logger.Info("Service Cntrlr -> SaveMemberDeviceToken Initiated - MemberID: [" + memberId + "], DeviceToken: [" + deviceToken + "]");
+            Logger.Info("Service Cntrlr -> SaveMemberDeviceToken Fired - MemberID: [" + memberId + "], DeviceToken: [" + deviceToken + "]");
 
             StringResult res = new StringResult();
 
@@ -4522,6 +4521,7 @@ namespace Nooch.API.Controllers
             StringResult res = new StringResult();
 
             if (transInput.isRentScene == true ||
+                transInput.isForHabitat == true ||
                 transInput.isRentAutoPayment == true ||
                 transInput.doNotSendEmails == false || // Proxy to tell if it's an admin sending a test transaction (only time doNotSendEmails would be 'false')
                 CommonHelper.IsValidRequest(accessToken, transInput.MemberId))
@@ -5682,6 +5682,7 @@ namespace Nooch.API.Controllers
                 TransactionDateTime = DateTime.Now.ToString(),
                 doNotSendEmails = transactionInput.doNotSendEmails,
                 TransactionId = Guid.NewGuid().ToString(),
+                isForHabitat = transactionInput.isForHabitat,
                 isRentAutoPayment = transactionInput.isRentAutoPayment == true
                                     ? true
                                     : false,

@@ -14,6 +14,7 @@ namespace Nooch.Common.Entities.MobileAppOutputEnities
         public bool doNotSendEmails { get; set; }
         public bool isRentAutoPayment { get; set; }
         public bool isRentScene { get; set; }
+        public bool isForHabitat { get; set; }
         public decimal Amount { get; set; }
         public decimal? TransactionFee { get; set; }
         public int TotalRecordsCount { get; set; }

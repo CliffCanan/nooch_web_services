@@ -26,6 +26,7 @@ namespace Nooch.Common.Entities.MobileAppInputEntities
         public string TransactionDateTime { get; set; }
         public bool doNotSendEmails { get; set; }
         public bool isRentAutoPayment { get; set; }
+        public bool isForHabitat { get; set; }
     }
 
     public class LocationEntity

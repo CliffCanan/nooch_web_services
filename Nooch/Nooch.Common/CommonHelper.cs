@@ -2716,7 +2716,7 @@ namespace Nooch.Common
 
                 synapseSearchUser_Filter filter = new synapseSearchUser_Filter();
                 filter.page = SEARCHUSER_CURRENT_PAGE;
-                filter.exact_match = true; // we might want to set this to false to prevent error due to capitalization mis-match... (or make sure we only send all lowercase email when creating a Synapse user)
+                filter.exact_match = false; // we might want to set this to false to prevent error due to capitalization mis-match... (or make sure we only send all lowercase email when creating a Synapse user)
                 filter.query = userEmail;
 
                 input.client = client;
@@ -2753,6 +2753,7 @@ namespace Nooch.Common
                         Convert.ToBoolean(checkPermissionResponse["success"]) == true)
                     {
                         //Logger.Info("Common Helper -> getUserPermissionsForSynapseV3 - JSON Result from Synapse: [" + checkPermissionResponse + "]");
+
                         res = JsonConvert.DeserializeObject<synapseSearchUserResponse>(content);
 
                         if (res.page != res.page_count || res.page == res.page_count)
@@ -2853,7 +2854,7 @@ namespace Nooch.Common
             }
             catch (Exception ex)
             {
-                Logger.Error("Common Helper -> IsNodeActiveInGivenSetOfNodes FAILED - [NodeToMatch: " + nodeOid + "], Exception: [" + ex.Message + "]");
+                Logger.Error("Common Helper -> IsNodeActiveInGivenSetOfNodes FAILED - NodeToMatch: [" + nodeOid + "], Exception: [" + ex.Message + "]");
             }
 
             Logger.Info("Common Helper -> IsNodeActiveInGivenSetOfNodes - About to return - IsPermissionFound: [" + res.IsPermissionfound +
@@ -4100,7 +4101,7 @@ namespace Nooch.Common
                     var member = _dbContext.Members.FirstOrDefault(memberTemp => memberTemp.MemberId == memId);
                     if (member != null)
                     {
-                        if (MemberId != "852987e8-d5fe-47e7-a00b-58a80dd15b49") // For RS's account, don't ever update the Fingerprint (DeviceID). Otherwise it will screw up Synapse services.
+                        if (member.Nooch_ID != "ykDjbVj5") // For RS's account, don't ever update the Fingerprint (DeviceID). Otherwise it will screw up Synapse services.
                             member.UDID1 = DeviceId;
                         else
                             Logger.Info("Common Helper -> UpdateMemberIPAddressAndDeviceId - Rent Scene Account Detected - Not Saving DeviceID (UDID1)");

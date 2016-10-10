@@ -6002,6 +6002,7 @@ namespace Nooch.DataAccess
                         "Amount: [" + transInput.Amount + "], " +
                         "RecipientID: [" + transInput.RecipientId + "], " +
                         "Memo: [" + transInput.Memo + "], " +
+                        "isForHabitat: [" + transInput.isForHabitat + "], " +
                         "isRentAutoPayment: [" + transInput.isRentAutoPayment + "], " +
                         "doNotSendEmails: [" + transInput.doNotSendEmails + "]");
 
@@ -6271,10 +6272,16 @@ namespace Nooch.DataAccess
                     senderLastName = "";
 
                     // Now check if the recipient is one of Rent Scene's employees
-                    if (recipientNoochDetails.Nooch_ID.ToString() == "q40l9MnO") // Tori Moore
+                    if (recipientNoochDetails.Nooch_ID.ToString() == "q40l9MnO" || // Tori M.
+                        recipientNoochDetails.Nooch_ID.ToString() == "S3FE3y3m") // Nathania H.
                     {
                         Logger.Info("TDA -> TransferMoneyUsingSynapse - RENT SCENE PAYROLL PAYMENT DETECTED - continuing on, but won't send email to Sender (Rent Scene)");
                         isRentScenePayrollPayment = true;
+                    }
+                    else if (transInput.isForHabitat)
+                    {
+                        isForRentScene = false;
+                        senderFirstName = "Habitat LLC";
                     }
                 }
                 else if (recipientNoochDetails.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49") // Rent Scene's account
@@ -6477,6 +6484,16 @@ namespace Nooch.DataAccess
 
                         if (transInput.doNotSendEmails != true)
                         {
+                            if (transInput.isForHabitat) // CC (10/10/16): Added this flag for manually sending Habitat transfers via Postman.
+                            {
+                                Logger.Info("TDA -> TransferMoneyUsingSynapse - IsForHabitat Flag was TRUE");
+                                isForRentScene = false;
+                                isHabitat = true;
+                                senderFirstName = "Habitat LLC";
+                                senderUserName = "payments@tryhabitat.com";
+                                fromAddress = "payments@tryhabitat.com";
+                            }
+
                             #region Send Email to Sender on transfer success
 
                             // CC (6/18/16): Bypassing the Notifcation Settings Check since no users currently can edit those,
@@ -6640,7 +6657,7 @@ namespace Nooch.DataAccess
                             #endregion Send Notifications to Recipient on transfer success
                         }
                         else
-                            Logger.Info("TDA -> TransferMoneyUsigSynapse - shouldSendEmail flag is [" + transInput.doNotSendEmails +
+                            Logger.Info("TDA -> TransferMoneyUsigSynapse - doNotSendEmails flag is [" + transInput.doNotSendEmails +
                                         "] - SO NOT SENDING TRANSFER SENT EMAIL TO SENDER: [" + senderUserName + "] OR RECIPIENT: [" + receiverUserName + "]");
 
                         return "Your cash was sent successfully";
@@ -6672,7 +6689,7 @@ namespace Nooch.DataAccess
                 // Check if there was a failure above and we need to send the failure Email/SMS notifications to the sender.
                 if (shouldSendFailureNotifications > 0)
                 {
-                    Logger.Error("TDA -> TransferMoneyUsingSynapse - THERE WAS A FAILURE - Sending Failure Notifications to both Users - " +
+                    Logger.Error("TDA -> TransferMoneyUsingSynapse - THERE WAS A FAILURE - Sending Failure Notifications to both Users (NOT ACTUALLY SENDING, COMMENTED OUT BY CC OCT 2016) - " +
                                  "shouldSendFailureNotifications = [" + shouldSendFailureNotifications + "]");
 
                     // CC (8/31/16): Commenting out failure notifications
