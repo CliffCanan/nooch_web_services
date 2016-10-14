@@ -6014,7 +6014,7 @@ namespace Nooch.DataAccess
 
             if (transInput.MemberId == null)
             {
-                Logger.Error("TDA -> TransferMoneyUsingSynapse - ABORTING - Missing MemberID- MemberID: [" + transInput.MemberId + "]");
+                Logger.Error("TDA -> TransferMoneyUsingSynapse - ABORTING - Missing MemberID - MemberID: [" + transInput.MemberId + "]");
                 return "Missing MemberID (Sender)";
             }
             if (transInput.RecipientId == null)

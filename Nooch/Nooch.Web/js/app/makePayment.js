@@ -860,12 +860,15 @@ function submitPin(pin) {
                     type: "success",
                     customClass: "largeText",
                     showConfirmButton: false,
-                    timer: 1600
+                    timer: 1500
                 }, function () {
                     swal.close();
 
                     $('#pinBtnWrap').addClass('hidden');
                     $('#paymentForm').removeClass('hidden');
+
+                    // CC (10/11/16): This only shows for Habitat, which only ever Sends payments.
+                    $('#typeGrp #send').trigger("click");
                 });
             }
             else if (result.msg != null)
