@@ -6184,10 +6184,10 @@ namespace Nooch.DataAccess
             // 575ad909950629625ca88262 - Corp Checking - USE FOR ALL NON-PASSTHROUGH PAYMENTS, i.e.: Payments TO Vendors, and Application fees from Clients to RS
             // 574f45d79506295ff7a81db8 - Passthrough (Linked to Rent Scene's parent account - USE FOR RENT PAYMENTS - ANYTHING OVER $1,000)
             // 5759005795062906e1359a8e - Passthrough (Linked to Marvis Burn's Nooch account - NEVER USE)
-            if ((senderNoochDetails.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49" ||
+            if (recipientNoochDetails.cipTag.ToLower() == "vendor" &&
+                (senderNoochDetails.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49" ||
                 senderBankOid == "5759005795062906e1359a8e" ||
-                senderBankOid == "574f45d79506295ff7a81db8") &&
-                recipientNoochDetails.cipTag.ToLower() == "vendor")
+                senderBankOid == "574f45d79506295ff7a81db8"))
             {
                 // Sender is Rent Scene and recipient is a 'Vendor'
                 senderBankOid = "575ad909950629625ca88262";
@@ -6364,22 +6364,40 @@ namespace Nooch.DataAccess
 
                         sender_oauth = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == rentSceneMemGuid &&
                                                                                                m.IsDeleted == false).access_token;
-                        sender_oauth = CommonHelper.GetDecryptedData(sender_oauth);
 
-                        senderBankOid = "574f45d79506295ff7a81db8";
-                        senderFingerprint = "6d441f70cc6891e7831432baac2e50d7";
-                        var senderIP = CommonHelper.GetRecentOrDefaultIPOfMember(rentSceneMemGuid);
-                        var senderEmail2 = "payments@rentscene.com";
+                        // CLIFF (10/19/16): ADDING CALL TO REFRESH RS'S SYNAPSE OAUTH TOKEN - WAS CAUSING ERRORS FOR HABITAT SINCE
+                        //                   RS'S TOKEN WOULD EXPIRE AFTER A FEW DAYS & THIS METHOD WASN'T REFRESHING B/C OF THIS
+                        //                   JERRY-RIGGED PROCESS FOR HABITAT THAT CREATES 2 PAYMENTS
+                        synapseV3checkUsersOauthKey refreshRsToken = CommonHelper.refreshSynapseV3OauthKey(sender_oauth);
 
-                        log = "TDA -> TransferMoneyUsingSynapse - About to call 2nd HABITAT Payment (to the Vendor) - " +
-                              "TransID: [" + suppID_or_transID + "], Amount: [" + amount + "], Sender Name: [Rent Scene" +
-                              "], Sender BankOID: [" + senderBankOid + "], Recip Name: [" + recipientFirstName + " " + recipientLastName +
-                              "], Recip BankOID: [" + recipBankOid + "]";
-                        Logger.Info(log);
+                        if (refreshRsToken != null || refreshRsToken.success == true)
+                        {
+                            // Now decrypt the RS Oauth Key from the DB
+                            sender_oauth = CommonHelper.GetDecryptedData(sender_oauth);
+                            senderBankOid = "574f45d79506295ff7a81db8";
+                            senderFingerprint = "6d441f70cc6891e7831432baac2e50d7";
 
-                        transactionResultFromSynapseAPI = AddTransSynapseV3Reusable(sender_oauth, senderFingerprint,
-                            senderBankOid, amount, recipBankOid, suppID_or_transID, senderEmail2, receiverUserName,
-                            senderIP, "Habitat", recipientLastName, memoForSyn);
+                            var senderIP = CommonHelper.GetRecentOrDefaultIPOfMember(rentSceneMemGuid);
+                            var senderEmail2 = "payments@rentscene.com";
+
+                            log = "TDA -> TransferMoneyUsingSynapse - About to call 2nd HABITAT Payment (to the Vendor) - " +
+                                  "TransID: [" + suppID_or_transID + "], Amount: [" + amount + "], Sender Name: [Rent Scene" +
+                                  "], Sender BankOID: [" + senderBankOid + "], Recip Name: [" + recipientFirstName + " " + recipientLastName +
+                                  "], Recip BankOID: [" + recipBankOid + "]";
+                            Logger.Info(log);
+
+                            transactionResultFromSynapseAPI = AddTransSynapseV3Reusable(sender_oauth, senderFingerprint,
+                                senderBankOid, amount, recipBankOid, suppID_or_transID, senderEmail2, receiverUserName,
+                                senderIP, "Habitat", recipientLastName, memoForSyn);
+                        }
+                        else
+                        {
+                            var error = "TDA -> TransferMoneyUsingSynapse - HABITAT PAYMENT - FAILED on Attempting 2nd payment, from RS to the Habitat vendor/runner. " +
+                                        "Failed to refresh RS's Synapse OAuth Token - refreshRsToken.msg: [" + refreshRsToken.msg + "]";
+                            Logger.Error(error);
+                            CommonHelper.notifyCliffAboutError(error);
+                            return "Error #9 - Unable to refresh RS Token";
+                        }
 
                         #endregion 2nd Synapse Payment (RS to Vendor)
                     }
