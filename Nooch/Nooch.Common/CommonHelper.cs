@@ -546,7 +546,7 @@ namespace Nooch.Common
                                                     m.TransactionType == "T3EMY1WWZ9IscHIj3dbcNw=="))
                     .ToList().Sum(t => t.Amount);
 
-            if (totalAmountSent > 10)
+            if (totalAmountSent > 100)
             {
                 if (!(Convert.ToDecimal(WeeklyLimitAllowed) > (Convert.ToDecimal(totalAmountSent) + amount)))
                 {
@@ -568,9 +568,9 @@ namespace Nooch.Common
                         Logger.Info("**** Common Helper -> IsWeeklyTransferLimitExceeded LIMIT EXCEEDED - But transaction for RENT SCENE, so allowing transaction - [Amount: $" + amount.ToString() + "]  ****");
                         return false;
                     }
-                    if (MemberId.ToString().ToLower() == "e44c13da-7705-4953-8431-8ab0b2511a77") // REALTY MARK's Account (Member name is 'Diane Torres')
+                    if (MemberId.ToString().ToLower() == "45357cf0-e651-40e7-b825-e1ff48bf44d2") // HABITAT's Account
                     {
-                        Logger.Info("**** Common Helper -> IsWeeklyTransferLimitExceeded LIMIT EXCEEDED - But transaction for RENT SCENE, so allowing transaction - [Amount: $" + amount.ToString() + "]  ****");
+                        Logger.Info("**** Common Helper -> IsWeeklyTransferLimitExceeded LIMIT EXCEEDED - But transaction for HABITAT, so allowing transaction - [Amount: $" + amount.ToString() + "]  ****");
                         return false;
                     }
                     if (MemberId.ToString().ToLower() == "8b4b4983-f022-4289-ba6e-48d5affb5484") // Josh Detweiler (AppJaxx)
@@ -3096,8 +3096,8 @@ namespace Nooch.Common
 
                     List<string> clientIds = getClientSecretId(noochMemberObject.MemberId.ToString());
 
-                    string SynapseClientId = clientIds[0];
-                    string SynapseClientSecret = clientIds[1];
+                    var SynapseClientId = clientIds[0];
+                    var SynapseClientSecret = clientIds[1];
 
                     input.login = new createUser_login2()
                     {
@@ -3123,7 +3123,7 @@ namespace Nooch.Common
 
                     input.user = user;
 
-                    string UrlToHit = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/signin" : "https://synapsepay.com/api/v3/user/signin";
+                    var UrlToHit = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/signin" : "https://synapsepay.com/api/v3/user/signin";
 
                     Logger.Info("Common Helper -> refreshSynapseV3OautKey - Payload to send to Synapse /v3/user/signin: [" + JsonConvert.SerializeObject(input) + "]");
 

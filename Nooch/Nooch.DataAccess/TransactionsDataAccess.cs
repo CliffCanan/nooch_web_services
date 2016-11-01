@@ -6068,6 +6068,7 @@ namespace Nooch.DataAccess
                 }
             }
 
+            // Global transaction limit check
             if (CommonHelper.isOverTransactionLimit(transactionAmount, transInput.MemberId, transInput.RecipientId))
             {
                 var transLimit = Convert.ToDecimal(Utility.GetValueFromConfig("MaximumTransferLimitPerTransaction")).ToString("F2");
@@ -6187,7 +6188,8 @@ namespace Nooch.DataAccess
             if (recipientNoochDetails.cipTag.ToLower() == "vendor" &&
                 (senderNoochDetails.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49" ||
                 senderBankOid == "5759005795062906e1359a8e" ||
-                senderBankOid == "574f45d79506295ff7a81db8"))
+                senderBankOid == "574f45d79506295ff7a81db8") &&
+                transInput.isForHabitat != true)
             {
                 // Sender is Rent Scene and recipient is a 'Vendor'
                 senderBankOid = "575ad909950629625ca88262";
@@ -6297,8 +6299,7 @@ namespace Nooch.DataAccess
                     isAutoPay = true;
                 }
 
-                var fromAddress = Utility.GetValueFromConfig("transfersMail");
-                if (isForRentScene) fromAddress = "payments@rentscene.com";
+                var fromAddress = isForRentScene ? "payments@rentscene.com" : Utility.GetValueFromConfig("transfersMail");
 
                 #endregion Define Variables From Transaction for Notifications
 
@@ -6372,8 +6373,8 @@ namespace Nooch.DataAccess
 
                         if (refreshRsToken != null || refreshRsToken.success == true)
                         {
-                            // Now decrypt the RS Oauth Key from the DB
-                            sender_oauth = CommonHelper.GetDecryptedData(sender_oauth);
+                            // Now decrypt the RS Oauth Key retrieved from refreshSynapseV3OauthKey() for RS
+                            sender_oauth = CommonHelper.GetDecryptedData(refreshRsToken.oauth_consumer_key);
                             senderBankOid = "574f45d79506295ff7a81db8";
                             senderFingerprint = "6d441f70cc6891e7831432baac2e50d7";
 
@@ -6455,6 +6456,9 @@ namespace Nooch.DataAccess
                         ZipCode = transInput.Location.ZipCode,
                         DateCreated = TransDateTime,
                     };
+
+                    // If a manual admin-completed Habitat payment, substitute Habitat's MemberID for RS's for the Sender
+                    if (transInput.isForHabitat) transactionDetail.SenderId = Utility.ConvertToGuid("45357cf0-e651-40e7-b825-e1ff48bf44d2");
 
                     _dbContext.Transactions.Add(transactionDetail);
                     saveToTransTable = _dbContext.SaveChanges();
@@ -6546,10 +6550,8 @@ namespace Nooch.DataAccess
                                     {
                                         subject = "Your Rent Payment To " + recipientFirstName + " " + recipientLastName;
 
-                                        if (isForRentScene)
-                                            template = "TransferSent_RentSceneAutoPay";
-                                        else
-                                            template = "TransferSent";
+                                        if (isForRentScene) template = "TransferSent_RentSceneAutoPay";
+                                        else template = "TransferSent";
                                     }
                                     else
                                     {
