@@ -2445,7 +2445,7 @@ namespace Nooch.DataAccess
         public synapseCreateUserV3Result_int RegisterExistingUserWithSynapseV3(string transId, string memberId, string userEmail, string userPhone,
                                                                                string userName, string pw, string ssn, string dob, string address,
                                                                                string zip, string fngprnt, string ip, string cip, string fbid,
-                                                                               bool isRentScene, string isIdImageAdded = "0", string idImageData = "")
+                                                                               string isIdImageAdded = "0", string idImageData = "")
         {
             Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 Fired - Name: [" + userName +
                         "], Email: [" + userEmail + "], Phone: [" + userPhone +
@@ -2467,7 +2467,7 @@ namespace Nooch.DataAccess
                 String.IsNullOrEmpty(userEmail) ||
                 String.IsNullOrEmpty(userPhone))
             {
-                string missingData = "";
+                var missingData = "";
 
                 if (String.IsNullOrEmpty(userName))
                     missingData = missingData + "Users' Name";
@@ -2486,7 +2486,7 @@ namespace Nooch.DataAccess
                 String.IsNullOrEmpty(address) || String.IsNullOrEmpty(zip) ||
                 String.IsNullOrEmpty(fngprnt) || String.IsNullOrEmpty(ip))
             {
-                string missingData2 = "";
+                var missingData2 = "";
 
                 if (String.IsNullOrEmpty(ssn))
                     missingData2 = missingData2 + "SSN";
@@ -2622,10 +2622,8 @@ namespace Nooch.DataAccess
                 memberObj.DateModified = DateTime.Now;
                 memberObj.cipTag = !String.IsNullOrEmpty(cip) ? cip : memberObj.cipTag;
                 memberObj.FacebookUserId = !String.IsNullOrEmpty(fbid) ? fbid : memberObj.FacebookUserId;
-                if (memberObj.isRentScene == null)
-                    memberObj.isRentScene = isRentScene == true ? true : false;
-                else
-                    memberObj.isRentScene = isRentScene == true ? true : memberObj.isRentScene;
+                if (memberObj.isRentScene != true)
+                    memberObj.isRentScene = false;
 
                 if (!String.IsNullOrEmpty(pw))
                     memberObj.Password = CommonHelper.GetEncryptedData(pw);
@@ -2823,7 +2821,6 @@ namespace Nooch.DataAccess
 
                 #region Saving ID Image If Provided
 
-
                 if (isIdImageAdded == "1" && !String.IsNullOrEmpty(idImageData))
                 {
                     // We have ID Doc image... saving it on Nooch's Server and making entry in Members table.
@@ -2943,7 +2940,7 @@ namespace Nooch.DataAccess
 
         public synapseCreateUserV3Result_int RegisterNonNoochUserWithSynapseV3(string transId, string userEmail, string userPhone, string userName, string pw,
                                                                                string ssn, string dob, string address, string zip, string fngprnt, string ip,
-                                                                               string cip, string fbid, bool isRentScene, string company, string isIdImageAdded = "0", string idImageData = "")
+                                                                               string cip, string fbid, string company, string isIdImageAdded = "0", string idImageData = "")
         {
             // What's the plan? -- Store new Nooch member, then create Synpase user, then check if user supplied a (is password.Length > 0)
             // then store data in new added field in SynapseCreateUserResults table for later use
@@ -2954,7 +2951,7 @@ namespace Nooch.DataAccess
                         "], Address: [" + address + "], ZIP: [" + zip +
                         "], IP: [" + ip + "], Fngprnt: [" + fngprnt +
                         "], TransID: [" + transId + "], CIP: [" + cip +
-                        "], FBID: [" + fbid + "], company: [" + company + "], isRentScene: [" + isRentScene +
+                        "], FBID: [" + fbid + "], company: [" + company +
                         "], isIdImageAdded: [" + isIdImageAdded + "]");
 
             synapseCreateUserV3Result_int res = new synapseCreateUserV3Result_int();
@@ -3031,7 +3028,7 @@ namespace Nooch.DataAccess
                     // Consider the user valid, send to RegisterExistingUserWithSynapseV3()
                     return RegisterExistingUserWithSynapseV3(transId, memberObj.MemberId.ToString(), userEmail,
                                                              userPhone, userName, pw, ssn, dob, address, zip, fngprnt,
-                                                             ip, cip, fbid, isRentScene, isIdImageAdded, idImageData);
+                                                             ip, cip, fbid, isIdImageAdded, idImageData);
                 }
                 else
                 {
@@ -3050,7 +3047,7 @@ namespace Nooch.DataAccess
             var memberIdFromPhone = CommonHelper.GetMemberIdByContactNumber(userPhone);
             if (!String.IsNullOrEmpty(memberIdFromPhone))
             {
-                // Check if the user was created w/in the last 60 minutes... then we can assume it's the same person
+                // Check if the user was created w/in the last 180 minutes... then we can assume it's the same person
                 Member memberObj = CommonHelper.GetMemberDetails(memberIdFromPhone);
 
                 DateTime todaysDateTime = DateTime.Now;
@@ -3065,7 +3062,7 @@ namespace Nooch.DataAccess
                     // Consider the user valid, send to RegisterExistingUserWithSynapseV3()
                     return RegisterExistingUserWithSynapseV3(transId, memberObj.MemberId.ToString(), userEmail,
                                                              userPhone, userName, pw, ssn, dob, address, zip, fngprnt,
-                                                             ip, cip, fbid, isRentScene, isIdImageAdded, idImageData);
+                                                             ip, cip, fbid, isIdImageAdded, idImageData);
                 }
                 else
                 {
@@ -3122,12 +3119,7 @@ namespace Nooch.DataAccess
                 }
                 else if (!String.IsNullOrEmpty(company))
                 {
-                    if (company == "rentscene")
-                    {
-                        inviteCodeMemberName = "Rent Scene";
-                        inviteCodeId = "B43A36A6-1DA5-47CE-A56C-6210F9DDBD22"; // Rent Scene Account's InviteCodeId
-                    }
-                    else if (company == "habitat")
+                    if (company == "habitat")
                     {
                         inviteCodeMemberName = "Habitat LLC";
                         inviteCodeId = "3B749443-ACE2-4F31-BBA5-B3343D2D50C5"; // Habitat Account's InviteCodeId
@@ -3227,7 +3219,7 @@ namespace Nooch.DataAccess
                     cipTag = !String.IsNullOrEmpty(cip) ? cip : "renter",
                     FacebookUserId = fbid,
                     FacebookAccountLogin = fbid,
-                    isRentScene = isRentScene == true ? true : false,
+                    isRentScene = false,
                 };
 
                 if (!String.IsNullOrEmpty(inviteCodeId) && inviteCodeId.Length > 30)
@@ -3487,9 +3479,7 @@ namespace Nooch.DataAccess
 
                         completeEmailTxt.Append(s);
 
-                        var companyTxt = "";
-                        if (company == "rentscene") companyTxt = " [RENT SCENE]";
-                        else if (company == "habitat") companyTxt = " [HABITAT]";
+                        var companyTxt = company == "habitat" ? " [HABITAT]" : "";
 
                         Utility.SendEmail(null, "admin-autonotify@nooch.com", "newUser@nooch.com", null,
                                           "Nooch Alert - NEW" + companyTxt + " USER: " + namearray[0] + " " + name,
@@ -3621,9 +3611,7 @@ namespace Nooch.DataAccess
 
                     #region Send Email To Referrer (If Applicable)
 
-                    if (!String.IsNullOrEmpty(inviteCodeId) &&
-                        inviteCodeId.ToLower() != "b43a36a6-1da5-47ce-a56c-6210f9ddbd22" && // CC (9/7/16): Rent Scene didn't want these emails
-                        inviteCodeId.ToLower() != "nocode")
+                    if (!String.IsNullOrEmpty(inviteCodeId) && inviteCodeId.ToLower() != "nocode")
                     {
                         try
                         {
@@ -5584,37 +5572,6 @@ namespace Nooch.DataAccess
                                 var memoForSyn = !String.IsNullOrEmpty(Transaction.Memo) ? Transaction.Memo : "";
                                 var log = "";
 
-                                #region Rent Scene Custom Checks
-
-                                // Cliff (6/14/16): Adding this to check: a.) is this a payment to Rent Scene?
-                                //                  and b.) what kind of user the recipient is: Client or Vendor, which determines which Node ID to use for Rent Scene
-
-                                // 575ad909950629625ca88262 - Corp Checking - USE FOR ALL NON-PASSTHROUGH PAYMENTS, i.e.: Payments TO Vendors, and Application fees from Clients to RS
-                                // 574f45d79506295ff7a81db8 - Passthrough (Linked to Rent Scene's parent account - USE FOR RENT PAYMENTS - ANYTHING OVER $1,000)
-                                // 5759005795062906e1359a8e - Passthrough (Linked to Marvis Burn's Nooch account - NEVER USE)
-                                if (recipient.cipTag != null && recipient.cipTag.ToLower() == "vendor" &&
-                                    (sender.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49" ||
-                                     senderBankOid == "5759005795062906e1359a8e" || senderBankOid == "574f45d79506295ff7a81db8"))
-                                {
-                                    // Sender is Rent Scene and recipient is a 'Vendor'
-                                    senderBankOid = "575ad909950629625ca88262";
-                                    Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser - RENT SCENE VENDOR Payment Detected - " +
-                                                "Substituting Sender_Bank_NodeID to use RS's Corporate Checking account");
-                                }
-                                else if (Transaction.Amount < 200 &&
-                                         (recipient.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49" ||
-                                          recipBankOid == "574f45d79506295ff7a81db8" || recipBankOid == "5759005795062906e1359a8e") &&
-                                         (sender.cipTag.ToLower() == "renter" || sender.cipTag.ToLower() == "client")) // CC (8/5/16): Should be "renter" now as of updating to Synapse's KYC 2.0, used to be "Client"
-                                {
-                                    // Recipient is Rent Scene AND Sender is a Client AND Amount is < $200 (so it's probably an application fee)
-                                    // So use RS's Corporate Checking account.
-                                    recipBankOid = "575ad909950629625ca88262";
-                                    Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser - RENT SCENE Payment Detected Under $200 - " +
-                                                "Substituting Receiver_Bank_NodeID to use RS's Corporate Checking account");
-                                }
-
-                                #endregion Rent Scene Custom Checks
-
                                 TransactionsDataAccess tda = new TransactionsDataAccess();
                                 SynapseV3AddTrans_ReusableClass Call_Synapse_Order_API_Result = new SynapseV3AddTrans_ReusableClass();
 
@@ -5630,86 +5587,22 @@ namespace Nooch.DataAccess
 
                                     moneySenderFirstName = "Habitat";
                                     moneySenderLastName = "";
-
-                                    // Insert RENT SCENE values
-                                    var recipBankOid2 = "574f45d79506295ff7a81db8";
-                                    var recipEmail2 = "payments@rentscene.com";
-                                    var moneyRecipientLastName2 = "Rent Scene";
-
-                                    log = "MDA -> GetTokensAndTransferMoneyToNewUser - About to call AddTransSynapseV3Reusable() in TDA - " +
-                                          "TransID: [" + transId + "], Amount: [" + amount + "], Sender Name: [" + moneySenderFirstName + " " + moneySenderLastName +
-                                          "], Sender BankOID: [" + senderBankOid + "], Recip Name: [" + moneyRecipientFirstName + " " + moneyRecipientLastName +
-                                          "], Recip BankOID: [" + recipBankOid2 + "]";
-                                    Logger.Info(log);
-
-                                    // 1st payment - from Habitat -> Rent Scene
-                                    Call_Synapse_Order_API_Result = tda.AddTransSynapseV3Reusable(access_token,
-                                        senderFingerprint, senderBankOid, amount, recipBankOid2, transId, senderEmail, recipEmail2,
-                                        CommonHelper.GetRecentOrDefaultIPOfMember(sender.MemberId),
-                                        moneySenderLastName, moneyRecipientLastName2, memoForSyn);
-
-
-                                    if (Call_Synapse_Order_API_Result.success)
-                                    {
-                                        #region 2nd Synapse Payment (RS to Vendor)
-
-                                        // 1st Payment was successful, now do the 2nd one (from RS -> original recipient)
-                                        Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser - 1st HABITAT Payment Successful (to RS) - Response From SYNAPSE's /order/add API - " +
-                                                    "OrderID: [" + Call_Synapse_Order_API_Result.responseFromSynapse.trans._id.oid + "]");
-
-                                        moneySenderFirstName = "Rent Scene";
-                                        moneySenderLastName = "";
-
-                                        var rentSceneMemId = "852987e8-d5fe-47e7-a00b-58a80dd15b49"; // Rent Scene's MemberID
-                                        var rentSceneMemGuid = Utility.ConvertToGuid(rentSceneMemId);
-
-                                        var createSynapseUserObj = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == rentSceneMemGuid &&
-                                                                                                                           m.IsDeleted == false);
-                                        access_token = createSynapseUserObj.access_token;
-
-                                        senderBankOid = "574f45d79506295ff7a81db8";
-                                        senderFingerprint = "6d441f70cc6891e7831432baac2e50d7";
-                                        var senderIP = CommonHelper.GetRecentOrDefaultIPOfMember(new Guid(rentSceneMemId));
-                                        var senderEmail2 = "payments@rentscene.com";
-
-                                        log = "MDA -> GetTokensAndTransferMoneyToNewUser - About to call 2nd HABITAT Payment (to the Vendor) - " +
-                                              "TransID: [" + transId + "], Amount: [" + amount + "], Sender Name: [" + moneySenderFirstName + " " + moneySenderLastName +
-                                              "], Sender BankOID: [" + senderBankOid + "], Recip Name: [" + moneyRecipientFirstName + " " + moneyRecipientLastName +
-                                              "], Recip BankOID: [" + recipBankOid + "]";
-
-                                        Logger.Info(log);
-
-                                        Call_Synapse_Order_API_Result = tda.AddTransSynapseV3Reusable(access_token,
-                                            senderFingerprint, senderBankOid, amount, recipBankOid, transId,
-                                            senderEmail2, recipEmail, senderIP, moneySenderLastName, moneyRecipientLastName, memoForSyn);
-
-                                        #endregion 2nd Synapse Payment (RS to Vendor)
-                                    }
-                                    else
-                                    {
-                                        var error = "MDA -> GetTokensAndTransferMoneyToNewUser - 1st HABITAT Payment (to RS) FAILED - Response From SYNAPSE's /order/add API - " +
-                                                    "ErrorMessage: [" + Call_Synapse_Order_API_Result.ErrorMessage + "], Synapse Error: [" + Call_Synapse_Order_API_Result.responseFromSynapse.error.en + "]";
-                                        Logger.Error(error);
-                                        CommonHelper.notifyCliffAboutError(error);
-                                    }
                                 }
 
                                 #endregion Habitat Custom Checks
 
-                                else
-                                {
-                                    // Expected path for all Payments except for Habitat
-                                    log = "MDA -> GetTokensAndTransferMoneyToNewUser - About to call AddTransSynapseV3Reusable() in TDA - " +
-                                              "TransID: [" + transId + "], Amount: [" + amount + "], Sender Name: [" + moneySenderFirstName + " " + moneySenderLastName +
-                                              "], Sender BankOID: [" + senderBankOid + "], Recip Name: [" + moneyRecipientFirstName + " " + moneyRecipientLastName +
-                                              "], Recip BankOID: [" + recipBankOid + "]";
-                                    Logger.Info(log);
+                                // Expected path for all Payments except for Habitat
+                                log = "MDA -> GetTokensAndTransferMoneyToNewUser - About to call AddTransSynapseV3Reusable() in TDA - " +
+                                          "TransID: [" + transId + "], Amount: [" + amount + "], Sender Name: [" + moneySenderFirstName + " " + moneySenderLastName +
+                                          "], Sender BankOID: [" + senderBankOid + "], Recip Name: [" + moneyRecipientFirstName + " " + moneyRecipientLastName +
+                                          "], Recip BankOID: [" + recipBankOid + "]";
+                                Logger.Info(log);
 
-                                    Call_Synapse_Order_API_Result = tda.AddTransSynapseV3Reusable(access_token, senderFingerprint,
-                                        senderBankOid, amount, recipBankOid, transId, senderEmail, recipEmail,
-                                        CommonHelper.GetRecentOrDefaultIPOfMember(sender.MemberId),
-                                        moneySenderLastName, moneyRecipientLastName, memoForSyn);
-                                }
+                                Call_Synapse_Order_API_Result = tda.AddTransSynapseV3Reusable(access_token, senderFingerprint,
+                                    senderBankOid, amount, recipBankOid, transId, senderEmail, recipEmail,
+                                    CommonHelper.GetRecentOrDefaultIPOfMember(sender.MemberId),
+                                    moneySenderLastName, moneyRecipientLastName, memoForSyn);
+
 
                                 #endregion Call Synapse Order API
 
@@ -5764,14 +5657,6 @@ namespace Nooch.DataAccess
                                             !String.IsNullOrEmpty(Transaction.PhoneNumberInvited))
                                         {
                                             newUserPhone = CommonHelper.GetDecryptedData(Transaction.PhoneNumberInvited);
-                                        }
-
-                                        bool isForRentScene = false;
-                                        if (recipient.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49") // Rent Scene's account
-                                        {
-                                            isForRentScene = true;
-                                            moneyRecipientFirstName = "Rent Scene";
-                                            moneyRecipientLastName = "";
                                         }
 
                                         var newUserNameForEmail = "";
@@ -5860,9 +5745,7 @@ namespace Nooch.DataAccess
 
                                                 try
                                                 {
-                                                    string subject = isForRentScene
-                                                                     ? "Payment from Rent Scene accepted - $" + wholeAmount
-                                                                     : "Nooch payment from " + moneySenderFirstName + " " + moneySenderLastName + " accepted - $" + wholeAmount;
+                                                    var subject = "Payment from " + moneySenderFirstName + " " + moneySenderLastName + " accepted - $" + wholeAmount;
 
                                                     Utility.SendEmail("transferAcceptedToRecipient", fromAddress, newUsersEmail,
                                                                       null, subject, null, tokens, null, null, null);
@@ -5959,9 +5842,7 @@ namespace Nooch.DataAccess
 
                                                 try
                                                 {
-                                                    string subject = isForRentScene
-                                                                     ? "Your Payment to Rent Scene"
-                                                                     : "Your payment to " + moneyRecipientFirstName + " " + moneyRecipientLastName;
+                                                    var subject = "Your payment to " + moneyRecipientFirstName + " " + moneyRecipientLastName;
 
                                                     Utility.SendEmail("requestPaidToRecipient", fromAddress,
                                                         newUsersEmail, null, subject, null, tokens, null, null, null);

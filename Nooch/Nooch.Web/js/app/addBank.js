@@ -5,11 +5,10 @@ var SEC_QUES_NO = 0;
 var sendToIdVerQuestions = false;
 var isManual = false;
 
-var isRs = $('#isRs').val();
 var MEMBER_ID = $('#memId').val();
 var RED_URL = $('#redUrl').val();
-var COMPANY = isRs == "true" ? "Rent Scene" : "Nooch";
-var SUPPORTLINK = isRs == "true" ? "payments@rentscene.com" : "support@nooch.com";
+var COMPANY = "Nooch";
+var SUPPORTLINK = "support@nooch.com";
 var fromLandlordApp = $('#isLl').val();
 
 var SCREENWIDTH = $(window).width();
@@ -1081,37 +1080,6 @@ function sendToRedUrl() {
             console.log("AddBank -> TRIGGERING COMPLETE IN PARENT - Success!");
             window.parent.$('body').trigger('addBankComplete');
         }
-        else if (RED_URL.indexOf("rentscene") > -1) // For RentScene
-        {
-            if (isManual == true)
-            {
-                // Reset routing/account # form
-                $('#userFullName').val('');
-                $('#bankRout').val('');
-                $('#bankAcntNum').val('');
-
-                setTimeout(function () {
-                    window.top.location.href = "https://www.nooch.com/rentscene";
-                }, 300);
-            }
-            else
-            {
-                swal({
-                    title: "Bank linked successfully!",
-                    text: "<p>Thanks for completing this <strong>one-time</strong> process. &nbsp;Now you can make payments without sharing your bank details.</p>" +
-                          "<p>We will notify your landlord that you're ready to pay and we'll be in touch soon about completing your rent payments.</p>",
-                    type: "success",
-                    confirmButtonColor: "#3fabe1",
-                    confirmButtonText: "Done",
-                    customClass: "largeText",
-                    html: true
-                }, function (isConfirm) {
-                    setTimeout(function () {
-                        window.top.location.href = "https://www.nooch.com/rentscene";
-                    }, 400);
-                });
-            }
-        }
         else if (RED_URL.indexOf("habitat") > -1) // For Habitat
         {
             swal({
@@ -1155,10 +1123,6 @@ function sendToRedUrl() {
                 setTimeout(function () {
                     window.top.location.href = RED_URL;
                 }, 300);
-            }
-            else
-            {
-                console.log("Bank added manually - END.");
             }
         }
         else // All Others - most likely no RED_URL was passed in URL, so defaulting to a Sweet Alert
@@ -1268,33 +1232,6 @@ $(document).ready(function () {
             confirmButtonText: "Ok",
             html: true
         })
-    }
-    else if (COMPANY == "Rent Scene" && SCREENWIDTH > 1100 && // Only should show when the user came straight to this page, i.e. NOT via iFrame from another page.
-             RED_URL != "createaccnt")
-    {
-        changeFavicon('../Assets/favicon2.ico')
-        $('#headerAlt').removeClass('hidden');
-        $('body').css('overflow-y', 'scroll');
-
-        swal({
-            title: "Secure, Private Payments",
-            text: "<p>Rent Scene offers a quick, secure way to pay rent without giving your routing or account number. &nbsp;Just select your bank and login to your online banking<span class='desk-only'> as you normally do</span>.</p>" +
-				  "<ul class='fa-ul'><li><i class='fa-li fa fa-check'></i><strong>We don't see or store</strong> your bank credentials</li>" +
-				  "<li><i class='fa-li fa fa-check'></i>The person you pay never sees any of your personal or bank info (except your name)</li>" +
-				  "<li><i class='fa-li fa fa-check'></i>All data is secured with <strong>bank-grade encryption</strong></li></ul>",
-            imageUrl: "../Assets/Images/secure.svg",
-            imageSize: "194x80",
-            //showCancelButton: true,
-            //cancelButtonText: "Learn More",
-            confirmButtonColor: "#3fabe1",
-            confirmButtonText: "Great, Let's Go!",
-            customClass: "securityAlert",
-            allowEscapeKey: false,
-            html: true
-        }, function (isConfirm) {
-            if (!isConfirm)
-                window.top.location.href = "https://www.nooch.com/safe";
-        });
     }
     else if (RED_URL.indexOf("habitat") > -1)
     {
@@ -1482,16 +1419,11 @@ function resetBankLogoSize() {
 
     if (img.indexOf("/bank.png") < 0) // if the image IS currently one of the actual bank logos
     {
-        if (SCREENWIDTH > 767)
-            width = "110px";
-        else
-            width = "90px";
+        if (SCREENWIDTH > 767) width = "110px";
+        else width = "90px";
     }
-    else // if the image is currently the default bank icon
-    {
-        if (SCREENWIDTH > 767)
-            width = "86px";
-    }
+    else if (SCREENWIDTH > 767) width = "86px";// if the image is currently the default bank icon
+
     $("#addBankManual .selectedBank-logo > img").css({
         width: width,
         height: "auto"

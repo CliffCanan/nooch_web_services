@@ -1,27 +1,15 @@
-﻿var FOR_RENTSCENE = $('#IsRs').val();
-var isLrgScrn = false;
+﻿var isLrgScrn = false;
 var COMPANY = "Nooch";
-
 
 $(document).ready(function () {
     if ($(window).width() > 1000) isLrgScrn = true;
 
-    if (FOR_RENTSCENE == "true")
-    {
-        if (isLrgScrn) $('.landingHeaderLogo img').css('width', '170px');
-
-        changeFavicon('../Assets/favicon2.ico');
-        COMPANY = "Rent Scene";
-    }
-
     if ($('#success').val() == "true")
         $('#microVerForm').parsley();
 
+    // DISPLAY #pendingTrans IF USER HAS PENDING TRANSACTIONS
     if ($('#isAlrdyVer').val() == "true" && $('#hasPending').val() == "true")
-    {
-        // DISPLAY #pendingTrans IF USER HAS PENDING TRANSACTIONS
         $('#pendingTrans').removeClass('hidden').addClass('animated bounceIn');
-    }
 
     $(".two-digits").keydown(function (e) {
         if ($.inArray(e.keyCode, [46, 8, 9, 27, 13, 110, 190]) !== -1 ||
@@ -45,15 +33,13 @@ function SubmitInfo() {
         $('#Submit').attr('disabled', 'disabled');
 
         var dot = ".";
-        var IsRs = $('#IsRs').val();
         var MemberId = $('#MemberId').val().trim();
         var MicroDepositOne = dot + $('#MicroDepositOne').val().trim();
         var MicroDepositTwo = dot + $('#MicroDepositTwo').val().trim();
         var NodeId1 = $('#NodeId1').val();
         var BankName = $('#BankName').val();
 
-        console.log("SAVE MEMBER INFO -> {IsRs: " + IsRs +
-                                       ", MemberId: " + MemberId +
+        console.log("SAVE MEMBER INFO -> {MemberId: " + MemberId +
                                        ", MicroDepositOne: " + MicroDepositOne +
                                        ", MicroDepositTwo: " + MicroDepositTwo +
                                        ", BankName: " + BankName +
@@ -136,10 +122,7 @@ function SubmitInfo() {
                         confirmButtonText: "Contact Support",
                     }, function (isConfirm) {
                         if (isConfirm)
-                        {
-                            var supportEmail = COMPANY == "Rent Scene" ? "payments@rentscene.com" : "support@nooch.com";
-                            window.open("mailto:" + supportEmail);
-                        }
+                            window.open("mailto:support@nooch.com");
                     });
                 }
             }

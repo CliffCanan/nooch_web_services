@@ -1,16 +1,15 @@
 ﻿$(document).ready(function () {
     // Member.GetPageLoadData();
 
-    // CC (6/18/16): Commenting out since the App is temporarily down after V3 upgrade.
-    //$(function () {
-    //    var iOS = false,
-    //    p = navigator.platform;
+    $(function () {
+        var iOS = false,
+        p = navigator.platform;
 
-    //    if (p === 'iPad' || p === 'iPhone' || p === 'iPod') {
-    //        iOS = true;
-    //        $('.iphoneLogin').removeClass('hidden');
-    //    }
-    //});
+        if (p === 'iPad' || p === 'iPhone' || p === 'iPod') {
+            iOS = true;
+            $('.iphoneLogin').removeClass('hidden');
+        }
+    });
 
     var initStatus = $('#init_status').val();
 

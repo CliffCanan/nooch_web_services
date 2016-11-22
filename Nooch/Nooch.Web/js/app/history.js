@@ -10,13 +10,7 @@ $(document).ready(function (e)
 
     var user = getParameterByName("user");
 
-    if (user == "rentscene") {
-        if (isLrgScrn)
-            $('.landingHeaderLogo img').css('width', '160px');
-
-        changeFavicon('../Assets/favicon2.ico')
-    }
-    else if (user == "habitat")
+    if (user == "habitat")
     {
         COMPANY = "Habitat";
         changeFavicon('../Assets/favicon-habitat.png')

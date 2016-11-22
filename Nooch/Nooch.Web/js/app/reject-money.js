@@ -1,28 +1,17 @@
 var transType = $('#TransType').val();
-var ISRS = $('#isRs').val();
-var COMPANY = ISRS == "true" ? "Rent Scene" : "Nooch";
-var SUPPORTEMAIL = ISRS == "true" ? "team@rentscene.com" : "support@nooch.com";
+var COMPANY = "Nooch";
+var SUPPORTEMAIL = "support@nooch.com";
 var isLrgScrn = $(window).width() > 1000 ? true : false;
 
 $(document).ready(function () {
 
     console.log("errorFromCodeBehind is: " + errorFromCodeBehind);
 
-    if (ISRS == "true")
-    {
-        if (isLrgScrn)
-            $('.landingHeaderLogo img').css('width', '170px');
-
-        document.title = "Reject Payment | Rent Scene Payments";
-        changeFavicon('../Assets/favicon2.ico')
-    }
-
     if (areThereErrors() == false)
     {
         if (checkIfStillPending() == false)
-        {
             console.log("Transaction no longer pending!");
-        }
+
         //$('#createAccountPrompt').hide();
 
         if (transType == "Invite")
@@ -37,15 +26,11 @@ $(document).ready(function () {
         }
     }
     else
-    {
         console.log("20. There was an error! :-(");
-    }
 
     // Format the Memo if present
     if ($("#transMemo").text().length > 0)
-    {
         $("#transMemo").prepend("<i class='fa fa-fw fa-comment fa-flip-horizontal'>&nbsp;</i><em>&quot;</em>").append("<em>&quot;</em>");
-    }
 });
 
 function areThereErrors() {
@@ -124,17 +109,13 @@ function checkIfStillPending() {
             html: true
         }, function (isConfirm) {
             if (!isConfirm)
-            {
                 window.open("mailto:" + SUPPORTEMAIL);
-            }
         });
 
         return false;
     }
     else // The transaction IS still pending
-    {
         return true;
-    }
 }
 
 
@@ -185,11 +166,10 @@ function rejectBtnClicked() {
                 $("#clickToReject").fadeOut('fast');
 
                 var firstName = $('#nameLabel').text().trim().split(" ");
-                var textAddon = ISRS == "true" ? "" : "<br/><br/>Hope " + firstName[0] + " won't mind!";
 
                 swal({
                     title: "Payment Rejected",
-                    text: "You just rejected that payment request successfully." + textAddon,
+                    text: "You just rejected that payment request successfully.<br/><br/>Hope " + firstName[0] + " won't mind!",
                     type: "success",
                     showCancelButton: false,
                     confirmButtonColor: "#3fabe1",
@@ -279,9 +259,7 @@ function showErrorAlert(errorNum) {
         html: true
     }, function (isConfirm) {
         if (!isConfirm)
-        {
             window.open("mailto:" + SUPPORTEMAIL);
-        }
     });
 }
 

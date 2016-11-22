@@ -104,13 +104,7 @@
     <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
         <div class="clearfix">
             <div class="m-l-15">
-                @if (onLoad.from == "rentscene")
-                {
-                    <a class="pull-left" href="https://www.rentscene.com/" style="margin: 12px auto 12px !important;">
-                        <img src="https://noochme.com/noochweb/Assets/Images/rentscene.png" class="center-block" alt="Rent Scene Logo" />
-                    </a>
-                }
-                else if (onLoad.from == "habitat")
+                @if (onLoad.from == "habitat")
                 {
                     <a class="pull-left" href="https://tryhabitat.com/" style="margin: 12px auto 12px !important;">
                         <img src="https://noochme.com/noochweb/Assets/Images/habitat-logo.png" class="center-block" alt="AppJaxx Logo" />
@@ -147,10 +141,6 @@
     <div id="makePaymentContainer">
 
         <div id="idVerWiz" class="">
-
-            @*<div id="pinBtnWrap" class="animated bounceIn @onLoad.classForPinButton">
-                    <button type="button" class="btn btn-primary center-block" onclick="showPinPrompt()">Enter PIN</button>
-                </div>*@
 
             <form id="paymentForm" role="form" class="animated form-horizontal @onLoad.classForForm">
 
@@ -227,106 +217,69 @@
                                 <i class="fa fa-question-circle-o m-l-5"></i>
                             </span>
                         }
-                    </label>
+                        </label>
 
-                    <div class="col-sm-9 inputContainer" style="margin-top: 3px">
-                        <div class="btn-group btn-group-justified" data-toggle="buttons">
+                        <div class="col-sm-9 inputContainer" style="margin-top: 3px">
+                            <div class="btn-group btn-group-justified" data-toggle="buttons">
 
-                            @if (onLoad.from == "rentscene")
-                            {
-                                <label class="btn btn-default active">
-                                    <i class="fa fa-user m-r-5"></i>
-                                    <input type="radio" name="userType" id="renter" value="client" autocomplete="off" checked="checked">Renter
+                                @if (onLoad.from == "habitat")
+                                {
+                                    <label class="btn btn-default active">
+                                        <i class="fa fa-user m-r-5"></i>
+                                        <input type="radio" name="userType" id="runner" value="vendor" autocomplete="off" checked="checked">Runner
+                                    </label>
+                                }
+                                else if (onLoad.from == "appjaxx")
+                                {
+                                    <label class="btn btn-default active">
+                                        <i class="fa fa-user m-r-5"></i>
+                                        <input type="radio" name="userType" id="renter" value="client" autocomplete="off" checked="checked">Client
+                                    </label>
+                                }
+                                <label class="btn btn-default disabled" data-toggle="tooltip" title="Vendors can only RECEIVE money.">
+                                    <i class="fa fa-briefcase m-r-5"></i>
+                                    <input type="radio" name="userType" id="vendor" value="vendor" autocomplete="off" disabled>Vendor
                                 </label>
-
-                                <label class="btn btn-default">
-                                    <i class="fa fa-building m-r-5"></i>
-                                    <input type="radio" name="userType" id="landlord" value="landlord" autocomplete="off">Landlord
-                                </label>
-                            }
-                            else if (onLoad.from == "habitat")
-                            {
-                                <label class="btn btn-default active">
-                                    <i class="fa fa-user m-r-5"></i>
-                                    <input type="radio" name="userType" id="runner" value="vendor" autocomplete="off" checked="checked">Runner
-                                </label>
-                            }
-                            else if (onLoad.from == "appjaxx")
-                            {
-                                <label class="btn btn-default active">
-                                    <i class="fa fa-user m-r-5"></i>
-                                    <input type="radio" name="userType" id="renter" value="client" autocomplete="off" checked="checked">Client
-                                </label>
-                            }
-                            <label class="btn btn-default disabled" data-toggle="tooltip" title="Vendors can only RECEIVE money.">
-                                <i class="fa fa-briefcase m-r-5"></i>
-                                <input type="radio" name="userType" id="vendor" value="vendor" autocomplete="off" disabled>Vendor
-                            </label>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="form-group m-t-30">
-                    <div class="col-sm-offset-3 col-sm-6">
-                        <button id="submitPayment" type="submit" class="btn btn-lg btn-primary btn-block">
-                            Submit
-                            <i class="fa fa-caret-right m-l-10 f-17"></i>
-                        </button>
+                    <div class="form-group m-t-30">
+                        <div class="col-sm-offset-3 col-sm-6">
+                            <button id="submitPayment" type="submit" class="btn btn-lg btn-primary btn-block">
+                                Submit
+                                <i class="fa fa-caret-right m-l-10 f-17"></i>
+                            </button>
+                        </div>
                     </div>
-                </div>
 
-            </form>
+                </form>
+
+            </div>
 
         </div>
 
-    </div>
+        <div class="errorMessage hidden"></div>
 
+        <script src="//code.jquery.com/jquery-1.12.4.min.js"></script>
+        <script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
 
-    @*<!-- CLIFF (12/17/15): THIS IS JUST UNRELATED TEST CODE FOR THE RENT SCENE WEBSITE - SUMO ME SCROLL BOX... DELETE EVENTUALLY -->
-        <!--<div class="hidden" style="border-top: 10px solid #49a7f5; font-family: 'Montserrat', Helvetica, sans-serif !important; padding: 10px 22px 15px;">
-            <img src="https://noochme.com/noochweb/Assets/Images/rentscene.png" style="margin: 15px auto; display: block; max-width: 70%;" />
+        <script src="../js/jquery.blockUI.min.js"></script>
+        <script src="../js/input-mask.min.js"></script>
+        <script src="../js/jquery.autocomplete.min.js"></script>
+        <script type="text/javascript">
+            var ipusr;
+        </script>
+        <script type="text/javascript" src="https://www.l2.io/ip.js?var=ipusr"></script>
+        <script src="../js/sweetalert.min.js"></script>
+        <script src="../js/app/makePayment.js"></script>
 
-            <h3 class="text-center m-b-20" style="font-family: 'Montserrat', Open Sans, Helvetica, sans-serif;">Rent Scene New Listing Alerts</h3>
-
-            <div class="p-15 m-b-15" style="background: rgba(114,191,40,1); color: #fff; border-radius: 5px; text-shadow: 0 1px 0px rgba(0,0,0,.3); font-weight: 300;">
-                <p class="m-0 text-center" style="font-size: 16px; line-height: 1.5; /* font-weight: 500; */">
-                    Signup today and be the first to get notified when new apartments become available that fit your criteria.
-                </p>
-            </div>
-
-            <form>
-                <div class="form-group">
-                    <input type="text" class="form-control" placeholder="Enter your email here..." style="text-align: center; height: 50px; font-size: 18px; border-radius: 5px;" />
-                </div>
-
-                <a class="" style="width: 100%; padding: 16px 10px; background: #49a7f5; color: #fff; display: block; text-align: center; border-radius: 5px; font-size: 18px; text-shadow: 0 0px 20px rgba(19,44,64,.5); font-weight: 100;">
-                    Submit
-                    <i class="m-l-10 fa fa-angle-right" style="font-family: 'FontAwesome'; font-style: normal;"></i>
-                </a>
-            </form>
-        </div>-->*@
-
-    <div class="errorMessage hidden"></div>
-
-    <script src="//code.jquery.com/jquery-1.12.4.min.js"></script>
-    <script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
-
-    <script src="../js/jquery.blockUI.min.js"></script>
-    <script src="../js/input-mask.min.js"></script>
-    <script src="../js/jquery.autocomplete.min.js"></script>
-    <script type="text/javascript">
-        var ipusr;
-    </script>
-    <script type="text/javascript" src="https://www.l2.io/ip.js?var=ipusr"></script>
-    <script src="../js/sweetalert.min.js"></script>
-    <script src="../js/app/makePayment.js"></script>
-
-    <script type="text/javascript">
-        var URLs = {
-            submitPayment: '@Url.Action("submitPayment", "Nooch")',
-            submitRequestToExistingUser: '@Url.Action("submitRequestToExistingUser", "Nooch")',
-        };
-    </script>
-</body>
+        <script type="text/javascript">
+            var URLs = {
+                submitPayment: '@Url.Action("submitPayment", "Nooch")',
+                submitRequestToExistingUser: '@Url.Action("submitRequestToExistingUser", "Nooch")',
+            };
+        </script>
+    </body>
 </html>

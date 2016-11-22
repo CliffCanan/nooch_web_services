@@ -1,6 +1,4 @@
-﻿
-
-$(document).ready(function () {
+﻿$(document).ready(function () {
     $(document).ajaxStart($.blockUI).ajaxStop($.unblockUI);
 
     if ($('#invalidUser').val() == "true")
@@ -53,9 +51,7 @@ $(document).ready(function () {
                         });
                     }
                     else
-                    {
                         $('#resetPasswordDiv').css('display', 'block');
-                    }
                 },
                 Error: function (x, e) {
                     console.log("RESET PASS ERROR. x:")
@@ -123,4 +119,3 @@ $(document).ready(function () {
         return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
     }
 });
-

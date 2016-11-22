@@ -11,7 +11,6 @@ namespace Nooch.Common.Entities.MobileAppOutputEnities
         public DateTime? DateCreated { get; set; }
         public bool IsVerifiedPhone { get; set; }
         public bool IsSSNAdded { get; set; }
-        public bool isRs { get; set; }
         public bool? IsSynapseBankAdded { get; set; }
         public bool? IsVerifiedWithSynapse { get; set; }
         public decimal? LastLocationLat { get; set; }
@@ -45,7 +44,7 @@ namespace Nooch.Common.Entities.MobileAppOutputEnities
         public string note { get; set; }
     }
 
-    public class requestFromRentScene
+    public class requestFromBrowser
     {
         public bool success { get; set; }
         public string msg { get; set; }

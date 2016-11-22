@@ -260,11 +260,7 @@ namespace Nooch.Web.Controllers
 
                 Member memberObj = CommonHelper.GetMemberDetails(MemberId);
 
-                if (memberObj != null)
-                {
-                    res.success = true;
-                    res.isRs = memberObj.isRentScene ?? false;
-                }
+                if (memberObj != null) res.success = true;
                 else res.msg = "Member not found";
             }
             else res.msg = "Missing MemberID param";
@@ -671,15 +667,7 @@ namespace Nooch.Web.Controllers
                 }
                 else
                 {
-                    string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
                     res = CommonHelper.SetSynapseDefaultBank(input.MemberId, input.BankName, input.BankOId);
-
-                    // CC (6/22/16): Why bother to make a Get Request when we can just go straight to Common Helper?
-                    //string serviceMethod = "SetSynapseDefaultBank?MemberId=" + input.MemberId + "&BankName=" + input.BankName + "&BankId=" + input.BankOId;
-                    //SynapseBankSetDefaultResult bnkloginresult = ResponseConverter<SynapseBankSetDefaultResult>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
-
-                    //res.Is_success = bnkloginresult.Is_success;
-                    //res.Message = bnkloginresult.Message;
                 }
             }
             catch (Exception we)
@@ -763,16 +751,14 @@ namespace Nooch.Web.Controllers
                 rdm.senderName1 = trans.Name;
                 rdm.showPaymentInfo = true;
 
-                if (rdm.senderName1 == "Marvis Burns") rdm.senderName1 = "Rent Scene";
+                //if (rdm.senderName1 == "Marvis Burns") rdm.senderName1 = "Rent Scene";
 
                 string s = trans.Amount.ToString("n2");
                 string[] s1 = s.Split('.');
                 rdm.transAmountd = s1[0].ToString();
                 rdm.transAmountc = s1.Length == 2 ? s1[1].ToString() : "00";
 
-                if (trans.isRentScene || trans.MemberId == "852987e8-d5fe-47e7-a00b-58a80dd15b49")
-                    rdm.company = "rentscene";
-                else if (trans.MemberId == "45357cf0-e651-40e7-b825-e1ff48bf44d2")
+                if (trans.MemberId == "45357cf0-e651-40e7-b825-e1ff48bf44d2")
                     rdm.company = "habitat";
                 else
                     rdm.company = "nooch";
@@ -818,18 +804,16 @@ namespace Nooch.Web.Controllers
         /// <param name="ip"></param>
         /// <param name="cip"></param>
         /// <param name="fbid"></param>
-        /// <param name="isRentScene"></param>
         /// <param name="isIdImage"></param>
         /// <param name="idImagedata"></param>
         /// <returns></returns>
         public ActionResult RegisterUserWithSynpForDepositMoney(string transId, string memberId, string userEm, string userPh, string userName,
                                                                 string userPw, string ssn, string dob, string address, string zip, string fngprnt,
-                                                                string ip, string cip, string fbid, bool isRentScene, string isIdImage = "0", string idImagedata = "")
+                                                                string ip, string cip, string fbid, string isIdImage = "0", string idImagedata = "")
         {
             Logger.Info("DepositMoney Page -> RegisterUserWithSynpForDepositMoney Fired - Email: [" + userEm +
                         "], TransID: [" + transId + "], memberId: [" + memberId +
-                        "], CIP: [" + cip + "], FBID: [" + fbid +
-                        "], isRentScene: [" + isRentScene + "]");
+                        "], CIP: [" + cip + "], FBID: [" + fbid + "]");
 
             RegisterUserSynapseResultClassExt res = new RegisterUserSynapseResultClassExt();
             res.success = "false";
@@ -864,11 +848,10 @@ namespace Nooch.Web.Controllers
                 inputClass.ssn = ssn;
                 inputClass.transId = transId;
                 inputClass.zip = zip;
-                inputClass.isRentScene = isRentScene;
                 inputClass.cip = cip;
 
                 var scriptSerializer = new JavaScriptSerializer();
-                string json = scriptSerializer.Serialize(inputClass);
+                var json = scriptSerializer.Serialize(inputClass);
 
                 Logger.Info("DepositMoney Page -> RegisterUserWithSynpForDepositMoney - Full Query String: [ " + String.Concat(serviceUrl, serviceMethod) + " ]");
 
@@ -925,8 +908,8 @@ namespace Nooch.Web.Controllers
                     {
                         res.errorMsg = "ok";
 
-                        string memberId = allQueryStrings[0];
-                        string transId = allQueryStrings[1];
+                        var memberId = allQueryStrings[0];
+                        var transId = allQueryStrings[1];
 
                         // Get Transaction Details
                         res = GetTransDetailsForDepositMoneyComplete(transId, res);
@@ -985,9 +968,7 @@ namespace Nooch.Web.Controllers
                 // Check If Still Pending
                 res.IsTransStillPending = trans.TransactionStatus == "Pending" ? true : false;
 
-                if (trans.isRentScene || trans.MemberId == "852987e8-d5fe-47e7-a00b-58a80dd15b49")
-                    res.company = "rentscene";
-                else if (trans.MemberId == "45357cf0-e651-40e7-b825-e1ff48bf44d2")
+                if (trans.MemberId == "45357cf0-e651-40e7-b825-e1ff48bf44d2")
                     res.company = "habitat";
                 else
                     res.company = "nooch";
@@ -1217,17 +1198,13 @@ namespace Nooch.Web.Controllers
                                      transInfo.RecepientName :
                                      transInfo.Name;
 
-                if (res.senderName1 == "Marvis Burns") res.senderName1 = "Rent Scene";
-
                 string s = transInfo.Amount.ToString("n2");
                 string[] s1 = s.Split('.');
                 res.transAmountd = s1[0].ToString();
                 res.transAmountc = s1.Length == 2 ? s1[1].ToString() : "00";
 
 
-                if (transInfo.isRentScene || transInfo.MemberId == "852987e8-d5fe-47e7-a00b-58a80dd15b49")
-                    res.company = "rentscene";
-                else if (transInfo.MemberId == "45357cf0-e651-40e7-b825-e1ff48bf44d2")
+                if (transInfo.MemberId == "45357cf0-e651-40e7-b825-e1ff48bf44d2")
                     res.company = "habitat";
                 else
                     res.company = "nooch";
@@ -1267,7 +1244,7 @@ namespace Nooch.Web.Controllers
 
         public ActionResult RegisterUserWithSynpForPayRequest(string transId, string memberId, string userEm, string userPh, string userName,
                                                               string userPw, string ssn, string dob, string address, string zip, string fngprnt,
-                                                              string ip, string cip, string fbid, bool isRentScene, string isIdImage = "0", string idImagedata = "")
+                                                              string ip, string cip, string fbid, string isIdImage = "0", string idImagedata = "")
         {
             Logger.Info("PayRequest Page -> RegisterUserWithSynpForPayRequest Fired - Email: [" + userEm +
                         "], TransID: [" + transId + "], MemberID: [" + memberId + "]");
@@ -1286,7 +1263,7 @@ namespace Nooch.Web.Controllers
                             ", memberId (If existing user): [" + memberId + "], userEm: [" + userEm + "], userPh: [" + userPh +
                             "], userPw: [" + userPw + "], ssn: [" + ssn + "], dob: [" + dob + "], address: [" + address +
                             "], zip: [" + zip + "], Has ID Img: [" + isIdImage + "], CIP: [" + cip + "], Fngprnt: [" + fngprnt +
-                            "] FBID: [" + fbid + "], isRentScene: [" + isRentScene + "]");
+                            "] FBID: [" + fbid + "]");
 
 
                 #region Initial Checks
@@ -1306,7 +1283,7 @@ namespace Nooch.Web.Controllers
 
                 #endregion Initial Checks
 
-                string serviceMethod = "";
+                var serviceMethod = "";
                 var scriptSerializer = new JavaScriptSerializer();
 
                 RegisterUserWithSynapseV3_Input inputClass = new RegisterUserWithSynapseV3_Input();
@@ -1325,7 +1302,6 @@ namespace Nooch.Web.Controllers
                 inputClass.zip = zip;
                 inputClass.cip = !String.IsNullOrEmpty(cip) ? cip : "renter";
                 inputClass.fbid = fbid != "not connected" ? fbid : null;
-                inputClass.isRentScene = isRentScene != null ? isRentScene : false;
 
                 if (!String.IsNullOrEmpty(memberId) && memberId.Length > 30)
                 {
@@ -1455,14 +1431,10 @@ namespace Nooch.Web.Controllers
                 rpc.transAmountd = transInfo.Amount.ToString("n2");
                 rpc.transMemo = transInfo.Memo;
 
-                if (transInfo.isRentScene || transInfo.MemberId == "852987e8-d5fe-47e7-a00b-58a80dd15b49")
-                    rpc.company = "rentscene";
-                else if (transInfo.MemberId == "45357cf0-e651-40e7-b825-e1ff48bf44d2")
+                if (transInfo.MemberId == "45357cf0-e651-40e7-b825-e1ff48bf44d2")
                     rpc.company = "habitat";
                 else
                     rpc.company = "nooch";
-
-                if (rpc.senderName1 == "Marvis Burns") rpc.senderName1 = "Rent Scene";
 
                 // Check If Still Pending
                 rpc.IsTransStillPending = transInfo.TransactionStatus == "Pending" ? true : false;
@@ -1565,7 +1537,7 @@ namespace Nooch.Web.Controllers
                     // No MemberID in URL, so must be creating a brand NEW user
                     rca.errorId = "0";
                     rca.isNewUser = true;
-                    rca.company = by;
+                    rca.company = !String.IsNullOrEmpty(by) ? by : "nooch";
 
                     if (by == "habitat")
                         rca.type = "vendor";
@@ -1663,7 +1635,7 @@ namespace Nooch.Web.Controllers
                     rca.phone = member.ContactNumber;
                     rca.ssn = member.ssnLast4;
                     rca.fngprnt = member.fngrprnt;
-                    rca.company = member.isRs ? "rentscene" : "nooch";
+                    rca.company = "nooch";
                     rca.type = member.cip_type;
 
                     if (member.companyName != null && member.companyName.Length > 3)
@@ -1732,13 +1704,12 @@ namespace Nooch.Web.Controllers
                     pw = userData.pw,
                     memberId = userData.memId,
                     transId = userData.transId,
-                    isRentScene = userData.company == "true" ? true : false,
                     company = userData.company,
                     cip = !String.IsNullOrEmpty(userData.cip) ? userData.cip : "renter"
                 };
 
                 var scriptSerializer = new JavaScriptSerializer();
-                string json = scriptSerializer.Serialize(inputClass);
+                var json = scriptSerializer.Serialize(inputClass);
 
                 Logger.Info("Create Account Page -> saveMemberInfo CHECKPOINT #1 - New User?: [" + newUser + "], URL To Use: [" + urlToUse + "]");
 
@@ -1853,7 +1824,6 @@ namespace Nooch.Web.Controllers
                         res.transMemo = TransDetails.transMemo;
                         res.senderImage = TransDetails.senderImage;
                         res.nameLabel = TransDetails.nameLabel;
-                        res.isRentScene = TransDetails.isRentScene.ToString().ToLower();
                     }
                     else
                     {
@@ -1945,23 +1915,8 @@ namespace Nooch.Web.Controllers
             rcr.transMemo = transaction.Memo.Trim();
             rcr.TransType = transaction.TransactionType;
             rcr.TransId = transaction.TransactionId;
-            rcr.isRentScene = transaction.isRentScene;
-
-            //if (transaction.IsPhoneInvitation && transaction.PhoneNumberInvited.Length > 0)
-            //{
-            //    rcr.senderImage = "https://www.noochme.com/noochweb/Assets/Images/" + "userpic-default.png";
-            //    rcr.nameLabel = transaction.PhoneNumberInvited;
-            //}
-            //else if (!String.IsNullOrEmpty(transaction.InvitationSentTo))
-            //{
-            //    rcr.senderImage = "https://www.noochme.com/noochweb/Assets/Images/" + "userpic-default.png";
-            //    rcr.nameLabel = transaction.InvitationSentTo;
-            //}
-            //else
-            //{
             rcr.senderImage = transaction.SenderPhoto;
             rcr.nameLabel = transaction.Name;
-            //}
 
             return rcr;
         }
@@ -2211,13 +2166,11 @@ namespace Nooch.Web.Controllers
                 {
                     Logger.Info("Make Payment Page -> Loaded for: [" + from.ToUpper() + "]");
 
-                    if (from.IndexOf("rentscene") > -1)
-                        res.from = "rentscene";
-                    else if (from == "habitat")
+                    if (from == "habitat")
                     {
                         res.from = "habitat";
 
-                        // Require PIN for Habitat (for now)
+                        // Require PIN for Habitat
                         res.classForForm = "hidden";
                         res.classForPinButton = "";
                     }
@@ -2265,7 +2218,7 @@ namespace Nooch.Web.Controllers
                         "], Amount: [" + amount + "], memo: [" + memo +
                         "], PIN: [" + pin + "], IP: [" + ip + "], CIP: [" + cip + "]");
 
-            requestFromRentScene res = new requestFromRentScene();
+            requestFromBrowser res = new requestFromBrowser();
             res.success = false;
             res.msg = "Initial - code behind";
 
@@ -2312,9 +2265,7 @@ namespace Nooch.Web.Controllers
 
                 var userName = "";
 
-                if (from.ToLower() == "rentscene")
-                    userName = "payments@rentscene.com";
-                else if (from.ToLower() == "habitat")
+                if (from.ToLower() == "habitat")
                     userName = "andrew@tryhabitat.com";
                 else if (from.ToLower() == "nooch")
                     userName = "team@nooch.com";
@@ -2333,15 +2284,15 @@ namespace Nooch.Web.Controllers
 
                 #endregion Lookup PIN
 
-                string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-                string serviceMethod;
-                string json = "";
+                var serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+                var serviceMethod = "";
+                var json = "";
 
-                requestFromRentScene response = new requestFromRentScene();
+                requestFromBrowser response = new requestFromBrowser();
 
                 if (isRequest)
                 {
-                    serviceMethod = "RequestMoneyForRentScene?from=" + from +
+                    serviceMethod = "RequestMoneyFromBrowser?from=" + from +
                                                              "&name=" + name +
                                                              "&email=" + email + "&amount=" + amount +
                                                              "&memo=" + memo + "&pin=" + pin +
@@ -2349,12 +2300,12 @@ namespace Nooch.Web.Controllers
                                                              "&cip=" + cip +
                                                              "&isRequest=" + isRequest;
 
-                    response = ResponseConverter<requestFromRentScene>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+                    response = ResponseConverter<requestFromBrowser>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
                 }
                 else
                 {
-                    string memIdToUse = "";
-                    string accessToken = "";
+                    var memIdToUse = "";
+                    var accessToken = "";
 
                     Member member = CommonHelper.GetMemberDetailsByUserName(userName);
 
@@ -2370,7 +2321,7 @@ namespace Nooch.Web.Controllers
                         accessToken = member.AccessToken;
                     else
                     {
-                        string newToken = GenerateAccessToken();
+                        var newToken = GenerateAccessToken();
                         CommonHelper.UpdateAccessToken(userName, newToken);
                         accessToken = newToken;
                     }
@@ -2395,7 +2346,7 @@ namespace Nooch.Web.Controllers
                     response.success = sr.Result.Contains("successfully") ? true : false;
                 }
 
-                string urlToUse = String.Concat(serviceUrl, serviceMethod);
+                var urlToUse = String.Concat(serviceUrl, serviceMethod);
 
                 Logger.Info("Make Payment Page -> submitPayment - URL To Query: [" + urlToUse + "]");
 
@@ -2411,7 +2362,7 @@ namespace Nooch.Web.Controllers
                     {
                         if (response.isEmailAlreadyReg == true)
                             // CLIFF (5/15/16): shouldn't ever get here since I added the block above to check if the email
-                            //                  is already registered (so it shouldn't even call /RequestMoneyForRentScene).
+                            //                  is already registered (so it shouldn't even call /RequestMoneyFromBrowser).
                             Logger.Info("Make Payment Page -> submitPayment Success - Email address already registered to an Existing User - " +
                                         "Name: [" + response.name + "], Email: [" + email + "], Status: [" + response.memberStatus + "], MemberID: [" + response.memberId + "]");
                         else
@@ -2419,7 +2370,7 @@ namespace Nooch.Web.Controllers
                                         "Recipient: [" + name + "], Email: [" + email + "], Amount: [" + amount + "], Memo: [" + memo + "]");
                     }
                     else
-                        Logger.Error("Make Payment Page -> submitPayment FAILED - Server response for RequestMoneyForRentScene() was NOT successful - " +
+                        Logger.Error("Make Payment Page -> submitPayment FAILED - Server response for RequestMoneyFromBrowser() was NOT successful - " +
                                      "Recipient: [" + name + "], Email: [" + email + "], Amount: [" + amount + "], Memo: [" + memo + "]");
 
                     #endregion Logging For Debugging
@@ -2463,21 +2414,19 @@ namespace Nooch.Web.Controllers
                         "], PIN: [" + pin + "], IP: [" + ip + "]" +
                         "], MemberID: [" + memberId + "], NameFromServer: [" + nameFromServer + "]");
 
-            requestFromRentScene res = new requestFromRentScene();
+            requestFromBrowser res = new requestFromBrowser();
             res.success = false;
             res.msg = "Initial - code behind";
 
             #region Lookup PIN
 
             var json = "";
-            requestFromRentScene response = new requestFromRentScene();
+            requestFromBrowser response = new requestFromBrowser();
             var scriptSerializer = new JavaScriptSerializer();
 
             pin = (String.IsNullOrEmpty(pin) || pin.Length != 4) ? "0000" : pin;
 
-            if (from == "rentscene")
-                pin = CommonHelper.GetMemberPinByUserName("payments@rentscene.com");
-            else if (from == "habitat")
+            if (from == "habitat")
                 pin = CommonHelper.GetMemberPinByUserName("andrew@tryhabitat.com");
             else if (from == "nooch")
                 pin = CommonHelper.GetMemberPinByUserName("team@nooch.com");
@@ -2507,20 +2456,14 @@ namespace Nooch.Web.Controllers
                                     "&memo=" + memo + "&pin=" + pin +
                                     "&ip=" + ip + "&isRequest=" + isRequest +
                                     "&memberId=" + memberId + "&nameFromServer=" + nameFromServer;
-                    response = ResponseConverter<requestFromRentScene>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
+                    response = ResponseConverter<requestFromBrowser>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
                 }
                 else
                 {
                     var memIdToUse = "";
                     var accessToken = "";
 
-                    if (from.ToLower() == "rentscene")
-                    {
-                        Member member = CommonHelper.GetMemberDetailsByUserName("payments@rentscene.com");
-                        memIdToUse = member.MemberId.ToString();
-                        accessToken = member.AccessToken.ToString();
-                    }
-                    else if (from.ToLower() == "habitat")
+                    if (from.ToLower() == "habitat")
                     {
                         Member member = CommonHelper.GetMemberDetailsByUserName("andrew@tryhabitat.com");
                         memIdToUse = member.MemberId.ToString();
@@ -2650,9 +2593,7 @@ namespace Nooch.Web.Controllers
 
                 if (!String.IsNullOrEmpty(user))
                 {
-                    if (user.ToLower() == "rentscene")
-                        memid = "852987e8-d5fe-47e7-a00b-58a80dd15b49";
-                    else if (user == "habitat")
+                    if (user == "habitat")
                         memid = "45357cf0-e651-40e7-b825-e1ff48bf44d2";
                     else if (user.ToLower() == "appjaxx" || user.ToLower() == "josh")
                         memid = "8b4b4983-f022-4289-ba6e-48d5affb5484";
@@ -2883,8 +2824,8 @@ namespace Nooch.Web.Controllers
                 if (!String.IsNullOrEmpty(user))
                 {
                     res.msg = user.ToLower();
-                    if (res.msg == "rentscene") memId = "852987e8-d5fe-47e7-a00b-58a80dd15b49";
-                    else if (res.msg == "habitat") memId = "45357cf0-e651-40e7-b825-e1ff48bf44d2";
+                    //if (res.msg == "rentscene") memId = "852987e8-d5fe-47e7-a00b-58a80dd15b49";
+                    if (res.msg == "habitat") memId = "45357cf0-e651-40e7-b825-e1ff48bf44d2";
                     else if (res.msg == "appjaxx") memId = "8b4b4983-f022-4289-ba6e-48d5affb5484";
                     else if (res.msg == "cliff") memId = "b3a6cf7b-561f-4105-99e4-406a215ccf60";
                 }
@@ -2953,10 +2894,6 @@ namespace Nooch.Web.Controllers
 
                                     #region Set Correct Sender/Recipient Info
 
-                                    //if (obj.TransactionType == "Transfer" || obj.TransactionType == "Disputed" ||
-                                    //    obj.TransactionType == "Reward" || obj.TransactionType == "Invite" ||
-                                    //    obj.TransactionType == "Rent" || obj.TransactionType == "Request")
-                                    //{
                                     if (String.IsNullOrEmpty(trans.InvitationSentTo) && trans.IsPhoneInvitation != true)
                                     {
                                         // Payment Request or Transfer to an EXISTING Nooch user... straight forward.
@@ -3031,7 +2968,6 @@ namespace Nooch.Web.Controllers
                                             obj.RecepientNoochId = null;
                                         }
                                     }
-                                    //}
 
                                     #endregion Set Correct Sender/Recipient Info
 
@@ -3070,12 +3006,11 @@ namespace Nooch.Web.Controllers
                     var memberObj = CommonHelper.GetMemberDetails(memId);
                     if (memberObj != null && !String.IsNullOrEmpty(memberObj.FirstName))
                     {
-                        res.usersName = user == "rentscene" ? "Rent Scene"
-                                                            : CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName));
+                        res.usersName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName));
                         res.usersPhoto = !String.IsNullOrEmpty(memberObj.Photo) ? memberObj.Photo
                                                                                 : "https://www.noochme.com/noochweb/Assets/Images/userpic-default.png";
 
-                        if (user != "rentscene" && !String.IsNullOrEmpty(memberObj.LastName))
+                        if (!String.IsNullOrEmpty(memberObj.LastName))
                             res.usersName += " " + CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.LastName));
 
                         res.usersEmail = CommonHelper.GetDecryptedData(memberObj.UserName);
@@ -3108,6 +3043,7 @@ namespace Nooch.Web.Controllers
 
             return Json(res);
         }
+
 
         [HttpPost]
         [ActionName("paymentReminder")]
@@ -3203,9 +3139,6 @@ namespace Nooch.Web.Controllers
 
                 else // Get Bank Info from server
                     pageData = GetBankDetailsForMicroDepositVerification(mid.Trim());
-
-                if (pageData.isRs == true)
-                    Logger.Info("MicroDepositsVerification -> Page Load - RENT SCENE USER Detected");
             }
             catch (Exception ex)
             {

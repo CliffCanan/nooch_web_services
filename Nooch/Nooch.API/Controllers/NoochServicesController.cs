@@ -1017,7 +1017,7 @@ namespace Nooch.API.Controllers
 
 
         /// <summary>
-        /// For sending a payment (send or request) on behalf of Rent Scene's Nooch account.
+        /// For sending a payment (send or request) from the browser (orig. made for Rent Scene).
         /// Created by Cliff on 12/17/15.
         /// </summary>
         /// <param name="requestInput"></param>
@@ -1025,16 +1025,16 @@ namespace Nooch.API.Controllers
         /// <param name="accessToken"></param>
         /// <returns></returns>
         [HttpGet]
-        [ActionName("RequestMoneyForRentScene")]
-        public requestFromRentScene RequestMoneyForRentScene(string from, string name, string email, string amount, string memo, string pin, string ip, string cip, bool isRequest)
+        [ActionName("RequestMoneyFromBrowser")]
+        public requestFromBrowser RequestMoneyFromBrowser(string from, string name, string email, string amount, string memo, string pin, string ip, string cip, bool isRequest)
         {
-            Logger.Info("Service Cntrlr - RequestMoneyForRentScene Initiated - From: [" + from +
+            Logger.Info("Service Cntrlr - RequestMoneyFromBrowser Fired - From: [" + from +
                         "], Name: [" + name + "], Email: [" + email +
                         "], amount: [" + amount + "], memo: [" + memo +
                         "], pin: [" + pin + "], ip: [" + ip +
                         "], CIP Tag: [" + cip + "], isRequest: [" + isRequest + "]");
 
-            requestFromRentScene res = new requestFromRentScene();
+            requestFromBrowser res = new requestFromBrowser();
             res.success = false;
             res.isEmailAlreadyReg = false;
             res.msg = "Service Layer - Initial";
@@ -1075,7 +1075,7 @@ namespace Nooch.API.Controllers
             }
             if (isMissingData)
             {
-                Logger.Error("Service Cntrlr -> RequestMoneyForRentScene FAILED - Missing required data - Msg: [" + res.msg + "]");
+                Logger.Error("Service Cntrlr -> RequestMoneyFromBrowser FAILED - Missing required data - Msg: [" + res.msg + "]");
                 return res;
             }
 
@@ -1088,13 +1088,7 @@ namespace Nooch.API.Controllers
             var addressToUse = "";
             var zipToUse = "";
 
-            if (from.ToLower() == "rentscene")
-            {
-                memIdToUse = CommonHelper.GetMemberIdByUserName("payments@rentscene.com");
-                addressToUse = "1500 JFK Blvd";
-                zipToUse = "19102";
-            }
-            else if (from.ToLower() == "habitat")
+            if (from.ToLower() == "habitat")
             {
                 memIdToUse = CommonHelper.GetMemberIdByUserName("andrew@tryhabitat.com");
                 addressToUse = "1856 N. Willington St.";
@@ -1115,7 +1109,7 @@ namespace Nooch.API.Controllers
 
             if (String.IsNullOrEmpty(memIdToUse))
             {
-                Logger.Error("Service Cntlr -> RequestMoneyForRentScene FAILED - unable to get MemberID based on given username - From: [" + from + "]");
+                Logger.Error("Service Cntlr -> RequestMoneyFromBrowser FAILED - unable to get MemberID based on given username - From: [" + from + "]");
                 res.msg = "Unable to get MemberID based on given username";
 
                 return res;
@@ -1157,13 +1151,11 @@ namespace Nooch.API.Controllers
                 res.note = requestId;
 
                 if (tdaRes.Result.IndexOf("made successfully") > -1)
-                {
                     res.success = true;
-                }
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Controller - RequestMoneyForRentScene FAILED - [Email: " + email + "]. Exception: [" + ex + "]");
+                Logger.Error("Service Controller - RequestMoneyFromBrowser FAILED - Email: [" + email + "], Exception: [" + ex + "]");
 
                 res.msg = ex.Message;
 
@@ -1187,15 +1179,15 @@ namespace Nooch.API.Controllers
         /// <returns></returns>
         [HttpGet]
         [ActionName("RequestMoneyToExistingUserForRentScene")]
-        public requestFromRentScene RequestMoneyToExistingUserForRentScene(string from, string name, string email, string amount, string memo, string pin, string ip, bool isRequest, string memberId, string nameFromServer)
+        public requestFromBrowser RequestMoneyToExistingUserForRentScene(string from, string name, string email, string amount, string memo, string pin, string ip, bool isRequest, string memberId, string nameFromServer)
         {
-            Logger.Info("Service Cntlr - RequestMoneyToExistingUserForRentScene Initiated - From: [" + from + ", Name: [" + name +
+            Logger.Info("Service Cntlr - RequestMoneyToExistingUserForRentScene Fired - From: [" + from + ", Name: [" + name +
                         "], Email: [" + email + "], Amount: [" + amount +
                         "], Memo: [" + memo + "], PIN: [" + pin +
                         "], IP: [" + ip + "], isRequest: [" + isRequest + "]" +
                         "], MemberID: [" + memberId + "], NameFromServer: [" + nameFromServer + "]");
 
-            requestFromRentScene res = new requestFromRentScene();
+            requestFromBrowser res = new requestFromBrowser();
             res.success = false;
             res.isEmailAlreadyReg = false;
             res.msg = "Service Layer - Initial";
@@ -1234,7 +1226,7 @@ namespace Nooch.API.Controllers
 
                 if (isMissingData)
                 {
-                    Logger.Error("Service Cntlr -> RequestMoneyForRentScene FAILED - Missing required data - Msg: [" + res.msg + "]");
+                    Logger.Error("Service Cntlr -> RequestMoneyToExistingUserForRentScene FAILED - Missing required data - Msg: [" + res.msg + "]");
                     return res;
                 }
 
@@ -1245,26 +1237,19 @@ namespace Nooch.API.Controllers
                 var zip = "";
                 var memIdOfRequester = "";
 
-                if (from == "appjaxx")
-                {
-                    address = "100 Fairhill Road";
-                    city = "Hatfield";
-                    zip = "19440";
-                    memIdOfRequester = "8b4b4983-f022-4289-ba6e-48d5affb5484";
-                }
-                else if (from == "rentscene")
-                {
-                    address = "1500 JFK Blvd";
-                    city = "Philadelphia";
-                    zip = "19102";
-                    memIdOfRequester = "852987e8-d5fe-47e7-a00b-58a80dd15b49";
-                }
-                else if (from == "habitat")
+                if (from == "habitat")
                 {
                     memIdOfRequester = CommonHelper.GetMemberIdByUserName("andrew@tryhabitat.com");
                     address = "1856 N. Willington St.";
                     city = "Philadelphia";
                     zip = "19121";
+                }
+                else if (from == "appjaxx")
+                {
+                    address = "100 Fairhill Road";
+                    city = "Hatfield";
+                    zip = "19440";
+                    memIdOfRequester = "8b4b4983-f022-4289-ba6e-48d5affb5484";
                 }
                 else
                 {
@@ -1309,7 +1294,7 @@ namespace Nooch.API.Controllers
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Cntlr - RequestMoneyToExistingUserForRentScene FAILED - [Email: " + email + "]. Exception: [" + ex + "]");
+                Logger.Error("Service Cntlr - RequestMoneyToExistingUserForRentScene FAILED - Email: [" + email + "], Exception: [" + ex + "]");
 
                 res.msg = ex.Message;
                 res.note = "Outer exception in Service Layer (RequestMoneyToExistingUserForRentScene)!";
@@ -2413,7 +2398,6 @@ namespace Nooch.API.Controllers
                     DateCreatedString = memberEntity.DateCreated == null ? "" : Convert.ToDateTime(memberEntity.DateCreated).ToString("MM/dd/yyyy"),
                     DeviceToken = memberEntity.DeviceToken,
                     fngrprnt = !String.IsNullOrEmpty(memberEntity.UDID1) ? memberEntity.UDID1 : null,
-                    isRs = memberEntity.isRentScene ?? false,
                     cip_type = memberEntity.cipTag
                 };
 
@@ -2469,19 +2453,17 @@ namespace Nooch.API.Controllers
                 trans.TransactionDate = Convert.ToDateTime(tr.TransactionDate).ToString("d MMM, yyyy");
                 trans.IsPhoneInvitation = tr.IsPhoneInvitation ?? false;
 
-                trans.isRentScene = (tr.Member.isRentScene == true ||
-                                     tr.Member1.isRentScene == true ||
-                                     tr.Member.MemberId.ToString() == "852987E8-D5FE-47E7-A00B-58A80DD15B49" ||
-                                     tr.Member1.MemberId.ToString() == "852987E8-D5FE-47E7-A00B-58A80DD15B49")
-                                     ? true : false;
-
                 if (tr.InvitationSentTo != null &&
                     tr.IsPhoneInvitation != true &&
                     String.IsNullOrEmpty(tr.PhoneNumberInvited)) // Request via EMAIL
+                {
                     trans.InvitationSentTo = CommonHelper.GetDecryptedData(tr.InvitationSentTo);
+                }
                 else if ((tr.IsPhoneInvitation == true || tr.InvitationSentTo == null) &&
-                          !String.IsNullOrEmpty(tr.PhoneNumberInvited)) // Request via PHONE
+                         !String.IsNullOrEmpty(tr.PhoneNumberInvited)) // Request via PHONE
+                {
                     trans.InvitationSentTo = CommonHelper.GetDecryptedData(tr.PhoneNumberInvited);
+                }
                 else
                     trans.InvitationSentTo = "";
 
@@ -2562,7 +2544,6 @@ namespace Nooch.API.Controllers
                 {
                     res.userFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName));
                     res.userLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.LastName));
-                    res.isRs = memberObj.isRentScene ?? false;
 
                     var synapseBankDetails = CommonHelper.GetSynapseBankDetails(memberId);
                     var memGuid = Utility.ConvertToGuid(memberId);
@@ -2760,7 +2741,6 @@ namespace Nooch.API.Controllers
                 trans.TransactionFee = tr.TransactionFee.Value;
                 trans.InvitationSentTo = (tr.InvitationSentTo != null) ? CommonHelper.GetDecryptedData(tr.InvitationSentTo) : "";
                 trans.IsPhoneInvitation = tr.IsPhoneInvitation != null && Convert.ToBoolean(tr.IsPhoneInvitation);
-                trans.isRentScene = (tr.Member.isRentScene == true || tr.Member1.isRentScene == true) ? true : false;
 
                 if (tr.IsPhoneInvitation == true)
                 {
@@ -3100,7 +3080,7 @@ namespace Nooch.API.Controllers
                 Logger.Info("Service Cntlr -> RegisterExistingUserWithSynapseV3 Fired - MemberID: [" + input.memberId +
                             "], Name: [" + input.fullname + "], Email: [" + input.email +
                             "], Is ID Img Sent: [" + input.isIdImageAdded + "], CIP: [" + input.cip +
-                            "], FBID: [" + input.fbid + "], isRentScene: [" + input.isRentScene + "]");
+                            "], FBID: [" + input.fbid + "]");
 
                 MembersDataAccess mda = new MembersDataAccess();
                 RegisterUserSynapseResultClassExt nc = new RegisterUserSynapseResultClassExt();
@@ -3108,7 +3088,7 @@ namespace Nooch.API.Controllers
                 synapseCreateUserV3Result_int res = mda.RegisterExistingUserWithSynapseV3(input.transId, input.memberId, input.email,
                                                                                           input.phone, input.fullname, input.pw, input.ssn,
                                                                                           input.dob, input.address, input.zip, input.fngprnt,
-                                                                                          input.ip, input.cip, input.fbid, input.isRentScene,
+                                                                                          input.ip, input.cip, input.fbid,
                                                                                           input.isIdImageAdded, input.idImageData);
 
                 nc.success = res.success == true ? "true" : "false";
@@ -3145,24 +3125,19 @@ namespace Nooch.API.Controllers
             try
             {
                 if (String.IsNullOrEmpty(input.company))
-                {
-                    if (input.isRentScene)
-                        input.company = "rentscene";
-                    else
-                        input.company = "nooch";
-                }
+                    input.company = "nooch";
 
                 Logger.Info("Service Cntrlr -> RegisterNonNoochUserWithSynapse Fired - MemberID: [" + input.memberId +
                             "], Name: [" + input.fullname + "], Email: [" + input.email +
                             "], Is ID Img Sent: [" + input.isIdImageAdded + "], CIP: [" + input.cip +
-                            "], FBID: [" + input.fbid + "], Company: [" + input.company + "], isRentScene: [" + input.isRentScene + "]");
+                            "], FBID: [" + input.fbid + "], Company: [" + input.company + "]");
 
                 MembersDataAccess mda = new MembersDataAccess();
 
                 synapseCreateUserV3Result_int mdaRes = mda.RegisterNonNoochUserWithSynapseV3(input.transId, input.email, input.phone, input.fullname,
                                                                                              input.pw, input.ssn, input.dob, input.address,
                                                                                              input.zip, input.fngprnt, input.ip, input.cip, input.fbid,
-                                                                                             input.isRentScene, input.company, input.isIdImageAdded, input.idImageData);
+                                                                                             input.company, input.isIdImageAdded, input.idImageData);
 
                 res.success = mdaRes.success.ToString().ToLower();
                 res.reason = mdaRes.reason;
@@ -3170,14 +3145,13 @@ namespace Nooch.API.Controllers
                 res.memberIdGenerated = mdaRes.memberIdGenerated;
                 res.ssn_verify_status = mdaRes.ssn_verify_status;
                 res.errorMsg = mdaRes.errorMsg;
+
                 if (mdaRes.oauth != null)
                 {
                     res.access_token = mdaRes.oauth.oauth_key;
                     res.expires_in = mdaRes.oauth.expires_in;
                     res.refresh_token = mdaRes.oauth.refresh_token;
                 }
-                //if (mdaRes.user != null && mdaRes.user.logins != null && mdaRes.user.logins.Length > 0)
-                //    res.username = mdaRes.user.logins[0].email;
             }
             catch (Exception ex)
             {
@@ -3531,7 +3505,7 @@ namespace Nooch.API.Controllers
                                     var verifyLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
                                                         "Nooch/MicroDepositsVerification?mid=" + MemberId);
 
-                                    var templateToUse = noochMember.isRentScene == true ? "MicroDepositNotification_RentScene" : "MicroDepositNotification";
+                                    var templateToUse = "MicroDepositNotification";
 
                                     var tokens = new Dictionary<string, string>
 	                                        {
@@ -3579,7 +3553,7 @@ namespace Nooch.API.Controllers
                                         else if ((int)currentDateTime.DayOfWeek == 6)
                                             delayToUse = TimeSpan.FromDays(4);
 
-                                        var x = BackgroundJob.Schedule(() => CommonHelper.SendMincroDepositsVerificationReminderEmail(sbom.MemberId.ToString(), sbom.oid, Convert.ToBoolean(noochMember.isRentScene)), delayToUse);
+                                        var x = BackgroundJob.Schedule(() => CommonHelper.SendMincroDepositsVerificationReminderEmail(sbom.MemberId.ToString(), sbom.oid), delayToUse);
                                         if (x != null)
                                             Logger.Info("Service Cntrlr -> SynapseV3 AddNodeWithAccountNumberAndRoutingNumber - Scheduled Micro Deposit Reminder email in Background - [" +
                                                         "] DelayToUser: [" + delayToUse.ToString() + " Days]");
@@ -3736,7 +3710,6 @@ namespace Nooch.API.Controllers
 
                 /*if (noochMember.IsVerifiedPhone != true &&
                     noochMember.Status != "NonRegistered" &&
-                    noochMember.isRentScene != true &&
                     noochMember.Type != "Personal - Browser")
                 {
                     Logger.Error("Service Cntrlr -> SynapseV3 ADD NODE Attempted, but Member's Phone is Not Verified. MemberId: [" + MemberId + "]");
@@ -4520,8 +4493,7 @@ namespace Nooch.API.Controllers
 
             StringResult res = new StringResult();
 
-            if (transInput.isRentScene == true ||
-                transInput.isForHabitat == true ||
+            if (transInput.isForHabitat == true ||
                 transInput.isRentAutoPayment == true ||
                 transInput.doNotSendEmails == false || // Proxy to tell if it's an admin sending a test transaction (only time doNotSendEmails would be 'false')
                 CommonHelper.IsValidRequest(accessToken, transInput.MemberId))
@@ -4724,26 +4696,20 @@ namespace Nooch.API.Controllers
 
         /// <summary>
         /// For cancelling a transaction with Synapse V3.0
+        /// DON'T THINK THIS IS USED ANYWHERE (CLIFF: 9/22/16)
         /// </summary>
-        /// <param name="IsRentScene">Bool indicating if the payment was for Rent Scene (just for logging).</param>
         /// <param name="TransationId">TransID of the payment to be cancelled.</param>
         /// <param name="MemberId">MemberID of the SENDER.</param>
         /// <returns></returns>
         [HttpPost]
         [ActionName("CancelTransactionAtSynapse")]
-        public CancelTransactionAtSynapseResult CancelTransactionAtSynapse(bool IsRentScene, string TransationId, string MemberId)
+        public CancelTransactionAtSynapseResult CancelTransactionAtSynapse(string TransationId, string MemberId)
         {
             CancelTransactionAtSynapseResult CancelTransaction = new CancelTransactionAtSynapseResult();
             CancelTransaction.IsSuccess = false;
 
             try
             {
-                if (IsRentScene != true)
-                {
-                    Logger.Error("Service Cntlr -> CancelTransactionAtSynapse CodeBehind - IsRentScene: [" + IsRentScene + "]");
-                    CancelTransaction.errorMsg = "Missing IsRentScene or its false";
-                }
-
                 if (String.IsNullOrEmpty(TransationId))
                 {
                     Logger.Error("Service Cntlr -> CancelTransactionAtSynapse CodeBehind - TransID: [" + TransationId + "]");
@@ -5798,7 +5764,7 @@ namespace Nooch.API.Controllers
                             {"$PropAddress$", propAddress}
                         };
 
-                    Utility.SendEmail(template, "landlords@rentscene.com", email,
+                    Utility.SendEmail(template, "landlords@nooch.com", email,
                                       null, subject, null, tokens, null, null, null);
 
                     res.Result = "Email Template [" + template + "] sent successfully to [" + email + "]";

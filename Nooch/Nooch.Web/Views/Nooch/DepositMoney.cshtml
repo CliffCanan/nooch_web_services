@@ -46,13 +46,7 @@
 
     <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
         <div class="clearfix">
-            @if (pgData.company == "rentscene")
-            {
-                <a class="landingHeaderLogo center-block" href="https://www.rentscene.com/">
-                    <img src="../Assets/Images/rentscene.png" class="center-block" alt="Rent Scene Logo" />
-                </a>
-            }
-            else if (pgData.company == "habitat")
+            @if (pgData.company == "habitat")
             {
                 <a class="landingHeaderLogo center-block" href="https://tryhabitat.com/">
                     <img src="../Assets/Images/habitat-logo.png" class="center-block" alt="Habitat Logo" />
@@ -131,22 +125,12 @@
     <div class="footer footer-login">
         <div>
             <ul class="list-inline">
-                @if (pgData.company == "rentscene")
+                <li><a href="https://www.nooch.com/overview" target="_blank">About</a></li>
+                <li><a href="https://www.nooch.com/safe" target="_blank">Security</a></li>
+                <li><a href="https://www.nooch.com/tos" target="_blank">Legal Stuff</a></li>
+                if (pgData.company != "habitat")
                 {
-                    <li><a href="https://www.rentscene.com" target="_blank">About</a></li>
-                    <li><a href="https://www.nooch.com/safe" target="_blank">Security</a></li>
-                    <li><a href="https://www.nooch.com/tos" target="_blank">Legal Stuff</a></li>
-                    <li><a href="https://www.rentscene.com/faq" target="_blank">FAQ</a></li>
-                }
-                else
-                {
-                    <li><a href="https://www.nooch.com/overview" target="_blank">About</a></li>
-                    <li><a href="https://www.nooch.com/safe" target="_blank">Security</a></li>
-                    <li><a href="https://www.nooch.com/tos" target="_blank">Legal Stuff</a></li>
-                    if (pgData.company != "habitat")
-                    {
-                        <li><a href="https://www.nooch.com/blog/" target="_blank">Blog</a></li>
-                    }
+                <li><a href="https://www.nooch.com/blog/" target="_blank">Blog</a></li>
                 }
             </ul>
         </div>

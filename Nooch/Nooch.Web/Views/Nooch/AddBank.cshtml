@@ -37,13 +37,7 @@
     {
         <nav id="headerAlt" class="navbar navbar-default navbar-fixed-top desk-only hidden" role="navigation">
             <div class="clearfix">
-                @if (res.isRs)
-                {
-                    <a class="pull-left" href="https://www.rentscene.com/" style="margin: 12px auto 12px !important;">
-                        <img src="../Assets/Images/rentscene.png" class="center-block" alt="Rent Scene Logo" />
-                    </a>
-                }
-                else if (res.redUrl == "habitat")
+                if (res.redUrl == "habitat")
                 {
                     <a class="pull-left" href="https://tryhabitat.com/" style="margin: 12px auto 12px !important;">
                         <img src="../Assets/Images/habitat-logo.png" class="center-block" alt="Habitat Logo" />
@@ -453,7 +447,6 @@
     <input type="hidden" id="setDefaultBankUrl" value="@Url.Action("SetDefaultBank", "Nooch")" />
     <input type="hidden" id="memId" value="@res.memId" />
     <input type="hidden" id="redUrl" value="@res.redUrl" />
-    <input type="hidden" id="isRs" value="@res.isRs.ToString().ToLower()" />
     <input type="hidden" id="isLl" value="@res.isLandlord.ToString().ToLower()" />
 
     <script type="text/javascript">

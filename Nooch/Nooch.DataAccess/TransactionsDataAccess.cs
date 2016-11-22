@@ -495,29 +495,17 @@ namespace Nooch.DataAccess
                     if (i > 0)
                     {
                         _dbContext.Entry(transObj).Reload();
-                        string s22 = transObj.Amount.ToString("n2");
+                        var s22 = transObj.Amount.ToString("n2");
                         string[] s32 = s22.Split('.');
-                        string senderFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transObj.Member.FirstName));
-                        string senderLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transObj.Member.LastName));
-                        string senderFullName = senderFirstName + " " + senderFirstName;
-                        string nonNoochRecipient = CommonHelper.GetDecryptedData(transObj.InvitationSentTo);
+                        var senderFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transObj.Member.FirstName));
+                        var senderLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transObj.Member.LastName));
+                        var senderFullName = senderFirstName + " " + senderFirstName;
+                        var nonNoochRecipient = CommonHelper.GetDecryptedData(transObj.InvitationSentTo);
 
                         var fromAddress = Utility.GetValueFromConfig("transfersMail");
                         var toAddress = CommonHelper.GetDecryptedData(transObj.Member.UserName);
 
-                        bool isForRentScene = false;
-                        //var logoToDisplay = "noochlogo";
-
-                        if (transObj.Member.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49") // Rent Scene's account
-                        {
-                            isForRentScene = true;
-                            senderFirstName = "Rent Scene";
-                            senderLastName = "";
-                            senderFullName = "Rent Scene";
-                        }
-
-                        fromAddress = isForRentScene ? "payments@rentscene.com"
-                                                     : Utility.GetValueFromConfig("transfersMail");
+                        fromAddress = Utility.GetValueFromConfig("transfersMail");
 
                         if (transObj.IsPhoneInvitation == true &&
                             transObj.PhoneNumberInvited != null &&
@@ -565,7 +553,7 @@ namespace Nooch.DataAccess
                         {
                             var tokens2 = new Dictionary<string, string>
 								{
-									{Constants.PLACEHOLDER_FIRST_NAME,  "there"}, // Cliff (1/18/16): this had been using the email/phone # of the recipient since we don't know their name (although we might sometimes if sent by Rent Scene, but we're not currently storing that name), so changing to "there" as in "Hi there,..."
+									{Constants.PLACEHOLDER_FIRST_NAME,  "there"}, // Cliff (1/18/16): this had been using the email/phone # of the recipient since we don't know their name, so changing to "there" as in "Hi there,..."
 									{Constants.TRANSACTION_ID, senderFirstName + " " + senderLastName},
 									{Constants.PLACEHOLDER_TRANSFER_AMOUNT, s32[0]},
 									{Constants.PLACEHLODER_CENTS, s32[1]}
@@ -641,40 +629,30 @@ namespace Nooch.DataAccess
 
                         #region Setup Common Variables
 
-                        string fromAddress = Utility.GetValueFromConfig("transfersMail");
-                        string requesterFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member1.FirstName));
-                        string requesterLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member1.LastName));
-                        string payLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
+                        var fromAddress = Utility.GetValueFromConfig("transfersMail");
+                        var requesterFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member1.FirstName));
+                        var requesterLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member1.LastName));
+                        var payLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
                                                        "Nooch/payRequest?TransactionId=" + trans.TransactionId);
 
-                        string transDate = Convert.ToDateTime(trans.TransactionDate).ToString("MMM d, yyyy");
-                        string amountFull = trans.Amount.ToString("n2");
+                        var transDate = Convert.ToDateTime(trans.TransactionDate).ToString("MMM d, yyyy");
+                        var amountFull = trans.Amount.ToString("n2");
                         string[] amountArray = amountFull.Split('.');
                         var dollars = amountArray[0];
                         var cents = amountArray[1];
 
-                        string memo = "";
+                        var memo = "";
                         if (!string.IsNullOrEmpty(trans.Memo))
                         {
                             if (trans.Memo.Length > 3)
                             {
-                                string firstThreeChars = trans.Memo.Substring(0, 3).ToLower();
+                                var firstThreeChars = trans.Memo.Substring(0, 3).ToLower();
                                 bool startWithFor = firstThreeChars.Equals("for");
 
                                 if (startWithFor) memo = trans.Memo.ToString();
                                 else memo = "For " + trans.Memo.ToString();
                             }
                             else memo = "For " + trans.Memo.ToString();
-                        }
-
-                        var company = "nooch";
-
-                        if (trans.Member1.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49" || // Rent Scene's account
-                            trans.Member.isRentScene == true)
-                        {
-                            company = "rentscene";
-                            requesterFirstName = "Rent Scene";
-                            requesterLastName = "";
                         }
 
                         #endregion Setup Common Variables
@@ -686,7 +664,7 @@ namespace Nooch.DataAccess
                         {
                             #region Request Sent To Email Address
 
-                            string rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
+                            var rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
                                                               "Nooch/rejectMoney?TransactionId=" + trans.TransactionId +
                                                               "&UserType=U6De3haw2r4mSgweNpdgXQ==" +
                                                               "&TransType=T3EMY1WWZ9IscHIj3dbcNw==");
@@ -704,8 +682,6 @@ namespace Nooch.DataAccess
 								};
 
                             var templateToUse = "requestReminderToNewUser";
-                            if (company == "rentscene") templateToUse = "requestReminderToNewUser_RentScene";
-
                             var toAddress = CommonHelper.GetDecryptedData(trans.InvitationSentTo);
 
                             // Send Request Reminder email to NON-NOOCH user
@@ -830,11 +806,8 @@ namespace Nooch.DataAccess
 								};
 
                             var templateToUse = "requestReminderToExistingUser";
-                            if (company == "rentscene") templateToUse = "requestReminderToExistingUser_RentScene";
+                            var subject = requesterFirstName + " " + requesterLastName + " requested " + "$" + amountFull + " with Nooch - Reminder";
 
-                            var subject = company == "rentscene"
-                                          ? requesterFirstName + " " + requesterLastName + " requested " + "$" + amountFull + " with Nooch - Reminder"
-                                          : "Rent Scene Payment Reminder - $" + amountFull;
                             try
                             {
                                 Utility.SendEmail(templateToUse, fromAddress, toAddress, null,
@@ -1954,7 +1927,6 @@ namespace Nooch.DataAccess
                         Guid RequestSenderId = Utility.ConvertToGuid(transactionDetail.Member1.MemberId.ToString());
 
                         var noochMemberfornotification = _dbContext.Members.Where(memberTemp => memberTemp.MemberId.Equals(RequestSenderId) &&
-                                                                                                memberTemp.isRentScene != true &&
                                                                                                 memberTemp.IsDeleted == false &&
                                                                                                 memberTemp.UDID1 != null).FirstOrDefault();
 
@@ -2363,13 +2335,9 @@ namespace Nooch.DataAccess
                             (userTypeDecr == "Existing" || userTypeDecr == "NonRegistered"))
                         {
                             // Request sent to existing user -- 'Rejector' is SenderId in transactionDetail
-                            if (transactionDetail.Member1.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49")
-                                SenderFirstName = "Rent Scene";
-                            else
-                            {
-                                SenderFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member1.FirstName));
-                                SenderLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member1.LastName));
-                            }
+                            SenderFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member1.FirstName));
+                            SenderLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member1.LastName));
+
                             RejectorFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member.FirstName));
                             RejectorLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member.LastName));
                             RejectorFullName = RejectorFirstName + " " + RejectorLastName;
@@ -2382,13 +2350,8 @@ namespace Nooch.DataAccess
                             //Logger.Info("TDA -> RejectMoneyCommon - CHECKPOINT 2 REACHED - User Type = New, TransType = Requst or Invite");
                             // Request sent to Non-Nooch user -- 'Rejector' is email address InvitationSentTo in transactionDetail
 
-                            if (transactionDetail.Member.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49")
-                                SenderFirstName = "Rent Scene";
-                            else
-                            {
-                                SenderFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member.FirstName));
-                                SenderLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member.LastName));
-                            }
+                            SenderFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member.FirstName));
+                            SenderLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(transactionDetail.Member.LastName));
 
                             RejectorFirstName = "";
                             RejectorLastName = "";
@@ -2921,8 +2884,7 @@ namespace Nooch.DataAccess
                     var senderMemberDetails = CommonHelper.GetMemberDetailsByUserName(senderUserName);
                     var companyName = "NOOCH";
 
-                    if (senderMemberDetails.isRentScene == true) companyName = "RENT SCENE";
-                    else if (senderUserName == "andrew@tryhabitat.com") companyName = "HABITAT";
+                    if (senderUserName == "andrew@tryhabitat.com") companyName = "HABITAT";
 
                     SynapseV3AddTransInput transParamsForSynapse = new SynapseV3AddTransInput();
 
@@ -2933,9 +2895,9 @@ namespace Nooch.DataAccess
 
                     SynapseV3AddTransInput_trans transMain = new SynapseV3AddTransInput_trans();
 
-                    // CLIFF (5/9/16): Just a note for future reference... (esp for Rent Scene)
+                    // CLIFF (5/9/16): Just a note for future reference...
                     //                 We may want to consider doing this differently and create 2 orders w/ Synapse,
-                    //                 a DEBIT from the sender's ACH Bank to Nooch's Synapse Account (or RS's) and then
+                    //                 a DEBIT from the sender's ACH Bank to Nooch's Synapse Account and then
                     //                 a CREDIT from Nooch's Synapse Account to the recipient's ACH Bank.
                     //                 By 'fronting' the money for the Sender before the debit actually clears,
                     //                 we would speed up the total processing time. Could only do it with 100% trustworthy users...
@@ -2990,6 +2952,7 @@ namespace Nooch.DataAccess
                     feeMain.note = "Negative Fee Offset";
                     feeMain.fee = "-0.10"; // to offset the Synapse fee so the user doesn't pay it
 
+                    // NEED TO UPDATE - NOVEMBER 2016
                     SynapseV3AddTransInput_trans_fees_to tomain = new SynapseV3AddTransInput_trans_fees_to()
                     {
                         id = isTesting ? "5618028c86c27347a1b3aa0f" // Temporary: ID of Nooch's SYNAPSE account (NOT an ACH (bank) account)!!... using temp Sandbox account until we get Production credentials
@@ -3075,9 +3038,7 @@ namespace Nooch.DataAccess
 
                                 completeEmailTxt.Append(s);
 
-                                var companyTxt = "";
-                                if (companyName == "rentscene") companyTxt = " [RENT SCENE]";
-                                else if (companyName == "habitat") companyTxt = " [HABITAT]";
+                                var companyTxt = companyName == "habitat" ? " [HABITAT]" : "";
 
                                 Utility.SendEmail(null, "admin-autonotify@nooch.com", "newpayment@nooch.com", null,
                                                   "Nooch Alert - NEW" + companyTxt + " Transaction: $" + amount,
@@ -3488,20 +3449,20 @@ namespace Nooch.DataAccess
                         //                                  "/Nooch/CancelMoneyRequest?TransactionId=" + requestId +
                         //                                  "&MemberId=" + requestDto.MemberId.ToString() +
                         //                                  "&userType=mx5bTcAYyiOf9I5Py9TiLw==");
-                        string cancelLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
+                        var cancelLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
                                                          "/Nooch/CancelRequest?TransactionId=" + requestId +
                                                          "&MemberId=" + requestDto.MemberId.ToString() +
                                                          "&userType=mx5bTcAYyiOf9I5Py9TiLw==");
 
-                        string wholeAmount = requestDto.Amount.ToString("n2");
+                        var wholeAmount = requestDto.Amount.ToString("n2");
                         string[] s32 = wholeAmount.Split('.');
 
-                        string memo = "";
+                        var memo = "";
                         if (!string.IsNullOrEmpty(transaction.Memo))
                         {
                             if (transaction.Memo.Length > 3)
                             {
-                                string firstThreeChars = transaction.Memo.Substring(0, 3).ToLower();
+                                var firstThreeChars = transaction.Memo.Substring(0, 3).ToLower();
                                 bool startWithFor = firstThreeChars.Equals("for");
 
                                 if (startWithFor) memo = transaction.Memo.ToString();
@@ -3511,26 +3472,14 @@ namespace Nooch.DataAccess
                         }
 
 
-                        string requesterPic = (!String.IsNullOrEmpty(requester.Photo) && requester.Photo.Length > 20)
+                        var requesterPic = (!String.IsNullOrEmpty(requester.Photo) && requester.Photo.Length > 20)
                             ? requester.Photo : "https://www.noochme.com/EmailTemplates/img/userpic-default.png";
 
-                        string senderPic = (!String.IsNullOrEmpty(sender.Photo) && sender.Photo.Length > 20)
+                        var senderPic = (!String.IsNullOrEmpty(sender.Photo) && sender.Photo.Length > 20)
                             ? sender.Photo : "https://www.noochme.com/EmailTemplates/img/userpic-default.png";
 
-                        bool isForRentScene = false;
-
-                        if (requester.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49") // Rent Scene's account
-                        {
-                            isForRentScene = true;
-                            RequesterFirstName = "Rent Scene";
-                            RequesterLastName = "";
-                        }
-
-                        var fromAddress = isForRentScene ? "payments@rentscene.com"
-                                                         : Utility.GetValueFromConfig("transfersMail");
-
-                        var templateToUse_Sender = isForRentScene ? "requestSent_RentScene"
-                                                                  : "requestSent";
+                        var fromAddress = Utility.GetValueFromConfig("transfersMail");
+                        var templateToUse_Sender = "requestSent";
 
                         #endregion Setup Notification Variables
 
@@ -3568,7 +3517,7 @@ namespace Nooch.DataAccess
                         try
                         {
                             var tokens2 = new Dictionary<string, string> { };
-                            string templateToUse = "";
+                            var templateToUse = "requestReceivedToExistingNonRegUser";
 
                             if (sender.Status == "NonRegistered" ||
                                 sender.Type == "Personal - Browser")
@@ -3580,28 +3529,16 @@ namespace Nooch.DataAccess
                                 // In this case UserType would = 'Nonregistered'  ->  6KX3VJv3YvoyK+cemdsvMA==
                                 //              TransType would = 'Request'
 
-                                string userType = "6KX3VJv3YvoyK+cemdsvMA=="; // "NonRegistered"
+                                var userType = "6KX3VJv3YvoyK+cemdsvMA=="; // "NonRegistered"
 
-                                string rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
+                                var rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
                                                                   "Nooch/RejectMoney?TransactionId=" + requestId +
                                                                   "&UserType=" + userType +
                                                                   "&TransType=T3EMY1WWZ9IscHIj3dbcNw==");
 
-                                string paylink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
+                                var paylink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
                                                                "Nooch/PayRequest?TransactionId=" + requestId +
                                                                "&UserType=" + userType);
-
-                                if (isForRentScene)
-                                {
-                                    rejectLink = rejectLink + "&rs=1";
-                                    paylink = paylink + "&rs=1";
-
-                                    templateToUse = "requestReceivedToExistingNonRegUser_RentScene";
-                                }
-                                else
-                                {
-                                    templateToUse = "requestReceivedToExistingNonRegUser";
-                                }
 
                                 tokens2 = new Dictionary<string, string>
                                 {
@@ -3622,20 +3559,12 @@ namespace Nooch.DataAccess
                                 // In this case UserType would = 'Existing'
                                 // TransType would be 'Request'
 
-                                string rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
+                                var rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
                                                                   "Nooch/RejectMoney?TransactionId=" + transaction.TransactionId +
                                                                   "&UserType=mx5bTcAYyiOf9I5Py9TiLw==" +
                                                                   "&TransType=T3EMY1WWZ9IscHIj3dbcNw==");
 
-                                if (isForRentScene)
-                                {
-                                    rejectLink = rejectLink + "&rs=1";
-                                    templateToUse = "requestReceivedToExistingUser_RentScene";
-                                }
-                                else
-                                {
-                                    templateToUse = "requestReceivedToExistingUser";
-                                }
+                                templateToUse = "requestReceivedToExistingUser";
 
                                 tokens2 = new Dictionary<string, string>
                                 {
@@ -4097,21 +4026,8 @@ namespace Nooch.DataAccess
                         var senderPic = (!String.IsNullOrEmpty(receiver.Photo) && receiver.Photo.Length > 20)
                             ? receiver.Photo : "https://www.noochme.com/EmailTemplates/img/userpic-default.png";
 
-                        bool isForRentScene = false;
-                        //var logoToDisplay = "noochlogo";
-
-                        if (requester.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49") // Rent Scene's account
-                        {
-                            isForRentScene = true;
-                            RequesterFirstName = "Rent Scene";
-                            RequesterLastName = "";
-                        }
-
-                        var fromAddress = isForRentScene ? "payments@rentscene.com"
-                                                         : Utility.GetValueFromConfig("transfersMail");
-
-                        var templateToUse_Sender = isForRentScene ? "requestSent_RentScene"
-                                                                  : "requestSent";
+                        var fromAddress = Utility.GetValueFromConfig("transfersMail");
+                        var templateToUse_Sender = "requestSent";
 
                         #endregion Setup Notification Variables
 
@@ -4149,7 +4065,7 @@ namespace Nooch.DataAccess
                         try
                         {
                             var tokens2 = new Dictionary<string, string> { };
-                            string templateToUse = "";
+                            var templateToUse = "requestReceivedToExistingNonRegUser";
 
                             if (receiver.Status == "NonRegistered" ||
                                 receiver.Type == "Personal - Browser")
@@ -4161,28 +4077,16 @@ namespace Nooch.DataAccess
                                 // In this case UserType would = 'Nonregistered'  ->  6KX3VJv3YvoyK+cemdsvMA==
                                 //              TransType would = 'Request'
 
-                                string userType = "6KX3VJv3YvoyK+cemdsvMA=="; // "NonRegistered"
+                                var userType = "6KX3VJv3YvoyK+cemdsvMA=="; // "NonRegistered"
 
-                                string rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
+                                var rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
                                                                   "Nooch/RejectMoney?TransactionId=" + requestId +
                                                                   "&UserType=" + userType +
                                                                   "&TransType=T3EMY1WWZ9IscHIj3dbcNw==");
 
-                                string paylink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
+                                var paylink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
                                                                "Nooch/PayRequest?TransactionId=" + requestId +
                                                                "&UserType=" + userType);
-
-                                if (isForRentScene)
-                                {
-                                    rejectLink = rejectLink + "&rs=1";
-                                    paylink = paylink + "&rs=1";
-
-                                    templateToUse = "requestReceivedToExistingNonRegUser_RentScene";
-                                }
-                                else
-                                {
-                                    templateToUse = "requestReceivedToExistingNonRegUser";
-                                }
 
                                 tokens2 = new Dictionary<string, string>
                                 {
@@ -4204,20 +4108,12 @@ namespace Nooch.DataAccess
                                 // TransType would be 'Request'
                                 // and link source would be 'Email'
 
-                                string rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
+                                var rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
                                                                   "Nooch/RejectMoney?TransactionId=" + transaction.TransactionId +
                                                                   "&UserType=mx5bTcAYyiOf9I5Py9TiLw==" +
                                                                   "&TransType=T3EMY1WWZ9IscHIj3dbcNw==");
 
-                                if (isForRentScene)
-                                {
-                                    rejectLink = rejectLink + "&rs=1";
-                                    templateToUse = "requestReceivedToExistingUser_RentScene";
-                                }
-                                else
-                                {
-                                    templateToUse = "requestReceivedToExistingUser";
-                                }
+                                templateToUse = "requestReceivedToExistingUser";
 
                                 tokens2 = new Dictionary<string, string>
                                 {
@@ -4432,64 +4328,50 @@ namespace Nooch.DataAccess
 
                     #region Send Notifications
 
-                    string s22 = requestDto.Amount.ToString("n2");
+                    var s22 = requestDto.Amount.ToString("n2");
                     string[] s32 = s22.Split('.');
 
-                    string RequesterFirstName = CommonHelper.UppercaseFirst((CommonHelper.GetDecryptedData(requester.FirstName)).ToString());
-                    string RequesterLastName = CommonHelper.UppercaseFirst((CommonHelper.GetDecryptedData(requester.LastName)).ToString());
-                    string RequesterEmail = (requestDto.isTesting == "true") ? RequesterLastName.Trim().Replace(" ", "") + "-TEST@nooch.com"
+                    var RequesterFirstName = CommonHelper.UppercaseFirst((CommonHelper.GetDecryptedData(requester.FirstName)).ToString());
+                    var RequesterLastName = CommonHelper.UppercaseFirst((CommonHelper.GetDecryptedData(requester.LastName)).ToString());
+                    var RequesterEmail = (requestDto.isTesting == "true") ? RequesterLastName.Trim().Replace(" ", "") + "-TEST@nooch.com"
                                                                              : CommonHelper.GetDecryptedData(requester.UserName);
 
-                    string cancelLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
+                    var cancelLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
                                                       "Nooch/CancelRequest?TransactionId=" + requestId +
                                                       "&MemberId=" + requestDto.MemberId +
                                                       "&UserType=U6De3haw2r4mSgweNpdgXQ==");
 
-                    string recipientName = (!string.IsNullOrEmpty(requestDto.Name) && requestDto.Name.IndexOf("@") == -1)
+                    var recipientName = (!String.IsNullOrEmpty(requestDto.Name) && requestDto.Name.IndexOf("@") == -1)
                                            ? requestDto.Name
                                            : "";
-                    string recipientsEmail = (requestDto.isTesting == "true") ? "testering@nooch.com"
+                    var recipientsEmail = (requestDto.isTesting == "true") ? "testering@nooch.com"
                                                                               : requestDto.MoneySenderEmailId;
 
-                    bool isForRentScene = (requester.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49") ? true : false; // Rent Scene's account
+                    var fromAddress = Utility.GetValueFromConfig("transfersMail");
 
-                    var fromAddress = isForRentScene ? "payments@rentscene.com"
-                                                     : Utility.GetValueFromConfig("transfersMail");
+                    var templateToUse_Recip = "requestReceivedToNewUser";
+                    var templateToUse_Sender = "requestSent";
 
-                    var templateToUse_Recip = isForRentScene ? "requestReceivedToNewUser_RentScene"
-                                                             : "requestReceivedToNewUser";
-
-                    var templateToUse_Sender = isForRentScene ? "requestSent_RentScene"
-                                                              : "requestSent";
-
-                    string memo = "";
+                    var memo = "";
                     if (transaction.Memo != null && transaction.Memo != "")
                     {
                         if (transaction.Memo.Length > 3)
                         {
-                            string firstThreeChars = transaction.Memo.Substring(0, 3).ToLower();
+                            var firstThreeChars = transaction.Memo.Substring(0, 3).ToLower();
                             bool startWithFor = firstThreeChars.Equals("for");
 
                             if (startWithFor)
-                            {
                                 memo = transaction.Memo.ToString();
-                            }
                             else
-                            {
                                 memo = "For " + transaction.Memo.ToString();
-                            }
                         }
                         else
-                        {
                             memo = "For " + transaction.Memo.ToString();
-                        }
                     }
 
-                    if (!isForRentScene) // Not sending this one to Rent Scene (just b/c it was considered unnecessary for them)
+                    try
                     {
-                        try
-                        {
-                            var tokens = new Dictionary<string, string>
+                        var tokens = new Dictionary<string, string>
 					        {
 						        {Constants.PLACEHOLDER_FIRST_NAME, RequesterFirstName},
 						        {Constants.PLACEHOLDER_NEWUSER, recipientsEmail},
@@ -4499,17 +4381,16 @@ namespace Nooch.DataAccess
 						        {Constants.MEMO, memo}
 					         };
 
-                            Utility.SendEmail(templateToUse_Sender, fromAddress, RequesterEmail, null,
-                                              "Your payment request to " + recipientsEmail + " is pending",
-                                              null, tokens, null, null, null);
+                        Utility.SendEmail(templateToUse_Sender, fromAddress, RequesterEmail, null,
+                                          "Your payment request to " + recipientsEmail + " is pending",
+                                          null, tokens, null, null, null);
 
-                            Logger.Info("TDA -> RequestMoneyToNonNoochUserUsingSynapse -> [" + templateToUse_Sender + "] email sent to [" + RequesterEmail + "] successfully.");
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Error("TDA -> RequestMoneyToNonNoochUserUsingSynapse -> [" + templateToUse_Sender + "] email NOT sent to [" + RequesterEmail +
-                                         "], Exception: [" + ex + "]");
-                        }
+                        Logger.Info("TDA -> RequestMoneyToNonNoochUserUsingSynapse -> [" + templateToUse_Sender + "] email sent to [" + RequesterEmail + "] successfully.");
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error("TDA -> RequestMoneyToNonNoochUserUsingSynapse -> [" + templateToUse_Sender + "] email NOT sent to [" + RequesterEmail +
+                                     "], Exception: [" + ex + "]");
                     }
 
                     try
@@ -4536,18 +4417,15 @@ namespace Nooch.DataAccess
                                 break;
                         }
 
-                        string rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
+                        var rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
                                                    "Nooch/RejectMoney?TransactionId=" + requestId +
                                                    "&UserType=U6De3haw2r4mSgweNpdgXQ==" +
                                                    "&TransType=T3EMY1WWZ9IscHIj3dbcNw==");
 
-                        string paylink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
+                        var paylink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
                                                        "Nooch/PayRequest?TransactionId=" + requestId +
                                                        "&UserType=U6De3haw2r4mSgweNpdgXQ==" + // UserType = "New"
                                                        "&cip=" + cipToUse);
-
-                        if (isForRentScene)
-                            paylink += "&rs=1";
 
                         var tokens2 = new Dictionary<string, string>
                         {
@@ -4561,9 +4439,7 @@ namespace Nooch.DataAccess
 					        {Constants.PLACEHOLDER_PAY_LINK, paylink}
 					    };
 
-                        string subject = isForRentScene
-                                         ? "Payment Request from Rent Scene"
-                                         : RequesterFirstName + " " + RequesterLastName + " requested " + "$" + s22.ToString() + " with Nooch";
+                        var subject = RequesterFirstName + " " + RequesterLastName + " requested " + "$" + s22.ToString() + " with Nooch";
 
                         Utility.SendEmail(templateToUse_Recip, fromAddress,
                                           recipientsEmail, null, subject, null, tokens2,
@@ -4848,15 +4724,15 @@ namespace Nooch.DataAccess
                                                                                                     "&MemberId=" + requestDto.MemberId +
                                                                                                     "&UserType=6KX3VJv3YvoyK+cemdsvMA==");
 
-                    string wholeAmount = requestDto.Amount.ToString("n2");
+                    var wholeAmount = requestDto.Amount.ToString("n2");
                     string[] amountArray = wholeAmount.Split('.');
 
-                    string memo = "";
+                    var memo = "";
                     if (transaction.Memo != null && transaction.Memo != "")
                     {
                         if (transaction.Memo.Length > 3)
                         {
-                            string firstThreeChars = transaction.Memo.Substring(0, 3).ToLower();
+                            var firstThreeChars = transaction.Memo.Substring(0, 3).ToLower();
                             bool startWithFor = firstThreeChars.Equals("for");
 
                             if (startWithFor) memo = transaction.Memo.ToString();
@@ -4865,21 +4741,9 @@ namespace Nooch.DataAccess
                         else memo = "for " + transaction.Memo.ToString();
                     }
 
-                    bool isForRentScene = false;
+                    var templateToUse_Recip = "requestReceivedToExistingNonRegUser";
+                    var templateToUse_Sender = "requestSent";
 
-                    if (requester.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49") // Rent Scene's account
-                    {
-                        isForRentScene = true;
-                        fromAddress = "payments@rentscene.com";
-                        RequesterFirstName = "Rent Scene";
-                        RequesterLastName = "";
-                    }
-
-                    var templateToUse_Recip = isForRentScene ? "requestReceivedToExistingNonRegUser_RentScene"
-                                                             : "requestReceivedToExistingNonRegUser";
-
-                    var templateToUse_Sender = isForRentScene ? "requestSent_RentScene"
-                                                              : "requestSent";
                     #endregion Set Up Variables
 
 
@@ -4924,16 +4788,16 @@ namespace Nooch.DataAccess
                     //              TransType would = 'Request'
 
                     // Check if both user's are actually "Active" and not NonRegistered...
-                    string userType = "6KX3VJv3YvoyK+cemdsvMA=="; // "NonRegistered"
+                    var userType = "6KX3VJv3YvoyK+cemdsvMA=="; // "NonRegistered"
                     if (requester.Status == "Active" && requestRecipient.Status == "Active")
                         userType = "mx5bTcAYyiOf9I5Py9TiLw=="; // Update to "Existing"
 
-                    string rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
+                    var rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
                                                       "Nooch/rejectMoney?TransactionId=" + requestId +
                                                       "&UserType=" + userType +
                                                       "&TransType=T3EMY1WWZ9IscHIj3dbcNw==");
 
-                    string paylink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
+                    var paylink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
                                                    "Nooch/payRequest?TransactionId=" + requestId +
                                                    "&UserType=" + userType);
 
@@ -4955,9 +4819,7 @@ namespace Nooch.DataAccess
                     try
                     {
                         // ADD CURRENT MONTH IN BEGINNING OF THE SUBJECT, "December Rent Request from Landlord"
-                        string subject = isForRentScene
-                                         ? "$" + wholeAmount + " Payment Request from Rent Scene"
-                                         : "Payment Request from " + RequesterFirstName + " " + RequesterLastName + " - " + "$" + wholeAmount;
+                        var subject = "Payment Request from " + RequesterFirstName + " " + RequesterLastName + " - " + "$" + wholeAmount;
 
                         Utility.SendEmail(templateToUse_Recip, fromAddress, toAddress, null,
                                           subject, null, tokens2, null, null, null);
@@ -5118,19 +4980,17 @@ namespace Nooch.DataAccess
                     var requester = CommonHelper.GetMemberDetails(requestDto.MemberId);
 
                     // Validate PIN of requesting user
-                    string validPinNumberResult = CommonHelper.ValidatePinNumber(requestDto.MemberId.ToString(),
-                        requestDto.PinNumber.ToString());
-                    if (validPinNumberResult != "Success")
-                    {
-                        return validPinNumberResult;
-                    }
+                    var validPinNumberResult = CommonHelper.ValidatePinNumber(requestDto.MemberId.ToString(),
+                                                                              requestDto.PinNumber.ToString());
+
+                    if (validPinNumberResult != "Success") return validPinNumberResult;
 
                     // Check if request Amount is over per-transaction limit
                     decimal transactionAmount = Convert.ToDecimal(requestDto.Amount);
 
                     // individual user transfer limit check
                     decimal thisUserTransLimit = 0;
-                    string indiTransLimit = CommonHelper.GetGivenMemberTransferLimit(requestDto.MemberId);
+                    var indiTransLimit = CommonHelper.GetGivenMemberTransferLimit(requestDto.MemberId);
 
                     if (!String.IsNullOrEmpty(indiTransLimit))
                     {
@@ -5183,13 +5043,11 @@ namespace Nooch.DataAccess
                         TransactionId = Guid.NewGuid(),
                         SenderId = Utility.ConvertToGuid(requestDto.MemberId),
                         RecipientId = Utility.ConvertToGuid(requestDto.MemberId),
-
                         Amount = requestDto.Amount,
                         TransactionDate = DateTime.Now,
                         Picture = (requestDto.Picture != null) ? requestDto.Picture : null,
                         Memo = (requestDto.Memo == "") ? "" : requestDto.Memo,
                         DisputeStatus = null,
-
                         TransactionStatus = "Pending",
                         TransactionType = CommonHelper.GetEncryptedData("Request"),
                         DeviceId = requestDto.DeviceId,
@@ -5213,7 +5071,6 @@ namespace Nooch.DataAccess
                         }
                     };
 
-
                     int dbResult = 0;
 
                     if (requestDto.isTesting == "true")
@@ -5232,74 +5089,48 @@ namespace Nooch.DataAccess
 
                         #region Send Notifications
 
-                        string s22 = requestDto.Amount.ToString("n2");
+                        var s22 = requestDto.Amount.ToString("n2");
                         string[] s32 = s22.Split('.');
 
-                        string RequesterFirstName =
-                            CommonHelper.UppercaseFirst((CommonHelper.GetDecryptedData(requester.FirstName)).ToString());
-                        string RequesterLastName =
-                            CommonHelper.UppercaseFirst((CommonHelper.GetDecryptedData(requester.LastName)).ToString());
-                        string RequesterEmail = (requestDto.isTesting == "true")
+                        var RequesterFirstName = CommonHelper.UppercaseFirst((CommonHelper.GetDecryptedData(requester.FirstName)).ToString());
+                        var RequesterLastName = CommonHelper.UppercaseFirst((CommonHelper.GetDecryptedData(requester.LastName)).ToString());
+                        var RequesterEmail = (requestDto.isTesting == "true")
                             ? RequesterLastName.Trim().Replace(" ", "") + "-TEST@nooch.com"
                             : CommonHelper.GetDecryptedData(requester.UserName);
 
-                        string cancelLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
+                        var cancelLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
                             "Nooch/CancelRequest?TransactionId=" + requestId +
                             "&MemberId=" + requestDto.MemberId +
                             "&UserType=U6De3haw2r4mSgweNpdgXQ==");
 
-                        string recipientName = (!string.IsNullOrEmpty(requestDto.Name) &&
+                        var recipientName = (!string.IsNullOrEmpty(requestDto.Name) &&
                                                 requestDto.Name.IndexOf("@") == -1)
                             ? requestDto.Name
                             : "";
-                        string recipientsEmail = (requestDto.isTesting == "true")
+                        var recipientsEmail = (requestDto.isTesting == "true")
                             ? "testering@nooch.com"
                             : requestDto.MoneySenderEmailId;
 
-                        string PayorPhoneNumFormatted = CommonHelper.FormatPhoneNumber(PayorPhoneNumber);
-
+                        var PayorPhoneNumFormatted = CommonHelper.FormatPhoneNumber(PayorPhoneNumber);
                         var fromAddress = Utility.GetValueFromConfig("transfersMail");
-
                         var logoToDisplay = "noochlogo";
-
                         var templateToUse = "requestSent";
+                        var memo = "";
 
-                        bool isForRentScene = false;
-                        if (requester.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49" ||
-                            // Rent Scene's account
-                            requester.MemberId.ToString().ToLower() == "a35c14e9-ee7b-4fc6-b5d5-f54961f2596a")
-                        // Just for testing: "sallyanejones00@nooch.com"
-                        {
-                            isForRentScene = true;
-                            RequesterFirstName = "Rent Scene";
-
-                            logoToDisplay = "rentscenelogo";
-                            RequesterLastName = "";
-                            fromAddress = "payments@rentscene.com";
-                            templateToUse = "requestSent_RentScene";
-                        }
-
-                        string memo = "";
                         if (!string.IsNullOrEmpty(transaction.Memo))
                         {
                             if (transaction.Memo.Length > 3)
                             {
-                                string firstThreeChars = transaction.Memo.Substring(0, 3).ToLower();
+                                var firstThreeChars = transaction.Memo.Substring(0, 3).ToLower();
                                 bool startWithFor = firstThreeChars.Equals("for");
 
                                 if (startWithFor)
-                                {
                                     memo = transaction.Memo.ToString();
-                                }
                                 else
-                                {
                                     memo = "For " + transaction.Memo.ToString();
-                                }
                             }
                             else
-                            {
                                 memo = "For " + transaction.Memo.ToString();
-                            }
                         }
 
                         var tokens = new Dictionary<string, string>
@@ -5324,32 +5155,24 @@ namespace Nooch.DataAccess
                         }
                         catch (Exception ex)
                         {
-                            Logger.Error(
-                                "TDA -> RequestMoneyToNonNoochUserThroughPhoneUsingSynapse -> RequestSent email NOT sent to [" +
-                                RequesterEmail +
-                                "], [Exception: " + ex + "]");
+                            Logger.Error("TDA -> RequestMoneyToNonNoochUserThroughPhoneUsingSynapse -> RequestSent email NOT sent to [" +
+                                         RequesterEmail + "], [Exception: " + ex + "]");
                         }
 
                         // Send SMS to Request Receiver -- sending UserType, TransType as encrypted along with request
                         // In this case UserType would = 'New'
                         // TransType would = 'Request'
-                        string rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
+                        var rejectLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
                                                           "Nooch/RejectMoney?TransactionId=" + requestId +
                                                           "&UserType=U6De3haw2r4mSgweNpdgXQ==" +
                                                           "&TransType=T3EMY1WWZ9IscHIj3dbcNw==");
 
-                        string paylink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
+                        var paylink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
                                                        "Nooch/PayRequest?TransactionId=" + requestId);
 
-                        if (isForRentScene)
-                        {
-                            rejectLink = rejectLink + "&rs=1";
-                            paylink = paylink + "&rs=1";
-                        }
+                        var googleUrlAPIKey = Utility.GetValueFromConfig("GoogleURLAPI");
 
-                        string googleUrlAPIKey = Utility.GetValueFromConfig("GoogleURLAPI");
-
-                        // shortning pay request and reject request link from google url link shortner api
+                        // Shortening pay request and reject request link from Google URL link shortner API
                         #region Send SMS To New User
 
                         string RejectShortLink = "";
@@ -5420,7 +5243,6 @@ namespace Nooch.DataAccess
                         #endregion Send SMS To New User
 
                         requestId = transaction.TransactionId.ToString();
-
 
                         #endregion Send Notifications
 
@@ -5605,58 +5427,29 @@ namespace Nooch.DataAccess
 
                 #endregion Get Recipient Synapse Details
 
-                // Cliff (6/14/16): Adding this to check: a.) is this a payment to Rent Scene?
-                //                  and b.) what kind of user the recipient is: Client or Vendor, which determines which Node ID to use for Rent Scene
-
-                // 575ad909950629625ca88262 - Corp Checking - USE FOR ALL NON-PASSTHROUGH PAYMENTS, i.e.: Payments TO Vendors, and Application fees from Clients to RS
-                // 574f45d79506295ff7a81db8 - Passthrough (Linked to Rent Scene's parent account - USE FOR RENT PAYMENTS - ANYTHING OVER $1,000)
-                // 5759005795062906e1359a8e - Passthrough (Linked to Marvis Burn's Nooch account - NEVER USE)
-                if ((sender.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49" ||
-                    senderBankOid == "5759005795062906e1359a8e" ||
-                    senderBankOid == "574f45d79506295ff7a81db8") &&
-                    requester.cipTag.ToLower() == "vendor")
-                {
-                    // Sender is Rent Scene and recipient is a 'Vendor'
-                    senderBankOid = "575ad909950629625ca88262";
-                    Logger.Info("TDA -> HandleRequestMoney - RENT SCENE VENDOR Payment Detected - " +
-                                "Substituting Sender_Bank_NodeID to use RS's Corporate Checking account");
-                }
-                else if (transactionAmount < 200 &&
-                         (requester.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49" ||
-                          recipBankOid == "574f45d79506295ff7a81db8" ||
-                          recipBankOid == "5759005795062906e1359a8e") &&
-                         (sender.cipTag.ToLower() == "renter" || sender.cipTag.ToLower() == "client"))
-                {
-                    // Recipient is Rent Scene AND Sender is a Client AND Amount is < $200 (so it's probably an application fee)
-                    // So use RS's Corporate Checking account.
-                    recipBankOid = "575ad909950629625ca88262";
-                    Logger.Info("TDA -> HandleRequestMoney - RENT SCENE Payment Detected Under $200 - " +
-                                "Substituting Receiver_Bank_NodeID to use RS's Corporate Checking account");
-                }
-
                 #endregion Check Each User's Synapse Status
 
 
-                string moneySenderFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(request.Member.FirstName));
-                string moneySenderLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(request.Member.LastName));
-                string requesterPic = "https://www.noochme.com/noochservice/UploadedPhotos/Photos/" + requester.MemberId.ToString() + ".png";
-                string requestMakerFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(request.Member1.FirstName));
-                string requestMakerLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(request.Member1.LastName));
+                var moneySenderFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(request.Member.FirstName));
+                var moneySenderLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(request.Member.LastName));
+                var requesterPic = "https://www.noochme.com/noochservice/UploadedPhotos/Photos/" + requester.MemberId.ToString() + ".png";
+                var requestMakerFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(request.Member1.FirstName));
+                var requestMakerLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(request.Member1.LastName));
 
 
                 #region Setup Synapse V3 Order API Details
 
                 // Use AddTransSynapseV3Reusable() to handle this job from now on.
 
-                string sender_fingerPrint = sender.UDID1;
-                string amount = request.Amount.ToString();
-                string suppID_or_transID = request.TransactionId.ToString();
-                string senderUserName = CommonHelper.GetDecryptedData(sender.UserName).ToLower();
-                string receiverUserName = CommonHelper.GetDecryptedData(requester.UserName).ToLower();
-                string iPForTransaction = CommonHelper.GetRecentOrDefaultIPOfMember(sender.MemberId);
-                string senderLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(sender.LastName));
-                string recipientLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(requester.LastName));
-                string memoForSyn = !string.IsNullOrEmpty(request.Memo) ? request.Memo : "";
+                var sender_fingerPrint = sender.UDID1;
+                var amount = request.Amount.ToString();
+                var suppID_or_transID = request.TransactionId.ToString();
+                var senderUserName = CommonHelper.GetDecryptedData(sender.UserName).ToLower();
+                var receiverUserName = CommonHelper.GetDecryptedData(requester.UserName).ToLower();
+                var iPForTransaction = CommonHelper.GetRecentOrDefaultIPOfMember(sender.MemberId);
+                var senderLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(sender.LastName));
+                var recipientLastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(requester.LastName));
+                var memoForSyn = !string.IsNullOrEmpty(request.Memo) ? request.Memo : "";
 
                 #endregion SYNAPSE V3
 
@@ -6177,40 +5970,6 @@ namespace Nooch.DataAccess
 
             #endregion Get Recipient Synapse Details
 
-            #region Rent Scene Custom Checks
-
-            // Cliff (6/14/16): Adding this to check: a.) is this a payment to Rent Scene?
-            //                  and b.) what kind of user the recipient is: Client or Vendor, which determines which Node ID to use for Rent Scene
-
-            // 575ad909950629625ca88262 - Corp Checking - USE FOR ALL NON-PASSTHROUGH PAYMENTS, i.e.: Payments TO Vendors, and Application fees from Clients to RS
-            // 574f45d79506295ff7a81db8 - Passthrough (Linked to Rent Scene's parent account - USE FOR RENT PAYMENTS - ANYTHING OVER $1,000)
-            // 5759005795062906e1359a8e - Passthrough (Linked to Marvis Burn's Nooch account - NEVER USE)
-            if (recipientNoochDetails.cipTag.ToLower() == "vendor" &&
-                (senderNoochDetails.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49" ||
-                senderBankOid == "5759005795062906e1359a8e" ||
-                senderBankOid == "574f45d79506295ff7a81db8") &&
-                transInput.isForHabitat != true)
-            {
-                // Sender is Rent Scene and recipient is a 'Vendor'
-                senderBankOid = "575ad909950629625ca88262";
-                Logger.Info("TDA -> TransferMoneyUsingSynapse - RENT SCENE VENDOR Payment Detected - " +
-                            "Substituting Sender_Bank_NodeID to use RS's Corporate Checking account");
-            }
-            else if (transactionAmount < 200 &&
-                     (recipientNoochDetails.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49" ||
-                      recipBankOid == "574f45d79506295ff7a81db8" ||
-                      recipBankOid == "5759005795062906e1359a8e") &&
-                     (senderNoochDetails.cipTag.ToLower() == "renter" || senderNoochDetails.cipTag.ToLower() == "client"))
-            {
-                // Recipient is Rent Scene AND Sender is a Client AND Amount is < $200 (so it's probably an application fee)
-                // So use RS's Corporate Checking account.
-                recipBankOid = "575ad909950629625ca88262";
-                Logger.Info("TDA -> TransferMoneyUsingSynapse - RENT SCENE Payment Detected Under $200 - " +
-                            "Substituting Receiver_Bank_NodeID to use RS's Corporate Checking account");
-            }
-
-            #endregion Rent Scene Custom Checks
-
             #endregion Initial Checks
 
 
@@ -6262,36 +6021,10 @@ namespace Nooch.DataAccess
 
                 var senderPic = "https://www.noochme.com/noochweb/Assets/Images/userpic-default.png";
                 var recipientPic = "";
-
-                bool isForRentScene = false;
-                bool isRentScenePayrollPayment = false;
                 bool isAutoPay = false;
 
-                if (senderNoochDetails.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49") // Rent Scene's account
-                {
-                    isForRentScene = true;
-                    senderFirstName = "Rent Scene";
-                    senderLastName = "";
-
-                    // Now check if the recipient is one of Rent Scene's employees
-                    if (recipientNoochDetails.Nooch_ID.ToString() == "q40l9MnO" || // Tori M.
-                        recipientNoochDetails.Nooch_ID.ToString() == "S3FE3y3m") // Nathania H.
-                    {
-                        Logger.Info("TDA -> TransferMoneyUsingSynapse - RENT SCENE PAYROLL PAYMENT DETECTED - continuing on, but won't send email to Sender (Rent Scene)");
-                        isRentScenePayrollPayment = true;
-                    }
-                    else if (transInput.isForHabitat)
-                    {
-                        isForRentScene = false;
-                        senderFirstName = "Habitat LLC";
-                    }
-                }
-                else if (recipientNoochDetails.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49") // Rent Scene's account
-                {
-                    isForRentScene = true;
-                    recipientFirstName = "Rent Scene";
-                    recipientLastName = "";
-                }
+                if (transInput.isForHabitat)
+                    senderFirstName = "Habitat LLC";
 
                 if (transInput.isRentAutoPayment)
                 {
@@ -6299,7 +6032,7 @@ namespace Nooch.DataAccess
                     isAutoPay = true;
                 }
 
-                var fromAddress = isForRentScene ? "payments@rentscene.com" : Utility.GetValueFromConfig("transfersMail");
+                var fromAddress = Utility.GetValueFromConfig("transfersMail");
 
                 #endregion Define Variables From Transaction for Notifications
 
@@ -6332,95 +6065,15 @@ namespace Nooch.DataAccess
 
                     Logger.Info("TDA -> TransferMoneyUsingSynapse - HABITAT Payment!");
 
-                    // Need to create 2 transactions with Synapse: 1 from Habitat to Rent Scene, & 1 from Rent Scene to the Vendor
-
                     senderFirstName = "Habitat LLC";
                     senderLastName = "";
-
-                    // Insert RENT SCENE values
-                    var recipBankOid2 = "574f45d79506295ff7a81db8";
-                    var recipEmail2 = "payments@rentscene.com";
-
-                    var log = "TDA -> TransferMoneyUsingSynapse - About to call AddTransSynapseV3Reusable() in TDA - " +
-                                "TransID: [" + suppID_or_transID + "], Amount: [" + amount + "], Sender Name: [Habitat" +
-                                "], Sender BankOID: [" + senderBankOid + "], Recip Name: [" + recipientFirstName + " " + recipientLastName +
-                                "], Recip BankOID: [" + recipBankOid2 + "]";
-                    Logger.Info(log);
-
-                    // 1st payment - from Habitat -> Rent Scene
-                    transactionResultFromSynapseAPI = AddTransSynapseV3Reusable(sender_oauth, senderFingerprint,
-                        senderBankOid, amount, recipBankOid2, suppID_or_transID, senderUserName, recipEmail2,
-                        CommonHelper.GetRecentOrDefaultIPOfMember(senderNoochDetails.MemberId),
-                        "Habitat", recipientLastName, memoForSyn);
-
-
-                    if (transactionResultFromSynapseAPI.success)
-                    {
-                        #region 2nd Synapse Payment (RS to Vendor)
-
-                        // 1st Payment was successful, now do the 2nd one (from RS -> original recipient)
-                        Logger.Info("TDA -> TransferMoneyUsingSynapse - 1st HABITAT Payment Successful (to RS)");
-
-                        var rentSceneMemGuid = new Guid("852987e8-d5fe-47e7-a00b-58a80dd15b49"); // Rent Scene's MemberID
-
-                        sender_oauth = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == rentSceneMemGuid &&
-                                                                                               m.IsDeleted == false).access_token;
-
-                        // CLIFF (10/19/16): ADDING CALL TO REFRESH RS'S SYNAPSE OAUTH TOKEN - WAS CAUSING ERRORS FOR HABITAT SINCE
-                        //                   RS'S TOKEN WOULD EXPIRE AFTER A FEW DAYS & THIS METHOD WASN'T REFRESHING B/C OF THIS
-                        //                   JERRY-RIGGED PROCESS FOR HABITAT THAT CREATES 2 PAYMENTS
-                        synapseV3checkUsersOauthKey refreshRsToken = CommonHelper.refreshSynapseV3OauthKey(sender_oauth);
-
-                        if (refreshRsToken != null || refreshRsToken.success == true)
-                        {
-                            // Now decrypt the RS Oauth Key retrieved from refreshSynapseV3OauthKey() for RS
-                            sender_oauth = CommonHelper.GetDecryptedData(refreshRsToken.oauth_consumer_key);
-                            senderBankOid = "574f45d79506295ff7a81db8";
-                            senderFingerprint = "6d441f70cc6891e7831432baac2e50d7";
-
-                            var senderIP = CommonHelper.GetRecentOrDefaultIPOfMember(rentSceneMemGuid);
-                            var senderEmail2 = "payments@rentscene.com";
-
-                            log = "TDA -> TransferMoneyUsingSynapse - About to call 2nd HABITAT Payment (to the Vendor) - " +
-                                  "TransID: [" + suppID_or_transID + "], Amount: [" + amount + "], Sender Name: [Rent Scene" +
-                                  "], Sender BankOID: [" + senderBankOid + "], Recip Name: [" + recipientFirstName + " " + recipientLastName +
-                                  "], Recip BankOID: [" + recipBankOid + "]";
-                            Logger.Info(log);
-
-                            transactionResultFromSynapseAPI = AddTransSynapseV3Reusable(sender_oauth, senderFingerprint,
-                                senderBankOid, amount, recipBankOid, suppID_or_transID, senderEmail2, receiverUserName,
-                                senderIP, "Habitat", recipientLastName, memoForSyn);
-                        }
-                        else
-                        {
-                            var error = "TDA -> TransferMoneyUsingSynapse - HABITAT PAYMENT - FAILED on Attempting 2nd payment, from RS to the Habitat vendor/runner. " +
-                                        "Failed to refresh RS's Synapse OAuth Token - refreshRsToken.msg: [" + refreshRsToken.msg + "]";
-                            Logger.Error(error);
-                            CommonHelper.notifyCliffAboutError(error);
-                            return "Error #9 - Unable to refresh RS Token";
-                        }
-
-                        #endregion 2nd Synapse Payment (RS to Vendor)
-                    }
-                    else
-                    {
-                        var error = "TDA -> TransferMoneyUsingSynapse - 1st HABITAT Payment (to RS) FAILED - Response From SYNAPSE's /order/add API - " +
-                                    "ErrorMessage: [" + transactionResultFromSynapseAPI.ErrorMessage + "], Synapse Error: [" + transactionResultFromSynapseAPI.responseFromSynapse.error.en + "]";
-                        Logger.Error(error);
-                        CommonHelper.notifyCliffAboutError(error);
-                    }
                 }
 
                 #endregion Habitat Custom Checks
 
-                else
-                {
-                    // Expected path for all Payments except for Habitat
-                    transactionResultFromSynapseAPI = AddTransSynapseV3Reusable(sender_oauth, senderFingerprint, senderBankOid, amount,
-                                                                                recipBankOid, suppID_or_transID, senderUserName, receiverUserName,
-                                                                                iPForTransaction, senderLastName, recipientLastName, memoForSyn);
-                }
-
+                transactionResultFromSynapseAPI = AddTransSynapseV3Reusable(sender_oauth, senderFingerprint, senderBankOid, amount,
+                                                                            recipBankOid, suppID_or_transID, senderUserName, receiverUserName,
+                                                                            iPForTransaction, senderLastName, recipientLastName, memoForSyn);
 
                 short shouldSendFailureNotifications = 0;
 
@@ -6431,16 +6084,13 @@ namespace Nooch.DataAccess
                     Logger.Info("TDA -> TransferMoneyUsingSynapse - SUCCESS Response From SYNAPSE's /order/add API - " +
                                 "Synapse OrderID: [" + transactionResultFromSynapseAPI.responseFromSynapse.trans._id.oid + "]");
 
-
                     #region Save Info in Transaction Details Table
 
                     transactionDetail.TransactionStatus = "Success";
                     transactionDetail.Memo = transInput.Memo;
                     transactionDetail.Picture = transInput.Picture;
                     transactionDetail.Amount = transInput.Amount;
-                    transactionDetail.AdminNotes = isAutoPay
-                                                   ? "RENT AUTO PAYMENT"
-                                                   : null;
+                    transactionDetail.AdminNotes = isAutoPay ? "RENT AUTO PAYMENT" : null;
 
                     transactionDetail.GeoLocation = new GeoLocation
                     {
@@ -6456,9 +6106,6 @@ namespace Nooch.DataAccess
                         ZipCode = transInput.Location.ZipCode,
                         DateCreated = TransDateTime,
                     };
-
-                    // If a manual admin-completed Habitat payment, substitute Habitat's MemberID for RS's for the Sender
-                    if (transInput.isForHabitat) transactionDetail.SenderId = Utility.ConvertToGuid("45357cf0-e651-40e7-b825-e1ff48bf44d2");
 
                     _dbContext.Transactions.Add(transactionDetail);
                     saveToTransTable = _dbContext.SaveChanges();
@@ -6509,7 +6156,6 @@ namespace Nooch.DataAccess
                             if (transInput.isForHabitat) // CC (10/10/16): Added this flag for manually sending Habitat transfers via Postman.
                             {
                                 Logger.Info("TDA -> TransferMoneyUsingSynapse - IsForHabitat Flag was TRUE");
-                                isForRentScene = false;
                                 isHabitat = true;
                                 senderFirstName = "Habitat LLC";
                                 senderUserName = "payments@tryhabitat.com";
@@ -6522,14 +6168,11 @@ namespace Nooch.DataAccess
                             //               so it should always return true... so just skip it until we do something with the Notification Settings again.
                             //var sendersNotificationSets = CommonHelper.GetMemberNotificationSettings(senderNoochDetails.MemberId.ToString());
 
-                            if (//((sendersNotificationSets != null && sendersNotificationSets.EmailTransferSent != false) ||
-                                //isForRentScene) &&
-                                !isRentScenePayrollPayment) // don't send email to sender if sender is Rent Scene and it's a payment to a RS employee
-                            {
-                                if (!String.IsNullOrEmpty(recipientNoochDetails.Photo) && recipientNoochDetails.Photo.Length > 20)
-                                    recipientPic = recipientNoochDetails.Photo.ToString();
+                            //if ((sendersNotificationSets != null && sendersNotificationSets.EmailTransferSent != false) && {
+                            if (!String.IsNullOrEmpty(recipientNoochDetails.Photo) && recipientNoochDetails.Photo.Length > 20)
+                                recipientPic = recipientNoochDetails.Photo.ToString();
 
-                                var tokens = new Dictionary<string, string>
+                            var tokens = new Dictionary<string, string>
 	                                        {
 	                                            {Constants.PLACEHOLDER_FIRST_NAME, senderFirstName},
 	                                            {Constants.PLACEHOLDER_FRIEND_FIRST_NAME, recipientFirstName + " " + recipientLastName},
@@ -6538,49 +6181,41 @@ namespace Nooch.DataAccess
 	                                            {Constants.MEMO, memo}
 	                                        };
 
-                                var toAddress = senderUserName;
+                            var toAddress = senderUserName;
 
-                                try
+                            try
+                            {
+                                var subject = "";
+                                var template = "";
+
+                                if (isAutoPay)
                                 {
-                                    var subject = "";
-                                    var template = "";
-                                    // var month = 
+                                    subject = "Your Rent Payment To " + recipientFirstName + " " + recipientLastName;
+                                    template = "TransferSent";
+                                }
+                                else
+                                {
+                                    subject = "Your $" + wholeAmount + " payment to " + recipientFirstName;
 
-                                    if (isAutoPay)
+                                    if (isHabitat)
                                     {
-                                        subject = "Your Rent Payment To " + recipientFirstName + " " + recipientLastName;
-
-                                        if (isForRentScene) template = "TransferSent_RentSceneAutoPay";
-                                        else template = "TransferSent";
+                                        template = "TransferSent_Habitat";
+                                        toAddress = "payments@tryhabitat.com";
                                     }
                                     else
-                                    {
-                                        subject = "Your $" + wholeAmount + " payment to " + recipientFirstName;
-
-                                        if (isForRentScene)
-                                        {
-                                            template = "TransferSent_RentScene";
-                                        }
-                                        else if (isHabitat)
-                                        {
-                                            template = "TransferSent_Habitat";
-                                            toAddress = "payments@tryhabitat.com";
-                                        }
-                                        else
-                                            template = "TransferSent";
-                                    }
-
-                                    Utility.SendEmail(template, fromAddress, toAddress, null,
-                                                      subject, null, tokens, null, null, null);
-
-                                    Logger.Info("TDA -> TransferMoneyUsingSynapse - [" + template + "] email sent to [" +
-                                                toAddress + "] from [" + fromAddress + "] successfully. Subject: [" + subject + "]");
+                                        template = "TransferSent";
                                 }
-                                catch (Exception ex)
-                                {
-                                    Logger.Error("TDA -> TransferMoneyUsingSynapse -> EMAIL TO RECIPIENT FAILED: TransferReceived Email NOT sent to [" +
-                                                 toAddress + "], Exception: [" + ex + "]");
-                                }
+
+                                Utility.SendEmail(template, fromAddress, toAddress, null,
+                                                  subject, null, tokens, null, null, null);
+
+                                Logger.Info("TDA -> TransferMoneyUsingSynapse - [" + template + "] email sent to [" +
+                                            toAddress + "] from [" + fromAddress + "] successfully. Subject: [" + subject + "]");
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.Error("TDA -> TransferMoneyUsingSynapse -> EMAIL TO RECIPIENT FAILED: TransferReceived Email NOT sent to [" +
+                                             toAddress + "], Exception: [" + ex + "]");
                             }
 
                             #endregion Send Email to Sender on transfer success
@@ -6598,7 +6233,7 @@ namespace Nooch.DataAccess
                             #region Push notification to Recipient
 
                             if (//recipNotificationSets.TransferReceived == true &&
-                                !isForRentScene && !isHabitat &&
+                                !isHabitat &&
                                 !String.IsNullOrEmpty(recipientNoochDetails.DeviceToken) &&
                                 recipientNoochDetails.DeviceToken.Length > 6)
                             {
@@ -6645,7 +6280,7 @@ namespace Nooch.DataAccess
                             var toAddress2 = receiverUserName;
 
                             var templateToUse = "TransferReceived";
-                            if (isAutoPay || isForRentScene) templateToUse = "TransferReceived_RentScene";
+                            if (isAutoPay) templateToUse = "TransferReceived_RentScene";
                             else if (isHabitat) templateToUse = "TransferReceived_Habitat";
 
                             try
@@ -6653,8 +6288,6 @@ namespace Nooch.DataAccess
                                 var subject = "";
                                 if (isAutoPay)
                                     subject = "Rent AutoPayment from " + senderFirstName + " " + senderLastName + " - $" + wholeAmount;
-                                else if (isForRentScene)
-                                    subject = "Payment Received From Rent Scene for $" + wholeAmount;
                                 else if (isHabitat)
                                     subject = "Payment Received From Habitat LLC for $" + wholeAmount;
                                 else
@@ -7008,15 +6641,15 @@ namespace Nooch.DataAccess
                     if (!String.IsNullOrEmpty(sender.Photo) && sender.Photo.Length > 20)
                         senderPic = sender.Photo.ToString();
 
-                    string wholeAmount = transactionEntity.Amount.ToString("n2");
+                    var wholeAmount = transactionEntity.Amount.ToString("n2");
                     string[] amountArray = wholeAmount.Split('.');
 
-                    string memo = "";
+                    var memo = "";
                     if (!string.IsNullOrEmpty(transactionEntity.Memo))
                     {
                         if (transactionEntity.Memo.Length > 3)
                         {
-                            string firstThreeChars = transactionEntity.Memo.Substring(0, 3).ToLower();
+                            var firstThreeChars = transactionEntity.Memo.Substring(0, 3).ToLower();
                             bool startWithFor = firstThreeChars.Equals("for");
 
                             if (startWithFor) memo = transactionEntity.Memo.ToString();
@@ -7025,15 +6658,8 @@ namespace Nooch.DataAccess
                         else memo = "For " + transactionEntity.Memo.ToString();
                     }
 
-                    string company = "nooch";
-                    if (sender.MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49") // Rent Scene's account
-                    {
-                        fromAddress = "payments@rentscene.com";
-                        company = "rentscene";
-                        senderFirstName = "Rent Scene";
-                        senderLastName = "";
-                    }
-                    else if (sender.MemberId.ToString().ToLower() == "45357cf0-e651-40e7-b825-e1ff48bf44d2") // Habitat's account
+                    var company = "nooch";
+                    if (sender.MemberId.ToString().ToLower() == "45357cf0-e651-40e7-b825-e1ff48bf44d2") // Habitat's account
                     {
                         fromAddress = "payments@tryhabitat.com";
                         company = "habitat";
@@ -7053,7 +6679,7 @@ namespace Nooch.DataAccess
 
                         //var senderNotifSets = CommonHelper.GetMemberNotificationSettingsByUserName(CommonHelper.GetDecryptedData(sender.UserName));
 
-                        if (company != "rentscene") //senderNotifSets != null && (senderNotifSets.EmailTransferSent ?? false))
+                        if (true) //senderNotifSets != null && (senderNotifSets.EmailTransferSent ?? false))
                         {
                             string otherlink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"), "Nooch/CancelRequest?TransactionId=" + transactionDetail.TransactionId +
                                                                                                            "&MemberId=" + transactionEntity.MemberId +
@@ -7142,16 +6768,11 @@ namespace Nooch.DataAccess
 													 {Constants.MEMO, memo}
 												 };
 
-                            string cents = (amountArray[1] == "00") ? "" : "." + amountArray[1];
+                            var cents = (amountArray[1] == "00") ? "" : "." + amountArray[1];
 
                             var template = "transferReceivedNewUser";
                             var subject = "Payment From " + senderFirstName + " " + senderLastName + " - $" + amountArray[0] + cents;
-                            if (company == "rentscene")
-                            {
-                                template = "transferReceivedNewUser_rentscene";
-                                subject = "Payment From Rent Scene - $" + amountArray[0];
-                            }
-                            else if (company == "habitat")
+                            if (company == "habitat")
                             {
                                 template = "transferReceivedNewUser_habitat";
                                 subject = "Payment From Habitat LLC - $" + amountArray[0];

@@ -85,18 +85,11 @@
     <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
         <div class="clearfix">
             <div class="m-l-15">
-                @if (MicroDeposit.isRs)
-                {
-                    <a class="landingHeaderLogo" href="https://www.rentscene.com/" style="float:left;">
-                        <img src="../Assets/Images/rentscene.png" class="center-block" alt="Rent Scene Logo" />
-                    </a>
-                }
-                else
-                {
-                    <a class="landingHeaderLogo" href="https://www.nooch.com/" style="float:left;">
-                        <img src="../Assets/Images/nooch-logo2.svg" class="center-block" alt="Nooch Logo" />
-                    </a>
-                }
+
+                <a class="landingHeaderLogo" href="https://www.nooch.com/" style="float:left;">
+                    <img src="../Assets/Images/nooch-logo2.svg" class="center-block" alt="Nooch Logo" />
+                </a>
+
                 <div id="nameInNavContainer" class="text-center" style="position:absolute; left:10%; width:80%; top: 8px;">
                     <label id="nameInNav" class="m-t-5 m-b-0 center-block f-600 h4">@MicroDeposit.userFirstName @MicroDeposit.userLastName</label>
                     @if (!String.IsNullOrEmpty(MicroDeposit.bankName))
@@ -186,14 +179,7 @@
             <i class="fa fa-bank"></i>
             <h3>Bank Account Not Found</h3>
             <p class="f-16">Oh No! &nbsp;Very sorry, but we couldn't find your bank account. &nbsp;Please contact our support team and we'll help get this issue resolved ASAP!</p>
-            @if (MicroDeposit.isRs)
-            {
-                <a class="btn btn-danger btn-sm m-t-10" href="mailto:payments@rentscene.com" target="_blank"><i class="fa fa-pencil-square-o m-r-5"></i> Contact Support</a>
-            }
-            else
-            {
-                <a class="btn btn-danger btn-sm m-t-10" href="mailto:support@nooch.com" target="_blank"><i class="fa fa-pencil-square-o m-r-5"></i> Contact Support</a>
-            }
+            <a class="btn btn-danger btn-sm m-t-10" href="mailto:support@nooch.com" target="_blank"><i class="fa fa-pencil-square-o m-r-5"></i> Contact Support</a>
         </div>
     }
 
@@ -212,7 +198,6 @@
                     <form id="microVerPayRequestForm" class="form-inline" role="form">
                         @foreach (var tran in MicroDeposit.PendingTransactionList)
                         {
-                            
                             <div class="row">
                                 <div class="col-xs-4 p-r-0">
                                     <label class="m-r-5">Amount:</label>
@@ -230,7 +215,6 @@
                                 </div>
 
                                 <div id="errorMsg1"></div>
-
                             </div>
                         }
                     </form>
@@ -247,26 +231,14 @@
     <div class="footer footer-landing" style="position:fixed; bottom:1%;">
         <div>
             <ul class="list-inline">
-                @if (MicroDeposit.isRs)
-                {
-                    <li><a href="https://www.rentscene.com" target="_blank">About</a></li>
-                    <li><a href="https://www.nooch.com/safe" target="_blank">Security</a></li>
-                    <li><a href="https://www.nooch.com/tos" target="_blank">Legal Stuff</a></li>
-                    <li><a href="https://www.rentscene.com/faq" target="_blank">FAQ</a></li>
-                }
-                else
-                {
-                    <li><a href="https://www.nooch.com/overview" target="_blank">About</a></li>
-                    <li><a href="https://www.nooch.com/safe" target="_blank">Security</a></li>
-                    <li><a href="http://support.nooch.com/" target="_blank">Support Center</a></li>
-                    <li><a href="https://www.nooch.com/tos" target="_blank">Legal Stuff</a></li>
-                }
+                <li><a href="https://www.nooch.com/overview" target="_blank">About</a></li>
+                <li><a href="https://www.nooch.com/safe" target="_blank">Security</a></li>
+                <li><a href="https://www.nooch.com/tos" target="_blank">Legal Stuff</a></li>
             </ul>
         </div>
     </div>
 
     <form id="form1">
-        <input type="hidden" id="IsRs" value="@MicroDeposit.isRs" />
         <input type="hidden" id="MemberId" value="@MicroDeposit.MemberId" />
         <input type="hidden" id="NodeId1" value="@MicroDeposit.NodeId1" />
         <input type="hidden" id="errorMsg" value="@MicroDeposit.errorMsg" />

@@ -2,12 +2,8 @@ var TRANS_TYPE = $('#transType').val();
 var COMPANY_VAL = $('#company').val();
 var COMPANY_FORMATTED = "";
 var SUPPORT_EMAIL = "";
-if (COMPANY_VAL == "rentscene")
-{
-    COMPANY_FORMATTED = "Rent Scene";
-    SUPPORT_EMAIL = "payments@rentscene.com";
-}
-else if (COMPANY_VAL == "habitat")
+
+if (COMPANY_VAL == "habitat")
 {
     COMPANY_FORMATTED = "Habitat";
     SUPPORT_EMAIL = "support@nooch.com";
@@ -27,13 +23,7 @@ document.head || (document.head = document.getElementsByTagName('head')[0]);
 $(document).ready(function () {
     console.log("ERROR_MSG is: [" + ERROR_MSG + "]");
 
-    if (COMPANY_VAL == "rentscene")
-    {
-        if ($(window).width() > 1000) $('.landingHeaderLogo img').css('width', '170px');
-        document.title = TRANS_TYPE == "request" ? "Request Paid | Rent Scene Payments" : "Payment Accepted | Rent Scene Payments"
-        changeFavicon('../Assets/favicon2.ico');
-    }
-    else if (COMPANY_VAL == "habitat")
+    if (COMPANY_VAL == "habitat")
     {
         document.title = TRANS_TYPE == "request" ? "Request Paid | Habitat Payments" : "Payment Accepted | Habitat Payments"
         changeFavicon('../Assets/favicon-habitat.png')

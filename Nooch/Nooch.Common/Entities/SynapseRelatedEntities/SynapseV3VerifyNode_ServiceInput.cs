@@ -19,7 +19,6 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
     {
         public bool success { get; set; }
         public bool isAlreadyVerified { get; set; }
-        public bool isRs { get; set; }
         public bool hasPendingPymnt { get; set; }
         public string verifiedDate { get; set; }
         public string userFirstName { get; set; }

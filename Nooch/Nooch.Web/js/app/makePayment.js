@@ -13,18 +13,7 @@ var pinVerified = false;
 $(document).ready(function () {
     var isSmScrn = ($(window).width() < 768) ? true : false;
 
-    if (FROM == "rentscene")
-    {
-        COMPANY = "Rent Scene";
-
-        if (isSmScrn)
-            $('.navbar img').css('width', '100px');
-
-        changeFavicon('../Assets/favicon2.ico')
-
-        var suggestedUsers = getSuggestedUsers();
-    }
-    else if (FROM == "habitat")
+    if (FROM == "habitat")
     {
         COMPANY = "Habitat";
 
@@ -291,9 +280,7 @@ function submitPayment() {
                             html: true
                         }, function (isConfirm) {
                             if (isConfirm)
-                            {
                                 sendRequestToExistingUser();
-                            }
                         });
                     }
                     else
@@ -372,9 +359,7 @@ function submitPayment() {
                             html: true
                         }, function (isConfirm) {
                             if (isConfirm)
-                            {
                                 sendRequestToExistingUser();
-                            }
                         });
                     }
                     else
@@ -919,12 +904,9 @@ function getSuggestedUsers() {
                 // Set up user Autocomplete
                 $('#name').autocomplete({
                     lookup: msg.suggestions,
-                    //autoSelectFirst: true,
                     showNoSuggestionNotice: true,
                     noSuggestionNotice: "No users found :-(",
                     onSelect: function (suggestion) {
-                        //alert('You selected: ' + suggestion.value + ', ' + suggestion.data.email);
-
                         $('#email').val(suggestion.data.email);
                         //$('#memo').focus();
                     }

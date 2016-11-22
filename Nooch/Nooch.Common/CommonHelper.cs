@@ -436,8 +436,7 @@ namespace Nooch.Common
 
                 string memId = string.Empty;
 
-                if (user.ToLower() == "rentscene") memId = "852987e8-d5fe-47e7-a00b-58a80dd15b49";
-                else if (user == "habitat") memId = "45357cf0-e651-40e7-b825-e1ff48bf44d2";
+                if (user == "habitat") memId = "45357cf0-e651-40e7-b825-e1ff48bf44d2";
                 else if (user.ToLower() == "appjaxx") memId = "8b4b4983-f022-4289-ba6e-48d5affb5484";
                 else if (user == "cliff") memId = "b3a6cf7b-561f-4105-99e4-406a215ccf60";
                 else
@@ -1093,19 +1092,6 @@ namespace Nooch.Common
                     recipMemId.ToLower() == "00bd3972-d900-429d-8a0d-28a5ac4a75d7")
                 {
                     Logger.Info("*****  Common Helper -> isOverTransactionLimit - Transaction for TEAM NOOCH, so allowing transaction - [Amount: $" + amount.ToString() + "]  ****");
-                    return false;
-                }
-                if (senderMemId.ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49" || // Marvis Burns (RentScene)
-                    recipMemId.ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49")
-                {
-                    Logger.Info("*****  Common Helper -> isOverTransactionLimit - Transaction for RENT SCENE, so allowing transaction - [Amount: $" + amount.ToString() + "]  ****");
-                    return false;
-                }
-
-                if (senderMemId.ToLower() == "c9839463-d2fa-41b6-9b9d-45c7f79420b1" || // Sherri Tan (RentScene - via Marvis Burns)
-                    recipMemId.ToLower() == "c9839463-d2fa-41b6-9b9d-45c7f79420b1")
-                {
-                    Logger.Info("*****  Common Helper -> isOverTransactionLimit - Transaction for RENT SCENE, so allowing transaction - [Amount: $" + amount.ToString() + "]  ****");
                     return false;
                 }
                 if (senderMemId.ToLower() == "8b4b4983-f022-4289-ba6e-48d5affb5484" || // Josh Detweiler (AppJaxx)
@@ -2005,7 +1991,7 @@ namespace Nooch.Common
                     documents.name = usersFirstName + " " + usersLastName;
                     documents.alias = usersFirstName + " " + usersLastName;
                     documents.entity_type = "NOT_KNOWN";
-                    documents.entity_scope = memberEntity.isRentScene == true ? "Real Estate" : "Not Known";
+                    documents.entity_scope = "Not Known";
                     documents.day = usersDobDay;
                     documents.month = usersDobMonth;
                     documents.year = usersDobYear;
@@ -4417,20 +4403,10 @@ namespace Nooch.Common
             {
                 Member member = GetMemberDetails(memId);
 
-                if (member.isRentScene == true)
-                {
-                    string SynapseClientId = Utility.GetValueFromConfig("SynapseClientIdRentScene");
-                    string SynapseClientSecret = Utility.GetValueFromConfig("SynapseClientSecretRentScene");
-                    clientIds.Add(SynapseClientId);
-                    clientIds.Add(SynapseClientSecret);
-                }
-                else
-                {
-                    string SynapseClientId = Utility.GetValueFromConfig("SynapseClientId");
-                    string SynapseClientSecret = Utility.GetValueFromConfig("SynapseClientSecret");
-                    clientIds.Add(SynapseClientId);
-                    clientIds.Add(SynapseClientSecret);
-                }
+                var SynapseClientId = Utility.GetValueFromConfig("SynapseClientId");
+                var SynapseClientSecret = Utility.GetValueFromConfig("SynapseClientSecret");
+                clientIds.Add(SynapseClientId);
+                clientIds.Add(SynapseClientSecret);
             }
             catch (Exception ex)
             {
@@ -4625,11 +4601,10 @@ namespace Nooch.Common
         }
 
 
-        public static string SendMincroDepositsVerificationReminderEmail(string MemberId, string BankId, bool IsRs)
+        public static string SendMincroDepositsVerificationReminderEmail(string MemberId, string BankId)
         {
             Logger.Info("Common Helper -> SendMincroDepositsVerificationReminderEmail Initiated. MemberID: [" + MemberId + "], " +
-                        "Node OID (enc): [" + BankId + "], " +
-                        "IsRs: [" + IsRs + "]");
+                        "Node OID (enc): [" + BankId + "]");
 
             try
             {
@@ -4654,22 +4629,22 @@ namespace Nooch.Common
                     {
                         #region Send Reminder Email
 
-                        string fromAddress = Utility.GetValueFromConfig("transfersMail");
-                        string toAddress = GetDecryptedData(memberObj.UserName);
+                        var fromAddress = Utility.GetValueFromConfig("transfersMail");
+                        var toAddress = GetDecryptedData(memberObj.UserName);
 
                         // User Details
-                        string userFirstName = UppercaseFirst(GetDecryptedData(memberObj.FirstName));
-                        string userLastName = UppercaseFirst(GetDecryptedData(memberObj.LastName));
+                        var userFirstName = UppercaseFirst(GetDecryptedData(memberObj.FirstName));
+                        var userLastName = UppercaseFirst(GetDecryptedData(memberObj.LastName));
 
                         // Bank Account Details
-                        string accountNum = GetDecryptedData(bankAccountDetails.account_number_string);
+                        var accountNum = GetDecryptedData(bankAccountDetails.account_number_string);
                         accountNum = "**** - " + accountNum.Substring(accountNum.Length - 4);
-                        string bankName = GetDecryptedData(bankAccountDetails.bank_name);
-                        string nameOnAccount = GetDecryptedData(bankAccountDetails.name_on_account);
-                        string accountNickName = GetDecryptedData(bankAccountDetails.nickname);
-                        string routingNum = GetDecryptedData(bankAccountDetails.routing_number_string);
+                        var bankName = GetDecryptedData(bankAccountDetails.bank_name);
+                        var nameOnAccount = GetDecryptedData(bankAccountDetails.name_on_account);
+                        var accountNickName = GetDecryptedData(bankAccountDetails.nickname);
+                        var routingNum = GetDecryptedData(bankAccountDetails.routing_number_string);
 
-                        string verifyLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
+                        var verifyLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
                                                           "Nooch/MicroDepositsVerification?mid=" + MemberId);
 
                         var tokens = new Dictionary<string, string>
@@ -4683,7 +4658,7 @@ namespace Nooch.Common
                                     {Constants.PLACEHOLDER_PAY_LINK, verifyLink}
 								};
 
-                        var templateToUse = IsRs ? "MicroDepositsReminderEmailToRentSceneUser" : "MicroDepositsReminderEmail";
+                        var templateToUse = "MicroDepositsReminderEmail";
 
                         try
                         {

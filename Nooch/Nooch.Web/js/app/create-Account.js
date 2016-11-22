@@ -24,17 +24,7 @@ document.head || (document.head = document.getElementsByTagName('head')[0]);
 $(document).ready(function () {
     if ($(window).width() < 768) isSmScrn = true;
 
-    if (COMPANY == "rentscene")
-    {
-        COMPANY_DISPLAY_TXT = "Rent Scene";
-
-        var w = isSmScrn ? '90px' : '140px'
-        $('.landingHeaderLogo img').css('width', w);
-
-        document.title = (ISNEW == "true") ? "Create Account | Rent Scene Payments" : "Update Account | Rent Scene Payments"
-        changeFavicon('../Assets/favicon2.ico');
-    }
-    else if (COMPANY == "habitat")
+    if (COMPANY == "habitat")
     {
         COMPANY_DISPLAY_TXT = "Habitat";
 
@@ -1108,7 +1098,6 @@ function showErrorAlert(errorNum) {
     var shouldShowErrorDiv = true;
 
     var supportEmail = "support@nooch.com";
-    if (COMPANY == "rentscene") supportEmail = "payments@rentscene.com"
     if (COMPANY == "habitat") supportEmail = "payments@tryhabitat.com"
 
     console.log("ShowError -> errorNum is: [" + errorNum + "], resultReason is: [" + resultReason + "]");

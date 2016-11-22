@@ -34,13 +34,7 @@
     <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
         <div class="clearfix">
             <div class="m-l-20">
-                @if (pData.msg == "rentscene")
-                {
-                    <a class="pull-left" href="https://www.rentscene.com/" style="margin: 12px auto 12px !important;">
-                        <img src="../Assets/Images/rentscene.png" class="center-block" alt="Rent Scene Logo" />
-                    </a>
-                }
-                else if (pData.msg == "habitat")
+                @if (pData.msg == "habitat")
                 {
                     <a class="pull-left" href="https://tryhabitat.com/" style="margin: 12px auto 12px !important;">
                         <img src="../Assets/Images/habitat-logo.png" class="center-block" alt="Habitat Logo" />
@@ -85,8 +79,6 @@
                             {
                                 <img id="profilePic" src="@pData.usersPhoto" class="img-circle" alt="User Pic" />
                             }
-                            <div class="ibox-tools"></div>
-
                         </div>
 
                         <div class="ibox-content">
@@ -161,14 +153,12 @@
                                                 }
                                             </td>
                                             <!--
-
                                                <td>
                                                    <button type="button" id="btnLocation" class="btn-link f-13" onclick="showLocationModal('@ad.TransLati','@ad.TransLongi','@ad.state')">
                                                        @ad.city@if (!String.IsNullOrEmpty(@ad.state))
                                                        {<span>, @ad.state</span>}
                                                    </button>
                                                </td>
-
                                             -->
                                             <td>
                                                 @if (ad.TransactionStatus == "Pending")
@@ -191,8 +181,6 @@
                                         </tr>
                                     }
                                 </tbody>
-                                <tfoot>
-                                </tfoot>
                             </table>
                         </div>
                     </div>

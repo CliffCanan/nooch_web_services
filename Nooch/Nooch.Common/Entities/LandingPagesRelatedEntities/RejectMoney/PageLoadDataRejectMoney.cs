@@ -20,6 +20,5 @@ namespace Nooch.Common.Entities.LandingPagesRelatedEntities.RejectMoney
         public bool SenderAndTransInfodiv { get; set; }
         public bool createAccountPrompt { get; set; }
         public bool TransactionResult { get; set; }
-        public string isRentScene { get; set; }
     }
 }
