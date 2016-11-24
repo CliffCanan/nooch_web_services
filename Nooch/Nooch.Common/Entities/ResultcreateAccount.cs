@@ -10,6 +10,7 @@ namespace Nooch.Common.Entities
     {
         public bool isNewUser { get; set; }
         public bool nameInNavContainer { get; set; }
+        public bool isBusiness { get; set; }
         public string company { get; set; }
         public string type { get; set; }
         public string errorId { get; set; }
@@ -33,6 +34,7 @@ namespace Nooch.Common.Entities
         public string idImagedata { get; set; }
         public string fbid { get; set; }
         public string cip { get; set; }
+        public string entityType { get; set; }
     }
 
     public class CreateAccountInDB

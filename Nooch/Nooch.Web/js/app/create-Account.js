@@ -1,12 +1,18 @@
-﻿var transType = $('#transType').val();
+﻿swal.setDefaults({
+    animation: false,
+    confirmButtonColor: "#3fabe1"
+})
+var transType = $('#transType').val();
 var sentTo = $("#sentTo").val();
 var resultReason = "";
 var fingprint = "";
 var errorId = $('#errorId').val();
-var TYPE = $('#type').val();
+var TYPE_CIP = $('#type').val();
+var TYPE_ACCOUNT = "personal"; // default, could become "business"
 var COMPANY = $('#company').val();
 var COMPANY_DISPLAY_TXT = "Nooch";
 var memIdGen = "";
+var memid = $('#memId').val();
 var memid = $('#memId').val();
 var ISNEW = $('#isNew').val();
 var FBID = "not connected";
@@ -71,37 +77,99 @@ $(document).ready(function () {
         });
         //console.log(ipusr);
 
-        var actionTxt = TYPE == "vendor" ? "Get paid" : "Send money";
-        swal({
-            title: "Secure, Private, & Direct Payments",
-            text: "<p>" + actionTxt + " without having to leave your seat! &nbsp;Secure, direct, and traceable payments when you want them. &nbsp;Please verify your identity and link a funding source to get started.</p>" +
+        var actionTxt = TYPE_CIP == "vendor" ? "Get paid" : "Send money";
+        var bodyText = "<p>" + actionTxt + " without having to leave your seat! &nbsp;Secure, direct, and traceable payments when you want them. &nbsp;Please verify your identity and link a funding source to get started.</p>" +
                   "<ul class='fa-ul'>" +
                   "<li><i class='fa-li fa fa-check'></i>We don't see or store your bank credentials</li>" +
                   "<li><i class='fa-li fa fa-check'></i>We use <strong>bank-grade encryption</strong> to secure all data</li>" +
-                  "<li><i class='fa-li fa fa-check'></i>The recipient will never see your bank credentials</li></ul>",
+                  "<li><i class='fa-li fa fa-check'></i>The recipient will never see your bank credentials</li></ul>";
+
+        /*swal({
+            title: "Secure, Private, & Direct Payments",
+            html: bodyText,
             imageUrl: "../Assets/Images/secure.svg",
-            imageSize: "194x80",
+            imageWidth: 194,
+            imageHeight: 80,
             showCancelButton: false,
             cancelButtonText: "Learn More",
             confirmButtonColor: "#3fabe1",
             confirmButtonText: "Let's Go",
-            closeOnCancel: false,
             customClass: "securityAlert",
             allowEscapeKey: false,
-            html: true
-        }, function (isConfirm) {
-            if (isConfirm)
-                setTimeout(function () {
-                    $('input#idVer-name').focus();
-                }, 500)
-            else
+        }).then(function () {
+            setTimeout(function () {
+                $('input#idVer-name').focus();
+            }, 500)
+        }, function (dismiss) {
+            if (dismiss == 'cancel')
                 window.open("https://www.nooch.com/safe");
-        });
+        });*/
 
-        // Now show the wizard since there are no errors (hidden on initial page load because it takes
-        // a split second to format the Steps plugin, so it was visible as un-formatted code briefly.
-        $('#idWizContainer').removeClass('hidden');
-        runIdWizard();
+        var steps = [
+                  {
+                      title: "Secure, Private, & Direct Payments",
+                      html: bodyText,
+                      imageUrl: "../Assets/Images/secure.svg",
+                      imageWidth: 194,
+                      imageHeight: 80,
+                      showCancelButton: false,
+                      cancelButtonText: "Learn More",
+                      confirmButtonText: "Next",
+                      customClass: "securityAlert",
+                      allowEscapeKey: false
+                  },
+                  {
+                      input: 'radio',
+                      inputOptions: {
+                          "business": "Business",
+                          "personal": "Personal"
+                      },
+                      inputValidator: function (result) {
+                          return new Promise(function (resolve, reject) {
+                              if (result)
+                                  resolve()
+                              else
+                                  reject('You need to select something!')
+                          })
+                      },
+                      title: 'Register as a Business?',
+                      html: '<p>Are you going to make payments on behalf of a company, or as an individual person?</p>',
+                      showCancelButton: false,
+                      //cancelButtonText: "Submit",
+                      confirmButtonText: "Submit",
+                      allowEscapeKey: false
+                  }
+        ]
+
+        swal.queue(steps).then(function (result) {
+
+            if (result != null &&
+                ((result[1] != null && result[1] == "business") ||
+                 (result[0] != null && result[0] == "business")))
+            {
+                // UPDATE FORM'S DOM HERE
+                $('#name-label').text('Business Name');
+                $('.biz-text').text(' business');
+                $('.biz-only').removeClass('hidden');
+                $('.personal-only').addClass('hidden');
+                $('.personal-only.destroy').remove();
+
+                TYPE_ACCOUNT = "business";
+            }
+            else
+            {
+                TYPE_ACCOUNT = "personal";
+                $('.biz-only').addClass('hidden');
+            }
+
+            // Now show the wizard since there are no errors (hidden on initial page load because it takes
+            // a split second to format the Steps plugin, so it was visible as un-formatted code briefly.
+
+            setTimeout(function () {
+                $('#idWizContainer').removeClass('hidden');
+                runIdWizard();
+            }, 300);
+        })
 
         $('#relaunchIdwiz > button').click(function () {
             //Get Fingerprint Again
@@ -115,7 +183,7 @@ $(document).ready(function () {
         });
     }
     else
-        console.log("124. There was an error! :-(");
+        console.log("182. There was an error! :-(");
 });
 
 
@@ -139,7 +207,7 @@ function runIdWizard() {
         /* Events */
         onInit: function (event, currentIndex) {
 
-            if (TYPE == "vendor") // Vendors only need to receive $, so Synapse doesn't require an ID, so Step 4 doesn't get displayed
+            if (TYPE_CIP == "vendor" || TYPE_ACCOUNT == "business") // Vendors only need to receive $, so Synapse doesn't require an ID, so Step 4 doesn't get displayed
                 $(".wizard > .steps > ul > li").css("width", "33%");
 
             $('#idVerWiz > .content').animate({ height: "27em" }, 300)
@@ -157,7 +225,7 @@ function runIdWizard() {
                         next: 'fa fa-fw fa-chevron-circle-right',
                         clear: 'fa fa-fw fa-trash-o'
                     },
-                    maxDate: "1998-06-01",
+                    maxDate: "1998-12-31",
                     viewMode: 'years',
                     //debug: true
                 });
@@ -173,6 +241,8 @@ function runIdWizard() {
             }
 
             $('#idVer-ssn').mask("000 - 00 - 0000");
+            $('#idVer-ein').mask("00 - 0000000");
+
             $('#idVer-zip').mask("00000");
             $('#idVer-phone').mask('(000) 000-0000');
 
@@ -258,7 +328,7 @@ function runIdWizard() {
             // IF going to Step 4
             if (newIndex == 3)
             {
-                if (TYPE != "vendor")
+                if (TYPE_CIP != "vendor")
                     return checkStepThree();
             }
 
@@ -277,7 +347,7 @@ function runIdWizard() {
             cancelIdVer();
         },
         onFinishing: function (event, currentIndex) {
-            if (TYPE == "vendor")
+            if (TYPE_CIP == "vendor" || TYPE_ACCOUNT == "business")
                 return checkStepThree();
 
             // Finish the Wizard...
@@ -302,75 +372,91 @@ function checkStepThree() {
         {
             updateValidationUi("dob", true);
 
-            // Check SSN field
-            var ssnVal = $('#idVer-ssn').val().trim();
-            ssnVal = ssnVal.replace(/ /g, "").replace(/-/g, "");
-
-            if (ssnVal.length == 9 || FBID != "not connected")
+            if (TYPE_ACCOUNT == "personal")
             {
-                updateValidationUi("ssn", true);
+                // Check SSN field
+                var ssnVal = $('#idVer-ssn').val().trim();
+                ssnVal = ssnVal.replace(/ /g, "").replace(/-/g, "");
 
-                // Great, go to the next step of the wizard :-]
-                // FILE INPUT DOCUMENTATION: http://plugins.krajee.com/file-input#options
-                $("#idVer_idDoc").fileinput({
-                    allowedFileTypes: ['image'],
-                    initialPreview: [
-                        "<img src='../Assets/Images/securityheader.png' class='file-preview-image' alt='' id='IdWizIdDocPreview'>"
-                    ],
-                    initialPreviewShowDelete: false,
-                    layoutTemplates: {
-                        icon: '<span class="fa fa-photo m-r-10 kv-caption-icon"></span>',
-                    },
-                    fileActionSettings: {
-                        showZoom: false,
-                        indicatorNew: '',
-                    },
-                    maxFileCount: 1,
-                    maxFileSize: 20000,
-                    msgSizeTooLarge: "<strong>'{name}' ({size} KB)</strong> is a bit too large! Max allowed file size is <strong>{maxSize} KB</strong>. &nbsp;Please try a smaller picture!",
-                    showCaption: false,
-                    showUpload: false,
-                    showPreview: true,
-                    resizeImage: true,
-                    maxImageWidth: 1000,
-                    maxImageHeight: 1000,
-                    resizePreference: 'width'
-                });
+                if (ssnVal.length == 9 || FBID != "not connected")
+                {
+                    updateValidationUi("ssn", true);
 
-                $('#idVer_idDoc').on('fileerror', function (event, data, msg) {
-                    $('#idVerWiz > .content').animate({ height: "31em" }, 700)
-                });
-
-                $('#idVer_idDoc').on('fileloaded', function (event, file, previewId, index, reader) {
-                    $('#idVerWiz > .content').animate({ height: "29em" }, 700)
-
-                    isFileAdded = "1";
-                    var readerN = new FileReader();
-
-                    // readerN.readAsDataURL(file);
-                    resizeImages(file, function (dataUrl) {
-                        var splittable = dataUrl.split(',');
-                        var string2 = splittable[1];
-                        FileData = string2;
+                    // Great, go to the next step of the wizard :-]
+                    // FILE INPUT DOCUMENTATION: http://plugins.krajee.com/file-input#options
+                    $("#idVer_idDoc").fileinput({
+                        allowedFileTypes: ['image'],
+                        initialPreview: [
+                            "<img src='../Assets/Images/securityheader.png' class='file-preview-image' alt='' id='IdWizIdDocPreview'>"
+                        ],
+                        initialPreviewShowDelete: false,
+                        layoutTemplates: {
+                            icon: '<span class="fa fa-photo m-r-10 kv-caption-icon"></span>',
+                        },
+                        fileActionSettings: {
+                            showZoom: false,
+                            indicatorNew: '',
+                        },
+                        maxFileCount: 1,
+                        maxFileSize: 20000,
+                        msgSizeTooLarge: "<strong>'{name}' ({size} KB)</strong> is a bit too large! Max allowed file size is <strong>{maxSize} KB</strong>. &nbsp;Please try a smaller picture!",
+                        showCaption: false,
+                        showUpload: false,
+                        showPreview: true,
+                        resizeImage: true,
+                        maxImageWidth: 1000,
+                        maxImageHeight: 1000,
+                        resizePreference: 'width'
                     });
-                });
 
-                $('#idVer_idDoc').on('fileclear', function (event) {
-                    $('#idVerWiz > .content').animate({ height: "23em" }, 800)
-                    isFileAdded = "0";
-                    FileData = null;
-                });
+                    $('#idVer_idDoc').on('fileerror', function (event, data, msg) {
+                        $('#idVerWiz > .content').animate({ height: "31em" }, 700)
+                    });
 
-                $('#idVer_idDoc').on('filecleared', function (event) {
-                    $('#idVerWiz > .content').animate({ height: "23em" }, 800)
-                    isFileAdded = "0";
-                    FileData = null;
-                });
+                    $('#idVer_idDoc').on('fileloaded', function (event, file, previewId, index, reader) {
+                        $('#idVerWiz > .content').animate({ height: "29em" }, 700)
 
-                $('#idVerWiz > .content').animate({ height: "29em" }, 800)
-                return true;
+                        isFileAdded = "1";
+                        var readerN = new FileReader();
+
+                        // readerN.readAsDataURL(file);
+                        resizeImages(file, function (dataUrl) {
+                            var splittable = dataUrl.split(',');
+                            var string2 = splittable[1];
+                            FileData = string2;
+                        });
+                    });
+
+                    $('#idVer_idDoc').on('fileclear', function (event) {
+                        $('#idVerWiz > .content').animate({ height: "23em" }, 800)
+                        isFileAdded = "0";
+                        FileData = null;
+                    });
+
+                    $('#idVer_idDoc').on('filecleared', function (event) {
+                        $('#idVerWiz > .content').animate({ height: "23em" }, 800)
+                        isFileAdded = "0";
+                        FileData = null;
+                    });
+
+                    $('#idVerWiz > .content').animate({ height: "29em" }, 800)
+                    return true;
+                }
+                else updateValidationUi("ssn", false);
             }
-            else updateValidationUi("ssn", false);
+            else if (TYPE_ACCOUNT == "business")
+            {
+                // Check SSN field
+                var einVal = $('#idVer-ein').val().trim();
+                einVal = einVal.replace(/ /g, "").replace(/-/g, "");
+
+                if (einVal.length == 9)
+                {
+                    updateValidationUi("ein", true);
+                    return true;
+                }
+                else updateValidationUi("ein", false);
+            }
         }
         else updateValidationUi("dob-default", false);
     }
@@ -464,12 +550,19 @@ function updateValidationUi(field, success) {
             helpBlockTxt = "Please enter your date of birth. &nbsp;Only needed to verify your ID!"
         else if (field == "ssn")
         {
-            $('#idVerWiz > .content').animate({ height: "28em" }, 600)
             helpBlockTxt = isSmScrn ? "Please enter your <strong>SSN</strong>."
-                                    : "<strong>Please enter your full SSN.</strong>"// or connect with FB." // CC (6/7/16): Un-comment once Synapse finishes adding /user/docs/add to V3.0
+                                    : "<strong>Please enter your full SSN.</strong> or connect with FB."
 
             if (isSmScrn)
                 $('#idVerWiz > .content').animate({ height: "27em" }, 300)
+            else
+                $('#idVerWiz > .content').animate({ height: "28em" }, 600)
+        }
+        else if (field == "ein")
+        {
+            $('#idVerWiz > .content').animate({ height: "29em" }, 600)
+            helpBlockTxt = isSmScrn ? "Enter your 9-digit <strong>EIN</strong>."
+                                    : "<strong>Please enter your 9-digit business EIN.</strong>"
         }
         else if (field == "address")
         {
@@ -553,13 +646,19 @@ function createRecord() {
     var userEmVal = $('#idVer-email').val();
     var userPhVal = $('#idVer-phone').cleanVal();
     var userPwVal = "";  // Still need to add the option for users to create a PW (not sure where in the flow to do it)
-    var ssnVal = $('#idVer-ssn').val().trim();
+    var ssnVal = (TYPE_ACCOUNT == "personal")
+        ? $('#idVer-ssn').val().trim()
+        : $('#idVer-ein').val().trim();
     var dobVal = isSmScrn ? $('#idVer-dob-mobile').val().trim() : $('#idVer-dob').val().trim();
     var addressVal = $('#idVer-address').val().trim();
     var zipVal = $('#idVer-zip').val().trim();
     var fngprntVal = fingprint;
     var ipVal = ipusr;
-    var cip = TYPE.length > 0 ? TYPE : "renter";
+    var cip = TYPE_CIP.length > 0 ? TYPE_CIP : "renter";
+    var entityType = (TYPE_ACCOUNT == "business")
+        ? $('#idVer-bizType').val()
+        : "";
+    var isBusiness = (TYPE_ACCOUNT == "business") ? true : false;
 
     if (isSmScrn)
     {
@@ -580,8 +679,12 @@ function createRecord() {
                                    ", IP: " + ipVal +
                                    ", company: " + COMPANY +
                                    ", Type: " + cip +
-								   ", FBID: " + FBID + "}");
+								   ", FBID: " + FBID +
+                                   ", isBusiness: " + isBusiness +
+                                   ", EntType: " + entityType + "}");
 
+
+    return;
 
     $.ajax({
         type: "POST",
@@ -601,6 +704,8 @@ function createRecord() {
              "', 'fbid':'" + FBID +
              "', 'company':'" + COMPANY +
              "', 'cip':'" + cip +
+             "', 'entityType':'" + entityType +
+             "', 'isBusiness':'" + isBusiness +
              "', 'isIdImage':'" + isFileAdded +
              "', 'idImagedata':'" + FileData + "'}",
         contentType: "application/json; charset=utf-8",
@@ -734,26 +839,21 @@ function idVerifiedSuccess() {
 
     // Hide iFrame w/ ID Verification KBA Questions
     if (!$("#idVerContainer").hasClass("bounceOut"))
-    {
         $("#idVerContainer").addClass("bounceOut");
-    }
 
     setTimeout(function () {
         // THEN DISPLAY SUCCESS ALERT...
         swal({
             title: "Submitted Successfully",
-            text: "Thanks for submitting your ID information. That helps us keep " + COMPANY_DISPLAY_TXT + " safe for everyone. &nbsp;We only use this information to prevent ID fraud and never share it without your permission." +
+            html: "Thanks for submitting your ID information. That helps us keep " + COMPANY_DISPLAY_TXT + " safe for everyone. &nbsp;We only use this information to prevent ID fraud and never share it without your permission." +
             "<span class='show m-t-10'>To finish, link any checking account:</span>" +
             "<span class=\"spanlist\"><span>1. &nbsp;Select your bank</span><span>2. &nbsp;Login with your regular online banking credentials</span><span>3. &nbsp;Choose which account to use</span></span>",
             type: "success",
             showCancelButton: false,
             confirmButtonColor: "#3fabe1",
             confirmButtonText: "Great!",
-            closeOnConfirm: true,
-            html: true,
             customClass: "idVerSuccessAlert",
-        }, function () {
-
+        }).then(function () {
             console.log("memIDGen is: [" + memIdGen + "]");
 
             $("#AddBankDiv iframe").attr("src", $('#addBank_Url').val() + "?memberid=" + memIdGen + "&redUrl=createaccnt");

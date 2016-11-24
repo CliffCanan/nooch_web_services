@@ -121,7 +121,7 @@
 
                             <dl class="dl-horizontal" id="nameGrp">
                                 <dt class="p-t-10 withIcon">
-                                    Your Name
+                                    <span id="name-label">Your Name</span>
                                     <i class="fa fa-fw fa-question-circle-o help-icon m-r-5" data-trigger="hover" data-toggle="popover" data-placement="auto" data-content="Please enter your full legal name."></i>
                                 </dt>
                                 <dd>
@@ -164,12 +164,12 @@
 
                         <div class="well well-sm">
                             <div>
-                                Please enter your <span class="f-700">current</span> street address.
+                                Please enter your <span class="f-700">current</span><span class="biz-text"></span> street address.
                             </div>
                         </div>
 
                         <dl class="dl-horizontal" id="addressGrp">
-                            <dt class="p-t-10">Street Address<small>(no city needed)</small></dt>
+                            <dt class="p-t-10">Street Address<small>(<span class="f-600">no city</span> needed)</small></dt>
                             <dd>
                                 <div class="form-group">
                                     <div class="dtp-container dropdown fg-line">
@@ -195,8 +195,8 @@
                     <h3><i class="fa fa-fw fa-user"></i><br />Identity<span class="hide-sm"> Info</span></h3>
                     <section>
 
-                        <div class="well well-sm text-left">
-                            <div class="text-center m-b-5" style="font-size: 16px;">To prevent identity theft, please:</div>
+                        <div class="well well-sm text-left personal-only">
+                            <div class="text-center m-b-5" style="font-size: 16px;">To prevent identity theft, please...</div>
                             <ol style="font-size:14.5px; font-weight:normal; letter-spacing: .3px; margin-bottom: 4px;">
                                 <li style="margin-bottom: 3px;">Enter your <span>date of birth</span></li>
                                 <li>
@@ -209,9 +209,15 @@
                             </ol>
                         </div>
 
+                        <div class="well well-sm biz-only hidden">
+
+                            <div>Please help us prevent fraud and identity theft...</div>
+
+                        </div>
+
                         <dl class="dl-horizontal" id="dobGrp">
                             <dt class="p-t-10 withIcon">
-                                Date of Birth
+                                Date of <span class="personal-only">Birth</span><span class="biz-only show hidden">Incorporation</span>
                             </dt>
                             <dd>
                                 <div class="form-group withIcon datePickerGrp">
@@ -220,12 +226,12 @@
                                         <input id="idVer-dob" type='text' class="form-control date-picker hide-sm" data-toggle="dropdown" placeholder="eg. 08/05/1978" />
                                         <input id="idVer-dob-mobile" type='date' class="form-control hide-md" placeholder="eg. 08/05/1978" />
                                     </div>
-                                    <i class="fa fa-fw fa-question-circle-o help-icon m-l-5" data-trigger="hover" data-toggle="popover" data-placement="auto" data-content="A date of birth is needed to verify a user's identity. Don't worry - nobody sees this!"></i>
+                                    <i class="fa fa-fw fa-question-circle-o icon-right help-icon m-l-5 personal-only" data-trigger="hover" data-toggle="popover" data-placement="auto" data-content="A date of birth is needed to verify a user's identity. Don't worry - nobody sees this!"></i>
                                 </div>
                             </dd>
                         </dl>
 
-                        <div class="row m-t-20">
+                        <div class="row m-t-20 personal-only">
                             <div class="col-xs-5 p-r-5" id="ssnGrp">
                                 <div class="form-group m-b-5">
                                     <label for="idVer-ssn">SSN</label>
@@ -246,12 +252,41 @@
                             </div>
                         </div>
 
+                        <dl class="dl-horizontal biz-only" id="bizTypeGrp">
+                            <dt class="p-t-10">Type</dt>
+                            <dd>
+                                <div class="form-group">
+                                    <div class="dtp-container dropdown fg-line">
+                                        <select id="idVer-bizType" class="form-control">
+                                            <option>LLC</option>
+                                            <option>Corporation</option>
+                                            <option>Partnership</option>
+                                            <option>Sole Proprietorship</option>
+                                            <option>Other</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </dd>
+                        </dl>
+
+                        <dl class="dl-horizontal biz-only" id="einGrp">
+                            <dt class="p-t-10">EIN<small>(Tax ID #)</small></dt>
+                            <dd>
+                                <div class="form-group withIcon">
+                                    <div class="dtp-container dropdown fg-line">
+                                        <input id="idVer-ein" type='tel' class="form-control" value="" />
+                                    </div>
+                                    <i class="fa fa-fw fa-question-circle-o icon-right help-icon m-l-5" data-trigger="hover" data-toggle="popover" data-placement="auto" data-content="EIN = Employer Identification Number (Tax ID # from the IRS)"></i>
+                                </div>
+                            </dd>
+                        </dl>
+
                     </section>
 
                     @if (rca.type != "vendor")
                     {
-                        <h3><i class="fa fa-fw fa-picture-o"></i><br />ID Doc<span class="hide-sm">ument</span></h3>
-                        <section>
+                        <h3 class="personal-only"><i class="fa fa-fw fa-picture-o"></i><br />ID Doc<span class="hide-sm">ument</span></h3>
+                        <section class="personal-only">
 
                             <div class="well p-15 m-b-15">
                                 <div>
@@ -299,7 +334,8 @@
     <script src="@Url.Content("~/js/bootstrap-datetimepicker.min.js")"></script>
     <script src="@Url.Content("~/js/jquery.steps.js")"></script>
     <script src="@Url.Content("~/js/fingerprint2.min.js")"></script>
-    <script src="@Url.Content("~/js/sweetalert.min.js")"></script>
+    @*<script src="@Url.Content("~/js/sweetalert.min.js")"></script>*@
+	<script src="@Url.Content("https://cdn.jsdelivr.net/sweetalert2/6.1.1/sweetalert2.min.js")"></script>
     <script src="@Url.Content("~/js/fileinput/fileinput.min.js")"></script>
     <script type="text/javascript">
         var ipusr;

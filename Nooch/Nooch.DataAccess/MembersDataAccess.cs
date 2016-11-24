@@ -1775,10 +1775,10 @@ namespace Nooch.DataAccess
                 // Malkit (5/17/16): Added this check here to see if we have user already in our SynapseCreateUsersResult table.
                 //                   This will prevent calling synapse/user/create service for single user multiple times
 
-                #region User Already Has Synapse Account
-
                 var synapseCreateUserObjIfExists = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == guid &&
                                                                                                            m.IsDeleted == false);
+
+                #region User Already Has Synapse Account
 
                 if (synapseCreateUserObjIfExists != null)
                 {
@@ -2442,18 +2442,16 @@ namespace Nooch.DataAccess
         }
 
 
-        public synapseCreateUserV3Result_int RegisterExistingUserWithSynapseV3(string transId, string memberId, string userEmail, string userPhone,
+        public synapseCreateUserV3Result_int RegisterExistingUserWithSynapseV3(bool isBusiness, string transId, string memberId, string userEmail, string userPhone,
                                                                                string userName, string pw, string ssn, string dob, string address,
-                                                                               string zip, string fngprnt, string ip, string cip, string fbid,
+                                                                               string zip, string fngprnt, string ip, string cip, string fbid, string entityType,
                                                                                string isIdImageAdded = "0", string idImageData = "")
         {
-            Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 Fired - Name: [" + userName +
-                        "], Email: [" + userEmail + "], Phone: [" + userPhone +
-                        "], DOB: [" + dob + "], SSN: [" + ssn +
-                        "], Address: [" + address + "], ZIP: [" + zip +
-                        "], IP: [" + ip + "], Fngprnt: [" + fngprnt +
-                        "], TransId: [" + transId + "], CIP: [" + cip +
-                        "], FBID: [" + fbid + "], isIdImageAdded: [" + isIdImageAdded + "]");
+            Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 Fired - isBiz: [" + isBusiness +
+                        "], Name: [" + userName + "], Email: [" + userEmail + "], Phone: [" + userPhone +
+                        "], DOB: [" + dob + "], SSN: [" + ssn + "], Address: [" + address + "], ZIP: [" + zip +
+                        "], IP: [" + ip + "], Fngprnt: [" + fngprnt + "], TransId: [" + transId + "], CIP: [" + cip +
+                        "], FBID: [" + fbid + "], isIdImageAdded: [" + isIdImageAdded + "], EntType: [" + entityType + "]");
 
             synapseCreateUserV3Result_int res = new synapseCreateUserV3Result_int();
             res.success = false;
@@ -2545,8 +2543,8 @@ namespace Nooch.DataAccess
                 if (userName.IndexOf('+') > -1)
                     userName.Replace("+", " ");
                 string[] namearray = userName.Split(' ');
-                string FirstName = CommonHelper.GetEncryptedData(namearray[0]);
-                string LastName = " ";
+                var FirstName = CommonHelper.GetEncryptedData(namearray[0]);
+                var LastName = " ";
 
                 // Example Name Formats: Most Common: 1.) Charles Smith
                 //                       Possible Variations: 2.) Charles   3.) Charles H. Smith
@@ -2605,6 +2603,7 @@ namespace Nooch.DataAccess
 
                 var pinNumber = Utility.GetRandomPinNumber();
                 pinNumber = CommonHelper.GetEncryptedData(pinNumber);
+
                 memberObj.SecondaryEmail = memberObj.UserName; // In case the supplied email is different than what the Landlord used to invite, saving the original email here as secondary, and updating UserName in next line
                 memberObj.UserName = CommonHelper.GetEncryptedData(userEmail.Trim()); // Username might be different if user changes the email on the payRequest page
                 memberObj.UserNameLowerCase = CommonHelper.GetEncryptedData(userEmail.Trim().ToLower());
@@ -2622,11 +2621,13 @@ namespace Nooch.DataAccess
                 memberObj.DateModified = DateTime.Now;
                 memberObj.cipTag = !String.IsNullOrEmpty(cip) ? cip : memberObj.cipTag;
                 memberObj.FacebookUserId = !String.IsNullOrEmpty(fbid) ? fbid : memberObj.FacebookUserId;
-                if (memberObj.isRentScene != true)
-                    memberObj.isRentScene = false;
-
-                if (!String.IsNullOrEmpty(pw))
-                    memberObj.Password = CommonHelper.GetEncryptedData(pw);
+                if (isBusiness)
+                {
+                    memberObj.Type = "Business";
+                    memberObj.TimeZoneKey = entityType; // CC (11/23/16): Using "TimeZoneKey" to store this value, which is needed for creating Synapse Biz Accounts ("LLC", "Corporation", etc.)
+                }
+                if (memberObj.isRentScene != true) memberObj.isRentScene = false;
+                if (!String.IsNullOrEmpty(pw)) memberObj.Password = CommonHelper.GetEncryptedData(pw);
 
                 int save = 0;
                 try
@@ -2938,9 +2939,10 @@ namespace Nooch.DataAccess
         }
 
 
-        public synapseCreateUserV3Result_int RegisterNonNoochUserWithSynapseV3(string transId, string userEmail, string userPhone, string userName, string pw,
-                                                                               string ssn, string dob, string address, string zip, string fngprnt, string ip,
-                                                                               string cip, string fbid, string company, string isIdImageAdded = "0", string idImageData = "")
+        public synapseCreateUserV3Result_int RegisterNonNoochUserWithSynapseV3(bool isBusiness, string transId, string userEmail, string userPhone, string userName,
+                                                                               string pw, string ssn, string dob, string address, string zip, string fngprnt,
+                                                                               string ip, string cip, string fbid, string company, string entityType = "",
+                                                                               string isIdImageAdded = "0", string idImageData = "")
         {
             // What's the plan? -- Store new Nooch member, then create Synpase user, then check if user supplied a (is password.Length > 0)
             // then store data in new added field in SynapseCreateUserResults table for later use
@@ -3026,9 +3028,9 @@ namespace Nooch.DataAccess
                                 totalMins + "], so sending to RegisterExistingUserWithSynapseV3()");
 
                     // Consider the user valid, send to RegisterExistingUserWithSynapseV3()
-                    return RegisterExistingUserWithSynapseV3(transId, memberObj.MemberId.ToString(), userEmail,
+                    return RegisterExistingUserWithSynapseV3(isBusiness, transId, memberObj.MemberId.ToString(), userEmail,
                                                              userPhone, userName, pw, ssn, dob, address, zip, fngprnt,
-                                                             ip, cip, fbid, isIdImageAdded, idImageData);
+                                                             ip, cip, fbid, entityType, isIdImageAdded, idImageData);
                 }
                 else
                 {
@@ -3060,9 +3062,9 @@ namespace Nooch.DataAccess
                                 totalMins + "], so sending to RegisterExistingUserWithSynapseV3()");
 
                     // Consider the user valid, send to RegisterExistingUserWithSynapseV3()
-                    return RegisterExistingUserWithSynapseV3(transId, memberObj.MemberId.ToString(), userEmail,
+                    return RegisterExistingUserWithSynapseV3(isBusiness, transId, memberObj.MemberId.ToString(), userEmail,
                                                              userPhone, userName, pw, ssn, dob, address, zip, fngprnt,
-                                                             ip, cip, fbid, isIdImageAdded, idImageData);
+                                                             ip, cip, fbid, entityType, isIdImageAdded, idImageData);
                 }
                 else
                 {
@@ -3212,7 +3214,7 @@ namespace Nooch.DataAccess
                     Status = Constants.STATUS_NON_REGISTERED,
                     IsDeleted = false,
                     DateCreated = DateTime.Now,
-                    Type = "Personal - Browser",
+                    Type = isBusiness ? "Business" : "Personal - Browser",
                     Photo = Utility.GetValueFromConfig("PhotoUrl") + "gv_no_photo.png",
                     UDID1 = !String.IsNullOrEmpty(fngprnt) ? fngprnt : null,
                     IsVerifiedWithSynapse = false,
@@ -3220,7 +3222,11 @@ namespace Nooch.DataAccess
                     FacebookUserId = fbid,
                     FacebookAccountLogin = fbid,
                     isRentScene = false,
+                    TransferLimit = isBusiness ? "500.00" : "300.00",
                 };
+
+                if (isBusiness)
+                    member.TimeZoneKey = entityType; // CC (11/23/16): Using "TimeZoneKey" to store this value, which is needed for creating Synapse Biz Accounts ("LLC", "Corporation", etc.)
 
                 if (!String.IsNullOrEmpty(inviteCodeId) && inviteCodeId.Length > 30)
                     member.InviteCodeIdUsed = Utility.ConvertToGuid(inviteCodeId);

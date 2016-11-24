@@ -1562,6 +1562,9 @@ namespace Nooch.Web.Controllers
                 Logger.Error("CreateAccount Page -> OUTER EXCEPTION - MemberID: [" + memId + "], Exception: [" + ex.Message + "]");
             }
 
+            if (!String.IsNullOrEmpty(by))
+                rca.company = by;
+
             ViewData["OnLoaddata"] = rca;
             return View();
         }
@@ -1666,12 +1669,12 @@ namespace Nooch.Web.Controllers
         public ActionResult saveMemberInfo(ResultcreateAccount userData)
         {
             Logger.Info("Create Account Page -> saveMemberInfo Fired - MemberID: [" + userData.memId +
-                        "], Name: [" + userData.name + "], Email: [" + userData.email +
+                        "], isBusiness: [" + userData.isBusiness + "], Name: [" + userData.name + "], Email: [" + userData.email +
                         "], Phone: [" + userData.phone + "], DOB: [" + userData.dob +
                         "], SSN: [" + userData.ssn + "], Address: [" + userData.address +
                         "], IP: [" + userData.ip + "], Is Image Sent: [" + userData.isIdImage +
                         "], FBID: [" + userData.fbid + "], Company: [" + userData.company +
-                        "], CIP: [" + userData.cip + "]");
+                        "], CIP: [" + userData.cip + "], EntType: [" + userData.entityType + "]");
 
             RegisterUserSynapseResultClassExt res = new RegisterUserSynapseResultClassExt();
             res.success = "false";
@@ -1689,6 +1692,7 @@ namespace Nooch.Web.Controllers
 
                 RegisterUserWithSynapseV3_Input inputClass = new RegisterUserWithSynapseV3_Input
                 {
+                    isBusiness = userData.isBusiness,
                     fullname = userData.name,
                     email = userData.email,
                     phone = userData.phone,
@@ -1705,7 +1709,8 @@ namespace Nooch.Web.Controllers
                     memberId = userData.memId,
                     transId = userData.transId,
                     company = userData.company,
-                    cip = !String.IsNullOrEmpty(userData.cip) ? userData.cip : "renter"
+                    cip = !String.IsNullOrEmpty(userData.cip) ? userData.cip : "renter",
+                    entityType = userData.entityType
                 };
 
                 var scriptSerializer = new JavaScriptSerializer();

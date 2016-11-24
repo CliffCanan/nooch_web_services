@@ -3077,18 +3077,18 @@ namespace Nooch.API.Controllers
         {
             try
             {
-                Logger.Info("Service Cntlr -> RegisterExistingUserWithSynapseV3 Fired - MemberID: [" + input.memberId +
-                            "], Name: [" + input.fullname + "], Email: [" + input.email +
-                            "], Is ID Img Sent: [" + input.isIdImageAdded + "], CIP: [" + input.cip +
-                            "], FBID: [" + input.fbid + "]");
+                Logger.Info("Service Cntlr -> RegisterExistingUserWithSynapseV3 Fired - MemberID: [" + input.memberId + "]");
+                            //"], Name: [" + input.fullname + "], Email: [" + input.email +
+                            //"], Is ID Img Sent: [" + input.isIdImageAdded + "], CIP: [" + input.cip +
+                            //"], FBID: [" + input.fbid + "], isBiz: [" + input.isBusiness + "], EntType: [" + input.entityType + "]");
 
                 MembersDataAccess mda = new MembersDataAccess();
                 RegisterUserSynapseResultClassExt nc = new RegisterUserSynapseResultClassExt();
 
-                synapseCreateUserV3Result_int res = mda.RegisterExistingUserWithSynapseV3(input.transId, input.memberId, input.email,
+                synapseCreateUserV3Result_int res = mda.RegisterExistingUserWithSynapseV3(input.isBusiness, input.transId, input.memberId, input.email,
                                                                                           input.phone, input.fullname, input.pw, input.ssn,
                                                                                           input.dob, input.address, input.zip, input.fngprnt,
-                                                                                          input.ip, input.cip, input.fbid,
+                                                                                          input.ip, input.cip, input.fbid, input.entityType,
                                                                                           input.isIdImageAdded, input.idImageData);
 
                 nc.success = res.success == true ? "true" : "false";
@@ -3130,14 +3130,15 @@ namespace Nooch.API.Controllers
                 Logger.Info("Service Cntrlr -> RegisterNonNoochUserWithSynapse Fired - MemberID: [" + input.memberId +
                             "], Name: [" + input.fullname + "], Email: [" + input.email +
                             "], Is ID Img Sent: [" + input.isIdImageAdded + "], CIP: [" + input.cip +
-                            "], FBID: [" + input.fbid + "], Company: [" + input.company + "]");
+                            "], FBID: [" + input.fbid + "], Company: [" + input.company +
+                            "], isBiz: [" + input.isBusiness + "], EntType: [" + input.entityType + "]");
 
                 MembersDataAccess mda = new MembersDataAccess();
 
-                synapseCreateUserV3Result_int mdaRes = mda.RegisterNonNoochUserWithSynapseV3(input.transId, input.email, input.phone, input.fullname,
+                synapseCreateUserV3Result_int mdaRes = mda.RegisterNonNoochUserWithSynapseV3(input.isBusiness, input.transId, input.email, input.phone, input.fullname,
                                                                                              input.pw, input.ssn, input.dob, input.address,
                                                                                              input.zip, input.fngprnt, input.ip, input.cip, input.fbid,
-                                                                                             input.company, input.isIdImageAdded, input.idImageData);
+                                                                                             input.company, input.entityType, input.isIdImageAdded, input.idImageData);
 
                 res.success = mdaRes.success.ToString().ToLower();
                 res.reason = mdaRes.reason;

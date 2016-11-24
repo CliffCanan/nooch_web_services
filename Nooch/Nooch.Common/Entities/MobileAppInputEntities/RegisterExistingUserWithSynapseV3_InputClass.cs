@@ -25,5 +25,7 @@ namespace Nooch.Common.Entities.MobileAppInputEntities
         public string cip { get; set; }
         public string fbid { get; set; }
         public string company { get; set; }
+        public string entityType { get; set; }
+        public bool isBusiness { get; set; }
     }
 }
