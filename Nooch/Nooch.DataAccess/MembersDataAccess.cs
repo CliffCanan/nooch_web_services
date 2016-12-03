@@ -3466,7 +3466,7 @@ namespace Nooch.DataAccess
 
                         StringBuilder st = new StringBuilder("<p><strong>This user's Nooch Account information is:</strong></p>" +
                                               "<table border='1' cellpadding='5' style='border-collapse:collapse;'>" +
-                                              "<tr><td><strong>Name:</strong></td><td><strong>" + namearray[0] + " " + name + "</strong></td></tr>" +
+                                              "<tr><td><strong>Name:</strong></td><td><strong>" + name + "</strong></td></tr>" +
                                               "<tr><td><strong>MemberID:</strong></td><td>" + member.MemberId + "</td></tr>" +
                                               "<tr><td><strong>Nooch_ID:</strong></td><td><a href='https://noochme.com/noochnewadmin/Member/Detail?NoochId=" + member.Nooch_ID + "' target='_blank'>" + member.Nooch_ID + "</a></td></tr>" +
                                               "<tr><td><strong>Email Address:</strong></td><td>" + userEmail + "</td></tr>" +
@@ -3488,7 +3488,7 @@ namespace Nooch.DataAccess
                         var companyTxt = company == "habitat" ? " [HABITAT]" : "";
 
                         Utility.SendEmail(null, "admin-autonotify@nooch.com", "newUser@nooch.com", null,
-                                          "Nooch Alert - NEW" + companyTxt + " USER: " + namearray[0] + " " + name,
+                                          "Nooch Alert - NEW" + companyTxt + " USER: " + name,
                                           null, null, null, null, completeEmailTxt.ToString());
                     }
                     catch (Exception ex)
