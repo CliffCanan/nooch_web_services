@@ -513,14 +513,12 @@ function updateValidationUi(field, success) {
 
         swal({
             title: "Forget Your Birthday?",
-            text: "We hate identify fraud.  With a passion.<span class='show m-t-15'>So to help protect our users from the Bad Guys, " +
-                  "please enter your <strong>date of birth</strong> to help verify your ID. &nbsp;Don't worry, this is never displayed anywhere and is only used to verify who you are.</span>" +
-                  "<i class='fa fa-smile-o' style='font-size:36px; margin: 10px 0 0;'></i>",
+            html: "We hate identify fraud.  With a passion.<span class='show m-t-15'>So to help protect all users from fraud, " +
+                  "please enter your <strong>date of birth</strong> to help verify your ID. &nbsp;This is never displayed anywhere and is only used to verify who you are.</span>",
             type: "warning",
             showCancelButton: false,
             confirmButtonColor: "#3fabe1",
-            confirmButtonText: "Ok",
-            html: true
+            confirmButtonText: "Ok"
         });
     }
 
@@ -683,9 +681,6 @@ function createRecord() {
                                    ", isBusiness: " + isBusiness +
                                    ", EntType: " + entityType + "}");
 
-
-    return;
-
     $.ajax({
         type: "POST",
         url: "saveMemberInfo",
@@ -846,7 +841,7 @@ function idVerifiedSuccess() {
         swal({
             title: "Submitted Successfully",
             html: "Thanks for submitting your ID information. That helps us keep " + COMPANY_DISPLAY_TXT + " safe for everyone. &nbsp;We only use this information to prevent ID fraud and never share it without your permission." +
-            "<span class='show m-t-10'>To finish, link any checking account:</span>" +
+            "<strong class='show m-t-10'>To finish, link any checking account:</strong>" +
             "<span class=\"spanlist\"><span>1. &nbsp;Select your bank</span><span>2. &nbsp;Login with your regular online banking credentials</span><span>3. &nbsp;Choose which account to use</span></span>",
             type: "success",
             showCancelButton: false,
@@ -922,7 +917,6 @@ function submitPin(pin) {
                     showCancelButton: false,
                     confirmButtonColor: "#3fabe1",
                     confirmButtonText: "Continue",
-                    closeOnConfirm: true,
                     html: true,
                     customClass: "idVerSuccessAlert",
                 }, function (isConfirm)
@@ -1040,13 +1034,12 @@ $('body').bind('addBankComplete', function () {
         // THEN DISPLAY SUCCESS ALERT...
         swal({
             title: "Bank Linked Successfully",
-            text: "<i class=\"fa fa-bank text-success\"></i>" +
+            html: "<i class=\"fa fa-bank text-success\"></i>" +
                   "<span class='show m-t-10'>Thanks for completing this <strong>one-time</strong> process. &nbsp;Now you can make secure payments with anyone and never share your bank details!</span>",
             type: "success",
             confirmButtonColor: "#3fabe1",
             confirmButtonText: "Done",
-            customClass: "largeText",
-            html: true
+            customClass: "largeText"
         });
 
         //if (ISNEW == "true")
@@ -1071,7 +1064,6 @@ $('body').bind('addBankComplete', function () {
           confirmButtonColor: "#3fabe1",
           confirmButtonText: "Submit",
           cancelButtonText: "No thanks",
-          closeOnConfirm: false,
           html: true
       }, function (inputValue)
       {
@@ -1258,14 +1250,13 @@ function showErrorAlert(errorNum) {
         confirmButtonColor: "#3fabe1",
         confirmButtonText: "Ok",
         cancelButtonText: "Contact Support",
-        closeOnConfirm: true,
-        closeOnCancel: false,
         allowEscapeKey: false,
         html: true
-    }, function (isConfirm) {
-        if (!isConfirm) window.open("mailto:" + supportEmail);
-        else if (shouldFocusOnEmail) updateValidationUi("email", false);
+    }).then(function () {
+        if (shouldFocusOnEmail) updateValidationUi("email", false);
         else if (shouldFocusOnPhone) updateValidationUi("phone", false);
+    }, function (dismiss) {
+        window.open("mailto:" + supportEmail);
     });
 }
 
@@ -1297,7 +1288,7 @@ $('body').on('blur', '.form-control', function () {
 function ssnWhy() {
     swal({
         title: "Why Do We Collect SSN?",
-        text: "<strong>We hate identify fraud.  With a passion.</strong><span class='show m-t-10'>" +
+        html: "<strong>We hate identify fraud.  With a passion.</strong><span class='show m-t-10'>" +
               "In order to keep " + COMPANY_DISPLAY_TXT + " safe for all users (and to comply with federal and state measures against identity theft), we use your SSN for one purpose only: <strong>verifying your ID</strong>.</span>" +
 			  "<span class='show m-t-10'>Your SSN is never displayed anywhere and is only transmitted with bank-grade encryption.</span>" +
               "<span class='show m-t-10'><a href='https://en.wikipedia.org/wiki/Know_your_customer' class='btn btn-link p-5 f-16' target='_blank'>Learn More<i class='fa fa-external-link m-l-10 f-15'></i></a></span>",
@@ -1305,7 +1296,6 @@ function ssnWhy() {
         showCancelButton: false,
         confirmButtonColor: "#3fabe1",
         confirmButtonText: "Ok",
-        html: true
     });
 }
 

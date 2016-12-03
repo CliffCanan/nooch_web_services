@@ -1428,7 +1428,7 @@ namespace Nooch.Common
 
                     synapseKycInput.user = user;
 
-                    string baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox"))
+                    string baseAddress = !Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox"))
                                          ? "https://sandbox.synapsepay.com/api/v3/user/doc/add"
                                          : "https://synapsepay.com/api/v3/user/doc/add";
 
@@ -2075,7 +2075,7 @@ namespace Nooch.Common
                     synapseAddDocsV3Input.user = user;
 
 
-                    string baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox"))
+                    string baseAddress = !Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox"))
                                          ? "https://sandbox.synapsepay.com/api/v3/user/docs/add"
                                          : "https://synapsepay.com/api/v3/user/docs/add";
 
@@ -2557,7 +2557,7 @@ namespace Nooch.Common
 
                 submitDocObj.user = user;
 
-                string baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/doc/attachments/add" : "https://synapsepay.com/api/v3/user/doc/attachments/add";
+                string baseAddress = !Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/doc/attachments/add" : "https://synapsepay.com/api/v3/user/doc/attachments/add";
 
                 var http = (HttpWebRequest)WebRequest.Create(new Uri(baseAddress));
                 http.Accept = "application/json";
@@ -2708,7 +2708,7 @@ namespace Nooch.Common
                 input.client = client;
                 input.filter = filter;
 
-                string UrlToHit = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/search"
+                string UrlToHit = !Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/search"
                                                                                                       : "https://synapsepay.com/api/v3/user/search";
 
                 //Logger.Info("Common Helper -> getUserPermissionsForSynapseV3 - About to query Synapse's /user/search API - UrlToHit: [" + UrlToHit + "]");
@@ -3109,7 +3109,7 @@ namespace Nooch.Common
 
                     input.user = user;
 
-                    var UrlToHit = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/signin" : "https://synapsepay.com/api/v3/user/signin";
+                    var UrlToHit = !Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/signin" : "https://synapsepay.com/api/v3/user/signin";
 
                     Logger.Info("Common Helper -> refreshSynapseV3OautKey - Payload to send to Synapse /v3/user/signin: [" + JsonConvert.SerializeObject(input) + "]");
 
@@ -3419,7 +3419,7 @@ namespace Nooch.Common
                         inputNoPin.login = login;
                     }
 
-                    string UrlToHit = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/signin" : "https://synapsepay.com/api/v3/user/signin";
+                    string UrlToHit = !Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/signin" : "https://synapsepay.com/api/v3/user/signin";
                     string parsedContent = isPinIncluded ? JsonConvert.SerializeObject(inputWithPin) : JsonConvert.SerializeObject(inputNoPin);
 
                     Logger.Info("Common Helper -> SynapseV3SignIn - isPinIncluded: [" + isPinIncluded + "] - Payload to send to Synapse /v3/user/signin: [" + parsedContent + "]");
@@ -4264,7 +4264,7 @@ namespace Nooch.Common
             try
             {
                 string baseAddress = "";
-                baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/node/remove" : "https://synapsepay.com/api/v3/node/remove";
+                baseAddress = !Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/node/remove" : "https://synapsepay.com/api/v3/node/remove";
 
                 RemoveBankNodeRootClass rootObject = new RemoveBankNodeRootClass
                 {

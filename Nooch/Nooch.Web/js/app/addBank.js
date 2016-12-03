@@ -450,7 +450,7 @@ function submitBnkLgn() {
                 }
                 else if (bnkLoginResult.ERROR_MSG.indexOf('Currently we are unable to login to') > -1 ||
 				         bnkLoginResult.ERROR_MSG.indexOf('Please try again later') > -1 ||
-                         bnkLoginResult.ERROR_MSG.indexOf('Please make sure that your bank account isnt locked and then try again'))
+                         bnkLoginResult.ERROR_MSG.indexOf('Please make sure that your bank account isnt locked and then try again') > -1)
                 {
                     // ADD PROMPT FOR MANUAL ROUNTING/ACCOUNT #
                     bankLoginErrorAlert();
@@ -495,7 +495,7 @@ function submitBnkLgn() {
                 }
                 else
                 {
-                    $('#bankLogin_errorMsg').append("<div><p class='parsley-errors-list filled'>Oh no! We are having some trouble connecting to " + BANK_NAME + ". Please try again!</p></div>");
+                    $('#bankLogin_errorMsg').append("<div><p class='parsley-errors-list filled'>We'r having trouble connecting to " + BANK_NAME + ". Please try again!</p></div>");
 
                     // ADD PROMPT FOR MANUAL ROUNTING/ACCOUNT #
                     bankLoginErrorAlert();

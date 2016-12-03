@@ -3808,14 +3808,14 @@ namespace Nooch.API.Controllers
                 bankloginParameters.node = node;
 
                 string UrlToHit = "";
-                UrlToHit = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/node/add" : "https://synapsepay.com/api/v3/node/add";
+                UrlToHit = !Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/node/add" : "https://synapsepay.com/api/v3/node/add";
 
                 #endregion Setup Call To SynapseV3 /node/add
 
                 Logger.Info("Service Cntrlr -> SynapseV3AddNodeBankLogin - /node/add PAYLOAD: Oauth_Key: [" + bankloginParameters.login.oauth_key +
                             "], Fngrprnt: [" + bankloginParameters.user.fingerprint + "], Type: [" + bankloginParameters.node.type +
                             "], Bank_ID: [" + bankloginParameters.node.info.bank_id + "], Bank_PW: [" + bankloginParameters.node.info.bank_pw +
-                            "], Bank_Name: [" + bankloginParameters.node.info.bank_name + "], Supp_ID: [" + bankloginParameters.node.extra.supp_id + "]");
+                            "], Bank_Name: [" + bankloginParameters.node.info.bank_name + "], UrlToHit: [" + UrlToHit + "]");
 
                 // Calling Synapse Bank Login service
                 #region Call SynapseV3 Add Node API

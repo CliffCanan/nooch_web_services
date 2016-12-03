@@ -1838,7 +1838,7 @@ div[data-custom-class*="largeText"] p { font-size: 18px !important; }
 .idVerSuccessAlert p i, .createAccountPg .sweet-alert p i:not(.fa-li), .createAccountPg .swal2-modal p i:not(.fa-li) { font-size: 52px; margin: -15px 0 10px; }
 .idVerSuccessAlert p span { display: block; margin: 15px auto 10px; }
 .idVerSuccessAlert p span.spanlist { font-weight: 600; line-height: 1.5; margin-top: 0;}
-.idVerSuccessAlert .spanlist > span { margin: 5px auto; }
+.idVerSuccessAlert .spanlist > span { display: block;}
 .idVerSuccessAlert button.confirm, .idVerSuccessAlert .swal2-confirm,
 .createAccountPg .securityAlert button.confirm, .createAccountPg .securityAlert .swal2-confirm
 .confirmBtnFullWidth button.confirm, .confirmBtnFullWidth .swal2-confirm {
@@ -2724,7 +2724,7 @@ form .table-header {
     box-shadow: 0 0 14px rgba(0, 0, 0, 0.24),
 				0 14px 28px rgba(0, 0, 0, 0.48);
   }
-  .sweet-alert p, .swal2-modal p { font-size: 17px; }
+  .sweet-alert p, .swal2-modal .swal2-content { font-size: 17px; }
   .securityAlert p { font-size: 16.5px; line-height:1.4; margin: 0 0 1em; }
   .securityAlert ul ,
   .upgradeNotice ul { font-size: 16px; line-height:1.4; }
