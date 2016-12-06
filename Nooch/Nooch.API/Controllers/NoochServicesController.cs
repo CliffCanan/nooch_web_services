@@ -482,8 +482,12 @@ namespace Nooch.API.Controllers
                         email = CommonHelper.GetDecryptedData(memberObj.UserName),
                         contactNumber = !String.IsNullOrEmpty(memberObj.ContactNumber) && memberObj.ContactNumber.Length > 2
                                             ? CommonHelper.FormatPhoneNumber(memberObj.ContactNumber) : "",
-                        firstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName)),
-                        lastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.LastName)),
+                        firstName = !String.IsNullOrEmpty(memberObj.FirstName)
+                                        ? CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName))
+                                        : " ",
+                        lastName = !String.IsNullOrEmpty(memberObj.LastName)
+                                        ? CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.LastName))
+                                        : " ",
                         userPicture = memberObj.Photo ?? Path.GetFileName("././img/profile_picture.png"),
                         pin = memberObj.PinNumber,
                         rememberMe = memberObj.RememberMeEnabled ?? false,
@@ -501,12 +505,12 @@ namespace Nooch.API.Controllers
                         synUserPermission = synUserDetails != null ? synUserDetails.permission : "",
                         synBankAllowed = synBankDetails != null ? synBankDetails.allowed : "",
 
-                        isProfileComplete = !string.IsNullOrEmpty(memberObj.Address) &&
-                                                !string.IsNullOrEmpty(memberObj.City) &&
-                                                !string.IsNullOrEmpty(memberObj.Zipcode) &&
-                                                !string.IsNullOrEmpty(memberObj.ContactNumber) &&
-                                                !string.IsNullOrEmpty(memberObj.SSN) &&
-                                                memberObj.DateOfBirth != null,
+                        isProfileComplete = !String.IsNullOrEmpty(memberObj.Address) &&
+                                            !String.IsNullOrEmpty(memberObj.City) &&
+                                            !String.IsNullOrEmpty(memberObj.Zipcode) &&
+                                            !String.IsNullOrEmpty(memberObj.ContactNumber) &&
+                                            !String.IsNullOrEmpty(memberObj.SSN) &&
+                                            memberObj.DateOfBirth != null,
                         isRequiredImmediately = memberObj.IsRequiredImmediatley ?? false,
                         showInSearch = memberObj.ShowInSearch ?? false,
                         isVerifiedPhone = memberObj.IsVerifiedPhone == true ? true : false,
@@ -5258,7 +5262,7 @@ namespace Nooch.API.Controllers
 
             try
             {
-                Logger.Info("Service Cntlr -> LoginWithFacebook - userEmail: [" + userEmail + "], FB ID: [" + FBId + "]");
+                Logger.Info("Service Cntlr -> LoginWithFacebookGeneric - userEmail: [" + userEmail + "], FB ID: [" + FBId + "]");
 
                 var mda = new MembersDataAccess();
                 string cookie = mda.LoginwithFBGeneric(userEmail, FBId, rememberMeEnabled, lat, lng, udid, devicetoken);
@@ -5304,7 +5308,7 @@ namespace Nooch.API.Controllers
             }
             catch (Exception ex)
             {
-                Logger.Error("Service Cntlr -> LoginWithFacebook FAILED - userEmail: [" + userEmail + "], Exception: [" + ex + "]");
+                Logger.Error("Service Cntlr -> LoginWithFacebookGeneric FAILED - userEmail: [" + userEmail + "], Exception: [" + ex + "]");
                 res.Result = ex.Message;
             }
 

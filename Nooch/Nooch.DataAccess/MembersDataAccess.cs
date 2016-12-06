@@ -2288,14 +2288,13 @@ namespace Nooch.DataAccess
                                             "], FBID: [" + noochMember.FacebookUserId + "], VerificationDocPath: [" + noochMember.VerificationDocumentPath + "], MemberID: [" + memberId + "]");
 
                                 // Check whether the user provided an SSN or Facebook Login
-                                if (noochMember.cipTag != "vendor" &&
-                                     String.IsNullOrEmpty(noochMember.SSN) &&
-                                    (String.IsNullOrEmpty(noochMember.FacebookUserId) || noochMember.FacebookUserId != "not connected") &&
+                                if (String.IsNullOrEmpty(noochMember.SSN) &&
+                                    (String.IsNullOrEmpty(noochMember.FacebookUserId) || noochMember.FacebookUserId == "not connected") &&
                                      String.IsNullOrEmpty(noochMember.VerificationDocumentPath))
                                 {
                                     // User doesn't have any SSN or FB ID saved
-                                    var error = "MDA -> RegisterUserWithSynapseV3 - User has no SSN or FB ID to submit to Synapse! SSN: [" + noochMember.SSN +
-                                                 "], FB ID: [" + noochMember.FacebookUserId + "], CIP Tag: [" + noochMember.cipTag + "] - CONTINUING ON...";
+                                    var error = "MDA -> RegisterUserWithSynapseV3 - User has no SSN / FBID / ID Doc to submit to Synapse! SSN: [" + noochMember.SSN +
+                                                 "], FBID: [" + noochMember.FacebookUserId + "], CIP Tag: [" + noochMember.cipTag + "] - CONTINUING ON...";
                                     Logger.Error(error);
                                     CommonHelper.notifyCliffAboutError(error);
                                 }
