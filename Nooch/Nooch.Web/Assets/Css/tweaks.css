@@ -1544,6 +1544,12 @@ div#pwFormShell #depositCreateAccount,
 #idVerWiz dl {font-size: 15px;}
 #idVerWiz input {font-size: 15px;}
 
+.tos-text {
+	display: block;
+    margin: 15px auto 0px;
+	opacity: .8;
+}
+
 .dl-horizontal .withIcon { 
     position: relative;
     overflow: visible;
@@ -1553,13 +1559,14 @@ div#pwFormShell #depositCreateAccount,
     opacity: .85;
 }
 
+
+/*********************/
+/**  AUTO-COMPLETE  **/
+/*********************/
 .form-control.autocomplete {
   padding-left: 6px;
   color: #111;
 }
-/*********************/
-/**  AUTO-COMPLETE  **/
-/*********************/
 .autocomplete-suggestions {
   background: #FFF;
   border: 1px solid #ccc;
@@ -1716,7 +1723,7 @@ div#carousel ~ a:hover {
   text-align: center;
   color: #212121;
   font-weight: 400;
-  font-size: 16px;
+  font-size: 17px;
   line-height: 1.4;
   margin: 20px 0;
 }
@@ -2715,6 +2722,7 @@ form .table-header {
 @media only screen and (max-width: 360px) {
 	#idVerWiz #idVerWiz-p-2 .well-sm {font-size: 13px;}
 }
+
 @media only screen and (min-width: 768px) {
   .hide-md { display: none !important; }
   .sweet-alert, .swal2-modal {

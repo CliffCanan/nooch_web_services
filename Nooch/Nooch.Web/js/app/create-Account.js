@@ -73,7 +73,7 @@ $(document).ready(function () {
         // Get Fingerprint
         new Fingerprint2().get(function (result) {
             fingprint = result;
-            //console.log(fingprint);
+            //console.log("Fingerprint: " + fingprint);
         });
         //console.log(ipusr);
 
@@ -83,27 +83,6 @@ $(document).ready(function () {
                   "<li><i class='fa-li fa fa-check'></i>We don't see or store your bank credentials</li>" +
                   "<li><i class='fa-li fa fa-check'></i>We use <strong>bank-grade encryption</strong> to secure all data</li>" +
                   "<li><i class='fa-li fa fa-check'></i>The recipient will never see your bank credentials</li></ul>";
-
-        /*swal({
-            title: "Secure, Private, & Direct Payments",
-            html: bodyText,
-            imageUrl: "../Assets/Images/secure.svg",
-            imageWidth: 194,
-            imageHeight: 80,
-            showCancelButton: false,
-            cancelButtonText: "Learn More",
-            confirmButtonColor: "#3fabe1",
-            confirmButtonText: "Let's Go",
-            customClass: "securityAlert",
-            allowEscapeKey: false,
-        }).then(function () {
-            setTimeout(function () {
-                $('input#idVer-name').focus();
-            }, 500)
-        }, function (dismiss) {
-            if (dismiss == 'cancel')
-                window.open("https://www.nooch.com/safe");
-        });*/
 
         var steps = [
                   {
@@ -129,13 +108,12 @@ $(document).ready(function () {
                               if (result)
                                   resolve()
                               else
-                                  reject('You need to select something!')
+                                  reject('Please select an option!')
                           })
                       },
                       title: 'Register as a Business?',
                       html: '<p>Are you going to make payments on behalf of a company, or as an individual person?</p>',
                       showCancelButton: false,
-                      //cancelButtonText: "Submit",
                       confirmButtonText: "Submit",
                       allowEscapeKey: false
                   }
@@ -151,8 +129,9 @@ $(document).ready(function () {
                 $('#name-label').text('Business Name');
                 $('.biz-text').text(' business');
                 $('.biz-only').removeClass('hidden');
+                $('.no-id-step-show').removeClass('hidden');
                 $('.personal-only').addClass('hidden');
-                $('.personal-only.destroy').remove();
+                $('.no-id-step').remove();
 
                 TYPE_ACCOUNT = "business";
             }
@@ -160,6 +139,13 @@ $(document).ready(function () {
             {
                 TYPE_ACCOUNT = "personal";
                 $('.biz-only').addClass('hidden');
+
+                // Since Habitat's users only receive, don't need to ask for DL in step 4.
+                if (COMPANY == "habitat")
+                {
+                    $('.no-id-step-show').removeClass('hidden');
+                    $('.no-id-step').remove();
+                }
             }
 
             // Now show the wizard since there are no errors (hidden on initial page load because it takes
@@ -207,7 +193,7 @@ function runIdWizard() {
         /* Events */
         onInit: function (event, currentIndex) {
 
-            if (TYPE_CIP == "vendor" || TYPE_ACCOUNT == "business") // Vendors only need to receive $, so Synapse doesn't require an ID, so Step 4 doesn't get displayed
+            if (COMPANY == "habitat" || TYPE_ACCOUNT == "business" || TYPE_CIP == "vendor") // Vendors only need to receive $, so Synapse doesn't require an ID, so Step 4 doesn't get displayed
                 $(".wizard > .steps > ul > li").css("width", "33%");
 
             $('#idVerWiz > .content').animate({ height: "27em" }, 300)
@@ -264,7 +250,7 @@ function runIdWizard() {
                     $('#idVer-name').val(trimmedName);
 
                     // Check Name Field for a " "
-                    if ($('#idVer-name').val().indexOf(' ') > 1)
+                    if (TYPE_ACCOUNT == "business" || $('#idVer-name').val().indexOf(' ') > 1)
                     {
                         updateValidationUi("name", true);
 
@@ -317,7 +303,7 @@ function runIdWizard() {
 
                         // Great, go to the next step of the wizard :-]
 
-                        $('#idVerWiz > .content').animate({ height: "26.5em" }, 500)
+                        $('#idVerWiz > .content').animate({ height: "27.5em" }, 500)
                         return true;
                     }
                     else updateValidationUi("zip", false);
@@ -414,7 +400,7 @@ function checkStepThree() {
                     });
 
                     $('#idVer_idDoc').on('fileloaded', function (event, file, previewId, index, reader) {
-                        $('#idVerWiz > .content').animate({ height: "29em" }, 700)
+                        $('#idVerWiz > .content').animate({ height: "30.5em" }, 700)
 
                         isFileAdded = "1";
                         var readerN = new FileReader();
@@ -428,18 +414,18 @@ function checkStepThree() {
                     });
 
                     $('#idVer_idDoc').on('fileclear', function (event) {
-                        $('#idVerWiz > .content').animate({ height: "23em" }, 800)
+                        $('#idVerWiz > .content').animate({ height: "24em" }, 800)
                         isFileAdded = "0";
                         FileData = null;
                     });
 
                     $('#idVer_idDoc').on('filecleared', function (event) {
-                        $('#idVerWiz > .content').animate({ height: "23em" }, 800)
+                        $('#idVerWiz > .content').animate({ height: "24em" }, 800)
                         isFileAdded = "0";
                         FileData = null;
                     });
 
-                    $('#idVerWiz > .content').animate({ height: "29em" }, 800)
+                    $('#idVerWiz > .content').animate({ height: "30.5em" }, 800)
                     return true;
                 }
                 else updateValidationUi("ssn", false);
@@ -494,7 +480,7 @@ function resizeInCanvas(img) {
     canvas.width = img.width * ratio;
     canvas.height = img.height * ratio;
 
-    console.log(canvas);
+    //console.log(canvas);
     var ctx = canvas.getContext("2d");
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
     // 4. export as dataUrl
@@ -661,10 +647,10 @@ function createRecord() {
     if (isSmScrn)
     {
         dobVal = moment(dobVal).format('MM/DD/YYYY');
-        console.log("After applying Moment --> DOB Value is: [" + dobVal + "]");
+        //console.log("After applying Moment --> DOB Value is: [" + dobVal + "]");
     }
 
-    console.log("SAVE MEMBER INFO -> {memId: " + memId +
+    /*console.log("SAVE MEMBER INFO -> {memId: " + memId +
                                    ", Name: " + userNameVal +
                                    ", dob: " + dobVal +
                                    ", ssn: " + ssnVal +
@@ -679,7 +665,7 @@ function createRecord() {
                                    ", Type: " + cip +
 								   ", FBID: " + FBID +
                                    ", isBusiness: " + isBusiness +
-                                   ", EntType: " + entityType + "}");
+                                   ", EntType: " + entityType + "}");*/
 
     $.ajax({
         type: "POST",
@@ -791,24 +777,24 @@ function createRecord() {
                     }
                     else if (resultReason.indexOf("email already registered") > -1)
                     {
-                        console.log("Error: email already registered");
+                        console.warning("Error: email already registered");
                         showErrorAlert('20');
                     }
                     else if (resultReason.indexOf("phone number already registered") > -1)
                     {
-                        console.log("Error: phone number already registered");
+                        console.warning("Error: phone number already registered");
                         showErrorAlert('30');
                     }
                     else if (resultReason.indexOf("Missing critical data") > -1)
                     {
-                        console.log("Error: missing critical data");
+                        console.warning("Error: missing critical data");
                         showErrorAlert('2');
                     }
                     else showErrorAlert('2');
                 }
                 else
                 {
-                    console.log("Error checkpoint # 659");
+                    console.warning("Error checkpoint #797");
                     showErrorAlert('2');
                 }
             }
@@ -817,9 +803,9 @@ function createRecord() {
             // Hide the Loading Block
             $('#idWizContainer').unblock();
 
-            console.log("ERROR --> 'x', then 'e' is... ");
-            console.log(x);
-            console.log(e);
+            //console.log("ERROR --> 'x', then 'e' is... ");
+            console.error(x);
+            console.error(e);
 
             showErrorAlert('3');
         }
@@ -849,7 +835,7 @@ function idVerifiedSuccess() {
             confirmButtonText: "Great!",
             customClass: "idVerSuccessAlert",
         }).then(function () {
-            console.log("memIDGen is: [" + memIdGen + "]");
+            //console.log("memIDGen is: [" + memIdGen + "]");
 
             $("#AddBankDiv iframe").attr("src", $('#addBank_Url').val() + "?memberid=" + memIdGen + "&redUrl=createaccnt");
 
@@ -867,8 +853,6 @@ function submitPin(pin) {
     console.log("submitPin fired - PIN [" + pin + "]");
 
     var memId = $('#memId').val();
-
-    console.log("SubmitPIN Payload -> {memId: " + memId + ", PIN: " + pin + "}");
 
     // ADD THE LOADING BOX
     $('#idWizContainer').block({
@@ -912,15 +896,13 @@ function submitPin(pin) {
                 // THEN DISPLAY SUCCESS ALERT...
                 /*swal({
                     title: "Great Success",
-                    text: "Your phone number has been confirmed.",
+                    html: "Your phone number has been confirmed.",
                     type: "success",
                     showCancelButton: false,
                     confirmButtonColor: "#3fabe1",
                     confirmButtonText: "Continue",
-                    html: true,
                     customClass: "idVerSuccessAlert",
-                }, function (isConfirm)
-                {});*/
+                });*/
                 // SUBMIT ID WIZARD DATA TO SERVER AGAIN...
                 console.log("Calling createRecord() again...")
                 createRecord();
@@ -937,37 +919,36 @@ function submitPin(pin) {
                     {
                         swal({
                             title: "Check Your Phone",
-                            text: "To verify your phone number, we just sent a text message to your phone.  Please enter the <strong>PIN</strong> to continue.</span>" +
+                            html: "To verify your phone number, we just sent a text message to your phone.  Please enter the <strong>PIN</strong> to continue.</span>" +
 								  "<i class='show fa fa-mobile' style='font-size:40px; margin: 10px 0 0;'></i>",
                             type: "input",
                             showCancelButton: true,
                             confirmButtonColor: "#3fabe1",
-                            confirmButtonText: "Ok",
-                            html: true
+                            confirmButtonText: "Ok"
                         }, function (inputTxt) {
                             console.log("Entered Text: [" + inputTxt + "]");
                         });
                     }
                     else if (resultReason.indexOf("email already registered") > -1)
                     {
-                        console.log("Error: email already registered");
+                        console.warning("Error: email already registered");
                         showErrorAlert('20');
                     }
                     else if (resultReason.indexOf("phone number already registered") > -1)
                     {
-                        console.log("Error: phone number already registered");
+                        console.warning("Error: phone number already registered");
                         showErrorAlert('30');
                     }
                     else if (resultReason.indexOf("Missing critical data") > -1)
                     {
-                        console.log("Error: missing critical data");
+                        console.warning("Error: missing critical data");
                         showErrorAlert('2');
                     }
                     else showErrorAlert('2');
                 }
                 else
                 {
-                    console.log("Error checkpoint [#834]");
+                    console.error("Error checkpoint [#951]");
                     showErrorAlert('2');
                 }
             }
@@ -976,9 +957,9 @@ function submitPin(pin) {
             // Hide the Loading Block
             $('#idWizContainer').unblock();
 
-            console.log("Submit PIN ERROR --> 'x', then 'e' is... ");
-            console.log(x);
-            console.log(e);
+            //console.error("Submit PIN ERROR --> 'x', then 'e' is... ");
+            console.error(x);
+            console.error(e);
 
             showErrorAlert('3');
         }
@@ -993,9 +974,10 @@ $('body').bind('complete', function () {
     // Hide the Loading Block
     $('#idVerContainer').unblock();
 
-    console.log("Callback from ID Quest - success was: [" + result + "]");
+    //console.log("Callback from ID Quest - success was: [" + result + "]");
 
-    if (result == true) idVerifiedSuccess();
+    if (result == true)
+        idVerifiedSuccess();
     else
     {
         // Hide the ID Questions iFrame
@@ -1054,7 +1036,7 @@ $('body').bind('addBankComplete', function () {
 
     /*swal({
           title: "Bank Linked Successfully",
-          text: "<i class=\"fa fa-bank text-success\"></i>" +
+          html: "<i class=\"fa fa-bank text-success\"></i>" +
                 "<span class='m-t-10'>Your bank account is now linked!" +
                 "<span>Enter a password below if you'd like to be able to make future payments without re-entering all your info. <em>Optional</em></span>",
           type: "input",
@@ -1064,7 +1046,6 @@ $('body').bind('addBankComplete', function () {
           confirmButtonColor: "#3fabe1",
           confirmButtonText: "Submit",
           cancelButtonText: "No thanks",
-          html: true
       }, function (inputValue)
       {
           if (inputValue === false) return false;
@@ -1164,7 +1145,7 @@ function areThereErrors() {
 
     if (errorId != "0")
     {
-        console.log('areThereErrors -> errorId is: [' + errorId + "]");
+        console.warning('areThereErrors -> errorId is: [' + errorId + "]");
 
         // Position the footer absolutely so it's at the bottom of the screen (it's normally pushed down by the body content)
         $('.footer').css({
@@ -1244,14 +1225,13 @@ function showErrorAlert(errorNum) {
 
     swal({
         title: alertTitle,
-        text: alertBodyText,
+        html: alertBodyText,
         type: "error",
         showCancelButton: true,
         confirmButtonColor: "#3fabe1",
         confirmButtonText: "Ok",
         cancelButtonText: "Contact Support",
         allowEscapeKey: false,
-        html: true
     }).then(function () {
         if (shouldFocusOnEmail) updateValidationUi("email", false);
         else if (shouldFocusOnPhone) updateValidationUi("phone", false);

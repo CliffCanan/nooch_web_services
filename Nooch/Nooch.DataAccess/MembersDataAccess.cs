@@ -1966,21 +1966,14 @@ namespace Nooch.DataAccess
                     {
                         var attemptToResendSms = "TEMP PLACEHOLDER";//ResendVerificationSMS(noochMember.ContactNumber);
                         if (attemptToResendSms == "Success")
-                        {
                             res.reason = "User phone not verified - Verification SMS re-sent successfully";
-                        }
                         else
-                        {
                             res.reason = "User phone not verified - Attmept to resend verification SMS failed";
-                        }
                     }
                     else
-                    {
                         res.reason = "User phone not verified - no phone number found, cannot attempt to re-send verification SMS";
-                    }
 
                     Logger.Error("MDA -> RegisterUserWithSynapse FAILED. Res.reason is: [" + res.reason + "]");
-
 
                     return res;
                 }*/
@@ -1996,7 +1989,7 @@ namespace Nooch.DataAccess
                 string SynapseClientSecret = clientIds[1];
 
                 var fullname = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(noochMember.FirstName)) + " " +
-                                  CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(noochMember.LastName));
+                               CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(noochMember.LastName));
 
                 synapseCreateUserInput_int payload = new synapseCreateUserInput_int();
 
@@ -2020,18 +2013,14 @@ namespace Nooch.DataAccess
 
                 createUser_fingerprints fingerprints = new createUser_fingerprints();
                 if (!String.IsNullOrEmpty(noochMember.UDID1))
-                {
                     fingerprints.fingerprint = noochMember.UDID1;
-                }
                 else if (!String.IsNullOrEmpty(noochMember.DeviceToken))
-                {
                     fingerprints.fingerprint = noochMember.DeviceToken;
-                }
                 else
                 {
                     // If for some reason we don't have a value for either UDID1 or DeviceToken, then let's just send a random string of text...
                     // Found this trick online for generating "random" (not technically, but close enough for this purpose) string... make a GUID and remove the "-" (with "n")
-                    string randomTxt = Guid.NewGuid().ToString("n").Substring(0, 24);
+                    var randomTxt = Guid.NewGuid().ToString("n").Substring(0, 24);
                     fingerprints.fingerprint = randomTxt;
 
                     // Now save this new value for the user in the DB for UDID1
@@ -2039,6 +2028,7 @@ namespace Nooch.DataAccess
                     {
                         noochMember.UDID1 = randomTxt;
                         _dbContext.SaveChanges();
+                        _dbContext.Entry(noochMember).Reload();
                     }
                     catch (Exception ex)
                     {
@@ -2056,36 +2046,8 @@ namespace Nooch.DataAccess
                 createUser_extra extra = new createUser_extra();
                 extra.note = "";
                 extra.supp_id = noochMember.Nooch_ID;
-                extra.is_business = noochMember.Nooch_ID == "ykDjbVj5" ? true : false; // CLIFF (10/10/12): For Landlords, this could potentially be true... but we'll figure that out later
-
-                if (!String.IsNullOrEmpty(noochMember.cipTag))
-                {
-                    var cipTag = noochMember.cipTag.ToLower();
-
-                    if (cipTag == "renter" || cipTag == "1") { extra.cip_tag = 1; }
-                    else if (cipTag == "vendor" || cipTag == "2") { extra.cip_tag = 2; }
-                    else if (cipTag == "landlord" || cipTag == "3") { extra.cip_tag = 3; }
-                    else extra.cip_tag = 1; // default
-                }
-                else
-                {
-                    try
-                    {
-                        Logger.Info("MDA -> RegisterUserWithSynapseV3 - No CIP Tag found in DB for this user - Setting to 'RENTER' as default and continuing on - MemberID: [" + memberId + "]");
-                        extra.cip_tag = 1;
-
-                        // Update Members Table too
-                        noochMember.cipTag = "renter";
-                        _dbContext.SaveChanges();
-                    }
-                    catch (Exception ex)
-                    {
-                        var error = "MDA -> RegisterUserWithSynapseV3 -> User had no CIP_TAG yet, so attempted to update Members table but failed - MemberID: [" + memberId +
-                                    "], Exception: [" + ex + "]";
-                        Logger.Error(error);
-                        CommonHelper.notifyCliffAboutError(error);
-                    }
-                }
+                extra.is_business = noochMember.Type == "business" ? true : false;
+                extra.cip_tag = 1; // CC (12/5/16): Now there is only 1 CIP tag
 
                 payload.extra = extra;
 
@@ -2100,7 +2062,7 @@ namespace Nooch.DataAccess
                     http.ContentType = "application/json";
                     http.Method = "POST";
 
-                    string parsedContent = JsonConvert.SerializeObject(payload);
+                    var parsedContent = JsonConvert.SerializeObject(payload);
                     ASCIIEncoding encoding = new ASCIIEncoding();
                     Byte[] bytes = encoding.GetBytes(parsedContent);
 
@@ -2268,12 +2230,6 @@ namespace Nooch.DataAccess
                         _dbContext.SaveChanges();
                         _dbContext.Entry(newSynapseUser).Reload();
                         save = true;
-
-                        // CC (8/17/16): I DON'T THINK WE NEED TO CREATE A NEW SUBSCRIPTION FOR EVERY BANK.
-                        //               I THINK WE JUST CREATE THE SUBSCRIPTION *ONCE* (...EVER) AND THAT APPLIES TO
-                        //               *ALL* USERS/BANKS/TRANSACTIONS CREATED USING OUR CLIENT ID/SECRET
-                        // subscripe this user on synapse
-                        //setSubcriptionToUser(newSynapseUser.user_id.ToString(), guid.ToString());
                     }
                     catch (Exception ex)
                     {
@@ -2339,12 +2295,9 @@ namespace Nooch.DataAccess
 
                                 // (CC - 6/1/16): UPDATED TO USE NEW METHOD FOR SENDING *ALL* DOCS AT THE SAME TIME
                                 // (CC - 7/19/16): Synapse is finally ready for us to update this to the NEW (KYC 2.0) API which includes FB and full SSN
-
                                 // (CC - 8/05/16): I set this up initially to only query senDocsToSynapseV3 if the user had submitted one of: SSN, FB, ID Img...
                                 //                 However, we need to ALWAYS submit this API to Synapse, even if the user hasn't provided any of those.
-
-                                //submitIdVerificationInt submitAllDocs = CommonHelper.sendUserSsnInfoToSynapseV3(memberId); // OLD - using till Synapse tells us to use the new one (6/5/16)
-                                submitIdVerificationInt submitAllDocs = CommonHelper.sendDocsToSynapseV3(memberId);      // NEW
+                                submitIdVerificationInt submitAllDocs = CommonHelper.sendDocsToSynapseV3(memberId);
                                 res.ssn_verify_status = submitAllDocs.message;
                                 res.errorMsg = submitAllDocs.message;
 
@@ -2553,14 +2506,14 @@ namespace Nooch.DataAccess
                 if (namearray.Length > 1)
                 {
                     if (namearray.Length == 2) // For regular First & Last name: Charles Smith
-                        LastName = CommonHelper.GetEncryptedData(namearray[1]);
-                    else if (namearray.Length == 3)
-                        // For 3 names, could be a middle name or middle initial: Charles H. Smith or Charles Andrew Smith
-                        LastName = CommonHelper.GetEncryptedData(namearray[2]);
-                    else
-                        // For more than 3 names (some people have 2 or more middle names)
-                        LastName = CommonHelper.GetEncryptedData(namearray[namearray.Length - 1]);
+                        LastName = namearray[1];
+                    else if (namearray.Length == 3) // For 3 names, could be a middle name or middle initial: Charles H. Smith or Charles Andrew Smith
+                        LastName = namearray[2];
+                    else // For more than 3 names (some people have 2 or more middle names)
+                        LastName = namearray[namearray.Length - 1];
                 }
+
+                LastName = CommonHelper.GetEncryptedData(LastName);
 
                 // Convert string Date of Birth to DateTime
                 if (String.IsNullOrEmpty(dob)) // ...it shouldn't ever be empty for this method
@@ -2623,7 +2576,7 @@ namespace Nooch.DataAccess
                 memberObj.FacebookUserId = !String.IsNullOrEmpty(fbid) ? fbid : memberObj.FacebookUserId;
                 if (isBusiness)
                 {
-                    memberObj.Type = "Business";
+                    memberObj.Type = "business";
                     memberObj.TimeZoneKey = entityType; // CC (11/23/16): Using "TimeZoneKey" to store this value, which is needed for creating Synapse Biz Accounts ("LLC", "Corporation", etc.)
                 }
                 if (memberObj.isRentScene != true) memberObj.isRentScene = false;
@@ -2664,7 +2617,6 @@ namespace Nooch.DataAccess
                 {
                     try
                     {
-
                         var tenantObj = _dbContext.Tenants.FirstOrDefault(memberTemp => memberTemp.MemberId == memGuid &&
                                                                                         memberTemp.IsDeleted == false);
 
@@ -2677,9 +2629,7 @@ namespace Nooch.DataAccess
                             tenantObj.FirstName = FirstName;
                             tenantObj.LastName = LastName;
                             tenantObj.eMail = memberObj.UserName;
-
                             tenantObj.DateOfBirth = dateofbirth;
-
                             tenantObj.PhoneNumber = userPhone;
                             tenantObj.AddressLineOne = memberObj.Address;
                             tenantObj.Zip = memberObj.Zipcode;
@@ -2732,15 +2682,11 @@ namespace Nooch.DataAccess
                             _dbContext.Entry(tenantObj).Reload();
 
                             if (_dbContext.SaveChanges() > 0)
-                            {
                                 Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 - Saved changes to TENANT table successfully - " +
                                             "MemberID: [" + memberId + "]");
-                            }
                             else
-                            {
                                 Logger.Error("MDA -> RegisterExistingUserWithSynapseV3 - FAILED to save changes to TENANT table - " +
                                              "MemberID: [" + memberId + "]");
-                            }
                         }
                     }
                     catch (Exception ex)
@@ -2948,13 +2894,10 @@ namespace Nooch.DataAccess
             // then store data in new added field in SynapseCreateUserResults table for later use
 
             Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 Fired - Name: [" + userName +
-                        "], Email: [" + userEmail + "], Phone: [" + userPhone +
-                        "], DOB: [" + dob + "], SSN: [" + ssn +
-                        "], Address: [" + address + "], ZIP: [" + zip +
-                        "], IP: [" + ip + "], Fngprnt: [" + fngprnt +
-                        "], TransID: [" + transId + "], CIP: [" + cip +
-                        "], FBID: [" + fbid + "], company: [" + company +
-                        "], isIdImageAdded: [" + isIdImageAdded + "]");
+                        "], Email: [" + userEmail + "], Phone: [" + userPhone + "], DOB: [" + dob + "], SSN: [" + ssn +
+                        "], Address: [" + address + "], ZIP: [" + zip + "], IP: [" + ip + "], IsBusiness: [" + isBusiness +
+                        "], EntType: [" + entityType + "], Fngprnt: [" + fngprnt + "], TransID: [" + transId + "], CIP: [" + cip +
+                        "], FBID: [" + fbid + "], company: [" + company + "], isIdImageAdded: [" + isIdImageAdded + "]");
 
             synapseCreateUserV3Result_int res = new synapseCreateUserV3Result_int();
             res.success = false;
@@ -3022,9 +2965,9 @@ namespace Nooch.DataAccess
                 TimeSpan span = todaysDateTime.Subtract(Convert.ToDateTime(memberObj.DateCreated));
                 double totalMins = span.TotalMinutes;
 
-                if (totalMins < 60)
+                if (totalMins < 180)
                 {
-                    Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - EMAIL already registered, but user created < 60 mins ago [" +
+                    Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - EMAIL already registered, but user created < 180 mins ago [" +
                                 totalMins + "], so sending to RegisterExistingUserWithSynapseV3()");
 
                     // Consider the user valid, send to RegisterExistingUserWithSynapseV3()
@@ -3149,21 +3092,22 @@ namespace Nooch.DataAccess
                 // Example Name Formats: Most Common: 1.) Charles Smith
                 //                       Possible Variations: 2.) Charles   3.) Charles H. Smith
                 //                       4.) CJ Smith   5.) C.J. Smith   6.)  Charles Andrew Thomas Smith
-
                 if (namearray.Length > 1)
                 {
                     if (namearray.Length == 2) // For regular First & Last name: Charles Smith
-                        LastName = CommonHelper.GetEncryptedData(namearray[1]);
+                        LastName = namearray[1];
                     else if (namearray.Length == 3) // For 3 names, could be a middle name or middle initial: Charles H. Smith or Charles Andrew Smith
-                        LastName = CommonHelper.GetEncryptedData(namearray[2]);
+                        LastName = namearray[2];
                     else // For more than 3 names (some people have 2 or more middle names)
-                        LastName = CommonHelper.GetEncryptedData(namearray[namearray.Length - 1]);
+                        LastName = namearray[namearray.Length - 1];
                 }
+
+                LastName = CommonHelper.GetEncryptedData(LastName);
 
                 // Convert string Date of Birth to DateTime
                 if (String.IsNullOrEmpty(dob)) // ...it shouldn't ever be empty for this method
                 {
-                    Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - DOB was NULL, reassigning it to 'Jan 20, 1980' - Name: [" + userName + "], TransID: [" + transId + "]");
+                    Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - DOB was NULL, reassigning it to 'Jan 20, 1981' - Name: [" + userName + "], TransID: [" + transId + "]");
                     dob = "01/20/1981";
                 }
                 DateTime dateofbirth;
@@ -3214,7 +3158,7 @@ namespace Nooch.DataAccess
                     Status = Constants.STATUS_NON_REGISTERED,
                     IsDeleted = false,
                     DateCreated = DateTime.Now,
-                    Type = isBusiness ? "Business" : "Personal - Browser",
+                    Type = isBusiness ? "business" : "Personal - Browser",
                     Photo = Utility.GetValueFromConfig("PhotoUrl") + "gv_no_photo.png",
                     UDID1 = !String.IsNullOrEmpty(fngprnt) ? fngprnt : null,
                     IsVerifiedWithSynapse = false,

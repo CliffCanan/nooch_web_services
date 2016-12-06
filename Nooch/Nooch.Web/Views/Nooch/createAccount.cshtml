@@ -122,7 +122,8 @@
                             <dl class="dl-horizontal" id="nameGrp">
                                 <dt class="p-t-10 withIcon">
                                     <span id="name-label">Your Name</span>
-                                    <i class="fa fa-fw fa-question-circle-o help-icon m-r-5" data-trigger="hover" data-toggle="popover" data-placement="auto" data-content="Please enter your full legal name."></i>
+                                    <i class="personal-only fa fa-fw fa-question-circle-o help-icon m-r-5" data-trigger="hover" data-toggle="popover" data-placement="auto" data-content="Please enter your full legal name."></i>
+                                    <i class="biz-only fa fa-fw fa-question-circle-o help-icon m-r-5" data-trigger="hover" data-toggle="popover" data-placement="auto" data-content="Please enter your business's full legal name."></i>
                                 </dt>
                                 <dd>
                                     <div class="form-group">
@@ -210,9 +211,7 @@
                         </div>
 
                         <div class="well well-sm biz-only hidden">
-
                             <div>Please help us prevent fraud and identity theft...</div>
-
                         </div>
 
                         <dl class="dl-horizontal" id="dobGrp">
@@ -274,32 +273,40 @@
                             <dd>
                                 <div class="form-group withIcon">
                                     <div class="dtp-container dropdown fg-line">
-                                        <input id="idVer-ein" type='tel' class="form-control" value="" />
+                                        <input id="idVer-ein" type='tel' class="form-control p-l-0" value="" />
                                     </div>
                                     <i class="fa fa-fw fa-question-circle-o icon-right help-icon m-l-5" data-trigger="hover" data-toggle="popover" data-placement="auto" data-content="EIN = Employer Identification Number (Tax ID # from the IRS)"></i>
                                 </div>
                             </dd>
                         </dl>
 
+                        <small class="tos-text no-id-step-show hidden">
+                            By clicking submit, you agree to our <a href="https://www.nooch.com/tos" target="_blank">Terms of Service</a>.
+                        </small>
+
                     </section>
 
                     @if (rca.type != "vendor")
                     {
-                        <h3 class="personal-only destroy"><i class="fa fa-fw fa-picture-o"></i><br />ID Doc<span class="hide-sm">ument</span></h3>
-                        <section class="personal-only destroy">
+                        <h3 class="no-id-step"><i class="fa fa-fw fa-picture-o"></i><br />ID Doc<span class="hide-sm">ument</span></h3>
+                            <section class="no-id-step">
 
-                            <div class="well p-15 m-b-15">
-                                <div>
-                                    Please upload a copy of your <span class="text-primary">photo ID</span> (driver's license, passport, etc.) <span class="f-400">&nbsp;Please make sure your name and picture are<span class="hide-sm"> clearly</span> legible.</span>
-                                    <i class="fa fa-thumbs-up" style="color: #bbb; margin-left: 6px; text-shadow: 0 -1px 0 rgba(40,40,40,.6)"></i>
+                                <div class="well p-15 m-b-15">
+                                    <div>
+                                        Please upload a copy of your <span class="text-primary">photo ID</span> (driver's license, passport, etc.) <span class="f-400">&nbsp;Please make sure your name and picture are<span class="hide-sm"> clearly</span> legible.</span>
+                                        <i class="fa fa-thumbs-up" style="color: #bbb; margin-left: 6px; text-shadow: 0 -1px 0 rgba(40,40,40,.6)"></i>
+                                    </div>
                                 </div>
-                            </div>
 
-                            <div id="idDocWrap">
-                                <input id="idVer_idDoc" type="file" class="">
-                            </div>
+                                <div id="idDocWrap">
+                                    <input id="idVer_idDoc" type="file" class="">
+                                </div>
 
-                        </section>
+                                <small class="tos-text">
+                                    By clicking submit, you agree to our <a href="https://www.nooch.com/tos" target="_blank">Terms of Service</a>.
+                                </small>
+
+                            </section>
                     }
                 </div>
             </div>

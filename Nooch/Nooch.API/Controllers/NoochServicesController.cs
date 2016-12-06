@@ -3128,10 +3128,7 @@ namespace Nooch.API.Controllers
                     input.company = "nooch";
 
                 Logger.Info("Service Cntrlr -> RegisterNonNoochUserWithSynapse Fired - MemberID: [" + input.memberId +
-                            "], Name: [" + input.fullname + "], Email: [" + input.email +
-                            "], Is ID Img Sent: [" + input.isIdImageAdded + "], CIP: [" + input.cip +
-                            "], FBID: [" + input.fbid + "], Company: [" + input.company +
-                            "], isBiz: [" + input.isBusiness + "], EntType: [" + input.entityType + "]");
+                            "], Name: [" + input.fullname + "], Email: [" + input.email + "]");
 
                 MembersDataAccess mda = new MembersDataAccess();
 
@@ -3334,13 +3331,9 @@ namespace Nooch.API.Controllers
                     synapseCreateUserV3Result_int registerSynapseUserResult = RegisterUserWithSynapseV3(MemberId);
 
                     if (registerSynapseUserResult.success)
-                    {
                         createSynapseUserDetails = CommonHelper.GetSynapseCreateaUserDetails(id.ToString());
-                    }
                     else
-                    {
                         Logger.Error("Service Cntrlr -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber FAILED: Could not create Synapse User Record for: [" + MemberId + "].");
-                    }
                 }
 
                 // Check again if it's still null (which it shouldn't be because we just created a new Synapse user above if it was null.
@@ -3386,8 +3379,7 @@ namespace Nooch.API.Controllers
                 bankloginParameters.user = user;
                 bankloginParameters.node = node;
 
-                string UrlToHit = "";
-                UrlToHit = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/node/add" : "https://synapsepay.com/api/v3/node/add";
+                var UrlToHit = !Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/node/add" : "https://synapsepay.com/api/v3/node/add";
 
                 #endregion Setup Call To SynapseV3 /node/add
 
