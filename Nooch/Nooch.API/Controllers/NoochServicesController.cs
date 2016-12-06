@@ -3399,7 +3399,7 @@ namespace Nooch.API.Controllers
                     http.ContentType = "application/json";
                     http.Method = "POST";
 
-                    string parsedContent = JsonConvert.SerializeObject(bankloginParameters);
+                    var parsedContent = JsonConvert.SerializeObject(bankloginParameters);
                     ASCIIEncoding encoding = new ASCIIEncoding();
                     Byte[] bytes = encoding.GetBytes(parsedContent);
 
@@ -3554,7 +3554,7 @@ namespace Nooch.API.Controllers
                                         var x = BackgroundJob.Schedule(() => CommonHelper.SendMincroDepositsVerificationReminderEmail(sbom.MemberId.ToString(), sbom.oid), delayToUse);
                                         if (x != null)
                                             Logger.Info("Service Cntrlr -> SynapseV3 AddNodeWithAccountNumberAndRoutingNumber - Scheduled Micro Deposit Reminder email in Background - [" +
-                                                        "] DelayToUser: [" + delayToUse.ToString() + " Days]");
+                                                        "] DelayToUse: [" + delayToUse.ToString() + " Days]");
                                     }
                                     catch (Exception ex)
                                     {
@@ -3592,28 +3592,27 @@ namespace Nooch.API.Controllers
 
                     res.Is_success = false;
 
-                    var errorCode = ((HttpWebResponse)we.Response).StatusCode;
                     var resp = new StreamReader(we.Response.GetResponseStream()).ReadToEnd();
 
                     JObject jsonFromSynapse = JObject.Parse(resp);
 
                     var error = "Service Cntrlr -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber FAILED - MemberID: [" + MemberId +
                                 "], Synapse Response JSON: [" + jsonFromSynapse.ToString() + "]";
-                    Logger.Error(error);
                     CommonHelper.notifyCliffAboutError(error);
 
                     if (jsonFromSynapse["error"] != null)
                     {
                         var errorMsg = jsonFromSynapse["error"]["en"].ToString();
                         res.errorMsg = errorMsg;
-                        Logger.Error("Service Cntrlr -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber FAILED - Synapse MESSAGE: [" + errorMsg + "]");
+                        error = "Service Cntrlr -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber FAILED - Synapse MESSAGE: [" + errorMsg + "]";
                     }
                     else
                     {
-                        Logger.Error("Service Cntrlr -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber FAILED - HTTP ErrorCode: [" + errorCode.ToString() +
-                                     "], WebException: [" + we.ToString() + "]");
+                        error = "Service Cntrlr -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber FAILED - WebException: [" + we.ToString() + "]";
                         res.errorMsg = we.Message;
                     }
+
+                    Logger.Error(error);
 
                     return res;
 

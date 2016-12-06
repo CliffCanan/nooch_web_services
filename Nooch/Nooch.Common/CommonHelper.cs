@@ -1901,12 +1901,12 @@ namespace Nooch.Common
                     // CLIFF (10/10/15): Synapse lists all possible V3 error codes in the docs -> Introduction -> Errors.
                     //                   We might have to do different things depending on which error is returned (like re-submitting a specific
                     //                   Document Type.  For now just pass back the error number & msg to the function that called this method.
-                    string errorMsg = errorJsonFromSynapse["error"]["en"].ToString();
+                    var errorMsg = errorJsonFromSynapse["error"]["en"].ToString();
 
                     if (errorMsg != null)
                     {
-                        Logger.Error("Common Helper -> sendDocsToSynapseV3 FAILED (Outer) - [errorCode: " + httpStatusCode.ToString() +
-                                     "], [Error Message from Synapse: " + errorMsg + "]");
+                        Logger.Error("Common Helper -> sendDocsToSynapseV3 FAILED (Outer) - errorCode: [" + httpStatusCode.ToString() +
+                                     "], Error Message from Synapse: [" + errorMsg + "]");
 
                         res.message = errorMsg;
 
@@ -1987,9 +1987,9 @@ namespace Nooch.Common
                     int saveMember = _dbContext.SaveChanges();
 
                     if (saveMember > 0)
-                        Logger.Info("Common Helper -> sendDocsToSynapseV3 - Successfully updated user's record in Members Table");
+                        Logger.Info("Common Helper -> sendDocsToSynapseV3 - Successfully updated user's record in dbo.Members");
                     else
-                        Logger.Error("Common Helper -> sendDocsToSynapseV3 - FAILED to update user's record in Members Table");
+                        Logger.Error("Common Helper -> sendDocsToSynapseV3 - FAILED to update user's record in dbo.Members");
                 }
                 catch (Exception ex)
                 {

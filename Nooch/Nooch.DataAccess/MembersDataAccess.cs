@@ -1993,6 +1993,7 @@ namespace Nooch.DataAccess
 
                 var fullname = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(noochMember.FirstName)) + " " +
                                CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(noochMember.LastName));
+                var email = CommonHelper.GetDecryptedData(noochMember.UserName);
 
                 synapseCreateUserInput_int payload = new synapseCreateUserInput_int();
 
@@ -2001,7 +2002,7 @@ namespace Nooch.DataAccess
                 client.client_secret = SynapseClientSecret;
 
                 createUser_login logins = new createUser_login();
-                logins.email = CommonHelper.GetDecryptedData(noochMember.UserName);
+                logins.email = email;
                 logins.read_only = false;
 
                 payload.client = client;
@@ -2102,20 +2103,16 @@ namespace Nooch.DataAccess
 
                     if (!String.IsNullOrEmpty(res.error_code))
                     {
-                        error = "MDA -> RegisterUserWithSynapseV3 FAILED - Synapse Error Code: [" + res.error_code +
-                                "], Error Msg: [" + res.errorMsg + "], MemberID: [" + memberId + "]";
-                        Logger.Error(error);
-                        CommonHelper.notifyCliffAboutError(error);
-
                         #region Email Already Registered
 
                         // CLIFF (10/10/15): NOT SURE WHAT SYNAPSE'S RESPONSE/ERROR WILL LOOK LIKE FOR THIS CASE (Docs don't say and can't simulate in Sandbox)
                         if (res.errorMsg == "Email already registered.")
                         {
-                            // case when synapse returned email already registered...chances are we have user id in SynapseCreateUserResults table
+                            // case when synapse returned email already registered... Chances are we have user ID in SynapseCreateUserResults table
                             // checking Nooch DB
 
-                            var synapseRes = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == guid && m.IsDeleted == false);
+                            var synapseRes = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == guid &&
+                                                                                                     m.IsDeleted == false);
 
                             if (synapseRes != null)
                             {
@@ -2127,40 +2124,43 @@ namespace Nooch.DataAccess
                             }
                             else
                             {
-                                // WHAT ABOUT THIS CASE? THIS HAPPENS IF SYNAPSE HAS A RECORD FOR THIS EMAIL ADDRESS, BUT NOOCH DOESN'T IN OUR DB...
-                                // THIS IS EXTREMELY UNLIKELY TO EVER OCCUR, BUT COULD IF NOOCH EVER HAS A DB PROBLEM FOR 1 OR MORE USERS.
-                                // SYNAPSE DOES *NOT* HAVE THE force_create OPTION IN V3...
+                                Logger.Error("MDA -> RegisterUserWithSynapseV3 FAILED - Email: [" + email + "]. Synapse Error Email Already Registered BUT not found in Nooch DB.");
 
-                                Logger.Error("MDA -> RegisterUserWithSynapseV3 FAILED - MemberId: [" + memberId + "]. Synapse Error User Already Registered BUT not found in Nooch DB.");
-                                res.errorMsg = "Account already registered, but not found in Nooch DB.";
+                                // Synapse says they already have a user with that email address, but Nooch's DB didn't find it...
+                                // CHECK DELETED SYNAPSE USERS IN NOOCH DB
+
+                                // (THIS IS EXTREMELY UNLIKELY TO EVER OCCUR, BUT COULD IF NOOCH EVER HAS A DB PROBLEM FOR 1 OR MORE USERS.
+                                // SYNAPSE DOES *NOT* HAVE THE force_create OPTION IN V3)
+
+                                synapseRes = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == guid &&
+                                                                                                     m.IsDeleted == true);
+
+                                if (synapseRes != null)
+                                {
+                                    // CC (12/6/16): Should we consider this successful? Probably not, it would have been deleted fora reason...
+                                    Logger.Error("MDA -> RegisterUserWithSynapseV3 - FOUND EMAIL MATCH FOR A DELETED SYNAPSE USER IN NOOCH DB: [" + email + "]");
+                                    res.errorMsg = "Existing Synapse user found, but marked deleted in Nooch DB.";
+                                    res.user_id = synapseRes.user_id.ToString();
+                                    res.oauth.oauth_key = CommonHelper.GetDecryptedData(synapseRes.access_token);
+                                    return res;
+                                }
+                                else
+                                {
+                                    res.errorMsg = "Account already registered, but not found in Nooch DB.";
+                                }
                             }
                         }
 
                         #endregion Email Already Registered
 
-                        // CLIFF (10/10/15): Not sure if we actually need to parse this much, but these are all the error types Synapse lists in V3 documentation
-                        if (res.error_code == "100") // Incorrect Client Credentials
-                        { }
-                        else if (res.error_code == "110") // Incorrect User Credentials
-                        { }
-                        else if (res.error_code == "120") // Unauthorized Fingerprint
-                        { }
-                        else if (res.error_code == "200") // Error In Payload (Formatting error somewhere)
-                        { }
-                        else if (res.error_code == "300") // Unauthorized action (User/Client not allowed to perform this action)
-                        { }
-                        else if (res.error_code == "400") // Incorrect Values Supplied (eg. Insufficient balance, wrong MFA response, incorrect micro deposits)
-                        { }
-                        else if (res.error_code == "404") // Object not found
-                        { }
-                        else if (res.error_code == "500") // Synapse Server Error
-                        { }
+                        error = "MDA -> RegisterUserWithSynapseV3 FAILED - Synapse Error Code: [" + res.error_code +
+                                "], Error Msg: [" + res.errorMsg + "], Email: [" + email + "], MemberID: [" + memberId + "]";
+                        Logger.Info(error);
+                        CommonHelper.notifyCliffAboutError(error);
                     }
                     else
-                    {
                         Logger.Error("MDA -> RegisterUserWithSynapseV3 FAILED: Synapse Error, but *error_code* was null for " +
                                      "MemberID: [" + memberId + "], Exception: [" + we.InnerException + "]");
-                    }
 
                     return res;
 
@@ -2320,7 +2320,11 @@ namespace Nooch.DataAccess
                                                     "], submitSsn.message: [" + submitAllDocs.message + "]");
                                 }
                                 else
-                                    Logger.Error("MDA -> RegisterUserWithSynapseV3 - SSN Info Verified FAILED :-(  Email: [" + logins.email + "], submitSsn.message: [" + submitAllDocs.message + "]");
+                                {
+                                    var error = "MDA -> RegisterUserWithSynapseV3 - SSN Info Verified FAILED :-(  Email: [" + logins.email + "], submitSsn.message: [" + submitAllDocs.message + "]";
+                                    Logger.Error(error);
+                                    CommonHelper.notifyCliffAboutError(error);
+                                }
 
                                 #endregion Logging
                             }
@@ -2390,10 +2394,9 @@ namespace Nooch.DataAccess
             }
             else // Nooch member was not found in Members.dbo
             {
-                var error = "MDA -> RegisterUserWithSynapseV3 FAILED - Member Not Found in DB - MemberID: [" + memberId + "]. Error #2441.";
+                var error = "MDA -> RegisterUserWithSynapseV3 FAILED - Member Not Found in DB - MemberID: [" + memberId + "]. Error #2397.";
                 Logger.Error(error);
                 CommonHelper.notifyCliffAboutError(error);
-
                 res.errorMsg = "Given Member ID not found or Member is deleted.";
             }
 
@@ -3485,7 +3488,7 @@ namespace Nooch.DataAccess
                             else
                             {
                                 // EXPECTED OUTCOME for most users creating a new Synapse Account.
-                                Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - User was Created SUCCESSFULLY - Email: [" + userEmail + "], user_id: [" + createSynapseUserResult.user_id + "]");
+                                Logger.Info("MDA -> RegisterNonNoochUserWithSynapseV3 - SYNAPSE USER Created SUCCESSFULLY - Email: [" + userEmail + "], user_id: [" + createSynapseUserResult.user_id + "]");
                             }
 
                             createUserV3Result_oauth oath = new createUserV3Result_oauth();
