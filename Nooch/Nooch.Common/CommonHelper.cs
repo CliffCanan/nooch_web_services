@@ -1611,7 +1611,7 @@ namespace Nooch.Common
                     synapseAddDocsV3Input.login = login;
                     synapseAddDocsV3Input.user = user;
 
-                    var baseAddress = !Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox"))
+                    var baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox"))
                                       ? "https://sandbox.synapsepay.com/api/v3/user/docs/add"
                                       : "https://synapsepay.com/api/v3/user/docs/add";
 
@@ -2092,7 +2092,9 @@ namespace Nooch.Common
 
                 submitDocObj.user = user;
 
-                string baseAddress = !Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/doc/attachments/add" : "https://synapsepay.com/api/v3/user/doc/attachments/add";
+                var baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox"))
+                                    ? "https://sandbox.synapsepay.com/api/v3/user/doc/attachments/add"
+                                    : "https://synapsepay.com/api/v3/user/doc/attachments/add";
 
                 var http = (HttpWebRequest)WebRequest.Create(new Uri(baseAddress));
                 http.Accept = "application/json";
@@ -2243,8 +2245,8 @@ namespace Nooch.Common
                 input.client = client;
                 input.filter = filter;
 
-                string UrlToHit = !Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/search"
-                                                                                                      : "https://synapsepay.com/api/v3/user/search";
+                var UrlToHit = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/search"
+                                                                                                   : "https://synapsepay.com/api/v3/user/search";
 
                 //Logger.Info("Common Helper -> getUserPermissionsForSynapseV3 - About to query Synapse's /user/search API - UrlToHit: [" + UrlToHit + "]");
 
@@ -2644,7 +2646,8 @@ namespace Nooch.Common
 
                     input.user = user;
 
-                    var UrlToHit = !Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/signin" : "https://synapsepay.com/api/v3/user/signin";
+                    var UrlToHit = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/signin"
+                                                                                                       : "https://synapsepay.com/api/v3/user/signin";
 
                     Logger.Info("Common Helper -> refreshSynapseV3OautKey - Payload to send to Synapse /v3/user/signin: [" + JsonConvert.SerializeObject(input) + "]");
 
@@ -2653,7 +2656,7 @@ namespace Nooch.Common
                     http.ContentType = "application/json";
                     http.Method = "POST";
 
-                    string parsedContent = JsonConvert.SerializeObject(input);
+                    var parsedContent = JsonConvert.SerializeObject(input);
                     ASCIIEncoding encoding = new ASCIIEncoding();
                     Byte[] bytes = encoding.GetBytes(parsedContent);
 
@@ -2900,8 +2903,8 @@ namespace Nooch.Common
 
                     List<string> clientIds = getClientSecretId(memberObj.MemberId.ToString());
 
-                    string SynapseClientId = clientIds[0];
-                    string SynapseClientSecret = clientIds[1];
+                    var SynapseClientId = clientIds[0];
+                    var SynapseClientSecret = clientIds[1];
 
                     var client = new createUser_client()
                     {
@@ -2916,7 +2919,7 @@ namespace Nooch.Common
                     };
 
                     // Cliff (5/31/16): Have to do it this way because using 1 class causes a problem with Synapse because
-                    //                  it doesn't like a NULL value for Validation_PIN if it's not there.  Maybe I'm doing it wrong though...
+                    //                  it doesn't seem to like a NULL value for Validation_PIN if it's not there.
                     var inputNoPin = new SynapseV3Signin_InputNoPin();
                     var inputWithPin = new SynapseV3Signin_InputWithPin();
 
@@ -2954,8 +2957,9 @@ namespace Nooch.Common
                         inputNoPin.login = login;
                     }
 
-                    string UrlToHit = !Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/signin" : "https://synapsepay.com/api/v3/user/signin";
-                    string parsedContent = isPinIncluded ? JsonConvert.SerializeObject(inputWithPin) : JsonConvert.SerializeObject(inputNoPin);
+                    var UrlToHit = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/signin"
+                                                                                                        : "https://synapsepay.com/api/v3/user/signin";
+                    var parsedContent = isPinIncluded ? JsonConvert.SerializeObject(inputWithPin) : JsonConvert.SerializeObject(inputNoPin);
 
                     Logger.Info("Common Helper -> SynapseV3SignIn - isPinIncluded: [" + isPinIncluded + "] - Payload to send to Synapse /v3/user/signin: [" + parsedContent + "]");
 
@@ -2989,7 +2993,7 @@ namespace Nooch.Common
                         if ((refreshResponse["success"] != null && Convert.ToBoolean(refreshResponse["success"])) ||
                              refreshResultFromSyn.success.ToString() == "true")
                         {
-                            Logger.Info("Common Helper -> SynapseV3SignIn - Signed User In With Synapse Successfully - Oauth Key: [" +
+                            Logger.Info("Common Helper -> SynapseV3SignIn - Signed User In Successfully - Oauth Key: [" +
                                         oauthKey + "] - Checking Synapse Message...");
 
                             #region Response That PIN Was Sent To User's Phone
@@ -3798,8 +3802,8 @@ namespace Nooch.Common
 
             try
             {
-                string baseAddress = "";
-                baseAddress = !Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/node/remove" : "https://synapsepay.com/api/v3/node/remove";
+                string baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/node/remove"
+                                                                                                         : "https://synapsepay.com/api/v3/node/remove";
 
                 RemoveBankNodeRootClass rootObject = new RemoveBankNodeRootClass
                 {
@@ -3813,7 +3817,7 @@ namespace Nooch.Common
                 http.ContentType = "application/json";
                 http.Method = "POST";
 
-                string parsedContent = JsonConvert.SerializeObject(rootObject);
+                var parsedContent = JsonConvert.SerializeObject(rootObject);
                 ASCIIEncoding encoding = new ASCIIEncoding();
                 Byte[] bytes = encoding.GetBytes(parsedContent);
 
@@ -3973,8 +3977,7 @@ namespace Nooch.Common
                     var MemberObj = GetMemberDetails(memberId);
                     var OauthObj = GetSynapseCreateaUserDetails(memberId);
 
-                    string baseAddress = "";
-                    baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/trans/cancel" : "https://synapsepay.com/api/v3/trans/cancel";
+                    var baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/trans/cancel" : "https://synapsepay.com/api/v3/trans/cancel";
 
                     CancelTransactionClass rootObject = new CancelTransactionClass
                     {
@@ -3988,7 +3991,7 @@ namespace Nooch.Common
                     http.ContentType = "application/json";
                     http.Method = "POST";
 
-                    string parsedContent = JsonConvert.SerializeObject(rootObject);
+                    var parsedContent = JsonConvert.SerializeObject(rootObject);
                     ASCIIEncoding encoding = new ASCIIEncoding();
                     Byte[] bytes = encoding.GetBytes(parsedContent);
 

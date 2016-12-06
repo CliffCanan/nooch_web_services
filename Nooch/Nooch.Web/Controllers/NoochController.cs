@@ -3004,7 +3004,7 @@ namespace Nooch.Web.Controllers
                 {
                     res.usersName = "Habitat LLC";
                     res.usersPhoto = "https://noochme.com/noochweb/Assets/Images/habitat-logo.png";
-                    res.usersEmail = "andrew@tryhabitat.com";
+                    res.usersEmail = "alex@tryhabitat.com";
                 }
                 else
                 {

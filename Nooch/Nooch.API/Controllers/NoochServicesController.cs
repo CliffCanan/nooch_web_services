@@ -3379,7 +3379,8 @@ namespace Nooch.API.Controllers
                 bankloginParameters.user = user;
                 bankloginParameters.node = node;
 
-                var UrlToHit = !Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/node/add" : "https://synapsepay.com/api/v3/node/add";
+                var UrlToHit = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/node/add"
+                                                                                                   : "https://synapsepay.com/api/v3/node/add";
 
                 #endregion Setup Call To SynapseV3 /node/add
 
@@ -3799,8 +3800,8 @@ namespace Nooch.API.Controllers
                 node.extra = extra;
                 bankloginParameters.node = node;
 
-                string UrlToHit = "";
-                UrlToHit = !Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/node/add" : "https://synapsepay.com/api/v3/node/add";
+                var UrlToHit = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/node/add"
+                                                                                                    : "https://synapsepay.com/api/v3/node/add";
 
                 #endregion Setup Call To SynapseV3 /node/add
 

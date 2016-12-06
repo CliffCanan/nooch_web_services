@@ -2053,7 +2053,8 @@ namespace Nooch.DataAccess
 
                 try
                 {
-                    var baseAddress = !Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/create" : "https://synapsepay.com/api/v3/user/create";
+                    var baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/create"
+                                                                                                          : "https://synapsepay.com/api/v3/user/create";
 
                     Logger.Info("MDA -> RegisterUserWithSynapseV3 - Payload to send to Synapse /v3/user/create: [" + JsonConvert.SerializeObject(payload) + "]");
 
@@ -3828,7 +3829,8 @@ namespace Nooch.DataAccess
 
                     submitDocObj.user = user;
 
-                    string baseAddress = !Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/doc/attachments/add" : "https://synapsepay.com/api/v3/user/doc/attachments/add";
+                    var baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/doc/attachments/add"
+                                                                                                          : "https://synapsepay.com/api/v3/user/doc/attachments/add";
 
                     var http = (HttpWebRequest)WebRequest.Create(new Uri(baseAddress));
                     http.Accept = "application/json";
@@ -4548,8 +4550,8 @@ namespace Nooch.DataAccess
                         bankLoginPars.login = log;
                         bankLoginPars.node = node;
 
-                        string UrlToHit = !Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/node/verify"
-                                                                                                              : "https://synapsepay.com/api/v3/node/verify";
+                        var UrlToHit = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/node/verify"
+                                                                                                           : "https://synapsepay.com/api/v3/node/verify";
 
                         Logger.Info("MDA -> SynapseV3MFABankVerify - /node/verify PAYLOAD IS: Oauth_Key: [" + bankLoginPars.login.oauth_key +
                                     "], Fngrprnt: [" + bankLoginPars.user.fingerprint + "], Node OID: [" + bankLoginPars.node._id.oid +
@@ -5131,8 +5133,8 @@ namespace Nooch.DataAccess
 
             #region Call Synapse /user/ssn/answer API
 
-            string baseAddress = "";
-            baseAddress = !Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/doc/verify" : "https://synapsepay.com/api/v3/user/doc/verify";
+            var baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/doc/verify"
+                                                                                                  : "https://synapsepay.com/api/v3/user/doc/verify";
 
             try
             {
@@ -5461,7 +5463,7 @@ namespace Nooch.DataAccess
                         string newUsersEmail = CommonHelper.GetDecryptedData(newUserObj.UserName);
 
                         // Check if this is a TEST transaction
-                        bool isTesting = !Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox"));
+                        bool isTesting = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox"));
 
                         Guid SenderId, RecipientId;
 
@@ -5531,9 +5533,7 @@ namespace Nooch.DataAccess
                                 if (sender.MemberId.ToString().ToLower() == "45357cf0-e651-40e7-b825-e1ff48bf44d2" &&
                                     recipient.cipTag == "vendor")
                                 {
-                                    Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser - HABITAT Payment!!");
-
-                                    // Need to create 2 transactions with Synapse: 1 from Habitat to Rent Scene, & 1 from Rent Scene to the Vendor
+                                    Logger.Info("MDA -> GetTokensAndTransferMoneyToNewUser - HABITAT Payment!");
 
                                     moneySenderFirstName = "Habitat";
                                     moneySenderLastName = "";
@@ -5541,11 +5541,10 @@ namespace Nooch.DataAccess
 
                                 #endregion Habitat Custom Checks
 
-                                // Expected path for all Payments except for Habitat
                                 log = "MDA -> GetTokensAndTransferMoneyToNewUser - About to call AddTransSynapseV3Reusable() in TDA - " +
-                                          "TransID: [" + transId + "], Amount: [" + amount + "], Sender Name: [" + moneySenderFirstName + " " + moneySenderLastName +
-                                          "], Sender BankOID: [" + senderBankOid + "], Recip Name: [" + moneyRecipientFirstName + " " + moneyRecipientLastName +
-                                          "], Recip BankOID: [" + recipBankOid + "]";
+                                      "TransID: [" + transId + "], Amount: [" + amount + "], Sender Name: [" + moneySenderFirstName + " " + moneySenderLastName +
+                                      "], Sender BankOID: [" + senderBankOid + "], Recip Name: [" + moneyRecipientFirstName + " " + moneyRecipientLastName +
+                                      "], Recip BankOID: [" + recipBankOid + "]";
                                 Logger.Info(log);
 
                                 Call_Synapse_Order_API_Result = tda.AddTransSynapseV3Reusable(access_token, senderFingerprint,
