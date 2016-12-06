@@ -3140,34 +3140,25 @@ namespace Nooch.Common
         }
 
 
-        public static SynapseBankSetDefaultResult SetSynapseDefaultBank(string MemberId, string BankName, string BankOId)
+        public static SynapseBankSetDefaultResult SetSynapseDefaultBank(string memberId, string bankName, string bankOid)
         {
-            Logger.Info("Common Helper -> SetSynapseDefaultBank Fired - MemberID: [" + MemberId + "], Bank Name: [" +
-                        BankName + "], BankOId: [" + BankOId + "]");
+            Logger.Info("Common Helper -> SetSynapseDefaultBank Fired - MemberID: [" + memberId + "], Bank Name: [" +
+                        bankName + "], BankOId: [" + bankOid + "]");
 
             SynapseBankSetDefaultResult res = new SynapseBankSetDefaultResult();
             res.Is_success = false;
+            res.Message = "Initial";
 
             #region Check Query Data
 
-            if (String.IsNullOrEmpty(MemberId) ||
-                //String.IsNullOrEmpty(BankName) ||
-                String.IsNullOrEmpty(BankOId))
-            {
-                //if (String.IsNullOrEmpty(BankName))
-                //{
-                //    res.Message = "Invalid data - need Bank Name";
-                //}
-                if (String.IsNullOrEmpty(MemberId))
-                {
-                    res.Message = "Invalid data - need MemberId";
-                }
-                else if (String.IsNullOrEmpty(BankOId))
-                {
-                    res.Message = "Invalid data - need Bank Id";
-                }
+            if (String.IsNullOrEmpty(memberId))
+                res.Message = "Invalid data - need MemberId";
+            else if (String.IsNullOrEmpty(bankOid))
+                res.Message = "Invalid data - need Bank Id";
 
-                Logger.Error("Common Helper -> SetSynapseDefaultBank ERROR: [" + res.Message + "] for MemberId: [" + MemberId + "]");
+            if (res.Message != "Initial")
+            {
+                Logger.Error("Common Helper -> SetSynapseDefaultBank ERROR: [" + res.Message + "] for MemberId: [" + memberId + "]");
                 return res;
             }
 
@@ -3175,9 +3166,8 @@ namespace Nooch.Common
 
             else
             {
-                // Get Nooch UserName (primary email address) from MemberId
-                var noochUserName = GetMemberUsernameByMemberId(MemberId);
-                var MemberInfoInNoochDb = GetMemberDetails(MemberId);
+                // Get Nooch Member Details from MemberId
+                var MemberInfoInNoochDb = GetMemberDetails(memberId);
 
                 #region Member Found
 
@@ -3185,13 +3175,12 @@ namespace Nooch.Common
                 {
                     #region Find the bank to be set as Default
 
-                    string bankNameEncrypted = GetEncryptedData(BankName);
-                    string bankOId = GetEncryptedData(BankOId);
+                    var bankNameEncrypted = GetEncryptedData(bankName);
+                    var bankOidEnc = GetEncryptedData(bankOid);
 
                     var banksFound = _dbContext.SynapseBanksOfMembers.Where(bank =>
                                         bank.MemberId == MemberInfoInNoochDb.MemberId &&
-                                            //memberTemp.bank_name == bankNameEncrypted &&
-                                        bank.oid == bankOId).ToList();
+                                        bank.oid == bankOidEnc).ToList();
 
                     // CLIFF (10/7/15): ADDING THIS CODE TO MAKE SURE WE SELECT THE *MOST RECENT* BANK (b/c it creates problems when a user
                     //                  re-attaches the same bank... it has the same ID from Synapse, there may be more than one match)
@@ -3208,8 +3197,6 @@ namespace Nooch.Common
                         // An existing Bank was found, now mark all banks for this user as inactive
                         SetOtherBanksInactiveForGivenMemberId(MemberInfoInNoochDb.MemberId);
 
-                        selectedBank.IsDefault = true;
-
                         // CLIFF (7/13/15): Before we set the Bank's Status, we need to compare the user's Nooch info (name, email, phone, & maybe address)
                         // with the info that Synapse returned for this specific bank.  The problem is that sometimes Synapse will return NULL for 1 or more
                         // pieces of data (for example, for my current Default bank account (PNC), Synapse returned no name, no email, and no phone.
@@ -3220,251 +3207,56 @@ namespace Nooch.Common
                         // 3.) Check if Synapse returned any Email Address for the bankId.  If YES, send Verification Email to THAT email (NOT the user's Nooch email)
                         // 4.) If NO email returned from Synapse, then send the secondary Bank Verification Email.
                         //     This will tell the user they must send Nooch any photo ID that matches the name on the bank.
-                        //     Then I will have to manually update the bank's status to "Verified" (Need to add a button for this on the Member Details page in the Admin Dash).
+                        //     Then I will have to manually update the bank's status to "Verified".
 
-                        // UPDATE (5/21/16) CLIFF: Synapse no longer passes phone or email from the bank b/c each back is different and there was too much
-                        //                         inconsistency.
+                        // UPDATE (5/21/16) CLIFF: Synapse no longer passes phone or email from the bank b/c each
+                        //                         bank is different and there was too much inconsistency.
 
-                        #region Check, Parse, & Compare Name from Bank Account
-
-                        string noochEmailAddress = GetDecryptedData(MemberInfoInNoochDb.UserName).ToLower();
-                        string noochPhoneNumber = RemovePhoneNumberFormatting(MemberInfoInNoochDb.ContactNumber);
-                        string noochFirstName = GetDecryptedData(MemberInfoInNoochDb.FirstName).ToLower();
-                        string noochLastName = GetDecryptedData(MemberInfoInNoochDb.LastName).ToLower();
-                        string noochFullName = noochFirstName + " " + noochLastName;
+                        // Check, Parse, & Compare Name from Bank Account
 
                         var fullNameFromBank = selectedBank.name_on_account != null ? selectedBank.name_on_account : "";
-                        string firstNameFromBank = "";
-                        string lastNameFromBank = "";
+                        var bankAllowed = !String.IsNullOrEmpty(selectedBank.allowed)
+                                                ? selectedBank.allowed
+                                                : "";
+                        var checkName = new checkNoochNameAgainstBankName();
 
-                        bool bankIncludedName = false;
-                        bool nameMatchedExactly = false;
-                        bool lastNameMatched = false;
-
-                        var bankAllowed = selectedBank.allowed != null ? selectedBank.allowed : "";
-
-                        if (!String.IsNullOrEmpty(fullNameFromBank))
+                        try
                         {
-                            bankIncludedName = true;
-
-                            // Name was included with Bank, now decrypt it to compare with User's Name
-                            fullNameFromBank = GetDecryptedData(fullNameFromBank).ToLower();
-
-                            #region Parse Name
-
-                            // Parse & compare NAME from Nooch account w/ NAME from this bank account
-                            string[] nameFromBank_splitUp = fullNameFromBank.Split(' ');
-
-                            if (nameFromBank_splitUp.Length == 1)
+                            if (!String.IsNullOrEmpty(fullNameFromBank))
                             {
-                                lastNameFromBank = nameFromBank_splitUp[0];
-                            }
-                            else if (nameFromBank_splitUp.Length == 2)
-                            {
-                                firstNameFromBank = nameFromBank_splitUp[0];
-                                lastNameFromBank = nameFromBank_splitUp[1];
-                            }
-                            else if (nameFromBank_splitUp.Length >= 3)
-                            {
-                                firstNameFromBank = nameFromBank_splitUp[0];
-                                // Take the last string in the array and set as Last Name From Bank (So, if a bank name was "John W. Smith", this would make 'Smith' the last name)
-                                lastNameFromBank = nameFromBank_splitUp[(nameFromBank_splitUp.Length - 1)];
-                            }
-
-                            #endregion Parse Name
-
-                            #region Compare Name
-
-                            int fullNameCompare = noochFullName.IndexOf(fullNameFromBank);  // Does Nooch FULL name contain FULL name from bank?
-                            int fullNameCompare2 = fullNameFromBank.IndexOf(noochFullName); // Does FULL name from bank contain Nooch FULL name?
-                            int firstNameCompare = fullNameFromBank.IndexOf(noochFirstName);// Does FULL name from bank contain Nooch FIRST name?
-                            int lastNameCompare = fullNameFromBank.IndexOf(noochLastName);  // Does FULL name from bank contain Nooch LAST name?
-                            int lastNameCompare2 = noochFullName.IndexOf(lastNameFromBank); // Does FULL Nooch name contain LAST name from bank?
-
-                            if (noochFullName == fullNameFromBank || fullNameCompare > -1 || fullNameCompare2 > -1) // Name matches exactly
-                            {
-                                nameMatchedExactly = true;
-                                lastNameMatched = true;
-                            }
-                            else if (noochLastName == lastNameFromBank || lastNameCompare > -1 || lastNameCompare2 > -1)
-                            {
-                                // This would be when the bank name is not an exact full match, but the last names match...
-                                // Ex.: "Bob Smith" in Nooch vs. "Robert Smith" or "Bob A. Smith" or even "Smith, Bob A." from the bank
-                                // ... the full names don't match exactly, but the last names do match, so that's better than no match at all
-                                lastNameMatched = true;
-                            }
-                            else if (noochFirstName == firstNameFromBank || firstNameCompare > -1)
-                            {
-                                // This would be when the bank name is not an exact full match, and the last names also did not match, but bank name includes Nooch first name
-                                // This is very weak though, and could be true by accident if it's a common first name.  So may not use this as evidence of anything, just checking.
-                                // Ex.: "Clifford Smith" in Nooch vs. "Clifford S. Johnson" or "Smith, Clifford S." from the bank
-                                //firstNameMatched = true;
-                            }
-
-                            #endregion Compare Name
-                        }
-
-                        #endregion Check, Parse, & Compare Name from Bank Account
-
-
-                        // Set Bank Logo URL Variable for Either Email Template
-                        var bankLogoUrl = getLogoForBank(BankName);
-
-                        #region Scenarios for Immediately VERIFYING this bank account
-
-                        // Cliff (5/21/16): Re-doing the rules for when a Synapse bank should be automatically verified b/c Synapse V3
-                        //                  doesn't return any phone or email info from the bank.  So need to check if the user's SSN
-                        //                  was verified successfully ('IsVerifiedWithSynapse'), and compare any name returned from the bank.
-                        if (MemberInfoInNoochDb.IsVerifiedWithSynapse == true && bankAllowed == "CREDIT-AND-DEBIT")
-                        {
-                            selectedBank.Status = "Verified";
-                            selectedBank.VerifiedOn = DateTime.Now;
-
-                            Logger.Info("Common Helper -> SetSynapseDefaultBank -> Bank VERIFIED (Case 1) - [Names Matched Exactly: " + nameMatchedExactly +
-                                        "], [Bank Included Name: " + bankIncludedName + "], [Name From Bank: " + fullNameFromBank +
-                                        "], [Last Name Match: " + lastNameMatched + "], [Allowed: " + bankAllowed + "], [- MemberId: [" + MemberId +
-                                        "]; BankName: [" + BankName + "]");
-                        }
-
-                        #endregion Scenarios for Immediately VERIFYING this bank account
-
-
-                        #region Scenarios Where Further Verification Needed
-
-                        #region Non-Verified Scenario 1 - Email Included From Bank - NO LONGER USED W/ SYNAPSE V3
-
-                        // Non-Verifed Scenario #1: Some email was included from bank, so send Bank Verification Email Template #1 (With Link)
-                        /*else if (bankIncludedEmail && emailFromBank.Length > 4)
-                        {
-                            // Bank included some Email which is at least 5 characters long (so not just a dummy letter that the bank might have)
-                            // First, Mark as NOT Verified
-                            selectedBank.Status = "Not Verified";
-
-                            // Now send Bank Verification Email (with Link) to the EMAIL FROM THE BANK ACCOUNT
-                            #region Send Verify Bank Email TO EMAIL FROM THE BANK
-
-                            var toAddress = "";//emailFromBank;
-                            var fromAddress = Utility.GetValueFromConfig("adminMail");
-
-                            var firstNameForEmail = String.IsNullOrEmpty(firstNameFromBank)
-                                                    ? ""
-                                                    : " " + UppercaseFirst(firstNameFromBank); // Adding the extra space at the beginning of the FirstName for the Email template: So it's either "Hi," or "Hi John,"
-                            var fullNameFromBankTitleCase = UppercaseFirst(firstNameFromBank) + " " +
-                                                            UppercaseFirst(lastNameFromBank);
-                            var link = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
-                                                    "Nooch/BankVerification?tokenId=" + GetEncryptedData(selectedBank.Id.ToString()));
-
-                            var tokens = new Dictionary<string, string>
-                                            {
-                                                {Constants.PLACEHOLDER_FIRST_NAME, firstNameForEmail},
-                                                {Constants.PLACEHOLDER_BANK_NAME, BankName},
-                                                {Constants.PLACEHOLDER_RECIPIENT_FULL_NAME, fullNameFromBankTitleCase},
-                                                {Constants.PLACEHOLDER_Recepient_Email, ""},//emailFromBank},
-                                                {Constants.PLACEHOLDER_BANK_BALANCE, bankLogoUrl},
-                                                {Constants.PLACEHOLDER_OTHER_LINK, link}
-                                            };
-
-                            Utility.SendEmail("bankEmailVerification", fromAddress, toAddress, null,
-                                              "Your bank account was added to Nooch - Please Verify", null,
-                                              tokens, null, "bankAdded@nooch.com", null);
-
-                            Logger.Info("Common Helper -> SetSynapseDefaultBank --> Bank Verification w/ Link Email sent to: [" +
-                                        toAddress + "] for Nooch Username: [" + noochUserName + "]");
-
-                            #endregion Send Verify Bank Email TO EMAIL FROM THE BANK
-                        }*/
-
-                        #endregion Non-Verified Scenario 1 - Email Included From Bank - NO LONGER USED W/ SYNAPSE V3
-
-                        #region NonVerified Scanario 2 - Email NOT included from bank
-
-                        // Send Bank Verification Email Template #2 (No Link)
-                        else
-                        {
-                            selectedBank.Status = "Not Verified";
-
-                            Logger.Info("SetSynapseDefaultBank -> Bank NOT Verified (Case 6) -  MemberId: [" + MemberId +
-                                        "]; BankName: [" + BankName + "]; bankIncludedName: [" + bankIncludedName +
-                                        "]; nameMatchedExactly: [" + nameMatchedExactly + "]; lastNameMatched: [" + lastNameMatched +
-                                        "]; nameFromBank: [" + fullNameFromBank + "]");
-
-                            // If the User's ID was verified successfully, then don't send the Verfication email.  But keep the bank as "not verified" until a Nooch admin reviews
-                            if (MemberInfoInNoochDb.IsVerifiedWithSynapse == true)
-                            {
-                                Logger.Info("Common Helper -> SetSynapseDefaultBank -> Bank was not verified, but user's SSN verification was successful, so " +
-                                            "NOT sending the Verification Email - MemberID: [" + MemberId + "], Username: [" + noochEmailAddress + "]");
-
-                                StringBuilder st = new StringBuilder("<br/><p><strong>This user's Nooch Account information is:</strong></p>" +
-                                          "<table border='1' cellpadding='3' style='border-collapse:collapse;'>" +
-                                          "<tr><td><strong>MemberID:</strong></td><td>" + MemberId + "</td></tr>" +
-                                          "<tr><td><strongNooch_ID:</strong></td><td>" + MemberInfoInNoochDb.Nooch_ID + "</td></tr>" +
-                                          "<tr><td><strong>Nooch Name:</strong></td><td>" + noochFullName + "</td></tr>" +
-                                          "<tr><td><strong>Bank Included Name?:</strong></td><td>" + bankIncludedName + "</td></tr>" +
-                                          "<tr><td><strong>Name From Bank:</strong></td><td>" + fullNameFromBank + "</td></tr>" +
-                                          "<tr><td><strong>nameMatchedExactly:</strong></td><td>" + nameMatchedExactly + "</td></tr>" +
-                                          "<tr><td><strong>lastNameMatched:</strong></td><td>" + lastNameMatched + "</td></tr>" +
-                                          "<tr><td><strong>Nooch Email Address:</strong></td><td>" + noochEmailAddress + "</td></tr>" +
-                                          "<tr><td><strong>Nooch Phone #:</strong></td><td>" + MemberInfoInNoochDb.ContactNumber + "</td></tr>" +
-                                          "<tr><td><strong>Address:</strong></td><td>" + GetDecryptedData(MemberInfoInNoochDb.Address) +
-                                          "</td></tr></table><br/><br/>- Nooch Bot</body></html>");
-
-                                // Notify Nooch Admin
-                                StringBuilder completeEmailTxt = new StringBuilder();
-                                string s = "<html><body><h2>Non-Verified Syanpse Bank Account</h2><p>The following Nooch user just attached a Synapse bank account, which was unable " +
-                                           "to be verified because the bank did not return an email address, BUT this user's SSN info was verified successfully with Synapse.</p>" +
-                                           "<p>The bank account has beem marked \"Not Verified\" and is now awaiting Admin verification:</p>"
-                                           + st.ToString() +
-                                           "<br/><br/><small>This email was generated automatically in [Common Helper -> SetSynapseBankDefault -> Bank Not Verified (Case 6).</small></body></html>";
-
-                                completeEmailTxt.Append(s);
-
-                                Utility.SendEmail(null, "admin-autonotify@nooch.com", "bankAdded@nooch.com", null,
-                                                  "Nooch Admin Alert: Bank Added, Awaiting Admin Approval",
-                                                  null, null, null, null, completeEmailTxt.ToString());
-                            }
-                            else
-                            {
-                                // SEND VERIFICATION EMAIL to the Nooch user's userName (email address).
-                                // User will have to provide alternative documentation (i.e. Driver's License) to verify their account.
-                                #region Send Verify Bank Email to Nooch username
-
-                                var toAddress = noochUserName;
-                                var fromAddress = Utility.GetValueFromConfig("adminMail");
-
-                                var tokens = new Dictionary<string, string>
-                                            {
-                                                {Constants.PLACEHOLDER_FIRST_NAME, UppercaseFirst(noochFirstName)},
-                                                {Constants.PLACEHOLDER_BANK_NAME, BankName},
-                                                {Constants.PLACEHOLDER_BANK_BALANCE, bankLogoUrl}
-                                            };
-
-                                try
-                                {
-                                    Utility.SendEmail("bankEmailVerificationNoLink",
-                                        fromAddress, toAddress, null,
-                                        "Your bank account was added to Nooch - Additional Verification Needed",
-                                        null, tokens, null, "bankAdded@nooch.com", null);
-
-                                    Logger.Info("Common Helper -> SetSynapseDefaultBank --> Bank Verification No Link Email sent to: [" +
-                                                toAddress + "] for Nooch Username: [" + noochUserName + "]");
-                                }
-                                catch (Exception ex)
-                                {
-                                    Logger.Error("Common Helper -> SetSynapseDefaultBank --> Bank Verification No Link Email NOT sent to [" +
-                                                 toAddress + "] for Nooch Username: [" + noochUserName + "]; Exception: [" + ex.Message + "]");
-                                }
-
-                                #endregion Send Verify Bank Email to Nooch username
+                                // Name was included with Bank, now decrypt it to compare with User's Name
+                                fullNameFromBank = GetDecryptedData(fullNameFromBank).ToLower();
+                                checkName = checkNoochNameAgainstNameOnBankAccount(MemberInfoInNoochDb, fullNameFromBank, bankName, bankAllowed, false);
                             }
                         }
-
-                        #endregion NonVerified Scanario 2 - Email NOT included from bank
-
-                        #endregion Scenarios Where Further Verification Needed
+                        catch (Exception ex)
+                        {
+                            Logger.Error("Commong Helper -> SetSynapseDefaultBank - ERROR while calling checkNoochNameAgainstNameOnBankAccount - " +
+                                         "MemberID: [" + memberId + "], Exception: [" + ex.Message + "]");
+                        }
 
                         // FINALLY, UPDATE THIS BANK IN NOOCH DB
                         try
                         {
+                            // Cliff (5/21/16): Re-doing the rules for when a Synapse bank should be automatically verified b/c Synapse V3
+                            //                  doesn't return any phone or email info from the bank. So need to check if the user's SSN
+                            //                  was verified successfully ('IsVerifiedWithSynapse'), and compare any name returned from the bank.
+                            if (MemberInfoInNoochDb.IsVerifiedWithSynapse == true && bankAllowed == "CREDIT-AND-DEBIT")
+                            {
+                                selectedBank.Status = "Verified";
+                                selectedBank.VerifiedOn = DateTime.Now;
+
+                                Logger.Info("Common Helper -> SetSynapseDefaultBank -> Bank VERIFIED (Case 1) - [Names Matched Exactly: " + checkName.nameMatchedExactly +
+                                            "], [Name From Bank: " + fullNameFromBank + "], [Last Name Match: " + checkName.lastNameMatched +
+                                            "], [Allowed: " + bankAllowed + "], [MemberId: [" + memberId + "]; BankName: [" + bankName + "]");
+                            }
+                            else
+                            {
+                                selectedBank.Status = "Not Verified";
+                            }
+
+                            selectedBank.IsDefault = true;
+
                             if (_dbContext.SaveChanges() > 0)
                             {
                                 res.Message = "Success";
@@ -3474,7 +3266,7 @@ namespace Nooch.Common
                             else
                             {
                                 Logger.Error("Commong Helper -> SetSynapseDefaultBank - FAILED while trying to save new bank in DB - Error #2751");
-                                res.Message = "Server Error: Unable to save bank - #2751";
+                                res.Message = "Server Error: Unable to save bank - #3274";
                             }
                         }
                         catch (Exception ex)
@@ -3485,7 +3277,7 @@ namespace Nooch.Common
                     }
                     else
                     {
-                        Logger.Error("Common Helper -> SetSynapseDefaultBank ERROR: Selected Bank not found in Nooch DB - MemberId: [" + MemberId + "]; BankId: [" + BankOId + "]");
+                        Logger.Error("Common Helper -> SetSynapseDefaultBank ERROR: Selected Bank not found in Nooch DB - MemberId: [" + memberId + "]; BankId: [" + bankOid + "]");
                         res.Message = "Bank not found for given Member";
                     }
                 }
@@ -3494,7 +3286,7 @@ namespace Nooch.Common
 
                 else
                 {
-                    Logger.Error("Common Helper -> SetSynapseDefaultBank ERROR: Member not found in Nooch DB - MemberID: [" + MemberId + "]; BankID: [" + BankOId + "]");
+                    Logger.Error("Common Helper -> SetSynapseDefaultBank ERROR: Member not found in Nooch DB - MemberID: [" + memberId + "]; BankID: [" + bankOid + "]");
                     res.Message = "Member not found";
                 }
             }
@@ -3513,6 +3305,216 @@ namespace Nooch.Common
                 sbank.IsDefault = false;
                 _dbContext.SaveChanges();
             }
+        }
+
+
+        /// <summary>
+        /// Utility meathod for comparing the "Name on Account" from Synapse (or entered by the user for account/routing # banks
+        /// against the Nooch user's First/Last name provided upon creating a Nooch account.
+        /// </summary>
+        /// <param name="memberObj">Member Object</param>
+        /// <param name="nodeObj">Bank node selected by the user as the default bank.</param>
+        /// <param name="bankName">Name of the selected bank, passed only or logging purposes.</param>
+        /// <returns></returns>
+        public static checkNoochNameAgainstBankName checkNoochNameAgainstNameOnBankAccount(Member memberObj, string nameToCheck, string bankName, string allowed, bool isRoutingAccountBank)
+        {
+            checkNoochNameAgainstBankName res = new checkNoochNameAgainstBankName();
+            res.nameMatchedExactly = false;
+            res.lastNameMatched = false;
+            res.firstNameMatched = false;
+            res.wasVerificationEmailSent = false;
+
+            try
+            {
+                #region Check, Parse, & Compare Name from Bank Account
+
+                var memId = memberObj.MemberId.ToString();
+                var noochUserName = GetMemberUsernameByMemberId(memId);
+
+                var noochEmailAddress = GetDecryptedData(memberObj.UserName).ToLower();
+                var noochPhoneNumber = RemovePhoneNumberFormatting(memberObj.ContactNumber);
+                var noochFirstName = GetDecryptedData(memberObj.FirstName).ToLower();
+                var noochLastName = GetDecryptedData(memberObj.LastName).ToLower();
+                var noochFullName = noochFirstName + " " + noochLastName;
+
+                var firstNameFromBank = "";
+                var lastNameFromBank = "";
+
+                if (!String.IsNullOrEmpty(nameToCheck))
+                {
+                    #region Parse Name
+
+                    // Parse & compare NAME from Nooch account w/ NAME from this bank account
+                    string[] nameFromBank_splitUp = nameToCheck.Split(' ');
+
+                    if (nameFromBank_splitUp.Length == 1)
+                    {
+                        lastNameFromBank = nameFromBank_splitUp[0];
+                    }
+                    else if (nameFromBank_splitUp.Length == 2)
+                    {
+                        firstNameFromBank = nameFromBank_splitUp[0];
+                        lastNameFromBank = nameFromBank_splitUp[1];
+                    }
+                    else if (nameFromBank_splitUp.Length >= 3)
+                    {
+                        firstNameFromBank = nameFromBank_splitUp[0];
+                        // Take the last string in the array and set as Last Name From Bank (So, if a bank name was "John W. Smith", this would make 'Smith' the last name)
+                        lastNameFromBank = nameFromBank_splitUp[(nameFromBank_splitUp.Length - 1)];
+                    }
+
+                    #endregion Parse Name
+
+                    #region Compare Name
+
+                    int fullNameCompare = noochFullName.IndexOf(nameToCheck);  // Does Nooch FULL name contain FULL name from bank?
+                    int fullNameCompare2 = nameToCheck.IndexOf(noochFullName); // Does FULL name from bank contain Nooch FULL name?
+                    int firstNameCompare = nameToCheck.IndexOf(noochFirstName);// Does FULL name from bank contain Nooch FIRST name?
+                    int lastNameCompare = nameToCheck.IndexOf(noochLastName);  // Does FULL name from bank contain Nooch LAST name?
+                    int lastNameCompare2 = noochFullName.IndexOf(lastNameFromBank); // Does FULL Nooch name contain LAST name from bank?
+
+                    if (noochFullName == nameToCheck || fullNameCompare > -1 || fullNameCompare2 > -1) // Name matches exactly
+                    {
+                        res.nameMatchedExactly = true;
+                        res.lastNameMatched = true;
+                    }
+                    else if (noochLastName == lastNameFromBank || lastNameCompare > -1 || lastNameCompare2 > -1)
+                    {
+                        // This would be when the bank name is not an exact full match, but the last names match...
+                        // Ex.: "Bob Smith" in Nooch vs. "Robert Smith" or "Bob A. Smith" or even "Smith, Bob A." from the bank
+                        // ... the full names don't match exactly, but the last names do match, so that's better than no match at all
+                        res.lastNameMatched = true;
+                    }
+                    else if (noochFirstName == firstNameFromBank || firstNameCompare > -1)
+                    {
+                        // This would be when the bank name is not an exact full match, and the last names also did not match, but bank name includes Nooch first name
+                        // This is very weak though, and could be true by accident if it's a common first name.  So may not use this as evidence of anything, just checking.
+                        // Ex.: "Clifford Smith" in Nooch vs. "Clifford S. Johnson" or "Smith, Clifford S." from the bank
+                        res.firstNameMatched = true;
+                    }
+
+                    #endregion Compare Name
+                }
+
+                // Log Results
+                Logger.Info("CommonHelper -> checkNoochNameAgainstNameOnBankAccount -> Bank NOT Verified (Case 6) -" +
+                            "MemberId: [" + memId + "], BankAllowed: [" + allowed +
+                            "], BankName: [" + bankName + "], nameMatchedExactly: [" + res.nameMatchedExactly +
+                            "], firstNameMatched: [" + res.firstNameMatched + "], lastNameMatched: [" + res.lastNameMatched +
+                            "], nameToCheck: [" + nameToCheck + "]");
+
+                #endregion Check, Parse, & Compare Name from Bank Account
+
+
+                if (allowed == "CREDIT-AND-DEBIT" || res.nameMatchedExactly || res.lastNameMatched)
+                {
+                    Logger.Info("CommonHelper -> checkNoochNameAgainstNameOnBankAccount -> NO ISSUES - Returning...");
+                }
+                else
+                {
+                    #region Scenarios Where Further Verification Needed
+
+                    // Should Never Happen for online bank logins, which should always be verified immediately
+
+                    var st = "<br/><p><strong>This user's Nooch & Bank Account information is:</strong></p>" +
+                             "<table border='1' cellpadding='3' style='border-collapse:collapse;'>" +
+                             "<tr><td><strong>MemberID:</strong></td><td>" + memId + "</td></tr>" +
+                             "<tr><td><strong>Nooch_ID:</strong></td><td>" + memberObj.Nooch_ID + "</td></tr>" +
+                             "<tr><td><strong>Nooch Name:</strong></td><td>" + noochFullName + "</td></tr>" +
+                             "<tr><td><strong>Name To Check (on Bank):</strong></td><td>" + nameToCheck + "</td></tr>" +
+                             "<tr><td><strong>Is Routing/Acnt #:</strong></td><td>" + isRoutingAccountBank + "</td></tr>" +
+                             "<tr><td><strong>Bank Name:</strong></td><td>" + bankName + "</td></tr>" +
+                             "<tr><td><strong>Allowed:</strong></td><td>" + allowed + "</td></tr>" +
+                             "<tr><td><strong>Name Match Exact:</strong></td><td>" + res.nameMatchedExactly + "</td></tr>" +
+                             "<tr><td><strong>Last Name Match:</strong></td><td>" + res.lastNameMatched + "</td></tr>" +
+                             "<tr><td><strong>First Name Match:</strong></td><td>" + res.firstNameMatched + "</td></tr>" +
+                             "<tr><td><strong>Nooch Email Address:</strong></td><td>" + noochEmailAddress + "</td></tr>" +
+                             "<tr><td><strong>Nooch Phone #:</strong></td><td>" + memberObj.ContactNumber + "</td></tr>" +
+                             "<tr><td><strong>Address:</strong></td><td>" + GetDecryptedData(memberObj.Address) +
+                             "</td></tr></table><br/><br/>- Nooch Bot</body></html>";
+
+                    var log = "";
+
+                    if (memberObj.IsVerifiedWithSynapse != true)
+                    {
+                        // DON'T SEND TO BANKS ADDED VIA ROUTING/ACCNT #... THEY ALREADY RECEIVE THE MICRO-DEPOSIT EMAIL.
+                        if (!isRoutingAccountBank)
+                        {
+                            log = "User's isVerifiedWithSynapse == FALSE, so sent Verification Email to user";
+                            // SEND VERIFICATION EMAIL (No Link) to the Nooch user's userName (email address).
+                            // User will have to provide alternative documentation (i.e. Driver's License) to verify their account.
+                            #region Send Verify Bank Email to Nooch username
+
+                            // Set Bank Logo URL Variable for Email Template
+                            var bankLogoUrl = getLogoForBank(bankName);
+                            var toAddress = noochUserName;
+                            var fromAddress = Utility.GetValueFromConfig("adminMail");
+
+                            var tokens = new Dictionary<string, string>
+                                {
+                                    {Constants.PLACEHOLDER_FIRST_NAME, UppercaseFirst(noochFirstName)},
+                                    {Constants.PLACEHOLDER_BANK_NAME, bankName},
+                                    {Constants.PLACEHOLDER_BANK_BALANCE, bankLogoUrl}
+                                };
+
+                            try
+                            {
+                                Utility.SendEmail("bankEmailVerificationNoLink", fromAddress, toAddress, null,
+                                                  "Your bank account was added to Nooch - Additional Verification Needed",
+                                                  null, tokens, null, "bankAdded@nooch.com", null);
+
+                                Logger.Info("Common Helper -> checkNoochNameAgainstNameOnBankAccount - Bank Verification (No Link) Email sent to: [" + toAddress + "]");
+
+                                res.wasVerificationEmailSent = true;
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.Error("Common Helper -> checkNoochNameAgainstNameOnBankAccount --> Bank Verification No Link Email NOT sent to [" +
+                                             toAddress + "] for Nooch Username: [" + noochUserName + "]; Exception: [" + ex.Message + "]");
+                            }
+
+                            #endregion Send Verify Bank Email to Nooch username
+                        }
+                        else
+                            log = "BUT this is a Routing/Account # bank, so NOT sending Verification Email to user";
+                    }
+                    else
+                    {
+                        // If the User's ID was previously verified successfully (IsVerifiedWithSynapse == TRUE),
+                        // then don't send the Verfication email to the User, just send Admin Notification.
+                        // But keep the bank as "Not Verified" until a Nooch admin reviews.
+                        log = "BUT user's isVerifiedWithSynapse == TRUE, so NOT sending Verification Email to user";
+                    }
+
+                    #region Send Admin Notification
+
+                    Logger.Info("Common Helper -> checkNoochNameAgainstNameOnBankAccount -> Bank Name didn't match Nooch name OR \"Allowed\" was not CREDIT-AND-DEBIT - " +
+                                log + " - MemberID: [" + memId + "], Username: [" + noochEmailAddress +
+                                "], isRoutingAccountBank: [" + isRoutingAccountBank + "], Bank Name: [" + bankName + "], Allowed: [" + allowed + "]");
+
+                    // Notify Nooch Admin
+                    var completeEmailTxt = new StringBuilder("<html><body><h2>Non-Verified Syanpse Bank Account</h2><p>The following Nooch user just attached a Synapse bank account, which was unable " +
+                                            "to be verified because this user's SSN info was verified successfully with Synapse.</p>" +
+                                            "<p>The bank account has beem marked \"Not Verified\" and is now awaiting Admin verification:</p>");
+                    completeEmailTxt.Append(st);
+                    completeEmailTxt.Append("<br/><br/><small>This email was generated automatically in [Common Helper -> checkNoochNameAgainstNameOnBankAccount -> Bank Not Verified (Case 6).</small></body></html>");
+
+                    Utility.SendEmail(null, "admin-autonotify@nooch.com", "bankAdded@nooch.com", null,
+                                      "Nooch Admin Alert: Bank Added, Awaiting Admin Approval",
+                                      null, null, null, null, completeEmailTxt.ToString());
+
+                    #endregion Send Admin Notification
+
+                    #endregion Scenarios Where Further Verification Needed
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("CommonHelper -> checkNoochNameAgainstNameOnBankAccount FAILED -> NameToCheck: [" + nameToCheck +
+                            "], MemberID: [" + memberObj.MemberId + "], Outer Exception: [" + ex.Message + "]");
+            }
+
+            return res;
         }
 
 
@@ -3880,8 +3882,8 @@ namespace Nooch.Common
 
                 try
                 {
-                    string googleUrlLink = "https://maps.googleapis.com/maps/api/geocode/json?address=" + zipCode + "&key=" +
-                                           Utility.GetValueFromConfig("GoogleGeolocationKey");
+                    var googleUrlLink = "https://maps.googleapis.com/maps/api/geocode/json?address=" + zipCode + "&key=" +
+                                        Utility.GetValueFromConfig("GoogleGeolocationKey");
 
                     var http = (HttpWebRequest)WebRequest.Create(new Uri(googleUrlLink));
                     http.Method = "GET";

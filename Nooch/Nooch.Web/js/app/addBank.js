@@ -651,7 +651,7 @@ $('#bankLoginManual').submit(function (e) {
             $('#bankAcntNum').val($.trim($('#bankAcntNum').val()));
             if ($('#bankAcntNum').parsley().validate() === true)
             {
-                // If account number is ok, then validation bank account nickname
+                // If account number is ok, then validate bank account nickname
                 $('#bankAcntNickName').val($.trim($('#bankAcntNickName').val()));
                 if ($('#bankAcntNickName').parsley().validate() === true)
                 {

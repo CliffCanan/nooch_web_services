@@ -460,32 +460,33 @@ namespace Nooch.Web.Controllers
         [ActionName("addBank")]
         public ActionResult addBank(bankaddInputFormClass inp)
         {
-            Logger.Info("Add Bank Page -> AddBank (for manual routing/account #) Loaded - MemberID: [" + inp.memberid + "]");
+            Logger.Info("Add Bank Page -> AddBank (Routing/Account) Fired - MemberID: [" + inp.memberid + "]");
 
             SynapseBankLoginRequestResult res = new SynapseBankLoginRequestResult();
             res.Is_success = false;
+            res.Is_MFA = false; // Always false for routing/account # banks
 
             try
             {
+                var serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+                var serviceMethod = "SynapseV3AddNodeWithAccountNumberAndRoutingNumber?MemberId=" + inp.memberid +
+                                    "&name_on_account=" + inp.fullname +
+                                    "&routing_num=" + inp.routing + "&account_num=" + inp.account +
+                                    "&bankNickName=" + inp.nickname + "&accountclass=" + inp.cl +
+                                    "&accounttype=" + inp.type;
+
                 // Now call the bank login service.
                 // Response should be: 1.) array[] of 1 bank, or  2.) Failure/Error
-
-                string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-
-                string serviceMethod = "SynapseV3AddNodeWithAccountNumberAndRoutingNumber?MemberId=" + inp.memberid + "&routing_num=" + inp.routing +
-                                       "&account_num=" + inp.account + "&bankNickName=" + inp.nickname + "&accountclass=" + inp.cl + "&accounttype=" + inp.type;
-
                 SynapseBankLoginV3_Response_Int bankAddRes =
                     ResponseConverter<SynapseBankLoginV3_Response_Int>.ConvertToCustomEntity(String.Concat(serviceUrl, serviceMethod));
 
+                res.Is_success = bankAddRes.Is_success;
+                res.ERROR_MSG = bankAddRes.errorMsg;
+
                 if (bankAddRes.Is_success == true)
                 {
-                    res.Is_success = true;
-                    res.Is_MFA = bankAddRes.Is_MFA;
-                    res.ERROR_MSG = "OK";
-
-                    Logger.Info("Add Bank Page -> AddBank - Bank added MANUALLY Saved Successfully - MemberID: [" + inp.memberid +
-                                "], Full Name: [" + inp.fullname + "], Bank Nickname: [" + inp.nickname + "]");
+                    Logger.Info("Add Bank Page -> AddBank SUCCESS - Bank added MANUALLY Saved - MemberID: [" + inp.memberid +
+                                "], Full Name (entered on bank form): [" + inp.fullname + "], Bank Nickname: [" + inp.nickname + "]");
                 }
                 else
                 {
@@ -498,8 +499,7 @@ namespace Nooch.Web.Controllers
             }
             catch (Exception we)
             {
-                var error = "Add Bank Page -> AddBank (Manual) FAILED - MemberID: [" + inp.memberid +
-                             "], Exception: [" + we + "]";
+                var error = "Add Bank Page -> AddBank (Manual) FAILED - MemberID: [" + inp.memberid + "], Exception: [" + we + "]";
                 Logger.Error(error);
                 CommonHelper.notifyCliffAboutError(error);
                 res.ERROR_MSG = "Add Bank exception # 550";

@@ -3082,9 +3082,9 @@ namespace Nooch.API.Controllers
             try
             {
                 Logger.Info("Service Cntlr -> RegisterExistingUserWithSynapseV3 Fired - MemberID: [" + input.memberId + "]");
-                            //"], Name: [" + input.fullname + "], Email: [" + input.email +
-                            //"], Is ID Img Sent: [" + input.isIdImageAdded + "], CIP: [" + input.cip +
-                            //"], FBID: [" + input.fbid + "], isBiz: [" + input.isBusiness + "], EntType: [" + input.entityType + "]");
+                //"], Name: [" + input.fullname + "], Email: [" + input.email +
+                //"], Is ID Img Sent: [" + input.isIdImageAdded + "], CIP: [" + input.cip +
+                //"], FBID: [" + input.fbid + "], isBiz: [" + input.isBusiness + "], EntType: [" + input.entityType + "]");
 
                 MembersDataAccess mda = new MembersDataAccess();
                 RegisterUserSynapseResultClassExt nc = new RegisterUserSynapseResultClassExt();
@@ -3237,6 +3237,7 @@ namespace Nooch.API.Controllers
         /// For adding a Synapse bank account w/ Routing & Account #'s.
         /// </summary>
         /// <param name="MemberId"></param>
+        /// <param name="name_on_account">Should be UNENCRYPTED</param>
         /// <param name="bankNickName"></param>
         /// <param name="account_num"></param>
         /// <param name="routing_num"></param>
@@ -3245,7 +3246,7 @@ namespace Nooch.API.Controllers
         /// <returns></returns>
         [HttpGet]
         [ActionName("SynapseV3AddNodeWithAccountNumberAndRoutingNumber")]
-        public SynapseBankLoginV3_Response_Int SynapseV3AddNodeWithAccountNumberAndRoutingNumber(string MemberId, string bankNickName, string account_num, string routing_num, string accounttype, string accountclass)
+        public SynapseBankLoginV3_Response_Int SynapseV3AddNodeWithAccountNumberAndRoutingNumber(string MemberId, string name_on_account, string bankNickName, string account_num, string routing_num, string accounttype, string accountclass)
         {
             Logger.Info("Service Cntrlr -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber Fired - MemberID: [" + MemberId +
                         "], Bank Nick Name: [" + bankNickName + "], Routing #: [" + routing_num +
@@ -3331,7 +3332,7 @@ namespace Nooch.API.Controllers
                 if (createSynapseUserDetails == null) // No Synapse user details were found, so need to create a new Synapse User
                 {
                     // Call RegisterUserWithSynapse() to get auth token by registering this user with Synapse
-                    // This accounts for all users connecting a bank for the FIRST TIME (Sent to this method from Add-Bank.aspx.cs)
+                    // This accounts for all users connecting a bank for the FIRST TIME (Sent to this method from Add-Bank Browser Page)
                     synapseCreateUserV3Result_int registerSynapseUserResult = RegisterUserWithSynapseV3(MemberId);
 
                     if (registerSynapseUserResult.success)
@@ -3343,7 +3344,9 @@ namespace Nooch.API.Controllers
                 // Check again if it's still null (which it shouldn't be because we just created a new Synapse user above if it was null.
                 if (createSynapseUserDetails == null)
                 {
-                    Logger.Error("Service Cntrlr -> SynapseV3 ADD NODE ERROR: No Synapse OAuth code found in Nooch DB for: [" + MemberId + "].");
+                    var error = "Service Cntrlr -> SynapseV3 ADD NODE ERROR: No Synapse OAuth code found in Nooch DB for: [" + MemberId + "].";
+                    Logger.Error(error);
+                    CommonHelper.notifyCliffAboutError(error);
                     res.errorMsg = "No Authentication code found for given user.";
                     return res;
                 }
@@ -3418,9 +3421,9 @@ namespace Nooch.API.Controllers
                         addBankRespFromSynapse["nodes"] != null)
                     {
                         // Malkit (30 May 2016): Commented out code for Marking Any Existing Synapse Bank Login Entries as Deleted b/c this service uses routing/account # only,
-                        //                       so for this case the result will go be saved in SynapseBanksOfMembers table instead of synpaseBankLoginResult table along
-                        //                       with bank account, routing and some other info. From now we will be storing IsAddedUsingRoutingNumber field as true in
-                        //                       SynapseBanksOfMembers to keep track of who came through routing numbers.
+                        //                       so for this case the result will go be saved in dbo.SynapseBanksOfMembers instead of dbo.synpaseBankLoginResult along
+                        //                       with bank account, routing and some other info. From now on we'll store IsAddedUsingRoutingNumber field as TRUE in
+                        //                       dbo.SynapseBanksOfMembers to keep track of who came through routing numbers.
 
                         #region Save New Record In SynapseBanksOfMember
 
@@ -3453,26 +3456,37 @@ namespace Nooch.API.Controllers
 
                                 JToken info = addBankRespFromSynapse["nodes"][0]["info"];
 
-                                // Saving entry in SynapseBanksOfMember Table
-                                SynapseBanksOfMember sbom = new SynapseBanksOfMember();
-                                sbom.IsAddedUsingRoutingNumber = true;
-                                sbom.MemberId = id;
-                                sbom.AddedOn = DateTime.Now;
-                                sbom.mfa_verifed = false;
-                                sbom.account_number_string = CommonHelper.GetEncryptedData(info["account_num"].ToString());
-                                sbom.bank_name = CommonHelper.GetEncryptedData(info["bank_long_name"].ToString());
-                                sbom.@class = info["class"].ToString();
-                                sbom.name_on_account = CommonHelper.GetEncryptedData(info["name_on_account"].ToString());
-                                sbom.nickname = CommonHelper.GetEncryptedData(info["nickname"].ToString());
-                                sbom.routing_number_string = CommonHelper.GetEncryptedData(info["routing_num"].ToString());
-                                sbom.type_bank = info["type"].ToString();
-                                sbom.oid = CommonHelper.GetEncryptedData(addBankRespFromSynapse["nodes"][0]["_id"]["$oid"].ToString());
-                                sbom.allowed = addBankRespFromSynapse["nodes"][0]["allowed"].ToString();
-                                sbom.supp_id = addBankRespFromSynapse["nodes"][0]["extra"]["supp_id"].ToString();
+                                var bankNamePlain = info["bank_long_name"] != null
+                                                ? info["bank_long_name"].ToString()
+                                                : "UNKNOWN";
+                                // Usually will be: "CREDIT"
+                                var allowed = addBankRespFromSynapse["nodes"][0]["allowed"] != null
+                                                ? addBankRespFromSynapse["nodes"][0]["allowed"].ToString()
+                                                : "UNKNOWN";
 
-                                // Setting as default.... and 'Not Verified' for now, user must complete micro deposit verification
-                                sbom.IsDefault = true;
-                                sbom.Status = "Not Verified";
+                                // Saving entry in SynapseBanksOfMember Table
+                                SynapseBanksOfMember sbom = new SynapseBanksOfMember
+                                {
+                                    AddedOn = DateTime.Now,
+                                    bankAdddate = DateTime.Now.ToShortDateString(),
+                                    IsAddedUsingRoutingNumber = true,
+                                    MemberId = id,
+                                    mfa_verifed = false,
+                                    oid = CommonHelper.GetEncryptedData(addBankRespFromSynapse["nodes"][0]["_id"]["$oid"].ToString()),
+                                    nickname = CommonHelper.GetEncryptedData(info["nickname"].ToString()),
+                                    bank_name = CommonHelper.GetEncryptedData(bankNamePlain),
+                                    name_on_account = CommonHelper.GetEncryptedData(info["name_on_account"].ToString()),
+                                    account_number_string = CommonHelper.GetEncryptedData(info["account_num"].ToString()),
+                                    routing_number_string = CommonHelper.GetEncryptedData(info["routing_num"].ToString()),
+                                    allowed = allowed,
+                                    type_bank = info["type"].ToString(),
+                                    @class = info["class"].ToString(),
+                                    supp_id = addBankRespFromSynapse["nodes"][0]["extra"]["supp_id"].ToString(),
+                                    is_active = addBankRespFromSynapse["nodes"][0]["is_active"].ToString() == "true" ? true : false,
+                                    type_synapse = addBankRespFromSynapse["nodes"][0]["type"].ToString(),
+                                    IsDefault = true, // Automatically set as default
+                                    Status = "Not Verified", // Not Verified until user confirms micro-deposits,
+                                };
 
                                 try
                                 {
@@ -3482,16 +3496,20 @@ namespace Nooch.API.Controllers
                                 catch (Exception ex)
                                 {
                                     var error = "Service Controller -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber FAILED - Could not save record " +
-                                                 "in SynapseBanksOfMembers Table - ABORTING - MemberID: [" + MemberId + "], Exception: [" + ex + "]";
+                                                "in SynapseBanksOfMembers Table - ABORTING - MemberID: [" + MemberId + "], Exception: [" + ex + "]";
                                     Logger.Error(error);
                                     CommonHelper.notifyCliffAboutError(error);
                                     res.errorMsg = "Failed to save entry in BankLoginResults table: [" + ex.Message + "]";
                                 }
 
-                                Logger.Info("Service Controller -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber SUCCESS - Added record to SynapseBanksOfMembers Table - UserName: [" + CommonHelper.GetDecryptedData(noochMember.UserName) + "]");
+                                Logger.Info("Service Controller -> SynapseV3AddNodeWithAccountNumberAndRoutingNumber SUCCESS - " +
+                                            "Added record to SynapseBanksOfMembers Table - UserName: [" + CommonHelper.GetDecryptedData(noochMember.UserName) + "]");
 
                                 res.Is_success = true;
+                                res.errorMsg = "OK";
 
+
+                                // MICRO-DEPOSIT EMAIL
                                 if (noochMember.cipTag != "vendor")
                                 {
                                     #region Send Initial Micro-Deposit Email
@@ -3502,8 +3520,6 @@ namespace Nooch.API.Controllers
                                     var accountNum = "**** - " + account_num.Substring(account_num.Length - 4);
                                     var verifyLink = String.Concat(Utility.GetValueFromConfig("ApplicationURL"),
                                                         "Nooch/MicroDepositsVerification?mid=" + MemberId);
-
-                                    var templateToUse = "MicroDepositNotification";
 
                                     var tokens = new Dictionary<string, string>
 	                                        {
@@ -3518,21 +3534,22 @@ namespace Nooch.API.Controllers
 
                                     var fromAddress = Utility.GetValueFromConfig("transfersMail");
                                     var toAddress = CommonHelper.GetDecryptedData(noochMember.UserName);
-
+                                    var templateToUse = "MicroDepositNotification";
+                                    var error = "";
                                     try
                                     {
                                         Utility.SendEmail(templateToUse, fromAddress, toAddress, null,
                                                           "Bank Account Verification - Important Info",
                                                           null, tokens, null, "bankAddedManually@nooch.com", null);
-
-                                        Logger.Info("Service Cntrlr -> SynapseV3 AddNodeWithAccountNumberAndRoutingNumber - [" + templateToUse + "] - Email sent to [" +
-                                                     toAddress + "] successfully");
+                                        error = "Service Cntrlr -> SynapseV3 AddNodeWithAccountNumberAndRoutingNumber - [" + templateToUse + "] - Email sent to [" + toAddress + "] successfully";
                                     }
                                     catch (Exception ex)
                                     {
-                                        Logger.Error("Service Cntrlr -> SynapseV3 AddNodeWithAccountNumberAndRoutingNumber - EMAIL FAILED: " +
-                                                     "[" + templateToUse + "] Email NOT sent to [" + toAddress + "], Exception: [" + ex + "]");
+                                        error = "Service Cntrlr -> SynapseV3 AddNodeWithAccountNumberAndRoutingNumber - EMAIL FAILED: " +
+                                                "[" + templateToUse + "] Email NOT sent to [" + toAddress + "], Exception: [" + ex + "]";
                                     }
+
+                                    Logger.Info(error);
 
                                     #endregion Send Initial Micro-Deposit Email
 
@@ -3551,10 +3568,10 @@ namespace Nooch.API.Controllers
                                         else if ((int)currentDateTime.DayOfWeek == 6)
                                             delayToUse = TimeSpan.FromDays(4);
 
-                                        var x = BackgroundJob.Schedule(() => CommonHelper.SendMincroDepositsVerificationReminderEmail(sbom.MemberId.ToString(), sbom.oid), delayToUse);
-                                        if (x != null)
+                                        var sched = BackgroundJob.Schedule(() => CommonHelper.SendMincroDepositsVerificationReminderEmail(sbom.MemberId.ToString(), sbom.oid), delayToUse);
+                                        if (sched != null)
                                             Logger.Info("Service Cntrlr -> SynapseV3 AddNodeWithAccountNumberAndRoutingNumber - Scheduled Micro Deposit Reminder email in Background - [" +
-                                                        "] DelayToUse: [" + delayToUse.ToString() + " Days]");
+                                                        "], DelayToUse: [" + delayToUse.ToString() + " Days]");
                                     }
                                     catch (Exception ex)
                                     {
@@ -3564,6 +3581,10 @@ namespace Nooch.API.Controllers
 
                                     #endregion Scheduling Micro-Deposit Reminder Email
                                 }
+
+                                // FINALLY, CALL checkNoochNameAgainstNameOnBankAccount... just for logging and admin notification purposes.
+                                // Does not affect the return values to the user.
+                                var x = CommonHelper.checkNoochNameAgainstNameOnBankAccount(noochMember, name_on_account, bankNamePlain, allowed, true);
                             }
                         }
                         catch (Exception ex)
@@ -3588,7 +3609,7 @@ namespace Nooch.API.Controllers
                 }
                 catch (WebException we)
                 {
-                    #region Bank Login Catch
+                    #region Bank Add Catch
 
                     res.Is_success = false;
 
@@ -3616,7 +3637,7 @@ namespace Nooch.API.Controllers
 
                     return res;
 
-                    #endregion Bank Login Catch
+                    #endregion Bank Add Catch
                 }
 
                 #endregion Call SynapseV3 Add Node API
