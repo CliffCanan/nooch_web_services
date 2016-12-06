@@ -1825,13 +1825,16 @@ namespace Nooch.DataAccess
                                 };
                                 res.user_id = synapseCreateUserObjIfExists.user_id;
 
-                                if (noochMember.IsVerifiedWithSynapse == true)
-                                {
-                                    Logger.Info("MDA -> RegisterUserWithSynapseV3 - ID Already Verified on [" + noochMember.ValidatedDate +
-                                                "] - RETURNING - MemberID: " + memberId + "], ssn_verify_status: [id already verified]");
-                                    res.ssn_verify_status = "id already verified";
+                                // CC (12/6/16): Temporarily commenting this block to force all users SSN info to be submitted to Synapse.
+                                //               Once any existing users with this already set to TRUE have re-linked to Synapse, then can un-comment this.
+                                /*
+                                 * if (noochMember.IsVerifiedWithSynapse == true) {
+                                   Logger.Info("MDA -> RegisterUserWithSynapseV3 - ID Already Verified on [" + noochMember.ValidatedDate +
+                                                        "] - RETURNING - MemberID: " + memberId + "], ssn_verify_status: [id already verified]");
+                                            res.ssn_verify_status = "id already verified";
                                 }
-                                else if (res.user.permission == "SEND-AND-RECEIVE")
+                                else*/
+                                if (res.user.permission == "SEND-AND-RECEIVE")
                                 {
                                     #region Update IsVerifiedWithSynapse Value In Member Table
 
@@ -1985,8 +1988,8 @@ namespace Nooch.DataAccess
 
                 List<string> clientIds = CommonHelper.getClientSecretId(memberId);
 
-                string SynapseClientId = clientIds[0];
-                string SynapseClientSecret = clientIds[1];
+                var SynapseClientId = clientIds[0];
+                var SynapseClientSecret = clientIds[1];
 
                 var fullname = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(noochMember.FirstName)) + " " +
                                CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(noochMember.LastName));
@@ -2247,12 +2250,15 @@ namespace Nooch.DataAccess
                     {
                         Logger.Info("MDA -> RegisterUserWithSynapseV3 SUCCESS - Synapse User ID: [" + res.user_id + "], Permission: [" + res.user.permission + "]");
 
-                        if (noochMember.IsVerifiedWithSynapse == true)
+                        // CC (12/6/16): Temporarily commenting this block to force all users SSN info to be submitted to Synapse.
+                        //               Once any existing users with this already set to TRUE have re-linked to Synapse, then can un-comment this.
+                        /*if (noochMember.IsVerifiedWithSynapse == true)
                         {
                             Logger.Info("MDA -> RegisterUserWithSynapseV3 - ** ID Already Verified ** - MemberID: [" + memberId + "]");
                             res.ssn_verify_status = "id already verified";
                         }
-                        else if (res.user.permission == "SEND-AND-RECEIVE") // Probobly wouldn't ever be this b/c I don't think Synapse ever returns this for brand new users
+                        else */
+                        if (res.user.permission == "SEND-AND-RECEIVE") // Probobly wouldn't ever be this b/c I don't think Synapse ever returns this for brand new users
                         {
                             #region User Not Previously Verified But Got Send-Receive Permissions This Time
 

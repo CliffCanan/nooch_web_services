@@ -1545,7 +1545,9 @@ div#pwFormShell #depositCreateAccount,
 #idVerWiz input {font-size: 15px;}
 
 .tos-text {
+    color: #888;
 	display: block;
+    font-size: 82%;
     margin: 15px auto 0px;
 	opacity: .8;
 }

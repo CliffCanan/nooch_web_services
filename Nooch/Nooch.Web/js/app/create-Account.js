@@ -141,7 +141,7 @@ $(document).ready(function () {
                 $('.biz-only').addClass('hidden');
 
                 // Since Habitat's users only receive, don't need to ask for DL in step 4.
-                if (COMPANY == "habitat")
+                if (COMPANY == "habitat" || TYPE_CIP == "vendor")
                 {
                     $('.no-id-step-show').removeClass('hidden');
                     $('.no-id-step').remove();

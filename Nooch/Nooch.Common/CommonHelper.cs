@@ -1538,7 +1538,6 @@ namespace Nooch.Common
                     documents.address_postal_code = usersZip;
                     documents.address_country_code = "US";
 
-
                     #region Set All Document Values
 
                     try

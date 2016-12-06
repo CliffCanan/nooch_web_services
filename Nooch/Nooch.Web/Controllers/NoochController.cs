@@ -1611,10 +1611,8 @@ namespace Nooch.Web.Controllers
 
             try
             {
-                //Logger.Info("createAccount Page -> GetMemberDetailsForCreateAccount Initiated - MemberID: [" + memberId + "]");
-
-                string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-                string serviceMethod = "GetMemberDetailsForLandingPage?memberId=" + memberId;
+                var serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+                var serviceMethod = "GetMemberDetailsForLandingPage?memberId=" + memberId;
 
                 Logger.Info("createAccount Page -> GetMemberDetailsForCreateAccount - URL to Query: [" + String.Concat(serviceUrl, serviceMethod) + "]");
 
