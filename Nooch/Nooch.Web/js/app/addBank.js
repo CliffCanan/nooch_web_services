@@ -1140,11 +1140,12 @@ function sendToRedUrl() {
                 customClass: "largeText",
                 html: true
             }, function (isConfirm) {
-                showLoadingHUD("Finishing");
+                // CC (12/6/16): Ionic app is currently not sending any Red_URL, so server is defaulting to Nooch home page, but that's not good if you're inside the app...
+                //showLoadingHUD("Finishing");
 
-                setTimeout(function () {
-                    window.top.location.href = "https://www.nooch.com/";
-                }, 300);
+                //setTimeout(function () {
+                //    window.top.location.href = "https://www.nooch.com/";
+                //}, 300);
             });
         }
     }
