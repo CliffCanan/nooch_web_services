@@ -4476,7 +4476,7 @@ namespace Nooch.API.Controllers
         {
             try
             {
-                Logger.Error("Service Cntlr -> DeleteAttachedBankNode Fired - MemberID: [" + memberid + "]");
+                Logger.Info("Service Cntlr -> DeleteAttachedBankNode Fired - MemberID: [" + memberid + "]");
 
                 Guid MemId = Utility.ConvertToGuid(memberid);
                 var synBankDetails = _dbContext.SynapseBanksOfMembers.Where(b => b.MemberId == MemId &&

@@ -6895,10 +6895,10 @@ namespace Nooch.DataAccess
 
             var id = Utility.ConvertToGuid(memberId);
 
-            var bankAccountsFound = _dbContext.SynapseBanksOfMembers.Where(bank => bank.MemberId == id &&
+            var nodeObj = _dbContext.SynapseBanksOfMembers.Where(bank => bank.MemberId == id &&
                                                                                    bank.Id == bankId).FirstOrDefault();
 
-            if (bankAccountsFound != null)
+            if (nodeObj != null)
             {
                 SynapseDetailsClass sdc = CommonHelper.GetSynapseBankAndUserDetailsforGivenMemberId(memberId);
 
@@ -6915,13 +6915,19 @@ namespace Nooch.DataAccess
                 if (!String.IsNullOrEmpty(sdc.UserDetails.access_token) &&
                     !String.IsNullOrEmpty(sdc.UserDetails.user_fingerprints))
                 {
-                    var oidDecr = CommonHelper.GetDecryptedData(bankAccountsFound.oid);
+                    var oidDecr = CommonHelper.GetDecryptedData(nodeObj.oid);
                     var callSynapseToRemoveNode = CommonHelper.RemoveBankNodeFromSynapse(sdc.UserDetails.access_token,
                                                                                          sdc.UserDetails.user_fingerprints,
                                                                                          oidDecr, memberId);
 
                     if (callSynapseToRemoveNode.IsSuccess)
+                    {
+                        nodeObj.IsDefault = false;
+                        nodeObj.is_active = false;
+                        _dbContext.SaveChanges();
+
                         return "Deleted";
+                    }
                     else
                         return "Error processing that request, please try again later or contact Nooch support!";
                 }

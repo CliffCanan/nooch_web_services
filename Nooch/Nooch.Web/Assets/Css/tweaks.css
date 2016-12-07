@@ -1508,6 +1508,33 @@ div#pwFormShell #depositCreateAccount,
 .wizard .bootstrap-datetimepicker-widget.dropdown-menu:after { content: none; }
 
 
+
+#microVerPayRequestForm label {
+    font-size: 15px;
+}
+
+#microVerPayRequestForm p {
+    font-size: 15px;
+}
+
+.parsley-errors-list {
+    width: 260px;
+    margin: 0 auto;
+    font-size: 15px;
+    letter-spacing: 0;
+    font-weight: bold;
+    text-align: left;
+}
+
+#nameInNavContainer {
+    text-align: center;
+    min-height: 47px;
+}
+
+    #nameInNavContainer .bankName {
+        margin-top: 1px;
+    }
+
 /***************************
     CREATE ACCOUNT PAGE
 ***************************/
@@ -2750,6 +2777,12 @@ form .table-header {
 
   #idVer .modal-dialog { width: 640px; }
 
+  #nameInNavContainer {
+      position: absolute;
+      left: 10%;
+      width: 80%;
+      top: 8px;
+  }
 }
 
 @media only screen and (min-width: 1000px) {

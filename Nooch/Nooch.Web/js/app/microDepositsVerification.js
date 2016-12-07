@@ -29,105 +29,123 @@ function SubmitInfo() {
 
     if ($('#MicroDepositOne').val().length == 2)
     {
-        $("#Submit").text('Submitting...');
-        $('#Submit').attr('disabled', 'disabled');
+        if ($('#MicroDepositTwo').val().length == 2)
+        {
+            $("#Submit").text('Submitting...');
+            $('#Submit').attr('disabled', 'disabled');
 
-        var dot = ".";
-        var MemberId = $('#MemberId').val().trim();
-        var MicroDepositOne = dot + $('#MicroDepositOne').val().trim();
-        var MicroDepositTwo = dot + $('#MicroDepositTwo').val().trim();
-        var NodeId1 = $('#NodeId1').val();
-        var BankName = $('#BankName').val();
+            var dot = ".";
+            var MemberId = $('#MemberId').val().trim();
+            var MicroDepositOne = dot + $('#MicroDepositOne').val().trim();
+            var MicroDepositTwo = dot + $('#MicroDepositTwo').val().trim();
+            var NodeId1 = $('#NodeId1').val();
+            var BankName = $('#BankName').val();
 
-        console.log("SAVE MEMBER INFO -> {MemberId: " + MemberId +
-                                       ", MicroDepositOne: " + MicroDepositOne +
-                                       ", MicroDepositTwo: " + MicroDepositTwo +
-                                       ", BankName: " + BankName +
-                                       ", NodeId1 " + NodeId1 + "}");
+            console.log("SAVE MEMBER INFO -> {MemberId: " + MemberId +
+                                           ", MicroDepositOne: " + MicroDepositOne +
+                                           ", MicroDepositTwo: " + MicroDepositTwo +
+                                           ", BankName: " + BankName +
+                                           ", NodeId1 " + NodeId1 + "}");
 
-        $.ajax({
-            type: "POST",
-            url: "MFALoginWithRoutingAndAccountNumber",
-            data: "{ 'Bank':'" + BankName +
-                 "', 'MemberId':'" + MemberId +
-                 "', 'MicroDepositOne':'" + MicroDepositOne +
-                 "', 'MicroDepositTwo':'" + MicroDepositTwo +
-                 "', 'NodeId1':'" + NodeId1 + "'}",
-            contentType: "application/json; charset=utf-8",
-            dataType: "json",
-            async: "true",
-            cache: "false",
-            success: function (result) {
-                //console.log("SUCCESS -> MFALoginWithRoutingAndAccountNumber result is... [next line]");
-                console.log(result);
-                resultReason = result.msg;
+            $.ajax({
+                type: "POST",
+                url: "MFALoginWithRoutingAndAccountNumber",
+                data: "{ 'Bank':'" + BankName +
+                     "', 'MemberId':'" + MemberId +
+                     "', 'MicroDepositOne':'" + MicroDepositOne +
+                     "', 'MicroDepositTwo':'" + MicroDepositTwo +
+                     "', 'NodeId1':'" + NodeId1 + "'}",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                async: "true",
+                cache: "false",
+                success: function (result) {
+                    //console.log("SUCCESS -> MFALoginWithRoutingAndAccountNumber result is... [next line]");
+                    console.log(result);
+                    resultReason = result.msg;
 
-                $("#Submit").text('Submit');
-                $('#Submit').removeAttr("disabled");
+                    $("#Submit").text('Submit');
+                    $('#Submit').removeAttr("disabled");
 
-                if (result.Is_success == true || result.Is_success == "True")
-                {
-                    console.log("Success!");
+                    if (result.Is_success == true || result.Is_success == "True")
+                    {
+                        console.log("Success!");
 
-                    $('#idWizContainer').fadeOut(300);
+                        $('#idWizContainer').fadeOut(300);
 
-                    setTimeout(function () {
-                        $('.resultDiv').addClass('animated bounceIn').removeClass('hidden')
-                    }, 350);
+                        setTimeout(function () {
+                            $('.resultDiv').addClass('animated bounceIn').removeClass('hidden')
+                        }, 350);
 
-                    // THEN DISPLAY SUCCESS ALERT...
-                    swal({
-                        title: "Submitted Successfully",
-                        text: "Thanks for verifying your bank account.",
-                        type: "success",
-                        confirmButtonColor: "#3fabe1",
-                        confirmButtonText: "Ok"
-                    });
+                        // THEN DISPLAY SUCCESS ALERT...
+                        swal({
+                            title: "Submitted Successfully",
+                            text: "Thanks for verifying your bank account.",
+                            type: "success",
+                            confirmButtonColor: "#3fabe1",
+                            confirmButtonText: "Ok"
+                        });
 
-                    // NOW DISPLAY #pendingTrans IF USER HAS PENDING TRANSACTIONS
-                    if ($('#hasPending').val() == "true")
-                        $('#pendingTrans').removeClass('hidden').addClass('animated bounceIn');
+                        // NOW DISPLAY #pendingTrans IF USER HAS PENDING TRANSACTIONS
+                        if ($('#hasPending').val() == "true")
+                            $('#pendingTrans').removeClass('hidden').addClass('animated bounceIn');
+                    }
+                    else if (result.errorMsg.indexOf("Incorrect microdeposit amounts") > -1)
+                    {
+                        swal({
+                            title: "Incorrect Amounts",
+                            text: "Looks like those amounts were incorrect. Please try again!",
+                            type: "error",
+                            confirmButtonColor: "#3fabe1",
+                            confirmButtonText: "Ok"
+                        });
+                    }
+                    else if (result.errorMsg.indexOf("Microdeposits have not been sent to the bank") > -1)
+                    {
+                        swal({
+                            title: "Deposits Haven't Arrived yet!",
+                            text: "The Microdeposits have not been sent to your bank account yet - please wait until you see two small deposits (< $1.00) on your bank statement within the next business day.",
+                            type: "error",
+                            confirmButtonColor: "#3fabe1",
+                            confirmButtonText: "Ok"
+                        });
+
+                        $('#MicroDepositOne').attr('disabled', true).val('');
+                        $('#MicroDepositTwo').attr('disabled', true).val('');
+                    }
+                    else
+                    {
+                        swal({
+                            title: "Unexpected Error",
+                            text: "Something went wrong - extremely sorry about this. Please contact " + COMPANY + " support by clicking below.",
+                            type: "error",
+                            cancelButtonText: "OK",
+                            confirmButtonColor: "#3fabe1",
+                            confirmButtonText: "Contact Support",
+                        }, function (isConfirm) {
+                            if (isConfirm)
+                                window.open("mailto:support@nooch.com");
+                        });
+                    }
                 }
-                else if (result.errorMsg.indexOf("Incorrect microdeposit amounts") > -1)
-                {
-                    swal({
-                        title: "Incorrect Amounts",
-                        text: "Looks like those amounts were incorrect. Please try again!",
-                        type: "error",
-                        confirmButtonColor: "#3fabe1",
-                        confirmButtonText: "Ok"
-                    });
-                }
-                else if (result.errorMsg.indexOf("Microdeposits have not been sent to the bank") > -1)
-                {
-                    swal({
-                        title: "Deposits Haven't Arrived yet!",
-                        text: "The Microdeposits have not been sent to your bank account yet - please wait until you see two small deposits (< $1.00) on your bank statement within the next business day.",
-                        type: "error",
-                        confirmButtonColor: "#3fabe1",
-                        confirmButtonText: "Ok"
-                    });
-
-                    $('#MicroDepositOne').attr('disabled', true).val('');
-                    $('#MicroDepositTwo').attr('disabled', true).val('');
-                }
-                else
-                {
-                    swal({
-                        title: "Unexpected Error",
-                        text: "Something went wrong - extremely sorry about this. Please contact " + COMPANY + " support by clicking below.",
-                        type: "error",
-                        cancelButtonText: "OK",
-                        confirmButtonColor: "#3fabe1",
-                        confirmButtonText: "Contact Support",
-                    }, function (isConfirm) {
-                        if (isConfirm)
-                            window.open("mailto:support@nooch.com");
-                    });
-                }
-            }
-        });
+            });
+        }
+        else
+            errorAlert("Enter Both Amounts!", "Please enter BOTH amounts! (Just enter the CENTS.)");
     }
+    else
+        errorAlert("Enter Amounts First!", "Please enter the two micro-deposit amounts in the boxes. Just enter the CENTS.");
+}
+
+
+function errorAlert(title, msg) {
+    swal({
+        title: title,
+        text: msg,
+        type: "error",
+        confirmButtonColor: "#3fabe1",
+        confirmButtonText: "Ok"
+    });
 }
 
 
