@@ -987,39 +987,43 @@ namespace Nooch.DataAccess
                         if (memberEntity.Status == "Active" ||
                             memberEntity.Status == "Registered" ||
                             memberEntity.Status == "NonRegistered" ||
-                            memberEntity.Type == "Personal - Browser")
+                            memberEntity.Type == "Personal - Browser" ||
+                            memberEntity.Type == "business")
                         {
                             #region
 
                             #region Check If User Is Already Logged In
 
-                            // Check if user already logged in or not.  If yes, then send Auto Logout email
-                            if (!String.IsNullOrEmpty(memberEntity.AccessToken) &&
-                                !String.IsNullOrEmpty(memberEntity.UDID1) &&
-                                !String.IsNullOrEmpty(udid) &&
-                                memberEntity.IsOnline == true &&
-                                memberEntity.UDID1.ToLower() != udid.ToLower())
+                            // Check if user already logged in or not. If yes, then send Auto Logout email
+                            if (memberEntity.IsOnline == true)
                             {
-                                Logger.Info("MDA -> LoginRequest - Sending Automatic Logout Notification - UserName: [" + userEmail +
-                                            "], UDID: [" + udid + "], AccessToken: [" + memberEntity.AccessToken + "]");
+                                var reason = "";
 
-                                var fromAddress = Utility.GetValueFromConfig("adminMail");
-                                var toAddress = userEmail;
-                                var userFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberEntity.FirstName));
-
-                                var msg = "Hi " + userFirstName + ",<br/><br/>You have been automatically logged out from your Nooch account because you signed in from a new device.\n" +
-                                          "If you did not do this or you feel your account may be compromised, please contact support@nooch.com immediately.<br/><br/>- Team Nooch";
-
-                                try
+                                if (!String.IsNullOrEmpty(memberEntity.AccessToken) &&
+                                    !String.IsNullOrEmpty(memberEntity.UDID1) &&
+                                    !String.IsNullOrEmpty(udid) &&
+                                    memberEntity.UDID1.ToLower() != udid.ToLower())
                                 {
-                                    Utility.SendEmail("", fromAddress, toAddress, null,
-                                                      "Nooch Automatic Logout", null, null, null, null, msg);
+                                    Logger.Info("MDA -> LoginRequest - Sending Automatic Logout Notification - UserName: [" + userEmail +
+                                                "], UDID: [" + udid + "], AccessToken: [" + memberEntity.AccessToken + "]");
 
-                                    Logger.Info("MDA -> LoginRequest - Automatic Log Out Email sent to [" + toAddress + "] successfully.");
-                                }
-                                catch (Exception ex)
-                                {
-                                    Logger.Error("MDA -> LoginRequest - Automatic Log Out email NOT sent to: [" + toAddress + "] - Exception: [" + ex.Message + "]");
+                                    var fromAddress = Utility.GetValueFromConfig("adminMail");
+                                    var toAddress = userEmail;
+                                    var userFirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberEntity.FirstName));
+
+                                    var msg = "Hi " + userFirstName + ",<br/><br/>You have been automatically logged out from your Nooch account because you signed in from a new device.\n" +
+                                              "If you did not do this or you feel your account may be compromised, please contact support@nooch.com immediately.<br/><br/>- Team Nooch";
+
+                                    try
+                                    {
+                                        Utility.SendEmail("", fromAddress, toAddress, null, "Nooch Automatic Logout", null, null, null, null, msg);
+
+                                        Logger.Info("MDA -> LoginRequest - Automatic Log Out Email sent to [" + toAddress + "] successfully.");
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Logger.Error("MDA -> LoginRequest - Automatic Log Out email NOT sent to: [" + toAddress + "] - Exception: [" + ex.Message + "]");
+                                    }
                                 }
                             }
 
@@ -6887,36 +6891,50 @@ namespace Nooch.DataAccess
 
         public string RemoveSynapseBankAccount(string memberId, int bankId)
         {
-            Logger.Info("MDA -> RemoveSynapseBankAccount - [MemberId: " + memberId + "]");
+            Logger.Info("MDA -> RemoveSynapseBankAccount Fired - MemberID: [" + memberId + "]");
 
             var id = Utility.ConvertToGuid(memberId);
-            using (var noochConnection = new NOOCHEntities())
+
+            var bankAccountsFound = _dbContext.SynapseBanksOfMembers.Where(bank => bank.MemberId == id &&
+                                                                                   bank.Id == bankId).FirstOrDefault();
+
+            if (bankAccountsFound != null)
             {
-                var bankAccountsFound =
-                    noochConnection.SynapseBanksOfMembers.FirstOrDefault(
-                        m => m.MemberId == id && m.Id == bankId);
+                SynapseDetailsClass sdc = CommonHelper.GetSynapseBankAndUserDetailsforGivenMemberId(memberId);
 
-                if (bankAccountsFound != null)
+                if (!sdc.wereUserDetailsFound)
                 {
-                    bankAccountsFound.IsDefault = false;
-                    noochConnection.SaveChanges();
-                    SynapseDetailsClass sdc = CommonHelper.GetSynapseBankAndUserDetailsforGivenMemberId(memberId);
+                    return "No user details found for that MemberID.";
+                }
+                else if (sdc.UserDetailsErrMessage.ToLower().IndexOf("pin sent") > -1)
+                {
+                    // HANDLE 2FA PROMPT FROM SYNAPSE (IF NEW DEVICE FOR THE USER, OR UD1D HAS CHANGED SINCE CREATING THE SYNAPSE ACCOUNT).
+                    return "Enter PIN to verify identity.";
+                }
 
-                    if (!sdc.wereUserDetailsFound) return "Bank account deleted successfully";
+                if (!String.IsNullOrEmpty(sdc.UserDetails.access_token) &&
+                    !String.IsNullOrEmpty(sdc.UserDetails.user_fingerprints))
+                {
+                    var oidDecr = CommonHelper.GetDecryptedData(bankAccountsFound.oid);
+                    var callSynapseToRemoveNode = CommonHelper.RemoveBankNodeFromSynapse(sdc.UserDetails.access_token,
+                                                                                         sdc.UserDetails.user_fingerprints,
+                                                                                         oidDecr, memberId);
 
-                    if (!String.IsNullOrEmpty(sdc.UserDetails.access_token) &&
-                        !String.IsNullOrEmpty(sdc.UserDetails.user_fingerprints))
-                    {
-                        CommonHelper.RemoveBankNodeFromSynapse(sdc.UserDetails.access_token,
-                            sdc.UserDetails.user_fingerprints, CommonHelper.GetDecryptedData(bankAccountsFound.oid), memberId);
-                    }
-
-                    return "Bank account deleted successfully";
+                    if (callSynapseToRemoveNode.IsSuccess)
+                        return "Deleted";
+                    else
+                        return "Error processing that request, please try again later or contact Nooch support!";
                 }
                 else
                 {
-                    return "No active bank account found for this user";
+                    Logger.Error("MDA -> RemoveSynapseBankAccount ERROR - Found User details, but no Access_Token or Fingerprint");
+                    return "Unexpected error";
                 }
+            }
+            else
+            {
+                Logger.Error("MDA -> RemoveSynapseBankAccount FAILED - Bank Account Not Found - MemberID: [" + memberId + "], BankID: [" + bankId + "]");
+                return "No active bank accounts found.";
             }
         }
 

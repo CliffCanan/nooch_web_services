@@ -564,41 +564,6 @@ namespace Nooch.API.Controllers
 
 
         [HttpGet]
-        [ActionName("DeleteAttachedBankNode")]
-        public string DeleteAttachedBankNode(string memberid)
-        {
-
-            try
-            {
-                Logger.Error("Service Cntlr -> DeleteAttachedBankNode for - MemberID: [" + memberid + "]");
-                Guid MemId = Utility.ConvertToGuid(memberid);
-
-                var synBankDetails = _dbContext.SynapseBanksOfMembers.Where(b => b.MemberId == MemId && b.IsDefault == true).FirstOrDefault();
-                if (synBankDetails != null)
-                {
-                    synBankDetails.is_active = false;
-                    synBankDetails.IsDefault = false;
-                    _dbContext.SaveChanges();
-                    return "Deleted";
-                }
-                else
-                {
-                    return "Bank not found";
-                }
-
-
-            }
-            catch (Exception ex)
-            {
-                Logger.Error("Service Cntlr -> DeleteAttachedBankNode FAILED - MemberID: [" + memberid + "], Exception: [" + ex.InnerException + "]");
-                throw new Exception("Server Error");
-            }
-
-
-        }
-
-
-        [HttpGet]
         [ActionName("GetMemberStats")]
         public StringResult GetMemberStats(string MemberId, string accesstoken, string query)
         {
@@ -4497,6 +4462,35 @@ namespace Nooch.API.Controllers
             }
             else
                 return new StringResult() { Result = "Invalid Access Token." };
+        }
+
+
+        /// <summary>
+        /// CC (12/6/16): THIS IS WHAT THE CURRENT PUBLIC IOS APP IS CALLING TO REMOVE A BANK ACCOUNT.
+        /// </summary>
+        /// <param name="memberid"></param>
+        /// <returns></returns>
+        [HttpGet]
+        [ActionName("DeleteAttachedBankNode")]
+        public string DeleteAttachedBankNode(string memberid)
+        {
+            try
+            {
+                Logger.Error("Service Cntlr -> DeleteAttachedBankNode Fired - MemberID: [" + memberid + "]");
+
+                Guid MemId = Utility.ConvertToGuid(memberid);
+                var synBankDetails = _dbContext.SynapseBanksOfMembers.Where(b => b.MemberId == MemId &&
+                                                                                 b.IsDefault == true).FirstOrDefault();
+
+                var mda = new MembersDataAccess();
+
+                return mda.RemoveSynapseBankAccount(memberid, synBankDetails.Id);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Cntlr -> DeleteAttachedBankNode FAILED - MemberID: [" + memberid + "], Exception: [" + ex.InnerException + "]");
+                throw new Exception("Server Error");
+            }
         }
 
 

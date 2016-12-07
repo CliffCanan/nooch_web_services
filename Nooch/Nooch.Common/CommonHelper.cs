@@ -2431,7 +2431,7 @@ namespace Nooch.Common
                             res.UserDetails.user_id = checkTokenResult.user_oid;
                             res.UserDetails.user_fingerprints = memberObject.UDID1;
                             res.UserDetails.permission = createSynapseUserObj.permission;
-                            res.UserDetailsErrMessage = "OK";
+                            res.UserDetailsErrMessage = checkTokenResult.is2FA ? checkTokenResult.msg : "OK";
                         }
                         else
                         {
@@ -3004,7 +3004,7 @@ namespace Nooch.Common
 
                                 Logger.Info("Common Helper -> SynapseV3SignIn - Synapse Message: [" + res.msg + "]");
 
-                                if (res.msg.ToLower().IndexOf("validation pin sent") > -1)
+                                if (res.msg.ToLower().IndexOf("pin sent") > -1)
                                 {
                                     res.msg = "Validation PIN sent to: " + FormatPhoneNumber(memberObj.ContactNumber);
                                     res.success = true;
@@ -3803,8 +3803,8 @@ namespace Nooch.Common
 
             try
             {
-                string baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/node/remove"
-                                                                                                         : "https://synapsepay.com/api/v3/node/remove";
+                var baseAddress = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/node/remove"
+                                                                                                      : "https://synapsepay.com/api/v3/node/remove";
 
                 RemoveBankNodeRootClass rootObject = new RemoveBankNodeRootClass
                 {
@@ -3838,26 +3838,25 @@ namespace Nooch.Common
                     if (checkPermissionResponse["success"] != null &&
                         Convert.ToBoolean(checkPermissionResponse["success"]) == true)
                     {
+                        Logger.Info("Common Helper -> RemoveBankNodeFromSynapse - Node removed SUCCESSFULLY from Synapse");
                         res.IsSuccess = true;
                         res.Message = "Node removed from synapse successfully.";
                     }
                     else
                     {
-                        res.IsSuccess = false;
+                        Logger.Error("Common Helper -> RemoveBankNodeFromSynapse ERROR - Unable to remove node from Synapse - JSON: [" + checkPermissionResponse + "]");
                         res.Message = "Error removing node from synapse.";
                     }
                 }
                 catch (WebException we)
                 {
-                    Logger.Error("Common Helper -> RemoveBankNodeFromSynapse - MemberId: [" + MemberId + "] - NodeId: [" + nodeIdToRemove + "] - Error: [" + we + "]");
-                    res.IsSuccess = false;
+                    Logger.Error("Common Helper -> RemoveBankNodeFromSynapse ERROR - MemberId: [" + MemberId + "] - NodeId: [" + nodeIdToRemove + "] - Exception: [" + we.ToString() + "]");
                     res.Message = "Error removing node from synapse.";
                 }
             }
             catch (Exception ex)
             {
-                Logger.Error("Common Helper -> RemoveBankNodeFromSynapse - MemberId: [" + MemberId + "] - NodeId: [" + nodeIdToRemove + "] - Error: [" + ex + "]");
-                res.IsSuccess = false;
+                Logger.Error("Common Helper -> RemoveBankNodeFromSynapse ERROR - MemberId: [" + MemberId + "] - NodeId: [" + nodeIdToRemove + "] - Outer Exception: [" + ex.Message + "]");
                 res.Message = "Error removing node from synapse.";
             }
 
