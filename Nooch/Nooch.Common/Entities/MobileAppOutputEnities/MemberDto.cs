@@ -81,4 +81,28 @@ namespace Nooch.Common.Entities.MobileAppOutputEnities
         public string cip { get; set; }
         public string imgUrl { get; set; }
     }
+
+
+
+    public class synapseUsers
+    {
+        public bool success { get; set; }
+        public string msg { get; set; }
+        public List<synapseUsersObj> users { get; set; }
+    }
+
+    public class synapseUsersObj
+    {
+        public string noochId { get; set; }
+        public string signUpDate { get; set; }
+        public string oid { get; set; }
+        public string name { get; set; }
+        public string email { get; set; }
+        public string cip { get; set; }
+        public string permission { get; set; }
+        public string allowed { get; set; }
+        public bool hasBank { get; set; }
+    }
+
+
 }

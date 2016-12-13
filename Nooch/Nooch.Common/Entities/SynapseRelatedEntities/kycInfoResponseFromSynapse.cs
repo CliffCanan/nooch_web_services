@@ -109,6 +109,8 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
         public string permission { get; set; }  // same as before
         public string[] photos { get; set; } // same as before
         public string[] phone_numbers { get; set; } // same as before
+
+        public string refresh_token { get; set; }
     }
 
     public class addDocsResFromSynapse_user_docs

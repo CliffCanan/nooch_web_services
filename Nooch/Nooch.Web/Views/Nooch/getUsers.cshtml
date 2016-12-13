@@ -1,0 +1,67 @@
+﻿@using System.Collections.ObjectModel
+@using Nooch.Common.Entities;
+@using Nooch.Common.Entities.MobileAppOutputEnities
+
+@{
+    Layout = null;
+    synapseUsers data = Model;// (synapseUsersPage)ViewData["OnLoadData"];
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Get Users</title>
+
+    <link href="@Url.Content("https://fonts.googleapis.com/css?family=Roboto:400,300,400italic,500,500italic,700,900")" rel="stylesheet" type="text/css" />
+    <link href="@Url.Content("https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css")" rel="stylesheet" />
+    <link href="@Url.Content("https://code.jquery.com/ui/1.11.4/themes/cupertino/jquery-ui.css")" rel="stylesheet" />
+
+    <link href="@Url.Content("~/Assets/Css/tweaks.css")" rel="stylesheet" />
+    <link href="@Url.Content("~/Assets/favicon.ico")" rel="icon" />
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="row">
+
+            <div class="col-xs-12 col-sm-10 col-sm-offset-1 p-t-30">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Date Created</th>
+                            <th>Nooch_ID</th>
+                            <th>Permission</th>
+                            <th>OID</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            foreach (var user in data.users)
+                            {
+                                <tr>
+                                    <td>@user.name</td>
+                                    <td>@user.signUpDate</td>
+                                    <td>@user.noochId</td>
+                                    <td>@user.permission</td>
+                                    <td>@user.oid</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            
+            </div>
+
+        </div>
+    </div>
+
+    <script src='@Url.Content("//code.jquery.com/jquery-1.12.4.min.js")'></script>
+    <script src='@Url.Content("//code.jquery.com/ui/1.11.4/jquery-ui.min.js")'></script>
+    <script src='@Url.Content("//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js")'></script>
+
+</body>
+</html>

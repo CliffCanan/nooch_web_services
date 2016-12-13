@@ -380,6 +380,7 @@
     <Content Include="Views\Nooch\MicroDepositsVerification.cshtml" />
     <Content Include="Views\Nooch\EncryptDecrypt.cshtml" />
     <Content Include="Views\Open\VerifyPhoneNumber.cshtml" />
+    <Content Include="Views\Nooch\getUsers.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

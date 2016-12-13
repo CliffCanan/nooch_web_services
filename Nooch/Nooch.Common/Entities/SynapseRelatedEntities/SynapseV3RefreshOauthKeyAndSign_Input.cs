@@ -56,4 +56,17 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
         public string phone_number { get; set; }
         public string validation_pin { get; set; }
     }
+
+
+    public class SynapseSearchInput
+    {
+        public createUser_client client { get; set; }
+        public SynapseSearchInput_Filter filter { get; set; }
+    }
+
+    public class SynapseSearchInput_Filter
+    {
+        public int page = 1;
+        public string query { get; set; }
+    }
 }

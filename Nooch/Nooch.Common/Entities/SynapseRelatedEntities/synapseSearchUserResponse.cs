@@ -90,7 +90,46 @@ namespace Nooch.Common.Entities.SynapseRelatedEntities
     public class synapseV3ShowUser_Filter
     {
         public int page { get; set; }
-        
         public string query { get; set; }
     }
+
+
+
+    // ADDED 12/12/16 AS PART OF SYNAPSE UPDATES FOR NEW NOOCH CIP CONTRACT
+
+    public class synapseSearchResponse
+    {
+        public string error_code { get; set; }
+        public string http_code { get; set; }
+        public bool success { get; set; }
+        public int page { get; set; }
+        public int page_count { get; set; }
+        public int users_count { get; set; }
+        public addDocsResFromSynapse_user[] users { get; set; }
+    }
+
+    /*public class synapseSearchResponse_User
+    {
+        public synapseSearchUserResponse_Id _id { get; set; }
+        public synapseSearchUserResponse_Client client { get; set; }
+        public synapseSearchResponse_User_doc_status doc_status { get; set; }
+
+        public object[] emails { get; set; }
+        public string[] legal_names { get; set; }
+        public synapseSearchUserResponse_Node[] nodes { get; set; }
+        public object[] photos { get; set; }
+    }
+
+    public class synapseSearchResponse_User_doc_status
+    {
+        public string physical_doc { get; set; }
+        public string virtual_doc { get; set; }
+    }
+
+    public class synapseSearchResponse_User_documents
+    {
+        public string id { get; set; }
+        public string name { get; set; }
+        public string permission_scope { get; set; }
+    }*/
 }

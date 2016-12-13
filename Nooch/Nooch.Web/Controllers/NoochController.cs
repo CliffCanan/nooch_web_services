@@ -1070,9 +1070,9 @@ namespace Nooch.Web.Controllers
             try
             {
                 var objAesAlgorithm = new AES();
-                string encryptedPassword = objAesAlgorithm.Encrypt(PWDText.Trim(), string.Empty);
-                string serviceMethod = string.Empty;
-                string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+                var encryptedPassword = objAesAlgorithm.Encrypt(PWDText.Trim(), string.Empty);
+                var serviceMethod = string.Empty;
+                var serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
 
                 serviceMethod = "ResetPassword?memberId=" + memberId + "&newPassword=" + encryptedPassword + "&newUser=" + newUser;
 
@@ -3270,8 +3270,50 @@ namespace Nooch.Web.Controllers
             return Json(res);
         }
 
+
+        public ActionResult getUsers(string user)
+        {
+            synapseUsers res = new synapseUsers();
+            res.success = false;
+
+            if (String.IsNullOrEmpty(user))
+                res.msg = "No MemberId found in query URL.";
+            else
+            {
+                var memId = "";
+
+                if (!String.IsNullOrEmpty(user))
+                {
+                    res.msg = user.ToLower();
+                    if (res.msg == "habitat") memId = "45357cf0-e651-40e7-b825-e1ff48bf44d2";
+                }
+
+                Logger.Info("GetUsers Page -> Loaded - User: [" + res.msg + "], MemberID: [" + memId + "]");
+
+                List<synapseUsersObj> synapseUsers = new List<synapseUsersObj>();
+
+                try
+                {
+                    res = CommonHelper.GetSynapseUsers(memId);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("GetUsers Page -> OUTER EXCEPTION - MemberID: [" + memId + "], Exception: [" + ex.Message + "]");
+                    res.msg = "Server Error.";
+                }
+            }
+
+            Logger.Info("GetUsers Page -> Returning View --> User Count: " + res.users.Count);
+            return View(res);
+        }
+
+
     }
 
+    public class showSynapseUsers
+    {
+        public string[] users { get; set; }
+    }
 
     public class EncDecInput
     {

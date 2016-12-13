@@ -3040,6 +3040,251 @@ namespace Nooch.API.Controllers
         }
 
 
+        [HttpGet]
+        [ActionName("searchAndUpdateSynapse")]
+        public synapseCreateUserV3Result_int searchAndUpdateSynapse(string oldOid, string newOid)
+        {
+            synapseCreateUserV3Result_int res = new synapseCreateUserV3Result_int();
+            res.success = false;
+            res.errorMsg = "Service Cntrlr - Initial";
+            res.reason = "";
+            res.user_id = "";
+            res.error_code = "";
+            res.http_code = "";
+
+            try
+            {
+                oldOid = oldOid.Trim();
+                newOid = newOid.Trim();
+
+                if (String.IsNullOrEmpty(oldOid))
+                {
+                    res.errorMsg = "Missing old OID";
+                    return res;
+                }
+                if (String.IsNullOrEmpty(oldOid))
+                {
+                    res.errorMsg = "Missing new OID";
+                    return res;
+                }
+
+                var synUserDetails = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.user_id == oldOid);
+
+                if (synUserDetails == null)
+                {
+                    res.errorMsg = "SYNAPSE CREATE USER RECORD NOT FOUND IN DB :-(";
+                    return res;
+                }
+
+                _dbContext.Entry(synUserDetails).Reload();
+
+                if (synUserDetails.user_id != newOid.Trim())
+                {
+                    synUserDetails.user_id = newOid.Trim();
+                    if (synUserDetails.IsDeleted == true)
+                        synUserDetails.IsDeleted = false;
+
+                    if (_dbContext.SaveChanges() < 1)
+                    {
+                        res.errorMsg = "FAILED TO SAVE CHANGES TO dbo.SynapseCreateUserResults :-(";
+                        return res;
+                    }
+                }
+
+                res.memberIdGenerated = synUserDetails.MemberId.ToString();
+
+                Member memObj = CommonHelper.GetMemberDetails(res.memberIdGenerated);
+
+                if (memObj == null)
+                {
+                    res.errorMsg = "MEMBER NOT FOUND :-(";
+                    return res;
+                }
+
+                #region Setup Calling Synapse Search API
+
+                SynapseSearchInput input = new SynapseSearchInput();
+
+                var SynapseClientId = Utility.GetValueFromConfig("SynapseClientId");
+                var SynapseClientSecret = Utility.GetValueFromConfig("SynapseClientSecret");
+
+                input.client = new createUser_client()
+                {
+                    client_id = SynapseClientId,
+                    client_secret = SynapseClientSecret
+                };
+
+                input.filter = new SynapseSearchInput_Filter()
+                {
+                    query = newOid
+                };
+
+                var UrlToHit = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/client/users"
+                                                                                                   : "https://synapsepay.com/api/v3/user/client/users";
+
+                Logger.Info("Service Cntrlr -> searchAndUpdateSynapse - Payload to send to Synapse /v3/user/signin: [" + JsonConvert.SerializeObject(input) + "]");
+
+                var http = (HttpWebRequest)WebRequest.Create(new Uri(UrlToHit));
+                http.Accept = "application/json";
+                http.ContentType = "application/json";
+                http.Method = "POST";
+
+                var parsedContent = JsonConvert.SerializeObject(input);
+                ASCIIEncoding encoding = new ASCIIEncoding();
+                Byte[] bytes = encoding.GetBytes(parsedContent);
+
+                Stream newStream = http.GetRequestStream();
+                newStream.Write(bytes, 0, bytes.Length);
+                newStream.Close();
+
+                #endregion Setup Calling Synapse Search API
+
+                try
+                {
+                    var response = http.GetResponse();
+                    var stream = response.GetResponseStream();
+                    var sr = new StreamReader(stream);
+                    var content = sr.ReadToEnd();
+
+                    JObject searchResponse = JObject.Parse(content);
+                    //Logger.Info("Service Cntrlr -> searchAndUpdateSynapse - JSON Result from Synapse: [" + searchResponse + "]");
+
+                    if (searchResponse["success"] == null ||
+                        !Convert.ToBoolean(searchResponse["success"]))
+                    {
+                        res.errorMsg = "Synapse returned success == null or false!";
+                        return res;
+                    }
+
+                    var synapseResponse = JsonConvert.DeserializeObject<synapseSearchResponse>(content);
+
+                    if (synapseResponse.users_count < 1 || synapseResponse.users.Length < 1)
+                    {
+                        res.errorMsg = "Success from Synapse, but no users returned :-(";
+                        return res;
+                    }
+
+                    Logger.Info("Service Cntrlr -> searchAndUpdateSynapse - RESULTS FROM SYNAPSE: [" + synapseResponse.users_count + "]");
+
+                    _dbContext.Entry(synUserDetails).Reload();
+
+                    // Could theoretically be more than one user returned in the 'users' [], but since we sent 'filter' of an OID, it should only be one.
+                    addDocsResFromSynapse_user user = synapseResponse.users[0];
+
+                    synapseV3Result_user userToReturn = new synapseV3Result_user();
+
+                    if (user._id.id == newOid)
+                    {
+                        if (user.extra != null && user.extra.supp_id != null && user.extra.supp_id != memObj.Nooch_ID)
+                        {
+                            res.errorMsg = "Supp ID from Synapse of [" + user.extra.supp_id + "] did not match Nooch user's Nooch_ID: [" + memObj.Nooch_ID + "]";
+                            return res;
+                        }
+
+                        if (user.doc_status != null)
+                        {
+                            synapseV3Result_user_docStatus ds = new synapseV3Result_user_docStatus();
+
+                            if (user.doc_status.physical_doc != null)
+                            {
+                                synUserDetails.physical_doc = user.doc_status.physical_doc;
+                                ds.physical_doc = user.doc_status.physical_doc;
+                            }
+                            if (user.doc_status.virtual_doc != null)
+                            {
+                                synUserDetails.virtual_doc = user.doc_status.virtual_doc;
+                                ds.virtual_doc = user.doc_status.virtual_doc;
+                            }
+                            userToReturn.doc_status = ds;
+                        }
+
+                        Logger.Info("Service Cntrlr -> searchAndUpdateSynapse - CHECKPOINT #1");
+
+                        if (user.permission != null)
+                        {
+                            synUserDetails.permission = user.permission;
+                            res.ssn_verify_status = "Permission From Synapse: [" + user.permission + "]";
+                            userToReturn.permission = user.permission;
+                        }
+
+                        Logger.Info("Service Cntrlr -> searchAndUpdateSynapse - CHECKPOINT #2");
+
+                        if (user.legal_names != null) userToReturn.legal_names = user.legal_names;
+
+                        if (user.extra != null)
+                        {
+                            synapseV3Result_user_extra extra = new synapseV3Result_user_extra();
+                            extra.cip_tag = user.extra.cip_tag;
+                            extra.extra_security = user.extra.extra_security;
+                            extra.is_business = user.extra.is_business;
+                            extra.supp_id = user.extra.supp_id;
+                            userToReturn.extra = extra;
+                        }
+
+                        if (user.logins != null) userToReturn.logins = user.logins;
+                        if (user.phone_numbers != null) userToReturn.phone_numbers = user.phone_numbers;
+
+                        Logger.Info("Service Cntrlr -> searchAndUpdateSynapse - Parsing Synapse Response, about to check/update Refresh Token");
+
+                        res.user = userToReturn;
+
+                        if (user.refresh_token != null)
+                        {
+                            synUserDetails.refresh_token = CommonHelper.GetEncryptedData(user.refresh_token.ToString());
+
+                            if (_dbContext.SaveChanges() > 0)
+                            {
+                                var refreshTokenResult = CommonHelper.refreshSynapseV3OauthKey(synUserDetails.access_token);
+
+                                if (refreshTokenResult != null && refreshTokenResult.success)
+                                {
+                                    _dbContext.Entry(synUserDetails).Reload();
+
+                                    if (refreshTokenResult.is2FA)
+                                    {
+                                        // 2FA was triggered during /user/signin (Refresh Service), probably b/c the user's Fingerprint has changed since the Synapse user was created.
+                                        Logger.Info("Service Cntrlr -> searchAndUpdateSynapse - Got 2FA from Refresh Service - Msg: [" + refreshTokenResult.msg + "]");
+                                        res.success = false;
+                                        res.errorMsg = "2FA was triggered during /user/signin (Refresh Service) - NOT GOOD...";
+                                        res.reason = refreshTokenResult.msg;
+                                    }
+                                    else
+                                    {
+                                        Logger.Info("Service Cntrlr -> searchAndUpdateSynapse SUCCESS - Updated Synapse Record & got new OAuth Token!");
+                                        res.success = true;
+                                        res.errorMsg = "ALL GOOD! Synapse Create User record updated in Nooch DB, and user's OAuth Token successfully refreshed!";
+                                    }
+                                }
+                                else if (!String.IsNullOrEmpty(refreshTokenResult.msg))
+                                    res.errorMsg = refreshTokenResult.msg;
+                                else
+                                    res.errorMsg = "FAILED DURING refreshSynapseV3OauthKey()";
+                            }
+                            else
+                                res.errorMsg = "Failed to save changes in Nooch DB!";
+                        }
+                        else
+                            res.errorMsg = "Synapse returned success == true, but no REFRESH_TOKEN found in User object :-(";
+                    }
+                    else
+                        res.errorMsg = "OID FROM SYNAPSE /USER/CLIENT/USERS API DID NOT MATCH THE \"newOid\" INPUT";
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error("Service Cntrlr -> searchAndUpdateSynapse FAILED - Innter Exception: [" + ex.Message + "]");
+                    res.errorMsg = ex.Message;
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Service Cntrlr -> searchAndUpdateSynapse FAILED - Outer Exception: [" + ex.Message + "]");
+                res.errorMsg = "Service Exception: " + ex.Message;
+            }
+
+            return res;
+        }
+
+        
         [HttpPost]
         [ActionName("RegisterExistingUserWithSynapseV3")]
         public RegisterUserSynapseResultClassExt RegisterExistingUserWithSynapseV3(RegisterUserWithSynapseV3_Input input)

@@ -4361,5 +4361,140 @@ namespace Nooch.Common
             return suggestedUsers;
         }
 
+
+
+
+
+        public static synapseUsers GetSynapseUsers(string memberId)
+        {
+            Logger.Info("Common Helper -> GetSynapseUsers Fired - MemberID: [" + memberId + "]");
+
+            synapseUsers suggestedUsers = new synapseUsers();
+            suggestedUsers.success = false;
+            suggestedUsers.users = new List<synapseUsersObj>();
+
+            try
+            {
+                var id = Utility.ConvertToGuid(memberId);
+
+                var member = _dbContext.Members.FirstOrDefault(u => u.MemberId == id);
+
+                if (member != null)
+                {
+                    var trans = new List<Transaction>();
+
+                    trans = _dbContext.Transactions.Where(t => t.TransactionStatus == "Success" &&
+                                                              (t.SenderId == id ||
+                                                               t.RecipientId == id))
+                                                               .OrderByDescending(r => r.TransactionDate)
+                                                               .Take(100).ToList();
+
+                    if (trans != null && trans.Count > 0)
+                    {
+                        int i = 0;
+                        int duplicates = 0;
+
+                        #region Loop Through Transaction List
+
+                        foreach (var t in trans)
+                        {
+                            try
+                            {
+                                Member otherUser = new Member();
+
+                                if (t.SenderId == id && t.SenderId != t.RecipientId) // Sent to existing user, get recipient
+                                    otherUser = _dbContext.Members.FirstOrDefault(m => m.MemberId == t.RecipientId && m.IsDeleted == false);
+                                else if (t.SenderId != id && t.SenderId != t.RecipientId) // Received from existing user, get sender
+                                    otherUser = _dbContext.Members.FirstOrDefault(m => m.MemberId == t.SenderId && m.IsDeleted == false);
+                                else if (t.SenderId == id && t.InvitationSentTo != null) // Sent to non-Nooch user, get recipient by email
+                                {
+                                    var invitedUsersEmailEnc = GetEncryptedData(t.InvitationSentTo);
+                                    otherUser = _dbContext.Members.FirstOrDefault(m => (m.UserName == invitedUsersEmailEnc ||
+                                                                                        m.UserNameLowerCase == invitedUsersEmailEnc ||
+                                                                                        m.SecondaryEmail == invitedUsersEmailEnc) &&
+                                                                                        m.IsDeleted == false);
+                                }
+
+                                if (otherUser == null) continue;
+
+                                // Check if this user has already been added to the Array
+                                bool keepGoing = true;
+
+                                if (i > 0)
+                                {
+                                    foreach (synapseUsersObj s in suggestedUsers.users)
+                                    {
+                                        if (s != null && s.noochId != null && s.noochId == otherUser.Nooch_ID)
+                                        {
+                                            duplicates++;
+                                            keepGoing = false;
+                                            break;
+                                        }
+                                    }
+                                }
+
+                                if (!keepGoing) continue;
+
+                                var name = UppercaseFirst(GetDecryptedData(otherUser.FirstName)) + " " + UppercaseFirst(GetDecryptedData(otherUser.LastName));
+                                var email = GetDecryptedData(otherUser.UserName);
+                                var oid = "";
+                                var permission = ""; 
+                                var synUserDetails = new SynapseCreateUserResult();
+
+                                synUserDetails = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == otherUser.MemberId);
+
+
+                                if (synUserDetails != null)
+                                {
+                                    _dbContext.Entry(synUserDetails).Reload();
+
+                                    permission = synUserDetails.permission;
+                                    oid = synUserDetails.user_id;
+                                }
+                                
+                                synapseUsersObj suggestion = new synapseUsersObj()
+                                {
+                                    allowed = "",
+                                    name = name,
+                                    cip = otherUser.cipTag,
+                                    email = email,
+                                    signUpDate = otherUser.DateCreated == null ? "" : Convert.ToDateTime(otherUser.DateCreated).ToString("MM/dd/yyyy"),
+                                    oid = oid,
+                                    noochId = otherUser.Nooch_ID
+                                };
+
+                                suggestedUsers.users.Add(suggestion);
+
+                                i++;
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.Error("Common Helper -> GetSynapseUsers - EXCEPTION inside FOREACH loop - [" + ex.Message + "]");
+                            }
+                        }
+
+                        #endregion Loop Through Transaction List
+
+                        //Logger.Info("Common Helper -> GetSuggestedUsers SUCCESS - COUNT: [" + suggestedUsers.suggestions.Count + "], MemberID: [" + memberId + "]");
+
+                        suggestedUsers.success = true;
+                        suggestedUsers.msg = "Found [" + suggestedUsers.users.Count.ToString() + "]";
+                        Logger.Info("Common Helper -> GetSynapseUsers - Returning: " + suggestedUsers.msg + "], Duplicates: [" + duplicates + "]");
+                    }
+                    else
+                        suggestedUsers.msg = "No transactions found";
+                }
+                else
+                    suggestedUsers.msg = "Member not found";
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Common Helper - GetSynapseUsers FAILED - MemberID: [" + memberId + "], Exception: [" + ex + "]");
+                suggestedUsers.msg = "Exception: [" + ex.Message + "]";
+            }
+
+            return suggestedUsers;
+        }
+
     }
 }

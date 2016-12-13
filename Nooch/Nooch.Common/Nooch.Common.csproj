@@ -75,6 +75,7 @@
     <Compile Include="Entities\BoolResult.cs" />
     <Compile Include="Entities\CheckMemberExistenceUsingEmailOrPhoneResultClass.cs" />
     <Compile Include="Entities\GoogleGeolocationOutput.cs" />
+    <Compile Include="Entities\getUsers.cs" />
     <Compile Include="Entities\idVerification.cs" />
     <Compile Include="Entities\LandingPagesRelatedEntities\BankNameCheckStatus.cs" />
     <Compile Include="Entities\LandingPagesRelatedEntities\RejectMoney\PageLoadDataRejectMoney.cs" />
