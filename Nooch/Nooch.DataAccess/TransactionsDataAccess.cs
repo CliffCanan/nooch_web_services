@@ -5855,7 +5855,7 @@ namespace Nooch.DataAccess
                     if (transactionAmount > thisUserTransLimit)
                     {
                         Logger.Error("TDA -> TransferMoneyUsingSynapse FAILED - OVER PERSONAL TRANS LIMIT - Amount Requested: [" + transactionAmount.ToString() +
-                                     "], Indiv. Limit: [" + thisUserTransLimit + "], MemberId: [" + transInput.MemberId + "]");
+                                     "], Indiv. Limit: [" + thisUserTransLimit + "], MemberID: [" + transInput.MemberId + "] - ABORTING");
                         return "Whoa now big spender! To keep Nooch safe, the maximum amount you can send at a time is $" + thisUserTransLimit.ToString("F2");
                     }
                 }
@@ -5865,15 +5865,15 @@ namespace Nooch.DataAccess
             if (CommonHelper.isOverTransactionLimit(transactionAmount, transInput.MemberId, transInput.RecipientId))
             {
                 var transLimit = Convert.ToDecimal(Utility.GetValueFromConfig("MaximumTransferLimitPerTransaction")).ToString("F2");
-                Logger.Error("TransferMoneyUsingSynapse -> Transaction amount [$" + transactionAmount + "] is over the transfer limit [$" + transLimit +
-                             "], TransactionId: [" + transInput.TransactionId + "]");
+                Logger.Error("TransferMoneyUsingSynapse -> Transaction amount [$" + transactionAmount + "] is over transfer limit [$" + transLimit +
+                             "], TransID: [" + transInput.TransactionId + "] - ABORTING");
                 return "Whoa now big spender! To keep Nooch safe, the maximum amount you can send at a time is $" + transLimit;
             }
 
             // Check weekly transfer limit
             if (CommonHelper.IsWeeklyTransferLimitExceeded(Utility.ConvertToGuid(transInput.MemberId), transactionAmount, transInput.RecipientId))
             {
-                Logger.Error("TDA -> TransferMoneyUsingSynapse -> Weekly transfer limit exceeded. MemberId: [" + transInput.MemberId + "]");
+                Logger.Error("TDA -> TransferMoneyUsingSynapse -> Weekly transfer limit exceeded - ABORTING - MemberID: [" + transInput.MemberId + "]");
                 return "Weekly transfer limit exceeded.";
             }
 

@@ -3284,7 +3284,7 @@ namespace Nooch.API.Controllers
             return res;
         }
 
-        
+
         [HttpPost]
         [ActionName("RegisterExistingUserWithSynapseV3")]
         public RegisterUserSynapseResultClassExt RegisterExistingUserWithSynapseV3(RegisterUserWithSynapseV3_Input input)
@@ -5208,8 +5208,7 @@ namespace Nooch.API.Controllers
             {
                 try
                 {
-                    Logger.Info("Service Cntlr - ValidatePinNumberToEnterForEnterForeground - MemberID: [" + memberId + "]");
-
+                    //Logger.Info("Service Cntlr - ValidatePinNumberToEnterForEnterForeground - MemberID: [" + memberId + "]");
                     return new StringResult { Result = CommonHelper.ValidatePinNumberToEnterForEnterForeground(memberId, pinNo.Replace(" ", "+")) };
                 }
                 catch (Exception ex)

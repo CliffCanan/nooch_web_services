@@ -561,12 +561,6 @@ namespace Nooch.Common
                         Logger.Info("**** Common Helper -> IsWeeklyTransferLimitExceeded LIMIT EXCEEDED - But transaction for CLIFF CANAN, so allowing transaction - [Amount: $" + amount.ToString() + "]  ****");
                         return false;
                     }
-                    if (MemberId.ToString().ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49" || // Rent Scene
-                        (!String.IsNullOrEmpty(recipientId) && recipientId.ToLower() == "852987e8-d5fe-47e7-a00b-58a80dd15b49"))
-                    {
-                        Logger.Info("**** Common Helper -> IsWeeklyTransferLimitExceeded LIMIT EXCEEDED - But transaction for RENT SCENE, so allowing transaction - [Amount: $" + amount.ToString() + "]  ****");
-                        return false;
-                    }
                     if (MemberId.ToString().ToLower() == "45357cf0-e651-40e7-b825-e1ff48bf44d2") // HABITAT's Account
                     {
                         Logger.Info("**** Common Helper -> IsWeeklyTransferLimitExceeded LIMIT EXCEEDED - But transaction for HABITAT, so allowing transaction - [Amount: $" + amount.ToString() + "]  ****");
@@ -577,6 +571,9 @@ namespace Nooch.Common
                         Logger.Info("**** Common Helper -> IsWeeklyTransferLimitExceeded LIMIT EXCEEDED - But transaction is for APPJAXX, so allowing transaction - [Amount: $" + amount.ToString() + "]  ****");
                         return false;
                     }
+                    else
+                        Logger.Info("Common Helper -> IsWeeklyTransferLimitExceeded -> YES, LIMIT of [" + WeeklyLimitAllowed + "] EXCEEDED - Attempted Amount: [$" + amount +
+                                    "], MemberID: " + MemberId + "]");
 
                     #endregion Check For Exempt Users
 
@@ -923,8 +920,16 @@ namespace Nooch.Common
 
                     if (memberEntity != null)
                     {
-                        if (memberEntity.PinNumber.Equals(pinNumber.Replace(" ", "+"))) return "Success";
-                        else return "Invalid Pin";
+                        if (memberEntity.PinNumber.Equals(pinNumber.Replace(" ", "+")))
+                        {
+                            Logger.Info("CommonHelper - ValidatePinNumberToEnterForEnterForeground SUCCESS - MemberID: [" + memberId + "]");
+                            return "Success";
+                        }
+                        else
+                        {
+                            Logger.Error("CommonHelper - ValidatePinNumberToEnterForEnterForeground FAILED - Incorrect PIN - MemberID: [" + memberId + "]");
+                            return "Invalid Pin";
+                        }
                     }
                     return "Member not found.";
                 }
@@ -4438,7 +4443,7 @@ namespace Nooch.Common
                                 var name = UppercaseFirst(GetDecryptedData(otherUser.FirstName)) + " " + UppercaseFirst(GetDecryptedData(otherUser.LastName));
                                 var email = GetDecryptedData(otherUser.UserName);
                                 var oid = "";
-                                var permission = ""; 
+                                var permission = "";
                                 var synUserDetails = new SynapseCreateUserResult();
 
                                 synUserDetails = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == otherUser.MemberId);
@@ -4451,7 +4456,7 @@ namespace Nooch.Common
                                     permission = synUserDetails.permission;
                                     oid = synUserDetails.user_id;
                                 }
-                                
+
                                 synapseUsersObj suggestion = new synapseUsersObj()
                                 {
                                     allowed = "",
