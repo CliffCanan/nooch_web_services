@@ -3198,16 +3198,12 @@ namespace Nooch.API.Controllers
                             userToReturn.doc_status = ds;
                         }
 
-                        Logger.Info("Service Cntrlr -> searchAndUpdateSynapse - CHECKPOINT #1");
-
                         if (user.permission != null)
                         {
                             synUserDetails.permission = user.permission;
                             res.ssn_verify_status = "Permission From Synapse: [" + user.permission + "]";
                             userToReturn.permission = user.permission;
                         }
-
-                        Logger.Info("Service Cntrlr -> searchAndUpdateSynapse - CHECKPOINT #2");
 
                         if (user.legal_names != null) userToReturn.legal_names = user.legal_names;
 

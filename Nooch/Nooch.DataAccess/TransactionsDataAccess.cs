@@ -5835,7 +5835,7 @@ namespace Nooch.DataAccess
             if (validPinNumberResult != "Success")
             {
                 Logger.Error("TDA -> TransferMoneyUsingSynapse - ABORTING - Sender's PIN was incorrect - MemberId: [" +
-                                       transInput.MemberId + "]");
+                             transInput.MemberId + "]");
                 return validPinNumberResult;
             }
 

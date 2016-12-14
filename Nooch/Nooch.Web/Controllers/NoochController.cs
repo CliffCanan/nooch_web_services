@@ -2223,7 +2223,9 @@ namespace Nooch.Web.Controllers
 
             requestFromBrowser res = new requestFromBrowser();
             res.success = false;
+            res.isBankAttached = false;
             res.msg = "Initial - code behind";
+            res.note = "";
 
             #region Check If Recipient's Email Is Already Registered
 
@@ -2233,6 +2235,7 @@ namespace Nooch.Web.Controllers
             {
                 Logger.Info("Make Payment Page -> submitPayment Attempted - Recipient email already exists: [" + email + "]");
 
+                res.msg = "Existing user found!";
                 res.isEmailAlreadyReg = true;
                 res.memberId = memberObj.MemberId.ToString();
                 res.name = (!String.IsNullOrEmpty(memberObj.FirstName)) ? CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName))
@@ -2244,19 +2247,26 @@ namespace Nooch.Web.Controllers
 
                 var userAndBankInfo = CommonHelper.GetSynapseBankAndUserDetailsforGivenMemberId(memberObj.MemberId.ToString());
 
-                if (userAndBankInfo != null &&
-                    userAndBankInfo.wereBankDetailsFound == true &&
-                    userAndBankInfo.BankDetails != null)
+                if (userAndBankInfo == null)
+                    res.msg = "No Synapse user or bank info found";
+                else if (!userAndBankInfo.wereBankDetailsFound || userAndBankInfo.UserDetails == null)
+                    res.msg = "No Synapse user info found";
+                else if (!userAndBankInfo.wereBankDetailsFound || userAndBankInfo.BankDetails == null)
+                    res.msg = "Found Synapse user info, but no bank account linked";
+                else
                 {
                     res.isBankAttached = true;
                     res.bankStatus = userAndBankInfo.BankDetails.Status;
                     res.synapseUserPermission = userAndBankInfo.UserDetails.permission;
                     res.synapseBankAllowed = userAndBankInfo.BankDetails.allowed;
+
+                    Logger.Info("Make Payment Page -> submitPayment - User's Synapse Info found, forwarding to submitRequestToExistingUser...");
+
+                    // No errors, forward to service for Existing Users
+                    return submitRequestToExistingUser(from, isRequest, amount, name, email, memo, pin, ip, res.memberId, res.name);
                 }
 
-                res.msg = "Existing user found!";
-                res.note = "";
-                res.success = true;
+                // Got an error if we' got here :-(
                 return Json(res);
             }
 
@@ -2277,7 +2287,6 @@ namespace Nooch.Web.Controllers
 
                 if (!String.IsNullOrEmpty(userName))
                     pin = CommonHelper.GetMemberPinByUserName(userName);
-
 
                 if (String.IsNullOrEmpty(pin))
                 {

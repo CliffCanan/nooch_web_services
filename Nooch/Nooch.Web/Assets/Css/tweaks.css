@@ -73,6 +73,7 @@ h1 a:hover {text-decoration:none;}
 .white-text			{ color: #fff !important; }
 
 .capitalize { text-transform: capitalize !important; }
+.block { display: block !important; }
 /*
  * Generate Margin Class
  * margin, margin-top, margin-bottom, margin-left, margin-right

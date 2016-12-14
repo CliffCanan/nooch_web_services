@@ -87,7 +87,7 @@ function formatAmount() {
         if (formattedAmount.length <= 2)
             $('#amount').val(formattedAmount + '.00');
 
-        if (Number(formattedAmount) < 5 || Number(formattedAmount) > 5000)
+        if (Number(formattedAmount) < 5 || Number(formattedAmount) > 500)
             updateValidationUi("amount", false);
         else
             updateValidationUi("amount", true);
@@ -226,6 +226,11 @@ function submitPayment() {
             // Hide the Loading Block
             $('#makePaymentContainer').unblock();
 
+            if (sendPaymentResponse.name != null)
+                existNAME = sendPaymentResponse.name;
+            if (sendPaymentResponse.memberId != null)
+                existMEMID = sendPaymentResponse.memberId;
+
             if (sendPaymentResponse.success == true)
             {
                 // request type
@@ -233,9 +238,6 @@ function submitPayment() {
                 {
                     if (sendPaymentResponse.isEmailAlreadyReg == true)
                     {
-                        existNAME = sendPaymentResponse.name;
-                        existMEMID = sendPaymentResponse.memberId;
-
                         var status = "Active";
                         var statusCssClass = "f-600";
 
@@ -312,9 +314,6 @@ function submitPayment() {
                 {
                     if (sendPaymentResponse.isEmailAlreadyReg == true)
                     {
-                        existNAME = sendPaymentResponse.name;
-                        existMEMID = sendPaymentResponse.memberId;
-
                         var status = "Active";
                         var statusCssClass = "f-600";
 
@@ -392,32 +391,30 @@ function submitPayment() {
             {
                 if (resultReason != null)
                 {
-                    if (resultReason.indexOf("email already registered") > -1)
-                    {
+                    if (sendPaymentResponse.name != null)
+                        name = sendPaymentResponse.name;
+
+                    if (resultReason.indexOf("No Synapse user or bank") > -1)
+                        showErrorAlert('30');
+                    else if (resultReason.indexOf("No Synapse user info found") > -1)
+                        showErrorAlert('31');
+                    else if (resultReason.indexOf("Found Synapse user info, but no bank") > -1)
+                        showErrorAlert('32');
+
+                    else if (resultReason.indexOf("email already registered") > -1)
                         showErrorAlert('20');
-                    }
                     else if (resultReason.indexOf("Requester does not have any verified bank account") > -1)
-                    {
                         showErrorAlert('4');
-                    }
                     else if (resultReason.indexOf("Missing") > -1)
-                    {
                         showErrorAlert('5');
-                    }
                     else if (resultReason.indexOf("Sender does not have any bank") > -1 ||
                              resultReason.indexOf("Requester does not have any bank added") > -1)
-                    {
                         showErrorAlert('6');
-                    }
                     else
-                    {
                         showErrorAlert('2');
-                    }
                 }
                 else
-                {
                     showErrorAlert('2');
-                }
             }
         },
         Error: function (x, e) {
@@ -583,7 +580,7 @@ function updateValidationUi(field, success) {
 
         var helpBlockTxt = "";
         if (field == "amount")
-            helpBlockTxt = "Please enter an amount between <strong>$5 - $5,000</strong>.";
+            helpBlockTxt = "Please enter an amount between <strong>$5 - $100</strong>.";
         else if (field == "name")
             helpBlockTxt = "Please enter a name for this recipient."
         else if (field == "email")
@@ -649,6 +646,7 @@ function resetName() {
     $('#name').val('').focus();
 }
 
+
 function showErrorAlert(errorNum) {
     var alertTitle = "";
     var alertBodyText = "";
@@ -694,6 +692,26 @@ function showErrorAlert(errorNum) {
         shouldFocusOnEmail = true;
         shouldShowErrorDiv = false;
     }
+    else if (errorNum == '30' || errorNum == '31' || errorNum == '32') // EMAIL came back as already registered with Nooch.
+    {
+        var nameLocal = existNAME != null ? existNAME : name;
+        var fName = "the user";
+        var lName = "";
+        if (nameLocal.indexOf(' ') > 0)
+            fName = nameLocal.slice(0, nameLocal.indexOf(' '))
+
+        alertTitle = "Recipient's Bank Missing";
+
+        if (existMEMID != null && existMEMID.length > 30)
+            alertBodyText = "Looks like <strong>" + nameLocal + "</strong> already has a Nooch account, but it is not fully active yet." +
+                            "<span class='block m-t-10'>Please direct " + fName + " to <a href='https://www.noochme.com/noochweb/Nooch/createAccount?memId=" + existMEMID + "&by=habitat' target='_blank'>this personalized link</a> to finish linking a bank account:</span>" +
+                            "<a href='https://www.noochme.com/noochweb/Nooch/createAccount?memId=" + existMEMID + "&by=habitat' target='_blank' style='font-size: 84%; line-height: 1.3; margin-top: 12px;' class='block'>https://www.noochme.com/noochweb/Nooch/createAccount?memId=" + existMEMID + "&by=habitat<a>";
+        else
+            alertBodyText = "Looks like <strong>" + name + "</strong> already has a Nooch account, but it is not fully active yet." +
+                            "<span class='block m-t-10'>Please contact <a href='mailto:support@nooch.com' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>Nooch Support</a> for further assistance.";
+
+        shouldShowErrorDiv = false;
+    }
     else // Generic Error
     {
         alertTitle = "Errors Are The Worst!";
@@ -728,13 +746,9 @@ function showErrorAlert(errorNum) {
         html: true
     }, function (isConfirm) {
         if (!isConfirm)
-        {
             window.open("mailto:support@nooch.com");
-        }
         else if (shouldFocusOnEmail)
-        {
             updateValidationUi("email", false);
-        }
     });
 }
 

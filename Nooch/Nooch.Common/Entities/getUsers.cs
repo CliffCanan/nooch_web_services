@@ -25,7 +25,6 @@ namespace Nooch.Common.Entities
         public string permission { get; set; }
         public string allowed { get; set; }
         public bool hasBank { get; set; }
-
     }
 
 }
