@@ -23,7 +23,6 @@ namespace Nooch.Common
 {
     public static class Utility
     {
-
         public static IFormatProvider GetFormatProvider
         {
             get
@@ -32,10 +31,13 @@ namespace Nooch.Common
                 return iFormatProvider;
             }
         }
+
+
         public static string GetValueFromConfig(string key)
         {
             return ConfigurationManager.AppSettings[key];
         }
+
 
         public static bool IsInteger(string theValue)
         {
@@ -43,6 +45,8 @@ namespace Nooch.Common
             Match m = _isNumber.Match(theValue);
             return m.Success;
         }
+
+
         public static CultureInfo GetCultureInfo
         {
             get
@@ -51,44 +55,39 @@ namespace Nooch.Common
                 return cultureInfo;
             }
         }
+
+
         public static Object GetPropValue(String name, Object currentItem)
         {
             var parts = name.Split('.');
+
             for (int index = 0; index < parts.Length; index++)
             {
                 if (currentItem == null)
-                {
                     return null;
-                }
 
                 Type type = currentItem.GetType();
                 PropertyInfo info = type.GetProperty(parts[index]);
                 if (info == null)
-                {
                     return null;
-                }
                 if (type == typeof(string))
-                {
                     return currentItem;
-                }
 
                 currentItem = GetCurrentItem(name, index, parts, currentItem, type, info);
             }
             return currentItem;
         }
+
+
         private static object GetCurrentItem(string name, int index, string[] parts, object currentItem, Type type, PropertyInfo info)
         {
             currentItem = info.GetValue(currentItem, null);
 
             //Code to remove Time in DateTime column
             if (type.GetProperty(parts[index]).PropertyType == typeof(DateTime?))
-            {
                 currentItem = ((DateTime?)(currentItem)).HasValue ? ((DateTime?)(currentItem)).Value.ToShortDateString() : string.Empty;
-            }
             else if (type.GetProperty(parts[index]).PropertyType == typeof(DateTime))
-            {
                 currentItem = ((DateTime)(currentItem)).ToShortDateString();
-            }
             else if ((info.PropertyType).BaseType.IsGenericType)
             {
                 // iterate through the collection and get the Corresponding column Name
@@ -101,14 +100,14 @@ namespace Nooch.Common
 
                 }
                 if (!string.IsNullOrEmpty(value))
-                {
                     value = value.Substring(0, value.Length - 1);
-                }
+
                 currentItem = value;
 
             }
             return currentItem;
         }
+
 
         public static bool ToBoolean(string value)
         {
@@ -134,7 +133,6 @@ namespace Nooch.Common
                 throw new FormatException(exception.Message + "Unable to format string :" + value);
             }
             return result;
-
         }
 
 
@@ -159,9 +157,7 @@ namespace Nooch.Common
             try
             {
                 if (!String.IsNullOrEmpty(value) && value != Guid.Empty.ToString())
-                {
                     id = new Guid(value);
-                }
             }
             catch (Exception ex)
             {
@@ -175,9 +171,7 @@ namespace Nooch.Common
         public static string TrimCommaString(string selectedValues)
         {
             if (selectedValues.EndsWith(",", StringComparison.CurrentCulture))
-            {
                 selectedValues = selectedValues.Substring(0, selectedValues.Length - 1);
-            }
             return selectedValues;
         }
 
@@ -234,9 +228,9 @@ namespace Nooch.Common
             {
                 MailMessage mailMessage = new MailMessage();
 
-                string template;
-                string subjectString = subject;
-                string content = string.Empty;
+                var subjectString = subject;
+                var template = string.Empty;
+                var content = string.Empty;
 
                 if (!String.IsNullOrEmpty(templateName))
                 {
@@ -255,9 +249,7 @@ namespace Nooch.Common
                     mailMessage.Body = content;
                 }
                 else
-                {
                     mailMessage.Body = bodyText;
-                }
 
                 switch (fromAddress)
                 {
@@ -273,15 +265,6 @@ namespace Nooch.Common
                     case "welcome@nooch.com":
                         mailMessage.From = new MailAddress(fromAddress, "Team Nooch");
                         break;
-                    case "landlords@rentscene.com":
-                        mailMessage.From = new MailAddress(fromAddress, "Rent Scene");
-                        break;
-                    case "team@rentscene.com":
-                        mailMessage.From = new MailAddress(fromAddress, "Rent Scene Team");
-                        break;
-                    case "payments@rentscene.com":
-                        mailMessage.From = new MailAddress(fromAddress, "Rent Scene Payments");
-                        break;
                     case "payments@tryhabitat.com":
                         mailMessage.From = new MailAddress(fromAddress, "Habitat Payments");
                         break;
@@ -289,24 +272,27 @@ namespace Nooch.Common
                         mailMessage.From = new MailAddress(fromAddress, "Nooch Admin");
                         break;
                 }
-                mailMessage.IsBodyHtml = true;
-                mailMessage.Subject = subjectString;
+
 
                 if (Convert.ToBoolean(GetValueFromConfig("IsRunningOnSandBox")))
                     toAddress = GetValueFromConfig("SandboxEmailsRecepientEmail");
 
+                mailMessage.IsBodyHtml = true;
+                mailMessage.Subject = subjectString;
                 mailMessage.To.Add(toAddress);
 
-                if (!String.IsNullOrEmpty(bccMailId)) mailMessage.Bcc.Add(bccMailId);
+                if (!String.IsNullOrEmpty(bccMailId))
+                    mailMessage.Bcc.Add(bccMailId);
 
-                SmtpClient smtpClient = new SmtpClient();
+                SmtpClient smtp = new SmtpClient();
 
-                smtpClient.Host = GetValueFromConfig("SMTPAddress");
-                smtpClient.UseDefaultCredentials = false;
-                smtpClient.Port = 587;
+                smtp.Host = GetValueFromConfig("SMTPAddress");
+                smtp.UseDefaultCredentials = false;
+                smtp.Port = 587;
 
-                smtpClient.Credentials = new NetworkCredential(GetValueFromConfig("SMTPLogOn"), GetValueFromConfig("SMTPPassword"));
-                smtpClient.Send(mailMessage);
+                smtp.Credentials = new NetworkCredential(GetValueFromConfig("SMTPLogOn"), GetValueFromConfig("SMTPPassword"));
+                mailMessage.Priority = MailPriority.Normal;
+                smtp.Send(mailMessage);
 
                 return true;
             }
