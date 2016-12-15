@@ -2253,6 +2253,10 @@ namespace Nooch.Web.Controllers
                     res.msg = "No Synapse user info found";
                 else if (!userAndBankInfo.wereBankDetailsFound || userAndBankInfo.BankDetails == null)
                     res.msg = "Found Synapse user info, but no bank account linked";
+                else if (userAndBankInfo.UserDetails.permission == "UNVERIFIED")
+                    res.msg = "Found Synapse user info, but account is unverified";
+                else if (userAndBankInfo.BankDetails.allowed.IndexOf("CREDIT") == -1)
+                    res.msg = "Found Synapse user and bank info, but bank not allowed to make payments";
                 else
                 {
                     res.isBankAttached = true;

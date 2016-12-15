@@ -13,7 +13,6 @@ var COMPANY = $('#company').val();
 var COMPANY_DISPLAY_TXT = "Nooch";
 var memIdGen = "";
 var memid = $('#memId').val();
-var memid = $('#memId').val();
 var ISNEW = $('#isNew').val();
 var FBID = "not connected";
 
@@ -364,7 +363,8 @@ function checkStepThree() {
                 var ssnVal = $('#idVer-ssn').val().trim();
                 ssnVal = ssnVal.replace(/ /g, "").replace(/-/g, "");
 
-                if (ssnVal.length == 9 || FBID != "not connected")
+                if (!(typeof memid == "undefined" || memid == "") ||
+                    ssnVal.length == 9 || FBID != "not connected")
                 {
                     updateValidationUi("ssn", true);
 

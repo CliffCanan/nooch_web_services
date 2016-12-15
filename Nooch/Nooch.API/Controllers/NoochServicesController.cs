@@ -3175,7 +3175,10 @@ namespace Nooch.API.Controllers
 
                     if (user._id.id == newOid)
                     {
-                        if (user.extra != null && user.extra.supp_id != null && user.extra.supp_id != memObj.Nooch_ID)
+                        if (user.extra != null &&
+                            user.extra.supp_id != null &&
+                            user.extra.supp_id.Length == 8 &&
+                            user.extra.supp_id != memObj.Nooch_ID)
                         {
                             res.errorMsg = "Supp ID from Synapse of [" + user.extra.supp_id + "] did not match Nooch user's Nooch_ID: [" + memObj.Nooch_ID + "]";
                             return res;
@@ -5456,7 +5459,7 @@ namespace Nooch.API.Controllers
                 Logger.Info("Service Cntlr -> LoginWithFacebook - userEmail: [" + userEmail + "], FB ID: [" + FBId + "]");
 
                 var mda = new MembersDataAccess();
-                string cookie = mda.LoginwithFB(userEmail, FBId, rememberMeEnabled, lat, lng, udid, devicetoken);
+                var cookie = mda.LoginwithFB(userEmail, FBId, rememberMeEnabled, lat, lng, udid, devicetoken);
 
                 if (String.IsNullOrEmpty(cookie))
                 {

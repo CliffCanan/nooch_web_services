@@ -694,25 +694,25 @@ namespace Nooch.DataAccess
         /// CC (9/6/16): NOT SURE THIS IS USED ANYMORE - IONIC APP USES LoginWithFacebookGeneric().
         /// </summary>
         /// <param name="userEmail"></param>
-        /// <param name="FBId"></param>
+        /// <param name="fbid"></param>
         /// <param name="rememberMeEnabled"></param>
         /// <param name="lat"></param>
         /// <param name="lng"></param>
         /// <param name="udid"></param>
         /// <param name="devicetoken"></param>
-        public string LoginwithFB(string userEmail, string FBId, Boolean rememberMeEnabled, decimal lat, decimal lng, string udid, string devicetoken)
+        public string LoginwithFB(string userEmail, string fbid, Boolean rememberMeEnabled, decimal lat, decimal lng, string udid, string devicetoken)
         {
-            Logger.Info("MDA -> LoginwithFB fIRED - UserEmail: [" + userEmail + "], FBId: [" + FBId + "]");
+            Logger.Info("MDA -> LoginwithFB fIRED - UserEmail: [" + userEmail + "], FBId: [" + fbid + "]");
 
-            FBId = CommonHelper.GetEncryptedData(FBId.ToLower());
+            fbid = CommonHelper.GetEncryptedData(fbid.ToLower());
 
-            var memberEntity = _dbContext.Members.FirstOrDefault(
-                    m => m.FacebookAccountLogin.Equals(FBId) && m.IsDeleted == false);
+            var memberEntity = _dbContext.Members.FirstOrDefault(m => (m.FacebookAccountLogin.Equals(fbid) ||
+                                                                       m.FacebookUserId.Equals(fbid)) &&
+                                                                       m.IsDeleted == false);
 
             if (memberEntity == null)
             {
-                Logger.Info("MDA -> LoginwithFB - No User Found for this FB ID - [UserEmail: " + userEmail + "],  [FBId: " + FBId + "]");
-
+                Logger.Info("MDA -> LoginwithFB - No User Found for this FB ID - UserEmail: [" + userEmail + "], FBId: [" + fbid + "]");
                 return "FBID or EmailId not registered with Nooch";
             }
             else
@@ -760,8 +760,8 @@ namespace Nooch.DataAccess
 
                     // Update UDID of device from which the user has logged in.
                     if (!String.IsNullOrEmpty(udid))
-                        if (memberEntity.MemberId.ToString() != "852987e8-d5fe-47e7-a00b-58a80dd15b49") // For RS's account, don't ever update the Fingerprint (DeviceID). Otherwise it will screw up Synapse services.
-                            memberEntity.UDID1 = udid;
+                        memberEntity.UDID1 = udid;
+
                     if (!String.IsNullOrEmpty(devicetoken))
                         memberEntity.DeviceToken = devicetoken;
 
@@ -932,8 +932,8 @@ namespace Nooch.DataAccess
 
                     // Update UDID of device from which the user has logged in.
                     if (!String.IsNullOrEmpty(udid))
-                        if (memberEntity.MemberId.ToString() != "852987e8-d5fe-47e7-a00b-58a80dd15b49") // For RS's account, don't ever update the Fingerprint (DeviceID). Otherwise it will screw up Synapse services.
-                            memberEntity.UDID1 = udid;
+                        memberEntity.UDID1 = udid;
+
                     if (!String.IsNullOrEmpty(devicetoken))
                         memberEntity.DeviceToken = devicetoken;
 
@@ -1776,9 +1776,8 @@ namespace Nooch.DataAccess
 
             if (noochMember != null)
             {
-                // Malkit (5/17/16): Added this check here to see if we have user already in our SynapseCreateUsersResult table.
+                // MS (5/17/16): Added this check here to see if we have user already in our SynapseCreateUsersResult table.
                 //                   This will prevent calling synapse/user/create service for single user multiple times
-
                 var synapseCreateUserObjIfExists = _dbContext.SynapseCreateUserResults.FirstOrDefault(m => m.MemberId == guid &&
                                                                                                            m.IsDeleted == false);
 
@@ -1870,8 +1869,8 @@ namespace Nooch.DataAccess
                                             !String.IsNullOrEmpty(noochMember.FacebookUserId) ||
                                             !String.IsNullOrEmpty(noochMember.VerificationDocumentPath))
                                         {
-                                            Logger.Info("MDA -> RegisterUserWithSynapseV3 - Found at least 1 document for Synapse (SSN, FBID, or ID Img in Members Table), " +
-                                                        "attempting to send SSN info to SynapseV3 - MemberID: [" + memberId + "]");
+                                            Logger.Info("MDA -> RegisterUserWithSynapseV3 - Found at least 1 document for Synapse (in dbo.Members) - " +
+                                                        "SSN [" + noochMember.SSN + "], FBID: [" + noochMember.FacebookUserId + "] - Attempting to send docs to SynapseV3");
                                         }
 
                                         // (CC - 6/1/16): UPDATED TO USE NEW METHOD FOR SENDING *ALL* DOCS AT THE SAME TIME
@@ -1991,7 +1990,6 @@ namespace Nooch.DataAccess
                 #region Call Synapse V3 API: /v3/user/create
 
                 List<string> clientIds = CommonHelper.getClientSecretId(memberId);
-
                 var SynapseClientId = clientIds[0];
                 var SynapseClientSecret = clientIds[1];
 
@@ -2186,7 +2184,8 @@ namespace Nooch.DataAccess
 
                     try
                     {
-                        var synapseCreateUserObj = _dbContext.SynapseCreateUserResults.Where(m => m.MemberId == guid && m.IsDeleted == false).ToList();
+                        var synapseCreateUserObj = _dbContext.SynapseCreateUserResults.Where(m => m.MemberId == guid &&
+                                                                                                  m.IsDeleted == false).ToList();
 
                         foreach (var scur in synapseCreateUserObj)
                         {
@@ -2271,7 +2270,7 @@ namespace Nooch.DataAccess
                                 Logger.Info("MDA -> RegisterUserWithSynapseV3 - ** ID Already Verified b/c Synapse returned 'Permission' of [" + res.user.permission + "] ** - MemberID: [" + memberId + "]");
 
                                 noochMember.IsVerifiedWithSynapse = true;
-                                noochMember.TransferLimit = "5000";
+                                noochMember.TransferLimit = "500";
                                 _dbContext.SaveChanges();
 
                                 res.ssn_verify_status = "id already verified";
@@ -2529,7 +2528,7 @@ namespace Nooch.DataAccess
                 LastName = CommonHelper.GetEncryptedData(LastName);
 
                 // Convert string Date of Birth to DateTime
-                if (String.IsNullOrEmpty(dob)) // ...it shouldn't ever be empty for this method
+                if (String.IsNullOrEmpty(dob)) // Should never be empty for this method
                 {
                     Logger.Info("MDA -> RegisterExistingUserWithSynapseV3 - DOB was NULL, reassigning it to 'Jan 20, 1981' - Name: [" + userName + "], TransId: [" + transId + "]");
                     dob = "01/20/1981";
@@ -2580,19 +2579,28 @@ namespace Nooch.DataAccess
                 memberObj.City = !String.IsNullOrEmpty(cityFromGoogle) ? CommonHelper.GetEncryptedData(cityFromGoogle) : null;
                 memberObj.State = !String.IsNullOrEmpty(stateAbbrev) ? CommonHelper.GetEncryptedData(stateAbbrev) : null;
                 memberObj.Zipcode = !String.IsNullOrEmpty(zip) ? CommonHelper.GetEncryptedData(zip) : null;
-                memberObj.SSN = !String.IsNullOrEmpty(ssn) ? CommonHelper.GetEncryptedData(ssn) : null;
-                memberObj.DateOfBirth = dateofbirth;
-                memberObj.Status = "Active";
-                memberObj.UDID1 = !String.IsNullOrEmpty(fngprnt) ? fngprnt : memberObj.UDID1; // if this has changed since what it originally was, then the user will eventually have to complete the 2FA for Synapse
                 memberObj.DateModified = DateTime.Now;
                 memberObj.cipTag = !String.IsNullOrEmpty(cip) ? cip : memberObj.cipTag;
-                memberObj.FacebookUserId = !String.IsNullOrEmpty(fbid) ? fbid : memberObj.FacebookUserId;
+                memberObj.DateOfBirth = dateofbirth;
+                memberObj.Status = "Active";
+
+                if (!String.IsNullOrEmpty(ssn))
+                    memberObj.SSN = CommonHelper.GetEncryptedData(ssn);
+
+                if (!String.IsNullOrEmpty(fngprnt) && String.IsNullOrEmpty(memberObj.UDID1)) // Only replace if there wasn't already one (which is unlikely)
+                    memberObj.UDID1 = fngprnt; // if this has changed since what it originally was, then the user will eventually have to complete the 2FA for Synapse
+
+                if (!String.IsNullOrEmpty(fbid) && fbid != "not connected")
+                    memberObj.FacebookUserId = fbid;
+
                 if (isBusiness)
                 {
                     memberObj.Type = "business";
                     memberObj.TimeZoneKey = entityType; // CC (11/23/16): Using "TimeZoneKey" to store this value, which is needed for creating Synapse Biz Accounts ("LLC", "Corporation", etc.)
                 }
+
                 if (memberObj.isRentScene != true) memberObj.isRentScene = false;
+
                 if (!String.IsNullOrEmpty(pw)) memberObj.Password = CommonHelper.GetEncryptedData(pw);
 
                 int save = 0;
@@ -2612,7 +2620,8 @@ namespace Nooch.DataAccess
                 // Now add the IP address record to the MembersIPAddress Table
                 try
                 {
-                    CommonHelper.UpdateMemberIPAddressAndDeviceId(memberId, ip, null);
+                    if (ip != "96.245.54.5")
+                        CommonHelper.UpdateMemberIPAddressAndDeviceId(memberId, ip, null);
                 }
                 catch (Exception ex)
                 {
@@ -2728,7 +2737,6 @@ namespace Nooch.DataAccess
                     var fromAddress = Utility.GetValueFromConfig("welcomeMail");
                     var firstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName));
                     var lastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.LastName));
-
                     var link = "";
 
                     var tokens = new Dictionary<string, string>

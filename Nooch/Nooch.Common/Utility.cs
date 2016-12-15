@@ -291,7 +291,6 @@ namespace Nooch.Common
                 smtp.Port = 587;
 
                 smtp.Credentials = new NetworkCredential(GetValueFromConfig("SMTPLogOn"), GetValueFromConfig("SMTPPassword"));
-                mailMessage.Priority = MailPriority.Normal;
                 smtp.Send(mailMessage);
 
                 return true;

@@ -1762,7 +1762,6 @@ namespace Nooch.Common
                                                     }
                                                 }
                                             }
-
                                         }
 
                                         #endregion Loop Through Outer Documents Object (Should Only Be 1)
@@ -2752,7 +2751,7 @@ namespace Nooch.Common
                                         var synapsePhone = RemovePhoneNumberFormatting(refreshResponse["phone_numbers"][0].ToString());
                                         var usersPhoneinDB = RemovePhoneNumberFormatting(noochMemberObject.ContactNumber);
 
-                                        if (synapsePhone == usersPhoneinDB)
+                                        if ( false && synapsePhone == usersPhoneinDB)
                                         {
                                             // Good, phone #'s matched - proceed with 2FA process
                                             Logger.Info("Common Helper -> refreshSynapseV3OautKey - About to attempt 2FA process by querying SynapseV3SignIn()");
@@ -2760,13 +2759,17 @@ namespace Nooch.Common
                                             // Return response from 2nd Signin attempt w/ phone number (should trigger Synapse to send a PIN to the user)
                                             return SynapseV3SignIn(oauthKey, noochMemberObject, null);
                                         }
+                                        else if (synapsePhone == usersPhoneinDB)
+                                        {
+                                            res.msg = "PHONE FROM SYNAPSE MATCHED NOOCH DB, NORMALLY WOULD TRIGGER 2FA NOW, BUT SKIPPING TEMPORARILY...";
+                                        }
                                         else
                                         {
                                             // Bad - Synapse has a different phone # than we do for this user,
                                             // which means it probably changed since we created the user with Synapse...
                                             res.msg = "Phone number from Synapse doesn't match Nooch phone number";
                                             var error = "Common Helper -> refreshSynapseV3OautKey FAILED - Phone # Array returned from Synapse - " +
-                                                         "But didn't match user's ContactNumber in DB - Can't attempt 2FA flow - ABORTING";
+                                                        "But didn't match user's ContactNumber in DB - Can't attempt 2FA flow - ABORTING";
                                             Logger.Error(error);
                                             CommonHelper.notifyCliffAboutError(error);
                                         }
@@ -2859,11 +2862,11 @@ namespace Nooch.Common
         {
             bool isPinIncluded = false;
             if (String.IsNullOrEmpty(validationPin))
-                Logger.Info("Common Helper -> SynapseV3SignIn Initiated - Oauth Key (enc): [" + oauthKey + "] - No ValidationPIN Passed.");
+                Logger.Info("Common Helper -> SynapseV3SignIn Fired - Oauth Key (enc): [" + oauthKey + "] - No PIN Passed.");
             else
             {
                 isPinIncluded = true;
-                Logger.Info("Common Helper -> SynapseV3SignIn Initiated - Submitting Validation PIN: [" + validationPin + "], Oauth Key (enc): [" + oauthKey + "]");
+                Logger.Info("Common Helper -> SynapseV3SignIn Fired - Submitting Validation PIN: [" + validationPin + "], Oauth Key (enc): [" + oauthKey + "]");
             }
 
             synapseV3checkUsersOauthKey res = new synapseV3checkUsersOauthKey();
@@ -2906,7 +2909,6 @@ namespace Nooch.Common
                     Logger.Info("Common Helper -> SynapseV3SignIn - Found Member By Original OAuth Key");
 
                     List<string> clientIds = getClientSecretId(memberObj.MemberId.ToString());
-
                     var SynapseClientId = clientIds[0];
                     var SynapseClientSecret = clientIds[1];
 
@@ -2962,7 +2964,7 @@ namespace Nooch.Common
                     }
 
                     var UrlToHit = Convert.ToBoolean(Utility.GetValueFromConfig("IsRunningOnSandBox")) ? "https://sandbox.synapsepay.com/api/v3/user/signin"
-                                                                                                        : "https://synapsepay.com/api/v3/user/signin";
+                                                                                                       : "https://synapsepay.com/api/v3/user/signin";
                     var parsedContent = isPinIncluded ? JsonConvert.SerializeObject(inputWithPin) : JsonConvert.SerializeObject(inputNoPin);
 
                     Logger.Info("Common Helper -> SynapseV3SignIn - isPinIncluded: [" + isPinIncluded + "] - Payload to send to Synapse /v3/user/signin: [" + parsedContent + "]");
@@ -3044,9 +3046,7 @@ namespace Nooch.Common
                             synCreateUserObject.extra_security = refreshResultFromSyn.user.extra != null ? refreshResultFromSyn.user.extra.extra_security.ToString() : null;
 
                             if (!String.IsNullOrEmpty(refreshResultFromSyn.user.permission))
-                            {
                                 synCreateUserObject.permission = refreshResultFromSyn.user.permission;
-                            }
 
                             int save = _dbContext.SaveChanges();
                             _dbContext.Entry(synCreateUserObject).Reload();
@@ -3348,6 +3348,8 @@ namespace Nooch.Common
                 if (!String.IsNullOrEmpty(nameToCheck))
                 {
                     #region Parse Name
+
+                    nameToCheck = nameToCheck.ToLower();
 
                     // Parse & compare NAME from Nooch account w/ NAME from this bank account
                     string[] nameFromBank_splitUp = nameToCheck.Split(' ');
@@ -3722,9 +3724,7 @@ namespace Nooch.Common
 
         public static string GetMemberIdByContactNumber(string userContactNumber)
         {
-            Logger.Info("Common Helper -> GetMemberIdByContactNumber Fired - ContactNumber: [" + userContactNumber + "]");
-
-            string trimmedContactNum = RemovePhoneNumberFormatting(userContactNumber);
+            var trimmedContactNum = RemovePhoneNumberFormatting(userContactNumber);
 
             var noochMember = _dbContext.Members.Where(memberTemp =>
                                 memberTemp.ContactNumber.Equals(trimmedContactNum) &&
@@ -3735,6 +3735,8 @@ namespace Nooch.Common
                 _dbContext.Entry(noochMember).Reload();
                 return noochMember.MemberId.ToString();
             }
+            else
+                Logger.Error("Common Helper -> GetMemberIdByContactNumber - No User found for ContactNumber: [" + userContactNumber + "]");
 
             return null;
         }

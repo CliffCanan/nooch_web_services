@@ -398,8 +398,12 @@ function submitPayment() {
                         showErrorAlert('30');
                     else if (resultReason.indexOf("No Synapse user info found") > -1)
                         showErrorAlert('31');
-                    else if (resultReason.indexOf("Found Synapse user info, but no bank") > -1)
+                    else if (resultReason.indexOf("but no bank account linked") > -1)
                         showErrorAlert('32');
+                    else if (resultReason.indexOf("but account is unverified") > -1)
+                        showErrorAlert('40');
+                    else if (resultReason.indexOf("bank not allowed") > -1)
+                        showErrorAlert('41');
 
                     else if (resultReason.indexOf("email already registered") > -1)
                         showErrorAlert('20');
@@ -659,31 +663,31 @@ function showErrorAlert(errorNum) {
     {
         alertTitle = "Errors Are The Worst!";
         alertBodyText = "We had trouble finding that transaction.  Please try again and if you continue to see this message, contact <span style='font-weight:600;'>Nooch Support</span>:" +
-                        "<a href='mailto:support@nooch.com' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>support@nooch.com</a>";
+                        "<a href='mailto:support@nooch.com?subject=Support%20Request%20-%20Make%20Payment%20Page%20Error-1' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>support@nooch.com</a>";
     }
     else if (errorNum == '2' || errorNum == '3') // Errors after submitting ID verification AJAX
     {
         alertTitle = "Errors Are The Worst!";
         alertBodyText = "Terrible sorry, but it looks like we had trouble processing your info. &nbsp;Please refresh this page to try again and if you continue to see this message, contact <span style='font-weight:600;'>Nooch Support</span>:" +
-                        "<a href='mailto:support@nooch.com' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>support@nooch.com</a>";
+                        "<a href='mailto:support@nooch.com?subject=Support%20Request%20-%20Make%20Payment%20Page%20Error-" + errorNum + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>support@nooch.com</a>";
     }
     else if (errorNum == '4') // Requester does not have any verified bank account
     {
         alertTitle = "Oh No - Error!";
         alertBodyText = "Looks like the requester's account (yours) does not have a verified bank attached.  Please refresh this page to try again and if you continue to see this message, contact <span style='font-weight:600;'>Nooch Support</span>:" +
-                        "<a href='mailto:support@nooch.com' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>support@nooch.com</a>";
+                        "<a href='mailto:support@nooch.com?subject=Support%20Request%20-%20Make%20Payment%20Page%20Error-4' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>support@nooch.com</a>";
     }
     else if (errorNum == '5') // Missing some piece of data (shouldn't ever happen b/c the form shouldn't submit if missing anything)
     {
         alertTitle = "Oh No - Error!";
         alertBodyText = "Looks like we were missing some required information. &nbsp;Please refresh this page to try again and if you continue to see this message, contact <span style='font-weight:600;'>Nooch Support</span>:" +
-                        "<a href='mailto:support@nooch.com' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>support@nooch.com</a>";
+                        "<a href='mailto:support@nooch.com?subject=Support%20Request%20-%20Make%20Payment%20Page%20Error-5' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>support@nooch.com</a>";
     }
     else if (errorNum == '6') // Sender has no active bank account linked
     {
         alertTitle = "Missing Funding Source";
         alertBodyText = "Looks like your don't have a funding source set up yet. &nbsp;Please contact <span style='font-weight:600;'>Nooch Support</span>:" +
-                        "<a href='mailto:support@nooch.com' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>support@nooch.com</a>";
+                        "<a href='mailto:support@nooch.com?subject=Support%20Request%20-%20Make%20Payment%20Page%20Error-6' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>support@nooch.com</a>";
     }
     else if (errorNum == '20') // EMAIL came back as already registered with Nooch.
     {
@@ -708,7 +712,37 @@ function showErrorAlert(errorNum) {
                             "<a href='https://www.noochme.com/noochweb/Nooch/createAccount?memId=" + existMEMID + "&by=habitat' target='_blank' style='font-size: 84%; line-height: 1.3; margin-top: 12px;' class='block'>https://www.noochme.com/noochweb/Nooch/createAccount?memId=" + existMEMID + "&by=habitat<a>";
         else
             alertBodyText = "Looks like <strong>" + name + "</strong> already has a Nooch account, but it is not fully active yet." +
-                            "<span class='block m-t-10'>Please contact <a href='mailto:support@nooch.com' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>Nooch Support</a> for further assistance.";
+                            "<span class='block m-t-10'>Please contact <a href='mailto:support@nooch.com?subject=Support%20Request%20-%20Make%20Payment%20Page%20Error-" + errorNum + "' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>Nooch Support</a> for further assistance.";
+
+        shouldShowErrorDiv = false;
+    }
+    else if (errorNum == '40') // User's Synapse permission is Unverified
+    {
+        var nameLocal = existNAME != null ? existNAME : name;
+        var fName = "the user";
+        var lName = "";
+        if (nameLocal.indexOf(' ') > 0)
+            fName = nameLocal.slice(0, nameLocal.indexOf(' '))
+
+        alertTitle = fName == "the user" ? "Recipient Is Unverified" : fName + "'s ID is Unverified";
+
+        alertBodyText = "Good news is <strong>" + fName + "</strong> already has a Nooch account. The bad news is " + fName + "'s ID is not fully verified yet." +
+                        "<span class='block m-t-10'>Please contact <a href='mailto:support@nooch.com?subject=Support%20Request%20-%20Attempted%20to%20pay%20Unverified%20User' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>Nooch Support</a> for further assistance.";
+
+        shouldShowErrorDiv = false;
+    }
+    else if (errorNum == '41') // User's Bank is Unverified or Locked
+    {
+        var nameLocal = existNAME != null ? existNAME : name;
+        var fName = "the user";
+        var lName = "";
+        if (nameLocal.indexOf(' ') > 0)
+            fName = nameLocal.slice(0, nameLocal.indexOf(' '))
+
+        alertTitle = fName == "the user" ? "Recipient's Bank Is Unverified" : fName + "'s Bank is Unverified";
+
+        alertBodyText = "Good news is <strong>" + nameLocal + "</strong> already has a Nooch account. The bad news is " + fName + "'s bank is not fully verified yet." +
+                        "<span class='block m-t-10'>Please contact <a href='mailto:support@nooch.com?subject=Support%20Request%20-%20Attempted%20to%20pay%20Unverified%20Bank' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>Nooch Support</a> for further assistance.";
 
         shouldShowErrorDiv = false;
     }
@@ -716,7 +750,7 @@ function showErrorAlert(errorNum) {
     {
         alertTitle = "Errors Are The Worst!";
         alertBodyText = "Terrible sorry, but it looks like we had trouble processing that request. &nbsp;Please refresh this page to try again and if you continue to see this message, contact <span style='font-weight:600;'>Nooch Support:</span>" +
-                        "<br/><a href='mailto:support@nooch.com' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>support@nooch.com</a>";
+                        "<br/><a href='mailto:support@nooch.com?subject=Support%20Request%20-%20Make%20Payment%20Page%20Error' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>support@nooch.com</a>";
     }
     console.log("Should Show Error Div is...");
     console.log(shouldShowErrorDiv);

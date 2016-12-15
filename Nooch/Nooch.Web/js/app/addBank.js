@@ -762,14 +762,21 @@ function submitManualBank() {
 
                 $('#bankLogin').velocity("callout.shake");
 
+                var errorTitle = "Unexpected Error";
                 var errorText = "";
 
                 if (bnkManualResult.ERROR_MSG.indexOf('Routing Number is invalid') > -1)
                 {
+                    errorTitle = "Invalid Routing Number";
                     errorText = "That routing number appears to be invalid. Please double check and try again!";
                 }
+                else if (bnkManualResult.ERROR_MSG.indexOf('Invalid Account Number') > -1)
+                {
+                    errorTitle = "Invalid Account Number";
+                    errorText = "That account number appears to be invalid. Please double check and try again!";
+                }
                 else if (bnkManualResult.ERROR_MSG.indexOf('Currently we are unable to login to') > -1 ||
-				    bnkManualResult.ERROR_MSG.indexOf('Please try again later') > -1)
+				         bnkManualResult.ERROR_MSG.indexOf('Please try again later') > -1)
                 {
                     errorText = "Something went wrong - terrible sorry about this. We hate it when something breaks! Please try again or contact <a href='mailto:" + SUPPORTLINK +
 				                "' target='_blank'>" + SUPPORTLINK + "</a> if the problem happens again." +
@@ -1360,8 +1367,10 @@ $(document).ready(function () {
         var val = $(this).val().trim();
         val = val.replace(/\s+/g, '');
 
-        if (val.length == 9) //for checking 3 characters
+        if (val.length == 9)
             lookupRoutingNum(val);
+        if (val.length == 8)
+            lookupRoutingNum("0" + val);
     });
 });
 
