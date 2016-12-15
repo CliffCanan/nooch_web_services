@@ -2520,10 +2520,9 @@ namespace Nooch.Web.Controllers
                     StringResult sr = ResponseConverter<StringResult>.CallServicePostMethod(String.Concat(serviceUrl, serviceMethod), json);
 
                     if (sr.Result.Contains("successfully"))
-                    {
                         response.success = true;
-                        response.msg = sr.Result;
-                    }
+
+                    response.msg = sr.Result;
                 }
 
                 var urlToUse = String.Concat(serviceUrl, serviceMethod);

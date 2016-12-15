@@ -414,6 +414,8 @@ function submitPayment() {
                     else if (resultReason.indexOf("Sender does not have any bank") > -1 ||
                              resultReason.indexOf("Requester does not have any bank added") > -1)
                         showErrorAlert('6');
+                    else if (resultReason.indexOf("Sender has insufficient permissions") > -1)
+                        showErrorAlert('7')
                     else
                         showErrorAlert('2');
                 }
@@ -686,8 +688,14 @@ function showErrorAlert(errorNum) {
     else if (errorNum == '6') // Sender has no active bank account linked
     {
         alertTitle = "Missing Funding Source";
-        alertBodyText = "Looks like your don't have a funding source set up yet. &nbsp;Please contact <span style='font-weight:600;'>Nooch Support</span>:" +
+        alertBodyText = "Looks like your account don't have a funding source fully set up yet. Please contact <span style='font-weight:600;'>Nooch Support</span>:" +
                         "<a href='mailto:support@nooch.com?subject=Support%20Request%20-%20Make%20Payment%20Page%20Error-6' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>support@nooch.com</a>";
+    }
+    else if (errorNum == '7') // Sender has no active bank account linked
+    {
+        alertTitle = "Incomplete Account";
+        alertBodyText = "Looks like your account isn't fully verified to send money yet. Please contact <span style='font-weight:600;'>Nooch Support</span>:" +
+                        "<a href='mailto:support@nooch.com?subject=Support%20Request%20-%20Make%20Payment%20Page%20Error-7' style='display:block;margin:12px auto;font-weight:600;' target='_blank'>support@nooch.com</a>";
     }
     else if (errorNum == '20') // EMAIL came back as already registered with Nooch.
     {
@@ -780,7 +788,7 @@ function showErrorAlert(errorNum) {
         html: true
     }, function (isConfirm) {
         if (!isConfirm)
-            window.open("mailto:support@nooch.com");
+            window.open("mailto:support@nooch.com?subject=Support%20Request%20-%20Attempted%20Payment%20Failed");
         else if (shouldFocusOnEmail)
             updateValidationUi("email", false);
     });
