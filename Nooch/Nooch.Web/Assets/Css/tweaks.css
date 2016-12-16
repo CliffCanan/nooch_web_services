@@ -2106,7 +2106,6 @@ div[data-custom-class*="largeText"] p { font-size: 18px !important; }
 
 /** Nav - Mobile Screen **/
 nav .landingHeaderLogo {margin:12px auto;}
-nav .landingHeaderLogo img {margin-left:auto;width:100px;}
 nav .collapsing ul.navbar-left-sidebar {
     background: -moz-linear-gradient(center top , #5E6266 0%, #3D3E40 100%) repeat scroll 0 0 rgba(0, 0, 0, 0);
     height: auto;
@@ -2711,6 +2710,8 @@ form .table-header {
   .logo-reg { display: none; }
   .logo-icon { display: block; }
   .logo-icon img { width: 74px; }
+  nav .landingHeaderLogo img { margin-left:auto; width: 70px; }
+
   .signup-banner p.text-muted { display: block; }
   .container { width: 100%; }
   .sidebar-section, .help-panel-container { display: none; }
@@ -2735,7 +2736,13 @@ form .table-header {
   .modal dl { margin-bottom: 0px; }
   .blockUI.blockElement { top: 110px !important; }
 
-  .sweet-alert, .swal2-modal { top: 33%; padding:10px; }
+  .sweet-alert { top: 33%; padding:10px; }
+  .swal2-modal {
+	  max-width: 96%;
+	  top: 40%;
+	  left: 2%;
+	  padding: 10px !important;
+  }
   .sweet-alert button, .swal2-modal button { font-size: 15px !important; }
   .sweet-alert h2, .swal2-modal h2 {
       font-size: 22px;
@@ -2745,7 +2752,7 @@ form .table-header {
   .sweet-alert.securityAlert h2, .swal2-modal.securityAlert h2 {
     font-size: 21px;
   }
-  .sweet-alert p, .swal2-modal p,
+  .sweet-alert p,
   .sweet-alert.securityAlert ul, .swal2-modal.securityAlert ul { padding-left: 20px; }
 }
 

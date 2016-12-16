@@ -1047,9 +1047,10 @@ body.stop-scrolling {
 }
 
 .swal2-icon.swal2-info {
-    font-family: 'Open Sans', sans-serif;
+    border-color: #9de0f6;
     color: #3fc3ee;
-    border-color: #9de0f6
+    font-family: 'Open Sans', sans-serif;
+	font-size: 50px;
 }
 
 .swal2-icon.swal2-question {

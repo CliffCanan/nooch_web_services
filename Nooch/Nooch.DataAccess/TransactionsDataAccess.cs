@@ -6064,9 +6064,6 @@ namespace Nooch.DataAccess
                     fromAddress = "payments@tryhabitat.com";
 
                     Logger.Info("TDA -> TransferMoneyUsingSynapse - HABITAT Payment!");
-
-                    senderFirstName = "Habitat LLC";
-                    senderLastName = "";
                 }
 
                 #endregion Habitat Custom Checks

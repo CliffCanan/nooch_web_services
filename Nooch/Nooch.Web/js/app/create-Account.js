@@ -200,7 +200,7 @@ function runIdWizard() {
             if (!isSmScrn)
             {
                 var DOB = $('#dob').val() ? $('#dob').val() : "1980-01-01";
-                var maxDate = TYPE_ACCOUNT == "business" ? "2016-12-1" : "2016-12-01";
+                var maxDate = TYPE_ACCOUNT == "business" ? "2016-12-01" : "1998-12-31";
 
                 $('#idVer-dob').datetimepicker({
                     format: 'MM/DD/YYYY',
@@ -212,7 +212,7 @@ function runIdWizard() {
                         clear: 'fa fa-fw fa-trash-o'
                     },
                     maxDate: maxDate,
-                    viewMode: 'years',
+                    viewMode: 'years'
                     //debug: true
                 });
 
@@ -364,7 +364,7 @@ function checkStepThree() {
                 var ssnVal = $('#idVer-ssn').val().trim();
                 ssnVal = ssnVal.replace(/ /g, "").replace(/-/g, "");
 
-                if (!(typeof memid == "undefined" || memid == "") ||
+                if (//!(typeof memid == "undefined" || memid == "") ||
                     ssnVal.length == 9 || FBID != "not connected")
                 {
                     updateValidationUi("ssn", true);
@@ -397,11 +397,11 @@ function checkStepThree() {
                     });
 
                     $('#idVer_idDoc').on('fileerror', function (event, data, msg) {
-                        $('#idVerWiz > .content').animate({ height: "31em" }, 700)
+                        $('#idVerWiz > .content').animate({ height: "31.5em" }, 700)
                     });
 
                     $('#idVer_idDoc').on('fileloaded', function (event, file, previewId, index, reader) {
-                        $('#idVerWiz > .content').animate({ height: "30.5em" }, 700)
+                        $('#idVerWiz > .content').animate({ height: "31.5em" }, 700)
 
                         isFileAdded = "1";
                         var readerN = new FileReader();
@@ -426,7 +426,7 @@ function checkStepThree() {
                         FileData = null;
                     });
 
-                    $('#idVerWiz > .content').animate({ height: "30.5em" }, 800)
+                    $('#idVerWiz > .content').animate({ height: "31.5em" }, 800)
                     return true;
                 }
                 else updateValidationUi("ssn", false);
