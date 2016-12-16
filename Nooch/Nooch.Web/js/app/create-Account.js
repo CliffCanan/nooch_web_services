@@ -200,6 +200,7 @@ function runIdWizard() {
             if (!isSmScrn)
             {
                 var DOB = $('#dob').val() ? $('#dob').val() : "1980-01-01";
+                var maxDate = TYPE_ACCOUNT == "business" ? "2016-12-1" : "2016-12-01";
 
                 $('#idVer-dob').datetimepicker({
                     format: 'MM/DD/YYYY',
@@ -210,7 +211,7 @@ function runIdWizard() {
                         next: 'fa fa-fw fa-chevron-circle-right',
                         clear: 'fa fa-fw fa-trash-o'
                     },
-                    maxDate: "1998-12-31",
+                    maxDate: maxDate,
                     viewMode: 'years',
                     //debug: true
                 });

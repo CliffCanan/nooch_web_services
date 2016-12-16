@@ -2452,17 +2452,17 @@ namespace Nooch.DataAccess
                 var missingData2 = "";
 
                 if (String.IsNullOrEmpty(ssn))
-                    missingData2 = missingData2 + "SSN";
+                    missingData2 = missingData2 + "-SSN-";
                 if (String.IsNullOrEmpty(dob))
-                    missingData2 = missingData2 + " DOB";
+                    missingData2 = missingData2 + "-DOB-";
                 if (String.IsNullOrEmpty(address))
-                    missingData2 = missingData2 + "Address";
+                    missingData2 = missingData2 + "-Address-";
                 if (String.IsNullOrEmpty(zip))
-                    missingData2 = missingData2 + " ZIP";
+                    missingData2 = missingData2 + "-ZIP-";
                 if (String.IsNullOrEmpty(fngprnt))
-                    missingData2 = missingData2 + " Fingerprint";
+                    missingData2 = missingData2 + "-Fingerprint-";
                 if (String.IsNullOrEmpty(ip))
-                    missingData2 = missingData2 + " IP";
+                    missingData2 = missingData2 + "-IP-";
 
                 Logger.Error("MDA -> RegisterExistingUserWithSynapseV2 - Missing Non-Critical Data: [" + missingData2.Trim() + "]");
             }
@@ -2540,7 +2540,7 @@ namespace Nooch.DataAccess
                 //Rajat Puri 14/6/2016 The following region is a kind of duplicate as the same work will get done at line number 2845 
                 // in the region *saving user image if provided* This will  upload same image again on the server.
 
-                #region
+                #region Save ID Image
 
                 if (isIdImageAdded == "1" && !String.IsNullOrEmpty(idImageData))
                 {
@@ -2564,7 +2564,7 @@ namespace Nooch.DataAccess
                     }
                 }
 
-                #endregion
+                #endregion Save ID Image
 
                 var pinNumber = Utility.GetRandomPinNumber();
                 pinNumber = CommonHelper.GetEncryptedData(pinNumber);

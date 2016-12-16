@@ -2270,7 +2270,7 @@ namespace Nooch.Web.Controllers
                     return submitRequestToExistingUser(from, isRequest, amount, name, email, memo, pin, ip, res.memberId, res.name);
                 }
 
-                // Got an error if we' got here :-(
+                // Got an error if we're here :-(
                 return Json(res);
             }
 
