@@ -2919,7 +2919,7 @@ namespace Nooch.DataAccess
 
                     SynapseV3AddTransInput_trans_amount amountMain = new SynapseV3AddTransInput_trans_amount()
                     {
-                        amount = amount.Trim(), // CLIFF (5/9/16): Changed this from a double to a string type b/c the Synapse docs say this should be a string... need to test!
+                        amount = amount.Trim(),
                         currency = "USD"
                     };
                     transMain.amount = amountMain;
@@ -2955,8 +2955,8 @@ namespace Nooch.DataAccess
                     // NEED TO UPDATE - NOVEMBER 2016
                     SynapseV3AddTransInput_trans_fees_to tomain = new SynapseV3AddTransInput_trans_fees_to()
                     {
-                        id = isTesting ? "5618028c86c27347a1b3aa0f" // Temporary: ID of Nooch's SYNAPSE account (NOT an ACH (bank) account)!!... using temp Sandbox account until we get Production credentials
-                                       : "57436f4395062947f21bbcb6" // CC (6/7/16): THIS IS THE LIVE, PRODUCTION SYNAPSE V3 NODE ** FOR RENT SCENE **
+                        id = isTesting ? "5618028c86c27347a1b3aa0f" // Temporary: ID of Nooch's SYNAPSE SANDBOX account (NOT an ACH (bank) account)!!...
+                                       : "585823c695062923e505cc45" // CC (6/7/16): THIS IS THE LIVE, PRODUCTION SYNAPSE V3 NODE ** FOR RENT SCENE **
                     };
                     feeMain.to = tomain;
 
