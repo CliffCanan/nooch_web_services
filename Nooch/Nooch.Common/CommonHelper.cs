@@ -3097,7 +3097,7 @@ namespace Nooch.Common
                         #region Synapse V3 Signin Exception
 
                         var httpStatusCode = ((HttpWebResponse)we.Response).StatusCode;
-                        string http_code = httpStatusCode.ToString();
+                        var http_code = httpStatusCode.ToString();
 
                         var response = new StreamReader(we.Response.GetResponseStream()).ReadToEnd();
                         JObject jsonFromSynapse = JObject.Parse(response);
@@ -3107,8 +3107,8 @@ namespace Nooch.Common
 
                         if (!String.IsNullOrEmpty(error_code))
                         {
-                            Logger.Error("Common Helper -> SynapseV3SignIn FAILED (Exception)- [Synapse Error Code: " + error_code +
-                                         "], [Error Msg: " + res.msg + "]");
+                            Logger.Error("Common Helper -> SynapseV3SignIn FAILED (Exception)- Synapse Error Code: [" + error_code +
+                                         "], Error Msg: [" + res.msg + "]");
                         }
 
                         if (!String.IsNullOrEmpty(res.msg))
@@ -3118,8 +3118,8 @@ namespace Nooch.Common
                         }
                         else
                         {
-                            Logger.Error("Common Helper -> SynapseV3SignIn FAILED (Exception) - Synapse Error msg was null or not found - [Original Oauth Key (enc): " +
-                                         oauthKey + "], [Exception: " + we.Message + "]");
+                            Logger.Error("Common Helper -> SynapseV3SignIn FAILED (Exception) - Synapse Error msg was null or not found - Original Oauth Key (enc): [" +
+                                         oauthKey + "], Exception: [" + we.Message + "]");
                         }
 
                         #endregion Synapse V3 Signin Exception

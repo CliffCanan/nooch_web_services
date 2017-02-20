@@ -5042,6 +5042,8 @@ namespace Nooch.API.Controllers
                             res.isSuccess = true;
                             res.msg = "PIN validated successfully";
                         }
+                        else
+                            res.msg = signInResult.msg;
                     }
                     else
                         res.msg = "Users Synapse record not found in DB";
