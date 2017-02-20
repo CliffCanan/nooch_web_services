@@ -5890,6 +5890,13 @@ namespace Nooch.DataAccess
             var senderNoochDetails = _dbContext.Members.FirstOrDefault(m => m.MemberId == senderGuid && m.IsDeleted != true);
             var senderSynDetails = CommonHelper.GetSynapseBankAndUserDetailsforGivenMemberId(transInput.MemberId);
 
+            // Check if Synapse triggered 2FA
+            if (senderSynDetails.UserDetailsErrMessage.IndexOf("Validation PIN sent to") > -1)
+            {
+                Logger.Error("TDA -> TransferMoneyUsingSynapse - ABORTED: Synapse 2FA triggered - MemberID: [" +
+                             transInput.MemberId + "], Msg: [" + senderSynDetails.UserDetailsErrMessage + "]");
+                return senderSynDetails.UserDetailsErrMessage;
+            }
             if (senderSynDetails.wereUserDetailsFound == false || senderSynDetails.UserDetails == null)
             {
                 Logger.Error("TDA -> TransferMoneyUsingSynapse - ABORTED: Sender's Synapse details not found - MemberID: [" +
@@ -5941,7 +5948,7 @@ namespace Nooch.DataAccess
             if (recipientSynapseDetails.wereBankDetailsFound == false || recipientSynapseDetails.BankDetails == null)
             {
                 Logger.Info("TDA -> TransferMoneyUsingSynapse - ABORTED: No active Synapse Bank found for Recipient - MemberID (Recip): [" +
-                            transInput.MemberId + "], [TransactionId: " + transInput.TransactionId + "]");
+                            transInput.MemberId + "], TransId: [" + transInput.TransactionId + "]");
                 return "Recepient have not linked to any bank account yet.";
             }
             if (!(recipientSynapseDetails.UserDetails.permission == "SEND-AND-RECEIVE" ||

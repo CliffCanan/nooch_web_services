@@ -2229,11 +2229,9 @@ namespace Nooch.Common
 
             try
             {
-                String memberId = GetMemberIdByUserName(userEmail);
-                List<string> clientIds = getClientSecretId(memberId);
+                var SynapseClientId = Utility.GetValueFromConfig("SynapseClientId");
+                var SynapseClientSecret = Utility.GetValueFromConfig("SynapseClientSecret");
 
-                string SynapseClientId = clientIds[0];
-                string SynapseClientSecret = clientIds[1];
                 synapseSearchUserInputClass input = new synapseSearchUserInputClass();
 
                 synapseSearchUser_Client client = new synapseSearchUser_Client();
@@ -2620,10 +2618,8 @@ namespace Nooch.Common
 
                     SynapseV3RefreshOauthKeyAndSign_Input input = new SynapseV3RefreshOauthKeyAndSign_Input();
 
-                    List<string> clientIds = getClientSecretId(noochMemberObject.MemberId.ToString());
-
-                    var SynapseClientId = clientIds[0];
-                    var SynapseClientSecret = clientIds[1];
+                    var SynapseClientId = Utility.GetValueFromConfig("SynapseClientId");
+                    var SynapseClientSecret = Utility.GetValueFromConfig("SynapseClientSecret");
 
                     input.login = new createUser_login2()
                     {
@@ -2644,7 +2640,6 @@ namespace Nooch.Common
                         oid = synCreateUserObject.user_id
                     };
                     user.fingerprint = noochMemberObject.UDID1;
-
                     user.ip = GetRecentOrDefaultIPOfMember(noochMemberObject.MemberId);
 
                     input.user = user;
@@ -2751,7 +2746,7 @@ namespace Nooch.Common
                                         var synapsePhone = RemovePhoneNumberFormatting(refreshResponse["phone_numbers"][0].ToString());
                                         var usersPhoneinDB = RemovePhoneNumberFormatting(noochMemberObject.ContactNumber);
 
-                                        if ( false && synapsePhone == usersPhoneinDB)
+                                        if (synapsePhone == usersPhoneinDB)
                                         {
                                             // Good, phone #'s matched - proceed with 2FA process
                                             Logger.Info("Common Helper -> refreshSynapseV3OautKey - About to attempt 2FA process by querying SynapseV3SignIn()");
@@ -2759,10 +2754,10 @@ namespace Nooch.Common
                                             // Return response from 2nd Signin attempt w/ phone number (should trigger Synapse to send a PIN to the user)
                                             return SynapseV3SignIn(oauthKey, noochMemberObject, null);
                                         }
-                                        else if (synapsePhone == usersPhoneinDB)
-                                        {
-                                            res.msg = "PHONE FROM SYNAPSE MATCHED NOOCH DB, NORMALLY WOULD TRIGGER 2FA NOW, BUT SKIPPING TEMPORARILY...";
-                                        }
+                                        //else if (synapsePhone == usersPhoneinDB)
+                                        //{
+                                        //    res.msg = "PHONE FROM SYNAPSE MATCHED NOOCH DB, NORMALLY WOULD TRIGGER 2FA NOW, BUT SKIPPING TEMPORARILY...";
+                                        //}
                                         else
                                         {
                                             // Bad - Synapse has a different phone # than we do for this user,
@@ -2848,16 +2843,21 @@ namespace Nooch.Common
         }
 
 
-        // Method to change user fingerprint
-        // this required user's member id and new fingerprint
-        // from member id, we will get synapse id and password if any given
-        // UPDATE (Cliff - 5/31/16): This will be almost exactly the same as the above refreshSynapseOautKey()
-        //                           This will ONLY be called from that method when the 1st attempt at signing in fails.
-        //                           When that happens, Synapse returns an array of phone numbers for that user (should only ever be 1 in our case),
-        //                           then the user is supposed to "pick" which # to verify. But we'll skip that and assume it's the only 1 in the array.
-        //                           So then we query the /user/signin API again, this time with the phone number included.  Synapse then sends a code to the user's phone via SMS.
-        //                           Then the user must enter that code (I'll make the interface) and we submit it to Synapse using the same API: /user/signin.
-        // oAuth token needs to be in encrypted format
+        /// <summary>
+        /// Method to change a user's Fingerprint
+        /// this requires user's member id and new fingerprint
+        /// from member id, we will get synapse id and password if any given
+        /// UPDATE (Cliff - 5/31/16): This will be almost exactly the same as the above refreshSynapseOautKey()
+        ///                           This will ONLY be called from that method when the 1st attempt at signing in fails.
+        ///                           When that happens, Synapse returns an array of phone #s for that user (should only ever be 1 in our case),
+        ///                           then the user is supposed to "pick" which # to verify - but we'll skip that and assume it's the only 1 in the array.
+        ///                           So then we query the /user/signin API again, this time with the phone number included. Synapse then sends a code to 
+        ///                           the user's phone via SMS. Then the user must enter that code and we submit it to Synapse using the same API: /user/signin.
+        /// </summary>
+        /// <param name="oauthKey">oAuth token needs to be in encrypted format</param>
+        /// <param name="memberObj"></param>
+        /// <param name="validationPin"></param>
+        /// <returns></returns>
         public static synapseV3checkUsersOauthKey SynapseV3SignIn(string oauthKey, Member memberObj, string validationPin)
         {
             bool isPinIncluded = false;
@@ -2908,9 +2908,8 @@ namespace Nooch.Common
 
                     Logger.Info("Common Helper -> SynapseV3SignIn - Found Member By Original OAuth Key");
 
-                    List<string> clientIds = getClientSecretId(memberObj.MemberId.ToString());
-                    var SynapseClientId = clientIds[0];
-                    var SynapseClientSecret = clientIds[1];
+                    var SynapseClientId = Utility.GetValueFromConfig("SynapseClientId");
+                    var SynapseClientSecret = Utility.GetValueFromConfig("SynapseClientSecret");
 
                     var client = new createUser_client()
                     {
@@ -3629,16 +3628,15 @@ namespace Nooch.Common
             {
                 try
                 {
-                    // CLIFF (8/12/15): This "Device ID" will be stored in Nooch's DB as "UDID1" and is specifically for Synapse's "Fingerprint" requirement...
+                    // CLIFF (8/12/16): This "Device ID" will be stored in Nooch's DB as "UDID1" and is specifically for Synapse's "Fingerprint" requirement...
                     //                  NOT for push notifications, which should use the "DeviceToken" in Nooch's DB.  (Confusing, but they are different values)
 
                     var member = _dbContext.Members.FirstOrDefault(memberTemp => memberTemp.MemberId == memId);
                     if (member != null)
                     {
-                        if (member.Nooch_ID != "ykDjbVj5") // For RS's account, don't ever update the Fingerprint (DeviceID). Otherwise it will screw up Synapse services.
-                            member.UDID1 = DeviceId;
-                        else
-                            Logger.Info("Common Helper -> UpdateMemberIPAddressAndDeviceId - Rent Scene Account Detected - Not Saving DeviceID (UDID1)");
+                        // If the user already has created a Synapse account and then changes their Fingerprint,
+                        // they will be triggered by Synapse for 2FA to register the new Fingerprint.
+                        member.UDID1 = DeviceId;
                         member.DateModified = DateTime.Now;
                     }
 
@@ -3942,27 +3940,6 @@ namespace Nooch.Common
         }
 
 
-        public static List<string> getClientSecretId(string memId)
-        {
-            List<string> clientIds = new List<string>();
-            try
-            {
-                Member member = GetMemberDetails(memId);
-
-                var SynapseClientId = Utility.GetValueFromConfig("SynapseClientId");
-                var SynapseClientSecret = Utility.GetValueFromConfig("SynapseClientSecret");
-                clientIds.Add(SynapseClientId);
-                clientIds.Add(SynapseClientSecret);
-            }
-            catch (Exception ex)
-            {
-                Logger.Error("Common Helper -> getClientSecretId FAILED - MemberID: [" + memId + "], Exception: [" + ex + "]");
-            }
-
-            return clientIds;
-        }
-
-
         public static CancelTransactionAtSynapseResult CancelTransactionAtSynapse(string transId, string memberId)
         {
             Logger.Info("CommonHelper -> CancelTransactionAtSynapse Fired - TransID: [" + transId + "]");
@@ -4068,7 +4045,6 @@ namespace Nooch.Common
 
             return null;
         }
-
 
 
         public static string getLogoForBank(string bankName)
@@ -4369,9 +4345,11 @@ namespace Nooch.Common
         }
 
 
-
-
-
+        /// <summary>
+        /// Temp helper function for quickly grabbing Synapse User ID of all Habitat users from the DB.
+        /// </summary>
+        /// <param name="memberId"></param>
+        /// <returns></returns>
         public static synapseUsers GetSynapseUsers(string memberId)
         {
             Logger.Info("Common Helper -> GetSynapseUsers Fired - MemberID: [" + memberId + "]");

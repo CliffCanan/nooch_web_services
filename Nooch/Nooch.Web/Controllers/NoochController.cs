@@ -1758,9 +1758,9 @@ namespace Nooch.Web.Controllers
 
             try
             {
-                string serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
-                string serviceMethod = "Submit2FAPin?memberId=" + userData.memberId + "&pin=" + userData.pin;
-                string urlToUse = String.Concat(serviceUrl, serviceMethod);
+                var serviceUrl = Utility.GetValueFromConfig("ServiceUrl");
+                var serviceMethod = "Submit2FAPin?memberId=" + userData.memberId + "&pin=" + userData.pin;
+                var urlToUse = String.Concat(serviceUrl, serviceMethod);
 
                 Logger.Info("CreateAccount Page -> submit2FAPin CHECKPOINT #1 - URL To Use: [" + urlToUse + "]");
 
@@ -3283,6 +3283,11 @@ namespace Nooch.Web.Controllers
         }
 
 
+        /// <summary>
+        /// Temp helper page for quickly grabbing Synapse User ID of all Habitat users from the DB.
+        /// </summary>
+        /// <param name="user"></param>
+        /// <returns></returns>
         public ActionResult getUsers(string user)
         {
             synapseUsers res = new synapseUsers();
