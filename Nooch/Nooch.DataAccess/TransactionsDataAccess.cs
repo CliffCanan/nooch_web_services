@@ -1238,63 +1238,66 @@ namespace Nooch.DataAccess
 
                     var transactions = new List<Transaction>();
 
-                    var transactionTypeTransfer = CommonHelper.GetEncryptedData(Constants.TRANSACTION_TYPE_TRANSFER);
-                    var transactionTypeDonation = CommonHelper.GetEncryptedData(Constants.TRANSACTION_TYPE_DONATION);
-                    var transactionTypeRequest = CommonHelper.GetEncryptedData(Constants.TRANSACTION_TYPE_REQUEST);
-                    var transactionTypeDisputed = "+C1+zhVafHdXQXCIqjU/Zg==";
-
-                    var userNameDecrypted = CommonHelper.GetDecryptedData(member.UserName);
-                    var userNameDecryptedLowerCase = CommonHelper.GetDecryptedData(member.UserNameLowerCase);
+                    var transTypeTransfer = CommonHelper.GetEncryptedData(Constants.TRANSACTION_TYPE_TRANSFER);
+                    var transTypeRequest = CommonHelper.GetEncryptedData(Constants.TRANSACTION_TYPE_REQUEST);
+                    var transTypeDisputed = "+C1+zhVafHdXQXCIqjU/Zg==";
 
                     if (!String.IsNullOrEmpty(SubListType))
                     {
                         #region SubList Was Included
 
-                        if (listType.ToUpper().Equals("SENT"))
+                        if (listType.ToUpper().Equals("ALL") && SubListType == "Pending")
                         {
-                            transactions = _dbContext.Transactions.Where(entity => entity.Member.MemberId == id || entity.InvitationSentTo == member.UserName &&
-                                        (entity.TransactionType == transactionTypeTransfer || entity.TransactionType == transactionTypeDonation) &&
-                                         entity.TransactionStatus == SubListType).ToList();
+                            transactions = _dbContext.Transactions.Where(trans =>
+                                                                         trans.TransactionStatus == "Pending" &&
+                                                                         (trans.Member.MemberId == id || trans.Member1.MemberId == id || trans.InvitationSentTo == member.UserName))
+                                                                         .OrderByDescending(r => r.TransactionDate).Take(pageSize)
+                                                                         .ToList();
+                        }
+                        else if (listType.ToUpper().Equals("ALL") && SubListType == "Success" || SubListType == "Completed")
+                        {
+                            transactions = _dbContext.Transactions.Where(trans =>
+                                                                         (trans.TransactionStatus == "Success" || trans.TransactionStatus == "Cancelled" || trans.TransactionStatus == "Rejected") &&
+                                                                         (trans.Member.MemberId == id || trans.Member1.MemberId == id || trans.InvitationSentTo == member.UserName))
+                                                                         .OrderByDescending(r => r.TransactionDate).Take(pageSize)
+                                                                         .ToList();
+                        }
+                        else if (listType.ToUpper().Equals("SENT"))
+                        {
+                            transactions = _dbContext.Transactions.Where(trans =>
+                                                                         trans.TransactionStatus == SubListType &&
+                                                                         ((trans.TransactionType == transTypeTransfer && trans.Member.MemberId == id) ||
+                                                                          (trans.TransactionType == transTypeRequest && trans.Member1.MemberId == id)))
+                                                                         .OrderByDescending(r => r.TransactionDate).Take(pageSize)
+                                                                         .ToList();
                         }
                         else if (listType.ToUpper().Equals("RECEIVED"))
                         {
-                            transactions = _dbContext.Transactions.Where(entity =>
-                                        entity.Member1.MemberId == id || entity.InvitationSentTo == member.UserName &&
-                                        entity.TransactionType == transactionTypeTransfer &&
-                                        entity.TransactionStatus == SubListType).ToList();
+                            transactions = _dbContext.Transactions.Where(trans =>
+                                                                         trans.TransactionStatus == SubListType &&
+                                                                         trans.TransactionType == transTypeTransfer &&
+                                                                         (trans.Member1.MemberId == id || trans.InvitationSentTo == member.UserName))
+                                                                         .OrderByDescending(r => r.TransactionDate).Take(pageSize)
+                                                                         .ToList();
                         }
                         else if (listType.ToUpper().Equals("DISPUTED"))
                         {
-                            transactions = _dbContext.Transactions.Where(entity =>
-                                        ((entity.Member1.MemberId == id || entity.Member.MemberId == id || entity.InvitationSentTo == member.UserName) &&
-                                          entity.DisputeStatus != null && entity.TransactionType == transactionTypeDisputed) &&
-                                          entity.TransactionStatus == SubListType).ToList();
-                        }
-                        else if (listType.ToUpper().Equals("ALL") && SubListType == "Pending") // CR
-                        {
-                            transactions = _dbContext.Transactions.Where(entity =>
-                                        (entity.Member.MemberId == id || entity.Member1.MemberId == id || entity.InvitationSentTo == member.UserName) &&
-                                         entity.TransactionStatus == SubListType).ToList();
-                        }
-                        else if (listType.ToUpper().Equals("ALL") && SubListType == "Success") // CR
-                        {
-                            transactions = _dbContext.Transactions.Where(entity =>
-                                        (entity.Member.MemberId == id || entity.Member1.MemberId == id || entity.InvitationSentTo == member.UserName) &&
-                                        (entity.TransactionStatus == SubListType || entity.TransactionStatus == "Cancelled" || entity.TransactionStatus == "Rejected")).ToList();
-                        }
-                        else if (listType.ToUpper().Equals("DONATION"))
-                        {
-                            transactions = _dbContext.Transactions.Where(entity =>
-                                        (entity.Member1.MemberId == id || entity.Member.MemberId == id || entity.InvitationSentTo == member.UserName) &&
-                                         entity.TransactionType == transactionTypeDonation &&
-                                         entity.TransactionStatus == SubListType).ToList();
+                            transactions = _dbContext.Transactions.Where(trans =>
+                                                                         trans.TransactionType == transTypeDisputed &&
+                                                                         trans.DisputeStatus != null &&
+                                                                         trans.TransactionStatus == SubListType &&
+                                                                         (trans.Member1.MemberId == id || trans.Member.MemberId == id || trans.InvitationSentTo == member.UserName))
+                                                                         .OrderByDescending(r => r.TransactionDate).Take(pageSize)
+                                                                         .ToList();
                         }
                         else if (listType.ToUpper().Equals("REQUEST"))
                         {
-                            transactions = _dbContext.Transactions.Where(entity =>
-                                        (entity.Member1.MemberId == id || entity.Member.MemberId == id || entity.InvitationSentTo == member.UserName) &&
-                                         entity.TransactionType == transactionTypeRequest &&
-                                        (entity.TransactionStatus == SubListType || entity.TransactionStatus == "Cancelled" || entity.TransactionStatus == "Rejected")).ToList();
+                            transactions = _dbContext.Transactions.Where(trans =>
+                                                                         (trans.Member1.MemberId == id || trans.Member.MemberId == id || trans.InvitationSentTo == member.UserName) &&
+                                                                         trans.TransactionType == transTypeRequest &&
+                                                                         (trans.TransactionStatus == SubListType || trans.TransactionStatus == "Cancelled" || trans.TransactionStatus == "Rejected"))
+                                                                         .OrderByDescending(r => r.TransactionDate).Take(pageSize)
+                                                                         .ToList();
                         }
 
                         #endregion SubList Was Included
@@ -1318,7 +1321,7 @@ namespace Nooch.DataAccess
                                                                          (trans.SenderId == id ||
                                                                          trans.InvitationSentTo == member.UserName ||
                                                                          trans.InvitationSentTo == member.UserNameLowerCase) &&
-                                                                         trans.TransactionType == transactionTypeTransfer)
+                                                                         trans.TransactionType == transTypeTransfer)
                                                                          .OrderByDescending(r => r.TransactionDate).Take(pageSize).ToList();
                         }
                         else if (listType.ToUpper().Equals("RECEIVED"))
@@ -1327,7 +1330,7 @@ namespace Nooch.DataAccess
                                                                         (trans.RecipientId == id ||
                                                                          trans.InvitationSentTo == member.UserName ||
                                                                          trans.PhoneNumberInvited == member.ContactNumber) &&
-                                                                         trans.TransactionType == transactionTypeTransfer)
+                                                                         trans.TransactionType == transTypeTransfer)
                                                                          .OrderByDescending(r => r.TransactionDate).Take(pageSize).ToList();
                         }
                         else if (listType.ToUpper().Equals("DISPUTED"))
@@ -1337,7 +1340,7 @@ namespace Nooch.DataAccess
                                                                          trans.RecipientId == id ||
                                                                          trans.InvitationSentTo == member.UserName) &&
                                                                          trans.DisputeStatus != null &&
-                                                                         trans.TransactionType == transactionTypeDisputed)
+                                                                         trans.TransactionType == transTypeDisputed)
                                                                          .OrderByDescending(r => r.TransactionDate).Take(pageSize).ToList();
                         }
                         else if (listType.ToUpper().Equals("REQUEST"))
@@ -1347,7 +1350,7 @@ namespace Nooch.DataAccess
                                                                          trans.RecipientId == id ||
                                                                          trans.InvitationSentTo == member.UserName ||
                                                                          trans.InvitationSentTo == member.UserNameLowerCase) &&
-                                                                         trans.TransactionType == transactionTypeRequest).ToList();
+                                                                         trans.TransactionType == transTypeRequest).ToList();
                         }
 
                         #endregion SubList NOT Included

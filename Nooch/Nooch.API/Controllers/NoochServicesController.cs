@@ -1620,7 +1620,7 @@ namespace Nooch.API.Controllers
                         // Member is Receiver in this transaction
                         obj.FirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member1.FirstName));
                         obj.LastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member1.LastName));
-                        obj.Photo = String.Concat(Utility.GetValueFromConfig("PhotoUrl"), trans.Member1.Photo != null ? Path.GetFileName(trans.Member1.Photo) : Path.GetFileName("gv_no_photo.jpg"));
+                        obj.Photo = String.Concat(Utility.GetValueFromConfig("PhotoUrl"), trans.Member1.Photo != null ? Path.GetFileName(trans.Member1.Photo) : Path.GetFileName("default.png"));
 
                         decimal m = (Convert.ToDecimal(trans.Amount) + Convert.ToDecimal(trans.TransactionFee));
                         obj.Amount = Math.Round(m, 2);
@@ -1630,7 +1630,7 @@ namespace Nooch.API.Controllers
                         //the receiver is same as the current member than display the names of sender.
                         obj.FirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member.FirstName));
                         obj.LastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member.LastName));
-                        obj.Photo = String.Concat(Utility.GetValueFromConfig("PhotoUrl"), trans.Member.Photo != null ? Path.GetFileName(trans.Member.Photo) : Path.GetFileName("gv_no_photo.jpg"));
+                        obj.Photo = String.Concat(Utility.GetValueFromConfig("PhotoUrl"), trans.Member.Photo != null ? Path.GetFileName(trans.Member.Photo) : Path.GetFileName("default.png"));
                         obj.Amount = trans.Amount;
                     }
 
@@ -1737,7 +1737,7 @@ namespace Nooch.API.Controllers
                                     obj.Photo = String.Concat(Utility.GetValueFromConfig("PhotoUrl"),
                                             trans.Member1.Photo != null
                                                 ? Path.GetFileName(trans.Member1.Photo)
-                                                : Path.GetFileName("gv_no_photo.jpg"));
+                                                : Path.GetFileName("default.png"));
 
                                     decimal trFee = (trans.TransactionFee != null) ? Convert.ToDecimal(trans.TransactionFee) : 0;
                                     obj.Amount = Math.Round((trans.Amount + trFee), 2);
@@ -1748,7 +1748,7 @@ namespace Nooch.API.Controllers
                                     //the receiver is same as the current member than display the names of sender.
                                     obj.FirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member.FirstName));
                                     obj.LastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member.LastName));
-                                    obj.Photo = String.Concat(Utility.GetValueFromConfig("PhotoUrl"), trans.Member.Photo != null ? Path.GetFileName(trans.Member.Photo) : Path.GetFileName("gv_no_photo.jpg"));
+                                    obj.Photo = String.Concat(Utility.GetValueFromConfig("PhotoUrl"), trans.Member.Photo != null ? Path.GetFileName(trans.Member.Photo) : Path.GetFileName("default.png"));
                                     obj.Amount = Math.Round(trans.Amount, 2);
                                 }
 
@@ -1756,8 +1756,8 @@ namespace Nooch.API.Controllers
                                 {
                                     obj.FirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member1.FirstName));
                                     obj.LastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member1.LastName));
-                                    obj.Photo = String.Concat(Utility.GetValueFromConfig("PhotoUrl"), trans.Member1.Photo != null ? Path.GetFileName(trans.Member1.Photo) : Path.GetFileName("gv_no_photo.jpg"));
-                                    decimal trFee = (trans.TransactionFee != null) ? Convert.ToDecimal(trans.TransactionFee) : 0;
+                                    obj.Photo = String.Concat(Utility.GetValueFromConfig("PhotoUrl"), trans.Member1.Photo != null ? Path.GetFileName(trans.Member1.Photo) : Path.GetFileName("default.png"));
+                                    decimal trFee = trans.TransactionFee != null ? Convert.ToDecimal(trans.TransactionFee) : 0;
                                     obj.Amount = Math.Round((trans.Amount), 2);
                                 }
 
@@ -1868,7 +1868,7 @@ namespace Nooch.API.Controllers
                             DisputeStatus = !string.IsNullOrEmpty(transObj.DisputeStatus) ? CommonHelper.GetDecryptedData(transObj.DisputeStatus) : null,
                             DisputeId = transObj.DisputeTrackingId,
                             // sender photo - Received from
-                            Photo = String.Concat(Utility.GetValueFromConfig("PhotoUrl"), transObj.Member.Photo != null ? Path.GetFileName(transObj.Member.Photo) : Path.GetFileName("gv_no_photo.jpg")),
+                            Photo = String.Concat(Utility.GetValueFromConfig("PhotoUrl"), transObj.Member.Photo != null ? Path.GetFileName(transObj.Member.Photo) : Path.GetFileName("default.png")),
                             DisputeReportedDate = transObj.DisputeDate.HasValue ? !string.IsNullOrEmpty(transObj.Member1.TimeZoneKey) ? mda.GMTTimeZoneConversion(transObj.DisputeDate.ToString(), transObj.Member1.TimeZoneKey) : transObj.DisputeDate.ToString() : string.Empty,
                             DisputeReviewDate = transObj.ReviewDate.HasValue ? !string.IsNullOrEmpty(transObj.Member1.TimeZoneKey) ? mda.GMTTimeZoneConversion(transObj.ReviewDate.ToString(), transObj.Member1.TimeZoneKey) : transObj.ReviewDate.ToString() : string.Empty,
                             DisputeResolvedDate = transObj.ResolvedDate.HasValue ? !string.IsNullOrEmpty(transObj.Member1.TimeZoneKey) ? mda.GMTTimeZoneConversion(transObj.ResolvedDate.ToString(), transObj.Member1.TimeZoneKey) : transObj.ResolvedDate.ToString() : string.Empty,
@@ -1934,13 +1934,13 @@ namespace Nooch.API.Controllers
                                 // Member is Receiver in this transaction
                                 obj.FirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member1.FirstName));
                                 obj.LastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member1.LastName));
-                                obj.Photo = String.Concat(Utility.GetValueFromConfig("PhotoUrl"), trans.Member1.Photo != null ? Path.GetFileName(trans.Member1.Photo) : Path.GetFileName("gv_no_photo.jpg"));
+                                obj.Photo = String.Concat(Utility.GetValueFromConfig("PhotoUrl"), trans.Member1.Photo != null ? Path.GetFileName(trans.Member1.Photo) : Path.GetFileName("default.png"));
                             }
                             else if (trans.Member1.MemberId.ToString().ToUpper() == member.ToUpper())
                             {
                                 obj.FirstName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member.FirstName));
                                 obj.LastName = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(trans.Member.LastName));
-                                obj.Photo = String.Concat(Utility.GetValueFromConfig("PhotoUrl"), trans.Member.Photo != null ? Path.GetFileName(trans.Member.Photo) : Path.GetFileName("gv_no_photo.jpg"));
+                                obj.Photo = String.Concat(Utility.GetValueFromConfig("PhotoUrl"), trans.Member.Photo != null ? Path.GetFileName(trans.Member.Photo) : Path.GetFileName("default.png"));
                             }
                             obj.Name = obj.FirstName + " " + obj.LastName;
                             obj.TransactionDate = string.Format("{0:MM/d/yyyy hh:mm:ss tt}", trans.TransactionDate);
@@ -2101,7 +2101,7 @@ namespace Nooch.API.Controllers
                             trans.Name = CommonHelper.GetDecryptedData(transList.Member1.FirstName) + " " + CommonHelper.GetDecryptedData(transList.Member1.LastName);
                             trans.TransactionDate = !string.IsNullOrEmpty(transList.Member.TimeZoneKey) ? timeZoneDateString : transDateString;
                             trans.TransactionType = "Sent";
-                            trans.Photo = String.Concat(Utility.GetValueFromConfig("PhotoUrl"), transList.Member1.Photo != null ? Path.GetFileName(transList.Member1.Photo) : Path.GetFileName("gv_no_photo.jpg"));
+                            trans.Photo = String.Concat(Utility.GetValueFromConfig("PhotoUrl"), transList.Member1.Photo != null ? Path.GetFileName(transList.Member1.Photo) : Path.GetFileName("default.png"));
 
                             #endregion Sent
                         }
@@ -2118,7 +2118,7 @@ namespace Nooch.API.Controllers
                             trans.TransactionDate = !string.IsNullOrEmpty(transList.Member1.TimeZoneKey) ? timeZoneDateString : transDateString;
                             trans.TransactionType = "Received";
                             // sender photo - Received from
-                            trans.Photo = String.Concat(Utility.GetValueFromConfig("PhotoUrl"), transList.Member.Photo != null ? Path.GetFileName(transList.Member.Photo) : Path.GetFileName("gv_no_photo.jpg"));
+                            trans.Photo = String.Concat(Utility.GetValueFromConfig("PhotoUrl"), transList.Member.Photo != null ? Path.GetFileName(transList.Member.Photo) : Path.GetFileName("default.png"));
 
                             #endregion Received
                         }
@@ -2135,7 +2135,7 @@ namespace Nooch.API.Controllers
                             trans.TransactionDate = !string.IsNullOrEmpty(transList.Member1.TimeZoneKey) ? timeZoneDateString : transDateString;
                             trans.TransactionType = "Request";
                             // sender photo - Received from
-                            trans.Photo = String.Concat(Utility.GetValueFromConfig("PhotoUrl"), transList.Member.Photo != null ? Path.GetFileName(transList.Member.Photo) : Path.GetFileName("gv_no_photo.jpg"));
+                            trans.Photo = String.Concat(Utility.GetValueFromConfig("PhotoUrl"), transList.Member.Photo != null ? Path.GetFileName(transList.Member.Photo) : Path.GetFileName("default.png"));
 
                             #endregion Received
                         }
@@ -2152,7 +2152,7 @@ namespace Nooch.API.Controllers
                                 trans.TransactionDate = !string.IsNullOrEmpty(transList.Member.TimeZoneKey) ? timeZoneDateString : transDateString;
                                 trans.TransactionType = "Sent to";
                                 // recipient photo - Sent to
-                                trans.Photo = String.Concat(Utility.GetValueFromConfig("PhotoUrl"), transList.Member1.Photo != null ? Path.GetFileName(transList.Member1.Photo) : Path.GetFileName("gv_no_photo.jpg"));
+                                trans.Photo = String.Concat(Utility.GetValueFromConfig("PhotoUrl"), transList.Member1.Photo != null ? Path.GetFileName(transList.Member1.Photo) : Path.GetFileName("default.png"));
                             }
 
                             if (transList.RaisedBy.Equals("Receiver"))
@@ -2162,7 +2162,7 @@ namespace Nooch.API.Controllers
                                 trans.TransactionDate = !string.IsNullOrEmpty(transList.Member1.TimeZoneKey) ? timeZoneDateString : transDateString;
                                 trans.TransactionType = "Received from";
                                 // sender photo - Received from
-                                trans.Photo = String.Concat(Utility.GetValueFromConfig("PhotoUrl"), transList.Member.Photo != null ? Path.GetFileName(transList.Member.Photo) : Path.GetFileName("gv_no_photo.jpg"));
+                                trans.Photo = String.Concat(Utility.GetValueFromConfig("PhotoUrl"), transList.Member.Photo != null ? Path.GetFileName(transList.Member.Photo) : Path.GetFileName("default.png"));
                             }
 
                             #endregion Disputed
@@ -2357,7 +2357,7 @@ namespace Nooch.API.Controllers
                     IsVerifiedPhone = memberEntity.IsVerifiedPhone != null && Convert.ToBoolean(memberEntity.IsVerifiedPhone),
                     IsSSNAdded = memberEntity.SSN != null,
                     ssnLast4 = !String.IsNullOrEmpty(memberEntity.SSN) ? CommonHelper.GetDecryptedData(memberEntity.SSN) : "",
-                    PhotoUrl = memberEntity.Photo ?? Path.GetFileName("gv_no_photo.jpg"),
+                    PhotoUrl = memberEntity.Photo ?? String.Concat(Utility.GetValueFromConfig("PhotoUrl"), Path.GetFileName("default.png")),
                     FacebookAccountLogin = memberEntity.FacebookUserId != "not connected" ?
                                            memberEntity.FacebookUserId :
                                            "",
@@ -6078,7 +6078,7 @@ namespace Nooch.API.Controllers
                                 res.Name = CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.FirstName)) + " " +
                                            CommonHelper.UppercaseFirst(CommonHelper.GetDecryptedData(memberObj.LastName));
                                 res.MemberId = memberObj.MemberId.ToString();
-                                res.UserImage = memberObj.Photo ?? Path.GetFileName("gv_no_photo.jpg");
+                                res.UserImage = memberObj.Photo ?? String.Concat(Utility.GetValueFromConfig("PhotoUrl"), Path.GetFileName("default.png"));
                                 res.IsMemberFound = true;
                                 res.IsSuccess = true;
                                 res.ErrorMessage = "OK";
